@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+:root {
+	color-scheme: dark;
+	--background: #04060d;
+	--foreground: #eef2ff;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--background);
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	overflow-x: hidden;
+	color: var(--foreground);
+	font-family: "Space Grotesk", "Aptos", "Trebuchet MS", sans-serif;
+	background:
+		radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 30%),
+		radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 28%),
+		radial-gradient(circle at bottom left, rgba(74, 222, 128, 0.12), transparent 26%),
+		linear-gradient(180deg, #050915 0%, #02040a 46%, #020308 100%);
+}
+
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+	background-size: 48px 48px;
+	mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+}
+
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	background: radial-gradient(circle at center, rgba(103, 232, 249, 0.08), transparent 42%);
+	filter: blur(48px);
+	opacity: 0.7;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+}
+
+code,
+.font-mono {
+	font-family: "IBM Plex Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+::selection {
+	background: rgba(34, 211, 238, 0.28);
+	color: white;
+}
