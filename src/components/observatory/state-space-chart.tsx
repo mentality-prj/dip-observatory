@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
 import type { StateSpaceTrajectory } from "@/lib/observatory-derive";
+import type { ObservatoryCopy } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
     x: string;
     y: string;
   } | null;
+  copy: ObservatoryCopy;
   onSelect: (alternativeId: string) => void;
 };
 
@@ -24,6 +26,7 @@ export function StateSpaceChart({
   status,
   hasRun,
   axisLabels,
+  copy,
   onSelect,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -129,7 +132,7 @@ export function StateSpaceChart({
       .attr("fill", "rgba(226, 232, 240, 0.84)")
       .attr("font-size", 12)
       .attr("letter-spacing", "0.22em")
-      .text(axisLabels?.x ?? "STATE AXIS X");
+      .text(axisLabels?.x ?? copy.chart.axisFallbackX);
 
     chart
       .append("text")
@@ -138,7 +141,7 @@ export function StateSpaceChart({
       .attr("fill", "rgba(226, 232, 240, 0.84)")
       .attr("font-size", 12)
       .attr("letter-spacing", "0.22em")
-      .text(axisLabels?.y ?? "STATE AXIS Y");
+      .text(axisLabels?.y ?? copy.chart.axisFallbackY);
 
     if (trajectories.length === 0) {
       return;
@@ -245,25 +248,30 @@ export function StateSpaceChart({
         .attr("font-size", 11)
         .text(trajectory.predicted.detail);
     });
-  }, [axisLabels, trajectories, selectedAlternativeId, onSelect]);
+  }, [
+    axisLabels,
+    copy.chart.axisFallbackX,
+    copy.chart.axisFallbackY,
+    trajectories,
+    selectedAlternativeId,
+    onSelect,
+  ]);
 
   return (
     <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.12),transparent_42%),linear-gradient(180deg,rgba(10,16,30,0.86),rgba(5,8,16,0.98))]">
       <svg
         ref={svgRef}
         className="h-[420px] w-full lg:h-[520px]"
-        aria-label="DIP state-space projection chart"
+        aria-label={copy.chart.ariaLabel}
       />
 
       {!hasRun ? (
         <div className="pointer-events-none absolute inset-x-6 bottom-6 rounded-3xl border border-cyan-300/15 bg-slate-950/68 px-5 py-4 backdrop-blur">
           <p className="text-sm font-medium text-cyan-100">
-            State-space projection is awaiting a live DIP run.
+            {copy.chart.waitingTitle}
           </p>
           <p className="mt-1 text-sm text-slate-400">
-            Select one of the DIP-served scenarios and run it to populate the
-            chart with API-returned current state, predicted state,
-            trajectories, and uncertainty.
+            {copy.chart.waitingDescription}
           </p>
         </div>
       ) : null}
@@ -271,7 +279,7 @@ export function StateSpaceChart({
       {status === "loading" ? (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-950/44 backdrop-blur-sm">
           <div className="rounded-full border border-cyan-300/30 bg-slate-950/72 px-4 py-2 text-sm text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,0.18)]">
-            Running live DIP calculation...
+            {copy.chart.loading}
           </div>
         </div>
       ) : null}

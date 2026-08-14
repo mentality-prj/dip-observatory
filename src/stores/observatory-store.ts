@@ -4,6 +4,7 @@ import type {
   DipScalar,
   ObservatoryAlternativeInput,
   ObservatoryBootstrapPayload,
+  ObservatoryDemoMode,
   ObservatoryRunResponse,
   ObservatoryScenario,
 } from "@/lib/dip-contracts";
@@ -12,6 +13,7 @@ type RunStatus = "idle" | "loading" | "success" | "error";
 
 type ObservatoryState = {
   bootstrap: ObservatoryBootstrapPayload | null;
+  demoMode: ObservatoryDemoMode;
   scenarios: ObservatoryScenario[];
   selectedScenarioId: string | null;
   scenario: ObservatoryScenario | null;
@@ -91,6 +93,13 @@ function buildInitialAlternatives(scenario: ObservatoryScenario | null) {
 
 export const useObservatoryStore = create<ObservatoryState>((set, get) => ({
   bootstrap: null,
+  demoMode: {
+    enabled: false,
+    label: "Deterministic Demo",
+    scenarioId: null,
+    lockScenario: false,
+    lockAlternatives: false,
+  },
   scenarios: [],
   selectedScenarioId: null,
   scenario: null,
@@ -122,6 +131,7 @@ export const useObservatoryStore = create<ObservatoryState>((set, get) => ({
 
       return {
         bootstrap: payload,
+        demoMode: payload.demoMode,
         scenarios: payload.scenarios,
         selectedScenarioId: nextSelectedScenarioId,
         scenario: nextScenario,
@@ -133,6 +143,15 @@ export const useObservatoryStore = create<ObservatoryState>((set, get) => ({
     });
   },
   selectScenario: (scenarioId) => {
+    const { demoMode, selectedScenarioId } = get();
+    if (
+      demoMode.lockScenario &&
+      selectedScenarioId !== null &&
+      selectedScenarioId !== scenarioId
+    ) {
+      return;
+    }
+
     const nextScenario = findScenario(get().scenarios, scenarioId);
     const nextAlternatives = buildInitialAlternatives(nextScenario);
 
@@ -147,6 +166,10 @@ export const useObservatoryStore = create<ObservatoryState>((set, get) => ({
     });
   },
   updateFeature: (alternativeId, fieldName, value) => {
+    if (get().demoMode.lockAlternatives) {
+      return;
+    }
+
     set((state) => ({
       alternatives: state.alternatives.map((alternative) =>
         alternative.id === alternativeId

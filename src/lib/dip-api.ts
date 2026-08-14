@@ -3,22 +3,19 @@ import "server-only";
 import { z } from "zod";
 
 import {
-  type DipObservatoryApiInputField,
   type DipObservatoryApiRunResponse,
-  type DipObservatoryApiRunResult,
   type DipObservatoryApiScenario,
-  type DipObservatoryApiScenarioPreset,
   type ObservatoryBootstrapPayload,
-  type ObservatoryInputField,
   type ObservatoryRunRequest,
   type ObservatoryRunResponse,
-  type ObservatoryRunResult,
-  type ObservatoryScenario,
   dipObservatoryApiRunResponseSchema,
   dipObservatoryApiScenariosResponseSchema,
-  observatoryBootstrapPayloadSchema,
-  observatoryRunResponseSchema,
 } from "@/lib/dip-contracts";
+import {
+  buildObservatoryBootstrapPayload,
+  mapRunResponse,
+} from "@/lib/observatory-adapter";
+import { normalizeDipBaseUrl } from "@/lib/dip-url";
 
 class DipApiError extends Error {
   status: number;
@@ -43,7 +40,7 @@ function getDipBaseUrl() {
     process.env.NEXT_PUBLIC_DIP_API_BASE_URL ??
     "";
 
-  return raw.trim().replace(/\/+$/, "");
+  return normalizeDipBaseUrl(raw);
 }
 
 function getDipApiKey() {
@@ -53,89 +50,6 @@ function getDipApiKey() {
 
 function buildDipUrl(path: string) {
   return `${getDipBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
-function mapScenarioField(
-  field: DipObservatoryApiInputField,
-): ObservatoryInputField {
-  return {
-    name: field.name,
-    label: field.label,
-    type: field.type,
-    defaultValue: field.default_value,
-    required: field.required,
-    hint: field.hint,
-    minValue: field.min_value,
-    maxValue: field.max_value,
-    step: field.step,
-  };
-}
-
-function mapScenarioPreset(preset: DipObservatoryApiScenarioPreset) {
-  return {
-    id: preset.id,
-    label: preset.label,
-    description: preset.description,
-    entityId: preset.entity_id,
-    features: preset.features,
-  };
-}
-
-function mapScenario(scenario: DipObservatoryApiScenario): ObservatoryScenario {
-  return {
-    id: scenario.id,
-    name: scenario.name,
-    description: scenario.description,
-    domain: scenario.domain,
-    modelId: scenario.model_id,
-    datasetId: scenario.dataset_id,
-    stateAxes: scenario.state_axes,
-    fields: scenario.fields.map(mapScenarioField),
-    presets: scenario.presets.map(mapScenarioPreset),
-  };
-}
-
-function mapRunResult(
-  result: DipObservatoryApiRunResult,
-): ObservatoryRunResult {
-  return {
-    id: result.id,
-    label: result.label,
-    entityId: result.entity_id,
-    inputFeatures: result.input_features,
-    prediction: result.prediction,
-    decision: result.decision,
-    matchedRule: result.matched_rule,
-    confidence: result.confidence,
-    uncertainty: {
-      score: result.uncertainty.score,
-      label: result.uncertainty.label,
-      intervalLow: result.uncertainty.interval_low,
-      intervalHigh: result.uncertainty.interval_high,
-    },
-    risk: result.risk,
-    systemStability: result.system_stability,
-    propagationRisk: result.propagation_risk,
-    currentState: result.current_state,
-    predictedState: result.predicted_state,
-    feasibleStateSpace: result.feasible_state_space,
-    trajectories: result.trajectories,
-    alternativeDecisions: result.alternative_decisions,
-    ruleTraces: result.rule_traces,
-    explanation: result.explanation,
-    executionTimeMs: result.execution_time_ms,
-  };
-}
-
-function mapRunResponse(
-  response: DipObservatoryApiRunResponse,
-): ObservatoryRunResponse {
-  return {
-    scenario: mapScenario(response.scenario),
-    executedAt: response.executed_at,
-    results: response.results.map(mapRunResult),
-    warnings: response.warnings,
-  };
 }
 
 async function parseResponse<T>(response: Response, schema: z.ZodType<T>) {
@@ -226,7 +140,7 @@ export async function getObservatoryBootstrapPayload(): Promise<ObservatoryBoots
   const connection = getDipConnectionState();
 
   if (!connection.configured) {
-    return observatoryBootstrapPayloadSchema.parse({
+    return buildObservatoryBootstrapPayload({
       connection: {
         configured: false,
         healthy: false,
@@ -234,11 +148,15 @@ export async function getObservatoryBootstrapPayload(): Promise<ObservatoryBoots
         scenarioCatalogAvailable: false,
         runSurfaceAvailable: false,
       },
-      scenarios: [],
-      selectedScenarioId: null,
+      apiScenarios: [],
       warnings: [
         "Set DIP_API_BASE_URL and DIP_API_KEY to connect Observatory to DIP.",
       ],
+      demoConfig: {
+        enabledRaw: process.env.DIP_OBSERVATORY_DEMO_MODE,
+        scenarioIdRaw: process.env.DIP_OBSERVATORY_DEMO_SCENARIO_ID,
+        labelRaw: process.env.DIP_OBSERVATORY_DEMO_LABEL,
+      },
     });
   }
 
@@ -254,7 +172,8 @@ export async function getObservatoryBootstrapPayload(): Promise<ObservatoryBoots
 
   if (scenariosResult.error) warnings.push(scenariosResult.error);
 
-  const scenarios = scenariosResult.data?.items.map(mapScenario) ?? [];
+  const scenarios: DipObservatoryApiScenario[] =
+    scenariosResult.data?.items ?? [];
 
   if (scenarios.length === 0) {
     warnings.push(
@@ -262,7 +181,7 @@ export async function getObservatoryBootstrapPayload(): Promise<ObservatoryBoots
     );
   }
 
-  return observatoryBootstrapPayloadSchema.parse({
+  return buildObservatoryBootstrapPayload({
     connection: {
       configured: true,
       healthy: healthResult.data?.status === "ok",
@@ -271,16 +190,20 @@ export async function getObservatoryBootstrapPayload(): Promise<ObservatoryBoots
       runSurfaceAvailable:
         healthResult.data?.status === "ok" && scenarios.length > 0,
     },
-    scenarios,
-    selectedScenarioId: scenarios[0]?.id ?? null,
+    apiScenarios: scenarios,
     warnings,
+    demoConfig: {
+      enabledRaw: process.env.DIP_OBSERVATORY_DEMO_MODE,
+      scenarioIdRaw: process.env.DIP_OBSERVATORY_DEMO_SCENARIO_ID,
+      labelRaw: process.env.DIP_OBSERVATORY_DEMO_LABEL,
+    },
   });
 }
 
 export async function runDipObservatoryScenario(
   request: ObservatoryRunRequest,
 ): Promise<ObservatoryRunResponse> {
-  const response = await dipFetch(
+  const response: DipObservatoryApiRunResponse = await dipFetch(
     "/api/v1/observatory/run",
     dipObservatoryApiRunResponseSchema,
     {
@@ -297,7 +220,7 @@ export async function runDipObservatoryScenario(
     },
   );
 
-  return observatoryRunResponseSchema.parse(mapRunResponse(response));
+  return mapRunResponse(response);
 }
 
 export { DipApiError };

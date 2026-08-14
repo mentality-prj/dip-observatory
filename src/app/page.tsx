@@ -1,11 +1,14 @@
-import { connection } from "next/server";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { DecisionCanvas } from "@/components/observatory/decision-canvas";
-import { getObservatoryBootstrapPayload } from "@/lib/dip-api";
+import {
+  buildLocalePath,
+  detectLocaleFromHeader,
+} from "@/lib/observatory-i18n";
 
 export default async function Home() {
-  await connection();
-  const initialPayload = await getObservatoryBootstrapPayload();
+  const headersList = await headers();
+  const locale = detectLocaleFromHeader(headersList.get("accept-language"));
 
-  return <DecisionCanvas initialPayload={initialPayload} />;
+  redirect(buildLocalePath("/", locale));
 }

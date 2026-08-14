@@ -5,6 +5,7 @@ import type {
   ObservatoryRunResult,
   ObservatoryScenario,
 } from "@/lib/dip-contracts";
+import type { ObservatoryCopy } from "@/lib/observatory-i18n";
 
 export type Tone = "cyan" | "emerald" | "amber" | "rose";
 
@@ -157,14 +158,19 @@ function getTrajectoryPoint(
   );
 }
 
-function buildEvidenceBullets(result: ObservatoryRunResult) {
-  return result.ruleTraces
+function buildEvidenceBullets(
+  result: ObservatoryRunResult,
+  copy: ObservatoryCopy,
+) {
+  return (result.ruleTraces ?? [])
     .flatMap((trace) =>
-      trace.evidence.map((evidence) => {
-        const status = evidence.passed ? "pass" : "fail";
+      (trace.evidence ?? []).map((evidence) => {
+        const status = evidence.passed
+          ? copy.evidence.pass
+          : copy.evidence.fail;
         return `${trace.rule_name}: ${evidence.feature} ${evidence.operator} ${formatScalar(
           evidence.threshold,
-        )} | observed ${formatScalar(evidence.actual_value)} | ${status}`;
+        )} | ${copy.evidence.observed} ${formatScalar(evidence.actual_value)} | ${status}`;
       }),
     )
     .slice(0, 6);
@@ -173,6 +179,7 @@ function buildEvidenceBullets(result: ObservatoryRunResult) {
 export function buildStateSpaceTrajectories(params: {
   scenario: ObservatoryScenario | null;
   runResponse: ObservatoryRunResponse | null;
+  copy: ObservatoryCopy;
 }) {
   if (!params.scenario || !params.runResponse) {
     return [] satisfies StateSpaceTrajectory[];
@@ -180,11 +187,11 @@ export function buildStateSpaceTrajectories(params: {
 
   const xAxis = params.scenario.stateAxes[0] ?? {
     key: "pressure",
-    label: "Pressure",
+    label: params.copy.chart.axisFallbackX,
   };
   const yAxis = params.scenario.stateAxes[1] ?? {
     key: "readiness",
-    label: "Readiness",
+    label: params.copy.chart.axisFallbackY,
   };
 
   return params.runResponse.results.map((result, index) => {
@@ -267,7 +274,7 @@ export function buildStateSpaceTrajectories(params: {
       },
       alternativeDecisions: result.alternativeDecisions,
       explanationBullets: result.explanation.slice(0, 8),
-      evidenceBullets: buildEvidenceBullets(result),
+      evidenceBullets: buildEvidenceBullets(result, params.copy),
       executionTimeMs: result.executionTimeMs,
     } satisfies StateSpaceTrajectory;
   });
@@ -275,19 +282,20 @@ export function buildStateSpaceTrajectories(params: {
 
 export function buildMetricChips(
   trajectory: StateSpaceTrajectory | null,
+  copy: ObservatoryCopy,
 ): MetricChip[] {
   if (!trajectory) return [];
 
   return [
     {
-      label: "Decision",
+      label: copy.metrics.decision,
       value: trajectory.metrics.decision,
       tone: getDecisionTone(trajectory.metrics.decision),
       source: "api",
-      detail: "Returned by the DIP observatory scenario workflow.",
+      detail: copy.metrics.decisionDetail,
     },
     {
-      label: "Confidence",
+      label: copy.metrics.confidence,
       value: formatPercent(trajectory.metrics.confidence),
       tone:
         trajectory.metrics.confidence >= 0.75
@@ -296,10 +304,10 @@ export function buildMetricChips(
             ? "amber"
             : "rose",
       source: "api",
-      detail: "API-sourced confidence for the selected scenario branch.",
+      detail: copy.metrics.confidenceDetail,
     },
     {
-      label: "Uncertainty",
+      label: copy.metrics.uncertainty,
       value: `${trajectory.metrics.uncertaintyLabel} (${formatPercent(trajectory.metrics.uncertainty)})`,
       tone:
         trajectory.metrics.uncertainty >= 0.45
@@ -308,10 +316,10 @@ export function buildMetricChips(
             ? "amber"
             : "emerald",
       source: "api",
-      detail: "Returned by the DIP observatory run contract.",
+      detail: copy.metrics.uncertaintyDetail,
     },
     {
-      label: "Risk",
+      label: copy.metrics.risk,
       value: formatPercent(trajectory.metrics.risk),
       tone:
         trajectory.metrics.risk >= 0.7
@@ -320,10 +328,10 @@ export function buildMetricChips(
             ? "amber"
             : "emerald",
       source: "api",
-      detail: "Scenario-level branch risk returned directly by DIP.",
+      detail: copy.metrics.riskDetail,
     },
     {
-      label: "System Stability",
+      label: copy.metrics.systemStability,
       value: formatPercent(trajectory.metrics.systemStability),
       tone:
         trajectory.metrics.systemStability >= 0.7
@@ -332,10 +340,10 @@ export function buildMetricChips(
             ? "amber"
             : "rose",
       source: "api",
-      detail: "API-sourced system stability metric from the observatory run.",
+      detail: copy.metrics.systemStabilityDetail,
     },
     {
-      label: "Propagation Risk",
+      label: copy.metrics.propagationRisk,
       value: formatPercent(trajectory.metrics.propagationRisk),
       tone:
         trajectory.metrics.propagationRisk >= 0.7
@@ -344,12 +352,15 @@ export function buildMetricChips(
             ? "amber"
             : "emerald",
       source: "api",
-      detail: "API-sourced downstream risk propagation indicator.",
+      detail: copy.metrics.propagationRiskDetail,
     },
   ];
 }
 
-export function buildComparisonDeltas(trajectories: StateSpaceTrajectory[]) {
+export function buildComparisonDeltas(
+  trajectories: StateSpaceTrajectory[],
+  copy: ObservatoryCopy,
+) {
   if (trajectories.length < 2) return [];
 
   const [baseline, challenger] = trajectories;
@@ -361,13 +372,13 @@ export function buildComparisonDeltas(trajectories: StateSpaceTrajectory[]) {
 
   return [
     {
-      label: "Risk Delta",
+      label: copy.metrics.riskDelta,
       value: formatSignedPercent(riskDelta),
       tone: riskDelta > 0.08 ? "rose" : riskDelta < -0.08 ? "emerald" : "amber",
-      detail: `${challenger.label} versus ${baseline.label} from the same DIP scenario run.`,
+      detail: `${challenger.label} / ${baseline.label} ${copy.metrics.versusDetail}`,
     },
     {
-      label: "Confidence Delta",
+      label: copy.metrics.confidenceDelta,
       value: formatSignedPercent(confidenceDelta),
       tone:
         confidenceDelta > 0.05
@@ -375,10 +386,10 @@ export function buildComparisonDeltas(trajectories: StateSpaceTrajectory[]) {
           : confidenceDelta < -0.05
             ? "rose"
             : "amber",
-      detail: `${challenger.label} versus ${baseline.label} from the same DIP scenario run.`,
+      detail: `${challenger.label} / ${baseline.label} ${copy.metrics.versusDetail}`,
     },
     {
-      label: "Stability Delta",
+      label: copy.metrics.stabilityDelta,
       value: formatSignedPercent(stabilityDelta),
       tone:
         stabilityDelta > 0.05
@@ -386,10 +397,10 @@ export function buildComparisonDeltas(trajectories: StateSpaceTrajectory[]) {
           : stabilityDelta < -0.05
             ? "rose"
             : "amber",
-      detail: "Difference between API-returned stability outcomes.",
+      detail: copy.metrics.stabilityDeltaDetail,
     },
     {
-      label: "Decision Shift",
+      label: copy.metrics.decisionShift,
       value:
         baseline.metrics.decision === challenger.metrics.decision
           ? baseline.metrics.decision
@@ -398,40 +409,40 @@ export function buildComparisonDeltas(trajectories: StateSpaceTrajectory[]) {
         baseline.metrics.decision === challenger.metrics.decision
           ? "cyan"
           : getDecisionTone(challenger.metrics.decision),
-      detail:
-        "Shows whether the alternative path changes the selected DIP decision.",
+      detail: copy.metrics.decisionShiftDetail,
     },
   ] satisfies ComparisonDelta[];
 }
 
 export function buildTimelinePoints(
   trajectory: StateSpaceTrajectory | null,
+  copy: ObservatoryCopy,
 ): TimelinePoint[] {
   if (!trajectory) return [];
 
   return [
     {
-      label: "Current State",
+      label: copy.timeline.currentState,
       score: trajectory.current.risk,
       detail: trajectory.current.detail,
       tone: "cyan",
     },
     {
-      label: "Predicted State",
+      label: copy.timeline.predictedState,
       score: trajectory.predicted.risk,
       detail: trajectory.predicted.detail,
       tone: getDecisionTone(trajectory.metrics.decision),
     },
     {
-      label: "Optimistic Branch",
+      label: copy.timeline.optimisticBranch,
       score: trajectory.futures[0]?.risk ?? trajectory.metrics.risk,
-      detail: trajectory.futures[0]?.detail ?? "No branch available",
+      detail: trajectory.futures[0]?.detail ?? copy.timeline.noBranchAvailable,
       tone: "emerald",
     },
     {
-      label: "Conservative Branch",
+      label: copy.timeline.conservativeBranch,
       score: trajectory.futures[1]?.risk ?? trajectory.metrics.risk,
-      detail: trajectory.futures[1]?.detail ?? "No branch available",
+      detail: trajectory.futures[1]?.detail ?? copy.timeline.noBranchAvailable,
       tone: "rose",
     },
   ];

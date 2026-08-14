@@ -252,6 +252,14 @@ export const observatoryRunResponseSchema = z.object({
   warnings: z.array(z.string()).default([]),
 });
 
+export const observatoryDemoModeSchema = z.object({
+  enabled: z.boolean(),
+  label: z.string(),
+  scenarioId: z.string().nullable().default(null),
+  lockScenario: z.boolean().default(false),
+  lockAlternatives: z.boolean().default(false),
+});
+
 export const observatoryBootstrapPayloadSchema = z.object({
   connection: z.object({
     configured: z.boolean(),
@@ -260,6 +268,7 @@ export const observatoryBootstrapPayloadSchema = z.object({
     scenarioCatalogAvailable: z.boolean(),
     runSurfaceAvailable: z.boolean(),
   }),
+  demoMode: observatoryDemoModeSchema,
   scenarios: z.array(observatoryScenarioSchema).default([]),
   selectedScenarioId: z.string().nullable().default(null),
   warnings: z.array(z.string()).default([]),
@@ -308,6 +317,7 @@ export type ObservatoryRunResult = z.infer<typeof observatoryRunResultSchema>;
 export type ObservatoryRunResponse = z.infer<
   typeof observatoryRunResponseSchema
 >;
+export type ObservatoryDemoMode = z.infer<typeof observatoryDemoModeSchema>;
 export type ObservatoryBootstrapPayload = z.infer<
   typeof observatoryBootstrapPayloadSchema
 >;

@@ -1,8 +1,10 @@
 import type { TimelinePoint } from "@/lib/observatory-derive";
+import type { ObservatoryCopy } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 
 type Props = {
   points: TimelinePoint[];
+  copy: ObservatoryCopy;
 };
 
 const toneMap = {
@@ -12,11 +14,11 @@ const toneMap = {
   rose: "bg-rose-300",
 };
 
-export function StateTimeline({ points }: Props) {
+export function StateTimeline({ points, copy }: Props) {
   if (points.length === 0) {
     return (
       <div className="rounded-[24px] border border-dashed border-white/10 bg-white/4 px-5 py-6 text-sm text-slate-400">
-        Timeline becomes available after the first live DIP observatory run.
+        {copy.timeline.empty}
       </div>
     );
   }
