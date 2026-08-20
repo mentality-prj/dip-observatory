@@ -334,6 +334,7 @@ function createRunResponse(
   return {
     scenario,
     executed_at: "2026-08-14T12:00:00.000Z",
+    version: "1.0",
     warnings: [],
     results: alternatives.map((alternative, index) => {
       const prediction = Number((0.66 - index * 0.12).toFixed(2));

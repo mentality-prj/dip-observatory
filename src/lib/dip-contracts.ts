@@ -57,6 +57,7 @@ export const dipObservatoryApiScenarioSchema = z.object({
 
 export const dipObservatoryApiScenariosResponseSchema = z.object({
   items: z.array(dipObservatoryApiScenarioSchema).default([]),
+  version: z.string().default("1.0"),
 });
 
 export const dipObservatoryApiStateRangeSchema = z.object({
@@ -129,6 +130,7 @@ export const dipObservatoryApiRunResponseSchema = z.object({
   executed_at: z.string(),
   results: z.array(dipObservatoryApiRunResultSchema).default([]),
   warnings: z.array(z.string()).default([]),
+  version: z.string().default("1.0"),
 });
 
 export const observatoryStateAxisSchema = z.object({
