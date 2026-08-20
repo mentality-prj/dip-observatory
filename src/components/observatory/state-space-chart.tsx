@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import * as d3 from "d3";
 
 import type { StateSpaceTrajectory } from "@/lib/observatory-derive";
@@ -12,6 +12,7 @@ type Props = {
   selectedAlternativeId: string | null;
   status: "idle" | "loading" | "success" | "error";
   hasRun: boolean;
+  revealStep: number;
   axisLabels: {
     x: string;
     y: string;
@@ -25,12 +26,32 @@ export function StateSpaceChart({
   selectedAlternativeId,
   status,
   hasRun,
+  revealStep,
   axisLabels,
   copy,
   onSelect,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // persist scales and chart group between the two effects
+  const chartRef = useRef<d3.Selection<
+    SVGGElement,
+    unknown,
+    null,
+    undefined
+  > | null>(null);
+  const scalesRef = useRef<{
+    x: d3.ScaleLinear<number, number>;
+    y: d3.ScaleLinear<number, number>;
+    margin: { top: number; right: number; bottom: number; left: number };
+  } | null>(null);
+  // ref so Effect 2 always has latest trajectories without being in its deps
+  const trajectoriesRef = useRef<typeof trajectories>([]);
+  // useLayoutEffect runs synchronously before paint — safe for ref sync
+  useLayoutEffect(() => {
+    trajectoriesRef.current = trajectories;
+  });
 
+  // Effect 1: draw static background, grid, and axes once per trajectory set
   useEffect(() => {
     if (!svgRef.current) return;
 
@@ -43,6 +64,7 @@ export function StateSpaceChart({
     svg.attr("viewBox", `0 0 ${width} ${height}`);
 
     const chart = svg.append("g");
+    chartRef.current = chart;
 
     chart
       .append("rect")
@@ -61,6 +83,7 @@ export function StateSpaceChart({
       .scaleLinear()
       .domain([0, 1])
       .range([height - margin.bottom, margin.top]);
+    scalesRef.current = { x: xScale, y: yScale, margin };
 
     const xTicks = xScale.ticks(5);
     const yTicks = yScale.ticks(5);
@@ -143,119 +166,239 @@ export function StateSpaceChart({
       .attr("letter-spacing", "0.22em")
       .text(axisLabels?.y ?? copy.chart.axisFallbackY);
 
-    if (trajectories.length === 0) {
+    // separate group for trajectory elements so Effect 2 can clear only them
+    chart.append("g").attr("class", "trajectories-layer");
+  }, [
+    axisLabels?.x,
+    axisLabels?.y,
+    copy.chart.axisFallbackX,
+    copy.chart.axisFallbackY,
+  ]);
+
+  // Effect 2: add animated elements per revealStep — never clears the whole SVG
+  useEffect(() => {
+    const chart = chartRef.current;
+    const scales = scalesRef.current;
+    const currentTrajectories = trajectoriesRef.current;
+    if (
+      !chart ||
+      !scales ||
+      currentTrajectories.length === 0 ||
+      revealStep === 0
+    )
       return;
+
+    const { x: xScale, y: yScale, margin } = scales;
+
+    // clear only trajectory elements from the previous step
+    chart.select(".trajectories-layer").selectAll("*").remove();
+    chart.selectAll(".step-label").remove();
+
+    // reveal step 0 = nothing; elements fade/animate in as revealStep increases
+    const STEP_LABELS: Record<number, string> = {
+      1: "STATE",
+      2: "ALTERNATIVES",
+      3: "RISK",
+      4: "DECISION",
+    };
+    const stepLabel = STEP_LABELS[revealStep];
+    if (stepLabel) {
+      chart
+        .append("text")
+        .attr("class", "step-label")
+        .attr("x", margin.left + 8)
+        .attr("y", margin.top + 16)
+        .attr("fill", "rgba(103, 232, 249, 0.72)")
+        .attr("font-size", 11)
+        .attr("font-weight", 700)
+        .attr("letter-spacing", "0.28em")
+        .attr("opacity", 0)
+        .text(stepLabel)
+        .transition()
+        .duration(220)
+        .attr("opacity", 1);
     }
 
-    trajectories.forEach((trajectory, index) => {
+    // reveal step 0 = nothing; elements fade/animate in as revealStep increases
+    const FADE_DURATION = 500;
+    const LINE_DURATION = 700;
+
+    const layer = chart.select<SVGGElement>(".trajectories-layer");
+
+    currentTrajectories.forEach((trajectory, index) => {
       const isSelected =
         selectedAlternativeId === null
           ? index === 0
           : trajectory.id === selectedAlternativeId;
-      const group = chart
+      // step 2+: dim non-selected trajectories so winner is dominant
+      const groupOpacity = revealStep >= 2 && !isSelected ? 0.28 : 1;
+      const group = layer
         .append("g")
         .attr("class", "cursor-pointer")
+        .attr("opacity", groupOpacity)
         .on("click", () => onSelect(trajectory.id));
 
-      group
-        .append("circle")
-        .attr("cx", xScale(trajectory.predicted.x))
-        .attr("cy", yScale(trajectory.predicted.y))
-        .attr("r", trajectory.uncertaintyRadius * 220)
-        .attr("fill", trajectory.color)
-        .attr("fill-opacity", isSelected ? 0.16 : 0.08)
-        .attr("stroke", trajectory.color)
-        .attr("stroke-opacity", isSelected ? 0.56 : 0.26)
-        .attr("stroke-dasharray", "8 10");
-
-      group
-        .append("line")
-        .attr("x1", xScale(trajectory.current.x))
-        .attr("y1", yScale(trajectory.current.y))
-        .attr("x2", xScale(trajectory.predicted.x))
-        .attr("y2", yScale(trajectory.predicted.y))
-        .attr("stroke", trajectory.color)
-        .attr("stroke-width", isSelected ? 3.2 : 2.1)
-        .attr("stroke-opacity", isSelected ? 0.92 : 0.62);
-
-      trajectory.futures.forEach((future) => {
-        group
-          .append("line")
-          .attr("x1", xScale(trajectory.predicted.x))
-          .attr("y1", yScale(trajectory.predicted.y))
-          .attr("x2", xScale(future.x))
-          .attr("y2", yScale(future.y))
-          .attr("stroke", trajectory.color)
-          .attr("stroke-width", 1.6)
-          .attr("stroke-opacity", 0.7)
-          .attr(
-            "stroke-dasharray",
-            future.kind === "optimistic" ? "4 6" : "8 7",
-          );
-      });
-
-      group
-        .append("circle")
-        .attr("cx", xScale(trajectory.current.x))
-        .attr("cy", yScale(trajectory.current.y))
-        .attr("r", isSelected ? 8.5 : 7)
-        .attr("fill", "#f8fafc")
-        .attr("stroke", trajectory.color)
-        .attr("stroke-width", isSelected ? 2.2 : 1.5);
-
-      group
-        .append("circle")
-        .attr("cx", xScale(trajectory.predicted.x))
-        .attr("cy", yScale(trajectory.predicted.y))
-        .attr("r", isSelected ? 10 : 8)
-        .attr("fill", trajectory.color)
-        .attr("stroke", "rgba(248,250,252,0.9)")
-        .attr("stroke-width", isSelected ? 2.5 : 1.8);
-
-      trajectory.futures.forEach((future) => {
+      // step 3+: uncertainty envelope
+      if (revealStep >= 3) {
         group
           .append("circle")
-          .attr("cx", xScale(future.x))
-          .attr("cy", yScale(future.y))
-          .attr("r", 5.5)
-          .attr("fill", future.kind === "optimistic" ? "#4ade80" : "#f97316")
-          .attr("stroke", "rgba(248,250,252,0.82)")
-          .attr("stroke-width", 1.2);
-      });
+          .attr("cx", xScale(trajectory.predicted.x))
+          .attr("cy", yScale(trajectory.predicted.y))
+          .attr("r", trajectory.uncertaintyRadius * 220)
+          .attr("fill", trajectory.color)
+          .attr("fill-opacity", 0)
+          .attr("stroke", trajectory.color)
+          .attr("stroke-opacity", 0)
+          .attr("stroke-dasharray", "8 10")
+          .transition()
+          .duration(FADE_DURATION)
+          .attr("fill-opacity", isSelected ? 0.16 : 0.08)
+          .attr("stroke-opacity", isSelected ? 0.56 : 0.26);
+      }
 
-      group
-        .append("text")
-        .attr("x", xScale(trajectory.current.x) + 12)
-        .attr("y", yScale(trajectory.current.y) - 12)
-        .attr("fill", "rgba(241, 245, 249, 0.88)")
-        .attr("font-size", 11)
-        .text(trajectory.current.label);
+      // step 2+: trajectory line with dash-offset animation
+      if (revealStep >= 2) {
+        const lineEl = group
+          .append("line")
+          .attr("x1", xScale(trajectory.current.x))
+          .attr("y1", yScale(trajectory.current.y))
+          .attr("x2", xScale(trajectory.predicted.x))
+          .attr("y2", yScale(trajectory.predicted.y))
+          .attr("stroke", trajectory.color)
+          .attr("stroke-width", isSelected ? 3.2 : 2.1)
+          .attr("stroke-opacity", 0);
 
-      group
-        .append("text")
-        .attr("x", xScale(trajectory.predicted.x) + 12)
-        .attr("y", yScale(trajectory.predicted.y) - 14)
-        .attr("fill", trajectory.color)
-        .attr("font-size", 12)
-        .attr("font-weight", 600)
-        .text(trajectory.label);
+        const length = Math.hypot(
+          xScale(trajectory.predicted.x) - xScale(trajectory.current.x),
+          yScale(trajectory.predicted.y) - yScale(trajectory.current.y),
+        );
+        lineEl
+          .attr("stroke-dasharray", length)
+          .attr("stroke-dashoffset", length)
+          .transition()
+          .duration(LINE_DURATION)
+          .attr("stroke-opacity", isSelected ? 0.92 : 0.62)
+          .attr("stroke-dashoffset", 0);
+      }
 
-      group
-        .append("text")
-        .attr("x", xScale(trajectory.predicted.x) + 12)
-        .attr("y", yScale(trajectory.predicted.y) + 4)
-        .attr("fill", "rgba(203, 213, 225, 0.76)")
-        .attr("font-size", 11)
-        .text(trajectory.predicted.detail);
+      // step 3+: future branch lines
+      if (revealStep >= 3) {
+        trajectory.futures.forEach((future) => {
+          const fl = group
+            .append("line")
+            .attr("x1", xScale(trajectory.predicted.x))
+            .attr("y1", yScale(trajectory.predicted.y))
+            .attr("x2", xScale(future.x))
+            .attr("y2", yScale(future.y))
+            .attr("stroke", trajectory.color)
+            .attr("stroke-width", 1.6)
+            .attr("stroke-opacity", 0)
+            .attr(
+              "stroke-dasharray",
+              future.kind === "optimistic" ? "4 6" : "8 7",
+            );
+          const fl_len = Math.hypot(
+            xScale(future.x) - xScale(trajectory.predicted.x),
+            yScale(future.y) - yScale(trajectory.predicted.y),
+          );
+          fl.attr("stroke-dashoffset", fl_len)
+            .transition()
+            .duration(LINE_DURATION)
+            .attr("stroke-opacity", 0.7)
+            .attr("stroke-dashoffset", 0);
+        });
+      }
+
+      // step 1+: current state node
+      if (revealStep >= 1) {
+        group
+          .append("circle")
+          .attr("cx", xScale(trajectory.current.x))
+          .attr("cy", yScale(trajectory.current.y))
+          .attr("r", 0)
+          .attr("fill", "#f8fafc")
+          .attr("stroke", trajectory.color)
+          .attr("stroke-width", isSelected ? 2.2 : 1.5)
+          .transition()
+          .duration(FADE_DURATION)
+          .attr("r", isSelected ? 8.5 : 7);
+
+        group
+          .append("text")
+          .attr("x", xScale(trajectory.current.x) + 12)
+          .attr("y", yScale(trajectory.current.y) - 12)
+          .attr("fill", "rgba(241, 245, 249, 0.88)")
+          .attr("font-size", 11)
+          .attr("opacity", 0)
+          .text(trajectory.current.label)
+          .transition()
+          .delay(200)
+          .duration(FADE_DURATION)
+          .attr("opacity", 1);
+      }
+
+      // step 2+: predicted state node (brighter, larger) + label
+      if (revealStep >= 2) {
+        group
+          .append("circle")
+          .attr("cx", xScale(trajectory.predicted.x))
+          .attr("cy", yScale(trajectory.predicted.y))
+          .attr("r", 0)
+          .attr("fill", trajectory.color)
+          .attr("stroke", "rgba(248,250,252,0.9)")
+          .attr("stroke-width", isSelected ? 2.5 : 1.8)
+          .transition()
+          .delay(LINE_DURATION * 0.7)
+          .duration(FADE_DURATION)
+          .attr("r", isSelected ? 10 : 8);
+
+        group
+          .append("text")
+          .attr("x", xScale(trajectory.predicted.x) + 12)
+          .attr("y", yScale(trajectory.predicted.y) - 14)
+          .attr("fill", trajectory.color)
+          .attr("font-size", 12)
+          .attr("font-weight", 600)
+          .attr("opacity", 0)
+          .text(trajectory.label)
+          .transition()
+          .delay(LINE_DURATION)
+          .duration(FADE_DURATION)
+          .attr("opacity", 1);
+
+        group
+          .append("text")
+          .attr("x", xScale(trajectory.predicted.x) + 12)
+          .attr("y", yScale(trajectory.predicted.y) + 4)
+          .attr("fill", "rgba(203, 213, 225, 0.76)")
+          .attr("font-size", 11)
+          .attr("opacity", 0)
+          .text(trajectory.predicted.detail)
+          .transition()
+          .delay(LINE_DURATION)
+          .duration(FADE_DURATION)
+          .attr("opacity", 1);
+      }
+
+      // step 3+: future nodes
+      if (revealStep >= 3) {
+        trajectory.futures.forEach((future) => {
+          group
+            .append("circle")
+            .attr("cx", xScale(future.x))
+            .attr("cy", yScale(future.y))
+            .attr("r", 0)
+            .attr("fill", future.kind === "optimistic" ? "#4ade80" : "#f97316")
+            .attr("stroke", "rgba(248,250,252,0.82)")
+            .attr("stroke-width", 1.2)
+            .transition()
+            .delay(LINE_DURATION * 0.6)
+            .duration(FADE_DURATION)
+            .attr("r", 5.5);
+        });
+      }
     });
-  }, [
-    axisLabels,
-    copy.chart.axisFallbackX,
-    copy.chart.axisFallbackY,
-    trajectories,
-    selectedAlternativeId,
-    onSelect,
-  ]);
+  }, [revealStep, selectedAlternativeId, onSelect]);
 
   return (
     <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.12),transparent_42%),linear-gradient(180deg,rgba(10,16,30,0.86),rgba(5,8,16,0.98))]">
@@ -266,7 +409,10 @@ export function StateSpaceChart({
       />
 
       {!hasRun ? (
-        <div className="pointer-events-none absolute inset-x-6 bottom-6 rounded-3xl border border-cyan-300/15 bg-slate-950/68 px-5 py-4 backdrop-blur">
+        <div
+          data-testid="chart-waiting"
+          className="pointer-events-none absolute inset-x-6 bottom-6 rounded-3xl border border-cyan-300/15 bg-slate-950/68 px-5 py-4 backdrop-blur"
+        >
           <p className="text-sm font-medium text-cyan-100">
             {copy.chart.waitingTitle}
           </p>

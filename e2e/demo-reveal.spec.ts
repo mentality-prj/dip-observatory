@@ -56,9 +56,6 @@ test.describe("demo mode: Run → sequential reveal → final decision", () => {
     const isDisabled = await scenarioSelect.isDisabled();
 
     if (isDisabled) {
-      // verify exactly one scenario is pinned
-      const options = await scenarioSelect.locator("option").all();
-      // locked mode keeps selector but marks it disabled — options may still be present
       await expect(scenarioSelect).toBeDisabled();
     } else {
       // non-demo mode: can switch scenarios

@@ -1,18 +1,22 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   Activity,
   AlertTriangle,
-  ArrowRightLeft,
+  ChevronLeft,
   Gauge,
-  Layers3,
-  Orbit,
+  Pause,
   Play,
   RefreshCcw,
   Sparkles,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { StateSpaceChart } from "@/components/observatory/state-space-chart";
@@ -63,7 +67,7 @@ const badgeTone = {
 } as const;
 
 const panelIconClass =
-  "h-11 w-11 shrink-0 rounded-2xl border border-cyan-300/12 bg-cyan-300/8 p-2.5 text-cyan-100 shadow-[0_0_28px_rgba(34,211,238,0.14)]";
+  "h-8 w-8 shrink-0 rounded-xl border border-white/10 bg-white/5 p-1.5 text-slate-400";
 
 type LeftPanelTab = "catalog" | "inputs";
 type RightPanelTab = "overview" | "alternatives" | "evidence";
@@ -75,6 +79,10 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
   const [isLocalePending, startLocaleTransition] = useTransition();
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>("catalog");
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>("overview");
+  // 0=idle 1=current 2=predicted+trajectory 3=futures+uncertainty 4=done
+  const [revealStep, setRevealStep] = useState(0);
+  // track scheduled timeouts so Stop can cancel them
+  const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const {
     bootstrap,
     demoMode,
@@ -160,6 +168,46 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
     new Set([...activePayload.warnings, ...(runResponse?.warnings ?? [])]),
   );
 
+  const MAX_STEP = 4;
+  const isPlaying =
+    Boolean(runResponse) && revealStep > 0 && revealStep < MAX_STEP;
+  const isDone = Boolean(runResponse) && revealStep >= MAX_STEP;
+
+  function scheduleReveal() {
+    const delays = [1600, 3400, 5400, 7800];
+    pendingTimersRef.current = delays.map((delay, i) =>
+      setTimeout(() => setRevealStep(i + 1), delay),
+    );
+  }
+
+  function cancelTimers() {
+    pendingTimersRef.current.forEach(clearTimeout);
+    pendingTimersRef.current = [];
+  }
+
+  function handleStop() {
+    cancelTimers();
+  }
+
+  function handlePlay() {
+    if (!runResponse || revealStep >= MAX_STEP) return;
+    cancelTimers();
+    // schedule remaining steps relative to now
+    const stepDelays = [900, 1900, 2900, 4100];
+    const remaining = Array.from(
+      { length: MAX_STEP - revealStep },
+      (_, i) => revealStep + 1 + i,
+    );
+    pendingTimersRef.current = remaining.map((step, i) =>
+      setTimeout(() => setRevealStep(step), stepDelays[i] ?? (i + 1) * 1000),
+    );
+  }
+
+  function handleBack() {
+    cancelTimers();
+    setRevealStep((s) => Math.max(0, s - 1));
+  }
+
   async function handleRun() {
     if (
       !scenario ||
@@ -195,7 +243,10 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
       }
 
       setRightPanelTab("overview");
+      setRevealStep(0);
+      cancelTimers();
       setSuccess(observatoryRunResponseSchema.parse(payload));
+      scheduleReveal();
     } catch (runError) {
       setError(
         runError instanceof Error
@@ -208,112 +259,47 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-6 md:px-6 xl:px-10">
       <div className="mx-auto flex w-full max-w-[1700px] flex-col gap-6">
-        <div className="flex justify-end">
-          <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[28px] border border-white/10 bg-white/5 px-4 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.24)] backdrop-blur-xl">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-              {copy.localeLabel}
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {SUPPORTED_LOCALES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => {
-                    if (option === locale) return;
-                    startLocaleTransition(() => {
-                      router.replace(buildLocalePath(pathname, option));
-                    });
-                  }}
-                  disabled={isLocalePending}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-sm transition",
-                    locale === option
-                      ? "bg-cyan-300/20 text-cyan-50"
-                      : "text-slate-400 hover:bg-white/8 hover:text-white",
-                    isLocalePending &&
-                      "cursor-not-allowed opacity-70 hover:bg-transparent hover:text-slate-400",
-                  )}
-                >
-                  {copy.localeOptions[option]}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <header className="grid gap-5 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(11,17,31,0.96),rgba(7,10,18,0.98))] px-6 py-6 shadow-[0_24px_90px_rgba(0,0,0,0.32)] lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="cyan">DIP Observatory</Badge>
-              <Badge
-                variant={
-                  activePayload.connection.configured ? "emerald" : "amber"
-                }
-              >
-                {copy.shell.frontendClientOnly}
-              </Badge>
+        {/* Compact top bar: title left, locale selector right */}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold tracking-[0.22em] uppercase text-cyan-400">
+                DIP Observatory
+              </span>
               {demoMode.enabled ? (
-                <Badge variant="amber">{demoMode.label}</Badge>
+                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-0.5 text-[11px] text-amber-200">
+                  {demoMode.label}
+                </span>
               ) : null}
-              <Badge variant="neutral">
-                {copy.shell.decisionSemanticsStay}
-              </Badge>
             </div>
-            <div>
-              <h1 className="max-w-4xl text-3xl font-semibold tracking-tight text-white md:text-[2.7rem]">
-                {copy.shell.title}
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 md:text-base">
-                {copy.shell.description}
-              </p>
-            </div>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">
+              {localizedScenario?.name ?? copy.shell.title}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {copy.shell.frontendClientOnly} ·{" "}
+              {copy.shell.decisionSemanticsStay}
+            </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <HeaderStat
-              icon={Orbit}
-              label={copy.stats.connection}
-              value={
-                activePayload.connection.configured
-                  ? copy.stats.configured
-                  : copy.stats.missing
-              }
-              detail={
-                activePayload.connection.baseUrl ?? copy.stats.setDipConfig
-              }
-            />
-            <HeaderStat
-              icon={Layers3}
-              label={copy.stats.scenarioCatalog}
-              value={
-                activePayload.connection.scenarioCatalogAvailable
-                  ? `${localizedScenarios.length} ${copy.stats.scenariosUnit}`
-                  : copy.stats.unavailable
-              }
-              detail={
-                localizedScenario
-                  ? `${localizedScenario.domain} · ${localizedScenario.modelId}`
-                  : copy.stats.noScenarioSelected
-              }
-            />
-            <HeaderStat
-              icon={Gauge}
-              label={copy.stats.runSurface}
-              value={
-                activePayload.connection.runSurfaceAvailable
-                  ? copy.stats.ready
-                  : copy.stats.unavailable
-              }
-              detail={copy.stats.runSurfaceDetail}
-            />
-            <HeaderStat
-              icon={ArrowRightLeft}
-              label={copy.stats.comparisonMode}
-              value={`${localizedAlternatives.length} ${copy.stats.alternativesUnit}`}
-              detail={copy.stats.comparisonModeDetail}
-            />
-          </div>
-        </header>
+          <select
+            value={locale}
+            disabled={isLocalePending}
+            onChange={(e) => {
+              const next = e.target.value as Locale;
+              if (next === locale) return;
+              startLocaleTransition(() => {
+                router.replace(buildLocalePath(pathname, next));
+              });
+            }}
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 outline-none transition hover:border-white/20 disabled:opacity-60"
+          >
+            {SUPPORTED_LOCALES.map((option) => (
+              <option key={option} value={option} className="bg-slate-900">
+                {copy.localeOptions[option]}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {warnings.length > 0 || error ? (
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
@@ -341,476 +327,558 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
           </div>
         ) : null}
 
-        <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)_380px]">
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <CardTitle>{copy.sections.configurationTitle}</CardTitle>
-                  <CardDescription>
-                    {copy.sections.configurationDescription}
-                  </CardDescription>
-                </div>
-                <Sparkles className={panelIconClass} />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                  {copy.sections.selectedScenarioTitle}
-                </p>
-                <p className="mt-3 text-sm font-medium text-white">
-                  {localizedScenario?.name ?? copy.notices.dipNotConnected}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {localizedScenario?.description ??
-                    copy.notices.bootstrapFromApi}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Badge variant="cyan">
-                    {localizedScenario?.domain ?? copy.labels.na}
-                  </Badge>
-                  <Badge variant="neutral">
-                    {copy.labels.model}{" "}
-                    {localizedScenario?.modelId ?? copy.labels.na}
-                  </Badge>
-                  <Badge variant="neutral">
-                    {copy.labels.dataset}{" "}
-                    {localizedScenario?.datasetId ?? copy.labels.na}
-                  </Badge>
-                </div>
-              </div>
+        {/* Scenario + run bar — always above the chart */}
+        <div className="flex flex-wrap items-center gap-3 rounded-[20px] border border-white/10 bg-white/5 px-4 py-3">
+          <select
+            value={selectedScenarioId ?? ""}
+            disabled={demoMode.lockScenario}
+            onChange={(e) => {
+              setRevealStep(0);
+              selectScenario(e.target.value);
+            }}
+            className="min-w-[180px] flex-1 rounded-xl border border-white/10 bg-transparent px-3 py-2 text-sm text-white outline-none transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {localizedScenarios.map((item) => (
+              <option key={item.id} value={item.id} className="bg-slate-900">
+                {item.name}
+              </option>
+            ))}
+          </select>
 
-              <PanelTabs
-                tabs={leftTabs}
-                value={leftPanelTab}
-                onChange={(value) => setLeftPanelTab(value as LeftPanelTab)}
-              />
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="hidden sm:inline">
+              {localizedScenario?.domain}
+            </span>
+            {localizedAlternatives.length > 0 ? (
+              <span className="rounded-full border border-white/10 px-2 py-0.5">
+                {localizedAlternatives.length} {copy.stats.alternativesUnit}
+              </span>
+            ) : null}
+          </div>
 
-              {leftPanelTab === "catalog" ? (
-                <div className="space-y-3 rounded-[24px] border border-white/8 bg-white/4 p-4">
-                  <SectionTitle
-                    title={copy.sections.scenarioCatalogTitle}
-                    subtitle={
-                      demoMode.enabled
-                        ? copy.sections.scenarioCatalogDemoSubtitle
-                        : copy.sections.scenarioCatalogSubtitle
+          <Button
+            onClick={handleRun}
+            data-loading={status === "loading" || undefined}
+            disabled={
+              !scenario ||
+              !activePayload.connection.runSurfaceAvailable ||
+              status === "loading"
+            }
+            className="ml-auto shrink-0"
+          >
+            <Play className="h-4 w-4" />
+            {status === "loading"
+              ? copy.actions.runningDip
+              : copy.actions.runLiveScenario}
+          </Button>
+
+          {/* Animation controls — shown inline after Run */}
+          {Boolean(runResponse) ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={revealStep === 0}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                title="Previous step"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {isPlaying ? (
+                <button
+                  type="button"
+                  onClick={handleStop}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 transition hover:bg-cyan-300/18"
+                  title="Pause"
+                >
+                  <Pause className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePlay}
+                  disabled={isDone}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 transition hover:bg-cyan-300/18 disabled:cursor-not-allowed disabled:opacity-30"
+                  title="Play"
+                >
+                  <Play className="h-4 w-4" />
+                </button>
+              )}
+
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4].map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => {
+                      cancelTimers();
+                      setRevealStep(step);
+                    }}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-300",
+                      revealStep >= step
+                        ? "w-6 bg-cyan-300"
+                        : "w-1.5 bg-white/20 hover:bg-white/40",
+                    )}
+                    title={
+                      ["STATE", "ALTERNATIVES", "RISK", "DECISION"][step - 1]
                     }
                   />
-                  <div className="space-y-3">
-                    {localizedScenarios.map((item) => {
-                      const active = item.id === selectedScenarioId;
-                      const disabled =
-                        demoMode.lockScenario && item.id !== selectedScenarioId;
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
 
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => selectScenario(item.id)}
-                          disabled={disabled}
-                          className={cn(
-                            "rounded-[20px] border px-4 py-4 text-left transition",
-                            active
-                              ? "border-cyan-300/30 bg-cyan-300/10"
-                              : "border-white/8 bg-slate-950/38 hover:border-white/14 hover:bg-white/6",
-                            disabled &&
-                              "cursor-not-allowed opacity-55 hover:border-white/8 hover:bg-slate-950/38",
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-medium text-white">
-                                {item.name}
-                              </p>
-                              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
-                                {item.domain}
-                              </p>
-                            </div>
-                            <Badge variant={active ? "cyan" : "neutral"}>
-                              {active
-                                ? copy.actions.selected
-                                : copy.actions.load}
-                            </Badge>
-                          </div>
-                          <p className="mt-3 text-sm leading-6 text-slate-400">
-                            {item.description}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {localizedAlternatives.map((alternative) => (
-                    <AlternativeCard
-                      key={alternative.id}
-                      alternative={alternative}
-                      scenario={localizedScenario}
-                      description={
-                        localizedScenario?.presets.find(
-                          (preset) => preset.id === alternative.id,
-                        )?.description ?? null
-                      }
-                      copy={copy}
-                      inputsLocked={demoMode.lockAlternatives}
-                      selected={selectedAlternativeId === alternative.id}
-                      onSelect={() => selectAlternative(alternative.id)}
-                      onChange={(fieldName, value) =>
-                        updateFeature(alternative.id, fieldName, value)
-                      }
-                    />
-                  ))}
-
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={handleRun}
-                    disabled={
-                      !scenario ||
-                      !activePayload.connection.configured ||
-                      status === "loading"
-                    }
-                  >
-                    <Play className="h-4 w-4" />
-                    {status === "loading"
-                      ? copy.actions.runningDip
-                      : copy.actions.runLiveScenario}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
+        {/* Chart is the focal point; side panels support it */}
+        <section className="flex flex-col gap-6">
+          {/* Chart: full-width, dominant — no outer card, SVG carries its own background */}
           <div className="space-y-6">
+            <div>
+              <div className="flex items-center justify-between gap-3 px-1 pb-3">
+                <div>
+                  <h2 className="text-base font-semibold text-white">
+                    {copy.sections.stateSpaceTitle}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {copy.sections.stateSpaceDescription}
+                  </p>
+                </div>
+                <Activity className={panelIconClass} />
+              </div>
+              <StateSpaceChart
+                trajectories={deferredTrajectories}
+                selectedAlternativeId={selectedAlternativeId}
+                status={status}
+                hasRun={Boolean(runResponse)}
+                revealStep={revealStep}
+                axisLabels={axisLabels}
+                copy={copy}
+                onSelect={selectAlternative}
+              />
+            </div>
+
+            <div>
+              <div className="px-1 pb-3">
+                <h2 className="text-base font-semibold text-white">
+                  {copy.sections.stateTimelineTitle}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  {copy.sections.stateTimelineDescription}
+                </p>
+              </div>
+              <StateTimeline
+                points={timeline}
+                copy={copy}
+                activeIndex={revealStep > 0 ? revealStep - 1 : -1}
+              />
+            </div>
+          </div>
+
+          {/* Side panels: equal-width supporting panels */}
+          <div className="grid gap-6 xl:grid-cols-2">
             <Card className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <CardTitle>{copy.sections.stateSpaceTitle}</CardTitle>
+                    <CardTitle>{copy.sections.configurationTitle}</CardTitle>
                     <CardDescription>
-                      {copy.sections.stateSpaceDescription}
+                      {copy.sections.configurationDescription}
                     </CardDescription>
                   </div>
-                  <Activity className={panelIconClass} />
+                  <Sparkles className={panelIconClass} />
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <StateSpaceChart
-                  trajectories={deferredTrajectories}
-                  selectedAlternativeId={selectedAlternativeId}
-                  status={status}
-                  hasRun={Boolean(runResponse)}
-                  axisLabels={axisLabels}
-                  copy={copy}
-                  onSelect={selectAlternative}
+              <CardContent className="space-y-5">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {copy.sections.selectedScenarioTitle}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {localizedScenario?.name ?? copy.notices.dipNotConnected}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-400">
+                    {localizedScenario?.description ??
+                      copy.notices.bootstrapFromApi}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Badge variant="cyan">
+                      {localizedScenario?.domain ?? copy.labels.na}
+                    </Badge>
+                    <Badge variant="neutral">
+                      {copy.labels.model}{" "}
+                      {localizedScenario?.modelId ?? copy.labels.na}
+                    </Badge>
+                    <Badge variant="neutral">
+                      {copy.labels.dataset}{" "}
+                      {localizedScenario?.datasetId ?? copy.labels.na}
+                    </Badge>
+                  </div>
+                </div>
+
+                <PanelTabs
+                  tabs={leftTabs}
+                  value={leftPanelTab}
+                  onChange={(value) => setLeftPanelTab(value as LeftPanelTab)}
                 />
+
+                {leftPanelTab === "catalog" ? (
+                  <div className="space-y-3 rounded-[24px] border border-white/8 bg-white/4 p-4">
+                    <SectionTitle
+                      title={copy.sections.scenarioCatalogTitle}
+                      subtitle={
+                        demoMode.enabled
+                          ? copy.sections.scenarioCatalogDemoSubtitle
+                          : copy.sections.scenarioCatalogSubtitle
+                      }
+                    />
+                    <div className="space-y-3">
+                      {localizedScenarios.map((item) => {
+                        const active = item.id === selectedScenarioId;
+                        const disabled =
+                          demoMode.lockScenario &&
+                          item.id !== selectedScenarioId;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => selectScenario(item.id)}
+                            disabled={disabled}
+                            className={cn(
+                              "rounded-[20px] border px-4 py-4 text-left transition",
+                              active
+                                ? "border-cyan-300/30 bg-cyan-300/10"
+                                : "border-white/8 bg-slate-950/38 hover:border-white/14 hover:bg-white/6",
+                              disabled &&
+                                "cursor-not-allowed opacity-55 hover:border-white/8 hover:bg-slate-950/38",
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+                                  {item.domain}
+                                </p>
+                              </div>
+                              <Badge variant={active ? "cyan" : "neutral"}>
+                                {active
+                                  ? copy.actions.selected
+                                  : copy.actions.load}
+                              </Badge>
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-slate-400">
+                              {item.description}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {localizedAlternatives.map((alternative) => (
+                      <AlternativeCard
+                        key={alternative.id}
+                        alternative={alternative}
+                        scenario={localizedScenario}
+                        description={
+                          localizedScenario?.presets.find(
+                            (preset) => preset.id === alternative.id,
+                          )?.description ?? null
+                        }
+                        copy={copy}
+                        inputsLocked={demoMode.lockAlternatives}
+                        selected={selectedAlternativeId === alternative.id}
+                        onSelect={() => selectAlternative(alternative.id)}
+                        onChange={(fieldName, value) =>
+                          updateFeature(alternative.id, fieldName, value)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>{copy.sections.stateTimelineTitle}</CardTitle>
-                <CardDescription>
-                  {copy.sections.stateTimelineDescription}
-                </CardDescription>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <CardTitle>{copy.sections.decisionAnalysisTitle}</CardTitle>
+                    <CardDescription>
+                      {copy.sections.decisionAnalysisDescription}
+                    </CardDescription>
+                  </div>
+                  <Gauge className={panelIconClass} />
+                </div>
               </CardHeader>
-              <CardContent>
-                <StateTimeline points={timeline} copy={copy} />
+              <CardContent className="space-y-5">
+                {selectedTrajectory ? (
+                  <>
+                    <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+                      <div className="flex flex-wrap items-start gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                            {copy.labels.selectedPath}
+                          </p>
+                          <p className="mt-2 text-base font-medium text-white">
+                            {selectedTrajectory.label}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={badgeTone[metrics[0]?.tone ?? "cyan"]}
+                          className="ml-auto shrink-0 whitespace-nowrap"
+                        >
+                          {metrics[0]?.value ?? copy.labels.na}
+                        </Badge>
+                      </div>
+                      <div className="mt-4">
+                        <PanelTabs
+                          tabs={rightTabs}
+                          value={rightPanelTab}
+                          onChange={(value) =>
+                            setRightPanelTab(value as RightPanelTab)
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {rightPanelTab === "overview" ? (
+                      <>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {metrics.map((metric) => (
+                            <div
+                              key={metric.label}
+                              className="rounded-[20px] border border-white/8 bg-white/5 p-4"
+                            >
+                              <div className="flex flex-wrap items-start gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                                    {metric.label}
+                                  </p>
+                                  <p className="mt-2 text-sm font-medium text-white">
+                                    {metric.value}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant={badgeTone[metric.tone]}
+                                  className="ml-auto shrink-0 whitespace-nowrap"
+                                >
+                                  {metric.source === "api"
+                                    ? copy.labels.apiBadge
+                                    : copy.labels.comparisonBadge}
+                                </Badge>
+                              </div>
+                              <p className="mt-2 text-xs leading-5 text-slate-400">
+                                {metric.detail}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
+                          <DataRow
+                            label={copy.labels.currentState}
+                            value={
+                              selectedTrajectory.metrics.currentState ||
+                              copy.labels.na
+                            }
+                          />
+                          <DataRow
+                            label={copy.labels.predictedState}
+                            value={selectedTrajectory.metrics.predictedState}
+                          />
+                          <DataRow
+                            label={copy.labels.matchedRule}
+                            value={selectedTrajectory.metrics.matchedRule}
+                          />
+                          <DataRow
+                            label={copy.labels.execution}
+                            value={`${selectedTrajectory.executionTimeMs} ms`}
+                          />
+                          <DataRow
+                            label={copy.labels.uncertaintyInterval}
+                            value={`${Math.round(selectedTrajectory.metrics.uncertainty * 100)}% ${copy.metrics.uncertaintyEnvelope}`}
+                          />
+                        </div>
+                      </>
+                    ) : null}
+
+                    {rightPanelTab === "alternatives" ? (
+                      <div className="space-y-5">
+                        <div className="space-y-3">
+                          <SectionTitle
+                            title={copy.sections.alternativeComparisonTitle}
+                            subtitle={
+                              copy.sections.alternativeComparisonSubtitle
+                            }
+                          />
+                          {comparison.length > 0 ? (
+                            <div className="grid gap-3">
+                              {comparison.map((item) => (
+                                <div
+                                  key={item.label}
+                                  className="rounded-[20px] border border-white/8 bg-white/5 p-4"
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <p className="text-sm font-medium text-white">
+                                      {item.label}
+                                    </p>
+                                    <Badge variant={badgeTone[item.tone]}>
+                                      {item.value}
+                                    </Badge>
+                                  </div>
+                                  <p className="mt-2 text-xs leading-5 text-slate-400">
+                                    {item.detail}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <EmptyNotice
+                              text={copy.notices.runTwoAlternatives}
+                            />
+                          )}
+                        </div>
+
+                        <div className="space-y-3">
+                          <SectionTitle
+                            title={copy.sections.decisionAlternativesTitle}
+                            subtitle={
+                              copy.sections.decisionAlternativesSubtitle
+                            }
+                          />
+                          {selectedTrajectory.alternativeDecisions.length >
+                          0 ? (
+                            <div className="grid gap-3">
+                              {selectedTrajectory.alternativeDecisions.map(
+                                (decisionOption) => (
+                                  <div
+                                    key={`${selectedTrajectory.id}-${decisionOption.decision}`}
+                                    className="rounded-[20px] border border-white/8 bg-white/5 p-4"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <p className="text-sm font-medium text-white">
+                                          {decisionOption.decision}
+                                        </p>
+                                        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+                                          {copy.labels.rank}{" "}
+                                          {decisionOption.rank}
+                                        </p>
+                                      </div>
+                                      <div className="flex flex-wrap justify-end gap-2">
+                                        <Badge
+                                          variant={
+                                            decisionOption.selected
+                                              ? "cyan"
+                                              : toneForRisk(decisionOption.risk)
+                                          }
+                                          className="shrink-0 whitespace-nowrap"
+                                        >
+                                          {copy.labels.riskShort}{" "}
+                                          {Math.round(
+                                            decisionOption.risk * 100,
+                                          )}
+                                          %
+                                        </Badge>
+                                        <Badge
+                                          variant={toneForConfidence(
+                                            decisionOption.confidence,
+                                          )}
+                                          className="shrink-0 whitespace-nowrap"
+                                        >
+                                          {copy.labels.confidenceShort}{" "}
+                                          {Math.round(
+                                            decisionOption.confidence * 100,
+                                          )}
+                                          %
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <p className="mt-3 text-sm leading-6 text-slate-300">
+                                      {decisionOption.outcome}
+                                    </p>
+                                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                                      {decisionOption.rationale}
+                                    </p>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <EmptyNotice
+                              text={copy.notices.noAlternativeDecisions}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {rightPanelTab === "evidence" ? (
+                      <div className="space-y-5">
+                        <div className="space-y-3">
+                          <SectionTitle
+                            title={copy.sections.whyDecisionTitle}
+                            subtitle={copy.sections.whyDecisionSubtitle}
+                          />
+                          {selectedTrajectory.explanationBullets.length > 0 ? (
+                            <ul className="space-y-2">
+                              {selectedTrajectory.explanationBullets.map(
+                                (bullet) => (
+                                  <li
+                                    key={bullet}
+                                    className="rounded-[18px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300"
+                                  >
+                                    {bullet}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          ) : (
+                            <EmptyNotice text={copy.notices.noExplanation} />
+                          )}
+                        </div>
+
+                        <div className="space-y-3">
+                          <SectionTitle
+                            title={copy.sections.ruleEvidenceTitle}
+                            subtitle={copy.sections.ruleEvidenceSubtitle}
+                          />
+                          {selectedTrajectory.evidenceBullets.length > 0 ? (
+                            <ul className="space-y-2">
+                              {selectedTrajectory.evidenceBullets.map(
+                                (bullet) => (
+                                  <li
+                                    key={bullet}
+                                    className="rounded-[18px] border border-white/8 bg-slate-950/48 px-4 py-3 text-sm text-slate-300"
+                                  >
+                                    {bullet}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          ) : (
+                            <EmptyNotice text={copy.notices.noRuleEvidence} />
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <EmptyNotice text={copy.notices.chooseScenario} />
+                )}
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <CardTitle>{copy.sections.decisionAnalysisTitle}</CardTitle>
-                  <CardDescription>
-                    {copy.sections.decisionAnalysisDescription}
-                  </CardDescription>
-                </div>
-                <Gauge className={panelIconClass} />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {selectedTrajectory ? (
-                <>
-                  <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                    <div className="flex flex-wrap items-start gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          {copy.labels.selectedPath}
-                        </p>
-                        <p className="mt-2 text-base font-medium text-white">
-                          {selectedTrajectory.label}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={badgeTone[metrics[0]?.tone ?? "cyan"]}
-                        className="ml-auto shrink-0 whitespace-nowrap"
-                      >
-                        {metrics[0]?.value ?? copy.labels.na}
-                      </Badge>
-                    </div>
-                    <div className="mt-4">
-                      <PanelTabs
-                        tabs={rightTabs}
-                        value={rightPanelTab}
-                        onChange={(value) =>
-                          setRightPanelTab(value as RightPanelTab)
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {rightPanelTab === "overview" ? (
-                    <>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {metrics.map((metric) => (
-                          <div
-                            key={metric.label}
-                            className="rounded-[20px] border border-white/8 bg-white/5 p-4"
-                          >
-                            <div className="flex flex-wrap items-start gap-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
-                                  {metric.label}
-                                </p>
-                                <p className="mt-2 text-sm font-medium text-white">
-                                  {metric.value}
-                                </p>
-                              </div>
-                              <Badge
-                                variant={badgeTone[metric.tone]}
-                                className="ml-auto shrink-0 whitespace-nowrap"
-                              >
-                                {metric.source === "api"
-                                  ? copy.labels.apiBadge
-                                  : copy.labels.comparisonBadge}
-                              </Badge>
-                            </div>
-                            <p className="mt-2 text-xs leading-5 text-slate-400">
-                              {metric.detail}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <DataRow
-                          label={copy.labels.currentState}
-                          value={
-                            selectedTrajectory.metrics.currentState ||
-                            copy.labels.na
-                          }
-                        />
-                        <DataRow
-                          label={copy.labels.predictedState}
-                          value={selectedTrajectory.metrics.predictedState}
-                        />
-                        <DataRow
-                          label={copy.labels.matchedRule}
-                          value={selectedTrajectory.metrics.matchedRule}
-                        />
-                        <DataRow
-                          label={copy.labels.execution}
-                          value={`${selectedTrajectory.executionTimeMs} ms`}
-                        />
-                        <DataRow
-                          label={copy.labels.uncertaintyInterval}
-                          value={`${Math.round(selectedTrajectory.metrics.uncertainty * 100)}% ${copy.metrics.uncertaintyEnvelope}`}
-                        />
-                      </div>
-                    </>
-                  ) : null}
-
-                  {rightPanelTab === "alternatives" ? (
-                    <div className="space-y-5">
-                      <div className="space-y-3">
-                        <SectionTitle
-                          title={copy.sections.alternativeComparisonTitle}
-                          subtitle={copy.sections.alternativeComparisonSubtitle}
-                        />
-                        {comparison.length > 0 ? (
-                          <div className="grid gap-3">
-                            {comparison.map((item) => (
-                              <div
-                                key={item.label}
-                                className="rounded-[20px] border border-white/8 bg-white/5 p-4"
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <p className="text-sm font-medium text-white">
-                                    {item.label}
-                                  </p>
-                                  <Badge variant={badgeTone[item.tone]}>
-                                    {item.value}
-                                  </Badge>
-                                </div>
-                                <p className="mt-2 text-xs leading-5 text-slate-400">
-                                  {item.detail}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <EmptyNotice text={copy.notices.runTwoAlternatives} />
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <SectionTitle
-                          title={copy.sections.decisionAlternativesTitle}
-                          subtitle={copy.sections.decisionAlternativesSubtitle}
-                        />
-                        {selectedTrajectory.alternativeDecisions.length > 0 ? (
-                          <div className="grid gap-3">
-                            {selectedTrajectory.alternativeDecisions.map(
-                              (decisionOption) => (
-                                <div
-                                  key={`${selectedTrajectory.id}-${decisionOption.decision}`}
-                                  className="rounded-[20px] border border-white/8 bg-white/5 p-4"
-                                >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                      <p className="text-sm font-medium text-white">
-                                        {decisionOption.decision}
-                                      </p>
-                                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
-                                        {copy.labels.rank} {decisionOption.rank}
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-wrap justify-end gap-2">
-                                      <Badge
-                                        variant={
-                                          decisionOption.selected
-                                            ? "cyan"
-                                            : toneForRisk(decisionOption.risk)
-                                        }
-                                        className="shrink-0 whitespace-nowrap"
-                                      >
-                                        {copy.labels.riskShort}{" "}
-                                        {Math.round(decisionOption.risk * 100)}%
-                                      </Badge>
-                                      <Badge
-                                        variant={toneForConfidence(
-                                          decisionOption.confidence,
-                                        )}
-                                        className="shrink-0 whitespace-nowrap"
-                                      >
-                                        {copy.labels.confidenceShort}{" "}
-                                        {Math.round(
-                                          decisionOption.confidence * 100,
-                                        )}
-                                        %
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                                    {decisionOption.outcome}
-                                  </p>
-                                  <p className="mt-2 text-xs leading-5 text-slate-500">
-                                    {decisionOption.rationale}
-                                  </p>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        ) : (
-                          <EmptyNotice
-                            text={copy.notices.noAlternativeDecisions}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {rightPanelTab === "evidence" ? (
-                    <div className="space-y-5">
-                      <div className="space-y-3">
-                        <SectionTitle
-                          title={copy.sections.whyDecisionTitle}
-                          subtitle={copy.sections.whyDecisionSubtitle}
-                        />
-                        {selectedTrajectory.explanationBullets.length > 0 ? (
-                          <ul className="space-y-2">
-                            {selectedTrajectory.explanationBullets.map(
-                              (bullet) => (
-                                <li
-                                  key={bullet}
-                                  className="rounded-[18px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300"
-                                >
-                                  {bullet}
-                                </li>
-                              ),
-                            )}
-                          </ul>
-                        ) : (
-                          <EmptyNotice text={copy.notices.noExplanation} />
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <SectionTitle
-                          title={copy.sections.ruleEvidenceTitle}
-                          subtitle={copy.sections.ruleEvidenceSubtitle}
-                        />
-                        {selectedTrajectory.evidenceBullets.length > 0 ? (
-                          <ul className="space-y-2">
-                            {selectedTrajectory.evidenceBullets.map(
-                              (bullet) => (
-                                <li
-                                  key={bullet}
-                                  className="rounded-[18px] border border-white/8 bg-slate-950/48 px-4 py-3 text-sm text-slate-300"
-                                >
-                                  {bullet}
-                                </li>
-                              ),
-                            )}
-                          </ul>
-                        ) : (
-                          <EmptyNotice text={copy.notices.noRuleEvidence} />
-                        )}
-                      </div>
-                    </div>
-                  ) : null}
-                </>
-              ) : (
-                <EmptyNotice text={copy.notices.chooseScenario} />
-              )}
-            </CardContent>
-          </Card>
+          {/* end side panels grid */}
         </section>
       </div>
     </main>
-  );
-}
-
-function HeaderStat({
-  icon: Icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-3 text-lg font-medium text-white">{value}</p>
-        </div>
-        <Icon className="h-5 w-5 text-cyan-200" />
-      </div>
-      <p className="mt-3 text-sm leading-6 text-slate-400">{detail}</p>
-    </div>
   );
 }
 
