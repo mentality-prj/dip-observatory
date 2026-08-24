@@ -2,14 +2,18 @@
 
 import { ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
 
+import {
+  getEidosCopy,
+  getEidosDecisionFactorLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
 import { cn } from "@/lib/utils";
-import { STRATEGY_LABEL, formatSignedPercent } from "@/eidos/lib/eidos-format";
-import type {
-  DecisionFactor,
-  ProcurementStrategy,
-} from "@/eidos/types/eidos";
+import { formatSignedPercent } from "@/eidos/lib/eidos-format";
+import type { DecisionFactor, ProcurementStrategy } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   factors: DecisionFactor[];
   currentStrategy: ProcurementStrategy;
   recommendedStrategy: ProcurementStrategy;
@@ -17,11 +21,13 @@ type Props = {
 };
 
 export function DecisionExplanation({
+  locale,
   factors,
   currentStrategy,
   recommendedStrategy,
   decisionChanged,
 }: Props) {
+  const copy = getEidosCopy(locale);
   const drivers = factors.filter((factor) => Math.abs(factor.delta) >= 0.005);
 
   return (
@@ -29,26 +35,26 @@ export function DecisionExplanation({
       <p className="text-sm leading-6 text-slate-300">
         {decisionChanged ? (
           <>
-            The recommendation moved from{" "}
+            {copy.explanation.changedLead}{" "}
             <span className="font-medium text-white">
-              {STRATEGY_LABEL[currentStrategy]}
+              {getEidosStrategyLabel(locale, currentStrategy)}
             </span>{" "}
             <ArrowRight
               className="mx-1 inline h-4 w-4 text-cyan-300"
               aria-hidden="true"
             />
             <span className="font-medium text-cyan-200">
-              {STRATEGY_LABEL[recommendedStrategy]}
+              {getEidosStrategyLabel(locale, recommendedStrategy)}
             </span>{" "}
-            because of the following changes in assumptions:
+            {copy.explanation.changedTail}
           </>
         ) : (
           <>
-            The current strategy{" "}
+            {copy.explanation.stableLead}{" "}
             <span className="font-medium text-white">
-              {STRATEGY_LABEL[currentStrategy]}
+              {getEidosStrategyLabel(locale, currentStrategy)}
             </span>{" "}
-            remains recommended. The factors below did not move the decision:
+            {copy.explanation.stableTail}
           </>
         )}
       </p>
@@ -56,7 +62,7 @@ export function DecisionExplanation({
       <ul className="flex flex-col gap-2">
         {drivers.length === 0 ? (
           <li className="text-sm text-slate-400">
-            No material changes versus the baseline assumptions.
+            {copy.explanation.noMaterialChanges}
           </li>
         ) : (
           drivers.map((factor) => {
@@ -81,12 +87,14 @@ export function DecisionExplanation({
                     )}
                     aria-hidden="true"
                   />
-                  {factor.label}
+                  {getEidosDecisionFactorLabel(locale, factor.label)}
                 </span>
                 <span
                   className={cn(
                     "text-sm font-medium tabular-nums",
-                    factor.supportsHedging ? "text-amber-200" : "text-emerald-200",
+                    factor.supportsHedging
+                      ? "text-amber-200"
+                      : "text-emerald-200",
                   )}
                 >
                   {formatSignedPercent(factor.delta)}

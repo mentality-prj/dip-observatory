@@ -4,16 +4,16 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import {
-  RISK_LABEL,
-  RISK_TONE,
-  STATUS_LABEL,
-  STATUS_TONE,
-  STRATEGY_LABEL,
-  formatMwh,
-} from "@/eidos/lib/eidos-format";
+  getEidosCopy,
+  getEidosRiskLabel,
+  getEidosStatusLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
+import { cn } from "@/lib/utils";
+import { RISK_TONE, STATUS_TONE, formatMwh } from "@/eidos/lib/eidos-format";
 import type { ClientRisk, EidosClient } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 export type SortKey =
   | "name"
@@ -25,6 +25,7 @@ export type SortKey =
 export type SortDirection = "asc" | "desc";
 
 type Props = {
+  locale: Locale;
   rows: EidosClient[];
   totalCount: number;
   selectedClientId: string | null;
@@ -38,16 +39,8 @@ type Props = {
   onRiskFilter: (value: ClientRisk | "ALL") => void;
 };
 
-const COLUMNS: { key: SortKey; label: string; numeric?: boolean }[] = [
-  { key: "name", label: "Client" },
-  { key: "annualConsumptionMwh", label: "Annual consumption", numeric: true },
-  { key: "currentStrategy", label: "Current" },
-  { key: "recommendedStrategy", label: "Recommended" },
-  { key: "risk", label: "Risk" },
-  { key: "status", label: "Status" },
-];
-
 export function ClientTable({
+  locale,
   rows,
   totalCount,
   selectedClientId,
@@ -60,6 +53,20 @@ export function ClientTable({
   riskFilter,
   onRiskFilter,
 }: Props) {
+  const copy = getEidosCopy(locale);
+  const columns: { key: SortKey; label: string; numeric?: boolean }[] = [
+    { key: "name", label: copy.table.columns.client },
+    {
+      key: "annualConsumptionMwh",
+      label: copy.table.columns.annualConsumption,
+      numeric: true,
+    },
+    { key: "currentStrategy", label: copy.table.columns.current },
+    { key: "recommendedStrategy", label: copy.table.columns.recommended },
+    { key: "risk", label: copy.table.columns.risk },
+    { key: "status", label: copy.table.columns.status },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -72,32 +79,32 @@ export function ClientTable({
             type="search"
             value={search}
             onChange={(event) => onSearch(event.target.value)}
-            placeholder="Search by client name"
-            aria-label="Search clients by name"
+            placeholder={copy.table.searchPlaceholder}
+            aria-label={copy.table.searchAriaLabel}
             className="pl-10"
           />
         </div>
         <label className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
-          <span className="sr-only sm:not-sr-only">Risk</span>
+          <span className="sr-only sm:not-sr-only">{copy.table.riskLabel}</span>
           <select
             value={riskFilter}
             onChange={(event) =>
               onRiskFilter(event.target.value as ClientRisk | "ALL")
             }
-            aria-label="Filter by risk"
+            aria-label={copy.table.riskFilterAriaLabel}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 outline-none transition hover:border-white/20 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
           >
             <option value="ALL" className="bg-slate-900">
-              All risk
+              {copy.table.allRisk}
             </option>
             <option value="LOW" className="bg-slate-900">
-              Low
+              {getEidosRiskLabel(locale, "LOW")}
             </option>
             <option value="MEDIUM" className="bg-slate-900">
-              Medium
+              {getEidosRiskLabel(locale, "MEDIUM")}
             </option>
             <option value="HIGH" className="bg-slate-900">
-              High
+              {getEidosRiskLabel(locale, "HIGH")}
             </option>
           </select>
         </label>
@@ -106,13 +113,11 @@ export function ClientTable({
       <div className="overflow-x-auto rounded-[20px] border border-white/10">
         <table className="w-full border-collapse text-left text-sm">
           <caption className="sr-only">
-            Synthetic EIDOS clients with current and recommended procurement
-            strategy, risk and decision status. Showing {rows.length} of{" "}
-            {totalCount} clients.
+            {copy.table.caption(rows.length, totalCount)}
           </caption>
           <thead>
             <tr className="border-b border-white/10 bg-white/5">
-              {COLUMNS.map((column) => {
+              {columns.map((column) => {
                 const active = sortKey === column.key;
                 const ariaSort = active
                   ? sortDirection === "asc"
@@ -155,10 +160,10 @@ export function ClientTable({
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={COLUMNS.length}
+                  colSpan={columns.length}
                   className="px-4 py-10 text-center text-sm text-slate-400"
                 >
-                  No clients match the current filters.
+                  {copy.table.noMatches}
                 </td>
               </tr>
             ) : (
@@ -191,7 +196,7 @@ export function ClientTable({
                       {formatMwh(client.annualConsumptionMwh)}
                     </td>
                     <td className="px-4 py-3 text-slate-200">
-                      {STRATEGY_LABEL[client.currentStrategy]}
+                      {getEidosStrategyLabel(locale, client.currentStrategy)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -202,22 +207,25 @@ export function ClientTable({
                             : "text-slate-300",
                         )}
                       >
-                        {STRATEGY_LABEL[client.recommendedStrategy]}
+                        {getEidosStrategyLabel(
+                          locale,
+                          client.recommendedStrategy,
+                        )}
                       </span>
                       {client.decisionChanged ? (
                         <span className="ml-2 text-[10px] uppercase tracking-wide text-cyan-300/80">
-                          changed
+                          {copy.table.changedBadge}
                         </span>
                       ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={RISK_TONE[client.risk]}>
-                        {RISK_LABEL[client.risk]}
+                        {getEidosRiskLabel(locale, client.risk)}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={STATUS_TONE[client.status]}>
-                        {STATUS_LABEL[client.status]}
+                        {getEidosStatusLabel(locale, client.status)}
                       </Badge>
                     </td>
                   </tr>

@@ -4,17 +4,20 @@ import { useState } from "react";
 import { History, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
-  SCENARIO_LABEL,
-  STRATEGY_LABEL,
-  formatSignedPercent,
-} from "@/eidos/lib/eidos-format";
+  getEidosCopy,
+  getEidosDecisionFactorLabel,
+  getEidosScenarioLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
+import { cn } from "@/lib/utils";
+import { formatSignedPercent } from "@/eidos/lib/eidos-format";
 import type {
   DecisionFactor,
   EidosScenario,
   ProcurementStrategy,
 } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type ReplaySide = {
   scenario: EidosScenario;
@@ -22,12 +25,14 @@ type ReplaySide = {
 };
 
 type Props = {
+  locale: Locale;
   original: ReplaySide;
   current: ReplaySide;
   factors: DecisionFactor[];
 };
 
-export function DecisionReplay({ original, current, factors }: Props) {
+export function DecisionReplay({ locale, original, current, factors }: Props) {
+  const copy = getEidosCopy(locale);
   const [open, setOpen] = useState(false);
   const changed = original.strategy !== current.strategy;
 
@@ -46,31 +51,31 @@ export function DecisionReplay({ original, current, factors }: Props) {
         ) : (
           <History className="h-4 w-4" aria-hidden="true" />
         )}
-        {open ? "Hide replay" : "Replay decision"}
+        {open ? copy.replay.hide : copy.replay.show}
       </Button>
 
       {open ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <ReplayCard
-            title="Original decision"
+            locale={locale}
+            title={copy.replay.originalDecision}
             scenario={original.scenario}
             strategy={original.strategy}
           />
           <ReplayCard
-            title="Current scenario"
+            locale={locale}
+            title={copy.replay.currentScenario}
             scenario={current.scenario}
             strategy={current.strategy}
             highlight
           />
           <div className="sm:col-span-2 rounded-xl border border-white/8 bg-white/4 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-              {changed
-                ? "Changed because"
-                : "Recommendation held despite"}
+              {changed ? copy.replay.changedBecause : copy.replay.heldDespite}
             </p>
             {factors.length === 0 ? (
               <p className="mt-1 text-sm text-slate-400">
-                Assumptions are unchanged from the original decision.
+                {copy.replay.unchangedAssumptions}
               </p>
             ) : (
               <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
@@ -79,7 +84,9 @@ export function DecisionReplay({ original, current, factors }: Props) {
                     key={factor.label}
                     className="flex items-center gap-2 text-sm text-slate-200"
                   >
-                    <span>{factor.label}</span>
+                    <span>
+                      {getEidosDecisionFactorLabel(locale, factor.label)}
+                    </span>
                     <span
                       className={cn(
                         "font-medium tabular-nums",
@@ -102,11 +109,13 @@ export function DecisionReplay({ original, current, factors }: Props) {
 }
 
 function ReplayCard({
+  locale,
   title,
   scenario,
   strategy,
   highlight,
 }: {
+  locale: Locale;
   title: string;
   scenario: EidosScenario;
   strategy: ProcurementStrategy;
@@ -125,9 +134,11 @@ function ReplayCard({
         {title}
       </p>
       <p className="mt-1 text-lg font-semibold text-white">
-        {STRATEGY_LABEL[strategy]}
+        {getEidosStrategyLabel(locale, strategy)}
       </p>
-      <p className="text-xs text-slate-500">{SCENARIO_LABEL[scenario]}</p>
+      <p className="text-xs text-slate-500">
+        {getEidosScenarioLabel(locale, scenario)}
+      </p>
     </div>
   );
 }

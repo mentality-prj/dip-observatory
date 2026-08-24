@@ -5,6 +5,14 @@
 > any EIDOS system. Every number shown is generated locally from a deterministic
 > synthetic dataset.
 
+## Detailed documentation
+
+- Overview (PL): [`README.pl.md`](./README.pl.md)
+- Developer guide (EN): [`DEVELOPER_GUIDE.md`](./DEVELOPER_GUIDE.md)
+- Developer guide (PL): [`DEVELOPER_GUIDE.pl.md`](./DEVELOPER_GUIDE.pl.md)
+- Management brief (EN): [`MANAGEMENT_BRIEF.md`](./MANAGEMENT_BRIEF.md)
+- Management brief (PL): [`MANAGEMENT_BRIEF.pl.md`](./MANAGEMENT_BRIEF.pl.md)
+
 ## 1. Purpose
 
 A standalone, decision-oriented observability surface that lets an energy-procurement

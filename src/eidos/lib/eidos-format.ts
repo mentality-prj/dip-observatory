@@ -75,36 +75,45 @@ export const STATUS_PRIORITY: Record<DecisionStatus, number> = {
   STABLE: 0,
 };
 
-const eurCompact = new Intl.NumberFormat("en-IE", {
-  style: "currency",
-  currency: "EUR",
-  notation: "compact",
-  maximumFractionDigits: 2,
-});
+function groupThousands(value: number): string {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-const eurFull = new Intl.NumberFormat("en-IE", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
+function trimTrailingZeros(value: string): string {
+  return value.replace(/\.0+$/, "").replace(/(\.\d*?[1-9])0+$/, "$1");
+}
 
-const mwhFormat = new Intl.NumberFormat("en-IE", {
-  maximumFractionDigits: 0,
-});
+function formatCompactNumber(value: number): string {
+  const absoluteValue = Math.abs(value);
+
+  if (absoluteValue >= 1_000_000_000) {
+    return `${trimTrailingZeros((absoluteValue / 1_000_000_000).toFixed(2))}B`;
+  }
+  if (absoluteValue >= 1_000_000) {
+    return `${trimTrailingZeros((absoluteValue / 1_000_000).toFixed(2))}M`;
+  }
+  if (absoluteValue >= 1_000) {
+    return `${trimTrailingZeros((absoluteValue / 1_000).toFixed(2))}K`;
+  }
+
+  return groupThousands(Math.round(absoluteValue));
+}
 
 /** Format euros compactly, e.g. €1.02M. */
 export function formatEuroCompact(value: number): string {
-  return eurCompact.format(value);
+  const sign = value < 0 ? "-" : "";
+  return `${sign}€${formatCompactNumber(value)}`;
 }
 
 /** Format euros with full digits, e.g. €1,020,000. */
 export function formatEuroFull(value: number): string {
-  return eurFull.format(value);
+  const sign = value < 0 ? "-" : "";
+  return `${sign}€${groupThousands(Math.round(Math.abs(value)))}`;
 }
 
 /** Format a MWh volume, e.g. "18,000 MWh". */
 export function formatMwh(value: number): string {
-  return `${mwhFormat.format(value)} MWh`;
+  return `${groupThousands(Math.round(value))} MWh`;
 }
 
 /** Format a fraction in [0,1] as a percentage, e.g. 0.82 -> "82%". */

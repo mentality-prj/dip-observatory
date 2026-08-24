@@ -1,20 +1,26 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
-  RISK_LABEL,
-  RISK_TONE,
-  SCENARIO_LABEL,
-  STRATEGY_LABEL,
-} from "@/eidos/lib/eidos-format";
+  getEidosCopy,
+  getEidosHistoryReason,
+  getEidosRiskLabel,
+  getEidosScenarioLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
+import { cn } from "@/lib/utils";
+import { RISK_TONE } from "@/eidos/lib/eidos-format";
 import type { DecisionHistoryEntry } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   entries: DecisionHistoryEntry[];
 };
 
-export function DecisionHistory({ entries }: Props) {
+export function DecisionHistory({ locale, entries }: Props) {
+  const copy = getEidosCopy(locale);
+
   return (
     <ol className="relative flex flex-col gap-3 border-l border-white/10 pl-5">
       {entries.map((entry, index) => {
@@ -38,18 +44,19 @@ export function DecisionHistory({ entries }: Props) {
                 {entry.date}
               </time>
               <span className="text-sm font-medium text-white">
-                {STRATEGY_LABEL[entry.strategy]}
+                {getEidosStrategyLabel(locale, entry.strategy)}
               </span>
               <Badge variant={RISK_TONE[entry.risk]}>
-                {RISK_LABEL[entry.risk]}
+                {getEidosRiskLabel(locale, entry.risk)}
               </Badge>
               <span className="text-[11px] uppercase tracking-wide text-slate-500">
-                {SCENARIO_LABEL[entry.scenario]}
+                {getEidosScenarioLabel(locale, entry.scenario)}
               </span>
             </div>
             {entry.reason ? (
               <p className="mt-0.5 text-xs text-slate-400">
-                Reason: {entry.reason}
+                {copy.history.reasonPrefix}:{" "}
+                {getEidosHistoryReason(locale, entry.reason)}
               </p>
             ) : null}
           </li>

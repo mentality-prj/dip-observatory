@@ -1,23 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, FlaskConical } from "lucide-react";
+import { ArrowLeft, BookOpen, FlaskConical } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientDecisionDetail } from "@/eidos/components/client-decision-detail";
+import { EidosLocaleSwitcher } from "@/eidos/components/eidos-locale-switcher";
 import {
   ClientTable,
   type SortDirection,
   type SortKey,
 } from "@/eidos/components/client-table";
 import { EidosOverview } from "@/eidos/components/eidos-overview";
+import { getEidosCopy } from "@/eidos/lib/eidos-i18n";
 import { STATUS_PRIORITY } from "@/eidos/lib/eidos-format";
 import { resolveClient, summarizePortfolio } from "@/eidos/lib/eidos-decision";
 import {
@@ -32,6 +30,7 @@ import type {
   EidosScenario,
   ProcurementStrategy,
 } from "@/eidos/types/eidos";
+import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 
 /** The portfolio is always monitored at BASELINE; scenarios are explored per client. */
 const MONITORED_SCENARIO: EidosScenario = "BASELINE";
@@ -43,12 +42,15 @@ const STRATEGY_ORDER: Record<ProcurementStrategy, number> = {
 };
 const RISK_ORDER: Record<ClientRisk, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
 
-export function EidosWorkspace() {
+type Props = {
+  locale: Locale;
+};
+
+export function EidosWorkspace({ locale }: Props) {
+  const copy = getEidosCopy(locale);
   const baselineClients = useMemo<EidosClient[]>(
     () =>
-      EIDOS_CLIENT_SEEDS.map((seed) =>
-        resolveClient(seed, MONITORED_SCENARIO),
-      ),
+      EIDOS_CLIENT_SEEDS.map((seed) => resolveClient(seed, MONITORED_SCENARIO)),
     [],
   );
   const summary = useMemo(
@@ -89,7 +91,14 @@ export function EidosWorkspace() {
       if (primary !== 0) return primary;
       return a.name.localeCompare(b.name);
     });
-  }, [baselineClients, statusFilter, riskFilter, search, sortKey, sortDirection]);
+  }, [
+    baselineClients,
+    statusFilter,
+    riskFilter,
+    search,
+    sortKey,
+    sortDirection,
+  ]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -116,32 +125,40 @@ export function EidosWorkspace() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-                EIDOS Decision Observatory
+                {copy.header.eyebrow}
               </span>
               <Badge variant="amber" className="gap-1.5">
                 <FlaskConical className="h-3 w-3" aria-hidden="true" />
-                Prototype — synthetic data
+                {copy.header.prototypeBadge}
               </Badge>
             </div>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">
-              Monitor procurement decisions, focus on what changed
+              {copy.header.title}
             </h1>
             <p className="mt-1 max-w-3xl text-sm text-slate-500">
-              Scale expert energy-procurement oversight across many clients:
-              surface changed decisions, compare alternatives, expose the
-              cost/risk trade-off and track outcomes.
+              {copy.header.description}
             </p>
           </div>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            DIP Observatory
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <EidosLocaleSwitcher locale={locale} />
+            <Button asChild size="sm">
+              <Link href={buildLocalePath("/eidos/documentation", locale)}>
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                {copy.header.openDocumentationPage}
+              </Link>
+            </Button>
+            <Link
+              href={buildLocalePath("/", locale)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              {copy.header.backLink}
+            </Link>
+          </div>
         </header>
 
         <EidosOverview
+          locale={locale}
           summary={summary}
           activeStatusFilter={statusFilter}
           onSelectStatus={handleSelectStatus}
@@ -150,15 +167,17 @@ export function EidosWorkspace() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <Card>
             <CardHeader>
-              <CardTitle>Clients</CardTitle>
+              <CardTitle>{copy.table.title}</CardTitle>
               <p className="text-sm text-slate-400">
-                {summary.needsAttention} of {summary.total} need attention.
-                Exceptions are sorted to the top so a trader can investigate
-                only those that changed.
+                {copy.table.attentionSummary(
+                  summary.needsAttention,
+                  summary.total,
+                )}
               </p>
             </CardHeader>
             <CardContent>
               <ClientTable
+                locale={locale}
                 rows={visibleRows}
                 totalCount={baselineClients.length}
                 selectedClientId={selectedClientId}
@@ -176,6 +195,7 @@ export function EidosWorkspace() {
 
           {selectedSeed ? (
             <ClientDecisionDetail
+              locale={locale}
               seed={selectedSeed}
               scenario={scenario}
               onScenarioChange={setScenario}
@@ -184,17 +204,14 @@ export function EidosWorkspace() {
           ) : (
             <Card className="flex items-center justify-center">
               <CardContent className="py-16 text-center text-sm text-slate-400">
-                Select a client to inspect its decision, alternatives, scenario
-                comparison, history and outcome.
+                {copy.detail.emptyState}
               </CardContent>
             </Card>
           )}
         </div>
 
         <p className="text-center text-xs text-slate-600">
-          Prototype — synthetic data only. This does not modify DIP Core, does
-          not connect to EIDOS systems, and makes no real market prediction or
-          procurement recommendation.
+          {copy.footerDisclaimer}
         </p>
       </div>
     </main>
@@ -208,7 +225,9 @@ function compareBy(a: EidosClient, b: EidosClient, key: SortKey): number {
     case "annualConsumptionMwh":
       return a.annualConsumptionMwh - b.annualConsumptionMwh;
     case "currentStrategy":
-      return STRATEGY_ORDER[a.currentStrategy] - STRATEGY_ORDER[b.currentStrategy];
+      return (
+        STRATEGY_ORDER[a.currentStrategy] - STRATEGY_ORDER[b.currentStrategy]
+      );
     case "recommendedStrategy":
       return (
         STRATEGY_ORDER[a.recommendedStrategy] -

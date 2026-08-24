@@ -5,12 +5,13 @@ import { X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  getEidosCopy,
+  getEidosRiskLabel,
+  getEidosStatusLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
 import { cn } from "@/lib/utils";
 import { DecisionAlternatives } from "@/eidos/components/decision-alternatives";
 import { DecisionExplanation } from "@/eidos/components/decision-explanation";
@@ -19,14 +20,7 @@ import { DecisionOutcomes } from "@/eidos/components/decision-outcome";
 import { DecisionReplay } from "@/eidos/components/decision-replay";
 import { DecisionTradeoffChart } from "@/eidos/components/decision-tradeoff-chart";
 import { ScenarioSelector } from "@/eidos/components/scenario-selector";
-import {
-  RISK_LABEL,
-  RISK_TONE,
-  STATUS_LABEL,
-  STATUS_TONE,
-  STRATEGY_LABEL,
-  formatMwh,
-} from "@/eidos/lib/eidos-format";
+import { RISK_TONE, STATUS_TONE, formatMwh } from "@/eidos/lib/eidos-format";
 import {
   analyzeClient,
   explainScenarioShift,
@@ -36,8 +30,10 @@ import {
   buildDecisionOutcomes,
 } from "@/eidos/data/synthetic-eidos-data";
 import type { EidosClientSeed, EidosScenario } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   seed: EidosClientSeed;
   scenario: EidosScenario;
   onScenarioChange: (scenario: EidosScenario) => void;
@@ -45,11 +41,13 @@ type Props = {
 };
 
 export function ClientDecisionDetail({
+  locale,
   seed,
   scenario,
   onScenarioChange,
   onClose,
 }: Props) {
+  const copy = getEidosCopy(locale);
   const analysis = useMemo(
     () => analyzeClient(seed, scenario),
     [seed, scenario],
@@ -72,15 +70,16 @@ export function ClientDecisionDetail({
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle>{client.name}</CardTitle>
               <Badge variant={STATUS_TONE[client.status]}>
-                {STATUS_LABEL[client.status]}
+                {getEidosStatusLabel(locale, client.status)}
               </Badge>
               <Badge variant={RISK_TONE[client.risk]}>
-                {RISK_LABEL[client.risk]} risk
+                {getEidosRiskLabel(locale, client.risk)}{" "}
+                {copy.detail.riskBadgeSuffix}
               </Badge>
             </div>
             <p className="text-sm text-slate-400">
-              {client.id} · {formatMwh(client.annualConsumptionMwh)} annual
-              consumption
+              {client.id} · {formatMwh(client.annualConsumptionMwh)}{" "}
+              {copy.detail.annualConsumptionSuffix}
             </p>
           </div>
           <Button
@@ -88,44 +87,49 @@ export function ClientDecisionDetail({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            aria-label="Close decision detail"
+            aria-label={copy.detail.closeAriaLabel}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <DecisionFact label="Current strategy">
-            {STRATEGY_LABEL[client.currentStrategy]}
+          <DecisionFact label={copy.detail.currentStrategy}>
+            {getEidosStrategyLabel(locale, client.currentStrategy)}
           </DecisionFact>
-          <DecisionFact label="Recommended strategy" highlight>
-            {STRATEGY_LABEL[client.recommendedStrategy]}
+          <DecisionFact label={copy.detail.recommendedStrategy} highlight>
+            {getEidosStrategyLabel(locale, client.recommendedStrategy)}
           </DecisionFact>
           <DecisionFact
-            label="Decision changed"
+            label={copy.detail.decisionChanged}
             tone={client.decisionChanged ? "amber" : "emerald"}
           >
-            {client.decisionChanged ? "YES" : "NO"}
+            {client.decisionChanged ? copy.detail.yes : copy.detail.no}
           </DecisionFact>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scenario &amp; alternatives</CardTitle>
+          <CardTitle>{copy.detail.scenarioAndAlternativesTitle}</CardTitle>
           <p className="text-sm text-slate-400">
-            A change in assumptions can change the preferred decision. Switch
-            scenarios to see cost, risk, confidence and ranking update.
+            {copy.detail.scenarioAndAlternativesDescription}
           </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <ScenarioSelector scenario={scenario} onChange={onScenarioChange} />
+          <ScenarioSelector
+            locale={locale}
+            scenario={scenario}
+            onChange={onScenarioChange}
+          />
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
             <DecisionAlternatives
+              locale={locale}
               evaluations={evaluations}
               recommendedStrategy={recommended.strategy}
               currentStrategy={client.currentStrategy}
             />
             <DecisionTradeoffChart
+              locale={locale}
               evaluations={evaluations}
               recommendedStrategy={recommended.strategy}
             />
@@ -136,10 +140,11 @@ export function ClientDecisionDetail({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Why did the recommendation change?</CardTitle>
+            <CardTitle>{copy.detail.whyTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <DecisionExplanation
+              locale={locale}
               factors={analysis.factors}
               currentStrategy={client.currentStrategy}
               recommendedStrategy={client.recommendedStrategy}
@@ -150,14 +155,14 @@ export function ClientDecisionDetail({
 
         <Card>
           <CardHeader>
-            <CardTitle>Decision replay</CardTitle>
+            <CardTitle>{copy.detail.replayTitle}</CardTitle>
             <p className="text-sm text-slate-400">
-              UI simulation only — the underlying decision engine is not
-              modified.
+              {copy.detail.replayDescription}
             </p>
           </CardHeader>
           <CardContent>
             <DecisionReplay
+              locale={locale}
               original={{
                 scenario: original.scenario,
                 strategy: original.strategy,
@@ -175,27 +180,25 @@ export function ClientDecisionDetail({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Decision history</CardTitle>
+            <CardTitle>{copy.detail.historyTitle}</CardTitle>
             <p className="text-sm text-slate-400">
-              Twelve months of synthetic observations — decisions evolve over
-              time.
+              {copy.detail.historyDescription}
             </p>
           </CardHeader>
           <CardContent>
-            <DecisionHistory entries={history} />
+            <DecisionHistory locale={locale} entries={history} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Outcome tracking</CardTitle>
+            <CardTitle>{copy.detail.outcomeTitle}</CardTitle>
             <p className="text-sm text-slate-400">
-              Recommended vs executed strategy and expected vs actual cost
-              (synthetic).
+              {copy.detail.outcomeDescription}
             </p>
           </CardHeader>
           <CardContent>
-            <DecisionOutcomes outcomes={outcomes} />
+            <DecisionOutcomes locale={locale} outcomes={outcomes} />
           </CardContent>
         </Card>
       </div>

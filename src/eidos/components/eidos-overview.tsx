@@ -3,10 +3,13 @@
 import { AlertTriangle, Filter, ShieldAlert, TrendingUp } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { getEidosCopy } from "@/eidos/lib/eidos-i18n";
 import { cn } from "@/lib/utils";
 import type { DecisionStatus, PortfolioSummary } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   summary: PortfolioSummary;
   activeStatusFilter: DecisionStatus | "ALL";
   onSelectStatus: (status: DecisionStatus | "ALL") => void;
@@ -47,57 +50,59 @@ const toneActive: Record<Metric["tone"], string> = {
 };
 
 export function EidosOverview({
+  locale,
   summary,
   activeStatusFilter,
   onSelectStatus,
 }: Props) {
+  const copy = getEidosCopy(locale);
   const metrics: Metric[] = [
     {
       key: "ALL",
-      label: "Total clients",
+      label: copy.overview.totalClients,
       value: summary.total,
       tone: "neutral",
-      hint: `${summary.needsAttention} need attention`,
+      hint: `${summary.needsAttention} ${copy.overview.totalClientsHint}`,
       icon: Filter,
     },
     {
       key: "STABLE",
-      label: "Stable",
+      label: copy.overview.stable,
       value: summary.stable,
       tone: "emerald",
-      hint: "No change · not high risk",
+      hint: copy.overview.stableHint,
     },
     {
       key: "STRATEGY_CHANGED",
-      label: "Strategy changed",
+      label: copy.overview.strategyChanged,
       value: summary.strategyChanged,
       tone: "cyan",
-      hint: "Recommendation differs from contract",
+      hint: copy.overview.strategyChangedHint,
       icon: TrendingUp,
       emphasize: true,
     },
     {
       key: "HIGH_RISK",
-      label: "High risk",
+      label: copy.overview.highRisk,
       value: summary.highRisk,
       tone: "rose",
-      hint: "Elevated exposure",
+      hint: copy.overview.highRiskHint,
       icon: ShieldAlert,
       emphasize: true,
     },
     {
       key: "ACTION_REQUIRED",
-      label: "Action required",
+      label: copy.overview.actionRequired,
       value: summary.actionRequired,
       tone: "amber",
-      hint: "High risk · decision changed",
+      hint: copy.overview.actionRequiredHint,
       icon: AlertTriangle,
       emphasize: true,
     },
   ];
 
   return (
-    <section aria-label="Portfolio summary">
+    <section aria-label={copy.overview.ariaLabel}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {metrics.map((metric) => {
           const isActive = activeStatusFilter === metric.key;

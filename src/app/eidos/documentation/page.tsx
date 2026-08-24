@@ -9,11 +9,14 @@ import {
 
 const EIDOS_FALLBACK_LOCALE: Locale = "en";
 
-export default async function EidosRedirect() {
+export default async function EidosDocumentationRedirect() {
   const headersList = await headers();
   const locale = detectLocaleFromHeader(headersList.get("accept-language"));
 
   redirect(
-    buildLocalePath("/eidos", locale === "pl" ? "pl" : EIDOS_FALLBACK_LOCALE),
+    buildLocalePath(
+      "/eidos/documentation",
+      locale === "pl" ? "pl" : EIDOS_FALLBACK_LOCALE,
+    ),
   );
 }

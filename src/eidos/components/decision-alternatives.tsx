@@ -3,9 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  RISK_LABEL,
+  getEidosCopy,
+  getEidosRiskLabel,
+  getEidosStrategyLabel,
+} from "@/eidos/lib/eidos-i18n";
+import {
   RISK_TONE,
-  STRATEGY_LABEL,
   formatEuroCompact,
   formatEuroFull,
   formatPercent,
@@ -14,55 +17,56 @@ import type {
   ProcurementStrategy,
   StrategyEvaluation,
 } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   evaluations: StrategyEvaluation[];
   recommendedStrategy: ProcurementStrategy;
   currentStrategy: ProcurementStrategy;
 };
 
 export function DecisionAlternatives({
+  locale,
   evaluations,
   recommendedStrategy,
   currentStrategy,
 }: Props) {
+  const copy = getEidosCopy(locale);
+
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto rounded-[18px] border border-white/10">
         <table className="w-full border-collapse text-left text-sm">
-          <caption className="sr-only">
-            Expected cost, risk and confidence for each procurement alternative
-            under the selected scenario.
-          </caption>
+          <caption className="sr-only">{copy.alternatives.caption}</caption>
           <thead>
             <tr className="border-b border-white/10 bg-white/5 text-[11px] uppercase tracking-[0.16em] text-slate-400">
               <th scope="col" className="px-3 py-2.5 font-medium">
-                Strategy
+                {copy.alternatives.headers.strategy}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                Expected cost
+                {copy.alternatives.expectedCost}
               </th>
               <th scope="col" className="px-3 py-2.5 font-medium">
-                Risk
+                {copy.alternatives.headers.risk}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                Confidence
+                {copy.alternatives.confidence}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                Downside
+                {copy.alternatives.downside}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                Savings vs worst
+                {copy.alternatives.savingsVsWorst}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                Rank
+                {copy.alternatives.rank}
               </th>
             </tr>
           </thead>
           <tbody>
             {evaluations.map((evaluation) => {
-              const isRecommended =
-                evaluation.strategy === recommendedStrategy;
+              const isRecommended = evaluation.strategy === recommendedStrategy;
               const isCurrent = evaluation.strategy === currentStrategy;
               return (
                 <tr
@@ -77,12 +81,16 @@ export function DecisionAlternatives({
                     className="px-3 py-3 text-left font-medium text-white"
                   >
                     <span className="flex flex-wrap items-center gap-2">
-                      {STRATEGY_LABEL[evaluation.strategy]}
+                      {getEidosStrategyLabel(locale, evaluation.strategy)}
                       {isRecommended ? (
-                        <Badge variant="cyan">Recommended</Badge>
+                        <Badge variant="cyan">
+                          {copy.alternatives.recommendedBadge}
+                        </Badge>
                       ) : null}
                       {isCurrent ? (
-                        <Badge variant="neutral">Current</Badge>
+                        <Badge variant="neutral">
+                          {copy.alternatives.currentBadge}
+                        </Badge>
                       ) : null}
                     </span>
                   </th>
@@ -93,7 +101,7 @@ export function DecisionAlternatives({
                   </td>
                   <td className="px-3 py-3">
                     <Badge variant={RISK_TONE[evaluation.risk]}>
-                      {RISK_LABEL[evaluation.risk]}
+                      {getEidosRiskLabel(locale, evaluation.risk)}
                     </Badge>
                   </td>
                   <td className="px-3 py-3 text-right tabular-nums text-slate-300">
@@ -117,12 +125,9 @@ export function DecisionAlternatives({
         </table>
       </div>
       <p className="text-xs leading-5 text-slate-500">
-        {STRATEGY_LABEL[recommendedStrategy]} is{" "}
-        <span className="text-slate-300">
-          recommended under current assumptions
-        </span>
-        , not presented as an absolute optimum. Lower risk-adjusted cost wins;
-        the trade-off is shown so a trader can override it.
+        {copy.alternatives.summary(
+          getEidosStrategyLabel(locale, recommendedStrategy),
+        )}
       </p>
     </div>
   );

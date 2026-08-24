@@ -3,13 +3,15 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
-import { STRATEGY_LABEL } from "@/eidos/lib/eidos-format";
+import { getEidosCopy, getEidosStrategyLabel } from "@/eidos/lib/eidos-i18n";
 import type {
   ProcurementStrategy,
   StrategyEvaluation,
 } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   evaluations: StrategyEvaluation[];
   recommendedStrategy: ProcurementStrategy;
 };
@@ -19,9 +21,11 @@ const HEIGHT = 320;
 const MARGIN = { top: 24, right: 28, bottom: 52, left: 68 };
 
 export function DecisionTradeoffChart({
+  locale,
   evaluations,
   recommendedStrategy,
 }: Props) {
+  const copy = getEidosCopy(locale);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -72,13 +76,17 @@ export function DecisionTradeoffChart({
       .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
       .call(xAxis)
       .call((group) => group.selectAll("text").attr("fill", "#94a3b8"))
-      .call((group) => group.selectAll("line,path").attr("stroke", "rgba(148,163,184,0.3)"));
+      .call((group) =>
+        group.selectAll("line,path").attr("stroke", "rgba(148,163,184,0.3)"),
+      );
     svg
       .append("g")
       .attr("transform", `translate(${MARGIN.left},0)`)
       .call(yAxis)
       .call((group) => group.selectAll("text").attr("fill", "#94a3b8"))
-      .call((group) => group.selectAll("line,path").attr("stroke", "rgba(148,163,184,0.3)"));
+      .call((group) =>
+        group.selectAll("line,path").attr("stroke", "rgba(148,163,184,0.3)"),
+      );
 
     // Axis titles.
     svg
@@ -88,7 +96,7 @@ export function DecisionTradeoffChart({
       .attr("text-anchor", "middle")
       .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
-      .text("Risk →");
+      .text(copy.chart.riskAxis);
     svg
       .append("text")
       .attr("transform", "rotate(-90)")
@@ -97,7 +105,7 @@ export function DecisionTradeoffChart({
       .attr("text-anchor", "middle")
       .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
-      .text("Expected cost");
+      .text(copy.chart.expectedCostAxis);
 
     // Points.
     const points = svg
@@ -130,27 +138,34 @@ export function DecisionTradeoffChart({
       .attr("fill", "#e2e8f0")
       .attr("font-size", 12)
       .attr("font-weight", 600)
-      .text((d) => STRATEGY_LABEL[d.strategy]);
-  }, [evaluations, recommendedStrategy]);
+      .text((d) => getEidosStrategyLabel(locale, d.strategy));
+  }, [
+    copy.chart.expectedCostAxis,
+    copy.chart.riskAxis,
+    evaluations,
+    locale,
+    recommendedStrategy,
+  ]);
 
   return (
     <figure className="m-0">
       <svg
         ref={svgRef}
         role="img"
-        aria-label={`Cost versus risk trade-off. ${evaluations
+        aria-label={`${copy.chart.ariaLabelPrefix}. ${evaluations
           .map(
             (item) =>
-              `${STRATEGY_LABEL[item.strategy]}: risk ${Math.round(
+              `${getEidosStrategyLabel(locale, item.strategy)}: ${copy.chart.riskPointLabel} ${Math.round(
                 item.riskValue * 100,
               )}%`,
           )
-          .join(", ")}. Recommended: ${STRATEGY_LABEL[recommendedStrategy]}.`}
+          .join(
+            ", ",
+          )}. ${copy.chart.recommendedLabel}: ${getEidosStrategyLabel(locale, recommendedStrategy)}.`}
         className="w-full"
       />
       <figcaption className="mt-1 text-xs text-slate-500">
-        Each point is one alternative. Down-left is cheaper and safer; the
-        recommended option balances cost against risk.
+        {copy.chart.figureCaption}
       </figcaption>
     </figure>
   );

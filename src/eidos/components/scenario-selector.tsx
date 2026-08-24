@@ -2,16 +2,24 @@
 
 import { useRef } from "react";
 
+import {
+  getEidosCopy,
+  getEidosScenarioDescription,
+  getEidosScenarioLabel,
+} from "@/eidos/lib/eidos-i18n";
 import { cn } from "@/lib/utils";
-import { SCENARIOS, SCENARIO_ORDER } from "@/eidos/lib/eidos-decision";
+import { SCENARIO_ORDER } from "@/eidos/lib/eidos-decision";
 import type { EidosScenario } from "@/eidos/types/eidos";
+import type { Locale } from "@/lib/observatory-i18n";
 
 type Props = {
+  locale: Locale;
   scenario: EidosScenario;
   onChange: (scenario: EidosScenario) => void;
 };
 
-export function ScenarioSelector({ scenario, onChange }: Props) {
+export function ScenarioSelector({ locale, scenario, onChange }: Props) {
+  const copy = getEidosCopy(locale);
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   const moveTo = (index: number) => {
@@ -51,11 +59,10 @@ export function ScenarioSelector({ scenario, onChange }: Props) {
     <div className="flex flex-col gap-2">
       <div
         role="radiogroup"
-        aria-label="Market scenario"
+        aria-label={copy.scenario.ariaLabel}
         className="flex flex-wrap gap-2"
       >
         {SCENARIO_ORDER.map((id, index) => {
-          const params = SCENARIOS[id];
           const active = id === scenario;
           return (
             <button
@@ -77,13 +84,13 @@ export function ScenarioSelector({ scenario, onChange }: Props) {
                   : "border-white/12 bg-white/5 text-slate-300 hover:border-white/25 hover:text-white",
               )}
             >
-              {params.label}
+              {getEidosScenarioLabel(locale, id)}
             </button>
           );
         })}
       </div>
       <p className="text-xs leading-5 text-slate-400">
-        {SCENARIOS[scenario].description}
+        {getEidosScenarioDescription(locale, scenario)}
       </p>
     </div>
   );

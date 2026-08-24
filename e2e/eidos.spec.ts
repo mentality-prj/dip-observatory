@@ -2,8 +2,72 @@ import { test, expect } from "@playwright/test";
 
 test.describe("EIDOS Decision Observatory prototype", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/eidos");
-    await page.waitForURL(/\/(en|uk|pl)\/eidos/, { timeout: 10_000 });
+    await page.goto("/en/eidos");
+    await page.waitForURL(/\/en\/eidos/, { timeout: 10_000 });
+  });
+
+  test("language switcher is visible and only offers English and Polish", async ({
+    page,
+  }) => {
+    const switcher = page.getByRole("combobox", { name: /language/i });
+    await expect(switcher).toBeVisible();
+    await expect(switcher).toHaveValue("en");
+
+    const options = switcher.locator("option");
+    await expect(options).toHaveCount(2);
+    await expect(options.nth(0)).toHaveText("English");
+    await expect(options.nth(1)).toHaveText("Polski");
+
+    await switcher.selectOption("pl");
+    await page.waitForURL(/\/pl\/eidos/, { timeout: 10_000 });
+  });
+
+  test("documentation page stays on documentation route when switching language", async ({
+    page,
+  }) => {
+    await page.goto("/en/eidos/documentation");
+    await page.waitForURL(/\/en\/eidos\/documentation/, { timeout: 10_000 });
+
+    await expect(
+      page.getByRole("heading", {
+        name: /Management explanation for EIDOS/i,
+        level: 1,
+      }),
+    ).toBeVisible();
+
+    const switcher = page.getByRole("combobox", { name: /language/i });
+    await expect(switcher).toBeVisible();
+
+    await switcher.selectOption("pl");
+    await page.waitForURL(/\/pl\/eidos\/documentation/, { timeout: 10_000 });
+
+    await expect(
+      page.getByRole("heading", {
+        name: /Objaśnienie dla managera EIDOS/i,
+        level: 1,
+      }),
+    ).toBeVisible();
+  });
+
+  test("unsupported EIDOS locales redirect to english", async ({ page }) => {
+    await page.goto("/es/eidos");
+    await page.waitForURL(/\/en\/eidos/, { timeout: 10_000 });
+
+    await expect(
+      page.getByRole("heading", {
+        name: /Monitor procurement decisions, focus on what changed/i,
+      }),
+    ).toBeVisible();
+
+    await page.goto("/uk/eidos/documentation");
+    await page.waitForURL(/\/en\/eidos\/documentation/, { timeout: 10_000 });
+
+    await expect(
+      page.getByRole("heading", {
+        name: /Management explanation for EIDOS/i,
+        level: 1,
+      }),
+    ).toBeVisible();
   });
 
   test("page renders with the synthetic-data disclaimer and summary", async ({
@@ -82,5 +146,26 @@ test.describe("EIDOS Decision Observatory prototype", () => {
     await expect(
       detail.getByText("Original decision", { exact: true }),
     ).toBeVisible();
+  });
+
+  test("Polish locale shows localized UI and in-app documentation", async ({
+    page,
+  }) => {
+    await page.goto("/pl/eidos");
+    await page.waitForURL(/\/pl\/eidos/, { timeout: 10_000 });
+
+    await expect(
+      page.getByRole("heading", {
+        name: /Monitoruj decyzje zakupowe i skupiaj się na tym, co się zmieniło/i,
+      }),
+    ).toBeVisible();
+
+    await expect(
+      page.getByRole("link", { name: /Przejdź do dokumentacji/i }),
+    ).toBeVisible();
+
+    await expect(
+      page.getByRole("button", { name: /Pokaż dokumentację/i }),
+    ).toHaveCount(0);
   });
 });
