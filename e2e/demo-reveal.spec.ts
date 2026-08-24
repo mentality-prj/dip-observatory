@@ -11,17 +11,9 @@ test.describe("demo mode: Run → sequential reveal → final decision", () => {
     page,
   }) => {
     // page loaded — chart waiting overlay should be visible before any run
-    await expect(
-      page
-        .getByRole("main")
-        .locator("[data-testid=chart-waiting]")
-        .or(
-          page
-            .locator("text=awaiting")
-            .or(page.locator("text=очікує"))
-            .or(page.locator("text=czeka")),
-        ),
-    ).toBeVisible({ timeout: 8_000 });
+    const waitingOverlay = page.getByTestId("chart-waiting");
+    await expect(waitingOverlay).toBeVisible({ timeout: 8_000 });
+    await expect(waitingOverlay).toContainText(/awaiting|очікує|czeka/i);
 
     // scenario bar and Run button must be present
     const runBtn = page.getByRole("button", {
