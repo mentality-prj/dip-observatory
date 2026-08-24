@@ -18,6 +18,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Contributing
+
+Every new feature must be developed in its own **feature branch** — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full branching workflow and naming conventions.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
