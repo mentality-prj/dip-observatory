@@ -97,7 +97,7 @@ export function DecisionTradeoffChart({
       .attr("text-anchor", "middle")
       .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
-      .text("Expected cost →");
+      .text("Expected cost");
 
     // Points.
     const points = svg

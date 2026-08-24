@@ -59,7 +59,7 @@ export interface ScenarioParams {
   id: EidosScenario;
   label: string;
   description: string;
-  /** Multiplier on the market forward price. */
+  /** Multiplier on the reference price that drives the realized scenario spot. */
   priceLevel: number;
   /** Multiplier on consumed volume. */
   demandLevel: number;

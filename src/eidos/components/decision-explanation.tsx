@@ -86,7 +86,7 @@ export function DecisionExplanation({
                 <span
                   className={cn(
                     "text-sm font-medium tabular-nums",
-                    rising ? "text-amber-200" : "text-emerald-200",
+                    factor.supportsHedging ? "text-amber-200" : "text-emerald-200",
                   )}
                 >
                   {formatSignedPercent(factor.delta)}

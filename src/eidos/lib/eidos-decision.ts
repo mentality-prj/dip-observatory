@@ -113,7 +113,15 @@ export function bucketRisk(riskValue: number): ClientRisk {
   return "LOW";
 }
 
-/** Effective forward price for a client under a scenario (contango widens with price). */
+/**
+ * Effective forward price a client can lock for this decision.
+ *
+ * The forward is committed *before* the scenario resolves, so it does not scale
+ * with `priceLevel` (which drives the realized spot in {@link spotPrice}). It is
+ * anchored at the reference forward plus a client contango premium that widens
+ * as prices rise. Hedging therefore protects against spot moving above this
+ * locked level.
+ */
 function effectiveForward(seed: EidosClientSeed, params: ScenarioParams): number {
   const contango = seed.forwardPremium * Math.max(0, params.priceLevel - 1);
   return FORWARD_PRICE + contango;
