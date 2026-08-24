@@ -140,6 +140,14 @@ Dla każdej strategii i scenariusza model wyprowadza:
 - koszt skorygowany o ryzyko,
 - rank.
 
+Oczekiwany koszt wyliczany jest z zablokowanej ceny **forward** i zrealizowanej
+ceny **spot**. Forward jest ustalany zanim rozstrzygnie się scenariusz i leży
+stałe `FORWARD_HEDGE_DISCOUNT` (€/MWh) poniżej referencyjnego spotu, więc
+zabezpieczenie większego wolumenu obniża oczekiwany rachunek. W `BASELINE` daje
+to trzy różne koszty (`BUY_40 < BUY_20 < WAIT`). Gdy spot spada (`LOW_PRICE`),
+dyskonto maleje i odwraca się, przez co `WAIT` staje się realnie konkurencyjny i
+może zmienić preferowaną strategię.
+
 Rekomendacja to po prostu pozycja `#1` po sortowaniu według risk-adjusted cost.
 
 Derivacja statusu jest celowo jawna:

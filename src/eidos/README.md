@@ -53,8 +53,12 @@ Data generation:
   `mulberry32` PRNG keyed off each client id; **no runtime randomness**).
 - [`lib/eidos-decision.ts`](./lib/eidos-decision.ts) — the deterministic decision engine.
   For each strategy it derives expected cost, risk, confidence and downside from the
-  selected scenario, then ranks strategies by risk-adjusted cost. Recommendation, status,
-  and portfolio summary are all **derived from data**, never hardcoded in the UI.
+  selected scenario, then ranks strategies by risk-adjusted cost. Expected cost is built
+  from a locked forward that sits a fixed hedge discount below spot, so the three
+  alternatives get distinct, meaningfully different costs under every scenario.
+  The recommendation explanation surfaces the 3–4 most material, data-derived factors
+  (coverage gap, cost, downside, confidence, price and demand moves). Recommendation,
+  status, and portfolio summary are all **derived from data**, never hardcoded in the UI.
 
 The portfolio is always evaluated at the `BASELINE` scenario for the overview and table;
 scenario switching is a per-client exploration in the detail view.
