@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { StateSpaceChart } from "@/components/observatory/state-space-chart";
 import { StateTimeline } from "@/components/observatory/state-timeline";
@@ -281,24 +282,33 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
             </p>
           </div>
 
-          <select
-            value={locale}
-            disabled={isLocalePending}
-            onChange={(e) => {
-              const next = e.target.value as Locale;
-              if (next === locale) return;
-              startLocaleTransition(() => {
-                router.replace(buildLocalePath(pathname, next));
-              });
-            }}
-            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 outline-none transition hover:border-white/20 disabled:opacity-60"
-          >
-            {SUPPORTED_LOCALES.map((option) => (
-              <option key={option} value={option} className="bg-slate-900">
-                {copy.localeOptions[option]}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <Link
+              href={buildLocalePath("/eidos", locale)}
+              className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              EIDOS Observatory
+            </Link>
+            <select
+              value={locale}
+              disabled={isLocalePending}
+              onChange={(e) => {
+                const next = e.target.value as Locale;
+                if (next === locale) return;
+                startLocaleTransition(() => {
+                  router.replace(buildLocalePath(pathname, next));
+                });
+              }}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 outline-none transition hover:border-white/20 disabled:opacity-60"
+            >
+              {SUPPORTED_LOCALES.map((option) => (
+                <option key={option} value={option} className="bg-slate-900">
+                  {copy.localeOptions[option]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {warnings.length > 0 || error ? (
