@@ -26,7 +26,9 @@ Aktualne granice implementacji:
 Ta gałąź gwarantuje dziś następujące zachowanie:
 
 - `/eidos` przekierowuje do wersji z locale, np. `/en/eidos` lub `/pl/eidos`.
-- Obsługiwane locale są takie same jak w reszcie aplikacji: `en`, `uk`, `pl`.
+- Obsługiwane locale w prototypie EIDOS to `en` i `pl`.
+- Nieobsługiwane ścieżki locale dla EIDOS, takie jak `/uk/eidos` lub
+  `/es/eidos`, przekierowują do `en`.
 - Podsumowanie portfela i tabela klientów są zawsze oceniane w scenariuszu `BASELINE`.
 - Przełączanie scenariuszy w detail view służy tylko do eksploracji pojedynczego klienta.
 - Domyślny klient demo to `eidos-03` (`Helios Ceramics`).
@@ -47,6 +49,9 @@ Jeżeli którykolwiek z tych punktów zmieni się świadomie, zaktualizuj testy 
   Przekierowuje `/eidos` do aktywnego locale.
 - `src/app/[locale]/eidos/page.tsx`
   Locale-aware entry point, który renderuje `EidosWorkspace`.
+- `src/proxy.ts`
+  Przekierowuje nieobsługiwane locale-prefixed EIDOS routes do angielskiego
+  wariantu jeszcze przed renderowaniem trasy.
 
 ### Shell funkcji
 

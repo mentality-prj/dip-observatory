@@ -26,7 +26,9 @@ Current implementation boundaries:
 The branch currently guarantees the following behaviour:
 
 - `/eidos` redirects to a locale-prefixed route such as `/en/eidos`.
-- Supported locales are the same as the rest of the app: `en`, `uk`, `pl`.
+- Supported locales for the EIDOS prototype are `en` and `pl`.
+- Unsupported locale paths for EIDOS, such as `/uk/eidos` or `/es/eidos`,
+  redirect to `en`.
 - The portfolio overview and client table are always evaluated in the
   `BASELINE` scenario.
 - Per-client scenario switching is an exploration tool in the detail pane only.
@@ -49,6 +51,9 @@ If any of those guarantees changes, update both tests and documentation.
   Redirects `/eidos` to the active locale.
 - `src/app/[locale]/eidos/page.tsx`
   Locale-aware page entry point that renders `EidosWorkspace`.
+- `src/proxy.ts`
+  Redirects unsupported locale-prefixed EIDOS routes to the English variant
+  before route rendering.
 
 ### Feature shell
 
