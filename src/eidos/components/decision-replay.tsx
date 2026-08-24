@@ -83,7 +83,7 @@ export function DecisionReplay({ original, current, factors }: Props) {
                     <span
                       className={cn(
                         "font-medium tabular-nums",
-                        factor.delta > 0
+                        factor.supportsHedging
                           ? "text-amber-200"
                           : "text-emerald-200",
                       )}
