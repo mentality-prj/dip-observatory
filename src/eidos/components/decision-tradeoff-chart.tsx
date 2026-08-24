@@ -86,7 +86,7 @@ export function DecisionTradeoffChart({
       .attr("x", (MARGIN.left + WIDTH - MARGIN.right) / 2)
       .attr("y", HEIGHT - 12)
       .attr("text-anchor", "middle")
-      .attr("fill", "#cbd5f5")
+      .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
       .text("Risk →");
     svg
@@ -95,7 +95,7 @@ export function DecisionTradeoffChart({
       .attr("x", -(MARGIN.top + HEIGHT - MARGIN.bottom) / 2)
       .attr("y", 18)
       .attr("text-anchor", "middle")
-      .attr("fill", "#cbd5f5")
+      .attr("fill", "#cbd5e1")
       .attr("font-size", 12)
       .text("Expected cost →");
 
@@ -119,7 +119,7 @@ export function DecisionTradeoffChart({
           : "rgba(148,163,184,0.55)",
       )
       .attr("stroke", (d) =>
-        d.strategy === recommendedStrategy ? "#67e8f9" : "#cbd5f5",
+        d.strategy === recommendedStrategy ? "#67e8f9" : "#cbd5e1",
       )
       .attr("stroke-width", 1.5);
 
