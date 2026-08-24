@@ -59,20 +59,16 @@ Data generation:
 The portfolio is always evaluated at the `BASELINE` scenario for the overview and table;
 scenario switching is a per-client exploration in the detail view.
 
-## 5. Demo scenario (~5–7 min)
+## 5. Core workflow
 
-1. Open `/eidos`.
-2. Dashboard shows **20 clients → 12 stable / 4 strategy changed / 2 high risk /
-   2 action required** (derived from the dataset).
-3. Select the pre-highlighted client whose recommendation changed
-   (`BUY_20 → BUY_40`).
-4. Read **Why did the recommendation change?** — structured market/demand/risk factors.
-5. Compare alternatives **BUY 20% / BUY 40% / WAIT** (cost ↔ risk trade-off, ranking).
-6. Switch scenario **BASELINE → HIGH PRICE** — the preferred strategy changes. This is
-   the core hypothesis: a change in assumptions can change the preferred decision.
-7. Open the decision **history** timeline.
-8. Open the **outcome**: recommended vs. executed strategy, expected vs. actual cost,
-   variance, and a synthetic FAVOURABLE / NEUTRAL / UNFAVOURABLE verdict.
+The current prototype supports a clear client-facing workflow:
+
+1. Start from the portfolio overview and focus on the clients that require attention.
+2. Open an individual client to compare the current strategy and the recommended strategy.
+3. Review the explanation of why the recommendation changed.
+4. Compare procurement alternatives through cost, risk, confidence, and downside.
+5. Switch market scenarios to see whether different assumptions lead to a different strategy.
+6. Review decision history and tracked outcomes to understand how decisions evolved over time.
 
 ## 6. Architecture
 

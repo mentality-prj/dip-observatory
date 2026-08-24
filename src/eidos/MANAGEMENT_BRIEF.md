@@ -52,29 +52,23 @@ synthetic clients.
 ### Explainability and auditability
 
 - the interface explains why a recommendation changed using structured factors
-- the prototype includes a decision replay panel for presentation and reasoning
+- the prototype includes a decision replay panel for inspection and reasoning
 - the prototype shows twelve months of synthetic history
 - the prototype tracks synthetic outcomes: expected vs. actual cost and a simple
   favourable/neutral/unfavourable verdict
 
-## 3. What has been technically verified
+## 3. How the product supports daily work
 
-The branch is not just a static mockup. The following behaviour is covered by
-automated validation:
+The current product concept is aimed at the daily oversight workflow inside
+EIDOS:
 
-- production build succeeds
-- deterministic unit tests verify the synthetic dataset and decision engine
-- end-to-end browser tests verify the main user flows
-
-The validated flows include:
-
-- opening the localized EIDOS route
-- seeing the synthetic-data disclaimer and summary metrics
-- searching clients by name
-- narrowing the list by decision status
-- selecting a client and opening the detail view
-- switching a scenario and observing recommendation changes
-- rendering decision history and outcome tracking
+- it narrows a broad client portfolio to the cases that need attention now
+- it lets an expert inspect the current strategy and the recommended strategy
+  for a given client in one place
+- it explains why a recommendation changed instead of showing a black-box output
+- it compares procurement alternatives under different market assumptions
+- it keeps decision history and tracked outcomes visible for retrospective
+  review and learning
 
 ## 4. What the prototype proves
 
@@ -86,7 +80,7 @@ This branch is suitable for answering workflow and product questions such as:
   the trade-offs?
 - Is scenario switching a useful exploration tool during client oversight?
 - Does outcome tracking strengthen trust and retrospective learning?
-- Is the proposed interaction model understandable within a short live demo?
+- Is the proposed interaction model practical in everyday portfolio oversight?
 
 ## 5. What the prototype does not prove
 
@@ -102,26 +96,7 @@ This branch does **not** prove:
 It validates workflow and product direction, not commercial or quantitative
 correctness.
 
-## 6. Recommended demo narrative
-
-The most effective management demo is approximately 5 to 7 minutes.
-
-Suggested storyline:
-
-1. Open `/eidos` and show that the interface immediately narrows 20 clients down
-   to 8 that need attention.
-2. Start with the default demo client whose recommendation changed from
-   `BUY 20%` to `BUY 40%`.
-3. Show the explanation panel to answer the management question, "Why did the
-   recommendation change?"
-4. Show the alternatives table and trade-off chart to demonstrate that the tool
-   supports expert judgment instead of hiding it.
-5. Switch the scenario from `BASELINE` to `HIGH_PRICE` and show that the
-   preferred strategy changes.
-6. Close with decision history and outcome tracking to demonstrate learning and
-   accountability, not just point-in-time recommendation display.
-
-## 7. Business value if the hypothesis holds
+## 6. Value for EIDOS
 
 If real users confirm the workflow, the prototype suggests a path to several
 practical gains:
@@ -135,7 +110,7 @@ practical gains:
 In short: the interface aims to scale expert oversight, not replace expert
 judgment.
 
-## 8. Key limitations management should understand
+## 7. Key limitations management should understand
 
 The current prototype intentionally simplifies reality.
 
@@ -146,10 +121,10 @@ The current prototype intentionally simplifies reality.
 - there is no tenant-aware live data access
 - there is no real audit store
 
-Those limits are acceptable for a hypothesis demo and unacceptable for
+Those limits are acceptable for an early prototype and unacceptable for
 production use.
 
-## 9. Main delivery risks on the road to a real product
+## 8. Main delivery risks on the road to a real product
 
 If EIDOS decides to move beyond the prototype, the main risks are not visual.
 They are integration and governance risks:
@@ -164,7 +139,7 @@ They are integration and governance risks:
 - proving that the interface stays useful with real portfolio sizes and noisy
   data
 
-## 10. Recommended next steps
+## 9. Recommended next steps
 
 ### Product discovery
 
@@ -186,7 +161,7 @@ They are integration and governance risks:
 2. Keep scenario exploration and explanation.
 3. Add persisted outcome tracking before adding write actions.
 
-## 11. Go / no-go questions for management
+## 10. Go / no-go questions for management
 
 Before funding a production path, management should be able to answer:
 
@@ -197,11 +172,11 @@ Before funding a production path, management should be able to answer:
 - Is the goal oversight, recommendation support, or approval workflow?
 - What level of model transparency is required for internal adoption?
 
-## 12. Bottom line
+## 11. Bottom line
 
 This branch already delivers a credible, interactive prototype of an EIDOS
-Decision Observatory. It is strong enough for stakeholder demos, workflow
-validation, and product discussion.
+Decision Observatory. It is strong enough for stakeholder review and product
+discussion.
 
-It should be treated as a validated prototype, not as a production-ready
+It should be treated as an early product prototype, not as a production-ready
 decision system.

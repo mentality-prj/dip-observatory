@@ -1,13 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getEidosCopy } from "@/eidos/lib/eidos-i18n";
 import type { Locale } from "@/lib/observatory-i18n";
 
@@ -24,14 +17,7 @@ export function EidosManagementDocumentation({ locale, id }: Props) {
       id={id}
       className="border-cyan-300/20 bg-[linear-gradient(180deg,rgba(12,20,34,0.96),rgba(6,10,18,0.98))]"
     >
-      <CardHeader>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="cyan">{copy.header.documentationBadge}</Badge>
-        </div>
-        <CardTitle>{copy.documentation.title}</CardTitle>
-        <CardDescription>{copy.documentation.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 lg:grid-cols-2">
+      <CardContent className="grid gap-4 px-6 py-6 lg:grid-cols-2">
         {copy.documentation.sections.map((section) => (
           <section
             key={section.title}

@@ -336,7 +336,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       openDocumentationPage: "Go to documentation",
       showDocumentation: "Show documentation",
       hideDocumentation: "Hide documentation",
-      documentationBadge: "Management brief",
+      documentationBadge: "Documentation",
     },
     overview: {
       ariaLabel: "Portfolio summary",
@@ -465,7 +465,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
     documentation: {
       title: "Management explanation for EIDOS",
       description:
-        "This panel explains what the prototype shows, what has already been verified technically, and how to present it without over-claiming.",
+        "This panel explains what the prototype is, how it supports EIDOS work, what value it can create, and what its current limits are.",
       sections: [
         {
           title: "What this prototype is",
@@ -478,23 +478,25 @@ const copyByLocale: Record<Locale, EidosCopy> = {
           ],
         },
         {
-          title: "What is already verified",
+          title: "How it supports EIDOS work",
           description:
-            "The branch is not a static mockup; the key flows are executable and tested.",
+            "The product is designed to make expert portfolio oversight faster and clearer.",
           bullets: [
-            "Production build completes successfully.",
-            "Deterministic unit tests validate the synthetic dataset and decision rules.",
-            "End-to-end browser tests validate search, filtering, client selection, scenario switching, and outcome rendering.",
+            "Reduces a broad portfolio to the decisions that need attention now.",
+            "Shows the current strategy, recommended strategy, and the reason for the change in one view.",
+            "Compares alternatives under different market assumptions instead of presenting a single black-box output.",
+            "Keeps decision history and tracked outcomes visible for retrospective review.",
           ],
         },
         {
-          title: "How to present the demo",
-          description: "Keep the story short and anchored in user workflow.",
+          title: "Value for EIDOS",
+          description:
+            "The prototype is designed to support expert oversight, not to replace expert judgment.",
           bullets: [
-            "Start with 20 clients collapsing to the attention set.",
-            "Open the demo client and show why the recommendation changed.",
-            "Switch from BASELINE to HIGH PRICE to show the decision can change under new assumptions.",
-            "Finish with history and outcome tracking to show accountability and learning.",
+            "Helps one expert supervise more client portfolios without manually reviewing every stable case.",
+            "Makes changed decisions and elevated risk visible earlier.",
+            "Supports comparison of alternatives before accepting or overriding a recommendation.",
+            "Creates a clearer basis for retrospective learning through decision history and outcome tracking.",
           ],
         },
         {
@@ -525,7 +527,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       openDocumentationPage: "Перейти до документації",
       showDocumentation: "Показати документацію",
       hideDocumentation: "Сховати документацію",
-      documentationBadge: "Бриф для менеджменту",
+      documentationBadge: "Документація",
     },
     overview: {
       ariaLabel: "Портфельний огляд",
@@ -653,7 +655,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
     documentation: {
       title: "Пояснення для менеджменту EIDOS",
       description:
-        "Ця панель пояснює, що саме показує прототип, що вже технічно перевірено і як його презентувати без завищених очікувань.",
+        "Ця панель пояснює, чим є прототип, як він підтримує роботу EIDOS, яку цінність може створити і які його поточні обмеження.",
       sections: [
         {
           title: "Що це за прототип",
@@ -666,24 +668,25 @@ const copyByLocale: Record<Locale, EidosCopy> = {
           ],
         },
         {
-          title: "Що вже перевірено",
+          title: "Як це підтримує роботу EIDOS",
           description:
-            "Це не статичний мокап; ключові потоки виконувані й покриті перевірками.",
+            "Продукт задуманий так, щоб робити експертний нагляд за портфелем швидшим і зрозумілішим.",
           bullets: [
-            "Production build проходить успішно.",
-            "Детерміновані unit-тести перевіряють синтетичний датасет і правила рішень.",
-            "End-to-end тести перевіряють пошук, фільтрацію, вибір клієнта, зміну сценарію та рендер результатів.",
+            "Зводить широкий портфель до тих рішень, які потребують уваги зараз.",
+            "Показує поточну стратегію, рекомендовану стратегію і причину зміни в одному вікні.",
+            "Порівнює альтернативи за різних ринкових припущень замість одного black-box output.",
+            "Тримає історію рішень і відстеження результатів у видимому полі для ретроспективного аналізу.",
           ],
         },
         {
-          title: "Як показувати демо",
+          title: "Цінність для EIDOS",
           description:
-            "Тримайте історію короткою й прив'язаною до робочого процесу користувача.",
+            "Прототип створений, щоб підсилювати експертний нагляд, а не замінювати експертне судження.",
           bullets: [
-            "Почніть з того, як 20 клієнтів зводяться до невеликого набору, що потребує уваги.",
-            "Відкрийте демо-клієнта і покажіть, чому змінилася рекомендація.",
-            "Перемкніть BASELINE на HIGH PRICE, щоб показати зміну рішення під новими припущеннями.",
-            "Завершіть історією та tracking outcome, щоб показати підзвітність і навчання.",
+            "Допомагає одному експерту супроводжувати більше клієнтських портфелів без ручного перегляду кожного стабільного кейсу.",
+            "Раніше виявляє змінені рішення та підвищений ризик.",
+            "Дає змогу порівнювати альтернативи перед прийняттям або перевизначенням рекомендації.",
+            "Створює кращу основу для ретроспективного навчання через історію рішень і відстеження результатів.",
           ],
         },
         {
@@ -713,7 +716,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       openDocumentationPage: "Przejdź do dokumentacji",
       showDocumentation: "Pokaż dokumentację",
       hideDocumentation: "Ukryj dokumentację",
-      documentationBadge: "Brief dla managera",
+      documentationBadge: "Dokumentacja",
     },
     overview: {
       ariaLabel: "Podsumowanie portfela",
@@ -841,7 +844,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
     documentation: {
       title: "Objaśnienie dla managera EIDOS",
       description:
-        "Ten panel objaśnia, co dokładnie pokazuje prototyp, co zostało już technicznie zweryfikowane i jak go prezentować bez nadmiernych obietnic.",
+        "Ten panel objaśnia, czym jest prototyp, jak wspiera pracę EIDOS, jaką wartość może dać i jakie są jego obecne ograniczenia.",
       sections: [
         {
           title: "Czym jest ten prototyp",
@@ -854,24 +857,25 @@ const copyByLocale: Record<Locale, EidosCopy> = {
           ],
         },
         {
-          title: "Co zostało już potwierdzone",
+          title: "Jak wspiera pracę EIDOS",
           description:
-            "Ta gałąź nie jest statycznym mockupem; kluczowe przepływy są wykonywalne i przetestowane.",
+            "Produkt jest zaprojektowany tak, aby przyspieszać i porządkować ekspercki nadzór nad portfelem.",
           bullets: [
-            "Build produkcyjny kończy się sukcesem.",
-            "Deterministyczne testy jednostkowe weryfikują syntetyczny dataset i reguły decyzji.",
-            "Testy end-to-end w przeglądarce weryfikują wyszukiwanie, filtrowanie, wybór klienta, zmianę scenariusza i renderowanie wyników.",
+            "Redukuje szeroki portfel do decyzji, które wymagają uwagi teraz.",
+            "Pokazuje obecną strategię, rekomendowaną strategię i przyczynę zmiany w jednym widoku.",
+            "Porównuje alternatywy przy różnych założeniach rynkowych zamiast pojedynczego black-box output.",
+            "Utrzymuje historię decyzji i śledzenie wyników w polu widzenia do analizy retrospektywnej.",
           ],
         },
         {
-          title: "Jak prowadzić demo",
+          title: "Wartość dla EIDOS",
           description:
-            "Najlepiej opowiedzieć historię krótko i przez pryzmat pracy użytkownika.",
+            "Prototyp ma wzmacniać ekspercki nadzór, a nie zastępować ekspercki osąd.",
           bullets: [
-            "Zacznij od tego, jak 20 klientów redukuje się do niewielkiego zbioru wymagającego uwagi.",
-            "Otwórz klienta demo i pokaż, dlaczego rekomendacja się zmieniła.",
-            "Przełącz BASELINE na HIGH PRICE, aby pokazać, że decyzja może zmienić się przy nowych założeniach.",
-            "Zamknij prezentację historią i śledzeniem wyników, aby pokazać odpowiedzialność i uczenie się.",
+            "Pomaga jednemu ekspertowi nadzorować więcej portfeli klientów bez ręcznego przeglądu każdego stabilnego przypadku.",
+            "Wcześniej ujawnia zmienione decyzje i podwyższone ryzyko.",
+            "Pozwala porównywać alternatywy przed zaakceptowaniem lub nadpisaniem rekomendacji.",
+            "Tworzy lepszą podstawę do uczenia retrospektywnego dzięki historii decyzji i śledzeniu wyników.",
           ],
         },
         {

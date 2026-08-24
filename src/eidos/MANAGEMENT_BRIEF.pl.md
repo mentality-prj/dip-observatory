@@ -50,28 +50,22 @@ Prototyp pokazuje pełny workflow przeglądu portfela 20 syntetycznych klientów
 ### Explainability i auditability
 
 - interfejs wyjaśnia, dlaczego rekomendacja się zmieniła,
-- prototyp zawiera decision replay do prezentacji i reasoning,
+- prototyp zawiera decision replay do analizy i reasoning,
 - pokazuje 12 miesięcy syntetycznej historii,
 - śledzi syntetyczne wyniki: koszt oczekiwany vs rzeczywisty oraz prosty verdict.
 
-## 3. Co zostało technicznie zweryfikowane
+## 3. Jak produkt wspiera codzienną pracę
 
-To nie jest tylko statyczny mockup. Automatycznie zweryfikowano:
+Obecna koncepcja produktu jest zaprojektowana pod codzienny workflow nadzoru
+w EIDOS:
 
-- produkcyjny build aplikacji,
-- deterministyczne unit tests dla datasetu i decision engine,
-- end-to-end browser tests dla głównych przepływów użytkownika.
-
-Zweryfikowane scenariusze obejmują:
-
-- otwarcie localized EIDOS route,
-- wyświetlenie synthetic-data disclaimer i summary metrics,
-- wyszukiwanie klientów po nazwie,
-- zawężanie listy po statusie decyzji,
-- wybór klienta i otwarcie detail view,
-- przełączenie scenariusza i zmianę rekomendacji,
-- render decision history i outcome tracking,
-- dostępność przycisku dokumentacji i otwarcie objaśnienia dla managera.
+- zawęża szeroki portfel klientów do przypadków, które wymagają uwagi teraz,
+- pozwala ekspertowi zobaczyć w jednym miejscu obecną strategię i strategię
+  rekomendowaną dla konkretnego klienta,
+- wyjaśnia, dlaczego rekomendacja się zmieniła, zamiast pokazywać black-box output,
+- porównuje alternatywy zakupowe przy różnych założeniach rynkowych,
+- utrzymuje historię decyzji i śledzenie wyników w widoku, aby wspierać analizę
+  retrospektywną i uczenie się.
 
 ## 4. Co ten prototyp udowadnia
 
@@ -81,7 +75,7 @@ Ta gałąź nadaje się do odpowiedzi na pytania workflow i product-fit, takie j
 - Czy eksperci potrzebują tylko rekomendacji, czy również widoku alternatyw i trade-off?
 - Czy przełączanie scenariuszy jest wartościowym narzędziem eksploracji?
 - Czy outcome tracking wzmacnia zaufanie i retrospektywne uczenie się?
-- Czy proponowany model interakcji jest zrozumiały podczas krótkiego live demo?
+- Czy proponowany model interakcji jest praktyczny w codziennym nadzorze nad portfelem?
 
 ## 5. Czego ten prototyp nie udowadnia
 
@@ -96,20 +90,7 @@ Ta gałąź **nie** udowadnia:
 
 Waliduje kierunek workflow i produktu, a nie komercyjną lub ilościową poprawność.
 
-## 6. Rekomendowana narracja demo
-
-Najbardziej efektywne demo dla managementu trwa około 5 do 7 minut.
-
-Proponowana sekwencja:
-
-1. Otwórz `/pl/eidos` i pokaż, że interfejs zawęża 20 klientów do 8 wymagających uwagi.
-2. Zacznij od domyślnego klienta demo, którego rekomendacja zmieniła się z `BUY 20%` na `BUY 40%`.
-3. Pokaż panel explanation, aby odpowiedzieć na pytanie: „Dlaczego rekomendacja się zmieniła?”.
-4. Pokaż alternatives table i trade-off chart, aby zademonstrować wsparcie eksperckiego osądu.
-5. Przełącz scenariusz z `BASELINE` na `HIGH_PRICE` i pokaż zmianę preferowanej strategii.
-6. Zakończ decision history i outcome tracking, aby pokazać learning loop i accountability.
-
-## 7. Potencjalna wartość biznesowa, jeśli hipoteza się potwierdzi
+## 6. Wartość dla EIDOS
 
 Jeśli realni użytkownicy potwierdzą workflow, prototyp sugeruje drogę do kilku
 praktycznych korzyści:
@@ -122,7 +103,7 @@ praktycznych korzyści:
 
 Krótko: interfejs ma skalować ekspercki nadzór, a nie zastępować ekspercki osąd.
 
-## 8. Kluczowe ograniczenia, które management powinien rozumieć
+## 7. Kluczowe ograniczenia, które management powinien rozumieć
 
 Aktualny prototyp celowo upraszcza rzeczywistość.
 
@@ -133,9 +114,9 @@ Aktualny prototyp celowo upraszcza rzeczywistość.
 - nie ma tenant-aware live data access,
 - nie ma realnego store audytowego.
 
-Te ograniczenia są akceptowalne dla demo hipotezy i nieakceptowalne dla produkcji.
+Te ograniczenia są akceptowalne dla wczesnego prototypu i nieakceptowalne dla produkcji.
 
-## 9. Główne ryzyka delivery na drodze do realnego produktu
+## 8. Główne ryzyka delivery na drodze do realnego produktu
 
 Jeśli EIDOS zdecyduje się iść dalej, główne ryzyka nie są wizualne, lecz
 integracyjne i governance-related:
@@ -147,7 +128,7 @@ integracyjne i governance-related:
 - dopasowanie języka produktu do ograniczeń prawnych i komercyjnych,
 - potwierdzenie, że interfejs pozostaje użyteczny przy realnych rozmiarach portfela i noisy data.
 
-## 10. Rekomendowane następne kroki
+## 9. Rekomendowane następne kroki
 
 ### Product discovery
 
@@ -168,7 +149,7 @@ integracyjne i governance-related:
 2. Zachować scenario exploration i explanation.
 3. Dodać persisted outcome tracking przed wprowadzaniem write actions.
 
-## 11. Pytania go / no-go dla managementu
+## 10. Pytania go / no-go dla managementu
 
 Przed finansowaniem ścieżki produkcyjnej management powinien odpowiedzieć:
 
@@ -179,9 +160,9 @@ Przed finansowaniem ścieżki produkcyjnej management powinien odpowiedzieć:
 - Czy celem jest oversight, recommendation support czy approval workflow?
 - Jaki poziom przejrzystości modelu jest wymagany dla adopcji wewnętrznej?
 
-## 12. Bottom line
+## 11. Bottom line
 
 Ta gałąź dostarcza wiarygodny, interaktywny prototyp EIDOS Decision Observatory.
-Jest wystarczająco mocna do demos stakeholders, walidacji workflow i dyskusji produktowej.
+Jest wystarczająco mocna do przeglądu przez interesariuszy i dyskusji produktowej.
 
-Powinna być traktowana jako zweryfikowany prototyp, a nie produkcyjny system decyzyjny.
+Powinna być traktowana jako wczesny prototyp produktu, a nie produkcyjny system decyzyjny.

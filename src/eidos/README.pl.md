@@ -58,15 +58,16 @@ unie:
 Podsumowanie portfela i tabela klientów są zawsze liczone dla scenariusza
 `BASELINE`; przełączanie scenariuszy służy do analizy pojedynczego klienta.
 
-## 5. Sugerowany scenariusz demo
+## 5. Główny workflow
 
-1. Otwórz `/pl/eidos`.
-2. Pokaż podsumowanie: 20 klientów, z czego 8 wymaga uwagi.
-3. Otwórz domyślnego klienta demo z widoczną zmianą rekomendacji.
-4. Pokaż sekcję wyjaśniającą, dlaczego rekomendacja się zmieniła.
-5. Porównaj trzy strategie: `BUY 20%`, `BUY 40%`, `WAIT`.
-6. Przełącz scenariusz `BASELINE` na `HIGH_PRICE` i pokaż zmianę preferowanej decyzji.
-7. Zakończ historią decyzji i śledzeniem wyników.
+Aktualny prototyp wspiera czytelny workflow po stronie klienta:
+
+1. Zaczyna się od widoku portfela, który zawęża uwagę do klientów wymagających reakcji.
+2. Po wejściu w klienta pokazuje obecną strategię i strategię rekomendowaną.
+3. Wyjaśnia, dlaczego rekomendacja się zmieniła.
+4. Pozwala porównać alternatywy zakupowe przez koszt, ryzyko, pewność i downside.
+5. Pozwala przełączać scenariusze rynkowe, aby sprawdzić, czy nowe założenia zmieniają decyzję.
+6. Pokazuje historię decyzji i śledzenie wyników, aby wspierać analizę retrospektywną.
 
 ## 6. Architektura
 
