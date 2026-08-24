@@ -8,28 +8,28 @@ Every new feature must be developed in a dedicated **feature branch** — never 
 
 ### Workflow
 
-1. Оновіть локальну основну гілку:
+1. Оновіть локальну основну гілку / Update your local main branch:
 
    ```bash
    git checkout main
    git pull origin main
    ```
 
-2. Створіть нову гілку для фічі. Використовуйте префікс `feature/` та короткий описовий kebab-case суфікс:
+2. Створіть нову гілку для фічі. Використовуйте префікс `feature/` та короткий описовий kebab-case суфікс. / Create a new feature branch. Use the `feature/` prefix and a short descriptive kebab-case suffix:
 
    ```bash
    git checkout -b feature/short-description
    ```
 
-3. Розробляйте фічу, роблячи невеликі, зрозумілі коміти.
+3. Розробляйте фічу, роблячи невеликі, зрозумілі коміти. / Develop the feature with small, clear commits.
 
-4. Запуштіть гілку та відкрийте Pull Request у `main`:
+4. Запуштіть гілку та відкрийте Pull Request у `main`. / Push the branch and open a Pull Request into `main`:
 
    ```bash
    git push -u origin feature/short-description
    ```
 
-5. Після рев'ю та проходження CI гілку зливають (merge) у `main`.
+5. Після рев'ю та проходження CI гілку зливають (merge) у `main`. / After review and passing CI, the branch is merged into `main`.
 
 ### Branch naming conventions
 
@@ -43,7 +43,7 @@ Every new feature must be developed in a dedicated **feature branch** — never 
 
 ### Rules
 
-- ❌ Не пуште напряму в `main`.
-- ✅ Одна фіча — одна гілка — один Pull Request.
-- ✅ Тримайте гілку зосередженою на одній задачі.
-- ✅ Тримайте feature-гілку в актуальному стані з `main` (rebase або merge) перед злиттям.
+- ❌ Не пуште напряму в `main`. / Do not push directly to `main`.
+- ✅ Одна фіча — одна гілка — один Pull Request. / One feature — one branch — one Pull Request.
+- ✅ Тримайте гілку зосередженою на одній задачі. / Keep each branch focused on a single task.
+- ✅ Тримайте feature-гілку в актуальному стані з `main` (rebase або merge) перед злиттям. / Keep the feature branch up to date with `main` (rebase or merge) before merging.
