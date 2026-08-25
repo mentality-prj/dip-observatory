@@ -6,6 +6,7 @@ import {
   bucketRisk,
   deriveStatus,
   evaluateStrategies,
+  explainDecision,
   explainScenarioShift,
   recommendStrategy,
   resolveClient,
@@ -132,6 +133,148 @@ test("switching scenario can change the preferred strategy (demo client)", () =>
     recommendStrategy(seed, "BASELINE"),
     recommendStrategy(seed, "HIGH_PRICE"),
   );
+});
+
+// --- Cost/risk trade-off model (improved demo behaviour) ----------------------
+
+test("baseline returns three distinct expected costs (demo client)", () => {
+  const seed = getClientSeed(EIDOS_DEMO_CLIENT_ID)!;
+  const evaluations = evaluateStrategies(seed, "BASELINE");
+  const costs = evaluations.map((item) => item.expectedCost);
+  assert.equal(new Set(costs).size, 3, "all three costs are distinct");
+
+  // Under central assumptions more hedging lowers the expected bill.
+  const byStrategy = new Map(
+    evaluations.map((item) => [item.strategy, item.expectedCost]),
+  );
+  assert.ok(byStrategy.get("BUY_40")! < byStrategy.get("BUY_20")!);
+  assert.ok(byStrategy.get("BUY_20")! < byStrategy.get("WAIT")!);
+  // Gaps are material (visibly different for the demo), not rounding noise.
+  const spread =
+    (byStrategy.get("WAIT")! - byStrategy.get("BUY_40")!) /
+    byStrategy.get("BUY_40")!;
+  assert.ok(spread > 0.02, `expected a >2% spread, got ${spread}`);
+});
+
+test("ranking is deterministic and ordered by risk-adjusted cost", () => {
+  for (const seed of EIDOS_CLIENT_SEEDS) {
+    for (const scenario of SCENARIO_ORDER) {
+      const evaluations = evaluateStrategies(seed, scenario);
+      assert.deepEqual(
+        evaluations.map((item) => item.rank),
+        [1, 2, 3],
+        `${seed.id} @ ${scenario} ranks are 1..3`,
+      );
+      const costs = evaluations.map((item) => item.riskAdjustedCost);
+      const sorted = [...costs].sort((a, b) => a - b);
+      assert.deepEqual(costs, sorted, `${seed.id} @ ${scenario} is sorted`);
+    }
+  }
+});
+
+test("high-price scenario changes expected costs versus baseline", () => {
+  const seed = getClientSeed(EIDOS_DEMO_CLIENT_ID)!;
+  const base = evaluateStrategies(seed, "BASELINE");
+  const high = evaluateStrategies(seed, "HIGH_PRICE");
+  for (const strategy of STRATEGIES) {
+    const b = base.find((item) => item.strategy === strategy)!.expectedCost;
+    const h = high.find((item) => item.strategy === strategy)!.expectedCost;
+    assert.notEqual(h, b, `${strategy} cost moves under HIGH_PRICE`);
+  }
+});
+
+test("low-price scenario changes expected costs versus baseline", () => {
+  const seed = getClientSeed(EIDOS_DEMO_CLIENT_ID)!;
+  const base = evaluateStrategies(seed, "BASELINE");
+  const low = evaluateStrategies(seed, "LOW_PRICE");
+  for (const strategy of STRATEGIES) {
+    const b = base.find((item) => item.strategy === strategy)!.expectedCost;
+    const l = low.find((item) => item.strategy === strategy)!.expectedCost;
+    assert.notEqual(l, b, `${strategy} cost moves under LOW_PRICE`);
+  }
+  // Low prices make waiting genuinely competitive for the neutral client.
+  const reference = getClientSeed(EIDOS_REFERENCE_CLIENT_ID)!;
+  assert.equal(recommendStrategy(reference, "BASELINE"), "BUY_40");
+  assert.equal(recommendStrategy(reference, "LOW_PRICE"), "WAIT");
+});
+
+test("at least one scenario changes the preferred strategy across the portfolio", () => {
+  const changed = EIDOS_CLIENT_SEEDS.filter((seed) => {
+    const base = recommendStrategy(seed, "BASELINE");
+    return SCENARIO_ORDER.some(
+      (scenario) =>
+        scenario !== "BASELINE" && recommendStrategy(seed, scenario) !== base,
+    );
+  });
+  assert.ok(
+    changed.length >= 1,
+    "at least one client flips preferred strategy on a scenario change",
+  );
+
+  // At least two distinct scenarios must flip a preferred strategy.
+  const flippingScenarios = new Set<EidosScenario>();
+  for (const seed of EIDOS_CLIENT_SEEDS) {
+    const base = recommendStrategy(seed, "BASELINE");
+    for (const scenario of SCENARIO_ORDER) {
+      if (scenario === "BASELINE") continue;
+      if (recommendStrategy(seed, scenario) !== base) {
+        flippingScenarios.add(scenario);
+      }
+    }
+  }
+  assert.ok(
+    flippingScenarios.size >= 2,
+    `expected >=2 flipping scenarios, got ${[...flippingScenarios].join(", ")}`,
+  );
+});
+
+test("explanation contains multiple data-derived factors for a changed decision", () => {
+  const seed = getClientSeed(EIDOS_DEMO_CLIENT_ID)!;
+  const analysis = analyzeClient(seed, "BASELINE");
+  assert.equal(analysis.client.decisionChanged, true);
+
+  const factors = explainDecision(seed, "BASELINE");
+  assert.ok(
+    factors.length >= 3 && factors.length <= 4,
+    `expected 3-4 factors, got ${factors.length}`,
+  );
+
+  const allowed = new Set([
+    "Contract coverage vs target",
+    "Expected cost",
+    "Downside risk",
+    "Forecast confidence",
+    "TTF price forecast",
+    "Demand forecast",
+  ]);
+  for (const factor of factors) {
+    assert.ok(allowed.has(factor.label), `unknown factor ${factor.label}`);
+    assert.ok(Math.abs(factor.delta) >= 0.005, "factors are material");
+  }
+  // Coverage gap for a BUY_20 client is a real 20pp shortfall.
+  const coverage = factors.find(
+    (factor) => factor.label === "Contract coverage vs target",
+  );
+  assert.ok(coverage && Math.abs(coverage.delta + 0.2) < 1e-9);
+});
+
+test("re-running the same scenario produces identical results", () => {
+  for (const seed of EIDOS_CLIENT_SEEDS) {
+    for (const scenario of SCENARIO_ORDER) {
+      assert.deepEqual(
+        evaluateStrategies(seed, scenario),
+        evaluateStrategies(seed, scenario),
+      );
+      assert.deepEqual(
+        explainDecision(seed, scenario),
+        explainDecision(seed, scenario),
+      );
+      assert.deepEqual(
+        analyzeClient(seed, scenario),
+        analyzeClient(seed, scenario),
+      );
+    }
+  }
 });
 
 test("risk buckets and status derivation follow the rules", () => {

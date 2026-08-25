@@ -287,6 +287,7 @@ const factorLabelsByLocale: Record<Locale, Record<string, string>> = {
   en: {
     "TTF price forecast": "TTF price forecast",
     "Demand forecast": "Demand forecast",
+    "Expected cost": "Expected cost",
     "Downside risk": "Downside risk",
     "Forecast confidence": "Forecast confidence",
     "Contract coverage vs target": "Contract coverage vs target",
@@ -294,6 +295,7 @@ const factorLabelsByLocale: Record<Locale, Record<string, string>> = {
   uk: {
     "TTF price forecast": "Прогноз ціни TTF",
     "Demand forecast": "Прогноз попиту",
+    "Expected cost": "Очікувана вартість",
     "Downside risk": "Ризик негативного сценарію",
     "Forecast confidence": "Впевненість у прогнозі",
     "Contract coverage vs target": "Покриття контрактом відносно цілі",
@@ -301,6 +303,7 @@ const factorLabelsByLocale: Record<Locale, Record<string, string>> = {
   pl: {
     "TTF price forecast": "Prognoza ceny TTF",
     "Demand forecast": "Prognoza popytu",
+    "Expected cost": "Oczekiwany koszt",
     "Downside risk": "Ryzyko spadkowe",
     "Forecast confidence": "Pewność prognozy",
     "Contract coverage vs target": "Pokrycie kontraktowe względem celu",

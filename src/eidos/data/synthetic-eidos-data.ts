@@ -44,8 +44,8 @@ export const EIDOS_CLIENT_SEEDS: EidosClientSeed[] = [
   seed("eidos-05", "Baltic Paper Mills", 44000, "BUY_20", {}),
   seed("eidos-06", "Carpathian Glass", 27000, "BUY_20", {}),
   // --- HIGH RISK: exposed (WAIT) but local spot keeps WAIT preferred ---
-  seed("eidos-07", "Vega Data Centres", 95000, "WAIT", { spotBias: -18 }),
-  seed("eidos-08", "Aegean Cold Chain", 33000, "WAIT", { spotBias: -18 }),
+  seed("eidos-07", "Vega Data Centres", 95000, "WAIT", { spotBias: -28 }),
+  seed("eidos-08", "Aegean Cold Chain", 33000, "WAIT", { spotBias: -28 }),
   // --- STABLE: already at the 40% target ---
   seed("eidos-09", "Orion Breweries", 22000, "BUY_40", {}),
   seed("eidos-10", "Danube Logistics", 15000, "BUY_40", { baseRisk: 0.1 }),

@@ -24,6 +24,16 @@ import type {
 
 /** Reference market forward price in €/MWh. */
 const FORWARD_PRICE = 100;
+/**
+ * Fixed discount (€/MWh) applied to {@link FORWARD_PRICE} to derive the locked
+ * forward. Because the forward sits below the reference forward, locking a larger
+ * fraction of volume lowers the expected bill, so under central assumptions
+ * BUY_40 < BUY_20 < WAIT. The discount itself is constant; what changes across
+ * scenarios is the *relative hedging advantage*: when scenario spot falls below
+ * the locked forward (LOW_PRICE), hedging increases cost rather than reducing it,
+ * making WAIT genuinely competitive. Synthetic, deterministic, prototype-only.
+ */
+const FORWARD_HEDGE_DISCOUNT = 8;
 /** Ordered list of the procurement alternatives. */
 export const STRATEGIES: ProcurementStrategy[] = ["BUY_20", "BUY_40", "WAIT"];
 
@@ -60,7 +70,7 @@ export const SCENARIOS: Record<EidosScenario, ScenarioParams> = {
     id: "LOW_PRICE",
     label: "Low price",
     description: "Forward prices fall; waiting for spot is comparatively cheap.",
-    priceLevel: 0.82,
+    priceLevel: 0.78,
     demandLevel: 1.0,
     volatility: 0.95,
   },
@@ -118,13 +128,14 @@ export function bucketRisk(riskValue: number): ClientRisk {
  *
  * The forward is committed *before* the scenario resolves, so it does not scale
  * with `priceLevel` (which drives the realized spot in {@link spotPrice}). It is
- * anchored at the reference forward plus a client contango premium that widens
- * as prices rise. Hedging therefore protects against spot moving above this
- * locked level.
+ * anchored at the reference forward, discounted by {@link FORWARD_HEDGE_DISCOUNT}
+ * (the hedging benefit of locking early), plus a client contango premium that
+ * widens as prices rise. Hedging therefore lowers the expected bill whenever spot
+ * settles above this locked level.
  */
 function effectiveForward(seed: EidosClientSeed, params: ScenarioParams): number {
   const contango = seed.forwardPremium * Math.max(0, params.priceLevel - 1);
-  return FORWARD_PRICE + contango;
+  return FORWARD_PRICE - FORWARD_HEDGE_DISCOUNT + contango;
 }
 
 /** Expected spot price for a client under a scenario. */
@@ -247,8 +258,12 @@ export function resolveClient(
 
 /**
  * Structured (non-LLM) explanation of why the recommendation differs from the
- * client's current strategy. Factors are derived from the scenario deltas
- * relative to BASELINE and from the client's coverage gap.
+ * client's current strategy. Factors are derived from the actual decision inputs:
+ * the client's coverage gap, the cost / downside / confidence deltas between the
+ * current contract and the recommended alternative, and the scenario's price and
+ * demand moves relative to BASELINE. Only material factors are returned, ranked
+ * by magnitude and capped so a meaningful change surfaces its 3–4 top drivers.
+ * Everything is deterministic — no hardcoded copy, no randomness.
  */
 export function explainDecision(
   seed: EidosClientSeed,
@@ -257,34 +272,59 @@ export function explainDecision(
   const params = SCENARIOS[scenario];
   const base = SCENARIOS.BASELINE;
 
+  const evaluations = evaluateStrategies(seed, scenario);
+  const recommended = evaluations[0];
+  const current =
+    evaluations.find((entry) => entry.strategy === seed.currentStrategy) ??
+    recommended;
+
+  // Scenario moves relative to central assumptions.
   const priceDelta = params.priceLevel / base.priceLevel - 1;
   const demandDelta = params.demandLevel / base.demandLevel - 1;
-  const volatilityDelta = params.volatility / base.volatility - 1;
 
-  // Confidence moves inversely to volatility.
-  const confidenceDelta = -volatilityDelta * 0.25;
-  // Downside risk grows with both price and volatility.
-  const riskDelta = volatilityDelta * 0.6 + Math.max(0, priceDelta) * 0.4;
   // Coverage gap: how far current hedging sits below the 40% target.
   const coverageGap = 0.4 - HEDGE_FRACTION[seed.currentStrategy];
 
-  const factors: DecisionFactor[] = [
-    { label: "TTF price forecast", delta: priceDelta, supportsHedging: priceDelta > 0 },
-    { label: "Demand forecast", delta: demandDelta, supportsHedging: demandDelta > 0 },
-    { label: "Downside risk", delta: riskDelta, supportsHedging: riskDelta > 0 },
+  // Data-derived deltas between the current contract and the recommended
+  // alternative. These stay non-zero even under BASELINE assumptions, so a
+  // changed decision always has several concrete drivers.
+  const costDelta =
+    current.expectedCost > 0
+      ? recommended.expectedCost / current.expectedCost - 1
+      : 0;
+  const downsideDelta =
+    current.downside > 0 ? recommended.downside / current.downside - 1 : 0;
+  const confidenceDelta = recommended.confidence - current.confidence;
+
+  const candidates: DecisionFactor[] = [
+    {
+      label: "Contract coverage vs target",
+      delta: -coverageGap,
+      supportsHedging: coverageGap > 0,
+    },
+    { label: "Expected cost", delta: costDelta, supportsHedging: costDelta > 0 },
+    {
+      label: "Downside risk",
+      delta: downsideDelta,
+      supportsHedging: downsideDelta > 0,
+    },
     {
       label: "Forecast confidence",
       delta: confidenceDelta,
       supportsHedging: confidenceDelta < 0,
     },
     {
-      label: "Contract coverage vs target",
-      delta: -coverageGap,
-      supportsHedging: coverageGap > 0,
+      label: "TTF price forecast",
+      delta: priceDelta,
+      supportsHedging: priceDelta > 0,
     },
+    { label: "Demand forecast", delta: demandDelta, supportsHedging: demandDelta > 0 },
   ];
 
-  return factors;
+  return candidates
+    .filter((factor) => Math.abs(factor.delta) >= 0.005)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 4);
 }
 
 /**
