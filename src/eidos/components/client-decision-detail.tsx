@@ -92,7 +92,7 @@ export function ClientDecisionDetail({
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <DecisionFact label={copy.detail.currentStrategy}>
             {getEidosStrategyLabel(locale, client.currentStrategy)}
           </DecisionFact>
@@ -121,7 +121,7 @@ export function ClientDecisionDetail({
             scenario={scenario}
             onChange={onScenarioChange}
           />
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
             <DecisionAlternatives
               locale={locale}
               evaluations={evaluations}
@@ -137,7 +137,7 @@ export function ClientDecisionDetail({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{copy.detail.whyTitle}</CardTitle>
@@ -177,7 +177,7 @@ export function ClientDecisionDetail({
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{copy.detail.historyTitle}</CardTitle>
