@@ -54,7 +54,7 @@ Data generation:
 - [`lib/eidos-decision.ts`](./lib/eidos-decision.ts) — the deterministic decision engine.
   For each strategy it derives expected cost, risk, confidence and downside from the
   selected scenario, then ranks strategies by risk-adjusted cost. Expected cost is built
-  from a locked forward that sits a fixed hedge discount below spot, so the three
+  from a locked forward that sits a fixed hedge discount below the reference forward / typically below baseline expected spot, so the three
   alternatives get distinct, meaningfully different costs under every scenario.
   The recommendation explanation surfaces the 3–4 most material, data-derived factors
   (coverage gap, cost, downside, confidence, price and demand moves). Recommendation,

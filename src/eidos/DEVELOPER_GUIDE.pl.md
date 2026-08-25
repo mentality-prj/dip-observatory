@@ -142,10 +142,12 @@ Dla każdej strategii i scenariusza model wyprowadza:
 
 Oczekiwany koszt wyliczany jest z zablokowanej ceny **forward** i zrealizowanej
 ceny **spot**. Forward jest ustalany zanim rozstrzygnie się scenariusz i leży
-stałe `FORWARD_HEDGE_DISCOUNT` (€/MWh) poniżej referencyjnego spotu, więc
+stałe `FORWARD_HEDGE_DISCOUNT` (€/MWh) poniżej referencyjnego forward, więc
 zabezpieczenie większego wolumenu obniża oczekiwany rachunek. W `BASELINE` daje
-to trzy różne koszty (`BUY_40 < BUY_20 < WAIT`). Gdy spot spada (`LOW_PRICE`),
-dyskonto maleje i odwraca się, przez co `WAIT` staje się realnie konkurencyjny i
+to trzy różne koszty (`BUY_40 < BUY_20 < WAIT`). Sam dyskont jest stały;
+zmienia się natomiast *relatywna korzyść hedgingu*: gdy scenariuszowy spot spada
+poniżej zablokowanego forward (`LOW_PRICE`), hedging zwiększa koszt zamiast go
+obniżać, przez co `WAIT` staje się realnie konkurencyjny i
 może zmienić preferowaną strategię.
 
 Rekomendacja to po prostu pozycja `#1` po sortowaniu według risk-adjusted cost.

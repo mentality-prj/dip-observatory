@@ -25,12 +25,13 @@ import type {
 /** Reference market forward price in €/MWh. */
 const FORWARD_PRICE = 100;
 /**
- * Baseline hedging discount (€/MWh) at which the locked forward sits *below* the
- * expected spot. This is what makes hedging change the expected cost: locking a
- * larger fraction of volume at the discounted forward lowers the expected bill,
- * so under central assumptions BUY_40 < BUY_20 < WAIT. As spot falls (LOW_PRICE)
- * the discount shrinks and eventually inverts, which is what makes WAIT
- * competitive. Synthetic, deterministic, prototype-only.
+ * Fixed discount (€/MWh) applied to {@link FORWARD_PRICE} to derive the locked
+ * forward. Because the forward sits below the reference forward, locking a larger
+ * fraction of volume lowers the expected bill, so under central assumptions
+ * BUY_40 < BUY_20 < WAIT. The discount itself is constant; what changes across
+ * scenarios is the *relative hedging advantage*: when scenario spot falls below
+ * the locked forward (LOW_PRICE), hedging increases cost rather than reducing it,
+ * making WAIT genuinely competitive. Synthetic, deterministic, prototype-only.
  */
 const FORWARD_HEDGE_DISCOUNT = 8;
 /** Ordered list of the procurement alternatives. */

@@ -155,10 +155,12 @@ For each strategy and scenario the model derives:
 
 Expected cost is built from a locked **forward** price and the realized **spot**
 price. The forward is committed before the scenario resolves and sits a fixed
-`FORWARD_HEDGE_DISCOUNT` (€/MWh) below the reference spot, so locking a larger
+`FORWARD_HEDGE_DISCOUNT` (€/MWh) below the reference forward, so locking a larger
 fraction of volume lowers the expected bill. Under `BASELINE` this yields three
-distinct costs (`BUY_40 < BUY_20 < WAIT`). As spot falls (`LOW_PRICE`) the
-discount shrinks and inverts, which is what makes `WAIT` genuinely competitive
+distinct costs (`BUY_40 < BUY_20 < WAIT`). The discount itself is constant;
+what changes across scenarios is the *relative hedging advantage*: when scenario
+spot falls below the locked forward (`LOW_PRICE`), hedging increases cost rather
+than reducing it, which is what makes `WAIT` genuinely competitive
 and can change the preferred strategy.
 
 The recommendation is simply rank `#1` after sorting by risk-adjusted cost.
