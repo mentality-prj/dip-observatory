@@ -125,3 +125,125 @@ locale. UI behaviour is covered by [`e2e/eidos.spec.ts`](../../e2e/eidos.spec.ts
 This prototype makes **no** claim of real market prediction, real financial optimization,
 real procurement recommendation, real EIDOS integration, production readiness, or
 financial accuracy.
+
+---
+
+## Futures Mispricing Research Prototype (v0)
+
+> **HISTORICAL CASE STUDY — NOT STATISTICAL VALIDATION.**
+> A single successful 2026-05-26 case does not prove the methodology is generally effective.
+> Multiple out-of-sample decision dates and contracts are required before any effectiveness claim can be made.
+
+### 1. Product hypothesis
+
+Given the futures forward curve and historical futures prices available at a decision date, can DIP identify a futures contract whose current price is materially below a defensible valuation range and therefore generate a BUY / WATCH / NO ACTION hedge-timing recommendation?
+
+### 2. EIDOS problem definition
+
+A corporate energy buyer needs to decide whether the current market price of Q1-2027 Polish electricity futures represents a good hedging entry point. The decision must be made ex-ante (before the price moves), using only information available on 2026-05-26.
+
+- Decision date: 2026-05-26
+- Contract: Q1-2027
+- Price at decision time: **479 PLN/MWh**
+- Subsequent reference price (NOT used in decision): 558 PLN/MWh
+
+### 3. Mathematical model
+
+The pipeline:
+
+```
+MarketSnapshot (ex-ante only)
+  → CurveMetrics (structural analysis)
+  → ValuationRange (structural + uncertainty)
+  → MinimaxResult (robust worst-case)
+  → MispricingSignal (decision)
+  → HedgeDecision (recommendation)
+```
+
+### 4. Forward curve model
+
+- **Overall slope**: OLS linear regression over all curve points
+- **Local slope**: central difference `(P[i+1] - P[i-1]) / (ord[i+1] - ord[i-1])`
+- **Curvature**: discrete second derivative `(P[i+1] - 2·P[i] + P[i-1]) / (Δord)²`
+- **Structural valuation**: 70% local linear interpolation (adjacent quarterly) + 30% annual (Cal) proxy
+- **Calendar spreads**: target price minus adjacent quarterly contracts
+- **Annual spread**: target price minus nearest Cal contract
+- **Normalised deviation**: `(P_target - P_interpolated) / σ_local`
+
+### 5. Uncertainty model
+
+Uncertainty width is derived from measurable data properties:
+
+```
+σ_hist         = sample std dev of historical price observations
+σ_local        = population std dev of neighbouring contracts (excluding target)
+distanceFactor = 1 + (maxOrdinalGap - 1) × 0.5  [clamped to 2.5]
+densityFactor  = √(10 / n)  [for n < 10 curve points]
+
+σ_combined = √(σ_hist² + σ_local²) × distanceFactor × densityFactor
+halfWidth   = max(1.5 × σ_combined, 10 PLN/MWh)
+```
+
+The output is a deterministic interval, NOT a probability distribution.
+
+### 6. Minimax layer
+
+A transparent minimax over a 100-point deterministic grid:
+
+```
+U = [central - halfWidth, central + halfWidth]
+worstCaseLow  = min(U)
+worstCaseHigh = max(U)
+robustDiscount = worstCaseLow - currentPrice
+```
+
+The adversary picks the state that minimises the apparent discount (collapses valuation).
+
+This prototype demonstrates the minimax principle. It does NOT reproduce Kapustian's published PDE estimator.
+
+### 7. Decision policy
+
+Explicit thresholds (not calibrated to the 2026-05-26 outcome):
+
+| Signal | Condition |
+|--------|-----------|
+| BUY | `robustDiscount > 0` AND `discountPct > 3%` AND `discountAbsolute / uncertaintyWidth ≥ 0.5` AND `discountAbsolute > 5 PLN` |
+| WATCH | `currentPrice < central` but not BUY |
+| NO_ACTION | `currentPrice ≥ central` |
+
+### 8. Historical case (2026-05-26)
+
+Running `computeHedgeDecision(EIDOS_MARKET_SNAPSHOT, "Q1-2027", EIDOS_Q1_2027_HISTORY, "2026-05-26")` produces the decision. The regression test prints the exact values.
+
+The 558 PLN subsequent price is in the sealed `EIDOS_Q1_2027_OUTCOME` object with discriminant label `SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME` to make accidental use in decision code a TypeScript error.
+
+### 9. Look-ahead bias protection
+
+- `computeHedgeDecision()` accepts only `MarketSnapshot` (no outcome data)
+- Historical observations array contains only pre-decision dates
+- `OutcomeData` type carries a discriminant label that prevents accidental import
+- Unit tests explicitly verify that no snapshot point contains 558 PLN
+- The UI renders the outcome section after a visual separator labelled "post-decision information"
+
+### 10. Known limitations
+
+- Only 7 historical observations for Q1-2027 (July 2025 → May 2026)
+- The minimax grid is uniform — not a PDE solution
+- No cross-asset correlations (gas, coal, CO₂)
+- No seasonality model
+- No liquidity adjustment
+- Single decision date — no out-of-sample validation
+
+### 11. Why this is NOT Kapustian's published PDE estimator
+
+This prototype tests whether uncertainty-aware minimax decisioning can identify futures mispricing. It does not claim that the current implementation reproduces Kapustian's published PDE results.
+
+Kapustian's estimator involves a PDE over the uncertainty set, solved with a specific finite-difference scheme. This prototype uses a uniform grid over a symmetric interval — a first-order approximation that demonstrates the principle without the full mathematical machinery.
+
+### 12. Next R&D steps
+
+1. Replace uniform grid with Kapustian's PDE discretisation
+2. Add cross-asset factors (TTF gas, API2 coal, EUA carbon)
+3. Extend historical dataset to 24+ months
+4. Add multiple decision dates for out-of-sample validation
+5. Implement seasonality adjustment for Q1 winter premium
