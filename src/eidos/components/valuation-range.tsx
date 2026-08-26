@@ -22,7 +22,7 @@ export function ValuationRangeBar({
   worstCaseHigh,
   label = "Decision Boundary",
 }: ValuationRangeProps) {
-  // Extend view by 10% on each side for context
+  // Extend view: pull left edge down by ~3%, push right edge up by ~2%
   const min = Math.min(currentPrice, worstCaseLow) * 0.97;
   const max = Math.max(currentPrice, worstCaseHigh, valuation.upper) * 1.02;
   const range = max - min;

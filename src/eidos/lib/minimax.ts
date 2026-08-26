@@ -16,7 +16,7 @@
  *   2. Generate a deterministic grid of N states across U
  *   3. For each state v, compute loss = |currentPrice - v| relative to central
  *   4. Worst-case state = argmax loss over the grid
- *   5. Robust discount = currentPrice - worstCaseLow
+ *   5. Robust discount = worstCaseLow - currentPrice (positive → price is below worst-case lower bound)
  *
  * No random sampling. No Monte Carlo. Deterministic and reproducible.
  */
@@ -82,7 +82,8 @@ export function computeStateLoss(state: number, central: number): number {
  *   worstCaseLow  = min(grid)      — adversary collapses valuation
  *   worstCaseHigh = max(grid)      — adversary inflates valuation
  *   worstCaseDeviation = max(|state - central| for all states)
- *   robustDiscount = central - currentPrice (using minimax central)
+ *   robustDiscount = worstCaseLow - currentPrice
+ *     (positive means current price is below even the worst-case lower bound)
  *
  * @param currentPrice    Current futures price (PLN/MWh)
  * @param valuation       Structural valuation range

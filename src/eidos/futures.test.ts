@@ -408,6 +408,21 @@ describe("uncertainty model", () => {
     assert.ok(factor > 1, `Sparse snapshot should inflate uncertainty; got ${factor}`);
   });
 
+  test("data density factor throws for empty snapshot", () => {
+    const empty = makeSnapshot([]);
+    assert.throws(
+      () => computeDataDensityFactor(empty),
+      /computeDataDensityFactor: snapshot must contain at least one point/,
+    );
+  });
+
+  test("combined uncertainty exposes densityFactor in return value", () => {
+    const sigma = computeHistoricalDispersion(EIDOS_Q1_2027_HISTORY);
+    const result = computeCombinedUncertainty(sigma, EIDOS_MARKET_SNAPSHOT, "Q1-2027");
+    assert.ok("densityFactor" in result, "return value must include densityFactor");
+    assert.equal(result.densityFactor, 1, "14-point snapshot has densityFactor=1");
+  });
+
   test("combined uncertainty has positive half-width", () => {
     const sigma = computeHistoricalDispersion(EIDOS_Q1_2027_HISTORY);
     const { halfWidth } = computeCombinedUncertainty(
@@ -429,6 +444,19 @@ describe("uncertainty model", () => {
     const upperDiff = Math.abs(valuation.upper - 500 - valuation.uncertaintyWidth / 2);
     assert.ok(lowerDiff < 1e-9, "Valuation range must be symmetric");
     assert.ok(upperDiff < 1e-9, "Valuation range must be symmetric");
+  });
+
+  test("methodology string includes densityFactor for auditability", () => {
+    const valuation = buildUncertaintyRange(
+      500,
+      EIDOS_Q1_2027_HISTORY,
+      EIDOS_MARKET_SNAPSHOT,
+      "Q1-2027",
+    );
+    assert.ok(
+      valuation.methodology.includes("densityFactor="),
+      "methodology must report densityFactor",
+    );
   });
 });
 
@@ -607,6 +635,17 @@ describe("hedge decision", () => {
     assert.equal(decision.contract, "Q1-2027");
     assert.equal(decision.entryPrice, 440);
     assert.ok(decision.upside > 0, "upside should be positive for cheap contract");
+  });
+
+  test("downside is always >= 0 regardless of price position", () => {
+    // price well below worstCaseLow — downside must be clamped to 0
+    const d1 = computeHedgeDecision(
+      EIDOS_MARKET_SNAPSHOT,
+      EIDOS_TARGET_CONTRACT,
+      EIDOS_Q1_2027_HISTORY,
+      EIDOS_DECISION_DATE,
+    );
+    assert.ok(d1.downside >= 0, `downside must be >= 0; got ${d1.downside}`);
   });
 
   test("decision for expensive contract returns NO_ACTION", () => {

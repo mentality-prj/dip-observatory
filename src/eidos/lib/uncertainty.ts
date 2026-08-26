@@ -25,7 +25,7 @@ import type { MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
 const COVERAGE_FACTOR = 1.5;
 
 /** Minimum half-width regardless of data quality (PLN/MWh). */
-const MIN_HALF_WIDTH = 8.0;
+const MIN_HALF_WIDTH = 10.0;
 
 /** Maximum normalised distance factor (caps uncertainty scaling for sparse data). */
 const MAX_DISTANCE_FACTOR = 2.5;
@@ -142,6 +142,7 @@ export function computeDistanceFactor(
 export function computeDataDensityFactor(snapshot: MarketSnapshot): number {
   const REFERENCE_POINTS = 10;
   const n = snapshot.points.length;
+  if (n <= 0) throw new Error("computeDataDensityFactor: snapshot must contain at least one point");
   if (n >= REFERENCE_POINTS) return 1;
   return Math.sqrt(REFERENCE_POINTS / n);
 }
@@ -165,7 +166,7 @@ export function computeCombinedUncertainty(
   historicalDispersion: number,
   snapshot: MarketSnapshot,
   targetContract: string,
-): { halfWidth: number; sigma: number; sigmaLocal: number; distanceFactor: number } {
+): { halfWidth: number; sigma: number; sigmaLocal: number; distanceFactor: number; densityFactor: number } {
   const sigmaLocal = computeLocalCurveDispersion(snapshot, targetContract);
   const distanceFactor = computeDistanceFactor(snapshot, targetContract);
   const densityFactor = computeDataDensityFactor(snapshot);
@@ -177,7 +178,7 @@ export function computeCombinedUncertainty(
 
   const halfWidth = Math.max(COVERAGE_FACTOR * sigmaCombined, MIN_HALF_WIDTH);
 
-  return { halfWidth, sigma: sigmaCombined, sigmaLocal, distanceFactor };
+  return { halfWidth, sigma: sigmaCombined, sigmaLocal, distanceFactor, densityFactor };
 }
 
 // ---------------------------------------------------------------------------
@@ -203,7 +204,7 @@ export function buildUncertaintyRange(
   targetContract: string,
 ): ValuationRange {
   const sigmaHist = computeHistoricalDispersion(historicalObs);
-  const { halfWidth, sigma, sigmaLocal, distanceFactor } = computeCombinedUncertainty(
+  const { halfWidth, sigma, sigmaLocal, distanceFactor, densityFactor } = computeCombinedUncertainty(
     sigmaHist,
     snapshot,
     targetContract,
@@ -217,7 +218,7 @@ export function buildUncertaintyRange(
     methodology:
       `Uncertainty model: σ_hist=${sigmaHist.toFixed(2)} PLN/MWh (${historicalObs.length} observations), ` +
       `σ_local=${sigmaLocal.toFixed(2)} PLN/MWh, ` +
-      `distanceFactor=${distanceFactor.toFixed(2)}, ` +
+      `distanceFactor=${distanceFactor.toFixed(2)}, densityFactor=${densityFactor.toFixed(2)}, ` +
       `σ_combined=${sigma.toFixed(2)}, halfWidth=${halfWidth.toFixed(2)} PLN/MWh. ` +
       `Coverage factor k=${COVERAGE_FACTOR} (deterministic interval, not probabilistic).`,
   };

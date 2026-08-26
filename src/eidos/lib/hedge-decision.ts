@@ -84,9 +84,9 @@ export function computeHedgeDecision(
   );
 
   // 7. Downside / upside
-  // downside = how much the robust lower bound could still fall (adversarial scenario)
+  // downside = distance from current price to worst-case lower bound (clamped to >= 0)
   // upside = how much price could rise to reach central estimate
-  const downside = currentPrice - minimax.worstCaseLow; // negative = we are already below
+  const downside = Math.max(0, currentPrice - minimax.worstCaseLow);
   const upside = valuation.central - currentPrice;
 
   // 8. Robustness

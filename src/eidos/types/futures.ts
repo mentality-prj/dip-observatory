@@ -149,8 +149,8 @@ export interface MinimaxResult {
   /** Maximum absolute deviation from central estimate in the uncertainty set. */
   worstCaseDeviation: number;
   /**
-   * Robust discount: centralEstimate - currentPrice using the minimax lower.
-   * Positive means the current price is below the robust lower valuation.
+   * Robust discount: worstCaseLow - currentPrice.
+   * Positive means the current price is below even the worst-case lower bound.
    */
   robustDiscount: number;
   /** Grid size used for the deterministic minimax search. */
@@ -172,7 +172,11 @@ export interface HedgeDecision {
   valuationRange: ValuationRange;
   /** Minimax analysis result. */
   minimax: MinimaxResult;
-  /** Worst-case loss relative to robust lower bound (PLN/MWh). */
+  /**
+   * Distance between current price and the worst-case lower bound (PLN/MWh).
+   * Always >= 0. Zero when price is at or above worstCaseLow; positive when
+   * the price is inside the uncertainty range.
+   */
   downside: number;
   /** Potential upside relative to current price (central - currentPrice). */
   upside: number;
