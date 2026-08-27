@@ -2,6 +2,17 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Create a `.env` file before running the app:
+
+```bash
+cp /home/runner/work/dip-observatory/dip-observatory/.env.example /home/runner/work/dip-observatory/dip-observatory/.env
+```
+
+The Observatory expects these backend settings:
+
+- `DIP_API_BASE_URL` — base URL of the DIP backend
+- `DIP_API_KEY` — API key used for Observatory and futures mispricing requests
+
 First, run the development server:
 
 ```bash

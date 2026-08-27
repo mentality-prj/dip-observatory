@@ -7,6 +7,9 @@ import type {
   ObservatoryAlternativeInput,
 } from "@/lib/dip-contracts";
 import {
+  buildDipFuturesMispricingUrl,
+} from "@/lib/dip-futures-client";
+import {
   buildObservatoryBootstrapPayload,
   mapRunResponse,
 } from "@/lib/observatory-adapter";
@@ -27,6 +30,10 @@ import {
 import { useObservatoryStore } from "@/stores/observatory-store";
 
 const initialStoreState = useObservatoryStore.getState();
+const originalDipApiBaseUrl = process.env.DIP_API_BASE_URL;
+const originalDipUrl = process.env.DIP_URL;
+const originalNextPublicDipApiBaseUrl = process.env.NEXT_PUBLIC_DIP_API_BASE_URL;
+const originalDipFuturesBaseUrl = process.env.DIP_FUTURES_BASE_URL;
 
 test("normalizeDipBaseUrl accepts scheme-less hosts", () => {
   assert.equal(
@@ -40,6 +47,25 @@ test("normalizeDipBaseUrl accepts scheme-less hosts", () => {
     normalizeDipBaseUrl("https://dip.example.com/"),
     "https://dip.example.com",
   );
+});
+
+test("futures client uses shared DIP base URL env", () => {
+  try {
+    process.env.DIP_API_BASE_URL = "dip-backend.example.com";
+    process.env.DIP_URL = "";
+    process.env.NEXT_PUBLIC_DIP_API_BASE_URL = "";
+    process.env.DIP_FUTURES_BASE_URL = "legacy-futures.example.com";
+
+    assert.equal(
+      buildDipFuturesMispricingUrl(),
+      "https://dip-backend.example.com/api/dip/futures-mispricing",
+    );
+  } finally {
+    process.env.DIP_API_BASE_URL = originalDipApiBaseUrl;
+    process.env.DIP_URL = originalDipUrl;
+    process.env.NEXT_PUBLIC_DIP_API_BASE_URL = originalNextPublicDipApiBaseUrl;
+    process.env.DIP_FUTURES_BASE_URL = originalDipFuturesBaseUrl;
+  }
 });
 
 test("locale helpers support route-based localization", () => {
