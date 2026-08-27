@@ -7,6 +7,8 @@
  * calculation. No look-ahead is possible through this function.
  */
 
+import { FuturesMispricingInputError } from "./types";
+
 export interface HistoricalDynamics {
   /** Linear regression slope (PLN/MWh per day). */
   trend: number;
@@ -24,7 +26,7 @@ export interface HistoricalDynamics {
 function toEpochDays(isoDate: string): number {
   const timestamp = new Date(isoDate).getTime();
   if (Number.isNaN(timestamp)) {
-    throw new Error(`Invalid ISO date: ${isoDate}`);
+    throw new FuturesMispricingInputError(`Invalid ISO date: ${isoDate}`);
   }
   return Math.floor(timestamp / 86_400_000);
 }

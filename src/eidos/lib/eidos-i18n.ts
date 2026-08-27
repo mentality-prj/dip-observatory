@@ -22,6 +22,9 @@ export type EidosCopy = {
     backLink: string;
     backToDashboard: string;
     openDocumentationPage: string;
+    openOpportunityPage: string;
+    openOpportunityDocumentation: string;
+    backToOpportunity: string;
     showDocumentation: string;
     hideDocumentation: string;
     documentationBadge: string;
@@ -138,6 +141,11 @@ export type EidosCopy = {
     riskPointLabel: string;
   };
   documentation: {
+    title: string;
+    description: string;
+    sections: EidosDocumentationSection[];
+  };
+  opportunityDocumentation: {
     title: string;
     description: string;
     sections: EidosDocumentationSection[];
@@ -337,6 +345,9 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Back to EIDOS dashboard",
       openDocumentationPage: "Go to documentation",
+      openOpportunityPage: "Futures opportunity",
+      openOpportunityDocumentation: "How this works",
+      backToOpportunity: "Back to opportunity",
       showDocumentation: "Show documentation",
       hideDocumentation: "Hide documentation",
       documentationBadge: "Documentation",
@@ -514,6 +525,65 @@ const copyByLocale: Record<Locale, EidosCopy> = {
         },
       ],
     },
+    opportunityDocumentation: {
+      title: "Management brief — EIDOS Futures Opportunity",
+      description:
+        "This panel explains what the futures-mispricing tool does, how it produces its recommendation, what the current case study demonstrates, and where its limits lie.",
+      sections: [
+        {
+          title: "What this tool analyses",
+          description:
+            "The tool looks at a single energy futures contract and asks: is the current market price significantly below a robust fair-value estimate?",
+          bullets: [
+            "Compares the contract's current market price against a valuation range built from three independent signals: forward curve shape, annual proxy relationship, and historical price dynamics.",
+            "Uses Q1-2027 Polish electricity quarterly forward contract as the current case study.",
+            "All calculations use only data available at the decision date — no look-ahead into future prices.",
+          ],
+        },
+        {
+          title: "How the recommendation is produced",
+          description:
+            "The valuation pipeline is fully deterministic and produces one of three signals: BUY, WATCH, or NO ACTION.",
+          bullets: [
+            "BUY — the contract trades materially below the robust lower bound of the valuation range, even under adversarial worst-case assumptions.",
+            "WATCH — a structural discount exists but does not survive the minimax stress test.",
+            "NO ACTION — the market price is within or above the estimated fair-value range.",
+            "Robustness (HIGH / MEDIUM / LOW) reflects how confident the signal is given the uncertainty width and data quality.",
+          ],
+        },
+        {
+          title: "What \"robust\" means for management",
+          description:
+            "The valuation range is deliberately wide — designed to survive adversarial scenarios, not optimistic assumptions.",
+          bullets: [
+            "The minimax test finds the worst-case combination of valuation inputs within plausible bounds.",
+            "A HIGH-robustness BUY means the contract still looks cheap even if every uncertain assumption turns against the buyer.",
+            "The uncertainty width is computed from historical price dispersion and data density — not from a fitted model.",
+          ],
+        },
+        {
+          title: "The current case study result",
+          description:
+            "The tool produced a BUY · HIGH-robustness signal for Q1-2027 Polish electricity on the decision date.",
+          bullets: [
+            "Decision-date price: 487 PLN/MWh. Robust valuation: 493–567 PLN/MWh (central 530 PLN/MWh).",
+            "Subsequent market price: 558 PLN/MWh → FAVOURABLE outcome.",
+            "This is a single illustrative case, not a statistical proof of effectiveness. Multiple out-of-sample cases are needed before any performance claim can be made.",
+          ],
+        },
+        {
+          title: "What this tool does not do",
+          description:
+            "The tool is a research prototype on synthetic data. Several important limitations apply.",
+          bullets: [
+            "Does not give real trading, hedging, or procurement advice.",
+            "Uses fixed synthetic market data — not connected to live market feeds.",
+            "Does not account for liquidity, counterparty risk, regulatory constraints, or real contract specifications.",
+            "Has not been validated on a statistically significant sample of historical cases.",
+          ],
+        },
+      ],
+    },
     footerDisclaimer:
       "Prototype — synthetic data only. This does not modify DIP Core, does not connect to EIDOS systems, and makes no real market prediction or procurement recommendation.",
   },
@@ -528,6 +598,9 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Назад до дашборду EIDOS",
       openDocumentationPage: "Перейти до документації",
+      openOpportunityPage: "Ф'ючерсна можливість",
+      openOpportunityDocumentation: "Як це працює",
+      backToOpportunity: "Назад до можливості",
       showDocumentation: "Показати документацію",
       hideDocumentation: "Сховати документацію",
       documentationBadge: "Документація",
@@ -704,6 +777,65 @@ const copyByLocale: Record<Locale, EidosCopy> = {
         },
       ],
     },
+    opportunityDocumentation: {
+      title: "Пояснення для менеджменту — EIDOS Futures Opportunity",
+      description:
+        "Ця панель пояснює, що аналізує інструмент futures-mispricing, як він формує рекомендацію, що демонструє поточний кейс і де його обмеження.",
+      sections: [
+        {
+          title: "Що аналізує цей інструмент",
+          description:
+            "Інструмент розглядає один ф'ючерсний контракт на енергію і ставить питання: чи є поточна ринкова ціна суттєво нижчою за надійну оцінку справедливої вартості?",
+          bullets: [
+            "Порівнює поточну ринкову ціну контракту з діапазоном оцінки, побудованим з трьох незалежних сигналів: форма форвардної кривої, зв'язок з річним контрактом і динаміка історичних цін.",
+            "Використовує квартальний ф'ючерс Q1-2027 на польську електроенергію як поточний кейс.",
+            "Всі розрахунки використовують лише дані, доступні на дату рішення — без погляду в майбутнє.",
+          ],
+        },
+        {
+          title: "Як формується рекомендація",
+          description:
+            "Конвеєр оцінки є повністю детермінованим і формує один із трьох сигналів: BUY, WATCH або NO ACTION.",
+          bullets: [
+            "BUY — контракт торгується суттєво нижче надійної нижньої межі діапазону оцінки, навіть за несприятливих припущень.",
+            "WATCH — структурна знижка існує, але не витримує minimax-стрес-тесту.",
+            "NO ACTION — ринкова ціна знаходиться в межах або вище оціночного діапазону.",
+            "Robustness (HIGH / MEDIUM / LOW) відображає впевненість сигналу з урахуванням ширини невизначеності та якості даних.",
+          ],
+        },
+        {
+          title: "Що означає «надійність» для менеджменту",
+          description:
+            "Діапазон оцінки навмисно широкий — призначений для виживання в несприятливих сценаріях, а не оптимістичних припущеннях.",
+          bullets: [
+            "Minimax-тест знаходить найгіршу комбінацію вхідних параметрів оцінки в межах правдоподібних меж.",
+            "HIGH-robustness BUY означає, що контракт виглядає дешевим навіть якщо всі невизначені припущення обертаються проти покупця.",
+            "Ширина невизначеності обчислюється з дисперсії історичних цін і густини даних — не з підігнаної моделі.",
+          ],
+        },
+        {
+          title: "Результат поточного кейсу",
+          description:
+            "Інструмент сформував сигнал BUY · HIGH-robustness для Q1-2027 польської електроенергії на дату рішення.",
+          bullets: [
+            "Ціна на дату рішення: 487 PLN/MWh. Надійна оцінка: 493–567 PLN/MWh (центральне значення 530 PLN/MWh).",
+            "Подальша ринкова ціна: 558 PLN/MWh → FAVOURABLE результат.",
+            "Це один ілюстративний кейс, а не статистичний доказ ефективності. Для будь-яких висновків про ефективність необхідно кілька позавибіркових кейсів.",
+          ],
+        },
+        {
+          title: "Чого цей інструмент не робить",
+          description:
+            "Інструмент є дослідницьким прототипом на синтетичних даних. Діє ряд важливих обмежень.",
+          bullets: [
+            "Не надає реальних торговельних, хеджингових або закупівельних порад.",
+            "Використовує фіксовані синтетичні ринкові дані — не підключений до живих ринкових фідів.",
+            "Не враховує ліквідність, ризик контрагента, регуляторні обмеження або реальні специфікації контрактів.",
+            "Не перевірений на статистично значущій вибірці історичних кейсів.",
+          ],
+        },
+      ],
+    },
     footerDisclaimer:
       "Прототип — лише синтетичні дані. Він не змінює DIP Core, не підключається до систем EIDOS і не дає реального ринкового прогнозу чи рекомендації щодо закупівлі.",
   },
@@ -717,6 +849,9 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Wróć do dashboardu EIDOS",
       openDocumentationPage: "Przejdź do dokumentacji",
+      openOpportunityPage: "Okazja na rynku kontraktów",
+      openOpportunityDocumentation: "Jak to działa",
+      backToOpportunity: "Wróć do analizy",
       showDocumentation: "Pokaż dokumentację",
       hideDocumentation: "Ukryj dokumentację",
       documentationBadge: "Dokumentacja",
@@ -889,6 +1024,65 @@ const copyByLocale: Record<Locale, EidosCopy> = {
             "Brak integracji live z EIDOS.",
             "Brak realnej prognozy rynkowej i realnej rekomendacji zakupowej.",
             "Brak trwałego audytu, akceptacji i workflow operacyjnego.",
+          ],
+        },
+      ],
+    },
+    opportunityDocumentation: {
+      title: "Objaśnienie dla managera — EIDOS Futures Opportunity",
+      description:
+        "Ten panel objaśnia, co analizuje narzędzie futures-mispricing, jak tworzy rekomendację, co ilustruje bieżący case study i jakie są jego ograniczenia.",
+      sections: [
+        {
+          title: "Co analizuje to narzędzie",
+          description:
+            "Narzędzie analizuje jeden kontrakt futures na energię i zadaje pytanie: czy bieżąca cena rynkowa jest istotnie poniżej solidnej oceny wartości godziwej?",
+          bullets: [
+            "Porównuje bieżącą cenę rynkową kontraktu z przedziałem wyceny zbudowanym z trzech niezależnych sygnałów: kształtu krzywej terminowej, relacji do kontraktu rocznego i dynamiki historycznych cen.",
+            "Bieżący case study to kwartalny kontrakt futures Q1-2027 na polską energię elektryczną.",
+            "Wszystkie obliczenia korzystają wyłącznie z danych dostępnych w dniu decyzji — bez patrzenia w przyszłość.",
+          ],
+        },
+        {
+          title: "Jak powstaje rekomendacja",
+          description:
+            "Potok wyceny jest w pełni deterministyczny i generuje jeden z trzech sygnałów: BUY, WATCH lub NO ACTION.",
+          bullets: [
+            "BUY — kontrakt notowany istotnie poniżej solidnej dolnej granicy przedziału wyceny, nawet przy pesymistycznych założeniach.",
+            "WATCH — rabat strukturalny istnieje, ale nie przeżywa testu minimax.",
+            "NO ACTION — cena rynkowa mieści się w przedziale wyceny lub jest powyżej niego.",
+            "Robustness (HIGH / MEDIUM / LOW) odzwierciedla pewność sygnału z uwzględnieniem szerokości niepewności i jakości danych.",
+          ],
+        },
+        {
+          title: "Co \"solidność\" oznacza dla managera",
+          description:
+            "Przedział wyceny jest celowo szeroki — zaprojektowany, by przeżyć niekorzystne scenariusze, a nie optymistyczne założenia.",
+          bullets: [
+            "Test minimax szuka najgorszej kombinacji parametrów wyceny w granicach prawdopodobnych zakresów.",
+            "HIGH-robustness BUY oznacza, że kontrakt nadal wygląda tanio, nawet jeśli wszystkie niepewne założenia obracają się przeciwko kupującemu.",
+            "Szerokość niepewności obliczana jest z dyspersji historycznych cen i gęstości danych — nie z dopasowanego modelu.",
+          ],
+        },
+        {
+          title: "Wynik bieżącego case study",
+          description:
+            "Narzędzie wygenerowało sygnał BUY · HIGH-robustness dla Q1-2027 polskiej energii elektrycznej w dniu decyzji.",
+          bullets: [
+            "Cena w dniu decyzji: 487 PLN/MWh. Solidna wycena: 493–567 PLN/MWh (wartość centralna 530 PLN/MWh).",
+            "Późniejsza cena rynkowa: 558 PLN/MWh → wynik FAVOURABLE.",
+            "To pojedynczy ilustracyjny przypadek, a nie statystyczny dowód skuteczności. Do wyciągnięcia wniosków o skuteczności potrzebnych jest kilka przypadków poza próbą.",
+          ],
+        },
+        {
+          title: "Czego to narzędzie nie robi",
+          description:
+            "Narzędzie jest prototypem badawczym na danych syntetycznych. Obowiązuje szereg ważnych ograniczeń.",
+          bullets: [
+            "Nie udziela realnych porad handlowych, hedgingowych ani zakupowych.",
+            "Korzysta ze stałych syntetycznych danych rynkowych — nie jest podłączone do live feedów rynkowych.",
+            "Nie uwzględnia płynności, ryzyka kontrahenta, ograniczeń regulacyjnych ani realnych specyfikacji kontraktów.",
+            "Nie zostało zwalidowane na statystycznie istotnej próbie historycznych przypadków.",
           ],
         },
       ],

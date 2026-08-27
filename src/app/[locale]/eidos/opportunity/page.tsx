@@ -6,14 +6,15 @@ import {
   EIDOS_TARGET_CONTRACT,
 } from "@/eidos/data/synthetic-futures-data";
 import { FuturesOpportunityView } from "@/eidos/components/futures-opportunity-view";
-import { callFuturesMispricingApi } from "@/lib/dip-futures-client";
+import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
+import type { Locale } from "@/lib/observatory-i18n";
 
 export function generateStaticParams() {
-  return ["en", "pl"].map((locale) => ({ locale }));
+  return ["en", "uk", "pl"].map((locale) => ({ locale }));
 }
 
-async function fetchDecision() {
-  return callFuturesMispricingApi({
+function computeDecision() {
+  return runFuturesMispricingPlugin({
     decisionDate: EIDOS_DECISION_DATE,
     targetContract: EIDOS_TARGET_CONTRACT,
     marketSnapshot: EIDOS_MARKET_SNAPSHOT,
@@ -21,15 +22,28 @@ async function fetchDecision() {
   });
 }
 
-export default async function EidosOpportunityPage() {
+export default async function EidosOpportunityPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const resolvedLocale = (["en", "uk", "pl"].includes(locale) ? locale : "en") as Locale;
+
   let decision = null;
   let error = null;
+  let pluginStatus = null;
 
   try {
-    const result = await fetchDecision();
+    const result = computeDecision();
     decision = result.decision;
+    pluginStatus = {
+      pluginVersion: result.pluginVersion,
+      modelVersion: result.modelVersion,
+      configurationVersion: result.configurationVersion,
+    };
   } catch (err) {
-    error = err instanceof Error ? err.message : "DIP service unavailable";
+    error = err instanceof Error ? err.message : "Computation failed";
   }
 
   if (error || !decision) {
@@ -37,12 +51,12 @@ export default async function EidosOpportunityPage() {
       <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <h1 className="text-xl font-bold text-red-400">
-            DIP Service Unavailable
+            Computation Error
           </h1>
           <p className="text-zinc-400 text-sm">{error}</p>
           <p className="text-zinc-600 text-xs">
-            The Observatory requires DIP Core to compute decisions. No local
-            fallback is available.
+            The futures-mispricing plugin failed to compute a decision for the
+            provided input data.
           </p>
         </div>
       </div>
@@ -56,6 +70,8 @@ export default async function EidosOpportunityPage() {
       marketSnapshot={EIDOS_MARKET_SNAPSHOT}
       outcome={EIDOS_Q1_2027_OUTCOME}
       targetContract={EIDOS_TARGET_CONTRACT}
+      pluginStatus={pluginStatus ?? undefined}
+      locale={resolvedLocale}
     />
   );
 }

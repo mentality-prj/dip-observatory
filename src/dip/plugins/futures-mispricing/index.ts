@@ -10,13 +10,13 @@
  * decision date) and produces a hedge decision plus an auditable trace.
  */
 
-import type {
-  FuturesMispricingPluginMeta,
-  FuturesMispricingRequest,
-  FuturesMispricingResponse,
-  DecisionTrace,
-} from "./types";
-import { mergeFuturesMispricingConfig } from "./config";
+import {
+  FuturesMispricingInputError,
+  type FuturesMispricingPluginMeta,
+  type FuturesMispricingRequest,
+  type FuturesMispricingResponse,
+  type DecisionTrace,
+} from "./types";import { mergeFuturesMispricingConfig } from "./config";
 import { computeCurveMetrics } from "./curve-analysis";
 import { StructuralCurveValuationV1 } from "./valuation";
 import {
@@ -45,6 +45,8 @@ export const FUTURES_MISPRICING_PLUGIN_META: FuturesMispricingPluginMeta = {
     "Does not reproduce EIDOS's internal methodology and does not implement Kapustian's published mathematical estimator.",
 };
 
+export const MODEL_VERSION = "1.0" as const;
+
 /**
  * Run the futures mispricing plugin over a request.
  *
@@ -71,7 +73,7 @@ export function runFuturesMispricingPlugin(
     (p) => p.contract === targetContract,
   );
   if (!targetPoint) {
-    throw new Error(`Contract ${targetContract} not found in snapshot`);
+    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`);
   }
   const currentPrice = targetPoint.price;
 
@@ -146,7 +148,7 @@ export function runFuturesMispricingPlugin(
   return {
     decision,
     pluginVersion: FUTURES_MISPRICING_PLUGIN_META.version,
-    modelVersion: "1.0",
+    modelVersion: MODEL_VERSION,
     configurationVersion: config.configVersion,
     computedAt: new Date().toISOString(),
     decisionTrace,
@@ -154,4 +156,5 @@ export function runFuturesMispricingPlugin(
 }
 
 export { DEFAULT_CONFIG } from "./config";
+export { FuturesMispricingInputError } from "./types";
 export type * from "./types";

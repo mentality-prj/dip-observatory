@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
 import {
-  callFuturesMispricingApi,
-  DipFuturesApiError,
-} from "@/lib/dip-futures-client";
+  runFuturesMispricingPlugin,
+  FUTURES_MISPRICING_PLUGIN_META,
+  DEFAULT_CONFIG,
+  MODEL_VERSION,
+  FuturesMispricingInputError,
+} from "@/dip/plugins/futures-mispricing";
 
 function isParseableIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
@@ -72,7 +75,7 @@ const requestSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = requestSchema.parse(await request.json());
-    const result = await callFuturesMispricingApi(body);
+    const result = runFuturesMispricingPlugin(body);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -81,12 +84,25 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    if (error instanceof DipFuturesApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+    if (error instanceof FuturesMispricingInputError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
+}
+
+export function GET() {
+  return NextResponse.json({
+    status: "ok",
+    plugin: {
+      id: FUTURES_MISPRICING_PLUGIN_META.id,
+      version: FUTURES_MISPRICING_PLUGIN_META.version,
+      category: FUTURES_MISPRICING_PLUGIN_META.category,
+    },
+    modelVersion: MODEL_VERSION,
+    configurationVersion: DEFAULT_CONFIG.configVersion,
+  });
 }
