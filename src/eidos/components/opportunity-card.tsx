@@ -40,7 +40,7 @@ function fmt(n: number, decimals = 0): string {
 }
 
 function fmtPct(n: number): string {
-  const sign = n >= 0 ? "+" : "";
+  const sign = n > 0 ? "+" : "";
   return `${sign}${(n * 100).toFixed(1)}%`;
 }
 
@@ -48,11 +48,13 @@ export function OpportunityCard({ decision }: OpportunityCardProps) {
   const signal = SIGNAL_STYLES[decision.action] ?? SIGNAL_STYLES.NO_ACTION;
   const rob = ROBUSTNESS_STYLES[decision.robustness] ?? "text-zinc-400";
 
+  // Central discount = central valuation − current price. Positive = attractive.
   const discountAbsolute = decision.valuationRange.central - decision.entryPrice;
   const discountPct =
     decision.valuationRange.central > 0
       ? discountAbsolute / decision.valuationRange.central
       : 0;
+  const discountSign = discountAbsolute > 0 ? "+" : "";
 
   return (
     <div className={`rounded-xl p-6 ${signal.bg}`} data-testid="opportunity-card">
@@ -89,21 +91,20 @@ export function OpportunityCard({ decision }: OpportunityCardProps) {
           sub="at decision time"
         />
         <Metric
-          label="Robust valuation"
-          value={`${fmt(decision.valuationRange.lower)} – ${fmt(decision.valuationRange.upper)} PLN`}
-          sub={`central ${fmt(decision.valuationRange.central)} PLN`}
+          label="Central valuation"
+          value={`${fmt(decision.valuationRange.central)} PLN/MWh`}
+          sub="model central estimate"
         />
         <Metric
-          label="Discount"
-          value={`${fmt(discountAbsolute)} PLN`}
+          label="Central discount"
+          value={`${discountSign}${fmt(discountAbsolute)} PLN/MWh`}
           sub={fmtPct(discountPct)}
           highlight={discountAbsolute > 0}
         />
         <Metric
-          label="Robustness"
-          value={decision.robustness}
-          valueClass={rob}
-          sub={`±${fmt(decision.valuationRange.uncertaintyWidth / 2, 0)} PLN uncertainty`}
+          label="Uncertainty interval"
+          value={`${fmt(decision.valuationRange.lower)}–${fmt(decision.valuationRange.upper)} PLN/MWh`}
+          sub={`±${fmt(decision.valuationRange.uncertaintyWidth / 2, 0)} PLN/MWh`}
         />
       </div>
     </div>

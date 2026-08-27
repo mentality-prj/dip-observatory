@@ -139,6 +139,12 @@ export function FuturesOpportunityView({
   const { outcome } = outcomeData;
   const copy = getEidosCopy(locale);
 
+  // Pre-computed presentation values used in the metrics summary grid.
+  const centralDiscount = decision.valuationRange.central - decision.entryPrice;
+  const centralDiscountSign = centralDiscount > 0 ? "+" : "";
+  const priceVsWorstCase = decision.entryPrice - decision.minimax.worstCaseLow;
+  const priceVsWorstCaseSign = priceVsWorstCase > 0 ? "+" : "";
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -216,27 +222,26 @@ export function FuturesOpportunityView({
               value={`${decision.entryPrice.toFixed(0)} PLN/MWh`}
             />
             <MiniMetric
-              label="Robust valuation"
-              value={`${decision.valuationRange.lower.toFixed(0)} – ${decision.valuationRange.upper.toFixed(0)} PLN`}
+              label="Central valuation"
+              value={`${decision.valuationRange.central.toFixed(0)} PLN/MWh`}
             />
             <MiniMetric
-              label="Upside to central"
-              value={`${decision.upside.toFixed(0)} PLN`}
-              highlight={decision.upside > 0}
+              label="Central discount"
+              value={`${centralDiscountSign}${centralDiscount.toFixed(0)} PLN/MWh`}
+              highlight={centralDiscount > 0}
             />
             <MiniMetric
-              label="Worst-case low"
-              value={`${decision.minimax.worstCaseLow.toFixed(0)} PLN`}
+              label="Uncertainty interval"
+              value={`${decision.valuationRange.lower.toFixed(0)}–${decision.valuationRange.upper.toFixed(0)} PLN/MWh`}
             />
             <MiniMetric
-              label="Robust discount"
-              value={`${decision.minimax.robustDiscount.toFixed(0)} PLN`}
-              highlight={decision.minimax.robustDiscount > 0}
+              label="Worst-case valuation"
+              value={`${decision.minimax.worstCaseLow.toFixed(0)} PLN/MWh`}
             />
             <MiniMetric
-              label="Robustness"
-              value={decision.robustness}
-              highlight={decision.robustness === "HIGH"}
+              label="Price vs. worst-case valuation"
+              value={`${priceVsWorstCaseSign}${priceVsWorstCase.toFixed(0)} PLN/MWh`}
+              highlight={priceVsWorstCase < 0}
             />
           </div>
         </section>

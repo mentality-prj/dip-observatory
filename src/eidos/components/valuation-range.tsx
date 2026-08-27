@@ -52,14 +52,14 @@ export function ValuationRangeBar({
         <div
           className="absolute top-0 h-full rounded-lg bg-zinc-600/40 border border-zinc-600"
           style={{ left: `${lowerPct}%`, width: `${widthPct}%` }}
-          title={`Valuation range: ${valuation.lower.toFixed(0)} – ${valuation.upper.toFixed(0)} PLN`}
+          title={`Uncertainty interval: ${valuation.lower.toFixed(0)}–${valuation.upper.toFixed(0)} PLN/MWh`}
         />
 
         {/* Worst-case lower line */}
         <div
           className="absolute top-0 h-full border-l-2 border-dashed border-amber-600/70"
           style={{ left: `${wcLowPct}%` }}
-          title={`Worst-case lower: ${worstCaseLow.toFixed(0)} PLN`}
+          title={`Worst-case valuation: ${worstCaseLow.toFixed(0)} PLN/MWh`}
         />
 
         {/* Central estimate line */}
@@ -68,7 +68,7 @@ export function ValuationRangeBar({
           style={{
             left: `${parseFloat(toPercent(valuation.central))}%`,
           }}
-          title={`Central: ${valuation.central.toFixed(0)} PLN`}
+          title={`Central: ${valuation.central.toFixed(0)} PLN/MWh`}
         />
 
         {/* Current price marker */}
@@ -95,17 +95,17 @@ export function ValuationRangeBar({
         <LegendItem
           color="bg-zinc-400"
           line
-          label={`Central: ${valuation.central.toFixed(0)} PLN`}
+          label={`Central: ${valuation.central.toFixed(0)} PLN/MWh`}
         />
         <LegendItem
           color="bg-zinc-600/40 border border-zinc-600"
           rect
-          label={`Valuation range: ${valuation.lower.toFixed(0)} – ${valuation.upper.toFixed(0)} PLN`}
+          label={`Uncertainty interval: ${valuation.lower.toFixed(0)}–${valuation.upper.toFixed(0)} PLN/MWh`}
         />
         <LegendItem
           color="border-amber-600/70"
           dash
-          label={`Worst-case lower: ${worstCaseLow.toFixed(0)} PLN`}
+          label={`Worst-case valuation: ${worstCaseLow.toFixed(0)} PLN/MWh`}
         />
       </div>
 

@@ -15,10 +15,16 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
   const { curveMetrics, valuationRange, minimax, entryPrice } = decision;
 
   const structuralDiscount = valuationRange.central - entryPrice;
-  const robustDiscountStr =
-    minimax.robustDiscount > 0
-      ? `${minimax.robustDiscount.toFixed(0)} PLN below worst-case lower bound`
-      : `${Math.abs(minimax.robustDiscount).toFixed(0)} PLN above worst-case lower bound`;
+  // Price vs. worst-case valuation = currentPrice − worstCaseLow.
+  // Positive = current price is above worst-case lower bound (WATCH case).
+  // Negative = current price is below worst-case lower bound (BUY-territory).
+  const priceVsWorstCase = entryPrice - minimax.worstCaseLow;
+  const priceVsWorstCaseStr =
+    priceVsWorstCase > 0
+      ? `+${priceVsWorstCase.toFixed(0)} PLN/MWh above worst-case valuation`
+      : priceVsWorstCase < 0
+        ? `${priceVsWorstCase.toFixed(0)} PLN/MWh below worst-case valuation`
+        : `0 PLN/MWh (at worst-case valuation)`;
 
   const reasons: Array<{
     title: string;
@@ -58,27 +64,27 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
       positive: curveMetrics.spreadToAnnual < 0,
     },
     {
-      title: "Uncertainty range",
+      title: "Uncertainty interval",
       value: `±${(valuationRange.uncertaintyWidth / 2).toFixed(0)} PLN/MWh`,
       detail: `Derived from historical dispersion and local curve properties. Central estimate: ${valuationRange.central.toFixed(0)} PLN/MWh.`,
     },
     {
-      title: "Structural discount vs uncertainty",
-      value: `${structuralDiscount.toFixed(0)} PLN vs ±${(valuationRange.uncertaintyWidth / 2).toFixed(0)} PLN`,
+      title: "Central discount vs uncertainty",
+      value: `${structuralDiscount > 0 ? "+" : ""}${structuralDiscount.toFixed(0)} PLN vs ±${(valuationRange.uncertaintyWidth / 2).toFixed(0)} PLN`,
       detail:
         structuralDiscount > valuationRange.uncertaintyWidth / 2
-          ? "Discount exceeds uncertainty half-width — mispricing is robust."
-          : "Discount is within the uncertainty range — signal is tentative.",
+          ? "Central discount exceeds uncertainty half-width — mispricing is robust."
+          : "Central discount is within the uncertainty range — signal is tentative.",
       positive: structuralDiscount > valuationRange.uncertaintyWidth / 2,
     },
     {
-      title: "Minimax robustness",
-      value: robustDiscountStr,
+      title: "Price vs. worst-case valuation",
+      value: priceVsWorstCaseStr,
       detail:
-        minimax.robustDiscount > 0
-          ? "Even in the adversarial worst-case scenario, the contract still trades below the lower valuation bound."
-          : "In the adversarial worst-case, the current price is within the valuation range.",
-      positive: minimax.robustDiscount > 0,
+        priceVsWorstCase < 0
+          ? "Current price is below the worst-case lower bound — entry is robust under adversarial uncertainty."
+          : "Current price is above the worst-case lower bound — entry is not yet robust under adversarial uncertainty.",
+      positive: priceVsWorstCase < 0,
     },
   ];
 
@@ -87,6 +93,9 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
       <h3 className="text-sm font-semibold uppercase tracking-widest text-zinc-400">
         Why this opportunity?
       </h3>
+
+      {/* Decision summary — plain-language rationale */}
+      <DecisionSummary decision={decision} structuralDiscount={structuralDiscount} />
 
       <div className="space-y-3">
         {reasons.map((r) => (
@@ -136,6 +145,60 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
           {valuationRange.methodology}
         </p>
       </details>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Decision summary card — plain-language rationale
+// ---------------------------------------------------------------------------
+
+const DECISION_SEMANTICS: Record<string, { label: string; description: (discountPct: string) => string }> = {
+  BUY: {
+    label: "BUY / ENTER HEDGE",
+    description: (discountPct) =>
+      `Current price is sufficiently attractive relative to the central valuation (${discountPct} below) and the discount is robust against the current uncertainty range.`,
+  },
+  WATCH: {
+    label: "WATCH",
+    description: (discountPct) =>
+      `The contract is ${discountPct} below the central valuation, but the discount is not robust against the current uncertainty range. Central valuation indicates potential attractiveness, but uncertainty is insufficient for a robust entry decision.`,
+  },
+  NO_ACTION: {
+    label: "NO ACTION",
+    description: () =>
+      "There is insufficient evidence of attractive mispricing relative to the uncertainty range.",
+  },
+};
+
+function DecisionSummary({
+  decision,
+  structuralDiscount,
+}: {
+  decision: HedgeDecision;
+  structuralDiscount: number;
+}) {
+  const semantics = DECISION_SEMANTICS[decision.action] ?? DECISION_SEMANTICS.NO_ACTION;
+  const discountPct =
+    decision.valuationRange.central > 0
+      ? ((structuralDiscount / decision.valuationRange.central) * 100).toFixed(1) + "%"
+      : "0%";
+  const description = semantics.description(discountPct);
+
+  const actionColour =
+    decision.action === "BUY"
+      ? "border-emerald-700 bg-emerald-950/60 text-emerald-300"
+      : decision.action === "WATCH"
+        ? "border-amber-700 bg-amber-950/60 text-amber-300"
+        : "border-zinc-700 bg-zinc-900 text-zinc-400";
+
+  return (
+    <div className={`rounded-lg border p-4 ${actionColour}`} data-testid="decision-summary">
+      <p className="text-xs font-bold uppercase tracking-widest mb-1">{semantics.label}</p>
+      <p className="text-sm leading-relaxed">{description}</p>
+      <p className="mt-3 text-xs text-zinc-500">
+        Decision calculated by DIP Core. Historical outcome is not used by the decision model.
+      </p>
     </div>
   );
 }
