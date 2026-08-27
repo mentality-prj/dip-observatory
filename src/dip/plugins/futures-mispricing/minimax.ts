@@ -22,6 +22,7 @@
  */
 
 import type { ValuationRange, MinimaxResult } from "@/eidos/types/futures";
+import { FuturesMispricingInputError } from "./types";
 
 /** Number of grid points for the minimax search. */
 export const MINIMAX_GRID_SIZE = 100;
@@ -43,7 +44,7 @@ export function generateMinimaxGrid(
   upper: number,
   n: number = MINIMAX_GRID_SIZE,
 ): number[] {
-  if (n < 2) throw new Error("Grid must have at least 2 points");
+  if (n < 2) throw new FuturesMispricingInputError("Grid must have at least 2 points");
   if (upper <= lower) return [lower];
 
   const step = (upper - lower) / (n - 1);

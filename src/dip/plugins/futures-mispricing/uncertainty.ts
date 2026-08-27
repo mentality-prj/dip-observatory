@@ -22,6 +22,7 @@
 import type { MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
 import { DEFAULT_CONFIG } from "./config";
 import type { FuturesMispricingConfigV1 } from "./types";
+import { FuturesMispricingInputError } from "./types";
 
 /** Maximum normalised distance factor (caps uncertainty scaling for sparse data). */
 const MAX_DISTANCE_FACTOR = 2.5;
@@ -138,7 +139,7 @@ export function computeDistanceFactor(
 export function computeDataDensityFactor(snapshot: MarketSnapshot): number {
   const REFERENCE_POINTS = 10;
   const n = snapshot.points.length;
-  if (n <= 0) throw new Error("computeDataDensityFactor: snapshot must contain at least one point");
+  if (n <= 0) throw new FuturesMispricingInputError("computeDataDensityFactor: snapshot must contain at least one point");
   if (n >= REFERENCE_POINTS) return 1;
   return Math.sqrt(REFERENCE_POINTS / n);
 }

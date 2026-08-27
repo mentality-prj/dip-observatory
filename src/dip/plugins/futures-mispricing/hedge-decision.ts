@@ -25,6 +25,7 @@ import type {
   MispricingSignal,
   CurveMetrics,
 } from "@/eidos/types/futures";
+import { FuturesMispricingInputError } from "./types";
 import { computeCurveMetrics, computeStructuralValuation } from "./curve-analysis";
 import {
   buildUncertaintyRange,
@@ -77,7 +78,7 @@ export function computeHedgeDecision(
   // 5. Current price from snapshot
   const targetPoint = snapshot.points.find((p) => p.contract === targetContract);
   if (!targetPoint) {
-    throw new Error(`Contract ${targetContract} not found in snapshot`);
+    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`);
   }
   const currentPrice = targetPoint.price;
 

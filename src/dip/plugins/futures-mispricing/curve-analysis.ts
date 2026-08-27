@@ -21,6 +21,7 @@ import type {
   ValuationRange,
   CurveMetrics,
 } from "@/eidos/types/futures";
+import { FuturesMispricingInputError } from "./types";
 
 // ---------------------------------------------------------------------------
 // Curve slope
@@ -285,7 +286,7 @@ export function computeStructuralValuation(
 
   const targetIdx = quarterly.findIndex((p) => p.contract === targetContract);
   if (targetIdx < 0) {
-    throw new Error(`Contract ${targetContract} not found in snapshot`);
+    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`);
   }
 
   // --- Local interpolation from adjacent quarterly contracts ---

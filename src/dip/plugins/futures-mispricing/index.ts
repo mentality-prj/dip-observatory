@@ -16,6 +16,7 @@ import type {
   FuturesMispricingResponse,
   DecisionTrace,
 } from "./types";
+import { FuturesMispricingInputError } from "./types";
 import { mergeFuturesMispricingConfig } from "./config";
 import { computeCurveMetrics } from "./curve-analysis";
 import { StructuralCurveValuationV1 } from "./valuation";
@@ -73,7 +74,7 @@ export function runFuturesMispricingPlugin(
     (p) => p.contract === targetContract,
   );
   if (!targetPoint) {
-    throw new Error(`Contract ${targetContract} not found in snapshot`);
+    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`);
   }
   const currentPrice = targetPoint.price;
 
@@ -156,4 +157,5 @@ export function runFuturesMispricingPlugin(
 }
 
 export { DEFAULT_CONFIG } from "./config";
+export { FuturesMispricingInputError } from "./types";
 export type * from "./types";

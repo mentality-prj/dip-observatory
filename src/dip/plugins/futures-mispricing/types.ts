@@ -134,3 +134,18 @@ export interface FuturesMispricingResponse {
   /** Full deterministic decision trace. */
   decisionTrace: DecisionTrace;
 }
+
+/**
+ * Thrown when the plugin receives input data that violates its contract:
+ * e.g. a targetContract not present in the snapshot, an invalid date, or
+ * an empty/undersized configuration value.
+ *
+ * Callers (e.g. an HTTP API route) can use `instanceof FuturesMispricingInputError`
+ * to map these failures to HTTP 400 rather than 500.
+ */
+export class FuturesMispricingInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "FuturesMispricingInputError";
+  }
+}
