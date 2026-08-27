@@ -45,6 +45,8 @@ export const FUTURES_MISPRICING_PLUGIN_META: FuturesMispricingPluginMeta = {
     "Does not reproduce EIDOS's internal methodology and does not implement Kapustian's published mathematical estimator.",
 };
 
+export const MODEL_VERSION = "1.0" as const;
+
 /**
  * Run the futures mispricing plugin over a request.
  *
@@ -152,8 +154,6 @@ export function runFuturesMispricingPlugin(
     decisionTrace,
   };
 }
-
-export const MODEL_VERSION = "1.0" as const;
 
 export { DEFAULT_CONFIG } from "./config";
 export type * from "./types";
