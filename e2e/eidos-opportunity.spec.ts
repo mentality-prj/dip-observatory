@@ -94,4 +94,70 @@ test.describe("EIDOS Futures Opportunity prototype", () => {
     // Percentage change ~16.49%
     await expect(outcome).toContainText("16.");
   });
+
+  // -------------------------------------------------------------------------
+  // Presentation semantics tests (§12 of problem statement)
+  // -------------------------------------------------------------------------
+
+  test("opportunity card shows Central valuation label", async ({ page }) => {
+    const card = page.getByTestId("opportunity-card");
+    await expect(card).toContainText(/Central valuation/i);
+  });
+
+  test("opportunity card shows Central discount label and positive value", async ({
+    page,
+  }) => {
+    const card = page.getByTestId("opportunity-card");
+    await expect(card).toContainText(/Central discount/i);
+    const cardText = await card.innerText();
+    expect(cardText).toMatch(/\+\d+/);
+  });
+
+  test("opportunity card shows Uncertainty interval label", async ({ page }) => {
+    const card = page.getByTestId("opportunity-card");
+    await expect(card).toContainText(/Uncertainty interval/i);
+  });
+
+  test("page does not show 'Robust valuation' label", async ({ page }) => {
+    const bodyText = await page.innerText("body");
+    expect(bodyText).not.toMatch(/Robust valuation/i);
+  });
+
+  test("page does not show 'Robust discount' label", async ({ page }) => {
+    const bodyText = await page.innerText("body");
+    expect(bodyText).not.toMatch(/Robust discount/i);
+  });
+
+  test("decision explanation shows Price vs. worst-case valuation", async ({
+    page,
+  }) => {
+    const explanation = page.getByTestId("decision-explanation");
+    await expect(explanation).toContainText(/Price vs\. worst-case valuation/i);
+  });
+
+  test("decision explanation shows Uncertainty interval label", async ({
+    page,
+  }) => {
+    const explanation = page.getByTestId("decision-explanation");
+    await expect(explanation).toContainText(/Uncertainty interval/i);
+  });
+
+  test("decision summary is visible in explanation", async ({ page }) => {
+    const summary = page.getByTestId("decision-summary");
+    await expect(summary).toBeVisible();
+  });
+
+  test("disclaimer: decision calculated by DIP Core is visible", async ({
+    page,
+  }) => {
+    const bodyText = await page.innerText("body");
+    expect(bodyText).toMatch(/Decision calculated by DIP Core/i);
+  });
+
+  test("disclaimer: historical outcome not used by model is visible", async ({
+    page,
+  }) => {
+    const bodyText = await page.innerText("body");
+    expect(bodyText).toMatch(/Historical outcome is not used by the decision model/i);
+  });
 });
