@@ -40,7 +40,7 @@ function fmt(n: number, decimals = 0): string {
 }
 
 function fmtPct(n: number): string {
-  const sign = n >= 0 ? "+" : "";
+  const sign = n > 0 ? "+" : "";
   return `${sign}${(n * 100).toFixed(1)}%`;
 }
 
@@ -54,7 +54,7 @@ export function OpportunityCard({ decision }: OpportunityCardProps) {
     decision.valuationRange.central > 0
       ? discountAbsolute / decision.valuationRange.central
       : 0;
-  const discountSign = discountAbsolute >= 0 ? "+" : "";
+  const discountSign = discountAbsolute > 0 ? "+" : "";
 
   return (
     <div className={`rounded-xl p-6 ${signal.bg}`} data-testid="opportunity-card">
@@ -104,7 +104,6 @@ export function OpportunityCard({ decision }: OpportunityCardProps) {
         <Metric
           label="Uncertainty interval"
           value={`${fmt(decision.valuationRange.lower)}–${fmt(decision.valuationRange.upper)} PLN/MWh`}
-          valueClass={rob}
           sub={`±${fmt(decision.valuationRange.uncertaintyWidth / 2, 0)} PLN/MWh`}
         />
       </div>

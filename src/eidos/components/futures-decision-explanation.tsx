@@ -20,9 +20,11 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
   // Negative = current price is below worst-case lower bound (BUY-territory).
   const priceVsWorstCase = entryPrice - minimax.worstCaseLow;
   const priceVsWorstCaseStr =
-    priceVsWorstCase >= 0
+    priceVsWorstCase > 0
       ? `+${priceVsWorstCase.toFixed(0)} PLN/MWh above worst-case valuation`
-      : `${priceVsWorstCase.toFixed(0)} PLN/MWh below worst-case valuation`;
+      : priceVsWorstCase < 0
+        ? `${priceVsWorstCase.toFixed(0)} PLN/MWh below worst-case valuation`
+        : `0 PLN/MWh (at worst-case valuation)`;
 
   const reasons: Array<{
     title: string;
@@ -68,7 +70,7 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
     },
     {
       title: "Central discount vs uncertainty",
-      value: `${structuralDiscount >= 0 ? "+" : ""}${structuralDiscount.toFixed(0)} PLN vs ±${(valuationRange.uncertaintyWidth / 2).toFixed(0)} PLN`,
+      value: `${structuralDiscount > 0 ? "+" : ""}${structuralDiscount.toFixed(0)} PLN vs ±${(valuationRange.uncertaintyWidth / 2).toFixed(0)} PLN`,
       detail:
         structuralDiscount > valuationRange.uncertaintyWidth / 2
           ? "Central discount exceeds uncertainty half-width — mispricing is robust."

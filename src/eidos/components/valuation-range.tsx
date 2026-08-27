@@ -68,7 +68,7 @@ export function ValuationRangeBar({
           style={{
             left: `${parseFloat(toPercent(valuation.central))}%`,
           }}
-          title={`Central: ${valuation.central.toFixed(0)} PLN`}
+          title={`Central: ${valuation.central.toFixed(0)} PLN/MWh`}
         />
 
         {/* Current price marker */}
@@ -95,7 +95,7 @@ export function ValuationRangeBar({
         <LegendItem
           color="bg-zinc-400"
           line
-          label={`Central: ${valuation.central.toFixed(0)} PLN`}
+          label={`Central: ${valuation.central.toFixed(0)} PLN/MWh`}
         />
         <LegendItem
           color="bg-zinc-600/40 border border-zinc-600"

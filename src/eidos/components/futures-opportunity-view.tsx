@@ -141,9 +141,9 @@ export function FuturesOpportunityView({
 
   // Pre-computed presentation values used in the metrics summary grid.
   const centralDiscount = decision.valuationRange.central - decision.entryPrice;
-  const centralDiscountSign = centralDiscount >= 0 ? "+" : "";
+  const centralDiscountSign = centralDiscount > 0 ? "+" : "";
   const priceVsWorstCase = decision.entryPrice - decision.minimax.worstCaseLow;
-  const priceVsWorstCaseSign = priceVsWorstCase >= 0 ? "+" : "";
+  const priceVsWorstCaseSign = priceVsWorstCase > 0 ? "+" : "";
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
