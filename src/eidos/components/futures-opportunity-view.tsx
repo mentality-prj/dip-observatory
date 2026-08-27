@@ -1,9 +1,11 @@
 "use client";
 
 /**
- * EIDOS Futures Opportunity — primary research view.
+ * EIDOS Futures Opportunity — primary research view (presentation only).
  *
- * Orchestrates the full display pipeline:
+ * This component performs NO decision computation. The hedge decision is
+ * produced by DIP Core (see `src/dip/plugins/futures-mispricing/`) and passed
+ * in as a prop. This view is a pure presentation layer that renders:
  *   1. Decision summary (OpportunityCard)
  *   2. Forward Curve chart
  *   3. Why this opportunity (FuturesDecisionExplanation)
@@ -11,21 +13,16 @@
  *   5. Outcome section (post-decision, clearly separated)
  *
  * LOOK-AHEAD PROTECTION:
- *   The decision is computed purely from pre-decision snapshot data.
- *   The 558 PLN outcome is imported separately and rendered only AFTER
- *   the decision section, with explicit visual separation.
+ *   The decision is computed by DIP Core purely from pre-decision snapshot data.
+ *   The 558 PLN outcome is rendered only AFTER the decision section, with
+ *   explicit visual separation, and is NEVER fed into the decision.
  */
 
-import { useMemo } from "react";
-
-import {
-  EIDOS_DECISION_DATE,
-  EIDOS_MARKET_SNAPSHOT,
-  EIDOS_Q1_2027_HISTORY,
-  EIDOS_Q1_2027_OUTCOME,
-  EIDOS_TARGET_CONTRACT,
-} from "@/eidos/data/synthetic-futures-data";
-import { computeHedgeDecision, computeOutcome } from "@/eidos/lib/hedge-decision";
+import type {
+  HedgeDecision,
+  MarketSnapshot,
+  OutcomeData,
+} from "@/eidos/types/futures";
 import { OpportunityCard } from "@/eidos/components/opportunity-card";
 import { ForwardCurveChart } from "@/eidos/components/forward-curve-chart";
 import { ValuationRangeBar } from "@/eidos/components/valuation-range";
@@ -38,13 +35,18 @@ import { FuturesDecisionExplanation } from "@/eidos/components/futures-decision-
 function OutcomeSection({
   decisionPrice,
   referencePrice,
+  absoluteChange,
+  percentageChange,
+  outcomeStatus,
 }: {
   decisionPrice: number;
   referencePrice: number;
+  absoluteChange: number;
+  percentageChange: number;
+  outcomeStatus: "FAVOURABLE" | "NEUTRAL" | "UNFAVOURABLE";
 }) {
-  const outcome = computeOutcome(decisionPrice, referencePrice);
-  const sign = outcome.absoluteChange >= 0 ? "+" : "";
-  const pct = (outcome.percentageChange * 100).toFixed(2);
+  const sign = absoluteChange >= 0 ? "+" : "";
+  const pct = (percentageChange * 100).toFixed(2);
 
   return (
     <section
@@ -76,7 +78,7 @@ function OutcomeSection({
         <div>
           <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Change</p>
           <p className="text-xl font-bold text-emerald-400">
-            {sign}{outcome.absoluteChange.toFixed(0)} PLN
+            {sign}{absoluteChange.toFixed(0)} PLN
           </p>
           <p className="text-xs text-zinc-500">{sign}{pct}%</p>
         </div>
@@ -84,14 +86,14 @@ function OutcomeSection({
           <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Outcome</p>
           <p
             className={`text-xl font-bold ${
-              outcome.outcomeStatus === "FAVOURABLE"
+              outcomeStatus === "FAVOURABLE"
                 ? "text-emerald-400"
-                : outcome.outcomeStatus === "UNFAVOURABLE"
+                : outcomeStatus === "UNFAVOURABLE"
                   ? "text-red-400"
                   : "text-zinc-400"
             }`}
           >
-            {outcome.outcomeStatus}
+            {outcomeStatus}
           </p>
         </div>
       </div>
@@ -111,22 +113,22 @@ function OutcomeSection({
 // Main view
 // ---------------------------------------------------------------------------
 
-export function FuturesOpportunityView() {
-  // Decision is computed exclusively from pre-decision snapshot
-  const decision = useMemo(
-    () =>
-      computeHedgeDecision(
-        EIDOS_MARKET_SNAPSHOT,
-        EIDOS_TARGET_CONTRACT,
-        EIDOS_Q1_2027_HISTORY,
-        EIDOS_DECISION_DATE,
-      ),
-    [],
-  );
-
-  // Outcome data is extracted ONLY for the separate outcome section
-  // It does NOT influence the decision above
-  const { outcome } = EIDOS_Q1_2027_OUTCOME;
+export function FuturesOpportunityView({
+  decision,
+  decisionDate,
+  marketSnapshot,
+  outcome: outcomeData,
+  targetContract,
+}: {
+  decision: HedgeDecision;
+  decisionDate: string;
+  marketSnapshot: MarketSnapshot;
+  outcome: OutcomeData;
+  targetContract: string;
+}) {
+  // Outcome data is used ONLY for the separate outcome section below.
+  // It does NOT influence the decision, which is computed by DIP Core.
+  const { outcome } = outcomeData;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -147,7 +149,7 @@ export function FuturesOpportunityView() {
               Information available at decision time:
             </span>
             <span className="text-xs font-semibold text-zinc-300">
-              {EIDOS_DECISION_DATE}
+              {decisionDate}
             </span>
           </div>
         </header>
@@ -161,12 +163,12 @@ export function FuturesOpportunityView() {
             Forward curve
           </h2>
           <p className="text-xs text-zinc-600 mb-4">
-            Polish electricity quarterly forward contracts as of {EIDOS_DECISION_DATE}.
-            Green marker = target contract ({EIDOS_TARGET_CONTRACT}). Purple = annual (Cal).
+            Polish electricity quarterly forward contracts as of {decisionDate}.
+            Green marker = target contract ({targetContract}). Purple = annual (Cal).
           </p>
           <ForwardCurveChart
-            points={EIDOS_MARKET_SNAPSHOT.points}
-            targetContract={EIDOS_TARGET_CONTRACT}
+            points={marketSnapshot.points}
+            targetContract={targetContract}
           />
         </section>
 
@@ -224,11 +226,14 @@ export function FuturesOpportunityView() {
           data-testid="outcome-separator"
         >
           <p className="text-xs uppercase tracking-widest text-zinc-600 mb-6 text-center">
-            ↓ post-decision information — not available at {EIDOS_DECISION_DATE} ↓
+            ↓ post-decision information — not available at {decisionDate} ↓
           </p>
           <OutcomeSection
             decisionPrice={outcome.decisionPrice}
             referencePrice={outcome.referencePrice}
+            absoluteChange={outcome.absoluteChange}
+            percentageChange={outcome.percentageChange}
+            outcomeStatus={outcome.outcomeStatus}
           />
         </div>
       </div>

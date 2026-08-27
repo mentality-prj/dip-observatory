@@ -21,6 +21,11 @@
 import assert from "node:assert/strict";
 import { test, describe } from "node:test";
 
+import { POST as postFuturesMispricing } from "@/app/api/dip/futures-mispricing/route";
+import {
+  DEFAULT_CONFIG,
+  runFuturesMispricingPlugin,
+} from "@/dip/plugins/futures-mispricing";
 import {
   computeOverallSlope,
   computeLocalSlope,
@@ -65,6 +70,7 @@ import {
   getAnnualContracts,
 } from "@/eidos/data/synthetic-futures-data";
 import type { ForwardCurvePoint, MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
+import type { FuturesMispricingRequest } from "@/dip/plugins/futures-mispricing/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,6 +90,18 @@ function makePoints(
 
 function makeSnapshot(points: ForwardCurvePoint[]): MarketSnapshot {
   return { timestamp: "2026-05-26T09:00:00Z", points };
+}
+
+function makePluginRequest(
+  overrides: Partial<FuturesMispricingRequest> = {},
+): FuturesMispricingRequest {
+  return {
+    decisionDate: EIDOS_DECISION_DATE,
+    targetContract: EIDOS_TARGET_CONTRACT,
+    marketSnapshot: EIDOS_MARKET_SNAPSHOT,
+    historicalObservations: EIDOS_Q1_2027_HISTORY,
+    ...overrides,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -458,6 +476,24 @@ describe("uncertainty model", () => {
       "methodology must report densityFactor",
     );
   });
+
+  test("uncertainty range honors config overrides", () => {
+    const valuation = buildUncertaintyRange(
+      500,
+      [{ price: 500 }, { price: 500 }],
+      makeSnapshot(
+        makePoints([
+          { contract: "Q4-2026", ordinal: 6, price: 500 },
+          { contract: "Q1-2027", ordinal: 7, price: 500 },
+          { contract: "Q2-2027", ordinal: 8, price: 500 },
+        ]),
+      ),
+      "Q1-2027",
+      { uncertaintyCoverageFactor: 0, minimumHalfWidth: 25 },
+    );
+    assert.equal(valuation.uncertaintyWidth, 50);
+    assert.ok(valuation.methodology.includes("Coverage factor k=0"));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -606,6 +642,23 @@ describe("mispricing classification", () => {
     assert.equal(MIN_BUY_DISCOUNT_PCT, 0.03);
     assert.equal(MIN_DISCOUNT_UNCERTAINTY_RATIO, 0.5);
     assert.equal(MIN_ABSOLUTE_DISCOUNT_PLN, 5.0);
+  });
+
+  test("classifySignal honors config overrides", () => {
+    const valuation: ValuationRange = {
+      lower: 490,
+      central: 510,
+      upper: 530,
+      uncertaintyWidth: 40,
+      methodology: "test",
+    };
+    const minimax = runMinimax(470, valuation);
+    const signal = classifySignal(470, valuation, minimax, {
+      minimumBuyDiscountPercent: 0.1,
+      minimumDiscountUncertaintyRatio: DEFAULT_CONFIG.minimumDiscountUncertaintyRatio,
+      minimumAbsoluteDiscountPln: DEFAULT_CONFIG.minimumAbsoluteDiscountPln,
+    });
+    assert.equal(signal, "WATCH");
   });
 });
 
@@ -795,6 +848,24 @@ describe("look-ahead bias protection", () => {
     }
   });
 
+  test("computeHedgeDecision ignores post-decision observations", () => {
+    const withFutureObservation = computeHedgeDecision(
+      EIDOS_MARKET_SNAPSHOT,
+      EIDOS_TARGET_CONTRACT,
+      [...EIDOS_Q1_2027_HISTORY, { date: "2026-06-01", price: 1000 }],
+      EIDOS_DECISION_DATE,
+    );
+    const baseline = computeHedgeDecision(
+      EIDOS_MARKET_SNAPSHOT,
+      EIDOS_TARGET_CONTRACT,
+      EIDOS_Q1_2027_HISTORY,
+      EIDOS_DECISION_DATE,
+    );
+
+    assert.deepEqual(withFutureObservation.valuationRange, baseline.valuationRange);
+    assert.deepEqual(withFutureObservation.minimax, baseline.minimax);
+  });
+
   test("outcome is not reachable from the market snapshot", () => {
     // The market snapshot type does not contain referencePrice
     // This test verifies no price in the snapshot equals 558
@@ -821,6 +892,93 @@ describe("look-ahead bias protection", () => {
       EIDOS_Q1_2027_OUTCOME._label,
       "SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME",
     );
+  });
+});
+
+describe("plugin entry point", () => {
+  test("deep-merges nested valuationWeights overrides", () => {
+    const partialOverride = runFuturesMispricingPlugin(
+      makePluginRequest({
+        configuration: { valuationWeights: { localInterpolation: 1 } },
+      }),
+    );
+    const explicitOverride = runFuturesMispricingPlugin(
+      makePluginRequest({
+        configuration: {
+          valuationWeights: {
+            localInterpolation: 1,
+            annualProxy: DEFAULT_CONFIG.valuationWeights.annualProxy,
+          },
+        },
+      }),
+    );
+
+    assert.equal(
+      partialOverride.decisionTrace.structuralValuation.central,
+      explicitOverride.decisionTrace.structuralValuation.central,
+    );
+  });
+
+  test("filters post-decision observations at the plugin boundary", () => {
+    const withFutureObservation = runFuturesMispricingPlugin(
+      makePluginRequest({
+        historicalObservations: [
+          ...EIDOS_Q1_2027_HISTORY,
+          { date: "2026-06-01", price: 1000 },
+        ],
+      }),
+    );
+    const baseline = runFuturesMispricingPlugin(makePluginRequest());
+
+    assert.equal(
+      withFutureObservation.decisionTrace.input.historicalObservations,
+      baseline.decisionTrace.input.historicalObservations,
+    );
+    assert.deepEqual(
+      withFutureObservation.decisionTrace.uncertaintyRange,
+      baseline.decisionTrace.uncertaintyRange,
+    );
+    assert.deepEqual(
+      withFutureObservation.decisionTrace.historicalDynamics,
+      baseline.decisionTrace.historicalDynamics,
+    );
+  });
+});
+
+describe("plugin API route validation", () => {
+  test("rejects malformed configuration overrides", async () => {
+    const response = await postFuturesMispricing(
+      new Request("http://localhost/api/dip/futures-mispricing", {
+        method: "POST",
+        body: JSON.stringify(
+          makePluginRequest({
+            configuration: { unexpectedKey: 1 } as never,
+          }),
+        ),
+      }),
+    );
+
+    assert.equal(response.status, 400);
+    assert.match((await response.json()).error, /Unrecognized key/u);
+  });
+
+  test("rejects invalid historical observation dates", async () => {
+    const response = await postFuturesMispricing(
+      new Request("http://localhost/api/dip/futures-mispricing", {
+        method: "POST",
+        body: JSON.stringify(
+          makePluginRequest({
+            decisionDate: "2026/05/26",
+            historicalObservations: [{ date: "not-a-date", price: 479 }],
+          }),
+        ),
+      }),
+    );
+
+    assert.equal(response.status, 400);
+    const payload = await response.json();
+    assert.match(payload.error, /decisionDate/u);
+    assert.match(payload.error, /historical observation date/u);
   });
 });
 
