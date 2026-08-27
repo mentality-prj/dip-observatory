@@ -94,12 +94,12 @@ export function FuturesDecisionExplanation({ decision }: FuturesDecisionExplanat
             key={r.title}
             className="rounded-lg bg-zinc-900 border border-zinc-800 p-4"
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-zinc-300">{r.title}</p>
                 <p className="text-xs text-zinc-500 mt-1">{r.detail}</p>
               </div>
-              <div className="shrink-0 text-right">
+              <div className="sm:shrink-0 sm:text-right">
                 <span
                   className={`text-sm font-mono font-semibold ${
                     r.positive === true

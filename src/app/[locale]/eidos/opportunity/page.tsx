@@ -29,7 +29,7 @@ export default async function EidosOpportunityPage() {
     const result = fetchDecision();
     decision = result.decision;
   } catch (err) {
-    error = err instanceof Error ? err.message : "DIP service unavailable";
+    error = err instanceof Error ? err.message : "Computation failed";
   }
 
   if (error || !decision) {
@@ -37,12 +37,12 @@ export default async function EidosOpportunityPage() {
       <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <h1 className="text-xl font-bold text-red-400">
-            DIP Service Unavailable
+            Computation Error
           </h1>
           <p className="text-zinc-400 text-sm">{error}</p>
           <p className="text-zinc-600 text-xs">
-            The Observatory requires DIP Core to compute decisions. No local
-            fallback is available.
+            The futures-mispricing plugin failed to compute a decision for the
+            provided input data.
           </p>
         </div>
       </div>

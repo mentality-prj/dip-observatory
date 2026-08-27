@@ -79,7 +79,15 @@ export async function POST(request: Request) {
       );
     }
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // Errors that indicate bad client input rather than a server fault
+      const isClientError =
+        /not found in snapshot|Grid must have at least \d+ points|computeDataDensityFactor.*at least one point/.test(
+          error.message,
+        );
+      return NextResponse.json(
+        { error: error.message },
+        { status: isClientError ? 400 : 500 },
+      );
     }
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
