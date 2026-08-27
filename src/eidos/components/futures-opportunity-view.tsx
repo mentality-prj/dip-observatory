@@ -27,6 +27,10 @@ import { OpportunityCard } from "@/eidos/components/opportunity-card";
 import { ForwardCurveChart } from "@/eidos/components/forward-curve-chart";
 import { ValuationRangeBar } from "@/eidos/components/valuation-range";
 import { FuturesDecisionExplanation } from "@/eidos/components/futures-decision-explanation";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
+import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
+import { getEidosCopy } from "@/eidos/lib/eidos-i18n";
 
 // ---------------------------------------------------------------------------
 // Outcome display
@@ -120,6 +124,7 @@ export function FuturesOpportunityView({
   outcome: outcomeData,
   targetContract,
   pluginStatus,
+  locale = "en",
 }: {
   decision: HedgeDecision;
   decisionDate: string;
@@ -127,43 +132,54 @@ export function FuturesOpportunityView({
   outcome: OutcomeData;
   targetContract: string;
   pluginStatus?: { pluginVersion: string; modelVersion: string; configurationVersion: string };
+  locale?: Locale;
 }) {
   // Outcome data is used ONLY for the separate outcome section below.
   // It does NOT influence the decision, which is computed by DIP Core.
   const { outcome } = outcomeData;
+  const copy = getEidosCopy(locale);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <header>
-          <p className="text-xs uppercase tracking-widest text-zinc-500 mb-1">
-            EIDOS Research Prototype
-          </p>
-          <h1 className="text-3xl font-bold text-white">
-            EIDOS — Futures Opportunity
-          </h1>
-          <p className="text-zinc-400 mt-2">
-            Robust hedge timing under market uncertainty
-          </p>
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 border border-zinc-700 px-3 py-1">
-            <span className="text-xs text-zinc-500">
-              Information available at decision time:
-            </span>
-            <span className="text-xs font-semibold text-zinc-300">
-              {decisionDate}
-            </span>
-          </div>
-          {pluginStatus && (
-            <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-950 border border-emerald-800 px-3 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
-              <span className="text-xs text-emerald-400 font-medium">Plugin connected</span>
-              <span className="text-xs text-zinc-500">·</span>
-              <span className="text-xs text-zinc-400">
-                plugin v{pluginStatus.pluginVersion} · model v{pluginStatus.modelVersion}
+        <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-zinc-500 mb-1">
+              EIDOS Research Prototype
+            </p>
+            <h1 className="text-3xl font-bold text-white">
+              EIDOS — Futures Opportunity
+            </h1>
+            <p className="text-zinc-400 mt-2">
+              Robust hedge timing under market uncertainty
+            </p>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 border border-zinc-700 px-3 py-1">
+              <span className="text-xs text-zinc-500">
+                Information available at decision time:
+              </span>
+              <span className="text-xs font-semibold text-zinc-300">
+                {decisionDate}
               </span>
             </div>
-          )}
+            {pluginStatus && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-950 border border-emerald-800 px-3 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
+                <span className="text-xs text-emerald-400 font-medium">Plugin connected</span>
+                <span className="text-xs text-zinc-500">·</span>
+                <span className="text-xs text-zinc-400">
+                  plugin v{pluginStatus.pluginVersion} · model v{pluginStatus.modelVersion}
+                </span>
+              </div>
+            )}
+          </div>
+          <Link
+            href={buildLocalePath("/eidos/opportunity/documentation", locale)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3.5 py-2 text-sm text-emerald-100 outline-none transition hover:border-emerald-200/60 hover:bg-emerald-300/16 focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+          >
+            <BookOpen className="h-4 w-4" aria-hidden="true" />
+            {copy.header.openOpportunityDocumentation}
+          </Link>
         </header>
 
         {/* Primary decision card */}

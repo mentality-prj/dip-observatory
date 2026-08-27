@@ -7,9 +7,10 @@ import {
 } from "@/eidos/data/synthetic-futures-data";
 import { FuturesOpportunityView } from "@/eidos/components/futures-opportunity-view";
 import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
+import type { Locale } from "@/lib/observatory-i18n";
 
 export function generateStaticParams() {
-  return ["en", "pl"].map((locale) => ({ locale }));
+  return ["en", "uk", "pl"].map((locale) => ({ locale }));
 }
 
 function fetchDecision() {
@@ -21,7 +22,14 @@ function fetchDecision() {
   });
 }
 
-export default async function EidosOpportunityPage() {
+export default async function EidosOpportunityPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const resolvedLocale = (["en", "uk", "pl"].includes(locale) ? locale : "en") as Locale;
+
   let decision = null;
   let error = null;
   let pluginStatus = null;
@@ -63,6 +71,7 @@ export default async function EidosOpportunityPage() {
       outcome={EIDOS_Q1_2027_OUTCOME}
       targetContract={EIDOS_TARGET_CONTRACT}
       pluginStatus={pluginStatus ?? undefined}
+      locale={resolvedLocale}
     />
   );
 }
