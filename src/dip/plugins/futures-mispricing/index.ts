@@ -146,12 +146,14 @@ export function runFuturesMispricingPlugin(
   return {
     decision,
     pluginVersion: FUTURES_MISPRICING_PLUGIN_META.version,
-    modelVersion: "1.0",
+    modelVersion: MODEL_VERSION,
     configurationVersion: config.configVersion,
     computedAt: new Date().toISOString(),
     decisionTrace,
   };
 }
+
+export const MODEL_VERSION = "1.0" as const;
 
 export { DEFAULT_CONFIG } from "./config";
 export type * from "./types";

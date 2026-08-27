@@ -5,6 +5,7 @@ import {
   runFuturesMispricingPlugin,
   FUTURES_MISPRICING_PLUGIN_META,
   DEFAULT_CONFIG,
+  MODEL_VERSION,
 } from "@/dip/plugins/futures-mispricing";
 
 function isParseableIsoDate(value: string): boolean {
@@ -105,7 +106,7 @@ export function GET() {
       version: FUTURES_MISPRICING_PLUGIN_META.version,
       category: FUTURES_MISPRICING_PLUGIN_META.category,
     },
-    modelVersion: "1.0",
+    modelVersion: MODEL_VERSION,
     configurationVersion: DEFAULT_CONFIG.configVersion,
   });
 }
