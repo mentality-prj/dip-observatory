@@ -13,7 +13,7 @@ export function generateStaticParams() {
   return ["en", "uk", "pl"].map((locale) => ({ locale }));
 }
 
-function fetchDecision() {
+function computeDecision() {
   return runFuturesMispricingPlugin({
     decisionDate: EIDOS_DECISION_DATE,
     targetContract: EIDOS_TARGET_CONTRACT,
@@ -35,7 +35,7 @@ export default async function EidosOpportunityPage({
   let pluginStatus = null;
 
   try {
-    const result = fetchDecision();
+    const result = computeDecision();
     decision = result.decision;
     pluginStatus = {
       pluginVersion: result.pluginVersion,

@@ -4,7 +4,7 @@
  * EIDOS Futures Opportunity — primary research view (presentation only).
  *
  * This component performs NO decision computation. The hedge decision is
- * produced by DIP Core (see `src/dip/plugins/futures-mispricing/`) and passed
+ * produced by the local futures-mispricing plugin (see `src/dip/plugins/futures-mispricing/`) and passed
  * in as a prop. This view is a pure presentation layer that renders:
  *   1. Decision summary (OpportunityCard)
  *   2. Forward Curve chart
@@ -13,7 +13,7 @@
  *   5. Outcome section (post-decision, clearly separated)
  *
  * LOOK-AHEAD PROTECTION:
- *   The decision is computed by DIP Core purely from pre-decision snapshot data.
+ *   The decision is computed by the local futures-mispricing plugin purely from pre-decision snapshot data.
  *   The 558 PLN outcome is rendered only AFTER the decision section, with
  *   explicit visual separation, and is NEVER fed into the decision.
  */
@@ -135,7 +135,7 @@ export function FuturesOpportunityView({
   locale?: Locale;
 }) {
   // Outcome data is used ONLY for the separate outcome section below.
-  // It does NOT influence the decision, which is computed by DIP Core.
+  // It does NOT influence the decision, which is computed by the local futures-mispricing plugin.
   const { outcome } = outcomeData;
   const copy = getEidosCopy(locale);
 
