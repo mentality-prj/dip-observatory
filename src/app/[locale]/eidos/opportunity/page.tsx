@@ -6,14 +6,14 @@ import {
   EIDOS_TARGET_CONTRACT,
 } from "@/eidos/data/synthetic-futures-data";
 import { FuturesOpportunityView } from "@/eidos/components/futures-opportunity-view";
-import { callFuturesMispricingApi } from "@/lib/dip-futures-client";
+import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
 
 export function generateStaticParams() {
   return ["en", "pl"].map((locale) => ({ locale }));
 }
 
-async function fetchDecision() {
-  return callFuturesMispricingApi({
+function fetchDecision() {
+  return runFuturesMispricingPlugin({
     decisionDate: EIDOS_DECISION_DATE,
     targetContract: EIDOS_TARGET_CONTRACT,
     marketSnapshot: EIDOS_MARKET_SNAPSHOT,
@@ -26,7 +26,7 @@ export default async function EidosOpportunityPage() {
   let error = null;
 
   try {
-    const result = await fetchDecision();
+    const result = fetchDecision();
     decision = result.decision;
   } catch (err) {
     error = err instanceof Error ? err.message : "DIP service unavailable";

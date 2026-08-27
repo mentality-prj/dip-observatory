@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
-import {
-  callFuturesMispricingApi,
-  DipFuturesApiError,
-} from "@/lib/dip-futures-client";
+import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
 
 function isParseableIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
@@ -72,7 +69,7 @@ const requestSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = requestSchema.parse(await request.json());
-    const result = await callFuturesMispricingApi(body);
+    const result = runFuturesMispricingPlugin(body);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -80,9 +77,6 @@ export async function POST(request: Request) {
         { error: `Invalid request: ${error.issues.map((i) => i.message).join("; ")}` },
         { status: 400 },
       );
-    }
-    if (error instanceof DipFuturesApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
     }
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
