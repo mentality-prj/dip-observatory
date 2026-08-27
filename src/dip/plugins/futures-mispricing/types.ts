@@ -58,6 +58,12 @@ export interface FuturesMispricingConfigV1 {
   configVersion: "1.0";
 }
 
+export type FuturesMispricingConfigOverride = Partial<
+  Omit<FuturesMispricingConfigV1, "valuationWeights">
+> & {
+  valuationWeights?: Partial<FuturesMispricingConfigV1["valuationWeights"]>;
+};
+
 /**
  * Request contract for the futures mispricing plugin.
  *
@@ -74,7 +80,7 @@ export interface FuturesMispricingRequest {
   /** Pre-decision historical price observations. */
   historicalObservations: Array<{ date: string; price: number }>;
   /** Optional configuration overrides (merged over DEFAULT_CONFIG). */
-  configuration?: Partial<FuturesMispricingConfigV1>;
+  configuration?: FuturesMispricingConfigOverride;
 }
 
 /**

@@ -16,10 +16,13 @@ import type {
   FuturesMispricingResponse,
   DecisionTrace,
 } from "./types";
-import { DEFAULT_CONFIG } from "./config";
+import { mergeFuturesMispricingConfig } from "./config";
 import { computeCurveMetrics } from "./curve-analysis";
 import { StructuralCurveValuationV1 } from "./valuation";
-import { computeHistoricalDynamics } from "./historical-dynamics";
+import {
+  computeHistoricalDynamics,
+  filterHistoricalObservations,
+} from "./historical-dynamics";
 import { buildUncertaintyRange } from "./uncertainty";
 import { runMinimax } from "./minimax";
 import { computeMispricingSignal } from "./mispricing";
@@ -50,14 +53,18 @@ export const FUTURES_MISPRICING_PLUGIN_META: FuturesMispricingPluginMeta = {
 export function runFuturesMispricingPlugin(
   request: FuturesMispricingRequest,
 ): FuturesMispricingResponse {
-  const config = { ...DEFAULT_CONFIG, ...request.configuration };
+  const config = mergeFuturesMispricingConfig(request.configuration);
 
   const {
     marketSnapshot,
     targetContract,
-    historicalObservations,
+    historicalObservations: rawHistoricalObservations,
     decisionDate,
   } = request;
+  const historicalObservations = filterHistoricalObservations(
+    rawHistoricalObservations,
+    decisionDate,
+  );
 
   // Current price from the snapshot (decision-time information only).
   const targetPoint = marketSnapshot.points.find(
@@ -89,6 +96,7 @@ export function runFuturesMispricingPlugin(
     historicalObservations,
     marketSnapshot,
     targetContract,
+    config,
   );
 
   // 5. Minimax robust valuation.
@@ -104,6 +112,7 @@ export function runFuturesMispricingPlugin(
     currentPrice,
     uncertaintyRange,
     minimax,
+    config,
   );
 
   // 7. Full hedge decision — assembled from pre-computed intermediates so that

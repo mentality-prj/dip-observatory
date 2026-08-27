@@ -34,6 +34,8 @@ import type {
   HedgeSignal,
   Robustness,
 } from "@/eidos/types/futures";
+import { DEFAULT_CONFIG } from "./config";
+import type { FuturesMispricingConfigV1 } from "./types";
 
 // ---------------------------------------------------------------------------
 // Decision thresholds (explicit configuration — not outcome-fitted)
@@ -43,20 +45,22 @@ import type {
  * Minimum discount as a fraction of central valuation to consider a BUY.
  * 3% is a structurally meaningful threshold for energy futures hedging.
  */
-export const MIN_BUY_DISCOUNT_PCT = 0.03;
+export const MIN_BUY_DISCOUNT_PCT = DEFAULT_CONFIG.minimumBuyDiscountPercent;
 
 /**
  * Minimum ratio of (discountAbsolute / uncertaintyWidth) for a BUY.
  * Discount must be materially larger than the uncertainty to be actionable.
  * A ratio of 0.5 means the discount must exceed half the uncertainty width.
  */
-export const MIN_DISCOUNT_UNCERTAINTY_RATIO = 0.5;
+export const MIN_DISCOUNT_UNCERTAINTY_RATIO =
+  DEFAULT_CONFIG.minimumDiscountUncertaintyRatio;
 
 /**
  * Minimum absolute discount (PLN/MWh) for economic significance.
  * Below this, even a structurally cheap contract may not be worth transacting.
  */
-export const MIN_ABSOLUTE_DISCOUNT_PLN = 5.0;
+export const MIN_ABSOLUTE_DISCOUNT_PLN =
+  DEFAULT_CONFIG.minimumAbsoluteDiscountPln;
 
 // ---------------------------------------------------------------------------
 // Robustness classification
@@ -72,10 +76,14 @@ export const MIN_ABSOLUTE_DISCOUNT_PLN = 5.0;
 export function classifyRobustness(
   discountAbsolute: number,
   uncertaintyWidth: number,
+  config: Pick<
+    FuturesMispricingConfigV1,
+    "robustnessHighThreshold" | "robustnessMediumThreshold"
+  > = DEFAULT_CONFIG,
 ): Robustness {
   const halfWidth = uncertaintyWidth / 2;
-  if (discountAbsolute > 1.5 * halfWidth) return "HIGH";
-  if (discountAbsolute > 0.5 * halfWidth) return "MEDIUM";
+  if (discountAbsolute > config.robustnessHighThreshold * halfWidth) return "HIGH";
+  if (discountAbsolute > config.robustnessMediumThreshold * halfWidth) return "MEDIUM";
   return "LOW";
 }
 
@@ -94,6 +102,12 @@ export function classifySignal(
   currentPrice: number,
   valuation: ValuationRange,
   minimax: MinimaxResult,
+  config: Pick<
+    FuturesMispricingConfigV1,
+    | "minimumAbsoluteDiscountPln"
+    | "minimumBuyDiscountPercent"
+    | "minimumDiscountUncertaintyRatio"
+  > = DEFAULT_CONFIG,
 ): HedgeSignal {
   const discountAbsolute = valuation.lower - currentPrice;
   const discountPercent =
@@ -106,9 +120,9 @@ export function classifySignal(
   // BUY: price is below even worst-case lower bound, discount is material
   if (
     minimax.robustDiscount > 0 &&
-    discountPercent > MIN_BUY_DISCOUNT_PCT &&
-    discountUncertaintyRatio >= MIN_DISCOUNT_UNCERTAINTY_RATIO &&
-    discountAbsolute > MIN_ABSOLUTE_DISCOUNT_PLN
+    discountPercent > config.minimumBuyDiscountPercent &&
+    discountUncertaintyRatio >= config.minimumDiscountUncertaintyRatio &&
+    discountAbsolute > config.minimumAbsoluteDiscountPln
   ) {
     return "BUY";
   }
@@ -185,6 +199,14 @@ export function computeMispricingSignal(
   currentPrice: number,
   valuation: ValuationRange,
   minimax: MinimaxResult,
+  config: Pick<
+    FuturesMispricingConfigV1,
+    | "minimumAbsoluteDiscountPln"
+    | "minimumBuyDiscountPercent"
+    | "minimumDiscountUncertaintyRatio"
+    | "robustnessHighThreshold"
+    | "robustnessMediumThreshold"
+  > = DEFAULT_CONFIG,
 ): MispricingSignal {
   const discountAbsolute = valuation.lower - currentPrice;
   const discountPercent =
@@ -192,10 +214,11 @@ export function computeMispricingSignal(
       ? (valuation.central - currentPrice) / valuation.central
       : 0;
 
-  const signal = classifySignal(currentPrice, valuation, minimax);
+  const signal = classifySignal(currentPrice, valuation, minimax, config);
   const robustness = classifyRobustness(
     Math.max(discountAbsolute, 0),
     valuation.uncertaintyWidth,
+    config,
   );
   const explanation = explainSignal(
     contract,

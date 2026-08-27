@@ -20,12 +20,8 @@
  */
 
 import type { MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
-
-/** Coverage factor: half-width = k × σ. Conservative (not probabilistic). */
-const COVERAGE_FACTOR = 1.5;
-
-/** Minimum half-width regardless of data quality (PLN/MWh). */
-const MIN_HALF_WIDTH = 10.0;
+import { DEFAULT_CONFIG } from "./config";
+import type { FuturesMispricingConfigV1 } from "./types";
 
 /** Maximum normalised distance factor (caps uncertainty scaling for sparse data). */
 const MAX_DISTANCE_FACTOR = 2.5;
@@ -166,6 +162,10 @@ export function computeCombinedUncertainty(
   historicalDispersion: number,
   snapshot: MarketSnapshot,
   targetContract: string,
+  config: Pick<
+    FuturesMispricingConfigV1,
+    "minimumHalfWidth" | "uncertaintyCoverageFactor"
+  > = DEFAULT_CONFIG,
 ): { halfWidth: number; sigma: number; sigmaLocal: number; distanceFactor: number; densityFactor: number } {
   const sigmaLocal = computeLocalCurveDispersion(snapshot, targetContract);
   const distanceFactor = computeDistanceFactor(snapshot, targetContract);
@@ -176,7 +176,10 @@ export function computeCombinedUncertainty(
     distanceFactor *
     densityFactor;
 
-  const halfWidth = Math.max(COVERAGE_FACTOR * sigmaCombined, MIN_HALF_WIDTH);
+  const halfWidth = Math.max(
+    config.uncertaintyCoverageFactor * sigmaCombined,
+    config.minimumHalfWidth,
+  );
 
   return { halfWidth, sigma: sigmaCombined, sigmaLocal, distanceFactor, densityFactor };
 }
@@ -202,12 +205,17 @@ export function buildUncertaintyRange(
   historicalObs: Array<{ price: number }>,
   snapshot: MarketSnapshot,
   targetContract: string,
+  config: Pick<
+    FuturesMispricingConfigV1,
+    "minimumHalfWidth" | "uncertaintyCoverageFactor"
+  > = DEFAULT_CONFIG,
 ): ValuationRange {
   const sigmaHist = computeHistoricalDispersion(historicalObs);
   const { halfWidth, sigma, sigmaLocal, distanceFactor, densityFactor } = computeCombinedUncertainty(
     sigmaHist,
     snapshot,
     targetContract,
+    config,
   );
 
   return {
@@ -220,6 +228,6 @@ export function buildUncertaintyRange(
       `σ_local=${sigmaLocal.toFixed(2)} PLN/MWh, ` +
       `distanceFactor=${distanceFactor.toFixed(2)}, densityFactor=${densityFactor.toFixed(2)}, ` +
       `σ_combined=${sigma.toFixed(2)}, halfWidth=${halfWidth.toFixed(2)} PLN/MWh. ` +
-      `Coverage factor k=${COVERAGE_FACTOR} (deterministic interval, not probabilistic).`,
+      `Coverage factor k=${config.uncertaintyCoverageFactor} (deterministic interval, not probabilistic).`,
   };
 }

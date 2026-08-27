@@ -30,6 +30,7 @@ import {
   buildUncertaintyRange,
   computeHistoricalDispersion,
 } from "./uncertainty";
+import { filterHistoricalObservations } from "./historical-dynamics";
 import { runMinimax } from "./minimax";
 import { computeMispricingSignal } from "./mispricing";
 
@@ -54,6 +55,11 @@ export function computeHedgeDecision(
   historicalObs: Array<{ date: string; price: number }>,
   decisionDate: string,
 ): HedgeDecision {
+  const filteredHistoricalObs = filterHistoricalObservations(
+    historicalObs,
+    decisionDate,
+  );
+
   // 1. Forward curve structural analysis
   const curveMetrics = computeCurveMetrics(snapshot, targetContract);
 
@@ -63,7 +69,7 @@ export function computeHedgeDecision(
   // 3. Uncertainty-adjusted valuation range
   const valuation: ValuationRange = buildUncertaintyRange(
     structuralValuation.central,
-    historicalObs,
+    filteredHistoricalObs,
     snapshot,
     targetContract,
   );

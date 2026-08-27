@@ -22,7 +22,27 @@ export interface HistoricalDynamics {
 
 /** Convert an ISO date string to whole days since the Unix epoch. */
 function toEpochDays(isoDate: string): number {
-  return Math.floor(new Date(isoDate).getTime() / 86_400_000);
+  const timestamp = new Date(isoDate).getTime();
+  if (Number.isNaN(timestamp)) {
+    throw new Error(`Invalid ISO date: ${isoDate}`);
+  }
+  return Math.floor(timestamp / 86_400_000);
+}
+
+export function filterHistoricalObservations(
+  observations: Array<{ date: string; price: number }>,
+  decisionDate: string,
+): Array<{ date: string; price: number }> {
+  const cutoff = toEpochDays(decisionDate);
+
+  return observations
+    .map((observation) => ({
+      epochDays: toEpochDays(observation.date),
+      observation,
+    }))
+    .filter(({ epochDays }) => epochDays <= cutoff)
+    .sort((a, b) => a.epochDays - b.epochDays)
+    .map(({ observation }) => observation);
 }
 
 /**
@@ -42,12 +62,7 @@ export function computeHistoricalDynamics(
   observations: Array<{ date: string; price: number }>,
   decisionDate: string,
 ): HistoricalDynamics {
-  const cutoff = toEpochDays(decisionDate);
-
-  // Hard information cutoff: discard anything after the decision date.
-  const filtered = observations
-    .filter((o) => toEpochDays(o.date) <= cutoff)
-    .sort((a, b) => toEpochDays(a.date) - toEpochDays(b.date));
+  const filtered = filterHistoricalObservations(observations, decisionDate);
 
   const observationCount = filtered.length;
 
