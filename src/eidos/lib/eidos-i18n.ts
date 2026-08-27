@@ -22,6 +22,7 @@ export type EidosCopy = {
     backLink: string;
     backToDashboard: string;
     openDocumentationPage: string;
+    openOpportunityPage: string;
     showDocumentation: string;
     hideDocumentation: string;
     documentationBadge: string;
@@ -337,6 +338,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Back to EIDOS dashboard",
       openDocumentationPage: "Go to documentation",
+      openOpportunityPage: "Futures opportunity",
       showDocumentation: "Show documentation",
       hideDocumentation: "Hide documentation",
       documentationBadge: "Documentation",
@@ -528,6 +530,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Назад до дашборду EIDOS",
       openDocumentationPage: "Перейти до документації",
+      openOpportunityPage: "Ф'ючерсна можливість",
       showDocumentation: "Показати документацію",
       hideDocumentation: "Сховати документацію",
       documentationBadge: "Документація",
@@ -717,6 +720,7 @@ const copyByLocale: Record<Locale, EidosCopy> = {
       backLink: "DIP Observatory",
       backToDashboard: "Wróć do dashboardu EIDOS",
       openDocumentationPage: "Przejdź do dokumentacji",
+      openOpportunityPage: "Okazja na rynku kontraktów",
       showDocumentation: "Pokaż dokumentację",
       hideDocumentation: "Ukryj dokumentację",
       documentationBadge: "Dokumentacja",

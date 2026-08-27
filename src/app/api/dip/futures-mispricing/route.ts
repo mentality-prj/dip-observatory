@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 
-import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
+import {
+  runFuturesMispricingPlugin,
+  FUTURES_MISPRICING_PLUGIN_META,
+  DEFAULT_CONFIG,
+} from "@/dip/plugins/futures-mispricing";
 
 function isParseableIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
@@ -91,4 +95,17 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
+}
+
+export function GET() {
+  return NextResponse.json({
+    status: "ok",
+    plugin: {
+      id: FUTURES_MISPRICING_PLUGIN_META.id,
+      version: FUTURES_MISPRICING_PLUGIN_META.version,
+      category: FUTURES_MISPRICING_PLUGIN_META.category,
+    },
+    modelVersion: "1.0",
+    configurationVersion: DEFAULT_CONFIG.configVersion,
+  });
 }

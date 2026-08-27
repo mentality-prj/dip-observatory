@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, FlaskConical } from "lucide-react";
+import { ArrowLeft, BookOpen, FlaskConical, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -141,6 +141,12 @@ export function EidosWorkspace({ locale }: Props) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <EidosLocaleSwitcher locale={locale} />
+            <Button asChild size="sm">
+              <Link href={buildLocalePath("/eidos/opportunity", locale)}>
+                <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                {copy.header.openOpportunityPage}
+              </Link>
+            </Button>
             <Button asChild size="sm">
               <Link href={buildLocalePath("/eidos/documentation", locale)}>
                 <BookOpen className="h-4 w-4" aria-hidden="true" />

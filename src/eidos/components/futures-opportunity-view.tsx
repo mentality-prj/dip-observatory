@@ -119,12 +119,14 @@ export function FuturesOpportunityView({
   marketSnapshot,
   outcome: outcomeData,
   targetContract,
+  pluginStatus,
 }: {
   decision: HedgeDecision;
   decisionDate: string;
   marketSnapshot: MarketSnapshot;
   outcome: OutcomeData;
   targetContract: string;
+  pluginStatus?: { pluginVersion: string; modelVersion: string; configurationVersion: string };
 }) {
   // Outcome data is used ONLY for the separate outcome section below.
   // It does NOT influence the decision, which is computed by DIP Core.
@@ -152,6 +154,16 @@ export function FuturesOpportunityView({
               {decisionDate}
             </span>
           </div>
+          {pluginStatus && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-950 border border-emerald-800 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
+              <span className="text-xs text-emerald-400 font-medium">Plugin connected</span>
+              <span className="text-xs text-zinc-500">·</span>
+              <span className="text-xs text-zinc-400">
+                plugin v{pluginStatus.pluginVersion} · model v{pluginStatus.modelVersion}
+              </span>
+            </div>
+          )}
         </header>
 
         {/* Primary decision card */}

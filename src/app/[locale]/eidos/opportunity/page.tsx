@@ -24,10 +24,16 @@ function fetchDecision() {
 export default async function EidosOpportunityPage() {
   let decision = null;
   let error = null;
+  let pluginStatus = null;
 
   try {
     const result = fetchDecision();
     decision = result.decision;
+    pluginStatus = {
+      pluginVersion: result.pluginVersion,
+      modelVersion: result.modelVersion,
+      configurationVersion: result.configurationVersion,
+    };
   } catch (err) {
     error = err instanceof Error ? err.message : "Computation failed";
   }
@@ -56,6 +62,7 @@ export default async function EidosOpportunityPage() {
       marketSnapshot={EIDOS_MARKET_SNAPSHOT}
       outcome={EIDOS_Q1_2027_OUTCOME}
       targetContract={EIDOS_TARGET_CONTRACT}
+      pluginStatus={pluginStatus ?? undefined}
     />
   );
 }
