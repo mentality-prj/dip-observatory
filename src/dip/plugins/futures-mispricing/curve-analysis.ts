@@ -344,9 +344,9 @@ export function computeStructuralValuation(
     upper: central + halfWidth,
     uncertaintyWidth: 2 * halfWidth,
     methodology:
-      "Structural valuation: 70% local linear interpolation (adjacent quarterly) + " +
-      "30% annual contract proxy. Uncertainty bounds: 1.5× local price dispersion, " +
-      "minimum ±10 PLN/MWh.",
+      `Structural valuation: ${(localWeight * 100).toFixed(0)}% local linear interpolation (adjacent quarterly) + ` +
+      `${(annualWeight * 100).toFixed(0)}% annual contract proxy. Uncertainty bounds: 1.5× local price dispersion, ` +
+      `minimum ±${minHalfWidth.toFixed(0)} PLN/MWh.`,
   };
 }
 

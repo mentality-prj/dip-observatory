@@ -21,6 +21,9 @@ import type {
   HedgeDecision,
   ValuationRange,
   Robustness,
+  MinimaxResult,
+  MispricingSignal,
+  CurveMetrics,
 } from "@/eidos/types/futures";
 import { computeCurveMetrics, computeStructuralValuation } from "./curve-analysis";
 import {
@@ -120,6 +123,48 @@ export function computeHedgeDecision(
 // ---------------------------------------------------------------------------
 // Rationale builder
 // ---------------------------------------------------------------------------
+
+/**
+ * Assemble a HedgeDecision from pre-computed intermediates.
+ * Use this when the calling code has already run the sub-steps so that the
+ * canonical decision object uses exactly the same values that are recorded in
+ * the decision trace (no double-computation).
+ */
+export function assembleHedgeDecision(params: {
+  targetContract: string;
+  currentPrice: number;
+  valuation: ValuationRange;
+  minimax: MinimaxResult;
+  signal: MispricingSignal;
+  curveMetrics: CurveMetrics;
+  decisionDate: string;
+}): HedgeDecision {
+  const { targetContract, currentPrice, valuation, minimax, signal, curveMetrics, decisionDate } = params;
+  const downside = Math.max(0, currentPrice - minimax.worstCaseLow);
+  const upside = valuation.central - currentPrice;
+  const robustness: Robustness = signal.robustness;
+  const rationale = buildRationale(
+    targetContract,
+    currentPrice,
+    valuation,
+    minimax,
+    signal.signal,
+    curveMetrics,
+  );
+  return {
+    action: signal.signal,
+    contract: targetContract,
+    entryPrice: currentPrice,
+    valuationRange: valuation,
+    minimax,
+    downside,
+    upside,
+    robustness,
+    decisionDate,
+    rationale,
+    curveMetrics,
+  };
+}
 
 function buildRationale(
   contract: string,

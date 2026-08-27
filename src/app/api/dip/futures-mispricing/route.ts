@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 import { runFuturesMispricingPlugin } from "@/dip/plugins/futures-mispricing";
 import type { FuturesMispricingRequest } from "@/dip/plugins/futures-mispricing/types";
@@ -35,8 +35,14 @@ export async function POST(request: Request) {
     const result = runFuturesMispricingPlugin(body as FuturesMispricingRequest);
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: `Invalid request: ${error.issues.map((i) => i.message).join("; ")}` },
+        { status: 400 },
+      );
+    }
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }

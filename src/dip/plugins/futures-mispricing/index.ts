@@ -23,7 +23,7 @@ import { computeHistoricalDynamics } from "./historical-dynamics";
 import { buildUncertaintyRange } from "./uncertainty";
 import { runMinimax } from "./minimax";
 import { computeMispricingSignal } from "./mispricing";
-import { computeHedgeDecision } from "./hedge-decision";
+import { assembleHedgeDecision } from "./hedge-decision";
 
 export const FUTURES_MISPRICING_PLUGIN_META: FuturesMispricingPluginMeta = {
   id: "futures-mispricing",
@@ -106,13 +106,17 @@ export function runFuturesMispricingPlugin(
     minimax,
   );
 
-  // 7. Full hedge decision (canonical decision output).
-  const decision = computeHedgeDecision(
-    marketSnapshot,
+  // 7. Full hedge decision — assembled from pre-computed intermediates so that
+  //    the canonical decision and the trace record the same values.
+  const decision = assembleHedgeDecision({
     targetContract,
-    historicalObservations,
+    currentPrice,
+    valuation: uncertaintyRange,
+    minimax,
+    signal: mispricingSignal,
+    curveMetrics,
     decisionDate,
-  );
+  });
 
   const decisionTrace: DecisionTrace = {
     input: {

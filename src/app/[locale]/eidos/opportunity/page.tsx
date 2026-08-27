@@ -17,7 +17,14 @@ async function fetchDecision() {
   // Build an absolute URL from request headers (Next.js server component).
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3000";
-  const protocol = host.startsWith("localhost") ? "http" : "https";
+  // Build an absolute URL. Prefer x-forwarded-proto for proxied environments;
+  // fall back to http in development mode and https elsewhere.
+  const forwardedProto = headersList.get("x-forwarded-proto");
+  const isDev = process.env.NODE_ENV === "development";
+  const loopbackHosts = ["localhost", "127.0.0.1", "0.0.0.0", "::1"];
+  const isLoopback = loopbackHosts.some((h) => host.split(":")[0] === h);
+  const protocol =
+    forwardedProto ?? (isDev || isLoopback ? "http" : "https");
   const url = `${protocol}://${host}/api/dip/futures-mispricing`;
 
   const response = await fetch(url, {
