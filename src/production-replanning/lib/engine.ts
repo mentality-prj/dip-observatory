@@ -187,6 +187,10 @@ function evaluateRulesForAlternative(
   planHorizonDays: number,
   /** For KEEP_CURRENT_PLAN this is the disrupted affected-line tpd; for other actions the combined effective tpd. */
   criticalOrderTpd: number,
+  /** Fraction of normal capacity removed from the affected line, e.g. 0.30 = 30%. */
+  capacityReductionFactor: number,
+  /** Human-readable name of the disrupted line, e.g. "Line A". */
+  affectedLineName: string,
 ): RuleResult[] {
   const totalRequired = orders.reduce((s, o) => s + o.requiredTonnes, 0);
   const criticalOrders = orders.filter((o) => o.priority === "CRITICAL");
@@ -301,7 +305,7 @@ function evaluateRulesForAlternative(
           condition: "Plan actively compensates for the disruption",
           passed: compensates,
           evidence: compensates
-            ? `Action ${actionId} compensates for ${(disruptionDurationDays)}-day disruption (${(1 - disruptedVsNormal) * 100 > 0 ? ((1 - disruptedVsNormal) * 100).toFixed(0) : 0}% capacity loss).`
+            ? `${actionId} compensates for the ${disruptionDurationDays}-day disruption, during which ${affectedLineName} operates at ${((1 - capacityReductionFactor) * 100).toFixed(0)}% of normal capacity.`
             : "No compensating action taken — disruption impacts flow directly.",
           featureValues: {
             actionId,
@@ -916,6 +920,8 @@ export function runProductionReplanningEngine(
       normalCapacityTonnes,
       planHorizonDays,
       criticalOrderTpd,
+      disruption.capacityReductionFactor,
+      lines.find((l) => l.id === disruption.affectedLineId)?.name ?? disruption.affectedLineId,
     );
 
     const blockingConstraints = ruleResults
