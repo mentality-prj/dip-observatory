@@ -550,8 +550,10 @@ function WhatIfControls({
 
           <div className="flex items-center gap-3 pt-4">
             <button
+              id="overtime"
               role="checkbox"
               aria-checked={state.overtimeAvailable}
+              aria-label="Overtime available"
               onClick={() => update({ overtimeAvailable: !state.overtimeAvailable })}
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
@@ -682,15 +684,14 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
     overtimeAvailable: true,
   });
 
-  const decision = useMemo(() => {
-    const scenario = buildScenario(DEFAULT_SCENARIO, whatIf);
-    return runProductionReplanningEngine({ scenario });
-  }, [whatIf]);
-
   const scenario = useMemo(
     () => buildScenario(DEFAULT_SCENARIO, whatIf),
     [whatIf],
   );
+
+  const decision = useMemo(() => {
+    return runProductionReplanningEngine({ scenario });
+  }, [scenario]);
 
   const sortedAlts = [...decision.alternatives].sort((a, b) => a.rank - b.rank);
 

@@ -442,15 +442,19 @@ function calcFinancialImpact(
       ? costs.materialHandlingSwitchCost
       : 0;
 
-  const total = missedDeadlineCost + overtimeCost + delayCost + unusedCapacityCost + switchingCost;
+  const roundedMissedDeadlineCost = Math.round(missedDeadlineCost);
+  const roundedOvertimeCost = Math.round(overtimeCost);
+  const roundedDelayCost = Math.round(delayCost);
+  const roundedUnusedCapacityCost = Math.round(unusedCapacityCost);
+  const roundedSwitchingCost = Math.round(switchingCost);
 
   return {
-    missedDeadlineCost: Math.round(missedDeadlineCost),
-    overtimeCost: Math.round(overtimeCost),
-    delayCost: Math.round(delayCost),
-    unusedCapacityCost: Math.round(unusedCapacityCost),
-    switchingCost: Math.round(switchingCost),
-    total: Math.round(total),
+    missedDeadlineCost: roundedMissedDeadlineCost,
+    overtimeCost: roundedOvertimeCost,
+    delayCost: roundedDelayCost,
+    unusedCapacityCost: roundedUnusedCapacityCost,
+    switchingCost: roundedSwitchingCost,
+    total: roundedMissedDeadlineCost + roundedOvertimeCost + roundedDelayCost + roundedUnusedCapacityCost + roundedSwitchingCost,
   };
 }
 
