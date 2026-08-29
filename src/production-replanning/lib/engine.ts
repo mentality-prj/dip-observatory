@@ -402,7 +402,7 @@ function calcFinancialImpact(
   // Delay cost (production queue delay for non-deadline-specific delay)
   let delayCost = 0;
   if (actionId === "KEEP_CURRENT_PLAN") {
-    // Normal orders queued on Line A (or spill-over): delay due to reduced throughput
+    // Normal orders queued on unaffected line(s): delay due to overall throughput reduction
     for (const o of normalOrders) {
       delayCost += 2 * o.requiredTonnes * costs.productionDelayCostPerTonneDay;
     }
@@ -475,19 +475,6 @@ function computeLineAllocations(
       };
     });
 
-    let cumB = 0;
-    const normalAllocs = normalOrders.map((o) => {
-      cumB += o.requiredTonnes;
-      const completionDay = unaffectedTpd > 0 ? cumB / unaffectedTpd : 999;
-      return {
-        orderId: o.id,
-        orderName: o.name,
-        allocatedTonnes: o.requiredTonnes,
-        deadlineDays: o.deadlineDays,
-        estimatedCompletionDay: +completionDay.toFixed(2),
-        deadlineMet: completionDay <= o.deadlineDays,
-      };
-    });
 
     return [
       {
@@ -497,16 +484,28 @@ function computeLineAllocations(
         orders: affectedAllocs,
         totalAllocatedTonnes: criticalAndHigh.reduce((s, o) => s + o.requiredTonnes, 0),
       },
-      ...unaffectedLines.map((line, idx) => {
+      ...unaffectedLines.map((line) => {
         const tpd = line.normalCapacityTpd * line.availabilityFactor;
+        const share = unaffectedTpd > 0 ? tpd / unaffectedTpd : 0;
+        let cumU = 0;
+        const lineNormalAllocs = normalOrders.map((o) => {
+          cumU += o.requiredTonnes;
+          const completionDay = unaffectedTpd > 0 ? cumU / unaffectedTpd : 999;
+          return {
+            orderId: o.id,
+            orderName: o.name,
+            allocatedTonnes: Math.round(o.requiredTonnes * share),
+            deadlineDays: o.deadlineDays,
+            estimatedCompletionDay: +completionDay.toFixed(2),
+            deadlineMet: completionDay <= o.deadlineDays,
+          };
+        });
         return {
           lineId: line.id,
           lineName: line.name,
           effectiveTpd: tpd,
-          orders: idx === 0 ? normalAllocs : [],
-          totalAllocatedTonnes: idx === 0
-            ? normalOrders.reduce((s, o) => s + o.requiredTonnes, 0)
-            : 0,
+          orders: lineNormalAllocs,
+          totalAllocatedTonnes: Math.round(normalOrders.reduce((s, o) => s + o.requiredTonnes, 0) * share),
         };
       }),
     ];
