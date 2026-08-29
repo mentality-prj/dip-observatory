@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import { ArrowLeft, ChevronDown, ChevronUp, Package } from "lucide-react";
 import Link from "next/link";
 
@@ -170,14 +170,74 @@ function SupplierLabControls({
   const [policyOpen, setPolicyOpen] = useState(true);
   const [weightsOpen, setWeightsOpen] = useState(true);
 
-  function update(patch: Partial<SupplierScenarioState>) {
-    onChange({ ...state, ...patch });
+  // Raw string state allows typing decimals and clearing the field without
+  // the value snapping back to "0" mid-edit.
+  const [raw, setRaw] = useState({
+    deliveryPerformance: String(state.deliveryPerformance),
+    qualityScore: String(state.qualityScore),
+    dependency: String(state.dependency),
+    minDeliveryPerformance: String(state.minDeliveryPerformance),
+    minQualityScore: String(state.minQualityScore),
+    maxIncidents: String(state.maxIncidents),
+    weightDelivery: String(state.weightDelivery),
+    weightQuality: String(state.weightQuality),
+    weightDependency: String(state.weightDependency),
+  });
+
+  // Keep raw display values in sync when the state prop changes externally
+  // (e.g. when the parent resets the scenario to baseline).
+  useEffect(() => {
+    setRaw({
+      deliveryPerformance: String(state.deliveryPerformance),
+      qualityScore: String(state.qualityScore),
+      dependency: String(state.dependency),
+      minDeliveryPerformance: String(state.minDeliveryPerformance),
+      minQualityScore: String(state.minQualityScore),
+      maxIncidents: String(state.maxIncidents),
+      weightDelivery: String(state.weightDelivery),
+      weightQuality: String(state.weightQuality),
+      weightDependency: String(state.weightDependency),
+    });
+  }, [
+    state.deliveryPerformance,
+    state.qualityScore,
+    state.dependency,
+    state.minDeliveryPerformance,
+    state.minQualityScore,
+    state.maxIncidents,
+    state.weightDelivery,
+    state.weightQuality,
+    state.weightDependency,
+  ]);
+
+  function handleNum<K extends keyof typeof raw>(
+    rawKey: K,
+    stateKey: keyof SupplierScenarioState,
+    rawValue: string,
+    transform?: (n: number) => number,
+  ) {
+    setRaw((r) => ({ ...r, [rawKey]: rawValue }));
+    if (rawValue === "" || rawValue.endsWith(".")) return; // still typing
+    const num = Number(rawValue);
+    if (!Number.isNaN(num)) {
+      onChange({ ...state, [stateKey]: transform ? transform(num) : num });
+    }
+  }
+
+  function handleBlur<K extends keyof typeof raw>(
+    rawKey: K,
+    stateKey: keyof SupplierScenarioState,
+  ) {
+    // Normalise display to the actual committed value on blur
+    setRaw((r) => ({ ...r, [rawKey]: String(state[stateKey]) }));
   }
 
   const weightTotal =
     state.weightDelivery + state.weightQuality + state.weightDependency;
   const normalizedWeight = (weight: number) =>
     weightTotal > 0 ? (weight / weightTotal) * 100 : 0;
+
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
   return (
     <div className="space-y-4">
@@ -197,7 +257,7 @@ function SupplierLabControls({
                 id="supplier-risk"
                 value={state.financialRisk}
                 onChange={(e) =>
-                  update({ financialRisk: e.target.value as RiskLevel })
+                  onChange({ ...state, financialRisk: e.target.value as RiskLevel })
                 }
                 className="flex h-11 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/8 focus:ring-2 focus:ring-cyan-300/20"
               >
@@ -219,7 +279,7 @@ function SupplierLabControls({
                 role="checkbox"
                 aria-checked={state.compliant}
                 aria-label="Supplier compliant"
-                onClick={() => update({ compliant: !state.compliant })}
+                onClick={() => onChange({ ...state, compliant: !state.compliant })}
                 className={cn(
                   "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
                   state.compliant ? "bg-cyan-500" : "bg-white/10",
@@ -243,15 +303,9 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={state.deliveryPerformance}
-                onChange={(e) =>
-                  update({
-                    deliveryPerformance: Math.max(
-                      0,
-                      Math.min(1, Number(e.target.value)),
-                    ),
-                  })
-                }
+                value={raw.deliveryPerformance}
+                onChange={(e) => handleNum("deliveryPerformance", "deliveryPerformance", e.target.value, clamp01)}
+                onBlur={() => handleBlur("deliveryPerformance", "deliveryPerformance")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.deliveryPerformance)}
@@ -266,15 +320,9 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={state.qualityScore}
-                onChange={(e) =>
-                  update({
-                    qualityScore: Math.max(
-                      0,
-                      Math.min(1, Number(e.target.value)),
-                    ),
-                  })
-                }
+                value={raw.qualityScore}
+                onChange={(e) => handleNum("qualityScore", "qualityScore", e.target.value, clamp01)}
+                onBlur={() => handleBlur("qualityScore", "qualityScore")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.qualityScore)}
@@ -289,15 +337,9 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={state.dependency}
-                onChange={(e) =>
-                  update({
-                    dependency: Math.max(
-                      0,
-                      Math.min(1, Number(e.target.value)),
-                    ),
-                  })
-                }
+                value={raw.dependency}
+                onChange={(e) => handleNum("dependency", "dependency", e.target.value, clamp01)}
+                onBlur={() => handleBlur("dependency", "dependency")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.dependency)}
@@ -321,15 +363,9 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.01}
-              value={state.minDeliveryPerformance}
-              onChange={(e) =>
-                update({
-                  minDeliveryPerformance: Math.max(
-                    0,
-                    Math.min(1, Number(e.target.value)),
-                  ),
-                })
-              }
+              value={raw.minDeliveryPerformance}
+              onChange={(e) => handleNum("minDeliveryPerformance", "minDeliveryPerformance", e.target.value, clamp01)}
+              onBlur={() => handleBlur("minDeliveryPerformance", "minDeliveryPerformance")}
             />
           </div>
           <div className="space-y-1.5">
@@ -340,15 +376,9 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.01}
-              value={state.minQualityScore}
-              onChange={(e) =>
-                update({
-                  minQualityScore: Math.max(
-                    0,
-                    Math.min(1, Number(e.target.value)),
-                  ),
-                })
-              }
+              value={raw.minQualityScore}
+              onChange={(e) => handleNum("minQualityScore", "minQualityScore", e.target.value, clamp01)}
+              onBlur={() => handleBlur("minQualityScore", "minQualityScore")}
             />
           </div>
           <div className="space-y-1.5">
@@ -359,10 +389,9 @@ function SupplierLabControls({
               min={0}
               max={10}
               step={1}
-              value={state.maxIncidents}
-              onChange={(e) =>
-                update({ maxIncidents: Math.max(0, Number(e.target.value)) })
-              }
+              value={raw.maxIncidents}
+              onChange={(e) => handleNum("maxIncidents", "maxIncidents", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("maxIncidents", "maxIncidents")}
             />
           </div>
         </div>
@@ -382,12 +411,9 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={state.weightDelivery}
-              onChange={(e) =>
-                update({
-                  weightDelivery: Math.max(0, Number(e.target.value)),
-                })
-              }
+              value={raw.weightDelivery}
+              onChange={(e) => handleNum("weightDelivery", "weightDelivery", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightDelivery", "weightDelivery")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightDelivery).toFixed(0)}%
@@ -401,12 +427,9 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={state.weightQuality}
-              onChange={(e) =>
-                update({
-                  weightQuality: Math.max(0, Number(e.target.value)),
-                })
-              }
+              value={raw.weightQuality}
+              onChange={(e) => handleNum("weightQuality", "weightQuality", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightQuality", "weightQuality")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightQuality).toFixed(0)}%
@@ -420,12 +443,9 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={state.weightDependency}
-              onChange={(e) =>
-                update({
-                  weightDependency: Math.max(0, Number(e.target.value)),
-                })
-              }
+              value={raw.weightDependency}
+              onChange={(e) => handleNum("weightDependency", "weightDependency", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightDependency", "weightDependency")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightDependency).toFixed(0)}%
