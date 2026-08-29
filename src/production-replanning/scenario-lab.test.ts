@@ -563,8 +563,10 @@ describe("Part C: scenario control acceptance tests", () => {
     const lowAlt = lowMat.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN");
     assert.ok(baseAlt, "C5: baseline must include KEEP_CURRENT_PLAN");
     assert.ok(lowAlt, "C5: low-material scenario must include KEEP_CURRENT_PLAN");
-    const baseMatRule = baseAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL")!;
-    const lowMatRule = lowAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL")!;
+    const baseMatRule = baseAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL");
+    const lowMatRule = lowAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL");
+    assert.ok(baseMatRule, "C5: baseline KEEP_CURRENT_PLAN must include RULE-MATERIAL");
+    assert.ok(lowMatRule, "C5: low-material KEEP_CURRENT_PLAN must include RULE-MATERIAL");
     assert.ok(
       baseMatRule.evidence !== lowMatRule.evidence,
       "C5: RULE-MATERIAL evidence must change when material availability changes",
