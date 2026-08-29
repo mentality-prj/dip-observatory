@@ -290,6 +290,13 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               EIDOS Observatory
             </Link>
+            <Link
+              href={buildLocalePath("/supplier-decision", locale)}
+              className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Supplier Decision
+            </Link>
             <select
               value={locale}
               disabled={isLocalePending}
