@@ -608,7 +608,7 @@ function WhatIfControls({
               max={60}
               step={5}
               value={state.capacityReductionPct}
-              onChange={(e) => update({ capacityReductionPct: Number(e.target.value) })}
+              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ capacityReductionPct: v }); }}
             />
             <p className="text-xs text-slate-500">0–60%</p>
           </div>
@@ -622,7 +622,7 @@ function WhatIfControls({
               max={10}
               step={1}
               value={state.disruptionDurationDays}
-              onChange={(e) => update({ disruptionDurationDays: Number(e.target.value) })}
+              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ disruptionDurationDays: v }); }}
             />
             <p className="text-xs text-slate-500">1–10 days</p>
           </div>
@@ -636,7 +636,7 @@ function WhatIfControls({
               max={600}
               step={10}
               value={state.materialATonnes}
-              onChange={(e) => update({ materialATonnes: Number(e.target.value) })}
+              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ materialATonnes: v }); }}
             />
             <p className="text-xs text-slate-500">50–600 t</p>
           </div>
@@ -650,7 +650,7 @@ function WhatIfControls({
               max={14}
               step={1}
               value={state.criticalDeadlineDays}
-              onChange={(e) => update({ criticalDeadlineDays: Number(e.target.value) })}
+              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ criticalDeadlineDays: v }); }}
             />
             <p className="text-xs text-slate-500">1–14 days</p>
           </div>
