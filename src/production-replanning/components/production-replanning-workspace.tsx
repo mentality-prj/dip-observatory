@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -594,6 +594,17 @@ function WhatIfControls({
     materialATonnes: String(state.materialATonnes),
     criticalDeadlineDays: String(state.criticalDeadlineDays),
   });
+
+  // Keep raw display values in sync when the state prop changes externally
+  // (e.g. when the parent resets the scenario to baseline).
+  useEffect(() => {
+    setRaw({
+      capacityReductionPct: String(state.capacityReductionPct),
+      disruptionDurationDays: String(state.disruptionDurationDays),
+      materialATonnes: String(state.materialATonnes),
+      criticalDeadlineDays: String(state.criticalDeadlineDays),
+    });
+  }, [state.capacityReductionPct, state.disruptionDurationDays, state.materialATonnes, state.criticalDeadlineDays]);
 
   function handleChange<K extends keyof typeof raw>(
     key: K,
