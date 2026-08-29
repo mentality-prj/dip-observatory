@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, FlaskConical, TrendingUp } from "lucide-react";
+import { ArrowLeft, BookOpen, FlaskConical, Package, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +151,12 @@ export function EidosWorkspace({ locale }: Props) {
               <Link href={buildLocalePath("/eidos/documentation", locale)}>
                 <BookOpen className="h-4 w-4" aria-hidden="true" />
                 {copy.header.openDocumentationPage}
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href={buildLocalePath("/supplier-decision", locale)}>
+                <Package className="h-4 w-4" aria-hidden="true" />
+                Supplier Decision
               </Link>
             </Button>
             <Link
