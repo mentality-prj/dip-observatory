@@ -585,8 +585,34 @@ function WhatIfControls({
   state: WhatIfState;
   onChange: (s: WhatIfState) => void;
 }) {
-  function update(patch: Partial<WhatIfState>) {
-    onChange({ ...state, ...patch });
+  // Raw string display state allows the user to clear an input completely.
+  // When the field is empty we use 0 as the numeric fallback; on blur we
+  // normalise the displayed string back to the actual numeric value.
+  const [raw, setRaw] = useState({
+    capacityReductionPct: String(state.capacityReductionPct),
+    disruptionDurationDays: String(state.disruptionDurationDays),
+    materialATonnes: String(state.materialATonnes),
+    criticalDeadlineDays: String(state.criticalDeadlineDays),
+  });
+
+  function handleChange<K extends keyof typeof raw>(
+    key: K,
+    stateKey: keyof WhatIfState,
+    rawValue: string,
+  ) {
+    setRaw((r) => ({ ...r, [key]: rawValue }));
+    const num = rawValue === "" ? 0 : Number(rawValue);
+    if (!Number.isNaN(num)) {
+      onChange({ ...state, [stateKey]: num });
+    }
+  }
+
+  function handleBlur<K extends keyof typeof raw>(
+    key: K,
+    stateKey: keyof WhatIfState,
+  ) {
+    // Normalise: show the actual numeric value (removes leading/trailing chars)
+    setRaw((r) => ({ ...r, [key]: String(state[stateKey as keyof WhatIfState]) }));
   }
 
   return (
@@ -607,8 +633,9 @@ function WhatIfControls({
               min={0}
               max={60}
               step={5}
-              value={state.capacityReductionPct}
-              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ capacityReductionPct: v }); }}
+              value={raw.capacityReductionPct}
+              onChange={(e) => handleChange("capacityReductionPct", "capacityReductionPct", e.target.value)}
+              onBlur={() => handleBlur("capacityReductionPct", "capacityReductionPct")}
             />
             <p className="text-xs text-slate-500">0–60%</p>
           </div>
@@ -621,8 +648,9 @@ function WhatIfControls({
               min={1}
               max={10}
               step={1}
-              value={state.disruptionDurationDays}
-              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ disruptionDurationDays: v }); }}
+              value={raw.disruptionDurationDays}
+              onChange={(e) => handleChange("disruptionDurationDays", "disruptionDurationDays", e.target.value)}
+              onBlur={() => handleBlur("disruptionDurationDays", "disruptionDurationDays")}
             />
             <p className="text-xs text-slate-500">1–10 days</p>
           </div>
@@ -635,8 +663,9 @@ function WhatIfControls({
               min={50}
               max={600}
               step={10}
-              value={state.materialATonnes}
-              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ materialATonnes: v }); }}
+              value={raw.materialATonnes}
+              onChange={(e) => handleChange("materialATonnes", "materialATonnes", e.target.value)}
+              onBlur={() => handleBlur("materialATonnes", "materialATonnes")}
             />
             <p className="text-xs text-slate-500">50–600 t</p>
           </div>
@@ -649,8 +678,9 @@ function WhatIfControls({
               min={1}
               max={14}
               step={1}
-              value={state.criticalDeadlineDays}
-              onChange={(e) => { const v = e.target.valueAsNumber; if (!Number.isNaN(v)) update({ criticalDeadlineDays: v }); }}
+              value={raw.criticalDeadlineDays}
+              onChange={(e) => handleChange("criticalDeadlineDays", "criticalDeadlineDays", e.target.value)}
+              onBlur={() => handleBlur("criticalDeadlineDays", "criticalDeadlineDays")}
             />
             <p className="text-xs text-slate-500">1–14 days</p>
           </div>
@@ -661,7 +691,7 @@ function WhatIfControls({
               role="checkbox"
               aria-checked={state.overtimeAvailable}
               aria-label="Overtime available"
-              onClick={() => update({ overtimeAvailable: !state.overtimeAvailable })}
+              onClick={() => onChange({ ...state, overtimeAvailable: !state.overtimeAvailable })}
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
                 state.overtimeAvailable ? "bg-cyan-500" : "bg-white/10",
