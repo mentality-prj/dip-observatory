@@ -804,6 +804,35 @@ describe("R12. lineAllocations present in operational consequences", () => {
   });
 });
 
+describe("R13. changing constraints changes recommendation and financial output", () => {
+  test("relaxing critical deadline to 10 days removes the missed-deadline penalty on current plan", () => {
+    const relaxed = runProductionReplanningEngine(
+      buildRequest({
+        orders: DEFAULT_SCENARIO.orders.map((o) =>
+          o.priority === "CRITICAL" ? { ...o, deadlineDays: 10 } : o,
+        ),
+      }),
+    );
+    const current = relaxed.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.equal(current.financialImpact.missedDeadlineCost, 0, "Relaxed deadline eliminates missed-deadline cost");
+  });
+
+  test("increasing capacity reduction makes current plan miss deadline more severely", () => {
+    const moreDisrupted = runProductionReplanningEngine(
+      buildRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.7 },
+      }),
+    );
+    const baseline = getDemoDecision();
+    const moreDisruptedCurrent = moreDisrupted.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const baselineCurrent = baseline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.ok(
+      moreDisruptedCurrent.financialImpact.missedDeadlineCost >= baselineCurrent.financialImpact.missedDeadlineCost,
+      "More capacity reduction should not reduce missed-deadline cost",
+    );
+  });
+});
+
 describe("R14. explanation values match engine output", () => {
   test("explanation savings figure matches actual financial difference", () => {
     const result = getDemoDecision();

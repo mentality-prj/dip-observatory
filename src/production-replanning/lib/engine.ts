@@ -566,29 +566,57 @@ function calcOperationalConsequences(
   const totalEffective = effectiveCapacityTonnes + overtimeTonnes;
   const totalRequired = orders.reduce((s, o) => s + o.requiredTonnes, 0);
 
-  // Simulate completion days per order using criticalOrderTpd.
-  // For KEEP_CURRENT_PLAN this is the disrupted affected-line rate so that
-  // critical orders on Line A show their true (delayed) completion day.
+  // Simulate completion days per order.
+  // For KEEP_CURRENT_PLAN, model two independent queues:
+  //   – Critical + High on the disrupted Line A (affectedLineTpd)
+  //   – Normal on the unaffected line(s) (unaffectedLineTpd)
+  // For all other actions the lines work together (criticalOrderTpd = combined rate).
+  const unaffectedLineTpd = lines
+    .filter((l) => l.id !== affectedLineId)
+    .reduce((s, l) => s + l.normalCapacityTpd * l.availabilityFactor, 0);
+
   const priorityOrder = { CRITICAL: 0, HIGH: 1, NORMAL: 2 };
   const sorted = [...orders].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-  let cumulativeTonnes = 0;
   const expectedCompletionDays: Record<string, number> = {};
   const affectedOrderIds: string[] = [];
 
-  for (const order of sorted) {
-    cumulativeTonnes += order.requiredTonnes;
-    const completionDay = criticalOrderTpd > 0
-      ? Math.ceil(cumulativeTonnes / criticalOrderTpd)
-      : 999;
-    expectedCompletionDays[order.id] = completionDay;
-
-    if (actionId === "DELAY_LOW_PRIORITY_ORDER" && order.priority === "NORMAL") {
-      expectedCompletionDays[order.id] = completionDay + 3;
-      affectedOrderIds.push(order.id);
-    } else if (actionId === "KEEP_CURRENT_PLAN") {
-      // Disruption may push completion beyond deadline
+  if (actionId === "KEEP_CURRENT_PLAN") {
+    // Queue A (Line A, disrupted): critical + high
+    let cumulativeA = 0;
+    for (const order of sorted.filter((o) => o.priority !== "NORMAL")) {
+      cumulativeA += order.requiredTonnes;
+      const completionDay = affectedLineTpd > 0
+        ? Math.ceil(cumulativeA / affectedLineTpd)
+        : 999;
+      expectedCompletionDays[order.id] = completionDay;
       if (completionDay > order.deadlineDays) {
+        affectedOrderIds.push(order.id);
+      }
+    }
+    // Queue B (unaffected lines): normal orders
+    let cumulativeB = 0;
+    for (const order of sorted.filter((o) => o.priority === "NORMAL")) {
+      cumulativeB += order.requiredTonnes;
+      const completionDay = unaffectedLineTpd > 0
+        ? Math.ceil(cumulativeB / unaffectedLineTpd)
+        : 999;
+      expectedCompletionDays[order.id] = completionDay;
+      if (completionDay > order.deadlineDays) {
+        affectedOrderIds.push(order.id);
+      }
+    }
+  } else {
+    let cumulativeTonnes = 0;
+    for (const order of sorted) {
+      cumulativeTonnes += order.requiredTonnes;
+      const completionDay = criticalOrderTpd > 0
+        ? Math.ceil(cumulativeTonnes / criticalOrderTpd)
+        : 999;
+      expectedCompletionDays[order.id] = completionDay;
+
+      if (actionId === "DELAY_LOW_PRIORITY_ORDER" && order.priority === "NORMAL") {
+        expectedCompletionDays[order.id] = completionDay + 3;
         affectedOrderIds.push(order.id);
       }
     }
