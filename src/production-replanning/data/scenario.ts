@@ -51,7 +51,7 @@ export const DEFAULT_SCENARIO: ProductionScenario = {
       id: "ORDER-A",
       name: "Order A",
       requiredTonnes: 120,
-      deadlineDays: 4,
+      deadlineDays: 2,
       priority: "CRITICAL",
     },
     {

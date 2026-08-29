@@ -33,6 +33,7 @@ import type {
   ActionId,
   AlternativeEvaluation,
   FeasibilityStatus,
+  LineProductionAllocation,
   ProductionScenario,
 } from "@/production-replanning/types";
 
@@ -64,7 +65,7 @@ const BASELINE_WHAT_IF: WhatIfState = {
   capacityReductionPct: 30,
   disruptionDurationDays: 3,
   materialATonnes: 420,
-  criticalDeadlineDays: 4,
+  criticalDeadlineDays: 2,
   overtimeAvailable: true,
 };
 
@@ -327,6 +328,39 @@ function WhyPanel({
   );
 }
 
+function ProductionPlanTable({ lineAllocations, label }: { lineAllocations: LineProductionAllocation[]; label: string }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <div className="space-y-2">
+        {lineAllocations.map((line) => (
+          <div key={line.lineId} className="rounded-xl border border-white/8 bg-white/3 px-3 py-2">
+            <p className="mb-1 text-xs font-semibold text-slate-300">
+              {line.lineName} — {line.effectiveTpd.toFixed(0)} t/day
+            </p>
+            {line.orders.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">No orders assigned</p>
+            ) : (
+              <div className="space-y-0.5">
+                {line.orders.map((o) => (
+                  <div key={o.orderId} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="text-slate-400">{o.orderName}</span>
+                    <span className="text-slate-300">{o.allocatedTonnes} t</span>
+                    <span className={o.deadlineMet ? "text-emerald-400" : "text-rose-400"}>
+                      day {o.estimatedCompletionDay.toFixed(1)}
+                      {!o.deadlineMet && " ⚠ LATE"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CurrentVsRecommended({
   alternatives,
   recommendedId,
@@ -471,6 +505,23 @@ function CurrentVsRecommended({
               </tr>
             </tbody>
           </table>
+        </div>
+
+        {/* Production plan comparison */}
+        <div className="mt-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Production plan — per line
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ProductionPlanTable
+              lineAllocations={current.operationalConsequences.lineAllocations}
+              label="Current plan"
+            />
+            <ProductionPlanTable
+              lineAllocations={rec.operationalConsequences.lineAllocations}
+              label="Recommended plan"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

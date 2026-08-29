@@ -685,6 +685,19 @@ function DecisionPanel({
   trace: SupplierDecisionTrace;
   recommendation: SupplierEvaluation;
 }) {
+  // Derive the trigger that caused APPROVE_WITH_CONDITIONS when all blocking rules pass.
+  // This makes the causal chain explicit: a condition is not caused by a failed rule.
+  const conditionTrigger =
+    trace.decision === "APPROVE_WITH_CONDITIONS" && recommendation.blockingFailures === 0
+      ? recommendation.supplier.financialRisk === "MEDIUM"
+        ? "MEDIUM FINANCIAL RISK"
+        : recommendation.supplier.dependency >= 0.8
+          ? "HIGH DEPENDENCY CONCENTRATION"
+          : recommendation.ruleResults.find((r) => !r.passed)
+            ? `NON-BLOCKING RULE: ${recommendation.ruleResults.find((r) => !r.passed)!.rule.name.toUpperCase()}`
+            : null
+      : null;
+
   return (
     <Card>
       <CardHeader>
@@ -711,6 +724,20 @@ function DecisionPanel({
             {recommendation.supplier.name}
           </p>
         </div>
+
+        {/* Explicit trigger — shown only for APPROVE_WITH_CONDITIONS when all blocking rules pass */}
+        {conditionTrigger && (
+          <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-3">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
+              Trigger
+            </p>
+            <p className="text-sm font-semibold text-amber-200">{conditionTrigger}</p>
+            <p className="mt-1 text-xs text-slate-400">
+              All blocking rules passed — conditions are required due to the trigger above,
+              not a failed rule.
+            </p>
+          </div>
+        )}
 
         {trace.factors.length > 0 && (
           <div>

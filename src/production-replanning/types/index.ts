@@ -130,6 +130,28 @@ export interface AlternativeFinancialImpact {
   total: number;
 }
 
+// ---------------------------------------------------------------------------
+// Per-line production allocation (derived from engine, not UI-only)
+// ---------------------------------------------------------------------------
+
+export interface LineOrderAllocation {
+  orderId: string;
+  orderName: string;
+  allocatedTonnes: number;
+  deadlineDays: number;
+  estimatedCompletionDay: number;
+  deadlineMet: boolean;
+}
+
+export interface LineProductionAllocation {
+  lineId: string;
+  lineName: string;
+  /** Effective throughput used for this alternative (t/day). */
+  effectiveTpd: number;
+  orders: LineOrderAllocation[];
+  totalAllocatedTonnes: number;
+}
+
 export interface OperationalConsequences {
   criticalOrderDeadlineProtected: boolean;
   affectedOrderIds: string[];
@@ -138,6 +160,8 @@ export interface OperationalConsequences {
   capacityUtilizationFactor: number;
   /** Total tonnes processed under this alternative. */
   totalTonnesProcessed: number;
+  /** Per-line production allocation — derived from the engine, not the UI. */
+  lineAllocations: LineProductionAllocation[];
 }
 
 export interface AlternativeScore {
