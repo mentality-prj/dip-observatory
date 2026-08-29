@@ -161,6 +161,15 @@ export interface SupplierDecisionConfig {
   minQualityScore: number;
   /** Maximum incident count before triggering a blocking rule. */
   maxIncidents: number;
+  /** Optional scoring weights for composite ranking. */
+  scoreWeights?: {
+    delivery: number;
+    quality: number;
+    inverseDependency: number;
+    inverseIncidents: number;
+    compliance: number;
+    inverseLeadTime: number;
+  };
   /** Configuration schema version. */
   configVersion: "1.0";
 }

@@ -1,16 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Package } from "lucide-react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { ArrowLeft, ChevronDown, ChevronUp, Package } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DecisionScenarioLab } from "@/components/decision-scenario-lab";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
-import { getDemoDecision } from "@/supplier/data/synthetic-supplier-data";
+import {
+  DEMO_REQUEST,
+  DEMO_SUPPLIERS,
+} from "@/supplier/data/synthetic-supplier-data";
+import {
+  DEFAULT_SCORE_WEIGHTS,
+  DEFAULT_SUPPLIER_CONFIG,
+  runSupplierDecisionPlugin,
+} from "@/supplier/lib/supplier-decision";
+import {
+  computeSupplierSensitivity,
+  computeSupplierTraceDiff,
+} from "@/supplier/lib/scenario-lab-helpers";
 import type {
   RiskLevel,
+  SupplierDecisionRequest,
+  SupplierDecisionResponse,
   SupplierDecisionFactor,
   SupplierDecisionOutcome,
   SupplierDecisionTrace,
@@ -39,6 +56,410 @@ function formatPct(v: number) {
 
 function formatEur(v: number) {
   return `€${(v / 1_000_000).toFixed(2)}M`;
+}
+
+function formatPctInput(v: number) {
+  return `${(v * 100).toFixed(0)}%`;
+}
+
+interface SupplierScenarioState {
+  financialRisk: RiskLevel;
+  deliveryPerformance: number;
+  qualityScore: number;
+  dependency: number;
+  compliant: boolean;
+  switchingCostNote?: string;
+  minDeliveryPerformance: number;
+  minQualityScore: number;
+  maxIncidents: number;
+  weightDelivery: number;
+  weightQuality: number;
+  weightDependency: number;
+}
+
+const BASELINE_SUPPLIER_SCENARIO: SupplierScenarioState = {
+  financialRisk: DEMO_SUPPLIERS[0].financialRisk,
+  deliveryPerformance: DEMO_SUPPLIERS[0].deliveryPerformance,
+  qualityScore: DEMO_SUPPLIERS[0].qualityScore,
+  dependency: DEMO_SUPPLIERS[0].dependency,
+  compliant: DEMO_SUPPLIERS[0].compliant,
+  switchingCostNote: undefined,
+  minDeliveryPerformance: DEFAULT_SUPPLIER_CONFIG.minDeliveryPerformance,
+  minQualityScore: DEFAULT_SUPPLIER_CONFIG.minQualityScore,
+  maxIncidents: DEFAULT_SUPPLIER_CONFIG.maxIncidents,
+  weightDelivery: DEFAULT_SCORE_WEIGHTS.delivery,
+  weightQuality: DEFAULT_SCORE_WEIGHTS.quality,
+  weightDependency: DEFAULT_SCORE_WEIGHTS.inverseDependency,
+};
+
+function buildSupplierScenarioRequest(
+  base: typeof DEMO_REQUEST,
+  state: SupplierScenarioState,
+): SupplierDecisionRequest {
+  return {
+    ...base,
+    caseId: base.caseId + "-SCENARIO",
+    candidates: base.candidates.map((s, i) =>
+      i === 0
+        ? {
+            ...s,
+            financialRisk: state.financialRisk,
+            deliveryPerformance: state.deliveryPerformance,
+            qualityScore: state.qualityScore,
+            dependency: state.dependency,
+            compliant: state.compliant,
+          }
+        : s,
+    ),
+    configuration: {
+      minDeliveryPerformance: state.minDeliveryPerformance,
+      minQualityScore: state.minQualityScore,
+      maxIncidents: state.maxIncidents,
+      configVersion: "1.0",
+      scoreWeights: {
+        delivery: state.weightDelivery,
+        quality: state.weightQuality,
+        inverseDependency: state.weightDependency,
+        inverseIncidents: DEFAULT_SCORE_WEIGHTS.inverseIncidents,
+        compliance: DEFAULT_SCORE_WEIGHTS.compliance,
+        inverseLeadTime: DEFAULT_SCORE_WEIGHTS.inverseLeadTime,
+      },
+    },
+  };
+}
+
+function ScenarioSection({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+          {title}
+        </span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-slate-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-slate-500" />
+        )}
+      </button>
+      {open && <div className="border-t border-white/8 px-4 py-4">{children}</div>}
+    </div>
+  );
+}
+
+function SupplierLabControls({
+  state,
+  onChange,
+}: {
+  state: SupplierScenarioState;
+  onChange: (next: SupplierScenarioState) => void;
+}) {
+  const [policyOpen, setPolicyOpen] = useState(true);
+  const [weightsOpen, setWeightsOpen] = useState(true);
+
+  // Raw string state allows typing decimals and clearing the field without
+  // the value snapping back to "0" mid-edit.
+  const [raw, setRaw] = useState({
+    deliveryPerformance: String(state.deliveryPerformance),
+    qualityScore: String(state.qualityScore),
+    dependency: String(state.dependency),
+    minDeliveryPerformance: String(state.minDeliveryPerformance),
+    minQualityScore: String(state.minQualityScore),
+    maxIncidents: String(state.maxIncidents),
+    weightDelivery: String(state.weightDelivery),
+    weightQuality: String(state.weightQuality),
+    weightDependency: String(state.weightDependency),
+  });
+
+  // Keep raw display values in sync when the state prop changes externally
+  // (e.g. when the parent resets the scenario to baseline).
+  useEffect(() => {
+    setRaw({
+      deliveryPerformance: String(state.deliveryPerformance),
+      qualityScore: String(state.qualityScore),
+      dependency: String(state.dependency),
+      minDeliveryPerformance: String(state.minDeliveryPerformance),
+      minQualityScore: String(state.minQualityScore),
+      maxIncidents: String(state.maxIncidents),
+      weightDelivery: String(state.weightDelivery),
+      weightQuality: String(state.weightQuality),
+      weightDependency: String(state.weightDependency),
+    });
+  }, [
+    state.deliveryPerformance,
+    state.qualityScore,
+    state.dependency,
+    state.minDeliveryPerformance,
+    state.minQualityScore,
+    state.maxIncidents,
+    state.weightDelivery,
+    state.weightQuality,
+    state.weightDependency,
+  ]);
+
+  function handleNum<K extends keyof typeof raw>(
+    rawKey: K,
+    stateKey: keyof SupplierScenarioState,
+    rawValue: string,
+    transform?: (n: number) => number,
+  ) {
+    setRaw((r) => ({ ...r, [rawKey]: rawValue }));
+    if (rawValue === "" || rawValue.endsWith(".")) return; // still typing
+    const num = Number(rawValue);
+    if (!Number.isNaN(num)) {
+      onChange({ ...state, [stateKey]: transform ? transform(num) : num });
+    }
+  }
+
+  function handleBlur<K extends keyof typeof raw>(
+    rawKey: K,
+    stateKey: keyof SupplierScenarioState,
+  ) {
+    // Normalise display to the actual committed value on blur
+    setRaw((r) => ({ ...r, [rawKey]: String(state[stateKey]) }));
+  }
+
+  const weightTotal =
+    state.weightDelivery +
+    state.weightQuality +
+    state.weightDependency +
+    DEFAULT_SCORE_WEIGHTS.inverseIncidents +
+    DEFAULT_SCORE_WEIGHTS.compliance +
+    DEFAULT_SCORE_WEIGHTS.inverseLeadTime;
+  const normalizedWeight = (weight: number) =>
+    weightTotal > 0 ? (weight / weightTotal) * 100 : 0;
+
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>ACME scenario overrides</CardTitle>
+          <p className="text-sm text-slate-400">
+            Modify the first supplier and policy assumptions; the deterministic
+            engine recalculates immediately.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier-risk">Financial risk</Label>
+              <select
+                id="supplier-risk"
+                value={state.financialRisk}
+                onChange={(e) =>
+                  onChange({ ...state, financialRisk: e.target.value as RiskLevel })
+                }
+                className="flex h-11 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/8 focus:ring-2 focus:ring-cyan-300/20"
+              >
+                <option value="LOW" className="bg-slate-900">
+                  LOW
+                </option>
+                <option value="MEDIUM" className="bg-slate-900">
+                  MEDIUM
+                </option>
+                <option value="HIGH" className="bg-slate-900">
+                  HIGH
+                </option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3 pt-6">
+              <button
+                id="supplier-compliant"
+                role="checkbox"
+                aria-checked={state.compliant}
+                aria-label="Supplier compliant"
+                onClick={() => onChange({ ...state, compliant: !state.compliant })}
+                className={cn(
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
+                  state.compliant ? "bg-cyan-500" : "bg-white/10",
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition",
+                    state.compliant ? "translate-x-5" : "translate-x-0",
+                  )}
+                />
+              </button>
+              <Label htmlFor="supplier-compliant">Compliance valid</Label>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier-delivery">Delivery performance</Label>
+              <Input
+                id="supplier-delivery"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={raw.deliveryPerformance}
+                onChange={(e) => handleNum("deliveryPerformance", "deliveryPerformance", e.target.value, clamp01)}
+                onBlur={() => handleBlur("deliveryPerformance", "deliveryPerformance")}
+              />
+              <p className="text-xs text-slate-500">
+                {formatPctInput(state.deliveryPerformance)}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier-quality">Quality score</Label>
+              <Input
+                id="supplier-quality"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={raw.qualityScore}
+                onChange={(e) => handleNum("qualityScore", "qualityScore", e.target.value, clamp01)}
+                onBlur={() => handleBlur("qualityScore", "qualityScore")}
+              />
+              <p className="text-xs text-slate-500">
+                {formatPctInput(state.qualityScore)}
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier-dependency">Dependency</Label>
+              <Input
+                id="supplier-dependency"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={raw.dependency}
+                onChange={(e) => handleNum("dependency", "dependency", e.target.value, clamp01)}
+                onBlur={() => handleBlur("dependency", "dependency")}
+              />
+              <p className="text-xs text-slate-500">
+                {formatPctInput(state.dependency)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ScenarioSection
+        title="Decision policy"
+        open={policyOpen}
+        onToggle={() => setPolicyOpen((v) => !v)}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="min-delivery">Min delivery threshold</Label>
+            <Input
+              id="min-delivery"
+              type="number"
+              min={0}
+              max={1}
+              step={0.01}
+              value={raw.minDeliveryPerformance}
+              onChange={(e) => handleNum("minDeliveryPerformance", "minDeliveryPerformance", e.target.value, clamp01)}
+              onBlur={() => handleBlur("minDeliveryPerformance", "minDeliveryPerformance")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="min-quality">Min quality threshold</Label>
+            <Input
+              id="min-quality"
+              type="number"
+              min={0}
+              max={1}
+              step={0.01}
+              value={raw.minQualityScore}
+              onChange={(e) => handleNum("minQualityScore", "minQualityScore", e.target.value, clamp01)}
+              onBlur={() => handleBlur("minQualityScore", "minQualityScore")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="max-incidents">Max incidents</Label>
+            <Input
+              id="max-incidents"
+              type="number"
+              min={0}
+              max={10}
+              step={1}
+              value={raw.maxIncidents}
+              onChange={(e) => handleNum("maxIncidents", "maxIncidents", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("maxIncidents", "maxIncidents")}
+            />
+          </div>
+        </div>
+      </ScenarioSection>
+
+      <ScenarioSection
+        title="Rule weights"
+        open={weightsOpen}
+        onToggle={() => setWeightsOpen((v) => !v)}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="weight-delivery">Delivery weight</Label>
+            <Input
+              id="weight-delivery"
+              type="number"
+              min={0}
+              max={1}
+              step={0.05}
+              value={raw.weightDelivery}
+              onChange={(e) => handleNum("weightDelivery", "weightDelivery", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightDelivery", "weightDelivery")}
+            />
+            <p className="text-xs text-slate-500">
+              Normalized {normalizedWeight(state.weightDelivery).toFixed(0)}%
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="weight-quality">Quality weight</Label>
+            <Input
+              id="weight-quality"
+              type="number"
+              min={0}
+              max={1}
+              step={0.05}
+              value={raw.weightQuality}
+              onChange={(e) => handleNum("weightQuality", "weightQuality", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightQuality", "weightQuality")}
+            />
+            <p className="text-xs text-slate-500">
+              Normalized {normalizedWeight(state.weightQuality).toFixed(0)}%
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="weight-dependency">Dependency weight</Label>
+            <Input
+              id="weight-dependency"
+              type="number"
+              min={0}
+              max={1}
+              step={0.05}
+              value={raw.weightDependency}
+              onChange={(e) => handleNum("weightDependency", "weightDependency", e.target.value, (n) => Math.max(0, n))}
+              onBlur={() => handleBlur("weightDependency", "weightDependency")}
+            />
+            <p className="text-xs text-slate-500">
+              Normalized {normalizedWeight(state.weightDependency).toFixed(0)}%
+            </p>
+          </div>
+        </div>
+      </ScenarioSection>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -468,8 +889,121 @@ type Props = {
 };
 
 export function SupplierWorkspace({ locale }: Props) {
-  const result = getDemoDecision();
+  const [supplierScenario, setSupplierScenario] = useState<SupplierScenarioState>(
+    BASELINE_SUPPLIER_SCENARIO,
+  );
+  const baselineResult = useMemo(
+    () => runSupplierDecisionPlugin(DEMO_REQUEST),
+    [],
+  );
+  const scenarioRequest = useMemo(
+    () => buildSupplierScenarioRequest(DEMO_REQUEST, supplierScenario),
+    [supplierScenario],
+  );
+  const result = useMemo(
+    () => runSupplierDecisionPlugin(scenarioRequest),
+    [scenarioRequest],
+  );
+  const isDirty =
+    JSON.stringify(supplierScenario) !==
+    JSON.stringify(BASELINE_SUPPLIER_SCENARIO);
   const { decisionTrace: trace, recommendation, auditEntry } = result;
+
+  function getDecisionDelta(
+    baseline: SupplierDecisionResponse,
+    scenario: SupplierDecisionResponse,
+  ) {
+    const changedReasons: string[] = [];
+    const baseCandidate = DEMO_REQUEST.candidates[0];
+    const scenarioCandidate = scenarioRequest.candidates[0];
+    const baseConfig = {
+      ...DEFAULT_SUPPLIER_CONFIG,
+      scoreWeights: DEFAULT_SCORE_WEIGHTS,
+    };
+    const scenarioConfig = {
+      ...DEFAULT_SUPPLIER_CONFIG,
+      ...scenarioRequest.configuration,
+    };
+
+    if (baseCandidate.financialRisk !== scenarioCandidate.financialRisk) {
+      changedReasons.push(
+        `Financial risk: ${baseCandidate.financialRisk} → ${scenarioCandidate.financialRisk}`,
+      );
+    }
+    if (
+      baseCandidate.deliveryPerformance !== scenarioCandidate.deliveryPerformance
+    ) {
+      changedReasons.push(
+        `Delivery performance: ${formatPctInput(baseCandidate.deliveryPerformance)} → ${formatPctInput(scenarioCandidate.deliveryPerformance)}`,
+      );
+    }
+    if (baseCandidate.qualityScore !== scenarioCandidate.qualityScore) {
+      changedReasons.push(
+        `Quality score: ${formatPctInput(baseCandidate.qualityScore)} → ${formatPctInput(scenarioCandidate.qualityScore)}`,
+      );
+    }
+    if (baseCandidate.dependency !== scenarioCandidate.dependency) {
+      changedReasons.push(
+        `Dependency: ${formatPctInput(baseCandidate.dependency)} → ${formatPctInput(scenarioCandidate.dependency)}`,
+      );
+    }
+    if (baseCandidate.compliant !== scenarioCandidate.compliant) {
+      changedReasons.push(
+        `Compliance: ${baseCandidate.compliant ? "Valid" : "Missing"} → ${scenarioCandidate.compliant ? "Valid" : "Missing"}`,
+      );
+    }
+    if (
+      baseConfig.minDeliveryPerformance !== scenarioConfig.minDeliveryPerformance
+    ) {
+      changedReasons.push(
+        `Min delivery threshold: ${formatPctInput(baseConfig.minDeliveryPerformance)} → ${formatPctInput(scenarioConfig.minDeliveryPerformance)}`,
+      );
+    }
+    if (baseConfig.minQualityScore !== scenarioConfig.minQualityScore) {
+      changedReasons.push(
+        `Min quality threshold: ${formatPctInput(baseConfig.minQualityScore)} → ${formatPctInput(scenarioConfig.minQualityScore)}`,
+      );
+    }
+    if (baseConfig.maxIncidents !== scenarioConfig.maxIncidents) {
+      changedReasons.push(
+        `Max incidents: ${baseConfig.maxIncidents} → ${scenarioConfig.maxIncidents}`,
+      );
+    }
+    if (
+      baseConfig.scoreWeights.delivery !== scenarioConfig.scoreWeights?.delivery
+    ) {
+      changedReasons.push(
+        `Delivery weight: ${baseConfig.scoreWeights.delivery.toFixed(2)} → ${(scenarioConfig.scoreWeights?.delivery ?? 0).toFixed(2)}`,
+      );
+    }
+    if (
+      baseConfig.scoreWeights.quality !== scenarioConfig.scoreWeights?.quality
+    ) {
+      changedReasons.push(
+        `Quality weight: ${baseConfig.scoreWeights.quality.toFixed(2)} → ${(scenarioConfig.scoreWeights?.quality ?? 0).toFixed(2)}`,
+      );
+    }
+    if (
+      baseConfig.scoreWeights.inverseDependency !==
+      scenarioConfig.scoreWeights?.inverseDependency
+    ) {
+      changedReasons.push(
+        `Dependency weight: ${baseConfig.scoreWeights.inverseDependency.toFixed(2)} → ${(scenarioConfig.scoreWeights?.inverseDependency ?? 0).toFixed(2)}`,
+      );
+    }
+
+    return {
+      baselineDecision: baseline.decisionTrace.decision,
+      scenarioDecision: scenario.decisionTrace.decision,
+      changed:
+        baseline.decisionTrace.decision !== scenario.decisionTrace.decision,
+      changedReasons,
+    };
+  }
+
+  function onReset() {
+    setSupplierScenario(BASELINE_SUPPLIER_SCENARIO);
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-6 md:px-6 xl:px-10">
@@ -494,13 +1028,34 @@ export function SupplierWorkspace({ locale }: Props) {
               </span>
             </p>
           </div>
-          <Link
-            href={buildLocalePath("/eidos", locale)}
-            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to Observatory
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <DecisionScenarioLab
+              domainLabel="Supplier Decision"
+              baselineResult={baselineResult}
+              scenarioResult={result}
+              controls={
+                <SupplierLabControls
+                  state={supplierScenario}
+                  onChange={setSupplierScenario}
+                />
+              }
+              getDecisionLabel={(scenarioResult) =>
+                scenarioResult.decisionTrace.decision
+              }
+              getSensitivity={() => computeSupplierSensitivity(scenarioRequest)}
+              getTraceDiff={computeSupplierTraceDiff}
+              getDecisionDelta={getDecisionDelta}
+              onReset={onReset}
+              isDirty={isDirty}
+            />
+            <Link
+              href={buildLocalePath("/eidos", locale)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Back to Observatory
+            </Link>
+          </div>
         </header>
 
         <CaseHeader trace={trace} recommendation={recommendation} />
