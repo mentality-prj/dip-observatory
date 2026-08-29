@@ -421,10 +421,10 @@ test("Part A: RULE-DISRUPTION evidence uses actual capacity reduction factor", (
     `RULE-DISRUPTION evidence must include the actual remaining capacity (${remainingPct}%), got: ${disruptionRule!.evidence}`,
   );
   // Also verify it does NOT contain the misleading small percentage
-  const illegalPattern = /\b[1-9]% capacity loss\b/;
+  const illegalPattern = /% capacity loss\b/;
   assert.ok(
     !illegalPattern.test(disruptionRule!.evidence),
-    "RULE-DISRUPTION evidence must not contain a single-digit '% capacity loss'",
+    "RULE-DISRUPTION evidence must not contain '% capacity loss' phrasing",
   );
 });
 
@@ -559,8 +559,8 @@ describe("Part C: scenario control acceptance tests", () => {
 
     // RULE-MATERIAL evidence must change
     const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
-    const baseAlt = baseline.alternatives[0];
-    const lowAlt = lowMat.alternatives.find((a) => a.actionId === baseAlt.actionId)!;
+    const baseAlt = baseline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const lowAlt = lowMat.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
     const baseMatRule = baseAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL")!;
     const lowMatRule = lowAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL")!;
     assert.ok(
