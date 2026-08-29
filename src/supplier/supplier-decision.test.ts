@@ -18,6 +18,7 @@ import {
 import {
   getDemoDecision,
   DEMO_REQUEST,
+  DEMO_SUPPLIERS,
   DEMO_CASE_ID,
   DEMO_DECISION_DATE,
 } from "@/supplier/data/synthetic-supplier-data";
@@ -219,5 +220,104 @@ describe("scoring bounds", () => {
     for (const ev of result.decisionTrace.evaluations) {
       assert.ok(ev.overallScore >= 0 && ev.overallScore <= 1);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression tests — supplier decision causal consistency (problem statement §11)
+// ---------------------------------------------------------------------------
+
+describe("R16. MEDIUM risk → APPROVE_WITH_CONDITIONS is explicitly explained", () => {
+  test("ACME with MEDIUM risk gets APPROVE_WITH_CONDITIONS", () => {
+    const result = getDemoDecision();
+    const acme = result.decisionTrace.evaluations.find(
+      (e) => e.supplier.name === "ACME Components GmbH",
+    )!;
+    assert.equal(acme.riskLevel, "MEDIUM");
+    assert.equal(result.decisionTrace.decision, "APPROVE_WITH_CONDITIONS");
+  });
+
+  test("conditions list is non-empty when MEDIUM risk triggers them", () => {
+    const result = getDemoDecision();
+    assert.ok(result.decisionTrace.conditions.length > 0);
+    // The quarterly review condition must be present for MEDIUM financial risk
+    const hasReview = result.decisionTrace.conditions.some(
+      (c) => c.toLowerCase().includes("quarterly") || c.toLowerCase().includes("financial review"),
+    );
+    assert.ok(hasReview, "MEDIUM financial risk should trigger quarterly review condition");
+  });
+});
+
+describe("R17. all-PASS rules do not appear as the cause of the condition", () => {
+  test("ACME has zero blocking failures", () => {
+    const result = getDemoDecision();
+    const acme = result.decisionTrace.evaluations.find(
+      (e) => e.supplier.name === "ACME Components GmbH",
+    )!;
+    assert.equal(acme.blockingFailures, 0);
+  });
+
+  test("ACME blocking rules all pass", () => {
+    const result = getDemoDecision();
+    const acme = result.decisionTrace.evaluations.find(
+      (e) => e.supplier.name === "ACME Components GmbH",
+    )!;
+    const blockingRules = acme.ruleResults.filter((r) => r.rule.blocking);
+    for (const r of blockingRules) {
+      assert.equal(r.passed, true, `Blocking rule ${r.rule.id} should pass for ACME`);
+    }
+  });
+});
+
+describe("R18. changing risk to LOW removes the MEDIUM-risk condition", () => {
+  test("LOW risk ACME gets APPROVE without conditions", () => {
+    const request: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      candidates: [
+        { ...DEMO_SUPPLIERS[0], financialRisk: "LOW" },
+      ],
+    };
+    const result = runSupplierDecisionPlugin(request);
+    assert.equal(result.decisionTrace.decision, "APPROVE");
+    // No quarterly review condition
+    const hasReview = result.decisionTrace.conditions.some(
+      (c) => c.toLowerCase().includes("quarterly"),
+    );
+    assert.equal(hasReview, false, "LOW risk should not trigger quarterly review");
+  });
+});
+
+describe("R19. explanation changes consistently with decision", () => {
+  test("HIGH risk supplier triggers REJECT with appropriate explanation", () => {
+    const request: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      candidates: [
+        {
+          ...DEMO_SUPPLIERS[0],
+          financialRisk: "HIGH",
+          deliveryPerformance: 0.5, // also fail delivery to ensure blocking rule fails
+        },
+      ],
+    };
+    const result = runSupplierDecisionPlugin(request);
+    assert.equal(result.decisionTrace.decision, "REJECT");
+    // At least one negative factor should be present
+    const negativeFactors = result.decisionTrace.factors.filter((f) => f.direction === "negative");
+    assert.ok(negativeFactors.length > 0, "REJECT decision should have at least one negative factor");
+  });
+});
+
+describe("R20. trace remains consistent with decision", () => {
+  test("audit entry decision matches trace decision", () => {
+    const result = getDemoDecision();
+    assert.equal(result.auditEntry.decision, result.decisionTrace.decision);
+  });
+
+  test("recommended supplier in trace and audit entry are the same", () => {
+    const result = getDemoDecision();
+    assert.equal(
+      result.auditEntry.recommendedSupplier,
+      result.decisionTrace.recommendedSupplier.name,
+    );
   });
 });

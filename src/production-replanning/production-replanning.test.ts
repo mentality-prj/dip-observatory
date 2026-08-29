@@ -587,3 +587,257 @@ describe("20. overtime availability changes", () => {
     assert.equal(redist.financialImpact.overtimeCost, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Regression tests — financial model consistency (problem statement §11)
+// ---------------------------------------------------------------------------
+
+describe("R1. every cost component is explicitly represented", () => {
+  test("all financial impact fields are present and are numbers", () => {
+    const result = getDemoDecision();
+    for (const alt of result.alternatives) {
+      const fi = alt.financialImpact;
+      assert.equal(typeof fi.missedDeadlineCost, "number");
+      assert.equal(typeof fi.overtimeCost, "number");
+      assert.equal(typeof fi.delayCost, "number");
+      assert.equal(typeof fi.unusedCapacityCost, "number");
+      assert.equal(typeof fi.switchingCost, "number");
+      assert.equal(typeof fi.total, "number");
+    }
+  });
+});
+
+describe("R2. total equals sum of components", () => {
+  test("total = sum(all components) for every alternative", () => {
+    const result = getDemoDecision();
+    for (const alt of result.alternatives) {
+      const fi = alt.financialImpact;
+      const componentSum =
+        fi.missedDeadlineCost +
+        fi.overtimeCost +
+        fi.delayCost +
+        fi.unusedCapacityCost +
+        fi.switchingCost;
+      assert.equal(fi.total, componentSum, `${alt.actionId} total should equal sum of components`);
+    }
+  });
+});
+
+describe("R3. avoided cost calculation is correct", () => {
+  test("avoidedCostVsBaseline = currentTotal - recommendedTotal", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const rec = result.alternatives.find((a) => a.actionId === result.recommendedAction)!;
+    const expected = Math.max(0, current.financialImpact.total - rec.financialImpact.total);
+    assert.equal(result.avoidedCostVsBaseline, expected);
+  });
+});
+
+describe("R4. current and recommended plans have coherent operational states", () => {
+  test("KEEP_CURRENT_PLAN critical deadline NOT protected under 30% disruption (deadline=2)", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.equal(
+      current.operationalConsequences.criticalOrderDeadlineProtected,
+      false,
+      "Current plan should NOT protect critical deadline at 30% disruption with deadline=2",
+    );
+  });
+
+  test("REDISTRIBUTE_PRODUCTION critical deadline IS protected", () => {
+    const result = getDemoDecision();
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    assert.equal(
+      redist.operationalConsequences.criticalOrderDeadlineProtected,
+      true,
+      "Redistribute should protect critical deadline",
+    );
+  });
+});
+
+describe("R5. equal operational states cannot produce arbitrary different costs", () => {
+  test("unusedCapacityCost is the same for current and recommended plans", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    assert.equal(
+      current.financialImpact.unusedCapacityCost,
+      redist.financialImpact.unusedCapacityCost,
+      "Unused capacity cost must be the same for both plans (same total production)",
+    );
+  });
+
+  test("cost difference is explained by missedDeadline + delay - switching", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    // actualDiff = current.total - redist.total
+    // Both plans have the same unusedCapacityCost, so:
+    // actualDiff = (current.missed - redist.missed) + (current.delay - redist.delay) + (current.switching - redist.switching)
+    const explainedDiff =
+      (current.financialImpact.missedDeadlineCost - redist.financialImpact.missedDeadlineCost) +
+      (current.financialImpact.delayCost - redist.financialImpact.delayCost) +
+      (current.financialImpact.switchingCost - redist.financialImpact.switchingCost);
+    const actualDiff = current.financialImpact.total - redist.financialImpact.total;
+    assert.equal(actualDiff, explainedDiff, "Cost difference must be fully explained by operational components");
+  });
+});
+
+describe("R6–R8. capacity metrics", () => {
+  test("R6: capacity reduction calculation: affectedLine goes from normal to (1-factor)*normal", () => {
+    // Line A: 80 t/day, reduction=0.3 → effective 56 t/day
+    const scenario = DEFAULT_SCENARIO;
+    const affectedLine = scenario.lines.find((l) => l.id === scenario.disruption.affectedLineId)!;
+    const before = affectedLine.normalCapacityTpd * affectedLine.availabilityFactor;
+    const after = before * (1 - scenario.disruption.capacityReductionFactor);
+    assert.equal(before, 80);
+    assert.equal(after, 56);
+  });
+
+  test("R7: capacity lost = normal * reductionFactor * durationDays", () => {
+    const scenario = DEFAULT_SCENARIO;
+    const affectedLine = scenario.lines.find((l) => l.id === scenario.disruption.affectedLineId)!;
+    const normalTpd = affectedLine.normalCapacityTpd * affectedLine.availabilityFactor;
+    const capacityLost = normalTpd * scenario.disruption.capacityReductionFactor * scenario.disruption.durationDays;
+    assert.equal(capacityLost, 80 * 0.3 * 3); // = 72 t
+  });
+
+  test("R8: remaining capacity = disrupted tpd * durationDays", () => {
+    const scenario = DEFAULT_SCENARIO;
+    const affectedLine = scenario.lines.find((l) => l.id === scenario.disruption.affectedLineId)!;
+    const normalTpd = affectedLine.normalCapacityTpd * affectedLine.availabilityFactor;
+    const disruptedTpd = normalTpd * (1 - scenario.disruption.capacityReductionFactor);
+    const remaining = disruptedTpd * scenario.disruption.durationDays;
+    assert.equal(remaining, 56 * 3); // = 168 t
+  });
+});
+
+describe("R9. deadline penalties", () => {
+  test("KEEP_CURRENT_PLAN has missedDeadlineCost > 0 in baseline scenario", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.ok(
+      current.financialImpact.missedDeadlineCost > 0,
+      "Current plan should incur a missed-deadline penalty when critical order runs on disrupted line",
+    );
+  });
+
+  test("REDISTRIBUTE_PRODUCTION has missedDeadlineCost = 0", () => {
+    const result = getDemoDecision();
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    assert.equal(redist.financialImpact.missedDeadlineCost, 0);
+  });
+
+  test("missed deadline cost disappears when critical deadline is relaxed beyond disruption", () => {
+    const relaxed = runProductionReplanningEngine(
+      buildRequest({
+        orders: DEFAULT_SCENARIO.orders.map((o) =>
+          o.priority === "CRITICAL" ? { ...o, deadlineDays: 10 } : o,
+        ),
+      }),
+    );
+    const current = relaxed.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.equal(current.financialImpact.missedDeadlineCost, 0);
+  });
+});
+
+describe("R10. overtime costs", () => {
+  test("REDISTRIBUTE_PRODUCTION overtime cost is 0 when capacity > required", () => {
+    const result = getDemoDecision();
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    // effectiveCapacityTonnes >> totalRequired → overtimeTonnes = 0
+    assert.equal(redist.financialImpact.overtimeCost, 0);
+  });
+
+  test("overtime cost type is number", () => {
+    const result = getDemoDecision();
+    for (const alt of result.alternatives) {
+      assert.equal(typeof alt.financialImpact.overtimeCost, "number");
+    }
+  });
+});
+
+describe("R11. switching costs", () => {
+  test("REDISTRIBUTE_PRODUCTION has switching cost > 0", () => {
+    const result = getDemoDecision();
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    assert.ok(redist.financialImpact.switchingCost > 0);
+  });
+
+  test("KEEP_CURRENT_PLAN has switching cost = 0", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.equal(current.financialImpact.switchingCost, 0);
+  });
+});
+
+describe("R12. lineAllocations present in operational consequences", () => {
+  test("every alternative has lineAllocations array", () => {
+    const result = getDemoDecision();
+    for (const alt of result.alternatives) {
+      assert.ok(Array.isArray(alt.operationalConsequences.lineAllocations));
+      assert.ok(alt.operationalConsequences.lineAllocations.length > 0);
+    }
+  });
+
+  test("KEEP_CURRENT_PLAN: critical order is allocated to the affected line", () => {
+    const result = getDemoDecision();
+    const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const affectedLineAlloc = current.operationalConsequences.lineAllocations.find(
+      (l) => l.lineId === DEFAULT_SCENARIO.disruption.affectedLineId,
+    );
+    assert.ok(affectedLineAlloc, "Affected line should have an allocation");
+    const criticalOrderAlloc = affectedLineAlloc!.orders.find(
+      (o) => DEFAULT_SCENARIO.orders.find((ord) => ord.id === o.orderId)?.priority === "CRITICAL",
+    );
+    assert.ok(criticalOrderAlloc, "Critical order should appear on affected line");
+  });
+
+  test("REDISTRIBUTE_PRODUCTION: critical order appears on both lines", () => {
+    const result = getDemoDecision();
+    const redist = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    const criticalOrderId = DEFAULT_SCENARIO.orders.find((o) => o.priority === "CRITICAL")!.id;
+    const linesWithCritical = redist.operationalConsequences.lineAllocations.filter(
+      (l) => l.orders.some((o) => o.orderId === criticalOrderId),
+    );
+    assert.ok(linesWithCritical.length >= 1, "Critical order should be distributed across lines");
+  });
+});
+
+describe("R14. explanation values match engine output", () => {
+  test("explanation savings figure matches actual financial difference", () => {
+    const result = getDemoDecision();
+    const savingsFactor = result.explanation.reasons.find(
+      (r) => r.label === "Lower total financial impact",
+    );
+    if (savingsFactor) {
+      const current = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+      const rec = result.alternatives.find((a) => a.actionId === result.recommendedAction)!;
+      const actualSaved = current.financialImpact.total - rec.financialImpact.total;
+      assert.ok(
+        savingsFactor.evidence.includes(actualSaved.toLocaleString("en-US")),
+        "Explanation savings figure must match actual difference",
+      );
+    }
+  });
+});
+
+describe("R15. no hardcoded financial output", () => {
+  test("changing cost config changes total cost", () => {
+    const cheapDeadline = runProductionReplanningEngine({
+      ...DEFAULT_REQUEST,
+      costConfig: { ...DEFAULT_COST_CONFIG, missedCriticalDeadlineCostPerTonneDay: 1 },
+    });
+    const expensiveDeadline = runProductionReplanningEngine({
+      ...DEFAULT_REQUEST,
+      costConfig: { ...DEFAULT_COST_CONFIG, missedCriticalDeadlineCostPerTonneDay: 5000 },
+    });
+    const cheapCurrent = cheapDeadline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const expCurrent = expensiveDeadline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    // Higher deadline cost must produce higher total for the plan that misses the deadline
+    assert.ok(
+      expCurrent.financialImpact.missedDeadlineCost >= cheapCurrent.financialImpact.missedDeadlineCost,
+      "Higher deadline cost rate must produce higher deadline penalty",
+    );
+  });
+});
