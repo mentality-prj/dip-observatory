@@ -207,7 +207,9 @@ function computeScore(
   supplier: SupplierFeatures,
   config: SupplierDecisionConfig,
 ): number {
-  const w = config.scoreWeights ?? DEFAULT_SCORE_WEIGHTS;
+  const w = config.scoreWeights
+    ? { ...DEFAULT_SCORE_WEIGHTS, ...config.scoreWeights }
+    : DEFAULT_SCORE_WEIGHTS;
   const total =
     w.delivery +
     w.quality +

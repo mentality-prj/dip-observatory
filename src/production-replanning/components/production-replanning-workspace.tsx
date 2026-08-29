@@ -391,7 +391,7 @@ function CurrentVsRecommended({
       recommended: eur(rec.financialImpact.switchingCost),
     },
   ];
-  const avoidedCost = current.financialImpact.total - rec.financialImpact.total;
+  const avoidedCost = Math.max(0, current.financialImpact.total - rec.financialImpact.total);
 
   return (
     <Card>

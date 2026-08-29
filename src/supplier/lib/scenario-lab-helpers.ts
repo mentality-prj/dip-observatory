@@ -56,13 +56,16 @@ export function computeSupplierSensitivity(
       : rec.supplier.financialRisk === "MEDIUM"
         ? "HIGH"
         : "HIGH";
-  const financialRiskChanged = decisionChanged({
-    ...baseRequest,
-    caseId: baseRequest.caseId + "-SEN",
-    candidates: baseRequest.candidates.map((s) =>
-      s.name === rec.supplier.name ? { ...s, financialRisk: escalatedRisk } : s,
-    ),
-  });
+  const baselineAlreadyHighRisk = rec.supplier.financialRisk === "HIGH";
+  const financialRiskChanged =
+    baselineAlreadyHighRisk ||
+    decisionChanged({
+      ...baseRequest,
+      caseId: baseRequest.caseId + "-SEN",
+      candidates: baseRequest.candidates.map((s) =>
+        s.name === rec.supplier.name ? { ...s, financialRisk: escalatedRisk } : s,
+      ),
+    });
 
   const deliveryChanged = decisionChanged({
     ...baseRequest,
@@ -84,15 +87,17 @@ export function computeSupplierSensitivity(
     ),
   });
 
+  const baselineAlreadyHighDependency = rec.supplier.dependency >= 0.8;
   const dependencyChanged =
-    rec.supplier.dependency < 0.8 &&
-    decisionChanged({
-      ...baseRequest,
-      caseId: baseRequest.caseId + "-SEN4",
-      candidates: baseRequest.candidates.map((s) =>
-        s.name === rec.supplier.name ? { ...s, dependency: 0.82 } : s,
-      ),
-    });
+    baselineAlreadyHighDependency ||
+    (rec.supplier.dependency < 0.8 &&
+      decisionChanged({
+        ...baseRequest,
+        caseId: baseRequest.caseId + "-SEN4",
+        candidates: baseRequest.candidates.map((s) =>
+          s.name === rec.supplier.name ? { ...s, dependency: 0.82 } : s,
+        ),
+      }));
 
   const complianceChanged =
     rec.supplier.compliant &&
@@ -108,9 +113,11 @@ export function computeSupplierSensitivity(
     {
       variable: "Financial risk",
       level: financialRiskChanged ? "HIGH" : "MEDIUM",
-      evidence: financialRiskChanged
-        ? `Escalating financial risk from ${rec.supplier.financialRisk} → ${escalatedRisk} changes the decision.`
-        : `Financial risk at ${rec.supplier.financialRisk} — within acceptable range.`,
+      evidence: baselineAlreadyHighRisk
+        ? `Financial risk already at HIGH — RULE-05 is actively influencing the decision.`
+        : financialRiskChanged
+          ? `Escalating financial risk from ${rec.supplier.financialRisk} → ${escalatedRisk} changes the decision.`
+          : `Financial risk at ${rec.supplier.financialRisk} — within acceptable range.`,
     },
     {
       variable: "Delivery reliability",
@@ -129,9 +136,11 @@ export function computeSupplierSensitivity(
     {
       variable: "Supplier dependency",
       level: dependencyChanged ? "MEDIUM" : "LOW",
-      evidence: dependencyChanged
-        ? "Increasing dependency above 80% changes the decision."
-        : "Dependency below high-concentration threshold.",
+      evidence: baselineAlreadyHighDependency
+        ? `Supplier dependency at ${(rec.supplier.dependency * 100).toFixed(0)}% — already above the 80% high-concentration threshold.`
+        : dependencyChanged
+          ? "Increasing dependency above 80% changes the decision."
+          : "Dependency below high-concentration threshold.",
     },
     {
       variable: "Compliance status",

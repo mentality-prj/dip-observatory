@@ -233,7 +233,12 @@ function SupplierLabControls({
   }
 
   const weightTotal =
-    state.weightDelivery + state.weightQuality + state.weightDependency;
+    state.weightDelivery +
+    state.weightQuality +
+    state.weightDependency +
+    DEFAULT_SCORE_WEIGHTS.inverseIncidents +
+    DEFAULT_SCORE_WEIGHTS.compliance +
+    DEFAULT_SCORE_WEIGHTS.inverseLeadTime;
   const normalizedWeight = (weight: number) =>
     weightTotal > 0 ? (weight / weightTotal) * 100 : 0;
 

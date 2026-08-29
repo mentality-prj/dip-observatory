@@ -151,7 +151,9 @@ export function DecisionScenarioLab<T>({
 
       {open && (
         <div className="fixed inset-0 z-50 flex">
-          <div
+          <button
+            type="button"
+            aria-label="Close Scenario Lab"
             className="flex-1 bg-black/60 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
@@ -182,6 +184,8 @@ export function DecisionScenarioLab<T>({
                   </button>
                 )}
                 <button
+                  type="button"
+                  aria-label="Close Scenario Lab"
                   onClick={() => setOpen(false)}
                   className="rounded-lg p-1.5 text-slate-500 hover:bg-white/8 hover:text-white"
                 >
