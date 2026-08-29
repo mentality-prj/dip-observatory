@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DecisionScenarioLab } from "@/components/decision-scenario-lab";
 import { cn } from "@/lib/utils";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import {
@@ -23,6 +24,11 @@ import {
   PRODUCTION_RULES,
 } from "@/production-replanning/lib/engine";
 import { DEFAULT_SCENARIO } from "@/production-replanning/data/scenario";
+import {
+  computeProductionSensitivity,
+  computeProductionTraceDiff,
+  computeProductionDecisionDelta,
+} from "@/production-replanning/lib/scenario-lab-helpers";
 import type {
   ActionId,
   AlternativeEvaluation,
@@ -42,11 +48,6 @@ function pct(v: number) {
   return `${(v * 100).toFixed(0)}%`;
 }
 
-function signPct(v: number) {
-  const s = (v * 100).toFixed(0);
-  return v >= 0 ? `+${s}%` : `${s}%`;
-}
-
 // ---------------------------------------------------------------------------
 // Scenario state derived from controls
 // ---------------------------------------------------------------------------
@@ -58,6 +59,14 @@ interface WhatIfState {
   criticalDeadlineDays: number; // 1–14
   overtimeAvailable: boolean;
 }
+
+const BASELINE_WHAT_IF: WhatIfState = {
+  capacityReductionPct: 30,
+  disruptionDurationDays: 3,
+  materialATonnes: 420,
+  criticalDeadlineDays: 4,
+  overtimeAvailable: true,
+};
 
 function buildScenario(
   base: ProductionScenario,
@@ -101,7 +110,7 @@ const FEASIBILITY_COLOUR: Record<FeasibilityStatus, "emerald" | "rose"> = {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
       {children}
@@ -123,8 +132,13 @@ function DisruptionAlert({ scenario }: { scenario: ProductionScenario }) {
   const affectedLine = scenario.lines.find(
     (l) => l.id === scenario.disruption.affectedLineId,
   );
-  const before = affectedLine?.normalCapacityTpd ?? 0;
+  const before = (affectedLine?.normalCapacityTpd ?? 0) * (affectedLine?.availabilityFactor ?? 1);
   const after = before * (1 - scenario.disruption.capacityReductionFactor);
+  const capacityLost =
+    before *
+    scenario.disruption.capacityReductionFactor *
+    scenario.disruption.durationDays;
+  const remainingCapacity = after * scenario.disruption.durationDays;
   return (
     <Card>
       <CardContent className="pt-6">
@@ -138,10 +152,31 @@ function DisruptionAlert({ scenario }: { scenario: ProductionScenario }) {
           <Badge variant="rose">At risk</Badge>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatBox label="Line A capacity" value={`${before} → ${after.toFixed(0)} t/day`} accent="rose" />
-          <StatBox label="Reduction" value={`−${(scenario.disruption.capacityReductionFactor * 100).toFixed(0)}%`} accent="rose" />
-          <StatBox label="Affected period" value={`${scenario.disruption.durationDays} days`} accent="amber" />
-          <StatBox label="Current plan" value="At risk" accent="rose" />
+          <StatBox
+            label={`${affectedLine?.name ?? "Affected line"}:`}
+            value={`${before.toFixed(0)} → ${after.toFixed(0)} t/day`}
+            accent="rose"
+          />
+          <StatBox
+            label="Capacity reduction"
+            value={`−${(scenario.disruption.capacityReductionFactor * 100).toFixed(0)}%`}
+            accent="rose"
+          />
+          <StatBox
+            label="Capacity lost over disruption"
+            value={`${capacityLost.toFixed(0)} t`}
+            accent="amber"
+          />
+          <StatBox
+            label="Remaining capacity (disruption period)"
+            value={`${remainingCapacity.toFixed(0)} t`}
+            accent="emerald"
+          />
+          <StatBox
+            label="Duration"
+            value={`${scenario.disruption.durationDays} days`}
+            accent="amber"
+          />
         </div>
       </CardContent>
     </Card>
@@ -301,17 +336,22 @@ function CurrentVsRecommended({
 }) {
   const current = alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
   const rec = alternatives.find((a) => a.actionId === recommendedId)!;
-
-  const rows = [
-    {
-      label: "Estimated total cost",
-      current: eur(current.financialImpact.total),
-      recommended: eur(rec.financialImpact.total),
-    },
+  const operationalRows = [
     {
       label: "Critical deadlines",
-      current: current.operationalConsequences.criticalOrderDeadlineProtected ? "Protected" : "At risk",
-      recommended: rec.operationalConsequences.criticalOrderDeadlineProtected ? "Protected" : "At risk",
+      current: current.operationalConsequences.criticalOrderDeadlineProtected
+        ? "Protected"
+        : "At risk",
+      recommended: rec.operationalConsequences.criticalOrderDeadlineProtected
+        ? "Protected"
+        : "At risk",
+      currentClass: current.operationalConsequences.criticalOrderDeadlineProtected
+        ? "text-emerald-200"
+        : "text-rose-200",
+      recommendedClass: rec.operationalConsequences
+        .criticalOrderDeadlineProtected
+        ? "text-emerald-300"
+        : "text-rose-300",
     },
     {
       label: "Capacity utilisation",
@@ -323,6 +363,8 @@ function CurrentVsRecommended({
       current: `${current.operationalConsequences.totalTonnesProcessed.toFixed(0)} t`,
       recommended: `${rec.operationalConsequences.totalTonnesProcessed.toFixed(0)} t`,
     },
+  ];
+  const financialRows = [
     {
       label: "Missed deadline cost",
       current: eur(current.financialImpact.missedDeadlineCost),
@@ -333,7 +375,23 @@ function CurrentVsRecommended({
       current: eur(current.financialImpact.overtimeCost),
       recommended: eur(rec.financialImpact.overtimeCost),
     },
+    {
+      label: "Delay cost",
+      current: eur(current.financialImpact.delayCost),
+      recommended: eur(rec.financialImpact.delayCost),
+    },
+    {
+      label: "Unused capacity cost",
+      current: eur(current.financialImpact.unusedCapacityCost),
+      recommended: eur(rec.financialImpact.unusedCapacityCost),
+    },
+    {
+      label: "Switching/reconfiguration cost",
+      current: eur(current.financialImpact.switchingCost),
+      recommended: eur(rec.financialImpact.switchingCost),
+    },
   ];
+  const avoidedCost = current.financialImpact.total - rec.financialImpact.total;
 
   return (
     <Card>
@@ -355,13 +413,62 @@ function CurrentVsRecommended({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {rows.map((row) => (
+              {operationalRows.map((row) => (
+                <tr key={row.label}>
+                  <td className="py-2 text-xs text-slate-400">{row.label}</td>
+                  <td className={cn("py-2 text-xs text-white", row.currentClass)}>
+                    {row.current}
+                  </td>
+                  <td
+                    className={cn(
+                      "py-2 text-xs text-emerald-300",
+                      row.recommendedClass,
+                    )}
+                  >
+                    {row.recommended}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td
+                  colSpan={3}
+                  className="py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+                >
+                  Financial impact
+                </td>
+              </tr>
+              {financialRows.map((row) => (
                 <tr key={row.label}>
                   <td className="py-2 text-xs text-slate-400">{row.label}</td>
                   <td className="py-2 text-xs text-white">{row.current}</td>
-                  <td className="py-2 text-xs text-emerald-300">{row.recommended}</td>
+                  <td className="py-2 text-xs text-emerald-300">
+                    {row.recommended}
+                  </td>
                 </tr>
               ))}
+              <tr>
+                <td colSpan={3} className="pb-1 pt-2">
+                  <hr className="border-white/10" />
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 text-xs font-semibold text-slate-200">TOTAL</td>
+                <td className="py-2 text-xs font-semibold text-white">
+                  {eur(current.financialImpact.total)}
+                </td>
+                <td className="py-2 text-xs font-semibold text-emerald-300">
+                  {eur(rec.financialImpact.total)}
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2 text-xs font-semibold text-emerald-300">
+                  AVOIDED COST
+                </td>
+                <td className="py-2 text-xs text-slate-500">—</td>
+                <td className="py-2 text-xs font-semibold text-emerald-300">
+                  {eur(avoidedCost)}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -676,13 +783,11 @@ function AuditTrailPanel({
 // ---------------------------------------------------------------------------
 
 export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
-  const [whatIf, setWhatIf] = useState<WhatIfState>({
-    capacityReductionPct: 30,
-    disruptionDurationDays: 3,
-    materialATonnes: 420,
-    criticalDeadlineDays: 4,
-    overtimeAvailable: true,
-  });
+  const [whatIf, setWhatIf] = useState<WhatIfState>(BASELINE_WHAT_IF);
+  const baselineDecision = useMemo(
+    () => runProductionReplanningEngine({ scenario: DEFAULT_SCENARIO }),
+    [],
+  );
 
   const scenario = useMemo(
     () => buildScenario(DEFAULT_SCENARIO, whatIf),
@@ -694,6 +799,70 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
   }, [scenario]);
 
   const sortedAlts = [...decision.alternatives].sort((a, b) => a.rank - b.rank);
+  const isDirty = JSON.stringify(whatIf) !== JSON.stringify(BASELINE_WHAT_IF);
+
+  function onReset() {
+    setWhatIf(BASELINE_WHAT_IF);
+  }
+
+  function getDecisionLabel(
+    result: ReturnType<typeof runProductionReplanningEngine>,
+  ) {
+    return result.recommendedAction;
+  }
+
+  function getDecisionDelta(
+    baseline: ReturnType<typeof runProductionReplanningEngine>,
+    scenarioDecision: ReturnType<typeof runProductionReplanningEngine>,
+  ) {
+    const changedParams: Record<
+      string,
+      { from: string | number; to: string | number }
+    > = {};
+    if (
+      whatIf.capacityReductionPct !== BASELINE_WHAT_IF.capacityReductionPct
+    ) {
+      changedParams["Line A capacity reduction"] = {
+        from: `${BASELINE_WHAT_IF.capacityReductionPct}%`,
+        to: `${whatIf.capacityReductionPct}%`,
+      };
+    }
+    if (
+      whatIf.disruptionDurationDays !==
+      BASELINE_WHAT_IF.disruptionDurationDays
+    ) {
+      changedParams["Disruption duration"] = {
+        from: `${BASELINE_WHAT_IF.disruptionDurationDays} days`,
+        to: `${whatIf.disruptionDurationDays} days`,
+      };
+    }
+    if (whatIf.materialATonnes !== BASELINE_WHAT_IF.materialATonnes) {
+      changedParams["Material A available"] = {
+        from: `${BASELINE_WHAT_IF.materialATonnes} t`,
+        to: `${whatIf.materialATonnes} t`,
+      };
+    }
+    if (
+      whatIf.criticalDeadlineDays !== BASELINE_WHAT_IF.criticalDeadlineDays
+    ) {
+      changedParams["Critical deadline"] = {
+        from: `${BASELINE_WHAT_IF.criticalDeadlineDays} days`,
+        to: `${whatIf.criticalDeadlineDays} days`,
+      };
+    }
+    if (whatIf.overtimeAvailable !== BASELINE_WHAT_IF.overtimeAvailable) {
+      changedParams["Overtime availability"] = {
+        from: BASELINE_WHAT_IF.overtimeAvailable ? "Enabled" : "Disabled",
+        to: whatIf.overtimeAvailable ? "Enabled" : "Disabled",
+      };
+    }
+
+    return computeProductionDecisionDelta(
+      baseline,
+      scenarioDecision,
+      changedParams,
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#060810] text-white">
@@ -715,7 +884,26 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
               Battery recycling · Production replanning demonstrator
             </p>
           </div>
-          <Disclaimer />
+          <div className="flex flex-wrap items-start gap-3">
+            <DecisionScenarioLab
+              domainLabel="Production Replanning"
+              baselineResult={baselineDecision}
+              scenarioResult={decision}
+              controls={<WhatIfControls state={whatIf} onChange={setWhatIf} />}
+              getDecisionLabel={getDecisionLabel}
+              getSensitivity={() =>
+                computeProductionSensitivity({
+                  scenario,
+                  costConfig: DEFAULT_COST_CONFIG,
+                })
+              }
+              getTraceDiff={computeProductionTraceDiff}
+              getDecisionDelta={getDecisionDelta}
+              onReset={onReset}
+              isDirty={isDirty}
+            />
+            <Disclaimer />
+          </div>
         </div>
 
         {/* 1. Disruption alert */}

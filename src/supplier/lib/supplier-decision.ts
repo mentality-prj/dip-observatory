@@ -91,6 +91,15 @@ export const DEFAULT_SUPPLIER_CONFIG: SupplierDecisionConfig = {
   configVersion: "1.0",
 };
 
+export const DEFAULT_SCORE_WEIGHTS = {
+  delivery: 0.30,
+  quality: 0.25,
+  inverseDependency: 0.15,
+  inverseIncidents: 0.15,
+  compliance: 0.10,
+  inverseLeadTime: 0.05,
+} as const;
+
 function mergeConfig(
   override: Partial<SupplierDecisionConfig> | undefined,
 ): SupplierDecisionConfig {
@@ -194,14 +203,27 @@ function evaluateRules(
  * Financial risk affects the derived RiskLevel and conditions,
  * not the score itself, to keep the two concerns separate.
  */
-function computeScore(supplier: SupplierFeatures): number {
+function computeScore(
+  supplier: SupplierFeatures,
+  config: SupplierDecisionConfig,
+): number {
+  const w = config.scoreWeights ?? DEFAULT_SCORE_WEIGHTS;
+  const total =
+    w.delivery +
+    w.quality +
+    w.inverseDependency +
+    w.inverseIncidents +
+    w.compliance +
+    w.inverseLeadTime;
+  const n = total > 0 ? total : 1;
   const raw =
-    0.30 * supplier.deliveryPerformance +
-    0.25 * supplier.qualityScore +
-    0.15 * (1 - supplier.dependency) +
-    0.15 * (1 - Math.min(supplier.incidentsLast12Months / 5, 1)) +
-    0.10 * (supplier.compliant ? 1 : 0) +
-    0.05 * (1 - Math.min(supplier.leadTimeDays / 90, 1));
+    (w.delivery / n) * supplier.deliveryPerformance +
+    (w.quality / n) * supplier.qualityScore +
+    (w.inverseDependency / n) * (1 - supplier.dependency) +
+    (w.inverseIncidents / n) *
+      (1 - Math.min(supplier.incidentsLast12Months / 5, 1)) +
+    (w.compliance / n) * (supplier.compliant ? 1 : 0) +
+    (w.inverseLeadTime / n) * (1 - Math.min(supplier.leadTimeDays / 90, 1));
 
   return Math.max(0, Math.min(1, raw));
 }
@@ -304,7 +326,7 @@ export function runSupplierDecisionPlugin(
     const blockingFailures = ruleResults.filter(
       (r) => r.rule.blocking && !r.passed,
     ).length;
-    const overallScore = computeScore(supplier);
+    const overallScore = computeScore(supplier, config);
     const riskLevel = deriveRisk(supplier, blockingFailures);
     return {
       supplier,
