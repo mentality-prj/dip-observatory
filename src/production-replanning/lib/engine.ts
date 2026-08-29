@@ -141,10 +141,10 @@ function computeEffectiveCapacities(
 ): { perDay: LineCapacity[]; totalCapacityTonnes: number } {
   const perDay: LineCapacity[] = lines.map((line) => {
     const isAffected = line.id === disruption.affectedLineId;
-    const disruptedAvailability = isAffected
-      ? Math.max(0, line.availabilityFactor - disruption.capacityReductionFactor)
-      : line.availabilityFactor;
-    const effectiveTpd = line.normalCapacityTpd * disruptedAvailability;
+    const disruptedTpd = isAffected
+      ? Math.max(0, line.normalCapacityTpd * line.availabilityFactor * (1 - disruption.capacityReductionFactor))
+      : line.normalCapacityTpd * line.availabilityFactor;
+    const effectiveTpd = disruptedTpd;
     return { lineId: line.id, normalTpd: line.normalCapacityTpd * line.availabilityFactor, effectiveTpd };
   });
 
@@ -436,6 +436,7 @@ function calcOperationalConsequences(
   effectiveCapacityTonnes: number,
   overtimeTonnes: number,
   normalCapacityTonnes: number,
+  dailyTpd: number,
 ): OperationalConsequences {
   const totalEffective = effectiveCapacityTonnes + overtimeTonnes;
   const totalRequired = orders.reduce((s, o) => s + o.requiredTonnes, 0);
@@ -450,8 +451,8 @@ function calcOperationalConsequences(
 
   for (const order of sorted) {
     cumulativeTonnes += order.requiredTonnes;
-    const completionDay = totalEffective > 0
-      ? Math.ceil((cumulativeTonnes / totalEffective) * 10)
+    const completionDay = dailyTpd > 0
+      ? Math.ceil(cumulativeTonnes / dailyTpd)
       : 999;
     expectedCompletionDays[order.id] = completionDay;
 
@@ -655,7 +656,7 @@ export function runProductionReplanningEngine(
   // Daily effective throughput (disrupted)
   const dailyLines = lines.map((l) => {
     if (l.id === disruption.affectedLineId) {
-      return Math.max(0, l.normalCapacityTpd * (l.availabilityFactor - disruption.capacityReductionFactor));
+      return Math.max(0, l.normalCapacityTpd * l.availabilityFactor * (1 - disruption.capacityReductionFactor));
     }
     return l.normalCapacityTpd * l.availabilityFactor;
   });
@@ -714,6 +715,7 @@ export function runProductionReplanningEngine(
       totalCapacityTonnes,
       overtimeTonnes,
       normalCapacityTonnes,
+      overtimeTonnes > 0 ? dailyEffectiveTpd + dailyOvertimeTpd : dailyEffectiveTpd,
     );
 
     const capacityUtilization = Math.min(
