@@ -135,7 +135,7 @@ export function computeSupplierSensitivity(
     },
     {
       variable: "Supplier dependency",
-      level: dependencyChanged ? "MEDIUM" : "LOW",
+      level: baselineAlreadyHighDependency ? "HIGH" : dependencyChanged ? "MEDIUM" : "LOW",
       evidence: baselineAlreadyHighDependency
         ? `Supplier dependency at ${(rec.supplier.dependency * 100).toFixed(0)}% — already above the 80% high-concentration threshold.`
         : dependencyChanged
