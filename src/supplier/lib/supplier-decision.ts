@@ -267,7 +267,10 @@ function buildFactors(
   return factors;
 }
 
-function buildConditions(evaluation: SupplierEvaluation): string[] {
+function buildConditions(
+  evaluation: SupplierEvaluation,
+  config: SupplierDecisionConfig,
+): string[] {
   const conditions: string[] = [];
   const s = evaluation.supplier;
 
@@ -277,7 +280,7 @@ function buildConditions(evaluation: SupplierEvaluation): string[] {
     conditions.push("Documented contingency supplier plan required.");
   if (s.financialRisk === "MEDIUM")
     conditions.push("Quarterly financial review during contract period.");
-  if (s.incidentsLast12Months === 2)
+  if (s.incidentsLast12Months === config.maxIncidents)
     conditions.push("Performance improvement plan with 90-day review.");
 
   return conditions;
@@ -334,7 +337,7 @@ export function runSupplierDecisionPlugin(
   const recommendation = sorted[0];
   const decision = deriveDecision(recommendation);
   const factors = buildFactors(recommendation);
-  const conditions = buildConditions(recommendation);
+  const conditions = buildConditions(recommendation, config);
 
   // 3. Decision trace — mirrors DecisionTrace from futures-mispricing.
   const trace: SupplierDecisionTrace = {
