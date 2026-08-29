@@ -173,8 +173,8 @@ describe("audit trail", () => {
 // ---------------------------------------------------------------------------
 
 describe("configuration override", () => {
-  test("stricter quality threshold can flip Brenner to conditions", () => {
-    // Brenner has quality 91%. Raising threshold to 95% should add a failing rule.
+  test("stricter quality threshold rejects Brenner due to blocking rule failure", () => {
+    // Brenner has quality 91%. Raising threshold to 95% fails blocking RULE-02, so decision is REJECT.
     const request: SupplierDecisionRequest = {
       ...DEMO_REQUEST,
       candidates: [
@@ -199,6 +199,7 @@ describe("configuration override", () => {
     );
     assert.ok(rule02);
     assert.equal(rule02.passed, false);
+    assert.equal(result.decisionTrace.decision, "REJECT");
   });
 
   test("empty candidates throws", () => {

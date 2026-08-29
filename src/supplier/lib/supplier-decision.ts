@@ -74,8 +74,8 @@ export const SUPPLIER_RULES: SupplierRule[] = [
   },
   {
     id: "RULE-06",
-    name: "Sole-source dependency",
-    description: "Sole-source (dependency = 1.0) requires contingency planning.",
+    name: "High dependency concentration",
+    description: "High dependency (>= 80%) requires contingency planning.",
     blocking: false,
   },
 ];
@@ -166,23 +166,20 @@ function evaluateRules(
         };
       }
       case "RULE-06": {
-        const passed = supplier.dependency < 1.0;
+        const passed = supplier.dependency < 0.8;
         return {
           rule,
           passed,
           evidence: passed
-            ? `Dependency ${(supplier.dependency * 100).toFixed(0)}% — contingency alternatives exist.`
-            : "Sole-source dependency: contingency plan required.",
+            ? `Dependency ${(supplier.dependency * 100).toFixed(0)}% — below high-dependency threshold (80%).`
+            : `Dependency ${(supplier.dependency * 100).toFixed(0)}% — contingency plan required.`,
           featureValues: { dependency: supplier.dependency },
         };
       }
       default:
-        return {
-          rule,
-          passed: true,
-          evidence: "Rule not implemented — defaulting to pass.",
-          featureValues: {},
-        };
+        throw new Error(
+          `SupplierDecisionPlugin: unimplemented rule evaluation for ${rule.id}`,
+        );
     }
   });
 }
@@ -235,34 +232,29 @@ function buildFactors(
 ): SupplierDecisionFactor[] {
   const factors: SupplierDecisionFactor[] = [];
   const s = evaluation.supplier;
+  const failedRules = evaluation.ruleResults.filter((result) => !result.passed);
 
   if (s.deliveryPerformance >= 0.95)
     factors.push({ label: "Delivery performance", direction: "positive", evidence: `${(s.deliveryPerformance * 100).toFixed(0)}% on-time delivery` });
-  else if (s.deliveryPerformance < 0.85)
-    factors.push({ label: "Delivery performance", direction: "negative", evidence: `${(s.deliveryPerformance * 100).toFixed(0)}% below threshold` });
 
   if (s.qualityScore >= 0.95)
     factors.push({ label: "Quality score", direction: "positive", evidence: `${(s.qualityScore * 100).toFixed(0)}% quality pass rate` });
-  else if (s.qualityScore < 0.90)
-    factors.push({ label: "Quality score", direction: "negative", evidence: `${(s.qualityScore * 100).toFixed(0)}% below threshold` });
 
   if (s.incidentsLast12Months === 0)
     factors.push({ label: "Incident history", direction: "positive", evidence: "Zero incidents in last 12 months" });
-  else if (s.incidentsLast12Months > 2)
-    factors.push({ label: "Incident history", direction: "negative", evidence: `${s.incidentsLast12Months} incidents in last 12 months` });
-
-  if (s.dependency >= 0.8)
-    factors.push({ label: "Supplier dependency", direction: "negative", evidence: `${(s.dependency * 100).toFixed(0)}% dependency — contingency required` });
-
-  if (s.financialRisk === "HIGH")
-    factors.push({ label: "Financial risk", direction: "negative", evidence: "HIGH financial risk — bond required" });
-  else if (s.financialRisk === "LOW")
+  if (s.financialRisk === "LOW")
     factors.push({ label: "Financial risk", direction: "positive", evidence: "LOW financial risk" });
 
   if (s.compliant)
     factors.push({ label: "Compliance", direction: "positive", evidence: "Valid certification" });
-  else
-    factors.push({ label: "Compliance", direction: "negative", evidence: "No valid certification" });
+
+  for (const result of failedRules) {
+    factors.push({
+      label: result.rule.name,
+      direction: "negative",
+      evidence: result.evidence,
+    });
+  }
 
   return factors;
 }

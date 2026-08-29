@@ -404,6 +404,7 @@ function ExplainabilityPanel({
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
             className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300 hover:border-white/25 hover:text-white"
           >
             {open ? "Hide trace" : "Show trace"}

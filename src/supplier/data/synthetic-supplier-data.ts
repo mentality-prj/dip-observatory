@@ -30,10 +30,10 @@ export const DEMO_SUPPLIERS: SupplierFeatures[] = [
     name: "ACME Components GmbH",
     category: "Automotive — Tier 2 Structural",
     contractValueEur: 2_100_000,
-    deliveryPerformance: 0.97,  // strong delivery
-    qualityScore: 0.98,         // excellent quality
-    financialRisk: "MEDIUM",    // triggers conditions (quarterly review)
-    dependency: 0.70,           // moderate dependency
+    deliveryPerformance: 0.97, // strong delivery
+    qualityScore: 0.98, // excellent quality
+    financialRisk: "MEDIUM", // triggers conditions (quarterly review)
+    dependency: 0.70, // moderate dependency
     leadTimeDays: 25,
     compliant: true,
     incidentsLast12Months: 0,
