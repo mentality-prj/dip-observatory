@@ -396,6 +396,393 @@ test("supplier policy threshold change changes decision where appropriate", () =
   assert.equal(rule01Strict.passed, false, "RULE-01 must fail with stricter threshold");
 });
 
+// ---------------------------------------------------------------------------
+// Part A — regression: baseline output must not contain "4% capacity loss"
+// ---------------------------------------------------------------------------
+
+test("Part A: baseline output contains no '4% capacity loss' text", () => {
+  const result = runProductionReplanningEngine(DEFAULT_REQUEST);
+  const json = JSON.stringify(result);
+  assert.ok(
+    !json.includes("4% capacity loss"),
+    "baseline engine output must not contain the incorrect '4% capacity loss' wording",
+  );
+});
+
+test("Part A: RULE-DISRUPTION evidence uses actual capacity reduction factor", () => {
+  const result = runProductionReplanningEngine(DEFAULT_REQUEST);
+  const reductionFactor = DEFAULT_SCENARIO.disruption.capacityReductionFactor; // 0.30
+  const remainingPct = ((1 - reductionFactor) * 100).toFixed(0); // "70"
+  const redistAlt = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+  const disruptionRule = redistAlt.ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
+  assert.ok(disruptionRule, "RULE-DISRUPTION must exist");
+  assert.ok(
+    disruptionRule!.evidence.includes(`${remainingPct}%`),
+    `RULE-DISRUPTION evidence must include the actual remaining capacity (${remainingPct}%), got: ${disruptionRule!.evidence}`,
+  );
+  // Also verify it does NOT contain the misleading small percentage
+  const illegalPattern = /% capacity loss\b/;
+  assert.ok(
+    !illegalPattern.test(disruptionRule!.evidence),
+    "RULE-DISRUPTION evidence must not contain '% capacity loss' phrasing",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Part C — scenario control acceptance tests
+// ---------------------------------------------------------------------------
+
+describe("Part C: scenario control acceptance tests", () => {
+
+  // Test 1 — Capacity reduction: 30% → 50%
+  test("C1: capacity reduction 30→50% causes engine to recompute", () => {
+    const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
+    const scenario = runProductionReplanningEngine(
+      buildProdRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.5 },
+      }),
+    );
+
+    // Financial impacts must differ — more capacity removed = different costs
+    const baseKeep = baseline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const scKeep = scenario.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    assert.ok(
+      scKeep.financialImpact.total !== baseKeep.financialImpact.total ||
+        baseline.totalFinancialImpact !== scenario.totalFinancialImpact ||
+        baseline.avoidedCostVsBaseline !== scenario.avoidedCostVsBaseline,
+      "C1: some financial output must differ after capacity reduction change",
+    );
+
+    // RULE-DISRUPTION evidence must reflect 50% (i.e., "50% of normal capacity")
+    const scRedist = scenario.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    const rule = scRedist.ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
+    // With 50% reduction, remaining = 50%
+    assert.ok(rule?.evidence.includes("50%"), `C1: RULE-DISRUPTION evidence must reference 50%, got: ${rule?.evidence}`);
+  });
+
+  // Test 2 — Capacity reduction = 0%
+  test("C2: capacity reduction 0% restores full line capacity", () => {
+    const noDisruption = runProductionReplanningEngine(
+      buildProdRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0 },
+      }),
+    );
+    const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
+
+    const noDisruptKeep = noDisruption.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const baseKeep = baseline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+
+    // With 0% reduction, capacity is fully restored → disruption cost must not increase
+    assert.ok(
+      noDisruptKeep.financialImpact.total <= baseKeep.financialImpact.total,
+      "C2: 0% disruption must not increase disruption-related costs for KEEP_CURRENT_PLAN",
+    );
+
+    // Engine output must change vs baseline (costs should decrease or plan becomes more feasible)
+    assert.ok(
+      noDisruptKeep.financialImpact.total !== baseKeep.financialImpact.total ||
+        noDisruption.avoidedCostVsBaseline !== baseline.avoidedCostVsBaseline ||
+        noDisruption.recommendedAction !== baseline.recommendedAction,
+      "C2: removing disruption must change some engine output",
+    );
+  });
+
+  // Test 3 — High capacity reduction
+  test("C3: high capacity reduction detects infeasible alternatives and no NaN/Infinity", () => {
+    const highReduction = runProductionReplanningEngine(
+      buildProdRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.98 },
+      }),
+    );
+
+    // No NaN/Infinity in financial impacts; no negative values
+    for (const alt of highReduction.alternatives) {
+      const fi = alt.financialImpact;
+      for (const [key, val] of Object.entries(fi)) {
+        assert.ok(
+          Number.isFinite(val as number),
+          `C3: ${alt.actionId}.financialImpact.${key} must be finite, got ${val}`,
+        );
+        assert.ok(
+          (val as number) >= 0,
+          `C3: ${alt.actionId}.financialImpact.${key} must not be negative, got ${val}`,
+        );
+      }
+    }
+
+    // Infeasible alternatives must have blocking rules that explain why
+    const infeasible = highReduction.alternatives.filter((a) => a.feasibility === "INFEASIBLE");
+    for (const alt of infeasible) {
+      assert.ok(
+        alt.blockingConstraints.length > 0,
+        `C3: infeasible alternative ${alt.actionId} must have blocking constraint evidence`,
+      );
+    }
+  });
+
+  // Test 4 — Disruption duration: 3 → 6 days
+  test("C4: disruption duration 3→6 days changes capacity utilization evidence and trace", () => {
+    const threeDays = runProductionReplanningEngine(DEFAULT_REQUEST);
+    const sixDays = runProductionReplanningEngine(
+      buildProdRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, durationDays: 6 },
+      }),
+    );
+
+    // RULE-UTILIZATION evidence uses disrupted capacity which changes with duration
+    const threeKeep = threeDays.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const sixKeep = sixDays.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const threeUtilRule = threeKeep.ruleResults.find((r) => r.ruleId === "RULE-UTILIZATION");
+    const sixUtilRule = sixKeep.ruleResults.find((r) => r.ruleId === "RULE-UTILIZATION");
+    assert.ok(
+      threeUtilRule?.evidence !== sixUtilRule?.evidence ||
+        threeDays.totalFinancialImpact !== sixDays.totalFinancialImpact,
+      "C4: changing disruption duration must change capacity utilization evidence or financial impact",
+    );
+
+    // RULE-DISRUPTION evidence must reference 6 days
+    const sixRedist = sixDays.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    const rule = sixRedist.ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
+    assert.ok(rule?.evidence.includes("6-day"), `C4: RULE-DISRUPTION evidence must reference 6-day disruption, got: ${rule?.evidence}`);
+  });
+
+  // Test 5 — Material availability
+  test("C5: lower material availability causes material rule to be recalculated", () => {
+    const lowMat = runProductionReplanningEngine(
+      buildProdRequest({
+        materials: [
+          { id: "MAT-A", name: "Material A", availableTonnes: 50 },
+          { id: "MAT-B", name: "Material B", availableTonnes: 50 },
+        ],
+      }),
+    );
+
+    // RULE-MATERIAL evidence must change
+    const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
+    const baseAlt = baseline.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN");
+    const lowAlt = lowMat.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN");
+    assert.ok(baseAlt, "C5: baseline must include KEEP_CURRENT_PLAN");
+    assert.ok(lowAlt, "C5: low-material scenario must include KEEP_CURRENT_PLAN");
+    const baseMatRule = baseAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL");
+    const lowMatRule = lowAlt.ruleResults.find((r) => r.ruleId === "RULE-MATERIAL");
+    assert.ok(baseMatRule, "C5: baseline KEEP_CURRENT_PLAN must include RULE-MATERIAL");
+    assert.ok(lowMatRule, "C5: low-material KEEP_CURRENT_PLAN must include RULE-MATERIAL");
+    assert.ok(
+      baseMatRule.evidence !== lowMatRule.evidence,
+      "C5: RULE-MATERIAL evidence must change when material availability changes",
+    );
+
+    // Affected alternatives must become infeasible when material is insufficient
+    const totalRequired = DEFAULT_SCENARIO.orders.reduce((s, o) => s + o.requiredTonnes, 0);
+    const materialAvailable = 50 + 50; // matches availableTonnes passed to buildProdRequest above
+    if (materialAvailable < totalRequired) {
+      const infeasible = lowMat.alternatives.filter((a) => a.feasibility === "INFEASIBLE");
+      assert.ok(
+        infeasible.length > 0,
+        "C5: insufficient material must make at least one alternative infeasible",
+      );
+    }
+
+    // Recommendation must be recalculated (may differ from baseline)
+    // At minimum, the engine ran — assertion is that no error was thrown and result is valid
+    assert.ok(typeof lowMat.recommendedAction === "string");
+  });
+
+  // Test 6 — Critical deadline: 2 → 5 days
+  test("C6: loosening critical deadline changes deadline-related calculations", () => {
+    const tight = runProductionReplanningEngine(DEFAULT_REQUEST); // deadline = 2
+    const loose = runProductionReplanningEngine(
+      buildProdRequest({
+        orders: DEFAULT_SCENARIO.orders.map((o) =>
+          o.priority === "CRITICAL" ? { ...o, deadlineDays: 5 } : o,
+        ),
+      }),
+    );
+
+    // RULE-CRITICAL-DEADLINE evidence must change
+    const tightAlt = tight.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const looseAlt = loose.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+    const tightDeadlineRule = tightAlt.ruleResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE")!;
+    const looseDeadlineRule = looseAlt.ruleResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE")!;
+    assert.ok(
+      tightDeadlineRule.evidence !== looseDeadlineRule.evidence,
+      "C6: RULE-CRITICAL-DEADLINE evidence must reflect the changed deadline",
+    );
+
+    // Financial or feasibility impact must change
+    assert.ok(
+      tightAlt.financialImpact.total !== looseAlt.financialImpact.total ||
+        tightAlt.feasibility !== looseAlt.feasibility ||
+        tight.recommendedAction !== loose.recommendedAction,
+      "C6: changing critical deadline must affect some engine output",
+    );
+  });
+
+  // Test 7 — Overtime toggle
+  test("C7a: overtime OFF zeroes overtime cost and may change total", () => {
+    const withOT = runProductionReplanningEngine(DEFAULT_REQUEST);
+    const withoutOT = runProductionReplanningEngine(
+      buildProdRequest({ overtimeAvailable: false }),
+    );
+
+    // Overtime cost must be 0 when overtime is disabled for all alternatives
+    for (const alt of withoutOT.alternatives) {
+      assert.equal(
+        alt.financialImpact.overtimeCost,
+        0,
+        `C7a: ${alt.actionId}.overtimeCost must be 0 when overtime is disabled`,
+      );
+    }
+
+    // When overtime is enabled and actually used, the total financial impact for
+    // overtime-eligible alternatives must differ
+    const withRedist = withOT.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    const withoutRedist = withoutOT.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
+    if (withRedist.financialImpact.overtimeCost > 0) {
+      assert.ok(
+        withRedist.financialImpact.total !== withoutRedist.financialImpact.total,
+        "C7a: when overtime is used, total cost must differ when disabled",
+      );
+    }
+  });
+
+  test("C7b: resetting overtime ON restores exact baseline output", () => {
+    const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
+    // Turn off overtime
+    runProductionReplanningEngine(buildProdRequest({ overtimeAvailable: false }));
+    // Turn back on (same as DEFAULT_REQUEST)
+    const restored = runProductionReplanningEngine(DEFAULT_REQUEST);
+
+    assert.equal(restored.recommendedAction, baseline.recommendedAction, "C7b: recommended action must match after reset");
+    assert.equal(restored.totalFinancialImpact, baseline.totalFinancialImpact, "C7b: total financial impact must match after reset");
+    assert.equal(restored.avoidedCostVsBaseline, baseline.avoidedCostVsBaseline, "C7b: avoided cost must match after reset");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Part D — baseline isolation regression test
+// ---------------------------------------------------------------------------
+
+test("Part D: reset to baseline is byte-for-byte equivalent to original baseline", () => {
+  const baseline = runProductionReplanningEngine(DEFAULT_REQUEST);
+
+  // Simulate a user modifying all 5 controls
+  runProductionReplanningEngine(
+    buildProdRequest({
+      disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.6, durationDays: 8 },
+      materials: DEFAULT_SCENARIO.materials.map((m) => ({ ...m, availableTonnes: 50 })),
+      orders: DEFAULT_SCENARIO.orders.map((o) =>
+        o.priority === "CRITICAL" ? { ...o, deadlineDays: 1 } : o,
+      ),
+      overtimeAvailable: false,
+    }),
+  );
+
+  // Reset: re-run with DEFAULT_REQUEST (baseline)
+  const afterReset = runProductionReplanningEngine(DEFAULT_REQUEST);
+
+  assert.equal(afterReset.recommendedAction, baseline.recommendedAction, "Part D: decision must match");
+  assert.equal(afterReset.totalFinancialImpact, baseline.totalFinancialImpact, "Part D: total financial impact must match");
+  assert.equal(afterReset.avoidedCostVsBaseline, baseline.avoidedCostVsBaseline, "Part D: avoided cost must match");
+  assert.deepEqual(
+    afterReset.alternatives.map((a) => ({
+      actionId: a.actionId,
+      feasibility: a.feasibility,
+      total: a.financialImpact.total,
+      composite: a.score.composite,
+    })),
+    baseline.alternatives.map((a) => ({
+      actionId: a.actionId,
+      feasibility: a.feasibility,
+      total: a.financialImpact.total,
+      composite: a.score.composite,
+    })),
+    "Part D: all alternative details must match baseline after reset",
+  );
+
+  // Verify DEFAULT_SCENARIO is still unchanged
+  assert.equal(
+    DEFAULT_SCENARIO.disruption.capacityReductionFactor,
+    0.3,
+    "Part D: DEFAULT_SCENARIO must not be mutated",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Part E — supplier scenario controls reach the engine
+// ---------------------------------------------------------------------------
+
+describe("Part E: supplier scenario controls", () => {
+  test("E1: financial risk HIGH triggers RULE-05 fail", () => {
+    const req: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      caseId: "E1-FIN-RISK",
+      candidates: [{ ...DEMO_SUPPLIERS[0], financialRisk: "HIGH" }],
+    };
+    const result = runSupplierDecisionPlugin(req);
+    const rule05 = result.recommendation.ruleResults.find((r) => r.rule.id === "RULE-05");
+    assert.ok(rule05, "E1: RULE-05 must be evaluated");
+    assert.equal(rule05!.passed, false, "E1: RULE-05 must fail for HIGH financial risk");
+  });
+
+  test("E2: delivery reliability drop changes RULE-01 result", () => {
+    const baseline = runSupplierDecisionPlugin(DEMO_REQUEST);
+    const baseRule01 = baseline.recommendation.ruleResults.find((r) => r.rule.id === "RULE-01");
+
+    const lowDelivery: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      caseId: "E2-DELIVERY",
+      candidates: [{ ...DEMO_SUPPLIERS[0], deliveryPerformance: 0.70 }],
+    };
+    const result = runSupplierDecisionPlugin(lowDelivery);
+    const rule01 = result.recommendation.ruleResults.find((r) => r.rule.id === "RULE-01");
+    assert.ok(rule01, "E2: RULE-01 must be evaluated");
+    // Evidence must differ if delivery changed meaningfully
+    assert.ok(
+      rule01!.evidence !== baseRule01?.evidence || rule01!.passed !== baseRule01?.passed,
+      "E2: RULE-01 result or evidence must change when delivery performance drops significantly",
+    );
+  });
+
+  test("E3: quality score below threshold triggers RULE-02 fail", () => {
+    const req: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      caseId: "E3-QUALITY",
+      candidates: [{ ...DEMO_SUPPLIERS[0], qualityScore: 0.80 }],
+    };
+    const result = runSupplierDecisionPlugin(req);
+    const rule02 = result.recommendation.ruleResults.find((r) => r.rule.id === "RULE-02");
+    assert.ok(rule02, "E3: RULE-02 must be evaluated");
+    assert.equal(rule02!.passed, false, "E3: RULE-02 must fail when quality is below threshold");
+  });
+
+  test("E4: high dependency changes RULE-06 result", () => {
+    const req: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      caseId: "E4-DEPENDENCY",
+      candidates: [{ ...DEMO_SUPPLIERS[0], dependency: 0.95 }],
+    };
+    const result = runSupplierDecisionPlugin(req);
+    const rule06 = result.recommendation.ruleResults.find((r) => r.rule.id === "RULE-06");
+    assert.ok(rule06, "E4: RULE-06 must be evaluated");
+    assert.equal(rule06!.passed, false, "E4: RULE-06 must fail for high dependency (0.95)");
+  });
+
+  test("E5: non-compliant supplier triggers compliance rule fail", () => {
+    const req: SupplierDecisionRequest = {
+      ...DEMO_REQUEST,
+      caseId: "E5-COMPLIANCE",
+      candidates: [{ ...DEMO_SUPPLIERS[0], compliant: false }],
+    };
+    const result = runSupplierDecisionPlugin(req);
+    const complianceRule = result.recommendation.ruleResults.find(
+      (r) => r.rule.id === "RULE-03" || r.rule.id.includes("COMPLIANCE"),
+    );
+    assert.ok(complianceRule, "E5: compliance rule must be evaluated");
+    assert.equal(complianceRule!.passed, false, "E5: compliance rule must fail for non-compliant supplier");
+  });
+});
+
 test("scenario lab helper functions return deterministic structures", () => {
   const prodSensitivity = computeProductionSensitivity(DEFAULT_REQUEST);
   const supplierSensitivity = computeSupplierSensitivity(DEMO_REQUEST);
