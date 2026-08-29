@@ -170,39 +170,6 @@ function computeEffectiveCapacities(
 // Operational scheduling helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Simulate a simple priority-aware schedule given available capacity.
- * Returns expected completion day for each order (null = not completable).
- */
-function scheduleOrders(
-  orders: ProductionOrder[],
-  totalCapacityTonnes: number,
-  overtimeAvailable: boolean,
-  overtimeBonusTonnes: number,
-): Record<string, number | null> {
-  const effectiveCapacity = totalCapacityTonnes + (overtimeAvailable ? overtimeBonusTonnes : 0);
-  const sorted = [...orders].sort((a, b) => {
-    const priorityOrder = { CRITICAL: 0, HIGH: 1, NORMAL: 2 };
-    return priorityOrder[a.priority] - priorityOrder[b.priority];
-  });
-
-  let remaining = effectiveCapacity;
-  const completionDays: Record<string, number | null> = {};
-
-  for (const order of sorted) {
-    if (remaining >= order.requiredTonnes) {
-      remaining -= order.requiredTonnes;
-      // Approximate completion day proportional to how far into the capacity queue we are
-      const usedCapacity = effectiveCapacity - remaining;
-      completionDays[order.id] = Math.ceil((usedCapacity / effectiveCapacity) * 10);
-    } else {
-      completionDays[order.id] = null;
-    }
-  }
-
-  return completionDays;
-}
-
 // ---------------------------------------------------------------------------
 // Rule evaluation per alternative
 // ---------------------------------------------------------------------------
@@ -374,6 +341,7 @@ function calcFinancialImpact(
   dailyEffectiveTpd: number,
   costs: CostConfig,
   overtimeAvailable: boolean,
+  disruptionDurationDays: number,
 ): AlternativeFinancialImpact {
   const totalRequired = orders.reduce((s, o) => s + o.requiredTonnes, 0);
   const criticalOrders = orders.filter((o) => o.priority === "CRITICAL");
@@ -433,7 +401,7 @@ function calcFinancialImpact(
   const unusedTonnes = Math.max(0, normalCapacityTonnes - totalRequired);
   const unusedCapacityCost =
     actionId === "KEEP_CURRENT_PLAN"
-      ? unusedTonnes * costs.unusedCapacityCostPerTpdDay * 3 // 3 days of disruption idling
+      ? unusedTonnes * costs.unusedCapacityCostPerTpdDay * disruptionDurationDays
       : unusedTonnes * costs.unusedCapacityCostPerTpdDay;
 
   // Material switching / reconfiguration cost
@@ -596,7 +564,7 @@ function generateExplanation(
         evidence: r.evidence,
       });
     }
-    if (!r.passed && r.blocking) {
+    if (!r.passed && PRODUCTION_RULES.find((pr) => pr.id === r.ruleId)?.blocking) {
       reasons.push({
         label: `Constraint: ${r.ruleName}`,
         direction: "negative",
@@ -612,7 +580,7 @@ function generateExplanation(
     reasons.push({
       label: "Lower total financial impact",
       direction: "positive",
-      evidence: `Saves €${saved.toLocaleString("en-EU")} compared to keeping the current plan.`,
+      evidence: `Saves €${saved.toLocaleString("en-US")} compared to keeping the current plan.`,
     });
   }
 
@@ -629,7 +597,7 @@ function generateExplanation(
         const extra = a.financialImpact.total - recommended.financialImpact.total;
         return {
           actionId: a.actionId,
-          reason: `Higher total cost — €${extra.toLocaleString("en-EU")} more than recommended action.`,
+          reason: `Higher total cost — €${extra.toLocaleString("en-US")} more than recommended action.`,
         };
       }
       return {
@@ -687,7 +655,7 @@ export function runProductionReplanningEngine(
   // Daily effective throughput (disrupted)
   const dailyLines = lines.map((l) => {
     if (l.id === disruption.affectedLineId) {
-      return l.normalCapacityTpd * (l.availabilityFactor - disruption.capacityReductionFactor);
+      return Math.max(0, l.normalCapacityTpd * (l.availabilityFactor - disruption.capacityReductionFactor));
     }
     return l.normalCapacityTpd * l.availabilityFactor;
   });
@@ -728,6 +696,7 @@ export function runProductionReplanningEngine(
       dailyEffectiveTpd,
       costs,
       overtimeAvailable,
+      disruption.durationDays,
     );
   });
   const maxFinancialCost = Math.max(...rawFinancials.map((f) => f.total), 1);
@@ -756,7 +725,7 @@ export function runProductionReplanningEngine(
     const ruleResults = evaluateRulesForAlternative(
       actionId,
       orders,
-      totalCapacityTonnes + overtimeTonnes,
+      totalCapacityTonnes,
       totalMaterialTonnes,
       overtimeTonnes,
       capacityUtilization,
