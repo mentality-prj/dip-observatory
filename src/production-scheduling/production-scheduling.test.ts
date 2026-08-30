@@ -1149,12 +1149,13 @@ describe("44. getInitialProductionScenario — baseline state", () => {
   test("getInitialProductionScenario returns a deep copy", () => {
     const scenario = getInitialProductionScenario();
     const orderId = scenario.orders[0].id;
+    const mutatedSetupHours = scenario.setupMatrix.PERGOLA.AWNING + 1;
 
     scenario.lines[0].name = "Mutated line";
     scenario.orders[0].name = "Mutated order";
     scenario.orders[0].compatibleLines.push("LINE-Z");
     scenario.disruption.reason = "Mutated disruption";
-    scenario.setupMatrix.PERGOLA.AWNING = 99;
+    scenario.setupMatrix.PERGOLA.AWNING = mutatedSetupHours;
 
     const fresh = getInitialProductionScenario();
     const freshOrder = fresh.orders.find((order) => order.id === orderId);
