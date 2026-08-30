@@ -603,7 +603,7 @@ describe("21. baseline immutability", () => {
 describe("22. trace consistency", () => {
   test("audit trail rulesExecuted matches CONSTRAINT_RULES", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const ruleIds = CONSTRAINT_RULES.map((r) => r.id);
+    const ruleIds: string[] = CONSTRAINT_RULES.map((r) => r.id);
     for (const ruleId of result.auditTrail.rulesExecuted) {
       assert.ok(ruleIds.includes(ruleId), `Unknown rule in audit: ${ruleId}`);
     }
