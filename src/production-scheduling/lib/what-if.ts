@@ -41,9 +41,21 @@ export function buildSchedulingScenario(
   base: SchedulingScenario,
   what: WhatIfState,
 ): SchedulingScenario {
+  const scenarioId = [
+    base.scenarioId,
+    "WHATIF",
+    `cap${what.lineBCapacityReductionPct}`,
+    `dur${what.disruptionDurationDays}`,
+    `crit${what.criticalOrderDeadlineDays}`,
+    `mat${what.order103MaterialAvailable ? "1" : "0"}`,
+    `ot${what.overtimeAvailable ? "1" : "0"}`,
+    `otc${what.overtimeCostPerHour}`,
+    `p116${what.order116Priority}`,
+  ].join("-");
+
   return {
     ...base,
-    scenarioId: `${base.scenarioId}-WHATIF`,
+    scenarioId,
     orders: base.orders.map((o) => {
       if (o.id === "ORDER-101") {
         return { ...o, deadlineDays: what.criticalOrderDeadlineDays };

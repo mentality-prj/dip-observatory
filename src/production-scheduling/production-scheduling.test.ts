@@ -13,7 +13,6 @@ import {
   runSchedulingEngine,
   DEFAULT_COST_CONFIG,
   CONSTRAINT_RULES,
-  ENGINE_VERSION,
 } from "@/production-scheduling/lib/engine";
 import {
   DEFAULT_SCENARIO,
@@ -70,6 +69,13 @@ describe("1. determinism", () => {
     const a = runSchedulingEngine(DEFAULT_REQUEST);
     const b = runSchedulingEngine(DEFAULT_REQUEST);
     assert.equal(a.auditTrail.decisionId, b.auditTrail.decisionId);
+  });
+
+  test("same input produces identical computedAt metadata", () => {
+    const a = runSchedulingEngine(DEFAULT_REQUEST);
+    const b = runSchedulingEngine(DEFAULT_REQUEST);
+    assert.equal(a.computedAt, b.computedAt);
+    assert.equal(a.auditTrail.computedAt, b.auditTrail.computedAt);
   });
 });
 
@@ -308,6 +314,72 @@ describe("11. financial calculation", () => {
       );
     }
   });
+
+  test("not scheduled orders only accrue overdue penalty beyond their deadline", () => {
+    const futureDeadlineOrder = {
+      ...ORDERS[0]!,
+      id: "FUTURE-DEADLINE",
+      materialStatus: "UNAVAILABLE" as const,
+      deadlineDays: DEFAULT_SCENARIO.planningHorizonDays + 3,
+      delayPenaltyPerDay: 123,
+    };
+    const result = runSchedulingEngine({
+      scenario: {
+        ...DEFAULT_SCENARIO,
+        scenarioId: "TEST-FUTURE-DEADLINE",
+        orders: [futureDeadlineOrder],
+      },
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const task = result.strategies[0]!.schedule[0]!;
+    assert.equal(task.status, "NOT_SCHEDULED");
+    assert.equal(task.daysLate, 0);
+    assert.equal(task.delayPenalty, 0);
+  });
+
+  test("overtime hours count only worked time after the normal shift end", () => {
+    const lateOvertimeOrders = [
+      {
+        ...ORDERS[0]!,
+        id: "LATE-OT-1",
+        defaultLineId: "LINE-C",
+        compatibleLines: ["LINE-C"],
+        durationHours: 8,
+        deadlineDays: 5,
+        priority: "CRITICAL" as const,
+      },
+      {
+        ...ORDERS[4]!,
+        id: "LATE-OT-2",
+        defaultLineId: "LINE-C",
+        compatibleLines: ["LINE-C"],
+        durationHours: 1,
+        deadlineDays: 5,
+        priority: "HIGH" as const,
+      },
+    ];
+    const result = runSchedulingEngine({
+      scenario: {
+        ...DEFAULT_SCENARIO,
+        scenarioId: "TEST-LATE-OT",
+        orders: lateOvertimeOrders,
+        disruption: {
+          ...DEFAULT_SCENARIO.disruption,
+          affectedLineId: "LINE-A",
+          capacityReductionFactor: 0,
+          durationDays: 1,
+        },
+        overtimeAvailable: true,
+        overtimeHoursPerLinePerDay: 2,
+      },
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const strategy = result.strategies.find((s) => s.strategyId === "USE_OVERTIME");
+    assert.ok(strategy);
+    const utilization = strategy!.lineUtilization.find((entry) => entry.lineId === "LINE-C");
+    assert.ok(utilization);
+    assert.equal(utilization!.overtimeHours, 1);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -512,6 +584,15 @@ describe("21. baseline immutability", () => {
     buildSchedulingScenario(original, what);
     assert.equal(original.disruption.capacityReductionFactor, originalDisruption.capacityReductionFactor);
     assert.equal(original.disruption.durationDays, originalDisruption.durationDays);
+  });
+
+  test("buildSchedulingScenario derives a distinct scenarioId from what-if inputs", () => {
+    const one = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    const two = buildSchedulingScenario(DEFAULT_SCENARIO, {
+      ...BASELINE_WHAT_IF,
+      overtimeCostPerHour: BASELINE_WHAT_IF.overtimeCostPerHour + 10,
+    });
+    assert.notEqual(one.scenarioId, two.scenarioId);
   });
 });
 

@@ -209,6 +209,8 @@ function scheduleAssignments(
   const tasks: ScheduledTask[] = [];
 
   for (const { order, lineId } of assignments) {
+    const unscheduledDaysLate = Math.max(0, horizonDays + 1 - order.deadlineDays);
+
     if (order.materialStatus === "UNAVAILABLE") {
       tasks.push({
         orderId: order.id,
@@ -221,10 +223,10 @@ function scheduleAssignments(
         endHour: 0,
         setupHoursBefore: 0,
         status: "NOT_SCHEDULED",
-        daysLate: horizonDays + 1,
+        daysLate: unscheduledDaysLate,
         isOvertime: false,
         revenueEur: order.revenueEur,
-        delayPenalty: order.delayPenaltyPerDay * (horizonDays + 1),
+        delayPenalty: order.delayPenaltyPerDay * unscheduledDaysLate,
       });
       continue;
     }
@@ -297,10 +299,10 @@ function scheduleAssignments(
         endHour: 0,
         setupHoursBefore: 0,
         status: "NOT_SCHEDULED",
-        daysLate: horizonDays + 1,
+        daysLate: unscheduledDaysLate,
         isOvertime: false,
         revenueEur: order.revenueEur,
-        delayPenalty: order.delayPenaltyPerDay * (horizonDays + 1),
+        delayPenalty: order.delayPenaltyPerDay * unscheduledDaysLate,
       });
     }
   }
@@ -363,10 +365,9 @@ function buildRedistributeAssignments(
 
 /**
  * DELAY_LOW_PRIORITY_ORDERS:
- * Schedule only CRITICAL and HIGH priority orders on their default lines
- * in priority order. NORMAL and LOW orders are sorted after HIGH but given
- * a 2-day artificial offset so they are likely to miss their deadlines,
- * producing concrete delay costs.
+ * Keep default line assignments, but schedule CRITICAL and HIGH priority
+ * orders before NORMAL and LOW orders. Lower-priority orders still run on
+ * the same lines; they are only moved later in the queue.
  */
 function buildDelayLowPriorityAssignments(orders: SchedulingOrder[]): AssignedOrder[] {
   const critical = orders.filter((o) => o.priority === "CRITICAL");
@@ -374,9 +375,7 @@ function buildDelayLowPriorityAssignments(orders: SchedulingOrder[]): AssignedOr
   const normal = orders.filter((o) => o.priority === "NORMAL");
   const low = orders.filter((o) => o.priority === "LOW");
 
-  // Delay NORMAL by injecting a dummy offset by sorting them last and
-  // shifting their deadline evaluations (we simulate via adjusted deadline)
-  // — but the actual tasks are still scheduled, just later in the queue.
+  // Lower-priority orders are scheduled later purely by queue order.
   const delayed: SchedulingOrder[] = [
     ...normal.map((o) => o),
     ...low.map((o) => o),
@@ -420,7 +419,10 @@ function computeLineUtilization(
     const setupHours = lineTasks.reduce((s, t) => s + t.setupHoursBefore, 0);
     const overtimeHours = lineTasks
       .filter((t) => t.isOvertime)
-      .reduce((s, t) => s + (t.endHour - line.normalHoursPerDay), 0);
+      .reduce(
+        (s, t) => s + Math.max(0, t.endHour - Math.max(t.startHour, line.normalHoursPerDay)),
+        0,
+      );
     const availableHours =
       (capacitiesPerDay[line.id] ?? []).reduce((s, h) => s + h, 0);
     const usedHours = productionHours + setupHours;
@@ -988,7 +990,7 @@ export function runSchedulingEngine(
 
   const decisiveFactors: DecisionFactor[] = explanation.reasons;
 
-  const computedAt = new Date().toISOString();
+  const computedAt = new Date("2026-01-15T09:00:00Z").toISOString();
   const decisionId = [
     scenario.scenarioId,
     ENGINE_VERSION,

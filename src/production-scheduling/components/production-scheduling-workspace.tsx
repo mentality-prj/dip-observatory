@@ -22,7 +22,6 @@ import {
   runSchedulingEngine,
   DEFAULT_COST_CONFIG,
   CONSTRAINT_RULES,
-  ENGINE_VERSION,
 } from "@/production-scheduling/lib/engine";
 import { DEFAULT_SCENARIO } from "@/production-scheduling/data/scenario";
 import {

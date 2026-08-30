@@ -8,7 +8,7 @@ import {
   runSchedulingEngine,
   DEFAULT_COST_CONFIG,
 } from "@/production-scheduling/lib/engine";
-import { buildCostConfigOverride, type WhatIfState } from "@/production-scheduling/lib/what-if";
+import type { WhatIfState } from "@/production-scheduling/lib/what-if";
 import type {
   SchedulingDecisionResponse,
   SchedulingDecisionRequest,
