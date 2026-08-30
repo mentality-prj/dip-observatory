@@ -65,12 +65,42 @@ function hrs(v: number) {
 // Colour maps
 // ---------------------------------------------------------------------------
 
-const STRATEGY_COLOUR: Record<StrategyId, "emerald" | "amber" | "rose" | "cyan" | "violet"> = {
-  REDISTRIBUTE_TO_OTHER_LINES: "emerald",
-  PRIORITIZE_URGENT_ORDERS: "cyan",
-  DELAY_LOW_PRIORITY_ORDERS: "amber",
-  KEEP_CURRENT_SCHEDULE: "rose",
-  USE_OVERTIME: "violet",
+/** Static Tailwind class strings per strategy — avoids purged dynamic classes. */
+const STRATEGY_CLASSES: Record<StrategyId, { border: string; headerText: string; titleText: string }> = {
+  REDISTRIBUTE_TO_OTHER_LINES: {
+    border: "border-emerald-300/20",
+    headerText: "text-emerald-400",
+    titleText: "text-emerald-200",
+  },
+  PRIORITIZE_URGENT_ORDERS: {
+    border: "border-cyan-300/20",
+    headerText: "text-cyan-400",
+    titleText: "text-cyan-200",
+  },
+  DELAY_LOW_PRIORITY_ORDERS: {
+    border: "border-amber-300/20",
+    headerText: "text-amber-400",
+    titleText: "text-amber-200",
+  },
+  KEEP_CURRENT_SCHEDULE: {
+    border: "border-rose-300/20",
+    headerText: "text-rose-400",
+    titleText: "text-rose-200",
+  },
+  USE_OVERTIME: {
+    border: "border-violet-300/20",
+    headerText: "text-violet-400",
+    titleText: "text-violet-200",
+  },
+};
+
+/** Static cell text class per strategy for the alternatives table. */
+const STRATEGY_CELL_TEXT: Record<StrategyId, string> = {
+  REDISTRIBUTE_TO_OTHER_LINES: "text-emerald-300",
+  PRIORITIZE_URGENT_ORDERS: "text-cyan-300",
+  DELAY_LOW_PRIORITY_ORDERS: "text-amber-300",
+  KEEP_CURRENT_SCHEDULE: "text-rose-300",
+  USE_OVERTIME: "text-violet-300",
 };
 
 const FEASIBILITY_COLOUR: Record<FeasibilityStatus, "emerald" | "rose"> = {
@@ -309,18 +339,18 @@ function RecommendedStrategyCard({
   const baseline = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
   if (!rec) return null;
 
-  const colour = STRATEGY_COLOUR[result.recommendedStrategy];
+  const cls = STRATEGY_CLASSES[result.recommendedStrategy];
   const lineIds = [...new Set(rec.schedule.map((t) => t.lineId))].sort();
 
   return (
-    <Card className={`border-${colour}-300/20`}>
+    <Card className={cls.border}>
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-${colour}-400`}>
+            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${cls.headerText}`}>
               Recommended schedule
             </p>
-            <CardTitle className={`mt-1 text-xl text-${colour}-200`}>
+            <CardTitle className={`mt-1 text-xl ${cls.titleText}`}>
               {rec.strategyLabel.toUpperCase()}
             </CardTitle>
           </div>
@@ -480,10 +510,9 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
             <tbody>
               {result.strategies.map((s) => {
                 const isRec = s.strategyId === result.recommendedStrategy;
-                const colour = STRATEGY_COLOUR[s.strategyId];
                 return (
                   <tr key={s.strategyId} className="border-b border-white/5">
-                    <td className={cn("py-2 pr-3 font-medium", isRec && `text-${colour}-300`)}>
+                    <td className={cn("py-2 pr-3 font-medium", isRec && STRATEGY_CELL_TEXT[s.strategyId])}>
                       {s.strategyLabel}
                     </td>
                     <td className="py-2 pr-3">

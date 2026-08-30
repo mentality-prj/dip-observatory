@@ -137,7 +137,7 @@ export function computeSchedulingSensitivity(
   return [
     {
       variable: "Critical order deadline",
-      level: criticalDeadlineChanged ? "HIGH" : "HIGH",
+      level: criticalDeadlineChanged ? "HIGH" : "MEDIUM",
       evidence: criticalDeadlineChanged
         ? "Tightening the critical deadline by 1 day changes the recommended strategy."
         : "Critical deadline is already at its tightest; any relaxation reduces urgency.",
