@@ -1311,13 +1311,9 @@ describe("46. financial impact data model", () => {
   });
 
   test("Test 3: equal values — current 2550, recommended 2550, delta 0", () => {
-    const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
-    assert.ok(rec, "Recommended strategy must exist");
-
-    const current = rec.financialImpact.totalCost;
-    const recommended = rec.financialImpact.totalCost;
-    const delta = recommended - current;
+    const current = 2550;
+    const recommended = 2550;
+    const delta = Math.round(recommended) - Math.round(current);
 
     assert.equal(delta, 0, "delta must be 0 when current === recommended");
     assert.equal(eurFmt(current), eurFmt(recommended), "formatted current must equal formatted recommended");

@@ -199,7 +199,7 @@ test.describe("production-scheduling: baseline state", () => {
     const slugs = [
       "delay-cost",
       "overtime-cost",
-      "setup---changeover-cost",
+      "setup-changeover-cost",
       "unused-capacity-cost",
       "total-operational-impact",
       "revenue-at-risk",

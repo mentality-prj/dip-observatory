@@ -463,7 +463,7 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
             </thead>
             <tbody>
               {rows.map((row, i) => {
-                const delta = row.rec - row.keep;
+                const delta = Math.round(row.rec) - Math.round(row.keep);
                 const isBetter = delta < 0;
                 const isTotal = i === rows.length - 2;
                 const isRevenue = i === rows.length - 1;
@@ -575,8 +575,8 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                             (x) => x.strategyId === result.recommendedStrategy,
                           );
                           const costDiff =
-                            s.financialImpact.totalCost -
-                            (recStrategy?.financialImpact.totalCost ?? 0);
+                            Math.round(s.financialImpact.totalCost) -
+                            Math.round(recStrategy?.financialImpact.totalCost ?? 0);
                           if (costDiff === 0) {
                             const altScore = s.score.composite;
                             const recScore = recStrategy?.score.composite ?? 0;
