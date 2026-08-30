@@ -965,15 +965,22 @@ export function runSchedulingEngine(
     .filter((e) => e.feasibility === "FEASIBLE")
     .map((e) => e.financial);
 
-  // Pre-compute disrupted line hours per strategy for normalisation
+  // Pre-compute disrupted line hours per strategy.
+  // Normalisation uses feasible-strategy hours only so that an infeasible
+  // strategy's load does not deflate scores for feasible peers.
   const disruptedLineId = scenario.disruption.affectedLineId;
-  const allDisruptedLineHours = rawEvaluations.map((raw) =>
-    raw.tasks
+  const getDisruptedHours = (tasks: ScheduledTask[]) =>
+    tasks
       .filter((t) => t.lineId === disruptedLineId && t.day >= 1)
-      .reduce((s, t) => s + (t.endHour - t.startHour) + t.setupHoursBefore, 0),
+      .reduce((s, t) => s + (t.endHour - t.startHour) + t.setupHoursBefore, 0);
+  const disruptedLineHoursPerEval = rawEvaluations.map((raw) =>
+    getDisruptedHours(raw.tasks),
   );
+  const feasibleDisruptedLineHours = rawEvaluations
+    .filter((e) => e.feasibility === "FEASIBLE")
+    .map((raw) => getDisruptedHours(raw.tasks));
 
-  const strategies: StrategyEvaluation[] = rawEvaluations.map((raw) => {
+  const strategies: StrategyEvaluation[] = rawEvaluations.map((raw, idx) => {
     const onTime = raw.tasks.filter((t) => t.status === "ON_TIME").length;
     const delayed = raw.tasks.filter((t) => t.status === "DELAYED").length;
     const notSched = raw.tasks.filter((t) => t.status === "NOT_SCHEDULED").length;
@@ -987,7 +994,9 @@ export function runSchedulingEngine(
             scenario.orders,
             feasibleFinancials.length > 0 ? feasibleFinancials : [raw.financial],
             disruptedLineId,
-            allDisruptedLineHours,
+            feasibleDisruptedLineHours.length > 0
+              ? feasibleDisruptedLineHours
+              : [disruptedLineHoursPerEval[idx]],
           )
         : {
             onTimeDelivery: 0,

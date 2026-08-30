@@ -463,7 +463,8 @@ export function buildUrgentOrderScenario(
 /**
  * Return the baseline production scenario that the page starts from.
  * Guaranteed not to contain URGENT-201 as an active order.
+ * Returns a shallow copy to prevent external mutation of the shared constant.
  */
 export function getInitialProductionScenario(): SchedulingScenario {
-  return DEFAULT_SCENARIO;
+  return { ...DEFAULT_SCENARIO, orders: [...DEFAULT_SCENARIO.orders] };
 }
