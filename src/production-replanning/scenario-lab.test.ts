@@ -413,6 +413,7 @@ test("Part A: RULE-DISRUPTION evidence uses actual capacity reduction factor", (
   const result = runProductionReplanningEngine(DEFAULT_REQUEST);
   const reductionFactor = DEFAULT_SCENARIO.disruption.capacityReductionFactor; // 0.30
   const remainingPct = ((1 - reductionFactor) * 100).toFixed(0); // "70"
+  const reductionPct = (reductionFactor * 100).toFixed(0); // "30"
   const redistAlt = result.alternatives.find((a) => a.actionId === "REDISTRIBUTE_PRODUCTION")!;
   const disruptionRule = redistAlt.ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
   assert.ok(disruptionRule, "RULE-DISRUPTION must exist");
@@ -425,6 +426,30 @@ test("Part A: RULE-DISRUPTION evidence uses actual capacity reduction factor", (
   assert.ok(
     !illegalPattern.test(disruptionRule!.evidence),
     "RULE-DISRUPTION evidence must not contain '% capacity loss' phrasing",
+  );
+  // featureValues must use line-specific reduction factor (30%), not system-wide ratio (~4%)
+  assert.equal(
+    disruptionRule!.featureValues["lineCapacityReductionPct"],
+    +reductionPct,
+    `featureValues.lineCapacityReductionPct must equal the line reduction factor (${reductionPct}), not the system-wide capacity ratio`,
+  );
+});
+
+test("Part A: KEEP_CURRENT_PLAN RULE-DISRUPTION evidence quantifies the actual reduction", () => {
+  const result = runProductionReplanningEngine(DEFAULT_REQUEST);
+  const reductionFactor = DEFAULT_SCENARIO.disruption.capacityReductionFactor; // 0.30
+  const remainingPct = ((1 - reductionFactor) * 100).toFixed(0); // "70"
+  const reductionPct = (reductionFactor * 100).toFixed(0); // "30"
+  const keepAlt = result.alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+  const disruptionRule = keepAlt.ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
+  assert.ok(disruptionRule, "RULE-DISRUPTION must exist for KEEP_CURRENT_PLAN");
+  assert.ok(
+    disruptionRule!.evidence.includes(`${remainingPct}%`),
+    `KEEP_CURRENT_PLAN RULE-DISRUPTION evidence must include the actual remaining capacity (${remainingPct}%), got: ${disruptionRule!.evidence}`,
+  );
+  assert.ok(
+    disruptionRule!.evidence.includes(`${reductionPct}%`),
+    `KEEP_CURRENT_PLAN RULE-DISRUPTION evidence must include the actual reduction (${reductionPct}%), got: ${disruptionRule!.evidence}`,
   );
 });
 
