@@ -1383,11 +1383,7 @@ describe("46. financial impact data model", () => {
     assert.ok(keep && rec);
 
     const delta = rec.financialImpact.totalCost - keep.financialImpact.totalCost;
-    assert.equal(
-      delta,
-      rec.financialImpact.totalCost - keep.financialImpact.totalCost,
-      "delta must always be recommended - current",
-    );
+    assert.equal(delta, -4000, "delta should be −4000 for the baseline scenario");
     // avoidedCostVsBaseline in engine output matches
     assert.equal(
       Math.round(result.avoidedCostVsBaseline),

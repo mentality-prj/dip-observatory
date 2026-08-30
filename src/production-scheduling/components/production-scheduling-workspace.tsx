@@ -602,7 +602,7 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                           }
                           return (
                             <span className="text-xs text-slate-500">
-                              {eur(costDiff)} higher cost
+                              {costDiff > 0 ? `${eur(costDiff)} higher cost` : `${eur(-costDiff)} lower cost`}
                             </span>
                           );
                         })()}
