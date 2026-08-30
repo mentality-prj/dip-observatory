@@ -451,3 +451,22 @@ export function buildUrgentOrderScenario(
     orders: [...base.orders, URGENT_ORDER],
   };
 }
+
+// ---------------------------------------------------------------------------
+// Initial scenario accessor
+//
+// Returns the genuine baseline scenario that must be active on page load —
+// before the user clicks "Simulate Urgent Order".
+// URGENT-201 must NOT be present.
+// ---------------------------------------------------------------------------
+
+/**
+ * Return the baseline production scenario that the page starts from.
+ * Guaranteed not to contain URGENT-201 as an active order.
+ * Returns a deep copy to prevent external mutation of the shared constant.
+ */
+export function getInitialProductionScenario(): SchedulingScenario {
+  const scenario = structuredClone(DEFAULT_SCENARIO);
+  scenario.orders = scenario.orders.filter((o) => o.id !== URGENT_ORDER.id);
+  return scenario;
+}

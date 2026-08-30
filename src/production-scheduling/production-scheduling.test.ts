@@ -22,6 +22,7 @@ import {
   ORDERS,
   URGENT_ORDER,
   buildUrgentOrderScenario,
+  getInitialProductionScenario,
 } from "@/production-scheduling/data/scenario";
 import {
   buildSchedulingScenario,
@@ -1113,5 +1114,133 @@ describe("43. total financial impact equals component sum for urgent", () => {
         );
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 44: getInitialProductionScenario — Part A baseline guarantee
+// ---------------------------------------------------------------------------
+
+describe("44. getInitialProductionScenario — baseline state", () => {
+  test("getInitialProductionScenario does NOT contain URGENT-201 as an active order", () => {
+    const scenario = getInitialProductionScenario();
+    assert.ok(
+      !scenario.orders.some((o) => o.id === "URGENT-201"),
+      "Initial scenario must not contain URGENT-201",
+    );
+  });
+
+  test("getInitialProductionScenario returns a scenario with orders", () => {
+    const scenario = getInitialProductionScenario();
+    assert.ok(scenario.orders.length > 0, "Initial scenario must have orders");
+  });
+
+  test("getInitialProductionScenario is immutable — adding urgent order does not mutate it", () => {
+    const scenario = getInitialProductionScenario();
+    const before = scenario.orders.length;
+    buildUrgentOrderScenario(scenario);
+    assert.equal(
+      getInitialProductionScenario().orders.length,
+      before,
+      "getInitialProductionScenario must not be mutated",
+    );
+  });
+
+  test("getInitialProductionScenario returns a deep copy", () => {
+    const scenario = getInitialProductionScenario();
+    const orderId = scenario.orders[0].id;
+    const mutatedSetupHours = scenario.setupMatrix.PERGOLA.AWNING + 1;
+
+    scenario.lines[0].name = "Mutated line";
+    scenario.orders[0].name = "Mutated order";
+    scenario.orders[0].compatibleLines.push("LINE-Z");
+    scenario.disruption.reason = "Mutated disruption";
+    scenario.setupMatrix.PERGOLA.AWNING = mutatedSetupHours;
+
+    const fresh = getInitialProductionScenario();
+    const freshOrder = fresh.orders.find((order) => order.id === orderId);
+    const defaultOrder = DEFAULT_SCENARIO.orders.find((order) => order.id === orderId);
+    assert.ok(freshOrder);
+    assert.ok(defaultOrder);
+    assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
+    assert.equal(freshOrder.name, defaultOrder.name);
+    assert.deepEqual(freshOrder.compatibleLines, defaultOrder.compatibleLines);
+    assert.equal(fresh.disruption.reason, DEFAULT_SCENARIO.disruption.reason);
+    assert.equal(
+      fresh.setupMatrix.PERGOLA.AWNING,
+      DEFAULT_SCENARIO.setupMatrix.PERGOLA.AWNING,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 45: Score consistency — Part C ranking guarantee
+// ---------------------------------------------------------------------------
+
+describe("45. score consistency — recommended always has highest composite", () => {
+  test("baseline: recommended strategy has a strictly higher score than all non-recommended feasible strategies or is tied", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "A recommended strategy must exist");
+    for (const alt of result.strategies.filter(
+      (s) => s.feasibility === "FEASIBLE" && s.strategyId !== result.recommendedStrategy,
+    )) {
+      assert.ok(
+        rec!.score.composite >= alt.score.composite - 1e-9,
+        `Recommended ${rec!.strategyId} (${rec!.score.composite.toFixed(4)}) must have score >= ${alt.strategyId} (${alt.score.composite.toFixed(4)})`,
+      );
+    }
+  });
+
+  test("urgent order: recommended strategy has highest or equal composite score", () => {
+    const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({ scenario: urgentScenario, costConfig: DEFAULT_COST_CONFIG });
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "A recommended strategy must exist");
+    for (const alt of result.strategies.filter(
+      (s) => s.feasibility === "FEASIBLE" && s.strategyId !== result.recommendedStrategy,
+    )) {
+      assert.ok(
+        rec!.score.composite >= alt.score.composite - 1e-9,
+        `Recommended ${rec!.strategyId} (${rec!.score.composite.toFixed(4)}) must have score >= ${alt.strategyId} (${alt.score.composite.toFixed(4)})`,
+      );
+    }
+  });
+
+  test("rejection reasons never display 'Lower composite score (X vs X)' with equal formatted values", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    for (const rejected of result.explanation.rejectedStrategies) {
+      if (rejected.feasibility === "FEASIBLE") {
+        const altFmt =
+          result.strategies.find((s) => s.strategyId === rejected.strategyId)
+            ?.score.composite.toFixed(4) ?? "";
+        const recFmt =
+          result.strategies.find((s) => s.strategyId === result.recommendedStrategy)
+            ?.score.composite.toFixed(4) ?? "";
+        if (altFmt === recFmt) {
+          assert.ok(
+            !rejected.reason.includes("Lower composite score"),
+            `When scores are equal (${altFmt}), rejection reason must not say "Lower composite score". Got: "${rejected.reason}"`,
+          );
+        }
+      }
+    }
+  });
+
+  test("baseline feasible strategies have meaningfully different composite scores for REDISTRIBUTE", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const redistribute = result.strategies.find(
+      (s) => s.strategyId === "REDISTRIBUTE_TO_OTHER_LINES",
+    );
+    const prioritize = result.strategies.find(
+      (s) => s.strategyId === "PRIORITIZE_URGENT_ORDERS",
+    );
+    assert.ok(redistribute?.feasibility === "FEASIBLE");
+    assert.ok(prioritize?.feasibility === "FEASIBLE");
+    // REDISTRIBUTE must score strictly higher due to disruption avoidance
+    assert.ok(
+      redistribute!.score.composite > prioritize!.score.composite + 1e-9,
+      `REDISTRIBUTE (${redistribute!.score.composite.toFixed(4)}) must score above PRIORITIZE (${prioritize!.score.composite.toFixed(4)})`,
+    );
   });
 });

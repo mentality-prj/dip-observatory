@@ -218,6 +218,12 @@ export interface StrategyScore {
   capacityUtilization: number;
   overtimeCostScore: number;
   revenueProtection: number;
+  /**
+   * Inverse fraction of production + setup hours scheduled on the disrupted
+   * line, normalised against the feasible strategy with the most disrupted-line
+   * hours. 1 = least exposure to the disrupted line (best); 0 = most exposure (worst).
+   */
+  disruptionAvoidanceScore: number;
   /** Composite weighted score [0, 1] — higher is better. */
   composite: number;
 }
