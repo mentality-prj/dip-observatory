@@ -818,7 +818,7 @@ function buildExplanation(
         reason = `Feasible but €${diff.toLocaleString("de-DE")} higher total cost.`;
       } else {
         const scoreDiff = recommended.score.composite - s.score.composite;
-        if (scoreDiff < 0.0005) {
+        if (Math.abs(scoreDiff) < 0.0005) {
           // Scores are effectively tied — use cost as the tie-breaker description
           const costDiff = Math.round(
             s.financialImpact.totalCost - recommended.financialImpact.totalCost,
