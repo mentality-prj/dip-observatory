@@ -1159,9 +1159,9 @@ describe("44. getInitialProductionScenario — baseline state", () => {
     const fresh = getInitialProductionScenario();
     const freshOrder = fresh.orders.find((order) => order.id === orderId);
     const defaultOrder = DEFAULT_SCENARIO.orders.find((order) => order.id === orderId);
-    assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
     assert.ok(freshOrder);
     assert.ok(defaultOrder);
+    assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
     assert.equal(freshOrder.name, defaultOrder.name);
     assert.deepEqual(freshOrder.compatibleLines, defaultOrder.compatibleLines);
     assert.equal(fresh.disruption.reason, DEFAULT_SCENARIO.disruption.reason);
