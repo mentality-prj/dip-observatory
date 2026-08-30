@@ -460,9 +460,10 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
                 const isBetter = row.rec < row.keep;
                 const isTotal = i === rows.length - 2;
                 const isRevenue = i === rows.length - 1;
+                const slug = row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
                 return (
                   <tr
-                    key={row.label}
+                    key={slug}
                     className={cn(
                       "border-b border-white/5",
                       isTotal && "font-semibold",
@@ -471,18 +472,18 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
                   >
                     <td className="py-2 pr-4 text-slate-400">{row.label}</td>
                     <td className="py-2 pr-4 text-right text-rose-300">
-                      <span data-testid={`financial-keep-${row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                      <span data-testid={`financial-keep-${slug}`}>
                         {eur(row.keep)}
                       </span>
                     </td>
                     <td className={cn("py-2 text-right", isBetter ? "text-emerald-300" : "text-slate-300")}>
-                      <span data-testid={`financial-rec-${row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                      <span data-testid={`financial-rec-${slug}`}>
                         {eur(row.rec)}
                       </span>
                       {isBetter && row.keep - row.rec > 0 && (
                         <span
                           className="block text-xs text-emerald-400"
-                          data-testid={`financial-delta-${row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                          data-testid={`financial-delta-${slug}`}
                         >
                           −{eur(row.keep - row.rec)}
                         </span>
@@ -1145,7 +1146,7 @@ function WhatShouldWeDoCard({
               />
               <StatBox
                 label="Score"
-                value={rec.score.composite.toFixed(3)}
+                value={rec.score.composite.toFixed(4)}
                 accent="cyan"
               />
             </div>
