@@ -1632,7 +1632,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   useEffect(() => clearTimers, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100" data-testid="production-scheduling">
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">

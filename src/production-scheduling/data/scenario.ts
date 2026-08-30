@@ -451,3 +451,19 @@ export function buildUrgentOrderScenario(
     orders: [...base.orders, URGENT_ORDER],
   };
 }
+
+// ---------------------------------------------------------------------------
+// Initial scenario accessor
+//
+// Returns the genuine baseline scenario that must be active on page load —
+// before the user clicks "Simulate Urgent Order".
+// URGENT-201 must NOT be present.
+// ---------------------------------------------------------------------------
+
+/**
+ * Return the baseline production scenario that the page starts from.
+ * Guaranteed not to contain URGENT-201 as an active order.
+ */
+export function getInitialProductionScenario(): SchedulingScenario {
+  return DEFAULT_SCENARIO;
+}

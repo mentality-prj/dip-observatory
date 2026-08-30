@@ -68,13 +68,14 @@ function mergeCostConfig(override: Partial<CostConfig> | undefined): CostConfig 
 // ---------------------------------------------------------------------------
 
 const SCORE_WEIGHTS = {
-  onTimeDelivery: 0.25,
+  onTimeDelivery: 0.24,
   criticalOrderProtection: 0.30,
   delayCostScore: 0.15,
-  setupEfficiency: 0.05,
-  capacityUtilization: 0.05,
+  setupEfficiency: 0.04,
+  capacityUtilization: 0.04,
   overtimeCostScore: 0.10,
-  revenueProtection: 0.10,
+  revenueProtection: 0.09,
+  disruptionAvoidanceScore: 0.04,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -660,6 +661,8 @@ function scoreStrategy(
   financial: FinancialImpact,
   allOrders: SchedulingOrder[],
   allFinancials: FinancialImpact[],
+  disruptedLineId: string,
+  allDisruptedLineHours: number[],
 ): StrategyScore {
   const total = tasks.length;
   const onTime = tasks.filter((t) => t.status === "ON_TIME").length;
@@ -695,6 +698,15 @@ function scoreStrategy(
   const revenueProtection =
     totalRevenue > 0 ? (totalRevenue - atRiskRevenue) / totalRevenue : 1;
 
+  // Disruption avoidance: fewer production + setup hours on the disrupted line
+  // is better (reduces exposure to capacity constraint). Normalised against the
+  // strategy with the MOST hours on the disrupted line.
+  const disruptedHours = tasks
+    .filter((t) => t.lineId === disruptedLineId && t.day >= 1)
+    .reduce((s, t) => s + (t.endHour - t.startHour) + t.setupHoursBefore, 0);
+  const maxDisruptedHours = Math.max(...allDisruptedLineHours, 1);
+  const disruptionAvoidanceScore = 1 - disruptedHours / maxDisruptedHours;
+
   const composite =
     SCORE_WEIGHTS.onTimeDelivery * onTimeDelivery +
     SCORE_WEIGHTS.criticalOrderProtection * criticalOrderProtection +
@@ -702,7 +714,8 @@ function scoreStrategy(
     SCORE_WEIGHTS.setupEfficiency * setupEfficiency +
     SCORE_WEIGHTS.capacityUtilization * capacityUtilization +
     SCORE_WEIGHTS.overtimeCostScore * overtimeCostScore +
-    SCORE_WEIGHTS.revenueProtection * revenueProtection;
+    SCORE_WEIGHTS.revenueProtection * revenueProtection +
+    SCORE_WEIGHTS.disruptionAvoidanceScore * disruptionAvoidanceScore;
 
   return {
     onTimeDelivery,
@@ -712,6 +725,7 @@ function scoreStrategy(
     capacityUtilization,
     overtimeCostScore,
     revenueProtection,
+    disruptionAvoidanceScore,
     composite,
   };
 }
@@ -831,7 +845,15 @@ function buildExplanation(
           );
           reason = `Feasible but €${diff.toLocaleString("de-DE")} higher total cost.`;
         } else {
-          reason = `Lower composite score (${s.score.composite.toFixed(4)} vs ${recommended.score.composite.toFixed(4)}).`;
+          // Safety guard: never display "Lower composite score (X vs X)" when the
+          // formatted values are identical — treat as a tie instead.
+          const recFmt = recommended.score.composite.toFixed(4);
+          const altFmt = s.score.composite.toFixed(4);
+          if (recFmt === altFmt) {
+            reason = `Tied composite score — tie broken by strategy definition order.`;
+          } else {
+            reason = `Lower composite score (${altFmt} vs ${recFmt}).`;
+          }
         }
       }
       return { strategyId: s.strategyId, reason, feasibility: s.feasibility };
@@ -943,6 +965,14 @@ export function runSchedulingEngine(
     .filter((e) => e.feasibility === "FEASIBLE")
     .map((e) => e.financial);
 
+  // Pre-compute disrupted line hours per strategy for normalisation
+  const disruptedLineId = scenario.disruption.affectedLineId;
+  const allDisruptedLineHours = rawEvaluations.map((raw) =>
+    raw.tasks
+      .filter((t) => t.lineId === disruptedLineId && t.day >= 1)
+      .reduce((s, t) => s + (t.endHour - t.startHour) + t.setupHoursBefore, 0),
+  );
+
   const strategies: StrategyEvaluation[] = rawEvaluations.map((raw) => {
     const onTime = raw.tasks.filter((t) => t.status === "ON_TIME").length;
     const delayed = raw.tasks.filter((t) => t.status === "DELAYED").length;
@@ -956,6 +986,8 @@ export function runSchedulingEngine(
             raw.financial,
             scenario.orders,
             feasibleFinancials.length > 0 ? feasibleFinancials : [raw.financial],
+            disruptedLineId,
+            allDisruptedLineHours,
           )
         : {
             onTimeDelivery: 0,
@@ -965,6 +997,7 @@ export function runSchedulingEngine(
             capacityUtilization: 0,
             overtimeCostScore: 0,
             revenueProtection: 0,
+            disruptionAvoidanceScore: 0,
             composite: 0,
           };
 
