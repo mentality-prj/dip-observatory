@@ -1145,6 +1145,29 @@ describe("44. getInitialProductionScenario — baseline state", () => {
       "getInitialProductionScenario must not be mutated",
     );
   });
+
+  test("getInitialProductionScenario returns a deep copy", () => {
+    const scenario = getInitialProductionScenario();
+
+    scenario.lines[0].name = "Mutated line";
+    scenario.orders[0].name = "Mutated order";
+    scenario.orders[0].compatibleLines.push("LINE-Z");
+    scenario.disruption.reason = "Mutated disruption";
+    scenario.setupMatrix.PERGOLA.AWNING = 99;
+
+    const fresh = getInitialProductionScenario();
+    assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
+    assert.equal(fresh.orders[0].name, DEFAULT_SCENARIO.orders[0].name);
+    assert.deepEqual(
+      fresh.orders[0].compatibleLines,
+      DEFAULT_SCENARIO.orders[0].compatibleLines,
+    );
+    assert.equal(fresh.disruption.reason, DEFAULT_SCENARIO.disruption.reason);
+    assert.equal(
+      fresh.setupMatrix.PERGOLA.AWNING,
+      DEFAULT_SCENARIO.setupMatrix.PERGOLA.AWNING,
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -463,8 +463,10 @@ export function buildUrgentOrderScenario(
 /**
  * Return the baseline production scenario that the page starts from.
  * Guaranteed not to contain URGENT-201 as an active order.
- * Returns a shallow copy to prevent external mutation of the shared constant.
+ * Returns a deep copy to prevent external mutation of the shared constant.
  */
 export function getInitialProductionScenario(): SchedulingScenario {
-  return { ...DEFAULT_SCENARIO, orders: [...DEFAULT_SCENARIO.orders] };
+  const scenario = structuredClone(DEFAULT_SCENARIO);
+  scenario.orders = scenario.orders.filter((o) => o.id !== URGENT_ORDER.id);
+  return scenario;
 }

@@ -219,9 +219,9 @@ export interface StrategyScore {
   overtimeCostScore: number;
   revenueProtection: number;
   /**
-   * Fraction of total production hours scheduled on lines OTHER than the
-   * disrupted line, normalised against the worst feasible strategy.
-   * 1 = all work moved away from disrupted line (best); 0 = most work on disrupted line (worst).
+   * Inverse fraction of production + setup hours scheduled on the disrupted
+   * line, normalised against the feasible strategy with the most disrupted-line
+   * hours. 1 = least exposure to the disrupted line (best); 0 = most exposure (worst).
    */
   disruptionAvoidanceScore: number;
   /** Composite weighted score [0, 1] — higher is better. */
