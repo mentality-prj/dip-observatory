@@ -29,12 +29,16 @@ import {
   computeProductionTraceDiff,
   computeProductionDecisionDelta,
 } from "@/production-replanning/lib/scenario-lab-helpers";
+import {
+  buildScenario,
+  BASELINE_WHAT_IF,
+  type WhatIfState,
+} from "@/production-replanning/lib/what-if";
 import type {
   ActionId,
   AlternativeEvaluation,
   FeasibilityStatus,
   LineProductionAllocation,
-  ProductionScenario,
 } from "@/production-replanning/types";
 
 // ---------------------------------------------------------------------------
@@ -47,48 +51,6 @@ function eur(v: number) {
 
 function pct(v: number) {
   return `${(v * 100).toFixed(0)}%`;
-}
-
-// ---------------------------------------------------------------------------
-// Scenario state derived from controls
-// ---------------------------------------------------------------------------
-
-interface WhatIfState {
-  capacityReductionPct: number; // 0–60
-  disruptionDurationDays: number; // 1–10
-  materialATonnes: number;
-  criticalDeadlineDays: number; // 1–14
-  overtimeAvailable: boolean;
-}
-
-const BASELINE_WHAT_IF: WhatIfState = {
-  capacityReductionPct: 30,
-  disruptionDurationDays: 3,
-  materialATonnes: 420,
-  criticalDeadlineDays: 2,
-  overtimeAvailable: true,
-};
-
-function buildScenario(
-  base: ProductionScenario,
-  what: WhatIfState,
-): ProductionScenario {
-  return {
-    ...base,
-    scenarioId: `${base.scenarioId}-WHATIF`,
-    materials: base.materials.map((m) =>
-      m.id === "MAT-A" ? { ...m, availableTonnes: what.materialATonnes } : m,
-    ),
-    orders: base.orders.map((o) =>
-      o.priority === "CRITICAL" ? { ...o, deadlineDays: what.criticalDeadlineDays } : o,
-    ),
-    disruption: {
-      ...base.disruption,
-      capacityReductionFactor: what.capacityReductionPct / 100,
-      durationDays: what.disruptionDurationDays,
-    },
-    overtimeAvailable: what.overtimeAvailable,
-  };
 }
 
 // ---------------------------------------------------------------------------
