@@ -817,7 +817,20 @@ function buildExplanation(
         );
         reason = `Feasible but €${diff.toLocaleString("de-DE")} higher total cost.`;
       } else {
-        reason = `Lower composite score (${s.score.composite.toFixed(3)} vs ${recommended.score.composite.toFixed(3)}).`;
+        const scoreDiff = recommended.score.composite - s.score.composite;
+        if (scoreDiff < 0.0005) {
+          // Scores are effectively tied — use cost as the tie-breaker description
+          const costDiff = Math.round(
+            s.financialImpact.totalCost - recommended.financialImpact.totalCost,
+          );
+          if (Math.abs(costDiff) > 0) {
+            reason = `Tied composite score — €${Math.abs(costDiff).toLocaleString("de-DE")} ${costDiff > 0 ? "higher" : "lower"} total cost (tie-break by cost).`;
+          } else {
+            reason = `Tied on all metrics — tie broken by strategy definition order.`;
+          }
+        } else {
+          reason = `Lower composite score (${s.score.composite.toFixed(4)} vs ${recommended.score.composite.toFixed(4)}).`;
+        }
       }
       return { strategyId: s.strategyId, reason, feasibility: s.feasibility };
     });
