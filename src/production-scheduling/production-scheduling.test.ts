@@ -1148,6 +1148,7 @@ describe("44. getInitialProductionScenario — baseline state", () => {
 
   test("getInitialProductionScenario returns a deep copy", () => {
     const scenario = getInitialProductionScenario();
+    const orderId = scenario.orders[0].id;
 
     scenario.lines[0].name = "Mutated line";
     scenario.orders[0].name = "Mutated order";
@@ -1156,12 +1157,13 @@ describe("44. getInitialProductionScenario — baseline state", () => {
     scenario.setupMatrix.PERGOLA.AWNING = 99;
 
     const fresh = getInitialProductionScenario();
+    const freshOrder = fresh.orders.find((order) => order.id === orderId);
+    const defaultOrder = DEFAULT_SCENARIO.orders.find((order) => order.id === orderId);
     assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
-    assert.equal(fresh.orders[0].name, DEFAULT_SCENARIO.orders[0].name);
-    assert.deepEqual(
-      fresh.orders[0].compatibleLines,
-      DEFAULT_SCENARIO.orders[0].compatibleLines,
-    );
+    assert.ok(freshOrder);
+    assert.ok(defaultOrder);
+    assert.equal(freshOrder.name, defaultOrder.name);
+    assert.deepEqual(freshOrder.compatibleLines, defaultOrder.compatibleLines);
     assert.equal(fresh.disruption.reason, DEFAULT_SCENARIO.disruption.reason);
     assert.equal(
       fresh.setupMatrix.PERGOLA.AWNING,
