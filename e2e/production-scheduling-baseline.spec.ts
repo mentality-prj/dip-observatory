@@ -185,4 +185,115 @@ test.describe("production-scheduling: baseline state", () => {
     await expect(page.getByTestId("simulate-urgent-order")).toBeVisible();
     await expect(page.getByTestId("find-better-plan")).not.toBeVisible();
   });
+
+  // -------------------------------------------------------------------------
+  // Financial Impact: three independent columns (current / recommended / delta)
+  // -------------------------------------------------------------------------
+
+  test("financial impact has separate current, recommended, and delta elements for each row", async ({
+    page,
+  }) => {
+    const panel = page.getByTestId("financial-impact");
+    await expect(panel).toBeVisible();
+
+    const slugs = [
+      "delay-cost",
+      "overtime-cost",
+      "setup---changeover-cost",
+      "unused-capacity-cost",
+      "total-operational-impact",
+      "revenue-at-risk",
+    ];
+
+    for (const slug of slugs) {
+      const keep = panel.getByTestId(`financial-keep-${slug}`);
+      const rec = panel.getByTestId(`financial-rec-${slug}`);
+      const delta = panel.getByTestId(`financial-delta-${slug}`);
+
+      await expect(keep).toBeVisible();
+      await expect(rec).toBeVisible();
+      await expect(delta).toBeVisible();
+
+      const keepText = await keep.innerText();
+      const recText = await rec.innerText();
+      const deltaText = await delta.innerText();
+
+      // Each must start with € and must NOT contain a concatenated pattern
+      expect(keepText.trim()).toMatch(/^€/);
+      expect(recText.trim()).toMatch(/^€/);
+      // delta may be €0 or −€X or +€X
+      expect(deltaText.trim()).toMatch(/^[€+−]/);
+
+      // Current and recommended must not contain the concatenation patterns
+      expect(keepText).not.toMatch(/€\d[\d.,]*[−-]€/);
+      expect(recText).not.toMatch(/€\d[\d.,]*[−-]€/);
+    }
+  });
+
+  test("financial values use en-US comma formatting (no European period separator)", async ({
+    page,
+  }) => {
+    const panel = page.getByTestId("financial-impact");
+    await expect(panel).toBeVisible();
+
+    // Delay cost current should be €4,000 not €4.000
+    const keepDelay = panel.getByTestId("financial-keep-delay-cost");
+    await expect(keepDelay).toBeVisible();
+    const keepDelayText = await keepDelay.innerText();
+    expect(keepDelayText).not.toContain("4.000");
+    expect(keepDelayText).toContain("4,000");
+  });
+
+  test("financial delta for delay cost is −€4,000 as a separate element", async ({
+    page,
+  }) => {
+    const panel = page.getByTestId("financial-impact");
+    await expect(panel).toBeVisible();
+
+    const delta = panel.getByTestId("financial-delta-delay-cost");
+    await expect(delta).toBeVisible();
+    const deltaText = await delta.innerText();
+    // Must show −€4,000 (or equivalent) as a standalone value, not concatenated
+    expect(deltaText.trim()).toContain("4,000");
+    expect(deltaText.trim()).not.toMatch(/^€\d/); // Must not be a positive bare currency
+  });
+
+  test("financial delta for total impact is −€4,000 as a separate element", async ({
+    page,
+  }) => {
+    const panel = page.getByTestId("financial-impact");
+    await expect(panel).toBeVisible();
+
+    const keepTotal = panel.getByTestId("financial-keep-total-operational-impact");
+    const recTotal = panel.getByTestId("financial-rec-total-operational-impact");
+    const deltaTotal = panel.getByTestId("financial-delta-total-operational-impact");
+
+    await expect(keepTotal).toBeVisible();
+    await expect(recTotal).toBeVisible();
+    await expect(deltaTotal).toBeVisible();
+
+    expect(await keepTotal.innerText()).toContain("6,550");
+    expect(await recTotal.innerText()).toContain("2,550");
+    const deltaTotalText = await deltaTotal.innerText();
+    expect(deltaTotalText).toContain("4,000");
+    // Must not be concatenated (e.g. "€2,550−€4,000")
+    expect(deltaTotalText).not.toMatch(/€\d[\d,]*[−-]€/);
+  });
+
+  // -------------------------------------------------------------------------
+  // Alternative Schedules: equal-cost alternatives must not say "€0 higher cost"
+  // -------------------------------------------------------------------------
+
+  test("alternative schedules do not display '€0 higher cost' when costs are equal", async ({
+    page,
+  }) => {
+    const table = page.getByTestId("alternative-schedules");
+    await expect(table).toBeVisible();
+
+    const tableText = await table.innerText();
+    // Must not contain concatenated pattern or misleading "€0 higher cost"
+    expect(tableText).not.toContain("€0 higher cost");
+    expect(tableText).not.toMatch(/€0−/);
+    expect(tableText).not.toMatch(/€2[,.]550−/);
+  });
 });

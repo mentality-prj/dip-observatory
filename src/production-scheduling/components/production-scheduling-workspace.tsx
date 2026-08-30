@@ -55,7 +55,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 function eur(v: number) {
-  return `€${Math.round(v).toLocaleString("de-DE")}`;
+  return `€${Math.round(v).toLocaleString("en-US")}`;
 }
 
 function pct(v: number) {
@@ -451,19 +451,24 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
               <tr className="border-b border-white/10">
                 <th className="py-2 pr-4 text-left text-xs text-slate-400" />
                 <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-rose-400">
-                  Current Schedule
+                  Current
                 </th>
-                <th className="py-2 text-right text-xs font-semibold uppercase tracking-widest text-emerald-400">
+                <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-emerald-400">
                   {rec.strategyLabel}
+                </th>
+                <th className="py-2 text-right text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Delta
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => {
-                const isBetter = row.rec < row.keep;
+                const delta = row.rec - row.keep;
+                const isBetter = delta < 0;
                 const isTotal = i === rows.length - 2;
                 const isRevenue = i === rows.length - 1;
                 const slug = row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                const deltaText = delta === 0 ? eur(0) : `${delta < 0 ? "−" : "+"}${eur(Math.abs(delta))}`;
                 return (
                   <tr
                     key={slug}
@@ -479,18 +484,20 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
                         {eur(row.keep)}
                       </span>
                     </td>
-                    <td className={cn("py-2 text-right", isBetter ? "text-emerald-300" : "text-slate-300")}>
+                    <td className={cn("py-2 pr-4 text-right", isBetter ? "text-emerald-300" : "text-slate-300")}>
                       <span data-testid={`financial-rec-${slug}`}>
                         {eur(row.rec)}
                       </span>
-                      {isBetter && row.keep - row.rec > 0 && (
-                        <span
-                          className="block text-xs text-emerald-400"
-                          data-testid={`financial-delta-${slug}`}
-                        >
-                          −{eur(row.keep - row.rec)}
-                        </span>
+                    </td>
+                    <td
+                      className={cn(
+                        "py-2 text-right text-xs",
+                        isBetter ? "text-emerald-400" : delta > 0 ? "text-rose-400" : "text-slate-500",
                       )}
+                    >
+                      <span data-testid={`financial-delta-${slug}`}>
+                        {deltaText}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -563,16 +570,42 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                         <span className="text-xs text-rose-400">
                           {s.blockingConstraints[0] ?? "Constraint violated"}
                         </span>
-                      ) : (
-                        <span className="text-xs text-slate-500">
-                          {eur(
+                      ) : (() => {
+                          const recStrategy = result.strategies.find(
+                            (x) => x.strategyId === result.recommendedStrategy,
+                          );
+                          const costDiff =
                             s.financialImpact.totalCost -
-                              (result.strategies.find((x) => x.strategyId === result.recommendedStrategy)
-                                ?.financialImpact.totalCost ?? 0),
-                          )}{" "}
-                          higher cost
-                        </span>
-                      )}
+                            (recStrategy?.financialImpact.totalCost ?? 0);
+                          if (costDiff === 0) {
+                            const altScore = s.score.composite;
+                            const recScore = recStrategy?.score.composite ?? 0;
+                            if (altScore < recScore) {
+                              return (
+                                <span
+                                  className="text-xs text-slate-500"
+                                  data-testid="alternative-same-cost"
+                                >
+                                  Same total impact · score {altScore.toFixed(4)} vs{" "}
+                                  {recScore.toFixed(4)}
+                                </span>
+                              );
+                            }
+                            return (
+                              <span
+                                className="text-xs text-slate-500"
+                                data-testid="alternative-same-cost"
+                              >
+                                Same total impact
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="text-xs text-slate-500">
+                              {eur(costDiff)} higher cost
+                            </span>
+                          );
+                        })()}
                     </td>
                   </tr>
                 );
