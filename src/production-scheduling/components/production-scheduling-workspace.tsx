@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -8,12 +8,16 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowLeft,
+  ArrowRight,
   FlaskConical,
   RotateCcw,
+  Zap,
+  Play,
 } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -23,16 +27,18 @@ import {
   DEFAULT_COST_CONFIG,
   CONSTRAINT_RULES,
 } from "@/production-scheduling/lib/engine";
-import { DEFAULT_SCENARIO } from "@/production-scheduling/data/scenario";
+import { DEFAULT_SCENARIO, URGENT_ORDER } from "@/production-scheduling/data/scenario";
 import {
   computeSchedulingSensitivity,
   computeSchedulingTraceDiff,
   computeSchedulingDecisionDelta,
+  computeKeepCurrentTraceDiff,
 } from "@/production-scheduling/lib/scenario-lab-helpers";
 import {
   buildSchedulingScenario,
   buildCostConfigOverride,
   BASELINE_WHAT_IF,
+  SCENARIO_PRESETS,
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
 import type {
@@ -734,6 +740,468 @@ function DecisionTracePanel({ result }: { result: SchedulingDecisionResponse }) 
 }
 
 // ---------------------------------------------------------------------------
+// WHAT IF? — Simulation trigger card
+// ---------------------------------------------------------------------------
+
+type SimulationStep = "idle" | "event" | "impact" | "decision" | "complete";
+
+function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
+  return (
+    <Card className="border-violet-300/20 bg-violet-900/10">
+      <CardContent className="pt-6">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
+              What if?
+            </p>
+            <h2 className="text-lg font-bold text-white">
+              What If We Accept an Urgent Customer Order?
+            </h2>
+            <p className="text-sm text-slate-400">
+              See how the production plan and recommended action change.
+            </p>
+          </div>
+          <button
+            onClick={onSimulate}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/20 px-5 py-2.5 text-sm font-semibold text-violet-200 outline-none transition hover:border-violet-400/60 hover:bg-violet-500/30 focus-visible:ring-2 focus-visible:ring-violet-400/60"
+          >
+            <Play className="h-4 w-4" />
+            Simulate Urgent Order
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl border border-white/8 bg-white/4 p-4 sm:grid-cols-4">
+          <div>
+            <p className="text-[10px] text-slate-500">Order</p>
+            <p className="mt-0.5 text-sm font-semibold text-violet-300">
+              {URGENT_ORDER.id}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Priority</p>
+            <p className="mt-0.5 text-sm font-semibold text-rose-300">
+              {URGENT_ORDER.priority}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Deadline</p>
+            <p className="mt-0.5 text-sm font-semibold text-rose-300">
+              Day {URGENT_ORDER.deadlineDays}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Duration</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">
+              {URGENT_ORDER.durationHours}h
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Product</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">
+              {URGENT_ORDER.name.split("(")[0].trim()}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Compatible lines</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">
+              {URGENT_ORDER.compatibleLines.join(", ").replace(/LINE-/g, "")}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Revenue</p>
+            <p className="mt-0.5 text-sm font-semibold text-emerald-300">
+              {eur(URGENT_ORDER.revenueEur)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Delay penalty</p>
+            <p className="mt-0.5 text-sm font-semibold text-amber-300">
+              {eur(URGENT_ORDER.delayPenaltyPerDay)}/day
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Simulation progress (animation steps 1–3)
+// ---------------------------------------------------------------------------
+
+const SIMULATION_STEPS: Record<
+  Exclude<SimulationStep, "idle" | "complete">,
+  { title: string; desc: string; colour: string }
+> = {
+  event: {
+    title: "New Urgent Customer Order",
+    desc: "+1 order — CRITICAL priority — Deadline: Day 2",
+    colour: "border-violet-300/30 bg-violet-900/20",
+  },
+  impact: {
+    title: "Production capacity recalculating\u2026",
+    desc: "Analysing impact on the current schedule and production lines.",
+    colour: "border-amber-300/30 bg-amber-900/10",
+  },
+  decision: {
+    title: "Re-evaluating possible actions\u2026",
+    desc: "Evaluating all scheduling strategies with the new order included.",
+    colour: "border-cyan-300/30 bg-cyan-900/10",
+  },
+};
+
+const STRATEGY_LABELS_SHORT: Record<StrategyId, string> = {
+  KEEP_CURRENT_SCHEDULE: "Keep current schedule",
+  PRIORITIZE_URGENT_ORDERS: "Prioritize urgent orders",
+  REDISTRIBUTE_TO_OTHER_LINES: "Redistribute to other lines",
+  DELAY_LOW_PRIORITY_ORDERS: "Delay low-priority orders",
+  USE_OVERTIME: "Use overtime",
+};
+
+function SimulationProgressCard({
+  step,
+  onSkip,
+}: {
+  step: Exclude<SimulationStep, "idle" | "complete">;
+  onSkip: () => void;
+}) {
+  const info = SIMULATION_STEPS[step];
+  return (
+    <Card className={cn("border", info.colour)}>
+      <CardContent className="pt-6">
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <Zap className="h-8 w-8 text-violet-400 animate-pulse" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-white">{info.title}</p>
+            <p className="mt-1 text-sm text-slate-400">{info.desc}</p>
+          </div>
+          {step === "decision" && (
+            <div className="mx-auto max-w-xs space-y-1 text-left text-xs text-slate-500">
+              {(Object.values(STRATEGY_LABELS_SHORT) as string[]).map((s) => (
+                <p key={s} className="flex items-center gap-2">
+                  <span className="h-1 w-1 rounded-full bg-cyan-400" />
+                  {s}
+                </p>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={onSkip}
+            className="text-xs text-slate-600 transition hover:text-slate-400"
+          >
+            Skip animation →
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Before / After panel
+// ---------------------------------------------------------------------------
+
+function BeforeAfterPanel({
+  baselineResult,
+  urgentResult,
+}: {
+  baselineResult: SchedulingDecisionResponse;
+  urgentResult: SchedulingDecisionResponse;
+}) {
+  const baseRec = baselineResult.strategies.find(
+    (s) => s.strategyId === baselineResult.recommendedStrategy,
+  );
+  const urgRec = urgentResult.strategies.find(
+    (s) => s.strategyId === urgentResult.recommendedStrategy,
+  );
+  const keepCurrent = urgentResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+
+  const avoidedByOptimising = Math.max(
+    0,
+    (keepCurrent?.financialImpact.totalCost ?? 0) -
+      (urgRec?.financialImpact.totalCost ?? 0),
+  );
+
+  return (
+    <Card className="border-violet-300/20">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Zap className="h-4 w-4 text-violet-400" />
+          <CardTitle className="text-base text-violet-200">
+            Impact of Accepting URGENT-201
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Before */}
+          <div className="rounded-xl border border-white/10 bg-white/4 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+              Before
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              {baseRec?.totalOrders ?? 0} orders
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="On time"
+                value={`${baseRec?.onTimeCount ?? 0} / ${baseRec?.totalOrders ?? 0}`}
+                accent="emerald"
+              />
+              <StatBox
+                label="Estimated impact"
+                value={eur(baseRec?.financialImpact.totalCost ?? 0)}
+                accent="amber"
+              />
+            </div>
+          </div>
+
+          {/* After — keep current */}
+          <div className="rounded-xl border border-rose-300/20 bg-rose-900/10 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-rose-400">
+              Accept + Keep current
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              {keepCurrent?.totalOrders ?? 0} orders · not optimised
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="On time"
+                value={
+                  keepCurrent
+                    ? `${keepCurrent.onTimeCount} / ${keepCurrent.totalOrders}`
+                    : "—"
+                }
+                accent="rose"
+              />
+              <StatBox
+                label="Estimated impact"
+                value={eur(keepCurrent?.financialImpact.totalCost ?? 0)}
+                accent="rose"
+              />
+            </div>
+          </div>
+
+          {/* After — recommended */}
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
+              Accept + Recommended
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              {urgRec?.totalOrders ?? 0} orders · optimised
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="On time"
+                value={`${urgRec?.onTimeCount ?? 0} / ${urgRec?.totalOrders ?? 0}`}
+                accent="emerald"
+              />
+              <StatBox
+                label="Estimated impact"
+                value={eur(urgRec?.financialImpact.totalCost ?? 0)}
+                accent="emerald"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Avoided cost by optimising */}
+        {avoidedByOptimising > 0 && (
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
+              Potential avoided impact by optimising
+            </p>
+            <p className="mt-1 text-2xl font-bold text-emerald-300">
+              {eur(avoidedByOptimising)}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Compared to accepting the order without rescheduling.
+            </p>
+          </div>
+        )}
+
+        {/* Impact summary */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs text-slate-400">
+          <p>+1 customer order</p>
+          <p>+{URGENT_ORDER.durationHours}h production</p>
+          <p>Revenue: {eur(URGENT_ORDER.revenueEur)}</p>
+          <p>Risk if late: {eur(URGENT_ORDER.delayPenaltyPerDay)}/day</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// What Should We Do? card
+// ---------------------------------------------------------------------------
+
+function WhatShouldWeDoCard({
+  baselineResult,
+  urgentResult,
+}: {
+  baselineResult: SchedulingDecisionResponse;
+  urgentResult: SchedulingDecisionResponse;
+}) {
+  const delta = useMemo(
+    () =>
+      computeSchedulingDecisionDelta(
+        baselineResult,
+        urgentResult,
+        { ...BASELINE_WHAT_IF, includeUrgentOrder: true },
+        BASELINE_WHAT_IF,
+      ),
+    [baselineResult, urgentResult],
+  );
+  const keepCurrentDiff = useMemo(
+    () => computeKeepCurrentTraceDiff(baselineResult, urgentResult),
+    [baselineResult, urgentResult],
+  );
+
+  const rec = urgentResult.strategies.find(
+    (s) => s.strategyId === urgentResult.recommendedStrategy,
+  );
+
+  return (
+    <Card className="border-violet-300/20">
+      <CardHeader>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
+          What should we do?
+        </p>
+        <CardTitle className="text-violet-200">
+          Recommended Action
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {/* Decision changed / unchanged */}
+        {delta.changed ? (
+          <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3">
+            <p className="text-sm font-semibold text-cyan-300">
+              Decision changed
+            </p>
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-300">
+              <span className="text-rose-300 line-through">
+                {delta.baselineDecision.replace(/_/g, " ")}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-emerald-300">
+                {delta.scenarioDecision.replace(/_/g, " ")}
+              </span>
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
+            <p className="text-sm font-semibold text-emerald-300">
+              Decision unchanged
+            </p>
+            <p className="mt-1 text-sm text-slate-400">
+              The additional order can be absorbed without changing the optimal
+              strategy:{" "}
+              <span className="font-medium text-emerald-300">
+                {delta.scenarioDecision.replace(/_/g, " ")}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {/* Recommended strategy details */}
+        {rec && (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Recommended strategy
+            </p>
+            <p className="mt-1 text-lg font-bold text-white">
+              {rec.strategyLabel.toUpperCase()}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StatBox
+                label="Orders on time"
+                value={`${rec.onTimeCount} / ${rec.totalOrders}`}
+                accent="emerald"
+              />
+              <StatBox
+                label="Delayed"
+                value={`${rec.delayedCount}`}
+                accent={rec.delayedCount > 0 ? "amber" : "emerald"}
+              />
+              <StatBox
+                label="Total impact"
+                value={eur(rec.financialImpact.totalCost)}
+                accent="amber"
+              />
+              <StatBox
+                label="Score"
+                value={rec.score.composite.toFixed(3)}
+                accent="cyan"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Explanation reasons */}
+        {urgentResult.explanation.reasons.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Why?
+            </p>
+            <div className="space-y-2">
+              {urgentResult.explanation.reasons.slice(0, 4).map((r, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  {r.direction === "positive" ? (
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  ) : (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  )}
+                  <div>
+                    <p className="font-medium text-slate-200">{r.label}</p>
+                    <p className="text-xs text-slate-500">{r.evidence}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Keep-current comparison — show how it worsens */}
+        {keepCurrentDiff.some((d) => d.changed) && (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Why Keep Current fails with URGENT-201
+            </p>
+            <div className="space-y-1">
+              {keepCurrentDiff
+                .filter((d) => d.changed || d.scenarioResult === "FAIL")
+                .map((d) => (
+                  <div
+                    key={d.ruleId}
+                    className="rounded-lg border border-rose-300/20 bg-rose-900/10 px-3 py-2"
+                  >
+                    <p className="text-xs font-medium text-rose-300">
+                      {d.ruleName}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {d.changed
+                        ? `${d.baselineResult} → ${d.scenarioResult}`
+                        : d.scenarioResult}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      {d.scenarioEvidence}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Scenario Lab — what-if controls
 // ---------------------------------------------------------------------------
 
@@ -1055,6 +1523,9 @@ function ScenarioLabResult({
 
 export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   const [whatIf, setWhatIf] = useState<WhatIfState>(BASELINE_WHAT_IF);
+  const [simulationStep, setSimulationStep] = useState<SimulationStep>("idle");
+  const [showFullPlan, setShowFullPlan] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const baselineResult = useMemo(
     () => runSchedulingEngine({ scenario: DEFAULT_SCENARIO, costConfig: DEFAULT_COST_CONFIG }),
@@ -1076,6 +1547,46 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   );
 
   const displayResult = isBaseline ? baselineResult : scenResult;
+
+  // Simulation visibility logic
+  const urgentActive = whatIf.includeUrgentOrder;
+  const showProgress =
+    simulationStep !== "idle" && simulationStep !== "complete";
+  const showUrgentResult = urgentActive && !showProgress;
+  const showMainPanels = !showProgress && (!urgentActive || showFullPlan);
+  const showTrigger = !urgentActive && !showProgress;
+
+  function clearTimers() {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }
+
+  function handleSimulate() {
+    clearTimers();
+    setWhatIf((prev) => ({ ...prev, includeUrgentOrder: true }));
+    setShowFullPlan(false);
+    setSimulationStep("event");
+    timers.current = [
+      setTimeout(() => setSimulationStep("impact"), 1200),
+      setTimeout(() => setSimulationStep("decision"), 2400),
+      setTimeout(() => setSimulationStep("complete"), 3600),
+    ];
+  }
+
+  function handleSkipAnimation() {
+    clearTimers();
+    setSimulationStep("complete");
+  }
+
+  function handleReset() {
+    clearTimers();
+    setWhatIf(BASELINE_WHAT_IF);
+    setSimulationStep("idle");
+    setShowFullPlan(false);
+  }
+
+  // Cleanup pending timers when component unmounts
+  useEffect(() => clearTimers, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -1105,20 +1616,74 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
 
         <Disclaimer />
 
-        {/* Disruption */}
+        {/* Disruption — always visible */}
         <DisruptionPanel scenario={displayResult.scenarioSnapshot} />
 
-        {/* Recommended schedule */}
-        <RecommendedStrategyCard result={displayResult} />
+        {/* WHAT IF? trigger — shown when no urgent order active */}
+        {showTrigger && (
+          <UrgentOrderTriggerCard onSimulate={handleSimulate} />
+        )}
 
-        {/* Why this schedule */}
-        <WhyThisSchedule result={displayResult} />
+        {/* Simulation progress animation */}
+        {showProgress && (
+          <SimulationProgressCard
+            step={simulationStep as Exclude<SimulationStep, "idle" | "complete">}
+            onSkip={handleSkipAnimation}
+          />
+        )}
 
-        {/* Financial impact */}
-        <FinancialImpactPanel result={displayResult} />
+        {/* Simulation result panels */}
+        {showUrgentResult && (
+          <>
+            <BeforeAfterPanel
+              baselineResult={baselineResult}
+              urgentResult={scenResult}
+            />
+            <WhatShouldWeDoCard
+              baselineResult={baselineResult}
+              urgentResult={scenResult}
+            />
 
-        {/* Alternative schedules */}
-        <AlternativesTable result={displayResult} />
+            {!showFullPlan && (
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => setShowFullPlan(true)}
+                  className="gap-2 border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
+                  variant="secondary"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  Find Better Plan
+                </Button>
+                <Button
+                  onClick={handleReset}
+                  variant="secondary"
+                  className="gap-2"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset to Baseline
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Main schedule panels */}
+        {showMainPanels && (
+          <>
+            <RecommendedStrategyCard result={displayResult} />
+            <WhyThisSchedule result={displayResult} />
+            <FinancialImpactPanel result={displayResult} />
+            <AlternativesTable result={displayResult} />
+          </>
+        )}
+
+        {/* Reset button after full plan is shown */}
+        {showUrgentResult && showFullPlan && (
+          <Button onClick={handleReset} variant="secondary" className="gap-2">
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset to Baseline
+          </Button>
+        )}
 
         {/* Scenario Lab */}
         <Card className="border-cyan-300/20">
@@ -1130,7 +1695,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               </div>
               {!isBaseline && (
                 <button
-                  onClick={() => setWhatIf(BASELINE_WHAT_IF)}
+                  onClick={handleReset}
                   className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
@@ -1141,6 +1706,41 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
             <p className="text-xs text-slate-400">
               Change production conditions — the engine recalculates the schedule.
             </p>
+
+            {/* Scenario presets */}
+            <div className="mt-2">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Preset scenarios
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SCENARIO_PRESETS.map((preset) => {
+                  const isActive =
+                    JSON.stringify(whatIf) === JSON.stringify(preset.state);
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => {
+                        clearTimers();
+                        setSimulationStep("idle");
+                        setShowFullPlan(false);
+                        setWhatIf(preset.state);
+                      }}
+                      className={cn(
+                        "rounded-lg border px-3 py-1 text-xs font-medium transition",
+                        isActive
+                          ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300"
+                          : "border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300",
+                      )}
+                    >
+                      {preset.id === "urgent-order" && (
+                        <Zap className="mr-1 inline h-3 w-3 text-violet-400" />
+                      )}
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-8 lg:grid-cols-2">

@@ -5,6 +5,7 @@
  * can be unit-tested without importing React or the full workspace component.
  */
 import type { SchedulingScenario } from "@/production-scheduling/types";
+import { URGENT_ORDER } from "@/production-scheduling/data/scenario";
 
 export interface WhatIfState {
   /** Line B capacity reduction (%). Range: 0–60. */
@@ -21,6 +22,8 @@ export interface WhatIfState {
   overtimeCostPerHour: number;
   /** Priority adjustment for ORDER-116 (normally NORMAL). */
   order116Priority: "HIGH" | "NORMAL" | "LOW";
+  /** When true, URGENT-201 is appended to the production queue. */
+  includeUrgentOrder: boolean;
 }
 
 export const BASELINE_WHAT_IF: WhatIfState = {
@@ -31,6 +34,7 @@ export const BASELINE_WHAT_IF: WhatIfState = {
   overtimeAvailable: false,
   overtimeCostPerHour: 180,
   order116Priority: "NORMAL",
+  includeUrgentOrder: false,
 };
 
 /**
@@ -51,12 +55,19 @@ export function buildSchedulingScenario(
     `ot${what.overtimeAvailable ? "1" : "0"}`,
     `otc${what.overtimeCostPerHour}`,
     `p116${what.order116Priority}`,
+    `uo${what.includeUrgentOrder ? "1" : "0"}`,
   ].join("-");
+
+  // Build order list: add/remove URGENT-201 based on flag
+  const filteredBase = base.orders.filter((o) => o.id !== URGENT_ORDER.id);
+  const baseOrders = what.includeUrgentOrder
+    ? [...filteredBase, URGENT_ORDER]
+    : filteredBase;
 
   return {
     ...base,
     scenarioId,
-    orders: base.orders.map((o) => {
+    orders: baseOrders.map((o) => {
       if (o.id === "ORDER-101") {
         return { ...o, deadlineDays: what.criticalOrderDeadlineDays };
       }
@@ -86,3 +97,41 @@ export function buildSchedulingScenario(
 export function buildCostConfigOverride(what: WhatIfState) {
   return { overtimeCostPerHour: what.overtimeCostPerHour };
 }
+
+// ---------------------------------------------------------------------------
+// Scenario presets
+// ---------------------------------------------------------------------------
+
+export interface ScenarioPreset {
+  id: string;
+  label: string;
+  state: WhatIfState;
+}
+
+export const SCENARIO_PRESETS: ScenarioPreset[] = [
+  {
+    id: "baseline",
+    label: "Baseline",
+    state: BASELINE_WHAT_IF,
+  },
+  {
+    id: "urgent-order",
+    label: "Accept urgent order",
+    state: { ...BASELINE_WHAT_IF, includeUrgentOrder: true },
+  },
+  {
+    id: "capacity-disruption",
+    label: "Capacity disruption",
+    state: { ...BASELINE_WHAT_IF, lineBCapacityReductionPct: 50, disruptionDurationDays: 3 },
+  },
+  {
+    id: "tight-deadline",
+    label: "Tight deadline",
+    state: { ...BASELINE_WHAT_IF, criticalOrderDeadlineDays: 1, disruptionDurationDays: 3 },
+  },
+  {
+    id: "material-shortage",
+    label: "Material shortage",
+    state: { ...BASELINE_WHAT_IF, order103MaterialAvailable: false },
+  },
+];

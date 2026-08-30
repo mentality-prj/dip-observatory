@@ -279,6 +279,13 @@ export function computeSchedulingDecisionDelta(
       `ORDER-116 priority: ${baseWhat.order116Priority} → ${what.order116Priority}`,
     );
   }
+  if (what.includeUrgentOrder !== baseWhat.includeUrgentOrder) {
+    changedReasons.push(
+      what.includeUrgentOrder
+        ? "Urgent order URGENT-201 added to production queue"
+        : "Urgent order URGENT-201 removed from production queue",
+    );
+  }
 
   const baseFinancial =
     baseline.strategies.find((s) => s.strategyId === baseline.recommendedStrategy)
@@ -296,4 +303,52 @@ export function computeSchedulingDecisionDelta(
     avoidedCostDelta:
       scenario.avoidedCostVsBaseline - baseline.avoidedCostVsBaseline,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Keep-current trace diff for the urgent-order simulation
+// ---------------------------------------------------------------------------
+
+/**
+ * Compare the KEEP_CURRENT_SCHEDULE constraint results between a baseline
+ * and a scenario that includes an urgent order.
+ *
+ * Useful for showing how the infeasibility of KEEP_CURRENT worsens when the
+ * urgent order is added (more rules fail / more orders delayed).
+ */
+export function computeKeepCurrentTraceDiff(
+  baseline: SchedulingDecisionResponse,
+  scenario: SchedulingDecisionResponse,
+): TraceDiffEntry[] {
+  const bKeep = baseline.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+  const sKeep = scenario.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+
+  if (!bKeep || !sKeep) return [];
+
+  const ruleIds = [
+    ...new Set([
+      ...bKeep.constraintResults.map((r) => r.ruleId),
+      ...sKeep.constraintResults.map((r) => r.ruleId),
+    ]),
+  ];
+
+  return ruleIds.map((ruleId) => {
+    const bRule = bKeep.constraintResults.find((r) => r.ruleId === ruleId);
+    const sRule = sKeep.constraintResults.find((r) => r.ruleId === ruleId);
+    const bResult: "PASS" | "FAIL" = bRule?.passed ? "PASS" : "FAIL";
+    const sResult: "PASS" | "FAIL" = sRule?.passed ? "PASS" : "FAIL";
+    return {
+      ruleId,
+      ruleName: bRule?.ruleName ?? sRule?.ruleName ?? ruleId,
+      baselineResult: bResult,
+      scenarioResult: sResult,
+      baselineEvidence: bRule?.evidence ?? "—",
+      scenarioEvidence: sRule?.evidence ?? "—",
+      changed: bResult !== sResult,
+    };
+  });
 }

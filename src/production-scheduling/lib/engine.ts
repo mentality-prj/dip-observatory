@@ -401,8 +401,8 @@ function buildDelayLowPriorityAssignments(orders: SchedulingOrder[]): AssignedOr
 
   // Lower-priority orders are scheduled later purely by queue order.
   const delayed: SchedulingOrder[] = [
-    ...normal.map((o) => o),
-    ...low.map((o) => o),
+    ...normal,
+    ...low,
   ].sort((a, b) => a.deadlineDays - b.deadlineDays);
 
   const prioritised = [

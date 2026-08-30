@@ -408,3 +408,46 @@ export function getDemoDecision(): SchedulingDecisionResponse {
   }
   return _cachedDecision;
 }
+
+// ---------------------------------------------------------------------------
+// Urgent order (WHAT-IF simulation)
+//
+// URGENT-201: a rush motorised awning received mid-schedule.
+// Compatible with LINE-B and LINE-C only.
+// CRITICAL priority, day-2 deadline — creates meaningful pressure on the
+// disrupted LINE-B. KEEP_CURRENT cannot handle both URGENT-201 and ORDER-101
+// on time; REDISTRIBUTE absorbs it without changing the optimal strategy.
+//
+// SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS actual data.
+// ---------------------------------------------------------------------------
+
+export const URGENT_ORDER: SchedulingOrder = {
+  id: "URGENT-201",
+  name: "#201 Rush Motorised Awning (Urgent)",
+  productType: "AWNING_MOTORISED",
+  setupCategory: "AWNING",
+  quantity: 6,
+  durationHours: 3,
+  compatibleLines: ["LINE-B", "LINE-C"],
+  defaultLineId: "LINE-B",
+  materialStatus: "AVAILABLE",
+  priority: "CRITICAL",
+  deadlineDays: 2,
+  revenueEur: 7_200,
+  delayPenaltyPerDay: 1_800,
+};
+
+/**
+ * Return a new scenario that appends URGENT-201 to the order queue.
+ * Never mutates the base scenario.
+ */
+export function buildUrgentOrderScenario(
+  base: SchedulingScenario,
+): SchedulingScenario {
+  if (base.orders.some((o) => o.id === URGENT_ORDER.id)) return base;
+  return {
+    ...base,
+    scenarioId: `${base.scenarioId}-URGENT`,
+    orders: [...base.orders, URGENT_ORDER],
+  };
+}

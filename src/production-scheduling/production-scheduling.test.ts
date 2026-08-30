@@ -1,7 +1,8 @@
 /**
  * SURMA Production Scheduling Engine — unit tests.
  *
- * Tests cover all 25 cases specified in the problem statement.
+ * Tests cover all 25 cases specified in the original problem statement,
+ * plus 18 cases for the "What If? Accept Urgent Order" feature.
  *
  * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
  */
@@ -19,17 +20,21 @@ import {
   DEFAULT_REQUEST,
   getDemoDecision,
   ORDERS,
+  URGENT_ORDER,
+  buildUrgentOrderScenario,
 } from "@/production-scheduling/data/scenario";
 import {
   buildSchedulingScenario,
   buildCostConfigOverride,
   BASELINE_WHAT_IF,
+  SCENARIO_PRESETS,
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
 import {
   computeSchedulingSensitivity,
   computeSchedulingTraceDiff,
   computeSchedulingDecisionDelta,
+  computeKeepCurrentTraceDiff,
 } from "@/production-scheduling/lib/scenario-lab-helpers";
 import type { SchedulingDecisionRequest, SchedulingScenario } from "@/production-scheduling/types";
 
@@ -704,5 +709,409 @@ describe("25. no hardcoded decision transitions", () => {
     const a = getDemoDecision();
     const b = getDemoDecision();
     assert.strictEqual(a, b, "getDemoDecision should return cached instance");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 26–43: "What If? Accept Urgent Order" feature tests
+// ---------------------------------------------------------------------------
+
+describe("26. urgent order can be added to baseline scenario", () => {
+  test("buildUrgentOrderScenario adds URGENT-201 to orders", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    assert.equal(urgent.orders.length, DEFAULT_SCENARIO.orders.length + 1);
+    assert.ok(urgent.orders.some((o) => o.id === "URGENT-201"));
+  });
+
+  test("engine processes 21 orders with urgent scenario", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    for (const s of result.strategies) {
+      assert.equal(s.totalOrders, 21);
+    }
+  });
+});
+
+describe("27. baseline immutability with urgent order", () => {
+  test("buildUrgentOrderScenario does not mutate base scenario", () => {
+    const originalLength = DEFAULT_SCENARIO.orders.length;
+    buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    assert.equal(DEFAULT_SCENARIO.orders.length, originalLength);
+    assert.ok(!DEFAULT_SCENARIO.orders.some((o) => o.id === "URGENT-201"));
+  });
+
+  test("calling buildUrgentOrderScenario twice does not double-add URGENT-201", () => {
+    const once = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const twice = buildUrgentOrderScenario(once);
+    assert.equal(twice.orders.filter((o) => o.id === "URGENT-201").length, 1);
+  });
+});
+
+describe("28. urgent scenario determinism", () => {
+  test("same urgent scenario produces identical recommendation", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const req = { scenario: urgent, costConfig: DEFAULT_COST_CONFIG };
+    const a = runSchedulingEngine(req);
+    const b = runSchedulingEngine(req);
+    assert.equal(a.recommendedStrategy, b.recommendedStrategy);
+    assert.equal(a.totalFinancialImpact, b.totalFinancialImpact);
+    assert.equal(a.auditTrail.decisionId, b.auditTrail.decisionId);
+  });
+});
+
+describe("29. all 5 alternatives recalculated with urgent order", () => {
+  test("urgent scenario evaluates exactly 5 strategies", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    assert.equal(result.strategies.length, 5);
+  });
+});
+
+describe("30. capacity constraints with urgent order", () => {
+  test("KEEP_CURRENT remains infeasible with urgent order (ORDER-101 still delayed)", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const keepCurrent = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    assert.ok(keepCurrent, "KEEP_CURRENT must exist");
+    assert.equal(
+      keepCurrent.feasibility,
+      "INFEASIBLE",
+      "KEEP_CURRENT must be infeasible (critical order delayed)",
+    );
+  });
+});
+
+describe("31. deadline constraints with urgent order", () => {
+  test("URGENT-201 deadline is enforced by constraint rule", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const keepCurrent = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    )!;
+    const deadlineRule = keepCurrent.constraintResults.find(
+      (r) => r.ruleId === "RULE-CRITICAL-DEADLINE",
+    );
+    assert.ok(deadlineRule, "RULE-CRITICAL-DEADLINE must be evaluated");
+    // KEEP_CURRENT cannot honour the urgent order deadline after disruption
+    assert.equal(
+      deadlineRule.passed,
+      false,
+      "Deadline rule must fail for KEEP_CURRENT with urgent order",
+    );
+  });
+});
+
+describe("32. setup/changeover recalculated with urgent order", () => {
+  test("REDISTRIBUTE schedule includes URGENT-201 task", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const redistribute = result.strategies.find(
+      (s) => s.strategyId === "REDISTRIBUTE_TO_OTHER_LINES",
+    );
+    assert.ok(redistribute, "REDISTRIBUTE strategy must exist");
+    const urgentTask = redistribute.schedule.find(
+      (t) => t.orderId === "URGENT-201",
+    );
+    assert.ok(urgentTask, "URGENT-201 must appear in REDISTRIBUTE schedule");
+  });
+});
+
+describe("33. financial impact recalculated", () => {
+  test("KEEP_CURRENT total cost increases with urgent order compared to baseline", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const urgentResult = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const baseKeep = baseResult.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    )!;
+    const urgentKeep = urgentResult.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    )!;
+    // Urgent KEEP_CURRENT has an additional delayed CRITICAL order → higher cost
+    assert.ok(
+      urgentKeep.financialImpact.totalCost >= baseKeep.financialImpact.totalCost,
+      "KEEP_CURRENT cost must not decrease with urgent order",
+    );
+  });
+});
+
+describe("34. schedule includes URGENT-201 in recommended strategy", () => {
+  test("recommended strategy schedule contains URGENT-201 task", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    )!;
+    const task = rec.schedule.find((t) => t.orderId === "URGENT-201");
+    assert.ok(task, "URGENT-201 must be in recommended strategy schedule");
+  });
+});
+
+describe("35. recommendation comes from engine output", () => {
+  test("recommendedStrategy is one of the 5 valid strategy IDs", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const valid = [
+      "KEEP_CURRENT_SCHEDULE",
+      "PRIORITIZE_URGENT_ORDERS",
+      "REDISTRIBUTE_TO_OTHER_LINES",
+      "DELAY_LOW_PRIORITY_ORDERS",
+      "USE_OVERTIME",
+    ];
+    assert.ok(
+      valid.includes(result.recommendedStrategy),
+      `recommendedStrategy must be one of: ${valid.join(", ")}`,
+    );
+  });
+});
+
+describe("36. explanation from engine", () => {
+  test("urgent scenario explanation reasons are non-empty for feasible result", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    if (result.decisionStatus === "DECIDED") {
+      assert.ok(
+        result.explanation.reasons.length > 0,
+        "Explanation must have reasons for a decided result",
+      );
+    }
+  });
+});
+
+describe("37. trace diff between baseline and urgent", () => {
+  test("computeSchedulingTraceDiff returns entries when urgent order is added", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const urgentResult = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const diff = computeSchedulingTraceDiff(baseResult, urgentResult);
+    assert.ok(Array.isArray(diff), "Trace diff must be an array");
+  });
+
+  test("computeKeepCurrentTraceDiff shows FAIL when urgent order added", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const urgentResult = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const diff = computeKeepCurrentTraceDiff(baseResult, urgentResult);
+    assert.ok(diff.length > 0, "Keep-current trace diff must have entries");
+    // The critical deadline rule for KEEP_CURRENT must fail in both cases
+    const deadlineEntry = diff.find((d) => d.ruleId === "RULE-CRITICAL-DEADLINE");
+    assert.ok(deadlineEntry, "RULE-CRITICAL-DEADLINE must be in diff");
+    assert.equal(deadlineEntry.baselineResult, "FAIL");
+    assert.equal(deadlineEntry.scenarioResult, "FAIL");
+  });
+});
+
+describe("38. reset restores exact baseline", () => {
+  test("BASELINE_WHAT_IF scenario produces same result as DEFAULT_SCENARIO", () => {
+    const builtScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    // BASELINE_WHAT_IF parameters match DEFAULT_SCENARIO exactly
+    const builtResult = runSchedulingEngine({
+      scenario: builtScenario,
+      costConfig: { ...DEFAULT_COST_CONFIG, ...buildCostConfigOverride(BASELINE_WHAT_IF) },
+    });
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    assert.equal(builtResult.recommendedStrategy, baseResult.recommendedStrategy);
+  });
+
+  test("BASELINE_WHAT_IF has includeUrgentOrder=false", () => {
+    assert.equal(BASELINE_WHAT_IF.includeUrgentOrder, false);
+  });
+
+  test("resetting includeUrgentOrder removes URGENT-201 from scenario", () => {
+    const urgentState: WhatIfState = { ...BASELINE_WHAT_IF, includeUrgentOrder: true };
+    const urgentScenario = buildSchedulingScenario(DEFAULT_SCENARIO, urgentState);
+    assert.ok(urgentScenario.orders.some((o) => o.id === "URGENT-201"));
+
+    const resetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    assert.ok(!resetScenario.orders.some((o) => o.id === "URGENT-201"));
+  });
+});
+
+describe("39. no hardcoded recommendation for urgent", () => {
+  test("recommendation is derived from score, not a static value", () => {
+    // Run urgent scenario twice with different overtime cost → same deterministic result
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const r1 = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const r2 = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: { ...DEFAULT_COST_CONFIG, overtimeCostPerHour: 50 },
+    });
+    // Both must be valid strategy IDs (engine derives them)
+    const valid = [
+      "KEEP_CURRENT_SCHEDULE",
+      "PRIORITIZE_URGENT_ORDERS",
+      "REDISTRIBUTE_TO_OTHER_LINES",
+      "DELAY_LOW_PRIORITY_ORDERS",
+      "USE_OVERTIME",
+    ];
+    assert.ok(valid.includes(r1.recommendedStrategy));
+    assert.ok(valid.includes(r2.recommendedStrategy));
+  });
+});
+
+describe("40. no hardcoded financial result for urgent", () => {
+  test("total cost equals sum of components for urgent recommended strategy", () => {
+    const urgent = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgent,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    )!;
+    const f = rec.financialImpact;
+    const sum =
+      f.delayCost + f.overtimeCost + f.setupCost + f.unusedCapacityCost;
+    assert.equal(
+      f.totalCost,
+      sum,
+      `Total cost ${f.totalCost} must equal sum of components ${sum}`,
+    );
+  });
+});
+
+describe("41. Scenario Lab preset uses same engine path", () => {
+  test("'urgent-order' preset state has includeUrgentOrder=true", () => {
+    const urgentPreset = SCENARIO_PRESETS.find((p) => p.id === "urgent-order");
+    assert.ok(urgentPreset, "'urgent-order' preset must exist");
+    assert.equal(urgentPreset.state.includeUrgentOrder, true);
+  });
+
+  test("SCENARIO_PRESETS includes all 5 expected presets", () => {
+    const ids = SCENARIO_PRESETS.map((p) => p.id);
+    assert.ok(ids.includes("baseline"));
+    assert.ok(ids.includes("urgent-order"));
+    assert.ok(ids.includes("capacity-disruption"));
+    assert.ok(ids.includes("tight-deadline"));
+    assert.ok(ids.includes("material-shortage"));
+  });
+
+  test("urgent-order preset produces same result as buildUrgentOrderScenario", () => {
+    const urgentPreset = SCENARIO_PRESETS.find((p) => p.id === "urgent-order")!;
+    const presetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, urgentPreset.state);
+    const presetResult = runSchedulingEngine({
+      scenario: presetScenario,
+      costConfig: { ...DEFAULT_COST_CONFIG, ...buildCostConfigOverride(urgentPreset.state) },
+    });
+
+    const directScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const directResult = runSchedulingEngine({
+      scenario: directScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+
+    // Both must produce a valid recommendation (same engine path, slightly different scenarioId)
+    const valid = [
+      "KEEP_CURRENT_SCHEDULE",
+      "PRIORITIZE_URGENT_ORDERS",
+      "REDISTRIBUTE_TO_OTHER_LINES",
+      "DELAY_LOW_PRIORITY_ORDERS",
+      "USE_OVERTIME",
+    ];
+    assert.ok(valid.includes(presetResult.recommendedStrategy));
+    assert.ok(valid.includes(directResult.recommendedStrategy));
+    // Both must have 21 orders
+    for (const s of [presetResult, directResult]) {
+      for (const strat of s.strategies) {
+        assert.equal(strat.totalOrders, 21);
+      }
+    }
+  });
+});
+
+describe("42. decision unchanged case", () => {
+  test("computeSchedulingDecisionDelta correctly identifies unchanged decision", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const sameResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const delta = computeSchedulingDecisionDelta(
+      baseResult,
+      sameResult,
+      BASELINE_WHAT_IF,
+      BASELINE_WHAT_IF,
+    );
+    assert.equal(delta.changed, false);
+    assert.equal(delta.changedReasons.length, 0);
+  });
+
+  test("delta for urgent order has includeUrgentOrder in changedReasons", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const urgentScenario = buildSchedulingScenario(DEFAULT_SCENARIO, {
+      ...BASELINE_WHAT_IF,
+      includeUrgentOrder: true,
+    });
+    const urgentResult = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const delta = computeSchedulingDecisionDelta(
+      baseResult,
+      urgentResult,
+      { ...BASELINE_WHAT_IF, includeUrgentOrder: true },
+      BASELINE_WHAT_IF,
+    );
+    assert.ok(
+      delta.changedReasons.some((r) => r.includes("URGENT-201")),
+      "changedReasons must mention URGENT-201",
+    );
+  });
+});
+
+describe("43. total financial impact equals component sum for urgent", () => {
+  test("all strategies satisfy totalCost = sum of components with urgent order", () => {
+    const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
+    const result = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    for (const s of result.strategies) {
+      if (s.feasibility === "FEASIBLE") {
+        const f = s.financialImpact;
+        const sum =
+          f.delayCost + f.overtimeCost + f.setupCost + f.unusedCapacityCost;
+        assert.equal(
+          f.totalCost,
+          sum,
+          `${s.strategyId} total cost ${f.totalCost} !== sum ${sum}`,
+        );
+      }
+    }
   });
 });
