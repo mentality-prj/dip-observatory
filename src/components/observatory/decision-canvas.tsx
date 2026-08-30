@@ -86,7 +86,6 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
   const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const {
     bootstrap,
-    demoMode,
     selectedScenarioId,
     scenario,
     alternatives,
@@ -302,11 +301,6 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
               <span className="text-xs font-semibold tracking-[0.22em] uppercase text-cyan-400">
                 DIP Observatory
               </span>
-              {demoMode.enabled ? (
-                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-0.5 text-[11px] text-amber-200">
-                  {demoMode.label}
-                </span>
-              ) : null}
             </div>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">
               {localizedScenario?.name ?? copy.shell.title}
