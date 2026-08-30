@@ -119,6 +119,41 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
 
   const activePayload = bootstrap ?? initialPayload;
   const copy = getObservatoryCopy(locale);
+  const demonstrators = [
+    {
+      href: "/supplier-decision",
+      title: "Supplier Decision",
+      description:
+        "Multi-criteria supplier evaluation with DIP decision engine.",
+      badgeLabel: "Demonstrator",
+      className:
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
+    },
+    {
+      href: "/production-replanning",
+      title: "Production Replanning",
+      description:
+        "Real-time production disruption response and rescheduling.",
+      badgeLabel: "Demonstrator",
+      className:
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
+    },
+    {
+      href: "/production-scheduling",
+      title: "Production Scheduling",
+      description:
+        "Scheduling decision engine — capacity constraints, deadlines, disruptions and interactive scenario lab.",
+      badgeLabel: "New · Demonstrator",
+      className:
+        "group rounded-[20px] border border-amber-300/20 bg-amber-300/6 p-5 outline-none transition hover:border-amber-300/40 hover:bg-amber-300/10 focus-visible:ring-2 focus-visible:ring-amber-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-amber-400",
+    },
+  ] as const;
   const leftTabs = [
     { id: "catalog", label: copy.tabs.catalog },
     { id: "inputs", label: copy.tabs.inputs },
@@ -333,6 +368,27 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
             Production Scheduling
           </Link>
         </div>
+
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {demonstrators.map((demonstrator) => (
+            <Link
+              key={demonstrator.href}
+              href={buildLocalePath(demonstrator.href, locale)}
+              className={demonstrator.className}
+            >
+              <div className={demonstrator.badgeClassName}>
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {demonstrator.badgeLabel}
+              </div>
+              <p className="mt-2 text-base font-semibold text-white">
+                {demonstrator.title}
+              </p>
+              <p className="mt-1 text-sm leading-5 text-slate-400">
+                {demonstrator.description}
+              </p>
+            </Link>
+          ))}
+        </section>
 
         {warnings.length > 0 || error ? (
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
@@ -913,52 +969,24 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
 
         {/* Demonstrators navigation */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link
-            href={buildLocalePath("/supplier-decision", locale)}
-            className="group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-          >
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Demonstrator
-            </div>
-            <p className="mt-2 text-base font-semibold text-white">
-              Supplier Decision
-            </p>
-            <p className="mt-1 text-sm leading-5 text-slate-400">
-              Multi-criteria supplier evaluation with DIP decision engine.
-            </p>
-          </Link>
-          <Link
-            href={buildLocalePath("/production-replanning", locale)}
-            className="group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-          >
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Demonstrator
-            </div>
-            <p className="mt-2 text-base font-semibold text-white">
-              Production Replanning
-            </p>
-            <p className="mt-1 text-sm leading-5 text-slate-400">
-              Real-time production disruption response and rescheduling.
-            </p>
-          </Link>
-          <Link
-            href={buildLocalePath("/production-scheduling", locale)}
-            className="group rounded-[20px] border border-amber-300/20 bg-amber-300/6 p-5 outline-none transition hover:border-amber-300/40 hover:bg-amber-300/10 focus-visible:ring-2 focus-visible:ring-amber-300/60"
-          >
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-amber-400">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              New · Demonstrator
-            </div>
-            <p className="mt-2 text-base font-semibold text-white">
-              Production Scheduling
-            </p>
-            <p className="mt-1 text-sm leading-5 text-slate-400">
-              Scheduling decision engine — capacity constraints, deadlines,
-              disruptions and interactive scenario lab.
-            </p>
-          </Link>
+          {demonstrators.map((demonstrator) => (
+            <Link
+              key={demonstrator.href}
+              href={buildLocalePath(demonstrator.href, locale)}
+              className={demonstrator.className}
+            >
+              <div className={demonstrator.badgeClassName}>
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {demonstrator.badgeLabel}
+              </div>
+              <p className="mt-2 text-base font-semibold text-white">
+                {demonstrator.title}
+              </p>
+              <p className="mt-1 text-sm leading-5 text-slate-400">
+                {demonstrator.description}
+              </p>
+            </Link>
+          ))}
         </section>
       </div>
     </main>
