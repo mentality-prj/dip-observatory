@@ -147,11 +147,11 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
       title: "Production Scheduling",
       description:
         "Scheduling decision engine — capacity constraints, deadlines, disruptions and interactive scenario lab.",
-      badgeLabel: "New · Demonstrator",
+      badgeLabel: "Demonstrator",
       className:
-        "group rounded-[20px] border border-amber-300/20 bg-amber-300/6 p-5 outline-none transition hover:border-amber-300/40 hover:bg-amber-300/10 focus-visible:ring-2 focus-visible:ring-amber-300/60",
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
       badgeClassName:
-        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-amber-400",
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
     },
   ] as const;
   const leftTabs = [
