@@ -127,7 +127,10 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 function Disclaimer() {
   return (
-    <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2">
+    <div
+      data-testid="synthetic-disclaimer"
+      className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2"
+    >
       <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80">
         Synthetic demonstration — not SURMA SYSTEMS production data
       </p>
@@ -205,7 +208,7 @@ function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
   const hoursRemaining = after * scenario.disruption.durationDays;
 
   return (
-    <Card className="border-rose-300/20 bg-rose-900/10">
+    <Card className="border-rose-300/20 bg-rose-900/10" data-testid="disruption-panel">
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-rose-400" />
@@ -878,14 +881,19 @@ function SimulationProgressCard({
 }) {
   const info = SIMULATION_STEPS[step];
   return (
-    <Card className={cn("border", info.colour)}>
+    <Card className={cn("border", info.colour)} data-testid="simulation-progress">
       <CardContent className="pt-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
             <Zap className="h-8 w-8 text-violet-400 animate-pulse" />
           </div>
           <div>
-            <p className="text-base font-bold text-white">{info.title}</p>
+            <p
+              className="text-base font-bold text-white"
+              data-testid="simulation-step-title"
+            >
+              {info.title}
+            </p>
             <p className="mt-1 text-sm text-slate-400">{info.desc}</p>
           </div>
           {step === "decision" && (
@@ -900,6 +908,7 @@ function SimulationProgressCard({
           )}
           <button
             onClick={onSkip}
+            data-testid="simulation-skip"
             className="text-xs text-slate-600 transition hover:text-slate-400"
           >
             Skip animation →
@@ -938,7 +947,7 @@ function BeforeAfterPanel({
   );
 
   return (
-    <Card className="border-violet-300/20">
+    <Card className="border-violet-300/20" data-testid="before-after-panel">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-violet-400" />
@@ -1078,7 +1087,7 @@ function WhatShouldWeDoCard({
   );
 
   return (
-    <Card className="border-violet-300/20">
+    <Card className="border-violet-300/20" data-testid="what-should-we-do">
       <CardHeader>
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
           What should we do?
@@ -1090,7 +1099,7 @@ function WhatShouldWeDoCard({
       <CardContent className="space-y-5">
         {/* Decision changed / unchanged */}
         {delta.changed ? (
-          <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3">
+          <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3" data-testid="urgent-decision-changed">
             <p className="text-sm font-semibold text-cyan-300">
               Decision changed
             </p>
@@ -1105,7 +1114,7 @@ function WhatShouldWeDoCard({
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3" data-testid="urgent-decision-unchanged">
             <p className="text-sm font-semibold text-emerald-300">
               Decision unchanged
             </p>
@@ -1179,7 +1188,7 @@ function WhatShouldWeDoCard({
 
         {/* Keep-current comparison — show how it worsens */}
         {keepCurrentDiff.some((d) => d.changed) && (
-          <div>
+          <div data-testid="keep-current-fails">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
               Why Keep Current fails with URGENT-201
             </p>
@@ -1227,7 +1236,8 @@ function ScenarioLabControls({
     <div className="space-y-5">
       <div>
         <Label className="text-xs text-slate-400">
-          Line B capacity reduction: {what.lineBCapacityReductionPct}%
+          Line B capacity reduction:{" "}
+          <span data-testid="lab-capacity-value">{what.lineBCapacityReductionPct}</span>%
         </Label>
         <input
           type="range"
@@ -1249,7 +1259,8 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Disruption duration: {what.disruptionDurationDays} day(s)
+          Disruption duration:{" "}
+          <span data-testid="lab-duration-value">{what.disruptionDurationDays}</span> day(s)
         </Label>
         <input
           type="range"
@@ -1271,7 +1282,8 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Critical order #101 deadline: Day {what.criticalOrderDeadlineDays}
+          Critical order #101 deadline: Day{" "}
+          <span data-testid="lab-deadline-value">{what.criticalOrderDeadlineDays}</span>
         </Label>
         <input
           type="range"
@@ -1339,7 +1351,7 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Overtime cost: €{what.overtimeCostPerHour}/h
+          Overtime cost: €<span data-testid="lab-overtime-cost-value">{what.overtimeCostPerHour}</span>/h
         </Label>
         <input
           type="range"
@@ -1518,7 +1530,7 @@ function ScenarioLabResult({
       )}
 
       {/* Decision sensitivity */}
-      <div>
+      <div data-testid="decision-sensitivity">
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
           Decision sensitivity
         </p>
