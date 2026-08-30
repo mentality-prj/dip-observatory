@@ -172,6 +172,27 @@ function normalCapacityPerDay(
   return result;
 }
 
+/** Per-day normal (non-overtime) capacity: reduced on disrupted days, no overtime added. */
+function buildNormalCapacitiesPerDay(
+  scenario: SchedulingScenario,
+): Record<string, number[]> {
+  const capacities: Record<string, number[]> = {};
+  for (const line of scenario.lines) {
+    const daily: number[] = [];
+    for (let day = 1; day <= scenario.planningHorizonDays; day++) {
+      const isDisrupted =
+        line.id === scenario.disruption.affectedLineId &&
+        day <= scenario.disruption.durationDays;
+      const normal =
+        line.normalHoursPerDay *
+        (isDisrupted ? 1 - scenario.disruption.capacityReductionFactor : 1);
+      daily.push(normal);
+    }
+    capacities[line.id] = daily;
+  }
+  return capacities;
+}
+
 // ---------------------------------------------------------------------------
 // Greedy day-by-day scheduling
 // ---------------------------------------------------------------------------
@@ -195,6 +216,7 @@ interface AssignedOrder {
 function scheduleAssignments(
   assignments: AssignedOrder[],
   capacitiesPerDay: Record<string, number[]>,
+  normalCapacitiesPerDay: Record<string, number[]>,
   setupMatrix: SetupMatrix,
   horizonDays: number,
   overtimeHoursPerLinePerDay: number,
@@ -233,6 +255,7 @@ function scheduleAssignments(
 
     const cursor = cursors[lineId];
     const dayCapacities = capacitiesPerDay[lineId];
+    const normalDayCapacities = normalCapacitiesPerDay[lineId];
     const normalCap = normalCapacities[lineId] ?? 8;
 
     // Find a slot for this order
@@ -240,6 +263,7 @@ function scheduleAssignments(
 
     while (cursor.day <= horizonDays) {
       const dayCap = dayCapacities[cursor.day - 1] ?? 0;
+      const normalDayCap = normalDayCapacities?.[cursor.day - 1] ?? normalCap;
 
       // Setup time: only applies between consecutive orders within same day
       const setup =
@@ -254,9 +278,9 @@ function scheduleAssignments(
         const endHour = startHour + order.durationHours;
         const daysLate = Math.max(0, cursor.day - order.deadlineDays);
 
-        // Determine if any part is overtime
+        // Determine if any part is overtime (threshold is effective normal capacity for the day)
         const isOvertime =
-          overtimeEnabled && endHour > normalCap;
+          overtimeEnabled && endHour > normalDayCap;
 
         tasks.push({
           orderId: order.id,
@@ -412,15 +436,20 @@ function computeLineUtilization(
   tasks: ScheduledTask[],
   scenario: SchedulingScenario,
   capacitiesPerDay: Record<string, number[]>,
+  normalCapacitiesPerDay: Record<string, number[]>,
 ): LineUtilization[] {
   return scenario.lines.map((line) => {
     const lineTasks = tasks.filter((t) => t.lineId === line.id && t.day >= 1);
     const productionHours = lineTasks.reduce((s, t) => s + t.endHour - t.startHour, 0);
     const setupHours = lineTasks.reduce((s, t) => s + t.setupHoursBefore, 0);
+    const normalCapPerDay = normalCapacitiesPerDay[line.id] ?? [];
     const overtimeHours = lineTasks
       .filter((t) => t.isOvertime)
       .reduce(
-        (s, t) => s + Math.max(0, t.endHour - Math.max(t.startHour, line.normalHoursPerDay)),
+        (s, t) => {
+          const dayNormalCap = normalCapPerDay[t.day - 1] ?? line.normalHoursPerDay;
+          return s + Math.max(0, t.endHour - Math.max(t.startHour, dayNormalCap));
+        },
         0,
       );
     const availableHours =
@@ -864,16 +893,18 @@ export function runSchedulingEngine(
   for (const def of strategyDefs) {
     const overtime = def.overtime;
     const caps = buildLineCapacitiesPerDay(scenario, overtime);
+    const normalCapsPerDay = buildNormalCapacitiesPerDay(scenario);
     const tasks = scheduleAssignments(
       def.assignments,
       caps,
+      normalCapsPerDay,
       scenario.setupMatrix,
       scenario.planningHorizonDays,
       scenario.overtimeHoursPerLinePerDay,
       normalCaps,
       overtime,
     );
-    const lineUtil = computeLineUtilization(tasks, scenario, caps);
+    const lineUtil = computeLineUtilization(tasks, scenario, caps, normalCapsPerDay);
     const constraintResults = evaluateConstraints(
       def.id,
       def.assignments,
