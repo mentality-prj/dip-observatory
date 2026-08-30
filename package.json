@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/observatory-contract.test.ts src/eidos/eidos-decision.test.ts src/eidos/futures.test.ts src/eidos/presentation-semantics.test.ts src/supplier/supplier-decision.test.ts src/production-replanning/production-replanning.test.ts src/production-replanning/scenario-lab.test.ts",
+    "test": "tsx --test src/lib/observatory-contract.test.ts src/eidos/eidos-decision.test.ts src/eidos/futures.test.ts src/eidos/presentation-semantics.test.ts src/supplier/supplier-decision.test.ts src/production-replanning/production-replanning.test.ts src/production-replanning/scenario-lab.test.ts src/production-scheduling/production-scheduling.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
