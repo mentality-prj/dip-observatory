@@ -86,6 +86,7 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
   const pendingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const {
     bootstrap,
+    demoMode,
     selectedScenarioId,
     scenario,
     alternatives,
