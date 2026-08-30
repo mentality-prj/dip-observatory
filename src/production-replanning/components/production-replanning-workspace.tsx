@@ -39,6 +39,7 @@ import type {
   AlternativeEvaluation,
   FeasibilityStatus,
   LineProductionAllocation,
+  ProductionScenario,
 } from "@/production-replanning/types";
 
 // ---------------------------------------------------------------------------

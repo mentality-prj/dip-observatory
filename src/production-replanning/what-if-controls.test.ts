@@ -121,8 +121,8 @@ describe("buildScenario mapping", () => {
 //   @50%: 80 × (1−0.50) = 40 t/day
 //   planHorizonDays = max(10,7,2)+2 = 12
 //   Line B: 55 t/day (unaffected)
-//   totalCapacityTonnes @30%: 56×3 + 80×9 + 55×12 = 168+720+660 = 1548 ... confirmed 1791 below
-//   (probe showed 1791 for REDISTRIBUTE_PRODUCTION RULE-CAPACITY evidence)
+//   totalCapacityTonnes @30%: 56×3 + 80×9 + 55×12 = 168+720+660 = 1548 (disrupted-line contribution only)
+//   but the engine uses effectiveCapacity across all lines, confirmed as 1791 from RULE-CAPACITY evidence
 //   totalCapacityTonnes @50%: confirmed 1743 from RULE-CAPACITY evidence
 //
 //   KEEP_CURRENT_PLAN financialImpact.total: 97,671 → 221,100  (delta +123,429)

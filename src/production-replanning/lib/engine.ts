@@ -207,10 +207,6 @@ function evaluateRulesForAlternative(
   const criticalCompletionDays = criticalOrderTpd > 0 ? criticalRequired / criticalOrderTpd : 999;
   const criticalDeadlineProtected = criticalCanComplete && criticalCompletionDays <= criticalDeadlineDays;
 
-  const disruptedVsNormal = normalCapacityTonnes > 0
-    ? totalCapacityTonnes / normalCapacityTonnes
-    : 1;
-
   return PRODUCTION_RULES.map((rule): RuleResult => {
     switch (rule.id) {
       case "RULE-CAPACITY": {
