@@ -119,6 +119,41 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
 
   const activePayload = bootstrap ?? initialPayload;
   const copy = getObservatoryCopy(locale);
+  const demonstrators = [
+    {
+      href: "/supplier-decision",
+      title: "Supplier Decision",
+      description:
+        "Multi-criteria supplier evaluation with DIP decision engine.",
+      badgeLabel: "Demonstrator",
+      className:
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
+    },
+    {
+      href: "/production-replanning",
+      title: "Production Replanning",
+      description:
+        "Real-time production disruption response and rescheduling.",
+      badgeLabel: "Demonstrator",
+      className:
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
+    },
+    {
+      href: "/production-scheduling",
+      title: "Production Scheduling",
+      description:
+        "Scheduling decision engine — capacity constraints, deadlines, disruptions and interactive scenario lab.",
+      badgeLabel: "Demonstrator",
+      className:
+        "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+      badgeClassName:
+        "flex items-center gap-2 text-xs font-semibold tracking-[0.18em] uppercase text-cyan-400",
+    },
+  ] as const;
   const leftTabs = [
     { id: "catalog", label: copy.tabs.catalog },
     { id: "inputs", label: copy.tabs.inputs },
@@ -261,17 +296,12 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
     <main className="relative min-h-screen overflow-hidden px-4 py-6 md:px-6 xl:px-10">
       <div className="mx-auto flex w-full max-w-[1700px] flex-col gap-6">
         {/* Compact top bar: title left, locale selector right */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold tracking-[0.22em] uppercase text-cyan-400">
                 DIP Observatory
               </span>
-              {demoMode.enabled ? (
-                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-0.5 text-[11px] text-amber-200">
-                  {demoMode.label}
-                </span>
-              ) : null}
             </div>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">
               {localizedScenario?.name ?? copy.shell.title}
@@ -282,48 +312,78 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={buildLocalePath("/eidos", locale)}
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            >
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              EIDOS Observatory
-            </Link>
-            <Link
-              href={buildLocalePath("/supplier-decision", locale)}
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            >
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Supplier Decision
-            </Link>
-            <Link
-              href={buildLocalePath("/production-replanning", locale)}
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            >
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Production Replanning
-            </Link>
-            <select
-              value={locale}
-              disabled={isLocalePending}
-              onChange={(e) => {
-                const next = e.target.value as Locale;
-                if (next === locale) return;
-                startLocaleTransition(() => {
-                  router.replace(buildLocalePath(pathname, next));
-                });
-              }}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 outline-none transition hover:border-white/20 disabled:opacity-60"
-            >
-              {SUPPORTED_LOCALES.map((option) => (
-                <option key={option} value={option} className="bg-slate-900">
-                  {copy.localeOptions[option]}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={locale}
+            disabled={isLocalePending}
+            onChange={(e) => {
+              const next = e.target.value as Locale;
+              if (next === locale) return;
+              startLocaleTransition(() => {
+                router.replace(buildLocalePath(pathname, next));
+              });
+            }}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 outline-none transition hover:border-white/20 disabled:opacity-60"
+          >
+            {SUPPORTED_LOCALES.map((option) => (
+              <option key={option} value={option} className="bg-slate-900">
+                {copy.localeOptions[option]}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* Navigation links row */}
+        <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-center">
+          <Link
+            href={buildLocalePath("/eidos", locale)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            EIDOS Observatory
+          </Link>
+          <Link
+            href={buildLocalePath("/supplier-decision", locale)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Supplier Decision
+          </Link>
+          <Link
+            href={buildLocalePath("/production-replanning", locale)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Production Replanning
+          </Link>
+          <Link
+            href={buildLocalePath("/production-scheduling", locale)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Production Scheduling
+          </Link>
+        </div>
+
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {demonstrators.map((demonstrator) => (
+            <Link
+              key={demonstrator.href}
+              href={buildLocalePath(demonstrator.href, locale)}
+              className={demonstrator.className}
+            >
+              <div className={demonstrator.badgeClassName}>
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {demonstrator.badgeLabel}
+              </div>
+              <p className="mt-2 text-base font-semibold text-white">
+                {demonstrator.title}
+              </p>
+              <p className="mt-1 text-sm leading-5 text-slate-400">
+                {demonstrator.description}
+              </p>
+            </Link>
+          ))}
+        </section>
 
         {warnings.length > 0 || error ? (
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
@@ -901,6 +961,7 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
           </div>
           {/* end side panels grid */}
         </section>
+
       </div>
     </main>
   );

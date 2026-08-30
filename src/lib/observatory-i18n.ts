@@ -171,8 +171,8 @@ const copyByLocale: Record<Locale, ObservatoryCopy> = {
     localeLabel: "Language",
     localeOptions: { en: "English", uk: "Українська", pl: "Polski" },
     shell: {
-      frontendClientOnly: "Frontend Client Only",
-      decisionSemanticsStay: "Decision semantics stay in DIP",
+      frontendClientOnly: "Standalone client interface",
+      decisionSemanticsStay: "Decision logic executed in DIP",
       title: "Scenario-driven Observatory for the existing DIP API.",
       description:
         "The UI remains a standalone Next.js client, while DIP now owns the scenario catalog, risk propagation, system stability, uncertainty, state vectors, and decision alternatives returned by the observatory contract.",
@@ -336,8 +336,8 @@ const copyByLocale: Record<Locale, ObservatoryCopy> = {
     localeLabel: "Мова",
     localeOptions: { en: "English", uk: "Українська", pl: "Polski" },
     shell: {
-      frontendClientOnly: "Лише frontend-клієнт",
-      decisionSemanticsStay: "Семантика рішень лишається в DIP",
+      frontendClientOnly: "Окремий клієнтський інтерфейс",
+      decisionSemanticsStay: "Логіка рішень виконується в DIP",
       title: "Scenario-driven Observatory для існуючого DIP API.",
       description:
         "UI лишається окремим Next.js клієнтом, а DIP керує каталогом сценаріїв, propagation risk, system stability, uncertainty, state vectors і decision alternatives, які повертає observatory contract.",
@@ -503,8 +503,8 @@ const copyByLocale: Record<Locale, ObservatoryCopy> = {
     localeLabel: "Język",
     localeOptions: { en: "English", uk: "Українська", pl: "Polski" },
     shell: {
-      frontendClientOnly: "Tylko frontend client",
-      decisionSemanticsStay: "Semantyka decyzji pozostaje w DIP",
+      frontendClientOnly: "Niezależny interfejs kliencki",
+      decisionSemanticsStay: "Logika decyzyjna wykonywana w DIP",
       title: "Scenario-driven Observatory dla istniejącego DIP API.",
       description:
         "UI pozostaje osobnym klientem Next.js, a DIP zarządza katalogiem scenariuszy, propagation risk, system stability, uncertainty, state vectors oraz decision alternatives zwracanymi przez observatory contract.",
