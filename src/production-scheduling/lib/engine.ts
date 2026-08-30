@@ -219,7 +219,6 @@ function scheduleAssignments(
   normalCapacitiesPerDay: Record<string, number[]>,
   setupMatrix: SetupMatrix,
   horizonDays: number,
-  overtimeHoursPerLinePerDay: number,
   normalCapacities: Record<string, number>,
   overtimeEnabled: boolean,
 ): ScheduledTask[] {
@@ -512,7 +511,6 @@ function computeFinancialImpact(
 // ---------------------------------------------------------------------------
 
 function evaluateConstraints(
-  strategyId: StrategyId,
   assignments: AssignedOrder[],
   tasks: ScheduledTask[],
   scenario: SchedulingScenario,
@@ -900,13 +898,11 @@ export function runSchedulingEngine(
       normalCapsPerDay,
       scenario.setupMatrix,
       scenario.planningHorizonDays,
-      scenario.overtimeHoursPerLinePerDay,
       normalCaps,
       overtime,
     );
     const lineUtil = computeLineUtilization(tasks, scenario, caps, normalCapsPerDay);
     const constraintResults = evaluateConstraints(
-      def.id,
       def.assignments,
       tasks,
       scenario,
