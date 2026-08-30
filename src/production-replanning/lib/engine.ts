@@ -207,10 +207,6 @@ function evaluateRulesForAlternative(
   const criticalCompletionDays = criticalOrderTpd > 0 ? criticalRequired / criticalOrderTpd : 999;
   const criticalDeadlineProtected = criticalCanComplete && criticalCompletionDays <= criticalDeadlineDays;
 
-  const disruptedVsNormal = normalCapacityTonnes > 0
-    ? totalCapacityTonnes / normalCapacityTonnes
-    : 1;
-
   return PRODUCTION_RULES.map((rule): RuleResult => {
     switch (rule.id) {
       case "RULE-CAPACITY": {
@@ -305,12 +301,12 @@ function evaluateRulesForAlternative(
           condition: "Plan actively compensates for the disruption",
           passed: compensates,
           evidence: compensates
-            ? `${actionId} compensates for the ${disruptionDurationDays}-day disruption, during which ${affectedLineName} operates at ${((1 - capacityReductionFactor) * 100).toFixed(0)}% of normal capacity.`
-            : "No compensating action taken — disruption impacts flow directly.",
+            ? `${actionId} compensates for the ${disruptionDurationDays}-day disruption, during which ${affectedLineName} operates at ${((1 - capacityReductionFactor) * 100).toFixed(0)}% of normal capacity (−${(capacityReductionFactor * 100).toFixed(0)}% reduction).`
+            : `No compensating action taken — ${affectedLineName} runs at ${((1 - capacityReductionFactor) * 100).toFixed(0)}% capacity for ${disruptionDurationDays} days (−${(capacityReductionFactor * 100).toFixed(0)}% reduction); disruption impacts flow directly.`,
           featureValues: {
             actionId,
             compensates,
-            disruptedVsNormalPct: +(disruptedVsNormal * 100).toFixed(1),
+            lineCapacityReductionPct: +(capacityReductionFactor * 100).toFixed(1),
           },
         };
       }
