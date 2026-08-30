@@ -529,7 +529,11 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
               {result.strategies.map((s) => {
                 const isRec = s.strategyId === result.recommendedStrategy;
                 return (
-                  <tr key={s.strategyId} className="border-b border-white/5">
+                  <tr
+                    key={s.strategyId}
+                    className="border-b border-white/5"
+                    data-testid={isRec ? "alternative-recommended-row" : undefined}
+                  >
                     <td className={cn("py-2 pr-3 font-medium", isRec && STRATEGY_CELL_TEXT[s.strategyId])}>
                       {s.strategyLabel}
                     </td>
@@ -552,7 +556,9 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                     </td>
                     <td className="py-2">
                       {isRec ? (
-                        <Badge variant="emerald">Recommended</Badge>
+                        <Badge variant="emerald" data-testid="alternative-recommended-badge">
+                          Recommended
+                        </Badge>
                       ) : s.feasibility === "INFEASIBLE" ? (
                         <span className="text-xs text-rose-400">
                           {s.blockingConstraints[0] ?? "Constraint violated"}

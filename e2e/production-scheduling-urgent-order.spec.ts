@@ -167,7 +167,7 @@ test.describe("production-scheduling: Find Better Plan (Part F)", () => {
 
     const table = page.getByTestId("alternative-schedules");
     await expect(table).toBeVisible({ timeout: 5_000 });
-    await expect(table.getByText("Recommended")).toHaveCount(1);
+    await expect(table.getByTestId("alternative-recommended-badge")).toHaveCount(1);
   });
 
   test("decision-result strategy label matches Recommended row in alternatives", async ({
@@ -180,7 +180,7 @@ test.describe("production-scheduling: Find Better Plan (Part F)", () => {
     const labelText = (await strategyLabel.innerText()).trim().toUpperCase();
 
     const table = page.getByTestId("alternative-schedules");
-    const recommendedRow = table.locator("tr").filter({ hasText: "Recommended" });
+    const recommendedRow = table.getByTestId("alternative-recommended-row");
     await expect(recommendedRow).toBeVisible({ timeout: 5_000 });
     const rowText = (await recommendedRow.innerText()).toUpperCase();
 

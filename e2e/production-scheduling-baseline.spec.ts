@@ -170,7 +170,7 @@ test.describe("production-scheduling: baseline state", () => {
   }) => {
     const table = page.getByTestId("alternative-schedules");
     await expect(table).toBeVisible();
-    const recommendedBadges = table.getByText("Recommended");
+    const recommendedBadges = table.getByTestId("alternative-recommended-badge");
     await expect(recommendedBadges).toHaveCount(1);
   });
 

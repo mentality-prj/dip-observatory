@@ -816,10 +816,10 @@ function buildExplanation(
         // gets the tie-break message rather than the generic cost message.
         const scoreDiff = recommended.score.composite - s.score.composite;
         if (Math.abs(scoreDiff) < 0.0005) {
-          // Scores are effectively tied — use rounded cost as tie-breaker description.
-          const costDiff = Math.round(
-            s.financialImpact.totalCost - recommended.financialImpact.totalCost,
-          );
+          // Scores are effectively tied — use the same rounded-total comparison as the sorter.
+          const costDiff =
+            Math.round(s.financialImpact.totalCost) -
+            Math.round(recommended.financialImpact.totalCost);
           if (Math.abs(costDiff) >= 1) {
             reason = `Tied composite score — €${Math.abs(costDiff).toLocaleString("de-DE")} ${costDiff > 0 ? "higher" : "lower"} total cost (tie-break by cost).`;
           } else {

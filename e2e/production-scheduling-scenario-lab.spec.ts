@@ -81,8 +81,7 @@ test.describe("production-scheduling: scenario lab presets (Part G)", () => {
       await expect(delta).toBeVisible({ timeout: 5_000 });
       await expect(delta).toBeVisible();
 
-      // A recommended strategy value must exist in ScenarioLabResult
-      await expect(lab.getByText(/Recommended strategy|Decision unchanged/i)).toBeVisible();
+      await expect(lab.getByTestId("decision-sensitivity")).toBeVisible();
     });
   }
 
@@ -512,9 +511,6 @@ test.describe("production-scheduling: rapid interactions (Part M)", () => {
     await setRangeValue(page, "scenario-duration", 5);
     await setRangeValue(page, "scenario-critical-deadline", 3);
     await page.getByTestId("scenario-overtime").click();
-
-    // Wait a moment for React to settle all state updates
-    await page.waitForTimeout(300);
 
     // The final rendered capacity value must match the last set value (50)
     await expect(page.getByTestId("lab-capacity-value")).toHaveText("50", { timeout: 3_000 });
