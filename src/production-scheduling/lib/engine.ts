@@ -811,13 +811,28 @@ function buildExplanation(
       let reason: string;
       if (s.feasibility === "INFEASIBLE") {
         reason = `Infeasible: ${s.blockingConstraints.join("; ")}.`;
-      } else if (s.financialImpact.totalCost > recommended.financialImpact.totalCost) {
-        const diff = Math.round(
-          s.financialImpact.totalCost - recommended.financialImpact.totalCost,
-        );
-        reason = `Feasible but €${diff.toLocaleString("de-DE")} higher total cost.`;
       } else {
-        reason = `Lower composite score (${s.score.composite.toFixed(3)} vs ${recommended.score.composite.toFixed(3)}).`;
+        // Check composite tie first so a tied-score strategy with higher cost
+        // gets the tie-break message rather than the generic cost message.
+        const scoreDiff = recommended.score.composite - s.score.composite;
+        if (Math.abs(scoreDiff) < 0.0005) {
+          // Scores are effectively tied — use the same rounded-total comparison as the sorter.
+          const costDiff =
+            Math.round(s.financialImpact.totalCost) -
+            Math.round(recommended.financialImpact.totalCost);
+          if (Math.abs(costDiff) >= 1) {
+            reason = `Tied composite score — €${Math.abs(costDiff).toLocaleString("de-DE")} ${costDiff > 0 ? "higher" : "lower"} total cost (tie-break by cost).`;
+          } else {
+            reason = `Tied on all metrics — tie broken by strategy definition order.`;
+          }
+        } else if (s.financialImpact.totalCost > recommended.financialImpact.totalCost) {
+          const diff = Math.round(
+            s.financialImpact.totalCost - recommended.financialImpact.totalCost,
+          );
+          reason = `Feasible but €${diff.toLocaleString("de-DE")} higher total cost.`;
+        } else {
+          reason = `Lower composite score (${s.score.composite.toFixed(4)} vs ${recommended.score.composite.toFixed(4)}).`;
+        }
       }
       return { strategyId: s.strategyId, reason, feasibility: s.feasibility };
     });
@@ -971,10 +986,19 @@ export function runSchedulingEngine(
     };
   });
 
-  // Rank feasible strategies
+  // Rank feasible strategies — near-tied composites (< 0.0005) are broken by lower cost (rounded to whole euros for stability)
   const feasible = strategies
     .filter((s) => s.feasibility === "FEASIBLE")
-    .sort((a, b) => b.score.composite - a.score.composite);
+    .sort((a, b) => {
+      const scoreDiff = b.score.composite - a.score.composite;
+      if (Math.abs(scoreDiff) < 0.0005) {
+        return (
+          Math.round(a.financialImpact.totalCost) -
+          Math.round(b.financialImpact.totalCost)
+        );
+      }
+      return scoreDiff;
+    });
   feasible.forEach((s, i) => {
     s.rank = i + 1;
   });

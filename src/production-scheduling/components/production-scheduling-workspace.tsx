@@ -127,7 +127,10 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 function Disclaimer() {
   return (
-    <div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2">
+    <div
+      data-testid="synthetic-disclaimer"
+      className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2"
+    >
       <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80">
         Synthetic demonstration — not SURMA SYSTEMS production data
       </p>
@@ -205,7 +208,7 @@ function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
   const hoursRemaining = after * scenario.disruption.durationDays;
 
   return (
-    <Card className="border-rose-300/20 bg-rose-900/10">
+    <Card className="border-rose-300/20 bg-rose-900/10" data-testid="disruption-panel">
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-rose-400" />
@@ -348,14 +351,14 @@ function RecommendedStrategyCard({
   const lineIds = [...new Set(rec.schedule.map((t) => t.lineId))].sort();
 
   return (
-    <Card className={cls.border}>
+    <Card className={cls.border} data-testid="decision-result">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${cls.headerText}`}>
               Recommended schedule
             </p>
-            <CardTitle className={`mt-1 text-xl ${cls.titleText}`}>
+            <CardTitle className={`mt-1 text-xl ${cls.titleText}`} data-testid="decision-strategy-label">
               {rec.strategyLabel.toUpperCase()}
             </CardTitle>
           </div>
@@ -437,7 +440,7 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
   ];
 
   return (
-    <Card>
+    <Card data-testid="financial-impact">
       <CardHeader>
         <CardTitle className="text-base">Financial Impact</CardTitle>
       </CardHeader>
@@ -460,9 +463,10 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
                 const isBetter = row.rec < row.keep;
                 const isTotal = i === rows.length - 2;
                 const isRevenue = i === rows.length - 1;
+                const slug = row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
                 return (
                   <tr
-                    key={row.label}
+                    key={slug}
                     className={cn(
                       "border-b border-white/5",
                       isTotal && "font-semibold",
@@ -470,11 +474,20 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
                     )}
                   >
                     <td className="py-2 pr-4 text-slate-400">{row.label}</td>
-                    <td className="py-2 pr-4 text-right text-rose-300">{eur(row.keep)}</td>
+                    <td className="py-2 pr-4 text-right text-rose-300">
+                      <span data-testid={`financial-keep-${slug}`}>
+                        {eur(row.keep)}
+                      </span>
+                    </td>
                     <td className={cn("py-2 text-right", isBetter ? "text-emerald-300" : "text-slate-300")}>
-                      {eur(row.rec)}
+                      <span data-testid={`financial-rec-${slug}`}>
+                        {eur(row.rec)}
+                      </span>
                       {isBetter && row.keep - row.rec > 0 && (
-                        <span className="ml-2 text-xs text-emerald-400">
+                        <span
+                          className="block text-xs text-emerald-400"
+                          data-testid={`financial-delta-${slug}`}
+                        >
                           −{eur(row.keep - row.rec)}
                         </span>
                       )}
@@ -496,7 +509,7 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
 
 function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
   return (
-    <Card>
+    <Card data-testid="alternative-schedules">
       <CardHeader>
         <CardTitle className="text-base">Alternative Schedules</CardTitle>
       </CardHeader>
@@ -516,7 +529,11 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
               {result.strategies.map((s) => {
                 const isRec = s.strategyId === result.recommendedStrategy;
                 return (
-                  <tr key={s.strategyId} className="border-b border-white/5">
+                  <tr
+                    key={s.strategyId}
+                    className="border-b border-white/5"
+                    data-testid={isRec ? "alternative-recommended-row" : undefined}
+                  >
                     <td className={cn("py-2 pr-3 font-medium", isRec && STRATEGY_CELL_TEXT[s.strategyId])}>
                       {s.strategyLabel}
                     </td>
@@ -535,11 +552,13 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                       {s.feasibility === "FEASIBLE" ? eur(s.financialImpact.totalCost) : "—"}
                     </td>
                     <td className="py-2 pr-3 text-slate-300">
-                      {s.feasibility === "FEASIBLE" ? s.score.composite.toFixed(3) : "—"}
+                      {s.feasibility === "FEASIBLE" ? s.score.composite.toFixed(4) : "—"}
                     </td>
                     <td className="py-2">
                       {isRec ? (
-                        <Badge variant="emerald">Recommended</Badge>
+                        <Badge variant="emerald" data-testid="alternative-recommended-badge">
+                          Recommended
+                        </Badge>
                       ) : s.feasibility === "INFEASIBLE" ? (
                         <span className="text-xs text-rose-400">
                           {s.blockingConstraints[0] ?? "Constraint violated"}
@@ -763,6 +782,7 @@ function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
           </div>
           <button
             onClick={onSimulate}
+            data-testid="simulate-urgent-order"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/20 px-5 py-2.5 text-sm font-semibold text-violet-200 outline-none transition hover:border-violet-400/60 hover:bg-violet-500/30 focus-visible:ring-2 focus-visible:ring-violet-400/60"
           >
             <Play className="h-4 w-4" />
@@ -867,14 +887,19 @@ function SimulationProgressCard({
 }) {
   const info = SIMULATION_STEPS[step];
   return (
-    <Card className={cn("border", info.colour)}>
+    <Card className={cn("border", info.colour)} data-testid="simulation-progress">
       <CardContent className="pt-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
             <Zap className="h-8 w-8 text-violet-400 animate-pulse" />
           </div>
           <div>
-            <p className="text-base font-bold text-white">{info.title}</p>
+            <p
+              className="text-base font-bold text-white"
+              data-testid="simulation-step-title"
+            >
+              {info.title}
+            </p>
             <p className="mt-1 text-sm text-slate-400">{info.desc}</p>
           </div>
           {step === "decision" && (
@@ -889,6 +914,7 @@ function SimulationProgressCard({
           )}
           <button
             onClick={onSkip}
+            data-testid="simulation-skip"
             className="text-xs text-slate-600 transition hover:text-slate-400"
           >
             Skip animation →
@@ -927,7 +953,7 @@ function BeforeAfterPanel({
   );
 
   return (
-    <Card className="border-violet-300/20">
+    <Card className="border-violet-300/20" data-testid="before-after-panel">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-violet-400" />
@@ -1067,7 +1093,7 @@ function WhatShouldWeDoCard({
   );
 
   return (
-    <Card className="border-violet-300/20">
+    <Card className="border-violet-300/20" data-testid="what-should-we-do">
       <CardHeader>
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
           What should we do?
@@ -1079,7 +1105,7 @@ function WhatShouldWeDoCard({
       <CardContent className="space-y-5">
         {/* Decision changed / unchanged */}
         {delta.changed ? (
-          <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3">
+          <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3" data-testid="urgent-decision-changed">
             <p className="text-sm font-semibold text-cyan-300">
               Decision changed
             </p>
@@ -1094,7 +1120,7 @@ function WhatShouldWeDoCard({
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3" data-testid="urgent-decision-unchanged">
             <p className="text-sm font-semibold text-emerald-300">
               Decision unchanged
             </p>
@@ -1135,7 +1161,7 @@ function WhatShouldWeDoCard({
               />
               <StatBox
                 label="Score"
-                value={rec.score.composite.toFixed(3)}
+                value={rec.score.composite.toFixed(4)}
                 accent="cyan"
               />
             </div>
@@ -1168,7 +1194,7 @@ function WhatShouldWeDoCard({
 
         {/* Keep-current comparison — show how it worsens */}
         {keepCurrentDiff.some((d) => d.changed) && (
-          <div>
+          <div data-testid="keep-current-fails">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
               Why Keep Current fails with URGENT-201
             </p>
@@ -1216,7 +1242,8 @@ function ScenarioLabControls({
     <div className="space-y-5">
       <div>
         <Label className="text-xs text-slate-400">
-          Line B capacity reduction: {what.lineBCapacityReductionPct}%
+          Line B capacity reduction:{" "}
+          <span data-testid="lab-capacity-value">{what.lineBCapacityReductionPct}</span>%
         </Label>
         <input
           type="range"
@@ -1227,6 +1254,8 @@ function ScenarioLabControls({
           onChange={(e) =>
             onChange({ lineBCapacityReductionPct: Number(e.target.value) })
           }
+          data-testid="scenario-line-b-capacity"
+          aria-label={`Line B capacity reduction: ${what.lineBCapacityReductionPct}%`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1236,7 +1265,8 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Disruption duration: {what.disruptionDurationDays} day(s)
+          Disruption duration:{" "}
+          <span data-testid="lab-duration-value">{what.disruptionDurationDays}</span> day(s)
         </Label>
         <input
           type="range"
@@ -1247,6 +1277,8 @@ function ScenarioLabControls({
           onChange={(e) =>
             onChange({ disruptionDurationDays: Number(e.target.value) })
           }
+          data-testid="scenario-duration"
+          aria-label={`Disruption duration: ${what.disruptionDurationDays} days`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1256,7 +1288,8 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Critical order #101 deadline: Day {what.criticalOrderDeadlineDays}
+          Critical order #101 deadline: Day{" "}
+          <span data-testid="lab-deadline-value">{what.criticalOrderDeadlineDays}</span>
         </Label>
         <input
           type="range"
@@ -1267,6 +1300,8 @@ function ScenarioLabControls({
           onChange={(e) =>
             onChange({ criticalOrderDeadlineDays: Number(e.target.value) })
           }
+          data-testid="scenario-critical-deadline"
+          aria-label={`Critical order deadline: Day ${what.criticalOrderDeadlineDays}`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1282,11 +1317,13 @@ function ScenarioLabControls({
           onClick={() =>
             onChange({ order103MaterialAvailable: !what.order103MaterialAvailable })
           }
+          data-testid="scenario-material"
           className={cn(
             "relative h-5 w-10 rounded-full transition",
             what.order103MaterialAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.order103MaterialAvailable}
+          aria-label="ORDER-103 material available"
         >
           <span
             className={cn(
@@ -1301,11 +1338,13 @@ function ScenarioLabControls({
         <Label className="text-xs text-slate-400">Overtime enabled</Label>
         <button
           onClick={() => onChange({ overtimeAvailable: !what.overtimeAvailable })}
+          data-testid="scenario-overtime"
           className={cn(
             "relative h-5 w-10 rounded-full transition",
             what.overtimeAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.overtimeAvailable}
+          aria-label="Overtime enabled"
         >
           <span
             className={cn(
@@ -1318,7 +1357,7 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Overtime cost: €{what.overtimeCostPerHour}/h
+          Overtime cost: €<span data-testid="lab-overtime-cost-value">{what.overtimeCostPerHour}</span>/h
         </Label>
         <input
           type="range"
@@ -1329,6 +1368,8 @@ function ScenarioLabControls({
           onChange={(e) =>
             onChange({ overtimeCostPerHour: Number(e.target.value) })
           }
+          data-testid="scenario-overtime-cost"
+          aria-label={`Overtime cost: €${what.overtimeCostPerHour}/h`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1340,11 +1381,13 @@ function ScenarioLabControls({
         <Label className="text-xs text-slate-400 mb-2 block">
           ORDER-116 priority
         </Label>
-        <div className="flex gap-2">
+        <div className="flex gap-2" data-testid="scenario-order-priority">
           {(["HIGH", "NORMAL", "LOW"] as const).map((p) => (
             <button
               key={p}
               onClick={() => onChange({ order116Priority: p })}
+              data-testid={`priority-${p.toLowerCase()}`}
+              aria-pressed={what.order116Priority === p}
               className={cn(
                 "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition",
                 what.order116Priority === p
@@ -1396,7 +1439,7 @@ function ScenarioLabResult({
     <div className="space-y-5">
       {/* Decision change banner */}
       {delta.changed ? (
-        <div className="rounded-2xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3">
+        <div className="rounded-2xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3" data-testid="decision-delta" data-decision-changed="true">
           <p className="text-sm font-semibold text-cyan-300">Decision changed</p>
           <p className="mt-1 text-sm text-slate-300">
             <span className="text-rose-300 line-through mr-2">{delta.baselineDecision.replace(/_/g, " ")}</span>
@@ -1405,7 +1448,7 @@ function ScenarioLabResult({
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-600/30 bg-slate-800/30 px-4 py-3">
+        <div className="rounded-2xl border border-slate-600/30 bg-slate-800/30 px-4 py-3" data-testid="decision-delta" data-decision-changed="false">
           <p className="text-sm font-medium text-slate-400">
             Decision unchanged: <span className="text-slate-300">{delta.scenarioDecision.replace(/_/g, " ")}</span>
           </p>
@@ -1467,7 +1510,7 @@ function ScenarioLabResult({
 
       {/* Trace diff */}
       {traceDiff.length > 0 && (
-        <div>
+        <div data-testid="decision-trace-diff">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
             Trace diff — changed rules
           </p>
@@ -1493,7 +1536,7 @@ function ScenarioLabResult({
       )}
 
       {/* Decision sensitivity */}
-      <div>
+      <div data-testid="decision-sensitivity">
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
           Decision sensitivity
         </p>
@@ -1648,6 +1691,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap gap-3">
                 <Button
                   onClick={() => setShowFullPlan(true)}
+                  data-testid="find-better-plan"
                   className="gap-2 border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
                   variant="secondary"
                 >
@@ -1656,6 +1700,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                 </Button>
                 <Button
                   onClick={handleReset}
+                  data-testid="reset-baseline"
                   variant="secondary"
                   className="gap-2"
                 >
@@ -1679,14 +1724,14 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
 
         {/* Reset button after full plan is shown */}
         {showUrgentResult && showFullPlan && (
-          <Button onClick={handleReset} variant="secondary" className="gap-2">
+          <Button onClick={handleReset} data-testid="reset-baseline" variant="secondary" className="gap-2">
             <RotateCcw className="h-3.5 w-3.5" />
             Reset to Baseline
           </Button>
         )}
 
         {/* Scenario Lab */}
-        <Card className="border-cyan-300/20">
+        <Card className="border-cyan-300/20" data-testid="scenario-lab">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1696,6 +1741,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               {!isBaseline && (
                 <button
                   onClick={handleReset}
+                  data-testid="reset-baseline-lab"
                   className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
@@ -1719,6 +1765,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   return (
                     <button
                       key={preset.id}
+                      data-testid={`preset-${preset.id}`}
                       onClick={() => {
                         clearTimers();
                         setSimulationStep("idle");
