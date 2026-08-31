@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   AlertTriangle,
   CheckCircle,
@@ -1598,10 +1599,42 @@ function ScenarioLabResult({
 // ---------------------------------------------------------------------------
 
 export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
-  const [whatIf, setWhatIf] = useState<WhatIfState>(BASELINE_WHAT_IF);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [whatIf, setWhatIf] = useState<WhatIfState>(() => {
+    const scenarioParam = searchParams.get("scenario");
+    if (scenarioParam) {
+      const match = SCENARIO_PRESETS.find((p) => p.id === scenarioParam);
+      if (match) return match.state;
+    }
+    return BASELINE_WHAT_IF;
+  });
   const [simulationStep, setSimulationStep] = useState<SimulationStep>("idle");
   const [showFullPlan, setShowFullPlan] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function clearTimers() {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }
+
+  /** Apply a preset and push its id into the URL so the link stays shareable. */
+  function applyPreset(preset: typeof SCENARIO_PRESETS[number]) {
+    clearTimers();
+    setSimulationStep("idle");
+    setShowFullPlan(false);
+    setWhatIf(preset.state);
+    const params = new URLSearchParams(searchParams.toString());
+    if (preset.id === "baseline") {
+      params.delete("scenario");
+    } else {
+      params.set("scenario", preset.id);
+    }
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
 
   const baselineResult = useMemo(
     () => runSchedulingEngine({ scenario: DEFAULT_SCENARIO, costConfig: DEFAULT_COST_CONFIG }),
@@ -1632,11 +1665,6 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   const showMainPanels = !showProgress && (!urgentActive || showFullPlan);
   const showTrigger = !urgentActive && !showProgress;
 
-  function clearTimers() {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  }
-
   function handleSimulate() {
     clearTimers();
     setWhatIf((prev) => ({ ...prev, includeUrgentOrder: true }));
@@ -1659,6 +1687,10 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
     setWhatIf(BASELINE_WHAT_IF);
     setSimulationStep("idle");
     setShowFullPlan(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("scenario");
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   // Cleanup pending timers when component unmounts
@@ -1805,12 +1837,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                     <button
                       key={preset.id}
                       data-testid={`preset-${preset.id}`}
-                      onClick={() => {
-                        clearTimers();
-                        setSimulationStep("idle");
-                        setShowFullPlan(false);
-                        setWhatIf(preset.state);
-                      }}
+                      onClick={() => applyPreset(preset)}
                       className={cn(
                         "rounded-lg border px-3 py-1 text-xs font-medium transition",
                         isActive
