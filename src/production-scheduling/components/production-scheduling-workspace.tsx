@@ -1362,7 +1362,7 @@ function ScenarioLabControls({
           <span
             className={cn(
               "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-              what.order103MaterialAvailable ? "translate-x-5" : "translate-x-0.5",
+              what.order103MaterialAvailable ? "translate-x-[22px]" : "translate-x-0.5",
             )}
           />
         </button>
@@ -1383,7 +1383,7 @@ function ScenarioLabControls({
           <span
             className={cn(
               "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-              what.overtimeAvailable ? "translate-x-5" : "translate-x-0.5",
+              what.overtimeAvailable ? "translate-x-[22px]" : "translate-x-0.5",
             )}
           />
         </button>
