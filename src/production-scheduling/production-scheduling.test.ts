@@ -1244,3 +1244,157 @@ describe("45. score consistency — recommended always has highest composite", (
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// 46: Financial impact rendering — separate current / recommended / delta
+// ---------------------------------------------------------------------------
+
+describe("46. financial impact data model", () => {
+  // Helper: currency formatted with en-US locale (matches the eur() helper in the UI)
+  function eurFmt(v: number): string {
+    return `€${Math.round(v).toLocaleString("en-US")}`;
+  }
+
+  test("Test 1: delay cost — current 4000, recommended 0, delta -4000", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
+    assert.ok(rec, "Recommended strategy must exist");
+
+    const current = keep.financialImpact.delayCost;
+    const recommended = rec.financialImpact.delayCost;
+    const delta = recommended - current;
+
+    // Values are separate numeric fields, not a combined string
+    assert.equal(typeof current, "number", "current must be a number");
+    assert.equal(typeof recommended, "number", "recommended must be a number");
+    assert.equal(delta, recommended - current, "delta must equal recommended - current");
+
+    // Format each independently — no concatenation
+    const currentStr = eurFmt(current);
+    const recommendedStr = eurFmt(recommended);
+    const deltaStr = delta === 0
+      ? eurFmt(0)
+      : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
+
+    // They must be independent strings, not a combined one like "€0−€4,000"
+    assert.ok(!currentStr.includes("−"), "current formatted value must not contain −");
+    assert.ok(!recommendedStr.includes("−"), "recommended formatted value must not contain −");
+    // delta string may contain − but is separate
+    assert.equal(currentStr, eurFmt(4000), `current delay cost should be €4,000, got ${currentStr}`);
+    assert.equal(recommendedStr, eurFmt(0), `recommended delay cost should be €0, got ${recommendedStr}`);
+    assert.equal(deltaStr, `−${eurFmt(4000)}`, `delta should be −€4,000, got ${deltaStr}`);
+  });
+
+  test("Test 2: total impact — current 6550, recommended 2550, delta -4000", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
+    assert.ok(rec, "Recommended strategy must exist");
+
+    const current = keep.financialImpact.totalCost;
+    const recommended = rec.financialImpact.totalCost;
+    const delta = recommended - current;
+
+    assert.equal(eurFmt(current), eurFmt(6550), `current total should be €6,550, got ${eurFmt(current)}`);
+    assert.equal(eurFmt(recommended), eurFmt(2550), `recommended total should be €2,550, got ${eurFmt(recommended)}`);
+    assert.equal(
+      delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
+      `−${eurFmt(4000)}`,
+      "delta should be −€4,000",
+    );
+
+    // Invariant: delta = recommended - current
+    assert.equal(delta, recommended - current);
+  });
+
+  test("Test 3: equal values — current 2550, recommended 2550, delta 0", () => {
+    const current = 2550;
+    const recommended = 2550;
+    const delta = Math.round(recommended) - Math.round(current);
+
+    assert.equal(delta, 0, "delta must be 0 when current === recommended");
+    assert.equal(eurFmt(current), eurFmt(recommended), "formatted current must equal formatted recommended");
+
+    // When equal, delta should format as €0, not "€0 higher cost"
+    const deltaStr = delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
+    assert.equal(deltaStr, eurFmt(0), "delta of 0 must format as €0");
+    assert.ok(!deltaStr.includes("higher cost"), 'delta must not contain "higher cost" when equal');
+  });
+
+  test("Test 4: revenue at risk — current 8500, recommended 0, delta -8500", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
+    assert.ok(rec, "Recommended strategy must exist");
+
+    const current = keep.financialImpact.revenueAtRisk;
+    const recommended = rec.financialImpact.revenueAtRisk;
+    const delta = recommended - current;
+
+    assert.equal(eurFmt(current), eurFmt(8500), `current revenue at risk should be €8,500, got ${eurFmt(current)}`);
+    assert.equal(eurFmt(recommended), eurFmt(0), `recommended revenue at risk should be €0, got ${eurFmt(recommended)}`);
+    assert.equal(
+      delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
+      `−${eurFmt(8500)}`,
+      "delta should be −€8,500",
+    );
+  });
+
+  test("financial invariant: totalCurrent equals sum of current cost components", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
+
+    const fi = keep.financialImpact;
+    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    assert.equal(
+      Math.round(fi.totalCost),
+      Math.round(sum),
+      `totalCost (${fi.totalCost}) must equal sum of components (${sum})`,
+    );
+  });
+
+  test("financial invariant: totalRecommended equals sum of recommended cost components", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "Recommended strategy must exist");
+
+    const fi = rec.financialImpact;
+    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    assert.equal(
+      Math.round(fi.totalCost),
+      Math.round(sum),
+      `totalCost (${fi.totalCost}) must equal sum of components (${sum})`,
+    );
+  });
+
+  test("financial invariant: delta equals recommended - current for total", () => {
+    const result = runSchedulingEngine(DEFAULT_REQUEST);
+    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(keep && rec);
+
+    const delta = rec.financialImpact.totalCost - keep.financialImpact.totalCost;
+    assert.equal(delta, -4000, "delta should be −4000 for the baseline scenario");
+    // avoidedCostVsBaseline in engine output matches
+    assert.equal(
+      Math.round(result.avoidedCostVsBaseline),
+      Math.round(keep.financialImpact.totalCost - rec.financialImpact.totalCost),
+      "avoidedCostVsBaseline must equal current - recommended",
+    );
+  });
+
+  test("currency formatting uses en-US locale (comma thousands separator)", () => {
+    assert.equal(eurFmt(4000), "€4,000");
+    assert.equal(eurFmt(2550), "€2,550");
+    assert.equal(eurFmt(8500), "€8,500");
+    assert.equal(eurFmt(380), "€380");
+    assert.equal(eurFmt(0), "€0");
+    // Must NOT use European period separator
+    assert.ok(!eurFmt(4000).includes("4.000"), "4000 must not use European period separator");
+  });
+});
