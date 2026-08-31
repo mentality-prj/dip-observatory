@@ -10,21 +10,7 @@
 
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "/en/production-scheduling";
-
-// Helper: activate the production disruption scenario from the Scenario Lab
-async function activateDisruptionScenario(page: import("@playwright/test").Page) {
-  // Open Scenario Lab if not already open
-  const labToggle = page.getByTestId("scenario-lab-toggle");
-  if (await labToggle.isVisible()) {
-    await labToggle.click();
-  }
-  // Select the production-disruption preset from the scenario selector
-  const scenarioSelect = page.getByTestId("scenario-selector");
-  if (await scenarioSelect.isVisible()) {
-    await scenarioSelect.selectOption("production-disruption");
-  }
-}
+const BASE_URL = "/en/production-scheduling?scenario=production-disruption";
 
 test.describe("production-disruption: scenario activation", () => {
   test.beforeEach(async ({ page }) => {

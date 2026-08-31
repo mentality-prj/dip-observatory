@@ -1771,7 +1771,7 @@ function DisruptionImpactSummary({
       <div className="flex flex-wrap items-start gap-3 text-sm text-slate-400">
         <div className="rounded-lg border border-white/10 bg-slate-800/40 px-3 py-2 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">CURRENT PLAN</p>
-          <p className="text-lg font-bold text-white">{preRec?.onTimeCount ?? 0}/{preResult.strategies[0]?.totalOrders ?? 0}</p>
+          <p className="text-lg font-bold text-white">{preRec?.onTimeCount ?? 0}/{preRec?.totalOrders ?? 0}</p>
           <p className="text-[10px] text-slate-500">orders on time</p>
         </div>
         <div className="flex items-center text-slate-600 mt-4">↓</div>
