@@ -55,9 +55,6 @@ test.describe("production-scheduling: Critical Aerospace Order (Part C)", () => 
   });
 
   test("activating aerospace preset triggers engine recalculation", async ({ page }) => {
-    // Record baseline financial summary before preset change
-    const summaryBefore = await page.getByTestId("strategy-scores").allInnerTexts().catch(() => []);
-
     const aerBtn = page.getByTestId("preset-critical-aerospace-order");
     await aerBtn.click();
 

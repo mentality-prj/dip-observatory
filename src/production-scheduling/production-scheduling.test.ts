@@ -1549,13 +1549,11 @@ describe("55. Critical Aerospace Order — recommendation from engine", () => {
       validStrategies.includes(result.recommendedStrategy),
       `recommendedStrategy (${result.recommendedStrategy}) must be a valid strategy`,
     );
-    // The recommended strategy must have the highest composite score
-    const topStrategy = [...result.strategies].sort(
-      (a, b) => b.score.composite - a.score.composite,
-    )[0];
-    assert.ok(topStrategy, "At least one strategy must have a composite score");
-    assert.equal(topStrategy.strategyId, result.recommendedStrategy,
-      "Highest composite-score strategy must match recommendedStrategy");
+    // Recommendation must match the strategy ranked #1 by the engine
+    const topRankedStrategy = result.strategies.find((s) => s.rank === 1);
+    assert.ok(topRankedStrategy, "A feasible strategy should be ranked #1");
+    assert.equal(topRankedStrategy.strategyId, result.recommendedStrategy,
+      "Rank #1 strategy must match recommendedStrategy");
   });
 });
 

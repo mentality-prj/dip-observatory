@@ -441,8 +441,6 @@ export const AERO_ORDER: SchedulingOrder = {
 
 /**
  * Return a new scenario that appends AERO-201 to the order queue.
- * Also reduces LINE-A available hours slightly to create meaningful
- * capacity pressure (the machine already holds ORDER-102 and ORDER-105).
  * Never mutates the base scenario.
  *
  * If AERO-201 is already present, returns a scenario with the `-AERO` suffix

@@ -27,7 +27,7 @@ import {
   DEFAULT_COST_CONFIG,
   CONSTRAINT_RULES,
 } from "@/production-scheduling/lib/engine";
-import { DEFAULT_SCENARIO, URGENT_ORDER, AERO_ORDER } from "@/production-scheduling/data/scenario";
+import { DEFAULT_SCENARIO, URGENT_ORDER } from "@/production-scheduling/data/scenario";
 import {
   computeSchedulingSensitivity,
   computeSchedulingTraceDiff,
