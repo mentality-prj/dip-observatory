@@ -1,8 +1,8 @@
 /**
- * Scenario lab helpers for the SURMA production scheduling demonstrator.
+ * Scenario lab helpers for the production scheduling demonstrator.
  * Pure deterministic functions for sensitivity analysis and trace diff.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 import {
   runSchedulingEngine,
@@ -277,6 +277,13 @@ export function computeSchedulingDecisionDelta(
   if (what.order116Priority !== baseWhat.order116Priority) {
     changedReasons.push(
       `ORDER-116 priority: ${baseWhat.order116Priority} → ${what.order116Priority}`,
+    );
+  }
+  if (what.includeAerospaceOrder !== baseWhat.includeAerospaceOrder) {
+    changedReasons.push(
+      what.includeAerospaceOrder
+        ? "Critical Aerospace Order AERO-201 added to production queue"
+        : "Critical Aerospace Order AERO-201 removed from production queue",
     );
   }
   if (what.includeUrgentOrder !== baseWhat.includeUrgentOrder) {

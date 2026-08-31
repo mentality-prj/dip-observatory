@@ -21,7 +21,9 @@ import {
   getDemoDecision,
   ORDERS,
   URGENT_ORDER,
+  AERO_ORDER,
   buildUrgentOrderScenario,
+  buildAerospaceOrderScenario,
   getInitialProductionScenario,
 } from "@/production-scheduling/data/scenario";
 import {
@@ -1396,5 +1398,258 @@ describe("46. financial impact data model", () => {
     assert.equal(eurFmt(0), "€0");
     // Must NOT use European period separator
     assert.ok(!eurFmt(4000).includes("4.000"), "4000 must not use European period separator");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Critical Aerospace Order scenario tests (Part C — 20 cases)
+// ---------------------------------------------------------------------------
+
+describe("47. Critical Aerospace Order — determinism", () => {
+  test("1. scenario is deterministic (same result on repeated runs)", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const req = { scenario, costConfig: DEFAULT_COST_CONFIG };
+    const a = runSchedulingEngine(req);
+    const b = runSchedulingEngine(req);
+    assert.equal(a.recommendedStrategy, b.recommendedStrategy);
+    assert.equal(a.totalFinancialImpact, b.totalFinancialImpact);
+    assert.equal(a.auditTrail.decisionId, b.auditTrail.decisionId);
+  });
+});
+
+describe("48. Critical Aerospace Order — AERO-201 order presence", () => {
+  test("2. AERO-201 is included only after scenario activation", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const hasAero = scenario.orders.some((o) => o.id === "AERO-201");
+    assert.equal(hasAero, true, "AERO-201 must be present when includeAerospaceOrder is true");
+  });
+
+  test("3. Baseline does not contain AERO-201", () => {
+    const baselineScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    const hasAero = baselineScenario.orders.some((o) => o.id === "AERO-201");
+    assert.equal(hasAero, false, "Baseline must not contain AERO-201");
+  });
+
+  test("AERO-201 is included via buildAerospaceOrderScenario helper", () => {
+    const scenario = buildAerospaceOrderScenario(DEFAULT_SCENARIO);
+    assert.ok(scenario.orders.some((o) => o.id === "AERO-201"), "helper must include AERO-201");
+    // Calling again on already-patched scenario must be idempotent
+    const again = buildAerospaceOrderScenario(scenario);
+    const aeroCount = again.orders.filter((o) => o.id === "AERO-201").length;
+    assert.equal(aeroCount, 1, "AERO-201 must appear exactly once");
+  });
+});
+
+describe("49. Critical Aerospace Order — capacity constraints", () => {
+  test("4. Capacity constraints are recalculated after adding AERO-201", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+
+    // Scenario snapshot must include AERO-201
+    assert.ok(
+      aerResult.scenarioSnapshot.orders.some((o) => o.id === "AERO-201"),
+      "Scenario snapshot must include AERO-201",
+    );
+    // Engine must have produced a valid recommended strategy
+    assert.ok(aerResult.recommendedStrategy, "recommendedStrategy must be set");
+    // RULE-CAPACITY constraint must be evaluated
+    const rec = aerResult.strategies.find((s) => s.strategyId === aerResult.recommendedStrategy);
+    assert.ok(rec, "recommended strategy must exist");
+    const capRule = rec.constraintResults.find((r) => r.ruleId === "RULE-CAPACITY");
+    assert.ok(capRule, "RULE-CAPACITY must be evaluated in the aerospace scenario");
+  });
+});
+
+describe("50. Critical Aerospace Order — deadline constraints", () => {
+  test("5. Deadline constraints are recalculated for AERO-201 (3-day deadline)", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "Recommended strategy must exist");
+    // RULE-CRITICAL-DEADLINE must be present in constraint results
+    const deadlineRule = rec.constraintResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE");
+    assert.ok(deadlineRule, "RULE-CRITICAL-DEADLINE must be evaluated in the aerospace scenario");
+  });
+});
+
+describe("51. Critical Aerospace Order — machine compatibility", () => {
+  test("6. Machine compatibility is respected — AERO-201 is CARPORT category", () => {
+    assert.deepEqual(AERO_ORDER.compatibleLines, ["LINE-A", "LINE-C"],
+      "AERO-201 must be compatible with LINE-A and LINE-C only");
+    assert.equal(AERO_ORDER.setupCategory, "CARPORT",
+      "AERO-201 setup category must be CARPORT");
+  });
+});
+
+describe("52. Critical Aerospace Order — setup/changeover cost", () => {
+  test("7. Setup/changeover is calculated (setupCost present in financial impact)", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "Recommended strategy must exist");
+    assert.ok(typeof rec.financialImpact.setupCost === "number",
+      "setupCost must be a number");
+    assert.ok(rec.financialImpact.setupCost >= 0, "setupCost must be non-negative");
+  });
+});
+
+describe("53. Critical Aerospace Order — overtime calculation", () => {
+  test("8. Overtime is calculated when overtime is enabled with aerospace order", () => {
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+      overtimeAvailable: true,
+    };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const ot = result.strategies.find((s) => s.strategyId === "USE_OVERTIME");
+    assert.ok(ot, "USE_OVERTIME strategy must exist");
+    assert.ok(typeof ot.financialImpact.overtimeCost === "number",
+      "overtimeCost must be a number");
+  });
+});
+
+describe("54. Critical Aerospace Order — financial impact", () => {
+  test("9. Financial impact is calculated and components are consistent", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    assert.ok(rec, "Recommended strategy must exist");
+    const fi = rec.financialImpact;
+    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    assert.equal(
+      Math.round(fi.totalCost),
+      Math.round(sum),
+      "totalCost must equal sum of components",
+    );
+  });
+});
+
+describe("55. Critical Aerospace Order — recommendation from engine", () => {
+  test("10. Recommendation comes from engine output (not hardcoded)", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    // The recommended strategy must be one of the known strategy IDs
+    const validStrategies = [
+      "KEEP_CURRENT_SCHEDULE",
+      "PRIORITIZE_URGENT_ORDERS",
+      "REDISTRIBUTE_TO_OTHER_LINES",
+      "DELAY_LOW_PRIORITY_ORDERS",
+      "USE_OVERTIME",
+    ];
+    assert.ok(
+      validStrategies.includes(result.recommendedStrategy),
+      `recommendedStrategy (${result.recommendedStrategy}) must be a valid strategy`,
+    );
+    // Recommendation must match the strategy ranked #1 by the engine
+    const topRankedStrategy = result.strategies.find((s) => s.rank === 1);
+    assert.ok(topRankedStrategy, "A feasible strategy should be ranked #1");
+    assert.equal(topRankedStrategy.strategyId, result.recommendedStrategy,
+      "Rank #1 strategy must match recommendedStrategy");
+  });
+});
+
+describe("56. Critical Aerospace Order — explanation matches engine output", () => {
+  test("11. Explanation matches engine output (factors reference actual data)", () => {
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    assert.ok(result.explanation, "explanation must exist");
+    assert.ok(result.explanation.reasons.length > 0, "explanation must have reasons");
+    // All reasons must have a label
+    for (const reason of result.explanation.reasons) {
+      assert.ok(typeof reason.label === "string" && reason.label.length > 0,
+        "each reason must have a non-empty label",
+      );
+    }
+  });
+});
+
+describe("57. Critical Aerospace Order — trace matches engine output", () => {
+  test("12. Trace diff reflects scenario changes", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+
+    const traceDiff = computeSchedulingTraceDiff(baseResult, aerResult);
+    assert.ok(Array.isArray(traceDiff), "trace diff must be an array");
+    // Each entry must have required fields
+    for (const entry of traceDiff) {
+      assert.ok(entry.ruleId, "trace entry must have ruleId");
+      assert.ok(entry.ruleName, "trace entry must have ruleName");
+      assert.ok(["PASS", "FAIL"].includes(entry.baselineResult), "baselineResult must be PASS/FAIL");
+      assert.ok(["PASS", "FAIL"].includes(entry.scenarioResult), "scenarioResult must be PASS/FAIL");
+    }
+  });
+});
+
+describe("58. Critical Aerospace Order — reset restores exact baseline", () => {
+  test("13. Reset restores exact baseline (no AERO-201 remains)", () => {
+    // Simulate activating the aerospace preset then reverting to BASELINE_WHAT_IF
+    const aerWhat: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const aerScenario = buildSchedulingScenario(DEFAULT_SCENARIO, aerWhat);
+    assert.ok(aerScenario.orders.some((o) => o.id === "AERO-201"), "aerospace scenario has AERO-201");
+
+    // Reset: rebuild with BASELINE_WHAT_IF
+    const resetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    assert.ok(!resetScenario.orders.some((o) => o.id === "AERO-201"),
+      "Reset scenario must not contain AERO-201");
+
+    // Reset result must match original DEFAULT_REQUEST result
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const resetResult = runSchedulingEngine({ scenario: resetScenario, costConfig: DEFAULT_COST_CONFIG });
+    assert.equal(resetResult.recommendedStrategy, baseResult.recommendedStrategy,
+      "Reset recommended strategy must match baseline");
+    assert.equal(
+      Math.round(resetResult.totalFinancialImpact),
+      Math.round(baseResult.totalFinancialImpact),
+      "Reset financial impact must match baseline",
+    );
+  });
+
+  test("Scenario Lab preset for Critical Aerospace Order exists", () => {
+    const aerPreset = SCENARIO_PRESETS.find((p) => p.id === "critical-aerospace-order");
+    assert.ok(aerPreset, "critical-aerospace-order preset must exist");
+    assert.equal(aerPreset.label, "Critical Aerospace Order");
+    assert.equal(aerPreset.state.includeAerospaceOrder, true);
+    assert.equal(aerPreset.state.includeUrgentOrder, false,
+      "Aerospace preset must not activate urgent order");
+  });
+
+  test("Decision delta mentions AERO-201 when aerospace order added", () => {
+    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
+    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
+    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const delta = computeSchedulingDecisionDelta(baseResult, aerResult, what, BASELINE_WHAT_IF);
+    const mentions = delta.changedReasons.some((r) => r.includes("AERO-201"));
+    assert.ok(mentions, "changedReasons must mention AERO-201 when aerospace order is added");
+  });
+});
+
+describe("59. Critical Aerospace Order — AERO-201 order values", () => {
+  test("AERO-201 has CRITICAL priority", () => {
+    assert.equal(AERO_ORDER.priority, "CRITICAL");
+  });
+
+  test("AERO-201 has 3-day deadline", () => {
+    assert.equal(AERO_ORDER.deadlineDays, 3);
+  });
+
+  test("AERO-201 has explicit delay penalty", () => {
+    assert.ok(AERO_ORDER.delayPenaltyPerDay > 0, "delay penalty must be positive");
+  });
+
+  test("AERO-201 has available material", () => {
+    assert.equal(AERO_ORDER.materialStatus, "AVAILABLE");
   });
 });

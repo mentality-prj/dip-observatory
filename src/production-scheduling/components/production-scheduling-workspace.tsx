@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
+import { useState, useMemo, useRef, useEffect, useContext, createContext, useTransition, type ReactNode } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   AlertTriangle,
   CheckCircle,
@@ -21,7 +22,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
+import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from "@/lib/observatory-i18n";
+import {
+  getProductionSchedulingCopy,
+  type ProductionSchedulingCopy,
+} from "@/production-scheduling/lib/production-scheduling-i18n";
 import {
   runSchedulingEngine,
   DEFAULT_COST_CONFIG,
@@ -49,6 +54,18 @@ import type {
   StrategyEvaluation,
   StrategyId,
 } from "@/production-scheduling/types";
+
+// ---------------------------------------------------------------------------
+// i18n context — all sub-components read copy via usePSCopy()
+// ---------------------------------------------------------------------------
+
+const PSCopyContext = createContext<ProductionSchedulingCopy>(
+  getProductionSchedulingCopy("en"),
+);
+
+function usePSCopy() {
+  return useContext(PSCopyContext);
+}
 
 // ---------------------------------------------------------------------------
 // Formatting helpers
@@ -125,14 +142,15 @@ function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function Disclaimer() {
+function Disclaimer({ text }: { text?: string }) {
+  const copy = usePSCopy();
   return (
     <div
       data-testid="synthetic-disclaimer"
       className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2"
     >
       <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80">
-        Synthetic demonstration — not SURMA SYSTEMS production data
+        {text ?? copy.disclaimer.default}
       </p>
     </div>
   );
@@ -200,6 +218,7 @@ function CollapseSection({
 // ---------------------------------------------------------------------------
 
 function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
+  const copy = usePSCopy();
   const line = scenario.lines.find((l) => l.id === scenario.disruption.affectedLineId);
   const before = line?.normalHoursPerDay ?? 8;
   const after = before * (1 - scenario.disruption.capacityReductionFactor);
@@ -213,9 +232,9 @@ function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
         <div className="flex flex-wrap items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-rose-400" />
           <span className="text-sm font-semibold uppercase tracking-widest text-rose-300">
-            Production disruption
+            {copy.disruption.eyebrow}
           </span>
-          <Badge variant="rose">Capacity at risk</Badge>
+          <Badge variant="rose">{copy.disruption.badge}</Badge>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatBox
@@ -224,25 +243,25 @@ function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
             accent="rose"
           />
           <StatBox
-            label="Capacity reduction"
+            label={copy.disruption.capacityReduction}
             value={`−${(scenario.disruption.capacityReductionFactor * 100).toFixed(0)}%`}
             accent="rose"
           />
           <StatBox
-            label="Duration"
-            value={`${scenario.disruption.durationDays} day(s)`}
+            label={copy.disruption.duration}
+            value={`${scenario.disruption.durationDays} ${copy.scenarioLab.controls.dayUnit}`}
             accent="amber"
           />
           <StatBox
-            label="Hours lost (disruption period)"
+            label={copy.disruption.hoursLost}
             value={`${hoursLost.toFixed(0)}h`}
             accent="amber"
-            sub={`${hoursRemaining.toFixed(0)}h remaining`}
+            sub={`${hoursRemaining.toFixed(0)}h ${copy.disruption.hoursRemaining}`}
           />
         </div>
         {scenario.disruption.reason && (
           <p className="mt-3 text-xs text-slate-500">
-            Reason: {scenario.disruption.reason}
+            {copy.disruption.reason}: {scenario.disruption.reason}
           </p>
         )}
       </CardContent>
@@ -343,6 +362,7 @@ function RecommendedStrategyCard({
 }: {
   result: SchedulingDecisionResponse;
 }) {
+  const copy = usePSCopy();
   const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
   const baseline = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
   if (!rec) return null;
@@ -356,14 +376,14 @@ function RecommendedStrategyCard({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${cls.headerText}`}>
-              Recommended schedule
+              {copy.recommended.eyebrow}
             </p>
             <CardTitle className={`mt-1 text-xl ${cls.titleText}`} data-testid="decision-strategy-label">
               {rec.strategyLabel.toUpperCase()}
             </CardTitle>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-500">Avoided cost vs. current plan</p>
+            <p className="text-xs text-slate-500">{copy.recommended.avoidedCostLabel}</p>
             <p className="text-2xl font-bold text-emerald-300">{eur(result.avoidedCostVsBaseline)}</p>
           </div>
         </div>
@@ -371,30 +391,30 @@ function RecommendedStrategyCard({
       <CardContent className="space-y-6">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatBox
-            label="Orders on time"
+            label={copy.recommended.ordersOnTime}
             value={`${rec.onTimeCount} / ${rec.totalOrders}`}
             accent="emerald"
           />
           <StatBox
-            label="Orders delayed"
+            label={copy.recommended.ordersDelayed}
             value={`${rec.delayedCount}`}
             accent={rec.delayedCount > 0 ? "amber" : "emerald"}
           />
           <StatBox
-            label="Total impact"
+            label={copy.recommended.totalImpact}
             value={eur(rec.financialImpact.totalCost)}
             accent="amber"
             sub={`vs ${baseline ? eur(baseline.financialImpact.totalCost) : "—"} current`}
           />
           <StatBox
-            label="Capacity utilisation"
+            label={copy.recommended.capacityUtilisation}
             value={pct(rec.score.capacityUtilization)}
             accent="cyan"
           />
         </div>
 
         <div>
-          <SectionLabel>Production schedule</SectionLabel>
+          <SectionLabel>{copy.recommended.productionSchedule}</SectionLabel>
           <ScheduleTimeline
             tasks={rec.schedule}
             lineIds={lineIds}
@@ -406,13 +426,13 @@ function RecommendedStrategyCard({
         {result.avoidedCostVsBaseline > 0 && (
           <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              Avoided cost
+              {copy.recommended.avoidedCostHeading}
             </p>
             <p className="mt-1 text-2xl font-bold text-emerald-300">
               {eur(result.avoidedCostVsBaseline)}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Compared to keeping the current schedule under disruption.
+              {copy.recommended.avoidedCostComparedTo}
             </p>
           </div>
         )}
@@ -430,19 +450,21 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
   const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
   if (!rec) return null;
 
+  const copy = usePSCopy();
+  const r = copy.financial.rows;
   const rows: Array<{ label: string; keep: number; rec: number }> = [
-    { label: "Delay cost", keep: keep?.financialImpact.delayCost ?? 0, rec: rec.financialImpact.delayCost },
-    { label: "Overtime cost", keep: keep?.financialImpact.overtimeCost ?? 0, rec: rec.financialImpact.overtimeCost },
-    { label: "Setup / changeover cost", keep: keep?.financialImpact.setupCost ?? 0, rec: rec.financialImpact.setupCost },
-    { label: "Unused capacity cost", keep: keep?.financialImpact.unusedCapacityCost ?? 0, rec: rec.financialImpact.unusedCapacityCost },
-    { label: "Total operational impact", keep: keep?.financialImpact.totalCost ?? 0, rec: rec.financialImpact.totalCost },
-    { label: "Revenue at risk", keep: keep?.financialImpact.revenueAtRisk ?? 0, rec: rec.financialImpact.revenueAtRisk },
+    { label: r.delayCost, keep: keep?.financialImpact.delayCost ?? 0, rec: rec.financialImpact.delayCost },
+    { label: r.overtimeCost, keep: keep?.financialImpact.overtimeCost ?? 0, rec: rec.financialImpact.overtimeCost },
+    { label: r.setupCost, keep: keep?.financialImpact.setupCost ?? 0, rec: rec.financialImpact.setupCost },
+    { label: r.unusedCapacityCost, keep: keep?.financialImpact.unusedCapacityCost ?? 0, rec: rec.financialImpact.unusedCapacityCost },
+    { label: r.totalCost, keep: keep?.financialImpact.totalCost ?? 0, rec: rec.financialImpact.totalCost },
+    { label: r.revenueAtRisk, keep: keep?.financialImpact.revenueAtRisk ?? 0, rec: rec.financialImpact.revenueAtRisk },
   ];
 
   return (
     <Card data-testid="financial-impact">
       <CardHeader>
-        <CardTitle className="text-base">Financial Impact</CardTitle>
+        <CardTitle className="text-base">{copy.financial.title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -451,13 +473,13 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
               <tr className="border-b border-white/10">
                 <th className="py-2 pr-4 text-left text-xs text-slate-400" />
                 <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-rose-400">
-                  Current
+                  {copy.financial.currentPlan}
                 </th>
                 <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-emerald-400">
                   {rec.strategyLabel}
                 </th>
                 <th className="py-2 text-right text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Delta
+                  {copy.financial.delta}
                 </th>
               </tr>
             </thead>
@@ -515,19 +537,21 @@ function FinancialImpactPanel({ result }: { result: SchedulingDecisionResponse }
 // ---------------------------------------------------------------------------
 
 function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
+  const copy = usePSCopy();
+  const h = copy.alternatives.headers;
   return (
     <Card data-testid="alternative-schedules">
       <CardHeader>
-        <CardTitle className="text-base">Alternative Schedules</CardTitle>
+        <CardTitle className="text-base">{copy.alternatives.title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10">
-                {["Alternative", "Feasible", "On time", "Delayed", "Total impact", "Score", ""].map((h) => (
-                  <th key={h} className="py-2 pr-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-400">
-                    {h}
+                {[h.strategy, h.feasibility, h.ordersOnTime, h.delayed, h.totalImpact, h.score, ""].map((hdr) => (
+                  <th key={hdr} className="py-2 pr-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    {hdr}
                   </th>
                 ))}
               </tr>
@@ -546,7 +570,7 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                     </td>
                     <td className="py-2 pr-3">
                       <Badge variant={FEASIBILITY_COLOUR[s.feasibility]}>
-                        {s.feasibility}
+                        {s.feasibility === "FEASIBLE" ? copy.alternatives.feasible : copy.alternatives.infeasible}
                       </Badge>
                     </td>
                     <td className="py-2 pr-3 text-slate-300">
@@ -564,11 +588,11 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
                     <td className="py-2">
                       {isRec ? (
                         <Badge variant="emerald" data-testid="alternative-recommended-badge">
-                          Recommended
+                          {copy.alternatives.recommended}
                         </Badge>
                       ) : s.feasibility === "INFEASIBLE" ? (
                         <span className="text-xs text-rose-400">
-                          {s.blockingConstraints[0] ?? "Constraint violated"}
+                          {s.blockingConstraints[0] ?? copy.alternatives.blocking}
                         </span>
                       ) : (() => {
                           const recStrategy = result.strategies.find(
@@ -623,10 +647,11 @@ function AlternativesTable({ result }: { result: SchedulingDecisionResponse }) {
 // ---------------------------------------------------------------------------
 
 function WhyThisSchedule({ result }: { result: SchedulingDecisionResponse }) {
+  const copy = usePSCopy();
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Why This Schedule?</CardTitle>
+        <CardTitle className="text-base">{copy.alternatives.whyTitle}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {result.explanation.reasons.map((r, i) => (
@@ -668,11 +693,12 @@ function WhyThisSchedule({ result }: { result: SchedulingDecisionResponse }) {
 // ---------------------------------------------------------------------------
 
 function AssumptionsPanel() {
+  const copy = usePSCopy();
   return (
-    <CollapseSection title="Assumptions">
+    <CollapseSection title={copy.assumptions.title}>
       <div className="space-y-3 text-xs text-slate-400">
         <div className="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2 text-amber-200/80">
-          All values are synthetic demonstration assumptions. Not SURMA SYSTEMS actual economics.
+          {copy.disclaimer.default}
         </div>
         <table className="w-full">
           <tbody className="divide-y divide-white/5">
@@ -709,23 +735,25 @@ function AssumptionsPanel() {
 // ---------------------------------------------------------------------------
 
 function AuditTrailPanel({ result }: { result: SchedulingDecisionResponse }) {
+  const copy = usePSCopy();
   const a = result.auditTrail;
+  const f = copy.audit.fields;
   return (
-    <CollapseSection title="Audit Trail">
+    <CollapseSection title={copy.audit.title}>
       <div className="space-y-2 font-mono text-[11px] text-slate-400">
         {[
-          ["Decision ID", a.decisionId],
-          ["Scenario ID", a.scenarioId],
-          ["Computed at", a.computedAt],
-          ["Engine version", a.engineVersion],
-          ["Config version", a.configVersion],
-          ["Decision status", a.decisionStatus],
-          ["Recommended strategy", a.recommendedStrategy],
-          ["Strategies evaluated", a.strategiesEvaluated.join(", ")],
-          ["Rules executed", a.rulesExecuted.join(", ")],
-          ["Total financial impact", eur(a.totalFinancialImpact)],
-          ["Avoided cost vs baseline", eur(a.avoidedCostVsBaseline)],
-          ["Source", a.source],
+          [f.decisionId, a.decisionId],
+          [f.scenarioId, a.scenarioId],
+          [f.computedAt, a.computedAt],
+          [f.engineVersion, a.engineVersion],
+          [f.configVersion, a.configVersion],
+          [f.decisionStatus, a.decisionStatus],
+          [f.recommendedStrategy, a.recommendedStrategy],
+          [f.strategiesEvaluated, a.strategiesEvaluated.join(", ")],
+          [f.rulesExecuted, a.rulesExecuted.join(", ")],
+          [f.totalImpact, eur(a.totalFinancialImpact)],
+          [f.avoidedCost, eur(a.avoidedCostVsBaseline)],
+          [f.source, a.source],
         ].map(([k, v]) => (
           <div key={k} className="flex gap-4">
             <span className="w-48 flex-shrink-0 text-slate-600">{k}</span>
@@ -742,11 +770,12 @@ function AuditTrailPanel({ result }: { result: SchedulingDecisionResponse }) {
 // ---------------------------------------------------------------------------
 
 function DecisionTracePanel({ result }: { result: SchedulingDecisionResponse }) {
+  const copy = usePSCopy();
   const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
   if (!rec) return null;
 
   return (
-    <CollapseSection title="Decision Trace">
+    <CollapseSection title={copy.decisionTrace.title}>
       <div className="space-y-2">
         <p className="text-xs text-slate-500 mb-4">
           Constraint evaluation for the recommended strategy:{" "}
@@ -798,19 +827,21 @@ function DecisionTracePanel({ result }: { result: SchedulingDecisionResponse }) 
 type SimulationStep = "idle" | "event" | "impact" | "decision" | "complete";
 
 function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
+  const copy = usePSCopy();
+  const u = copy.urgentOrder;
   return (
     <Card className="border-violet-300/20 bg-violet-900/10">
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
-              What if?
+              {u.eyebrow}
             </p>
             <h2 className="text-lg font-bold text-white">
-              What If We Accept an Urgent Customer Order?
+              {u.title}
             </h2>
             <p className="text-sm text-slate-400">
-              See how the production plan and recommended action change.
+              {u.description}
             </p>
           </div>
           <button
@@ -819,55 +850,55 @@ function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
             className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/20 px-5 py-2.5 text-sm font-semibold text-violet-200 outline-none transition hover:border-violet-400/60 hover:bg-violet-500/30 focus-visible:ring-2 focus-visible:ring-violet-400/60"
           >
             <Play className="h-4 w-4" />
-            Simulate Urgent Order
+            {u.button}
           </button>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl border border-white/8 bg-white/4 p-4 sm:grid-cols-4">
           <div>
-            <p className="text-[10px] text-slate-500">Order</p>
+            <p className="text-[10px] text-slate-500">{u.fields.order}</p>
             <p className="mt-0.5 text-sm font-semibold text-violet-300">
               {URGENT_ORDER.id}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Priority</p>
+            <p className="text-[10px] text-slate-500">{u.fields.priority}</p>
             <p className="mt-0.5 text-sm font-semibold text-rose-300">
               {URGENT_ORDER.priority}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Deadline</p>
+            <p className="text-[10px] text-slate-500">{u.fields.deadline}</p>
             <p className="mt-0.5 text-sm font-semibold text-rose-300">
               Day {URGENT_ORDER.deadlineDays}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Duration</p>
+            <p className="text-[10px] text-slate-500">{u.fields.duration}</p>
             <p className="mt-0.5 text-sm font-semibold text-white">
               {URGENT_ORDER.durationHours}h
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Product</p>
+            <p className="text-[10px] text-slate-500">{u.fields.product}</p>
             <p className="mt-0.5 text-sm font-semibold text-white">
               {URGENT_ORDER.name.split("(")[0].trim()}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Compatible lines</p>
+            <p className="text-[10px] text-slate-500">{u.fields.compatibleLines}</p>
             <p className="mt-0.5 text-sm font-semibold text-white">
               {URGENT_ORDER.compatibleLines.join(", ").replace(/LINE-/g, "")}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Revenue</p>
+            <p className="text-[10px] text-slate-500">{u.fields.revenue}</p>
             <p className="mt-0.5 text-sm font-semibold text-emerald-300">
               {eur(URGENT_ORDER.revenueEur)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-slate-500">Delay penalty</p>
+            <p className="text-[10px] text-slate-500">{u.fields.delayPenalty}</p>
             <p className="mt-0.5 text-sm font-semibold text-amber-300">
               {eur(URGENT_ORDER.delayPenaltyPerDay)}/day
             </p>
@@ -882,35 +913,6 @@ function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
 // Simulation progress (animation steps 1–3)
 // ---------------------------------------------------------------------------
 
-const SIMULATION_STEPS: Record<
-  Exclude<SimulationStep, "idle" | "complete">,
-  { title: string; desc: string; colour: string }
-> = {
-  event: {
-    title: "New Urgent Customer Order",
-    desc: "+1 order — CRITICAL priority — Deadline: Day 2",
-    colour: "border-violet-300/30 bg-violet-900/20",
-  },
-  impact: {
-    title: "Production capacity recalculating\u2026",
-    desc: "Analysing impact on the current schedule and production lines.",
-    colour: "border-amber-300/30 bg-amber-900/10",
-  },
-  decision: {
-    title: "Re-evaluating possible actions\u2026",
-    desc: "Evaluating all scheduling strategies with the new order included.",
-    colour: "border-cyan-300/30 bg-cyan-900/10",
-  },
-};
-
-const STRATEGY_LABELS_SHORT: Record<StrategyId, string> = {
-  KEEP_CURRENT_SCHEDULE: "Keep current schedule",
-  PRIORITIZE_URGENT_ORDERS: "Prioritize urgent orders",
-  REDISTRIBUTE_TO_OTHER_LINES: "Redistribute to other lines",
-  DELAY_LOW_PRIORITY_ORDERS: "Delay low-priority orders",
-  USE_OVERTIME: "Use overtime",
-};
-
 function SimulationProgressCard({
   step,
   onSkip,
@@ -918,9 +920,15 @@ function SimulationProgressCard({
   step: Exclude<SimulationStep, "idle" | "complete">;
   onSkip: () => void;
 }) {
-  const info = SIMULATION_STEPS[step];
+  const copy = usePSCopy();
+  const info = copy.simulation.steps[step];
+  const colourMap: Record<Exclude<SimulationStep, "idle" | "complete">, string> = {
+    event: "border-violet-300/30 bg-violet-900/20",
+    impact: "border-amber-300/30 bg-amber-900/10",
+    decision: "border-cyan-300/30 bg-cyan-900/10",
+  };
   return (
-    <Card className={cn("border", info.colour)} data-testid="simulation-progress">
+    <Card className={cn("border", colourMap[step])} data-testid="simulation-progress">
       <CardContent className="pt-6">
         <div className="space-y-4 text-center">
           <div className="flex justify-center">
@@ -937,7 +945,7 @@ function SimulationProgressCard({
           </div>
           {step === "decision" && (
             <div className="mx-auto max-w-xs space-y-1 text-left text-xs text-slate-500">
-              {(Object.values(STRATEGY_LABELS_SHORT) as string[]).map((s) => (
+              {(Object.values(copy.strategyLabels) as string[]).map((s) => (
                 <p key={s} className="flex items-center gap-2">
                   <span className="h-1 w-1 rounded-full bg-cyan-400" />
                   {s}
@@ -950,7 +958,7 @@ function SimulationProgressCard({
             data-testid="simulation-skip"
             className="text-xs text-slate-600 transition hover:text-slate-400"
           >
-            Skip animation →
+            {copy.simulation.skipAnimation}
           </button>
         </div>
       </CardContent>
@@ -969,6 +977,8 @@ function BeforeAfterPanel({
   baselineResult: SchedulingDecisionResponse;
   urgentResult: SchedulingDecisionResponse;
 }) {
+  const copy = usePSCopy();
+  const ba = copy.beforeAfter;
   const baseRec = baselineResult.strategies.find(
     (s) => s.strategyId === baselineResult.recommendedStrategy,
   );
@@ -991,7 +1001,7 @@ function BeforeAfterPanel({
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-violet-400" />
           <CardTitle className="text-base text-violet-200">
-            Impact of Accepting URGENT-201
+            {ba.cardTitle}
           </CardTitle>
         </div>
       </CardHeader>
@@ -1000,19 +1010,19 @@ function BeforeAfterPanel({
           {/* Before */}
           <div className="rounded-xl border border-white/10 bg-white/4 p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-              Before
+              {ba.before}
             </p>
             <p className="mt-0.5 text-[11px] text-slate-500">
-              {baseRec?.totalOrders ?? 0} orders
+              {baseRec?.totalOrders ?? 0} {ba.orders}
             </p>
             <div className="mt-3 space-y-2">
               <StatBox
-                label="On time"
+                label={ba.onTime}
                 value={`${baseRec?.onTimeCount ?? 0} / ${baseRec?.totalOrders ?? 0}`}
                 accent="emerald"
               />
               <StatBox
-                label="Estimated impact"
+                label={ba.estimatedImpact}
                 value={eur(baseRec?.financialImpact.totalCost ?? 0)}
                 accent="amber"
               />
@@ -1022,14 +1032,14 @@ function BeforeAfterPanel({
           {/* After — keep current */}
           <div className="rounded-xl border border-rose-300/20 bg-rose-900/10 p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-rose-400">
-              Accept + Keep current
+              {ba.acceptKeepCurrent}
             </p>
             <p className="mt-0.5 text-[11px] text-slate-500">
-              {keepCurrent?.totalOrders ?? 0} orders · not optimised
+              {keepCurrent?.totalOrders ?? 0} {ba.orders} · {ba.notOptimised}
             </p>
             <div className="mt-3 space-y-2">
               <StatBox
-                label="On time"
+                label={ba.onTime}
                 value={
                   keepCurrent
                     ? `${keepCurrent.onTimeCount} / ${keepCurrent.totalOrders}`
@@ -1038,7 +1048,7 @@ function BeforeAfterPanel({
                 accent="rose"
               />
               <StatBox
-                label="Estimated impact"
+                label={ba.estimatedImpact}
                 value={eur(keepCurrent?.financialImpact.totalCost ?? 0)}
                 accent="rose"
               />
@@ -1048,19 +1058,19 @@ function BeforeAfterPanel({
           {/* After — recommended */}
           <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              Accept + Recommended
+              {ba.acceptRecommended}
             </p>
             <p className="mt-0.5 text-[11px] text-slate-500">
-              {urgRec?.totalOrders ?? 0} orders · optimised
+              {urgRec?.totalOrders ?? 0} {ba.orders} · {ba.optimised}
             </p>
             <div className="mt-3 space-y-2">
               <StatBox
-                label="On time"
+                label={ba.onTime}
                 value={`${urgRec?.onTimeCount ?? 0} / ${urgRec?.totalOrders ?? 0}`}
                 accent="emerald"
               />
               <StatBox
-                label="Estimated impact"
+                label={ba.estimatedImpact}
                 value={eur(urgRec?.financialImpact.totalCost ?? 0)}
                 accent="emerald"
               />
@@ -1072,23 +1082,23 @@ function BeforeAfterPanel({
         {avoidedByOptimising > 0 && (
           <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              Potential avoided impact by optimising
+              {ba.avoidedByOptimising}
             </p>
             <p className="mt-1 text-2xl font-bold text-emerald-300">
               {eur(avoidedByOptimising)}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Compared to accepting the order without rescheduling.
+              {ba.avoidedByComparison}
             </p>
           </div>
         )}
 
         {/* Impact summary */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs text-slate-400">
-          <p>+1 customer order</p>
-          <p>+{URGENT_ORDER.durationHours}h production</p>
-          <p>Revenue: {eur(URGENT_ORDER.revenueEur)}</p>
-          <p>Risk if late: {eur(URGENT_ORDER.delayPenaltyPerDay)}/day</p>
+          <p>+1 {ba.order}</p>
+          <p>+{URGENT_ORDER.durationHours}h {ba.productionHours}</p>
+          <p>{ba.revenue}: {eur(URGENT_ORDER.revenueEur)}</p>
+          <p>{ba.riskIfLate}: {eur(URGENT_ORDER.delayPenaltyPerDay)}/day</p>
         </div>
       </CardContent>
     </Card>
@@ -1106,6 +1116,7 @@ function WhatShouldWeDoCard({
   baselineResult: SchedulingDecisionResponse;
   urgentResult: SchedulingDecisionResponse;
 }) {
+  const copy = usePSCopy();
   const delta = useMemo(
     () =>
       computeSchedulingDecisionDelta(
@@ -1129,10 +1140,10 @@ function WhatShouldWeDoCard({
     <Card className="border-violet-300/20" data-testid="what-should-we-do">
       <CardHeader>
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-400">
-          What should we do?
+          {copy.whatShouldWeDo.eyebrow}
         </p>
         <CardTitle className="text-violet-200">
-          Recommended Action
+          {copy.whatShouldWeDo.title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -1140,7 +1151,7 @@ function WhatShouldWeDoCard({
         {delta.changed ? (
           <div className="rounded-xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3" data-testid="urgent-decision-changed">
             <p className="text-sm font-semibold text-cyan-300">
-              Decision changed
+              {copy.whatShouldWeDo.decisionChanged}
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-300">
               <span className="text-rose-300 line-through">
@@ -1155,11 +1166,10 @@ function WhatShouldWeDoCard({
         ) : (
           <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3" data-testid="urgent-decision-unchanged">
             <p className="text-sm font-semibold text-emerald-300">
-              Decision unchanged
+              {copy.whatShouldWeDo.decisionUnchanged}
             </p>
             <p className="mt-1 text-sm text-slate-400">
-              The additional order can be absorbed without changing the optimal
-              strategy:{" "}
+              {copy.whatShouldWeDo.additionalOrderAbsorbed}{" "}
               <span className="font-medium text-emerald-300">
                 {delta.scenarioDecision.replace(/_/g, " ")}
               </span>
@@ -1171,29 +1181,29 @@ function WhatShouldWeDoCard({
         {rec && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Recommended strategy
+              {copy.whatShouldWeDo.recommendedStrategy}
             </p>
             <p className="mt-1 text-lg font-bold text-white">
               {rec.strategyLabel.toUpperCase()}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <StatBox
-                label="Orders on time"
+                label={copy.whatShouldWeDo.ordersOnTime}
                 value={`${rec.onTimeCount} / ${rec.totalOrders}`}
                 accent="emerald"
               />
               <StatBox
-                label="Delayed"
+                label={copy.whatShouldWeDo.delayed}
                 value={`${rec.delayedCount}`}
                 accent={rec.delayedCount > 0 ? "amber" : "emerald"}
               />
               <StatBox
-                label="Total impact"
+                label={copy.whatShouldWeDo.totalImpact}
                 value={eur(rec.financialImpact.totalCost)}
                 accent="amber"
               />
               <StatBox
-                label="Score"
+                label={copy.whatShouldWeDo.score}
                 value={rec.score.composite.toFixed(4)}
                 accent="cyan"
               />
@@ -1205,7 +1215,7 @@ function WhatShouldWeDoCard({
         {urgentResult.explanation.reasons.length > 0 && (
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Why?
+              {copy.whatShouldWeDo.why}
             </p>
             <div className="space-y-2">
               {urgentResult.explanation.reasons.slice(0, 4).map((r, i) => (
@@ -1229,7 +1239,7 @@ function WhatShouldWeDoCard({
         {keepCurrentDiff.some((d) => d.changed) && (
           <div data-testid="keep-current-fails">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Why Keep Current fails with URGENT-201
+              {copy.whatShouldWeDo.keepCurrentFails}
             </p>
             <div className="space-y-1">
               {keepCurrentDiff
@@ -1271,11 +1281,13 @@ function ScenarioLabControls({
   what: WhatIfState;
   onChange: (patch: Partial<WhatIfState>) => void;
 }) {
+  const copy = usePSCopy();
+  const ctrl = copy.scenarioLab.controls;
   return (
     <div className="space-y-5">
       <div>
         <Label className="text-xs text-slate-400">
-          Line B capacity reduction:{" "}
+          {ctrl.lineBCapacity}:{" "}
           <span data-testid="lab-capacity-value">{what.lineBCapacityReductionPct}</span>%
         </Label>
         <input
@@ -1288,7 +1300,7 @@ function ScenarioLabControls({
             onChange({ lineBCapacityReductionPct: Number(e.target.value) })
           }
           data-testid="scenario-line-b-capacity"
-          aria-label={`Line B capacity reduction: ${what.lineBCapacityReductionPct}%`}
+          aria-label={`${ctrl.lineBCapacity}: ${what.lineBCapacityReductionPct}%`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1298,8 +1310,8 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Disruption duration:{" "}
-          <span data-testid="lab-duration-value">{what.disruptionDurationDays}</span> day(s)
+          {ctrl.disruptionDuration}:{" "}
+          <span data-testid="lab-duration-value">{what.disruptionDurationDays}</span> {ctrl.dayUnit}
         </Label>
         <input
           type="range"
@@ -1311,17 +1323,17 @@ function ScenarioLabControls({
             onChange({ disruptionDurationDays: Number(e.target.value) })
           }
           data-testid="scenario-duration"
-          aria-label={`Disruption duration: ${what.disruptionDurationDays} days`}
+          aria-label={`${ctrl.disruptionDuration}: ${what.disruptionDurationDays} ${ctrl.dayUnit}`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
-          <span>1 day</span><span>5 days</span>
+          <span>1 {ctrl.dayUnit}</span><span>5 {ctrl.dayUnit}</span>
         </div>
       </div>
 
       <div>
         <Label className="text-xs text-slate-400">
-          Critical order #101 deadline: Day{" "}
+          {ctrl.criticalDeadline}{" "}
           <span data-testid="lab-deadline-value">{what.criticalOrderDeadlineDays}</span>
         </Label>
         <input
@@ -1338,13 +1350,13 @@ function ScenarioLabControls({
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
-          <span>Day 1</span><span>Day 5</span>
+          <span>{ctrl.day} 1</span><span>{ctrl.day} 5</span>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <Label className="text-xs text-slate-400">
-          ORDER-103 material available
+          {ctrl.materialAvailable}
         </Label>
         <button
           onClick={() =>
@@ -1352,37 +1364,37 @@ function ScenarioLabControls({
           }
           data-testid="scenario-material"
           className={cn(
-            "relative h-5 w-10 shrink-0 rounded-full transition",
+            "relative h-5 w-10 shrink-0 overflow-hidden rounded-full transition",
             what.order103MaterialAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.order103MaterialAvailable}
-          aria-label="ORDER-103 material available"
+          aria-label={ctrl.materialAvailable}
         >
           <span
             className={cn(
               "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-              what.order103MaterialAvailable ? "translate-x-5" : "translate-x-0.5",
+              what.order103MaterialAvailable ? "translate-x-[22px]" : "translate-x-0.5",
             )}
           />
         </button>
       </div>
 
       <div className="flex items-center justify-between">
-        <Label className="text-xs text-slate-400">Overtime enabled</Label>
+        <Label className="text-xs text-slate-400">{ctrl.overtimeEnabled}</Label>
         <button
           onClick={() => onChange({ overtimeAvailable: !what.overtimeAvailable })}
           data-testid="scenario-overtime"
           className={cn(
-            "relative h-5 w-10 shrink-0 rounded-full transition",
+            "relative h-5 w-10 shrink-0 overflow-hidden rounded-full transition",
             what.overtimeAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.overtimeAvailable}
-          aria-label="Overtime enabled"
+          aria-label={ctrl.overtimeEnabled}
         >
           <span
             className={cn(
               "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
-              what.overtimeAvailable ? "translate-x-5" : "translate-x-0.5",
+              what.overtimeAvailable ? "translate-x-[22px]" : "translate-x-0.5",
             )}
           />
         </button>
@@ -1390,7 +1402,7 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400">
-          Overtime cost: €<span data-testid="lab-overtime-cost-value">{what.overtimeCostPerHour}</span>/h
+          {ctrl.overtimeCost}: €<span data-testid="lab-overtime-cost-value">{what.overtimeCostPerHour}</span>/h
         </Label>
         <input
           type="range"
@@ -1402,7 +1414,7 @@ function ScenarioLabControls({
             onChange({ overtimeCostPerHour: Number(e.target.value) })
           }
           data-testid="scenario-overtime-cost"
-          aria-label={`Overtime cost: €${what.overtimeCostPerHour}/h`}
+          aria-label={`${ctrl.overtimeCost}: €${what.overtimeCostPerHour}/h`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1412,7 +1424,7 @@ function ScenarioLabControls({
 
       <div>
         <Label className="text-xs text-slate-400 mb-2 block">
-          ORDER-116 priority
+          {ctrl.order116Priority}
         </Label>
         <div className="flex gap-2" data-testid="scenario-order-priority">
           {(["HIGH", "NORMAL", "LOW"] as const).map((p) => (
@@ -1450,6 +1462,8 @@ function ScenarioLabResult({
   scenResult: SchedulingDecisionResponse;
   what: WhatIfState;
 }) {
+  const copy = usePSCopy();
+  const labR = copy.scenarioLab.scenLabResult;
   const delta = useMemo(
     () =>
       computeSchedulingDecisionDelta(baseResult, scenResult, what, BASELINE_WHAT_IF),
@@ -1473,7 +1487,7 @@ function ScenarioLabResult({
       {/* Decision change banner */}
       {delta.changed ? (
         <div className="rounded-2xl border border-cyan-300/30 bg-cyan-900/20 px-4 py-3" data-testid="decision-delta" data-decision-changed="true">
-          <p className="text-sm font-semibold text-cyan-300">Decision changed</p>
+          <p className="text-sm font-semibold text-cyan-300">{copy.whatShouldWeDo.decisionChanged}</p>
           <p className="mt-1 text-sm text-slate-300">
             <span className="text-rose-300 line-through mr-2">{delta.baselineDecision.replace(/_/g, " ")}</span>
             →
@@ -1483,7 +1497,7 @@ function ScenarioLabResult({
       ) : (
         <div className="rounded-2xl border border-slate-600/30 bg-slate-800/30 px-4 py-3" data-testid="decision-delta" data-decision-changed="false">
           <p className="text-sm font-medium text-slate-400">
-            Decision unchanged: <span className="text-slate-300">{delta.scenarioDecision.replace(/_/g, " ")}</span>
+            {copy.whatShouldWeDo.decisionUnchanged}: <span className="text-slate-300">{delta.scenarioDecision.replace(/_/g, " ")}</span>
           </p>
         </div>
       )}
@@ -1508,12 +1522,12 @@ function ScenarioLabResult({
       {recStrategy && (
         <div className="grid grid-cols-2 gap-4">
           <StatBox
-            label="Scenario total impact"
+            label={labR.totalImpact}
             value={eur(recStrategy.financialImpact.totalCost)}
             accent="amber"
           />
           <StatBox
-            label="Cost delta vs baseline"
+            label={labR.avoidedCost}
             value={`${delta.financialDelta >= 0 ? "+" : ""}${eur(delta.financialDelta)}`}
             accent={delta.financialDelta <= 0 ? "emerald" : "rose"}
           />
@@ -1524,7 +1538,7 @@ function ScenarioLabResult({
       {delta.changed && scenResult.explanation.reasons.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Why did it change?
+            {copy.whatShouldWeDo.why}
           </p>
           <div className="space-y-2">
             {scenResult.explanation.reasons.map((r, i) => (
@@ -1545,7 +1559,7 @@ function ScenarioLabResult({
       {traceDiff.length > 0 && (
         <div data-testid="decision-trace-diff">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Trace diff — changed rules
+            {copy.decisionTrace.changedOnly}
           </p>
           <div className="space-y-1">
             {traceDiff
@@ -1571,7 +1585,7 @@ function ScenarioLabResult({
       {/* Decision sensitivity */}
       <div data-testid="decision-sensitivity">
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-          Decision sensitivity
+          {labR.sensitivity}
         </p>
         <div className="space-y-1">
           {sensitivity.map((s) => (
@@ -1583,7 +1597,7 @@ function ScenarioLabResult({
                 }
                 className="flex-shrink-0 text-[9px]"
               >
-                {s.level}
+                {labR.sensitivityLevels[s.level]}
               </Badge>
             </div>
           ))}
@@ -1598,10 +1612,51 @@ function ScenarioLabResult({
 // ---------------------------------------------------------------------------
 
 export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
-  const [whatIf, setWhatIf] = useState<WhatIfState>(BASELINE_WHAT_IF);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startLocaleTransition] = useTransition();
+
+  const copy = useMemo(() => getProductionSchedulingCopy(locale), [locale]);
+
+  function switchLocale(next: Locale) {
+    startLocaleTransition(() => {
+      router.replace(buildLocalePath(pathname, next));
+    });
+  }
+
+  const [whatIf, setWhatIf] = useState<WhatIfState>(() => {
+    const scenarioParam = searchParams.get("scenario");
+    if (scenarioParam) {
+      const match = SCENARIO_PRESETS.find((p) => p.id === scenarioParam);
+      if (match) return match.state;
+    }
+    return BASELINE_WHAT_IF;
+  });
   const [simulationStep, setSimulationStep] = useState<SimulationStep>("idle");
   const [showFullPlan, setShowFullPlan] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function clearTimers() {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }
+
+  /** Apply a preset and push its id into the URL so the link stays shareable. */
+  function applyPreset(preset: typeof SCENARIO_PRESETS[number]) {
+    clearTimers();
+    setSimulationStep("idle");
+    setShowFullPlan(false);
+    setWhatIf(preset.state);
+    const params = new URLSearchParams(searchParams.toString());
+    if (preset.id === "baseline") {
+      params.delete("scenario");
+    } else {
+      params.set("scenario", preset.id);
+    }
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
 
   const baselineResult = useMemo(
     () => runSchedulingEngine({ scenario: DEFAULT_SCENARIO, costConfig: DEFAULT_COST_CONFIG }),
@@ -1632,11 +1687,6 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   const showMainPanels = !showProgress && (!urgentActive || showFullPlan);
   const showTrigger = !urgentActive && !showProgress;
 
-  function clearTimers() {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  }
-
   function handleSimulate() {
     clearTimers();
     setWhatIf((prev) => ({ ...prev, includeUrgentOrder: true }));
@@ -1659,38 +1709,61 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
     setWhatIf(BASELINE_WHAT_IF);
     setSimulationStep("idle");
     setShowFullPlan(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("scenario");
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   // Cleanup pending timers when component unmounts
   useEffect(() => clearTimers, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
+    <PSCopyContext.Provider value={copy}>
     <div className="min-h-screen bg-slate-950 text-slate-100" data-testid="production-scheduling">
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
           <Link
             href={buildLocalePath("/", locale)}
             className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition"
           >
             <ArrowLeft className="h-4 w-4" />
-            Observatory
+            {copy.header.backLink}
           </Link>
+          <select
+            value={locale}
+            onChange={(e) => switchLocale(e.target.value as Locale)}
+            aria-label={copy.header.localeAriaLabel}
+            className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs text-slate-300 outline-none hover:border-white/20 focus:ring-1 focus:ring-cyan-400/40"
+          >
+            {SUPPORTED_LOCALES.map((l) => (
+              <option key={l} value={l}>
+                {copy.localeOptions[l]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold text-white">
-              Production Scheduling
+              {copy.header.title}
             </h1>
-            <Badge variant="cyan">Decision Engine</Badge>
+            <Badge variant="cyan">{copy.header.badgeLabel}</Badge>
           </div>
           <p className="text-sm text-slate-400">
-            SURMA SYSTEMS · Pergolas, Carports &amp; Shading — Scheduling Decision Demonstrator
+            {copy.header.subtitle}
           </p>
         </div>
 
-        <Disclaimer />
+        <Disclaimer
+          text={
+            whatIf.includeAerospaceOrder
+              ? copy.disclaimer.aerospace
+              : undefined
+          }
+        />
 
         {/* Disruption — always visible */}
         <DisruptionPanel scenario={displayResult.scenarioSnapshot} />
@@ -1729,7 +1802,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   variant="secondary"
                 >
                   <ArrowRight className="h-4 w-4" />
-                  Find Better Plan
+                  {copy.buttons.findBetterPlan}
                 </Button>
                 <Button
                   onClick={handleReset}
@@ -1738,7 +1811,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   className="gap-2"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Reset to Baseline
+                  {copy.buttons.resetToBaseline}
                 </Button>
               </div>
             )}
@@ -1759,7 +1832,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
         {showUrgentResult && showFullPlan && (
           <Button onClick={handleReset} data-testid="reset-baseline" variant="secondary" className="gap-2">
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset to Baseline
+            {copy.buttons.resetToBaseline}
           </Button>
         )}
 
@@ -1769,7 +1842,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FlaskConical className="h-5 w-5 text-cyan-400" />
-                <CardTitle className="text-base text-cyan-200">Scenario Lab</CardTitle>
+                <CardTitle className="text-base text-cyan-200">{copy.scenarioLab.title}</CardTitle>
               </div>
               {!isBaseline && (
                 <button
@@ -1778,18 +1851,18 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  Reset to baseline
+                  {copy.scenarioLab.resetToBaseline}
                 </button>
               )}
             </div>
             <p className="text-xs text-slate-400">
-              Change production conditions — the engine recalculates the schedule.
+              {copy.scenarioLab.description}
             </p>
 
             {/* Scenario presets */}
             <div className="mt-2">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Preset scenarios
+                {copy.scenarioLab.presetScenariosLabel}
               </p>
               <div className="flex flex-wrap gap-2">
                 {SCENARIO_PRESETS.map((preset) => {
@@ -1799,12 +1872,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                     <button
                       key={preset.id}
                       data-testid={`preset-${preset.id}`}
-                      onClick={() => {
-                        clearTimers();
-                        setSimulationStep("idle");
-                        setShowFullPlan(false);
-                        setWhatIf(preset.state);
-                      }}
+                      onClick={() => applyPreset(preset)}
                       className={cn(
                         "rounded-lg border px-3 py-1 text-xs font-medium transition",
                         isActive
@@ -1814,6 +1882,9 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                     >
                       {preset.id === "urgent-order" && (
                         <Zap className="mr-1 inline h-3 w-3 text-violet-400" />
+                      )}
+                      {preset.id === "critical-aerospace-order" && (
+                        <Zap className="mr-1 inline h-3 w-3 text-amber-400" />
                       )}
                       {preset.label}
                     </button>
@@ -1830,7 +1901,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               />
               <div>
                 <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  {isBaseline ? "Baseline result" : "Scenario result"}
+                  {isBaseline ? copy.scenarioLab.baselineResult : copy.scenarioLab.scenarioResult}
                 </p>
                 <ScenarioLabResult
                   baseResult={baselineResult}
@@ -1852,5 +1923,6 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
         <AuditTrailPanel result={displayResult} />
       </div>
     </div>
+    </PSCopyContext.Provider>
   );
 }

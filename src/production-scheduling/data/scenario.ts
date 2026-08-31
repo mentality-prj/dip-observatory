@@ -1,10 +1,9 @@
 /**
- * Synthetic scheduling scenario for the SURMA Production Scheduling demonstrator.
+ * Synthetic production scheduling scenario for the scheduling demonstrator.
  *
- * SURMA SYSTEMS — pergola, carport and shading system manufacturer.
- * All figures are synthetic demonstration values.
+ * Pergola, carport and shading system manufacturer — all figures are synthetic demonstration values.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 
 import type {
@@ -376,7 +375,7 @@ export const ORDERS: SchedulingOrder[] = [
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_SCENARIO: SchedulingScenario = {
-  scenarioId: "SURMA-DEMO-001",
+  scenarioId: "PS-DEMO-001",
   lines: PRODUCTION_LINES,
   orders: ORDERS,
   disruption: {
@@ -410,6 +409,59 @@ export function getDemoDecision(): SchedulingDecisionResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Critical Aerospace Order (WHAT-IF simulation)
+//
+// AERO-201: a high-priority customer order arriving while production capacity
+// is constrained.
+//
+// Uses a CARPORT setup category — compatible with LINE-A and LINE-C.
+// The 3-day deadline and high delay penalty put meaningful pressure on the
+// existing schedule without crowding out the LINE-B disruption story.
+//
+// SYNTHETIC DEMONSTRATION — not real production data.
+// All values are synthetic and chosen to create meaningful trade-offs.
+// ---------------------------------------------------------------------------
+
+export const AERO_ORDER: SchedulingOrder = {
+  id: "AERO-201",
+  name: "AERO-201 Critical Aerospace Component",
+  productType: "CARPORT_SINGLE",
+  setupCategory: "CARPORT",
+  quantity: 4,
+  durationHours: 3.5,
+  compatibleLines: ["LINE-A", "LINE-C"],
+  defaultLineId: "LINE-A",
+  materialStatus: "AVAILABLE",
+  priority: "CRITICAL",
+  deadlineDays: 3,
+  revenueEur: 5_500,
+  delayPenaltyPerDay: 1_200,
+};
+
+/**
+ * Return a new scenario that appends AERO-201 to the order queue.
+ * Never mutates the base scenario.
+ *
+ * If AERO-201 is already present, returns a scenario with the `-AERO` suffix
+ * in the scenarioId (idempotent with respect to orders and scenarioId form).
+ */
+export function buildAerospaceOrderScenario(
+  base: SchedulingScenario,
+): SchedulingScenario {
+  const scenarioId = base.scenarioId.endsWith("-AERO")
+    ? base.scenarioId
+    : `${base.scenarioId}-AERO`;
+  if (base.orders.some((o) => o.id === AERO_ORDER.id)) {
+    return base.scenarioId === scenarioId ? base : { ...base, scenarioId };
+  }
+  return {
+    ...base,
+    scenarioId,
+    orders: [...base.orders, AERO_ORDER],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Urgent order (WHAT-IF simulation)
 //
 // URGENT-201: a rush motorised awning received mid-schedule.
@@ -418,7 +470,7 @@ export function getDemoDecision(): SchedulingDecisionResponse {
 // disrupted LINE-B. KEEP_CURRENT cannot handle both URGENT-201 and ORDER-101
 // on time; REDISTRIBUTE absorbs it without changing the optimal strategy.
 //
-// SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS actual data.
+// SYNTHETIC DEMONSTRATION — not real production data.
 // ---------------------------------------------------------------------------
 
 export const URGENT_ORDER: SchedulingOrder = {

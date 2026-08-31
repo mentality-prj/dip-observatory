@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { ProductionSchedulingWorkspace } from "@/production-scheduling/components/production-scheduling-workspace";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
@@ -21,5 +22,9 @@ export default async function ProductionSchedulingPage({
     redirect(buildLocalePath("/production-scheduling", FALLBACK_LOCALE));
   }
 
-  return <ProductionSchedulingWorkspace locale={locale as Locale} />;
+  return (
+    <Suspense>
+      <ProductionSchedulingWorkspace locale={locale as Locale} />
+    </Suspense>
+  );
 }

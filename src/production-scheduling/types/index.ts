@@ -4,7 +4,7 @@
  * Deterministic, pure, stateless. Same input + config + engine version
  * → identical decision, scores, financial impact, and audit trace.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 
 // ---------------------------------------------------------------------------
