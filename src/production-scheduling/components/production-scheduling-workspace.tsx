@@ -2681,8 +2681,12 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   // -------------------------------------------------------------------------
   // Disruption scenario state
   // -------------------------------------------------------------------------
-  const [disruptionStep, setDisruptionStep] = useState<DisruptionSimStep>("idle");
-  const [disruptionShowFullPlan, setDisruptionShowFullPlan] = useState(false);
+  const [disruptionStep, setDisruptionStep] = useState<DisruptionSimStep>(() =>
+    searchParams.get("scenario") === "production-disruption" ? "complete" : "idle",
+  );
+  const [disruptionShowFullPlan, setDisruptionShowFullPlan] = useState<boolean>(
+    () => searchParams.get("scenario") === "production-disruption",
+  );
   const [disruptionWhatIf, setDisruptionWhatIf] = useState<DisruptionWhatIfState>(
     BASELINE_DISRUPTION_WHAT_IF,
   );

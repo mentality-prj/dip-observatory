@@ -5,17 +5,176 @@
  *   Baseline → Machine B Disruption → Impact Analysis → Recovery Options
  *   → Find Best Recovery Plan → Schedule/Financial/Trace update → Reset
  *
+ * Also verifies that the URL /en/production-scheduling?scenario=production-disruption
+ * immediately loads the full Production Disruption Decision without any manual
+ * activation steps — all panels must be visible on page load.
+ *
  * SYNTHETIC DEMONSTRATION — not production data.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const BASE_URL = "/en/production-scheduling?scenario=production-disruption";
 
-test.describe("production-disruption: scenario activation", () => {
+async function gotoIdleDisruptionState(page: Page) {
+  await page.goto(BASE_URL);
+  await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+  await page.getByTestId("reset-disruption").click();
+  await expect(page.getByTestId("disruption-trigger-card")).toBeVisible({ timeout: 5_000 });
+}
+
+// ---------------------------------------------------------------------------
+// URL pre-activation: the full decision must be visible on page load
+// ---------------------------------------------------------------------------
+test.describe("production-disruption: URL pre-activation", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL);
     await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+  });
+
+  test("preset is active: disruption trigger card is NOT shown", async ({ page }) => {
+    await expect(page.getByTestId("disruption-trigger-card")).not.toBeVisible({ timeout: 5_000 });
+  });
+
+  test("Machine B unavailable — impact summary is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-impact-summary")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("impact summary shows 3 at-risk orders immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-impact-summary")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByTestId("disruption-at-risk-order")).toHaveCount(3, { timeout: 5_000 });
+  });
+
+  test("PDR-104 (CRITICAL) is visible in at-risk orders immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-impact-summary")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText("PDR-104")).toBeVisible();
+  });
+
+  test("decision summary is visible immediately (no button click needed)", async ({ page }) => {
+    await expect(page.getByTestId("disruption-decision-summary")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("recovery alternatives table is visible immediately", async ({ page }) => {
+    // DisruptionBeforeAfterPanel or AlternativesTable
+    await expect(page.getByTestId("disruption-before-after")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("recommended recovery plan is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-decision-summary").getByText(/Move|Redistribute/i)).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("financial impact panel is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-financial-impact")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("avoided cost value is shown immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-avoided-cost-value")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByTestId("disruption-avoided-cost-value")).toContainText(/€\s*[\d,]+/);
+  });
+
+  test("WHY THIS RECOVERY PLAN section is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-why-plan")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("trace diff is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-decision-trace")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("trace diff shows critical deadline rule change", async ({ page }) => {
+    await expect(page.getByTestId("disruption-decision-trace")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByTestId("disruption-decision-trace").getByText(/Critical/i)).toBeVisible();
+  });
+
+  test("schedule diff shows Machine B as UNAVAILABLE immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-schedule-diff")).toBeVisible({ timeout: 8_000 });
+    await expect(
+      page.getByTestId("disruption-schedule-diff").getByText(/UNAVAILABLE/i),
+    ).toBeVisible();
+  });
+
+  test("Scenario Controls (sensitivity panel) are visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("disruption-sensitivity")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("duration controls are visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("dis-duration-8h")).toBeVisible({ timeout: 8_000 });
+  });
+
+  test("overtime toggle is visible immediately", async ({ page }) => {
+    await expect(page.getByTestId("dis-overtime")).toBeVisible({ timeout: 8_000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// URL pre-activation: changing controls updates results reactively
+// ---------------------------------------------------------------------------
+test.describe("production-disruption: URL pre-activation — controls", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await expect(page.getByTestId("disruption-sensitivity")).toBeVisible({ timeout: 10_000 });
+  });
+
+  test("changing duration to 4h still shows decision summary", async ({ page }) => {
+    await page.getByTestId("dis-duration-4h").click();
+    await expect(page.getByTestId("disruption-decision-summary")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("changing duration to 12h marks that button as active", async ({ page }) => {
+    await page.getByTestId("dis-duration-12h").click();
+    await expect(page.getByTestId("dis-duration-12h")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("disruption-sensitivity")).toBeVisible();
+  });
+
+  test("changing duration to 16h still shows financial impact", async ({ page }) => {
+    await page.getByTestId("dis-duration-16h").click();
+    await expect(page.getByTestId("disruption-financial-impact")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("enabling overtime updates financial impact panel", async ({ page }) => {
+    const toggle = page.getByTestId("dis-overtime");
+    if (await toggle.getAttribute("aria-pressed") !== "true") {
+      await toggle.click();
+    }
+    await expect(page.getByTestId("disruption-financial-impact")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("overtime cost input appears when overtime is enabled", async ({ page }) => {
+    const toggle = page.getByTestId("dis-overtime");
+    if (await toggle.getAttribute("aria-pressed") !== "true") {
+      await toggle.click();
+    }
+    await expect(page.getByTestId("dis-overtime-cost")).toBeVisible({ timeout: 3_000 });
+  });
+
+  test("changing overtime cost to 120 keeps financial impact visible", async ({ page }) => {
+    const toggle = page.getByTestId("dis-overtime");
+    if (await toggle.getAttribute("aria-pressed") !== "true") {
+      await toggle.click();
+    }
+    const costInput = page.getByTestId("dis-overtime-cost");
+    await costInput.fill("120");
+    await costInput.press("Enter");
+    await expect(page.getByTestId("disruption-financial-impact")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("changing Machine C capacity to 10h still shows sensitivity panel", async ({ page }) => {
+    const btn = page.getByTestId("dis-line-c-10h");
+    await expect(btn).toBeVisible({ timeout: 5_000 });
+    await btn.click();
+    await expect(page.getByTestId("disruption-sensitivity")).toBeVisible({ timeout: 5_000 });
+  });
+
+  test("reset from pre-activated state returns to trigger card", async ({ page }) => {
+    await page.getByTestId("reset-disruption").click();
+    await expect(page.getByTestId("disruption-trigger-card")).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId("disruption-decision-summary")).not.toBeVisible({ timeout: 3_000 });
+  });
+});
+
+test.describe("production-disruption: scenario activation", () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoIdleDisruptionState(page);
   });
 
   test("disruption trigger card is visible on page load", async ({ page }) => {
@@ -64,8 +223,7 @@ test.describe("production-disruption: scenario activation", () => {
 
 test.describe("production-disruption: Find Best Recovery Plan", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -138,8 +296,7 @@ test.describe("production-disruption: Find Best Recovery Plan", () => {
 
 test.describe("production-disruption: duration control", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -170,8 +327,7 @@ test.describe("production-disruption: duration control", () => {
 
 test.describe("production-disruption: overtime toggle", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -208,8 +364,7 @@ test.describe("production-disruption: overtime toggle", () => {
 
 test.describe("production-disruption: overtime cost change", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -245,8 +400,7 @@ test.describe("production-disruption: overtime cost change", () => {
 
 test.describe("production-disruption: reset", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
   });
 
   test("after full activation and reset, disruption trigger card reappears", async ({ page }) => {
