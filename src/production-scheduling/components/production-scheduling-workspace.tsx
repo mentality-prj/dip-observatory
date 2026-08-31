@@ -1352,7 +1352,7 @@ function ScenarioLabControls({
           }
           data-testid="scenario-material"
           className={cn(
-            "relative h-5 w-10 rounded-full transition",
+            "relative h-5 w-10 shrink-0 rounded-full transition",
             what.order103MaterialAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.order103MaterialAvailable}
@@ -1373,7 +1373,7 @@ function ScenarioLabControls({
           onClick={() => onChange({ overtimeAvailable: !what.overtimeAvailable })}
           data-testid="scenario-overtime"
           className={cn(
-            "relative h-5 w-10 rounded-full transition",
+            "relative h-5 w-10 shrink-0 rounded-full transition",
             what.overtimeAvailable ? "bg-emerald-500" : "bg-slate-700",
           )}
           aria-pressed={what.overtimeAvailable}
