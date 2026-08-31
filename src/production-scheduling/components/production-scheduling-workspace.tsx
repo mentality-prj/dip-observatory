@@ -704,8 +704,19 @@ function WhyThisSchedule({ result }: { result: SchedulingDecisionResponse }) {
 // Assumptions panel
 // ---------------------------------------------------------------------------
 
-function AssumptionsPanel() {
+function AssumptionsPanel({ isDisruptionScenario = false }: { isDisruptionScenario?: boolean }) {
   const copy = usePSCopy();
+  const criticalRows: [string, string][] = isDisruptionScenario
+    ? [
+        ["Critical order (PDR-101)", "Double Carport Frame, deadline: Day 2, penalty €1,500/day"],
+        ["Critical order (PDR-104)", "Pergola Assembly, deadline: Day 1, penalty €2,000/day"],
+        ["Disruption (scenario)", "Machine B fully offline — Day 1 equipment failure"],
+      ]
+    : [
+        ["Critical order (#101)", "Premium Pergola, deadline: Day 1, penalty €2,000/day"],
+        ["Critical order (#102)", "Double Carport, deadline: Day 2, penalty €1,500/day"],
+        ["Disruption (baseline)", "Line B −25% for 2 days (maintenance)"],
+      ];
   return (
     <CollapseSection title={copy.assumptions.title}>
       <div className="space-y-3 text-xs text-slate-400">
@@ -726,9 +737,7 @@ function AssumptionsPanel() {
               ["Line B compatible products", "Pergola, Awning, Screen"],
               ["Line C compatible products", "All product types"],
               ["Delay penalties", "Order-specific (€60 – €2,000 / day)"],
-              ["Critical order (#101)", "Premium Pergola, deadline: Day 1, penalty €2,000/day"],
-              ["Critical order (#102)", "Double Carport, deadline: Day 2, penalty €1,500/day"],
-              ["Disruption (baseline)", "Line B −25% for 2 days (maintenance)"],
+              ...criticalRows,
             ].map(([k, v]) => (
               <tr key={k}>
                 <td className="py-1.5 pr-4 text-slate-500">{k}</td>
@@ -1844,10 +1853,16 @@ function DisruptionDecisionSummary({
         {
           label: "ROOT CAUSE",
           colour: "rose",
-          text: `Machine B unavailable for ${
-            disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor * 8 *
-            disruptedResult.scenarioSnapshot.disruption.durationDays
-          }h (${(disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor * 100).toFixed(0)}% capacity reduction × ${disruptedResult.scenarioSnapshot.disruption.durationDays} day${disruptedResult.scenarioSnapshot.disruption.durationDays !== 1 ? "s" : ""}).`,
+          text: (() => {
+            const factor = disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor;
+            const days = disruptedResult.scenarioSnapshot.disruption.durationDays;
+            const hoursLost = factor * 8 * days;
+            if (factor >= 1.0) {
+              return `Machine B fully offline for ${days} production day${days !== 1 ? "s" : ""} — ${hoursLost.toFixed(0)}h capacity lost.`;
+            }
+            const pctLost = (factor * 100).toFixed(0);
+            return `Machine B at ${(100 - factor * 100).toFixed(0)}% capacity for ${days} day${days !== 1 ? "s" : ""} — ${hoursLost.toFixed(0)}h lost (${pctLost}% reduction).`;
+          })(),
         },
         {
           label: "IMPACT",
@@ -2176,15 +2191,23 @@ function DisruptionScheduleDiff({
     (s) => s.strategyId === preResult.recommendedStrategy,
   );
 
+  // Use KEEP_CURRENT_SCHEDULE from the disrupted result as the baseline for
+  // detecting which orders were moved to a different line. This reflects the
+  // original line assignment before any recovery action, not the pre-disruption
+  // recommended plan (which may already show orders on alternate lines).
+  const keepCurrentSchedule = disruptedResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+
   const isDisruptedLine = (id: string) =>
     id === disruptedResult.scenarioSnapshot.disruption.affectedLineId &&
     disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor >= 1.0;
 
   const movedOrderIds = new Set<string>();
-  if (rec) {
+  if (rec && keepCurrentSchedule) {
     for (const task of rec.schedule) {
-      const preTask = preRec?.schedule.find((t) => t.orderId === task.orderId);
-      if (preTask && preTask.lineId !== task.lineId) {
+      const baseTask = keepCurrentSchedule.schedule.find((t) => t.orderId === task.orderId);
+      if (baseTask && baseTask.lineId !== task.lineId) {
         movedOrderIds.add(task.orderId);
       }
     }
@@ -3196,7 +3219,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
         {!isDisruptionScenario && <DecisionTracePanel result={displayResult} />}
 
         {/* Assumptions */}
-        <AssumptionsPanel />
+        <AssumptionsPanel isDisruptionScenario={isDisruptionScenario} />
 
         {/* Audit trail */}
         {!isDisruptionScenario && <AuditTrailPanel result={displayResult} />}
