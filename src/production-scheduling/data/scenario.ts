@@ -410,6 +410,53 @@ export function getDemoDecision(): SchedulingDecisionResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Critical Aerospace Order (WHAT-IF simulation)
+//
+// AERO-201: a high-priority customer order arriving while production capacity
+// is constrained.
+//
+// Uses a CARPORT setup category — compatible with LINE-A and LINE-C.
+// The 3-day deadline and high delay penalty put meaningful pressure on the
+// existing schedule without crowding out the LINE-B disruption story.
+//
+// SYNTHETIC DEMONSTRATION — not Astronika production data.
+// All values are synthetic and chosen to create meaningful trade-offs.
+// ---------------------------------------------------------------------------
+
+export const AERO_ORDER: SchedulingOrder = {
+  id: "AERO-201",
+  name: "AERO-201 Critical Aerospace Component",
+  productType: "CARPORT_SINGLE",
+  setupCategory: "CARPORT",
+  quantity: 4,
+  durationHours: 3.5,
+  compatibleLines: ["LINE-A", "LINE-C"],
+  defaultLineId: "LINE-A",
+  materialStatus: "AVAILABLE",
+  priority: "CRITICAL",
+  deadlineDays: 3,
+  revenueEur: 5_500,
+  delayPenaltyPerDay: 1_200,
+};
+
+/**
+ * Return a new scenario that appends AERO-201 to the order queue.
+ * Also reduces LINE-A available hours slightly to create meaningful
+ * capacity pressure (the machine already holds ORDER-102 and ORDER-105).
+ * Never mutates the base scenario.
+ */
+export function buildAerospaceOrderScenario(
+  base: SchedulingScenario,
+): SchedulingScenario {
+  if (base.orders.some((o) => o.id === AERO_ORDER.id)) return base;
+  return {
+    ...base,
+    scenarioId: `${base.scenarioId}-AERO`,
+    orders: [...base.orders, AERO_ORDER],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Urgent order (WHAT-IF simulation)
 //
 // URGENT-201: a rush motorised awning received mid-schedule.

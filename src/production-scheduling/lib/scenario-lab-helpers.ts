@@ -279,6 +279,13 @@ export function computeSchedulingDecisionDelta(
       `ORDER-116 priority: ${baseWhat.order116Priority} → ${what.order116Priority}`,
     );
   }
+  if (what.includeAerospaceOrder !== baseWhat.includeAerospaceOrder) {
+    changedReasons.push(
+      what.includeAerospaceOrder
+        ? "Critical Aerospace Order AERO-201 added to production queue"
+        : "Critical Aerospace Order AERO-201 removed from production queue",
+    );
+  }
   if (what.includeUrgentOrder !== baseWhat.includeUrgentOrder) {
     changedReasons.push(
       what.includeUrgentOrder

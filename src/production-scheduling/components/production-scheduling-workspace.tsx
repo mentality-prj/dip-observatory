@@ -27,7 +27,7 @@ import {
   DEFAULT_COST_CONFIG,
   CONSTRAINT_RULES,
 } from "@/production-scheduling/lib/engine";
-import { DEFAULT_SCENARIO, URGENT_ORDER } from "@/production-scheduling/data/scenario";
+import { DEFAULT_SCENARIO, URGENT_ORDER, AERO_ORDER } from "@/production-scheduling/data/scenario";
 import {
   computeSchedulingSensitivity,
   computeSchedulingTraceDiff,
@@ -125,14 +125,14 @@ function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-function Disclaimer() {
+function Disclaimer({ text }: { text?: string }) {
   return (
     <div
       data-testid="synthetic-disclaimer"
       className="rounded-2xl border border-amber-300/20 bg-amber-300/5 px-4 py-2"
     >
       <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80">
-        Synthetic demonstration — not SURMA SYSTEMS production data
+        {text ?? "Synthetic demonstration — not SURMA SYSTEMS production data"}
       </p>
     </div>
   );
@@ -1690,7 +1690,13 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
           </p>
         </div>
 
-        <Disclaimer />
+        <Disclaimer
+          text={
+            whatIf.includeAerospaceOrder
+              ? "Synthetic aerospace manufacturing scenario — not client production data"
+              : undefined
+          }
+        />
 
         {/* Disruption — always visible */}
         <DisruptionPanel scenario={displayResult.scenarioSnapshot} />
@@ -1814,6 +1820,9 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                     >
                       {preset.id === "urgent-order" && (
                         <Zap className="mr-1 inline h-3 w-3 text-violet-400" />
+                      )}
+                      {preset.id === "critical-aerospace-order" && (
+                        <Zap className="mr-1 inline h-3 w-3 text-amber-400" />
                       )}
                       {preset.label}
                     </button>

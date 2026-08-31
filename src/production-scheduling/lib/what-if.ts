@@ -5,7 +5,7 @@
  * can be unit-tested without importing React or the full workspace component.
  */
 import type { SchedulingScenario } from "@/production-scheduling/types";
-import { URGENT_ORDER } from "@/production-scheduling/data/scenario";
+import { URGENT_ORDER, AERO_ORDER } from "@/production-scheduling/data/scenario";
 
 export interface WhatIfState {
   /** Line B capacity reduction (%). Range: 0–60. */
@@ -22,9 +22,9 @@ export interface WhatIfState {
   overtimeCostPerHour: number;
   /** Priority adjustment for ORDER-116 (normally NORMAL). */
   order116Priority: "HIGH" | "NORMAL" | "LOW";
-  /** When true, URGENT-201 is appended to the production queue. */
   includeUrgentOrder: boolean;
-}
+  includeAerospaceOrder: boolean;
+};
 
 export const BASELINE_WHAT_IF: WhatIfState = {
   lineBCapacityReductionPct: 25,
@@ -35,6 +35,7 @@ export const BASELINE_WHAT_IF: WhatIfState = {
   overtimeCostPerHour: 180,
   order116Priority: "NORMAL",
   includeUrgentOrder: false,
+  includeAerospaceOrder: false,
 };
 
 /**
@@ -56,13 +57,19 @@ export function buildSchedulingScenario(
     `otc${what.overtimeCostPerHour}`,
     `p116${what.order116Priority}`,
     `uo${what.includeUrgentOrder ? "1" : "0"}`,
+    `ao${what.includeAerospaceOrder ? "1" : "0"}`,
   ].join("-");
 
-  // Build order list: add/remove URGENT-201 based on flag
-  const filteredBase = base.orders.filter((o) => o.id !== URGENT_ORDER.id);
-  const baseOrders = what.includeUrgentOrder
+  // Build order list: add/remove URGENT-201 and AERO-201 based on flags
+  const filteredBase = base.orders.filter(
+    (o) => o.id !== URGENT_ORDER.id && o.id !== AERO_ORDER.id,
+  );
+  let baseOrders = what.includeUrgentOrder
     ? [...filteredBase, URGENT_ORDER]
     : filteredBase;
+  if (what.includeAerospaceOrder) {
+    baseOrders = [...baseOrders, AERO_ORDER];
+  }
 
   return {
     ...base,
@@ -133,5 +140,10 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     id: "material-shortage",
     label: "Material shortage",
     state: { ...BASELINE_WHAT_IF, order103MaterialAvailable: false },
+  },
+  {
+    id: "critical-aerospace-order",
+    label: "Critical Aerospace Order",
+    state: { ...BASELINE_WHAT_IF, includeAerospaceOrder: true },
   },
 ];

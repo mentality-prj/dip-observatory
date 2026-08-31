@@ -335,13 +335,6 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
         {/* Navigation links row */}
         <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-center">
           <Link
-            href={buildLocalePath("/eidos", locale)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
-          >
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            EIDOS Observatory
-          </Link>
-          <Link
             href={buildLocalePath("/supplier-decision", locale)}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-center text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60 md:w-auto md:justify-start md:text-left"
           >
