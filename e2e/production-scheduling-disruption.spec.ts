@@ -172,8 +172,8 @@ test.describe("production-disruption: duration control", () => {
     await page.getByTestId("dis-duration-12h").click();
     // Sensitivity panel should update (still visible)
     await expect(page.getByTestId("disruption-sensitivity")).toBeVisible();
-    // The 12h entry should be highlighted
-    await expect(page.getByTestId("dis-lab-12h-value")).toBeVisible();
+    // The 12h button should now be pressed
+    await expect(page.getByTestId("dis-duration-12h")).toHaveAttribute("aria-pressed", "true");
   });
 
   test("changing duration to 4h still produces a recommendation", async ({ page }) => {
@@ -202,8 +202,8 @@ test.describe("production-disruption: overtime toggle", () => {
 
   test("toggling overtime ON updates financial calculation", async ({ page }) => {
     const overtimeToggle = page.getByTestId("dis-overtime");
-    const isChecked = await overtimeToggle.isChecked();
-    if (!isChecked) {
+    const isPressed = await overtimeToggle.getAttribute("aria-pressed");
+    if (isPressed !== "true") {
       await overtimeToggle.click();
     }
     // Financial impact panel should still be visible after toggle
@@ -212,8 +212,8 @@ test.describe("production-disruption: overtime toggle", () => {
 
   test("toggling overtime OFF shows zero overtime in financial breakdown", async ({ page }) => {
     const overtimeToggle = page.getByTestId("dis-overtime");
-    const isChecked = await overtimeToggle.isChecked();
-    if (isChecked) {
+    const isPressed = await overtimeToggle.getAttribute("aria-pressed");
+    if (isPressed === "true") {
       await overtimeToggle.click();
     }
     await expect(page.getByTestId("disruption-financial-impact")).toBeVisible({ timeout: 3_000 });
@@ -244,6 +244,11 @@ test.describe("production-disruption: overtime cost change", () => {
   });
 
   test("changing overtime cost updates financial impact", async ({ page }) => {
+    // Enable overtime if not already
+    const overtimeToggle = page.getByTestId("dis-overtime");
+    if (await overtimeToggle.getAttribute("aria-pressed") !== "true") {
+      await overtimeToggle.click();
+    }
     const costInput = page.getByTestId("dis-overtime-cost");
     await costInput.fill("120");
     await costInput.press("Enter");
