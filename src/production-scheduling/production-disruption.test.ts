@@ -26,6 +26,7 @@ import {
   runSchedulingEngine,
   DEFAULT_COST_CONFIG,
 } from "@/production-scheduling/lib/engine";
+import type { ScheduledTask } from "@/production-scheduling/types";
 import {
   PDR_ORDERS,
   PDR_LINES,
@@ -235,7 +236,7 @@ describe("5. alternative machines respected", () => {
     assert.ok(redis);
     const awningOrders = ["PDR-106", "PDR-108"];
     for (const id of awningOrders) {
-      const task = redis!.schedule.find((t) => t.orderId === id);
+      const task: ScheduledTask | undefined = redis!.schedule.find((t) => t.orderId === id);
       assert.ok(task, `${id} must be scheduled`);
       assert.equal(task!.lineId, "LINE-B", `${id} should stay on LINE-B in REDISTRIBUTE`);
     }
