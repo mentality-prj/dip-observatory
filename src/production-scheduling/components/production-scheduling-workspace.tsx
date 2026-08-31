@@ -1323,7 +1323,7 @@ function ScenarioLabControls({
             onChange({ disruptionDurationDays: Number(e.target.value) })
           }
           data-testid="scenario-duration"
-          aria-label={`${ctrl.disruptionDuration}: ${what.disruptionDurationDays} days`}
+          aria-label={`${ctrl.disruptionDuration}: ${what.disruptionDurationDays} ${ctrl.dayUnit}`}
           className="mt-1 w-full accent-cyan-400"
         />
         <div className="flex justify-between text-[10px] text-slate-600">
@@ -1559,7 +1559,7 @@ function ScenarioLabResult({
       {traceDiff.length > 0 && (
         <div data-testid="decision-trace-diff">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-            {copy.decisionTrace.title}
+            {copy.decisionTrace.changedOnly}
           </p>
           <div className="space-y-1">
             {traceDiff

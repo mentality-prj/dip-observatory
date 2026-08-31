@@ -418,7 +418,7 @@ export function getDemoDecision(): SchedulingDecisionResponse {
 // The 3-day deadline and high delay penalty put meaningful pressure on the
 // existing schedule without crowding out the LINE-B disruption story.
 //
-// SYNTHETIC DEMONSTRATION — not Astronika production data.
+// SYNTHETIC DEMONSTRATION — not real production data.
 // All values are synthetic and chosen to create meaningful trade-offs.
 // ---------------------------------------------------------------------------
 
