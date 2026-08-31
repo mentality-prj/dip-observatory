@@ -12,9 +12,16 @@
  * SYNTHETIC DEMONSTRATION — not production data.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const BASE_URL = "/en/production-scheduling?scenario=production-disruption";
+
+async function gotoIdleDisruptionState(page: Page) {
+  await page.goto(BASE_URL);
+  await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+  await page.getByTestId("reset-disruption").click();
+  await expect(page.getByTestId("disruption-trigger-card")).toBeVisible({ timeout: 5_000 });
+}
 
 // ---------------------------------------------------------------------------
 // URL pre-activation: the full decision must be visible on page load
@@ -153,10 +160,9 @@ test.describe("production-disruption: URL pre-activation — controls", () => {
 
   test("changing Machine C capacity to 10h still shows sensitivity panel", async ({ page }) => {
     const btn = page.getByTestId("dis-line-c-10h");
-    if (await btn.isVisible({ timeout: 2_000 }).catch(() => false)) {
-      await btn.click();
-      await expect(page.getByTestId("disruption-sensitivity")).toBeVisible({ timeout: 5_000 });
-    }
+    await expect(btn).toBeVisible({ timeout: 5_000 });
+    await btn.click();
+    await expect(page.getByTestId("disruption-sensitivity")).toBeVisible({ timeout: 5_000 });
   });
 
   test("reset from pre-activated state returns to trigger card", async ({ page }) => {
@@ -168,8 +174,7 @@ test.describe("production-disruption: URL pre-activation — controls", () => {
 
 test.describe("production-disruption: scenario activation", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
   });
 
   test("disruption trigger card is visible on page load", async ({ page }) => {
@@ -218,8 +223,7 @@ test.describe("production-disruption: scenario activation", () => {
 
 test.describe("production-disruption: Find Best Recovery Plan", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -292,8 +296,7 @@ test.describe("production-disruption: Find Best Recovery Plan", () => {
 
 test.describe("production-disruption: duration control", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -324,8 +327,7 @@ test.describe("production-disruption: duration control", () => {
 
 test.describe("production-disruption: overtime toggle", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -362,8 +364,7 @@ test.describe("production-disruption: overtime toggle", () => {
 
 test.describe("production-disruption: overtime cost change", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
     await page.getByTestId("activate-disruption").click();
     const skip = page.getByTestId("disruption-skip");
     if (await skip.isVisible({ timeout: 2_000 }).catch(() => false)) {
@@ -399,8 +400,7 @@ test.describe("production-disruption: overtime cost change", () => {
 
 test.describe("production-disruption: reset", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
+    await gotoIdleDisruptionState(page);
   });
 
   test("after full activation and reset, disruption trigger card reappears", async ({ page }) => {
