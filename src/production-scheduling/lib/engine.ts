@@ -816,7 +816,7 @@ function buildExplanation(
   reasons.push({
     label: `${utilPct}% of available capacity utilised`,
     direction: utilPct > 50 ? "positive" : "negative",
-    evidence: `Production + setup hours as a fraction of available hours (post-disruption capacity across all lines).`,
+    evidence: `Production + setup hours as a fraction of available hours (after applying scenario capacity reductions across all lines).`,
   });
 
   const rejectedStrategies = all

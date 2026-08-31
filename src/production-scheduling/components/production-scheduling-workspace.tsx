@@ -2226,7 +2226,7 @@ function DisruptionScheduleDiff({
               CURRENT PLAN
             </p>
             {lineIds.map((lineId) => {
-              const tasks = (preRec?.schedule ?? []).filter(
+              const tasks = (keepCurrentSchedule?.schedule ?? []).filter(
                 (t) => t.lineId === lineId && t.day >= 1,
               );
               return (
