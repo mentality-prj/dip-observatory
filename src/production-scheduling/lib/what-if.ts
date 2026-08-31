@@ -148,4 +148,10 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     label: "Critical Aerospace Order",
     state: { ...BASELINE_WHAT_IF, includeAerospaceOrder: true },
   },
+  {
+    id: "production-disruption",
+    label: "Production Disruption",
+    // Uses its own PDR scenario — WhatIfState is a placeholder (baseline).
+    state: BASELINE_WHAT_IF,
+  },
 ];

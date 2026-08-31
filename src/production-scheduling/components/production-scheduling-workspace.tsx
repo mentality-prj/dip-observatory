@@ -14,6 +14,9 @@ import {
   RotateCcw,
   Zap,
   Play,
+  Siren,
+  Search,
+  Lightbulb,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -46,6 +49,15 @@ import {
   SCENARIO_PRESETS,
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
+import {
+  buildPdrScenario,
+  getPdrPreDisruptionDecision,
+  getOrdersAtRisk,
+  computeDisruptionSensitivity,
+  BASELINE_DISRUPTION_WHAT_IF,
+  PDR_MACHINE_B_ORDER_IDS,
+  type DisruptionWhatIfState,
+} from "@/production-scheduling/data/production-disruption-scenario";
 import type {
   FeasibilityStatus,
   ScheduledTask,
@@ -1608,6 +1620,1027 @@ function ScenarioLabResult({
 }
 
 // ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — type
+// ---------------------------------------------------------------------------
+
+type DisruptionSimStep = "idle" | "detected" | "impact" | "evaluating" | "complete";
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Trigger card
+// ---------------------------------------------------------------------------
+
+function DisruptionTriggerCard({ onActivate }: { onActivate: () => void }) {
+  return (
+    <Card className="border-rose-300/30 bg-rose-900/10" data-testid="disruption-trigger-card">
+      <CardContent className="pt-6">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-400">
+              PRODUCTION DISRUPTION
+            </p>
+            <h2 className="text-lg font-bold text-white">
+              Machine B — Equipment Failure
+            </h2>
+            <p className="text-sm text-slate-400">
+              Machine B is reporting an equipment failure and will be unavailable for 8 hours.
+              Evaluate recovery options and determine the best operational response.
+            </p>
+          </div>
+          <button
+            onClick={onActivate}
+            data-testid="activate-disruption"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-rose-400/40 bg-rose-500/20 px-5 py-2.5 text-sm font-semibold text-rose-200 outline-none transition hover:border-rose-400/60 hover:bg-rose-500/30 focus-visible:ring-2 focus-visible:ring-rose-400/60"
+          >
+            <Siren className="h-4 w-4" />
+            ACTIVATE DISRUPTION
+          </button>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl border border-white/8 bg-white/4 p-4 sm:grid-cols-4">
+          <div>
+            <p className="text-[10px] text-slate-500">Machine</p>
+            <p className="mt-0.5 text-sm font-semibold text-rose-300">Machine B</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Duration</p>
+            <p className="mt-0.5 text-sm font-semibold text-rose-300">8 hours</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Orders on Machine B</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">
+              {PDR_MACHINE_B_ORDER_IDS.length}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-500">Compatible alternative</p>
+            <p className="mt-0.5 text-sm font-semibold text-amber-300">Machine C</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Step progress card
+// ---------------------------------------------------------------------------
+
+const DISRUPTION_STEP_INFO: Record<
+  Exclude<DisruptionSimStep, "idle" | "complete">,
+  { icon: ReactNode; title: string; desc: string; colour: string }
+> = {
+  detected: {
+    icon: <Siren className="h-8 w-8 text-rose-400 animate-pulse" />,
+    title: "DISRUPTION DETECTED",
+    desc: "Machine B equipment failure confirmed. Assessing affected orders and capacity.",
+    colour: "border-rose-300/30 bg-rose-900/20",
+  },
+  impact: {
+    icon: <AlertTriangle className="h-8 w-8 text-amber-400 animate-pulse" />,
+    title: "IMPACT ANALYSIS",
+    desc: "Identifying affected orders, capacity loss, and deadline risk.",
+    colour: "border-amber-300/30 bg-amber-900/10",
+  },
+  evaluating: {
+    icon: <Search className="h-8 w-8 text-cyan-400 animate-pulse" />,
+    title: "EVALUATING RECOVERY OPTIONS",
+    desc: "Comparing: Wait · Move production · Overtime · Resequence",
+    colour: "border-cyan-300/30 bg-cyan-900/10",
+  },
+};
+
+function DisruptionProgressCard({
+  step,
+  onSkip,
+}: {
+  step: Exclude<DisruptionSimStep, "idle" | "complete">;
+  onSkip: () => void;
+}) {
+  const info = DISRUPTION_STEP_INFO[step];
+  return (
+    <Card className={cn("border", info.colour)} data-testid="disruption-progress">
+      <CardContent className="pt-6">
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">{info.icon}</div>
+          <div>
+            <p className="text-base font-bold text-white" data-testid="disruption-step-title">
+              {info.title}
+            </p>
+            <p className="mt-1 text-sm text-slate-400">{info.desc}</p>
+          </div>
+          <button
+            onClick={onSkip}
+            data-testid="disruption-skip"
+            className="text-xs text-slate-600 transition hover:text-slate-400"
+          >
+            Skip animation
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Impact summary (affected orders, capacity, deadlines)
+// ---------------------------------------------------------------------------
+
+function DisruptionImpactSummary({
+  preResult,
+  disruptedResult,
+  ordersAtRisk,
+}: {
+  preResult: SchedulingDecisionResponse;
+  disruptedResult: SchedulingDecisionResponse;
+  ordersAtRisk: string[];
+}) {
+  const keepCurrent = disruptedResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+  const preRec = preResult.strategies.find(
+    (s) => s.strategyId === preResult.recommendedStrategy,
+  );
+
+  const capacityLost =
+    disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor *
+    8 *
+    disruptedResult.scenarioSnapshot.disruption.durationDays;
+
+  return (
+    <div className="space-y-4" data-testid="disruption-impact-summary">
+      {/* Story flow */}
+      <div className="flex flex-wrap items-start gap-3 text-sm text-slate-400">
+        <div className="rounded-lg border border-white/10 bg-slate-800/40 px-3 py-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">CURRENT PLAN</p>
+          <p className="text-lg font-bold text-white">{preRec?.onTimeCount ?? 0}/{preResult.strategies[0]?.totalOrders ?? 0}</p>
+          <p className="text-[10px] text-slate-500">orders on time</p>
+        </div>
+        <div className="flex items-center text-slate-600 mt-4">↓</div>
+        <div className="rounded-lg border border-rose-300/20 bg-rose-900/10 px-3 py-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-400">MACHINE B FAILS</p>
+          <p className="text-lg font-bold text-rose-300">{capacityLost.toFixed(0)}h</p>
+          <p className="text-[10px] text-slate-500">capacity lost</p>
+        </div>
+        <div className="flex items-center text-slate-600 mt-4">↓</div>
+        <div className="rounded-lg border border-amber-300/20 bg-amber-900/10 px-3 py-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-400">AT RISK</p>
+          <p className="text-lg font-bold text-amber-300">{ordersAtRisk.length}</p>
+          <p className="text-[10px] text-slate-500">orders affected</p>
+        </div>
+      </div>
+
+      {/* At-risk orders */}
+      {ordersAtRisk.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+            Orders at risk (without recovery)
+          </p>
+          <div className="space-y-1">
+            {ordersAtRisk.map((id) => {
+              const task = keepCurrent?.schedule.find((t) => t.orderId === id);
+              return (
+                <div
+                  key={id}
+                  className="flex items-center justify-between rounded-lg border border-amber-300/20 bg-amber-900/10 px-3 py-2 text-xs"
+                  data-testid="disruption-at-risk-order"
+                >
+                  <span className="font-medium text-amber-200">{id}</span>
+                  {task && (
+                    <span className="text-amber-400">
+                      {task.status === "DELAYED"
+                        ? `${task.daysLate}d late`
+                        : "not scheduled"}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Root cause / countermeasures / decision
+// ---------------------------------------------------------------------------
+
+function DisruptionDecisionSummary({
+  disruptedResult,
+  ordersAtRisk,
+}: {
+  disruptedResult: SchedulingDecisionResponse;
+  ordersAtRisk: string[];
+}) {
+  const rec = disruptedResult.strategies.find(
+    (s) => s.strategyId === disruptedResult.recommendedStrategy,
+  );
+  const strategies = disruptedResult.strategies;
+  const feasibleCount = strategies.filter((s) => s.feasibility === "FEASIBLE").length;
+
+  return (
+    <div className="space-y-3" data-testid="disruption-decision-summary">
+      {[
+        {
+          label: "ROOT CAUSE",
+          colour: "rose",
+          text: `Machine B unavailable for ${
+            disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor * 8 *
+            disruptedResult.scenarioSnapshot.disruption.durationDays
+          }h (${(disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor * 100).toFixed(0)}% capacity reduction × ${disruptedResult.scenarioSnapshot.disruption.durationDays} day${disruptedResult.scenarioSnapshot.disruption.durationDays !== 1 ? "s" : ""}).`,
+        },
+        {
+          label: "IMPACT",
+          colour: "amber",
+          text: `${ordersAtRisk.length} order${ordersAtRisk.length !== 1 ? "s" : ""} at risk of delay${ordersAtRisk.length > 0 ? `: ${ordersAtRisk.join(", ")}` : ""}.`,
+        },
+        {
+          label: "COUNTERMEASURES",
+          colour: "cyan",
+          text: `${strategies.length} recovery strategies evaluated; ${feasibleCount} feasible.`,
+        },
+        {
+          label: "DECISION",
+          colour: "emerald",
+          text: rec
+            ? `${rec.strategyLabel} — ${rec.onTimeCount}/${rec.totalOrders} orders protected, €${Math.round(disruptedResult.avoidedCostVsBaseline).toLocaleString("en-US")} avoided.`
+            : disruptedResult.decisionStatus === "NO_FEASIBLE_ALTERNATIVE"
+              ? "No feasible recovery found — capacity insufficient."
+              : "Evaluating…",
+        },
+      ].map((row) => (
+        <div
+          key={row.label}
+          className={cn(
+            "rounded-xl border px-4 py-3",
+            row.colour === "rose" && "border-rose-300/20 bg-rose-900/10",
+            row.colour === "amber" && "border-amber-300/20 bg-amber-900/10",
+            row.colour === "cyan" && "border-cyan-300/20 bg-cyan-900/10",
+            row.colour === "emerald" && "border-emerald-300/20 bg-emerald-900/10",
+          )}
+        >
+          <p
+            className={cn(
+              "text-[10px] font-semibold uppercase tracking-[0.18em]",
+              row.colour === "rose" && "text-rose-400",
+              row.colour === "amber" && "text-amber-400",
+              row.colour === "cyan" && "text-cyan-400",
+              row.colour === "emerald" && "text-emerald-400",
+            )}
+          >
+            {row.label}
+          </p>
+          <p className="mt-1 text-sm text-slate-200">{row.text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Before / After / Recovery panel
+// ---------------------------------------------------------------------------
+
+function DisruptionBeforeAfterPanel({
+  preResult,
+  disruptedResult,
+}: {
+  preResult: SchedulingDecisionResponse;
+  disruptedResult: SchedulingDecisionResponse;
+}) {
+  const keepCurrent = disruptedResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+  const rec = disruptedResult.strategies.find(
+    (s) => s.strategyId === disruptedResult.recommendedStrategy,
+  );
+  const preRec = preResult.strategies.find(
+    (s) => s.strategyId === preResult.recommendedStrategy,
+  );
+
+  const avoidedImpact = Math.max(
+    0,
+    (keepCurrent?.financialImpact.totalCost ?? 0) -
+      (rec?.financialImpact.totalCost ?? 0),
+  );
+
+  return (
+    <Card className="border-rose-300/20" data-testid="disruption-before-after">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Siren className="h-4 w-4 text-rose-400" />
+          <CardTitle className="text-base text-rose-200">
+            Before · Disrupted · After Recovery
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Before disruption */}
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">
+              BEFORE DISRUPTION
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="Orders on time"
+                value={`${preRec?.onTimeCount ?? 0} / ${preRec?.totalOrders ?? 0}`}
+                accent="emerald"
+              />
+              <StatBox
+                label="Total operational impact"
+                value={eur(preRec?.financialImpact.totalCost ?? 0)}
+                accent="neutral"
+              />
+            </div>
+          </div>
+
+          {/* Disrupted — no recovery */}
+          <div className="rounded-xl border border-rose-300/20 bg-rose-900/10 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-400">
+              DISRUPTION — NO RECOVERY
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="Orders on time"
+                value={keepCurrent ? `${keepCurrent.onTimeCount}/${keepCurrent.totalOrders}` : "—"}
+                accent="rose"
+              />
+              <StatBox
+                label="Total operational impact"
+                value={eur(keepCurrent?.financialImpact.totalCost ?? 0)}
+                accent="rose"
+              />
+            </div>
+          </div>
+
+          {/* After recovery */}
+          <div className="rounded-xl border border-cyan-300/20 bg-cyan-900/10 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400">
+              AFTER RECOVERY
+            </p>
+            <div className="mt-3 space-y-2">
+              <StatBox
+                label="Orders on time"
+                value={rec ? `${rec.onTimeCount}/${rec.totalOrders}` : "—"}
+                accent="emerald"
+              />
+              <StatBox
+                label="Total operational impact"
+                value={eur(rec?.financialImpact.totalCost ?? 0)}
+                accent="cyan"
+              />
+              {(rec?.financialImpact.overtimeCost ?? 0) > 0 && (
+                <StatBox
+                  label="Overtime cost"
+                  value={eur(rec?.financialImpact.overtimeCost ?? 0)}
+                  accent="amber"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Avoided impact */}
+        {avoidedImpact > 0 && (
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3" data-testid="disruption-avoided-impact">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
+              AVOIDED IMPACT
+            </p>
+            <p className="mt-1 text-2xl font-bold text-emerald-300">
+              {eur(avoidedImpact)}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Disruption cost without recovery vs. recommended recovery plan
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Financial impact (3-column: pre / disrupted / recovery)
+// ---------------------------------------------------------------------------
+
+function DisruptionFinancialPanel({
+  preResult,
+  disruptedResult,
+}: {
+  preResult: SchedulingDecisionResponse;
+  disruptedResult: SchedulingDecisionResponse;
+}) {
+  const preRec = preResult.strategies.find(
+    (s) => s.strategyId === preResult.recommendedStrategy,
+  );
+  const keepCurrent = disruptedResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+  const rec = disruptedResult.strategies.find(
+    (s) => s.strategyId === disruptedResult.recommendedStrategy,
+  );
+
+  const rows: Array<{ label: string; pre: number; disrupted: number; recovery: number }> = [
+    {
+      label: "Delay cost",
+      pre: preRec?.financialImpact.delayCost ?? 0,
+      disrupted: keepCurrent?.financialImpact.delayCost ?? 0,
+      recovery: rec?.financialImpact.delayCost ?? 0,
+    },
+    {
+      label: "Overtime cost",
+      pre: preRec?.financialImpact.overtimeCost ?? 0,
+      disrupted: keepCurrent?.financialImpact.overtimeCost ?? 0,
+      recovery: rec?.financialImpact.overtimeCost ?? 0,
+    },
+    {
+      label: "Setup / changeover",
+      pre: preRec?.financialImpact.setupCost ?? 0,
+      disrupted: keepCurrent?.financialImpact.setupCost ?? 0,
+      recovery: rec?.financialImpact.setupCost ?? 0,
+    },
+    {
+      label: "Unused capacity",
+      pre: preRec?.financialImpact.unusedCapacityCost ?? 0,
+      disrupted: keepCurrent?.financialImpact.unusedCapacityCost ?? 0,
+      recovery: rec?.financialImpact.unusedCapacityCost ?? 0,
+    },
+    {
+      label: "Total impact",
+      pre: preRec?.financialImpact.totalCost ?? 0,
+      disrupted: keepCurrent?.financialImpact.totalCost ?? 0,
+      recovery: rec?.financialImpact.totalCost ?? 0,
+    },
+  ];
+
+  const avoidedImpact = Math.max(
+    0,
+    (keepCurrent?.financialImpact.totalCost ?? 0) -
+      (rec?.financialImpact.totalCost ?? 0),
+  );
+
+  return (
+    <Card data-testid="disruption-financial-impact">
+      <CardHeader>
+        <CardTitle className="text-base">Financial Impact</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="py-2 pr-4 text-left text-xs text-slate-400" />
+                <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-emerald-400">
+                  Current Plan
+                </th>
+                <th className="py-2 pr-4 text-right text-xs font-semibold uppercase tracking-widest text-rose-400">
+                  Without Recovery
+                </th>
+                <th className="py-2 text-right text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                  {rec?.strategyLabel ?? "Recovery"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => {
+                const isTotal = i === rows.length - 1;
+                const slug = row.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                return (
+                  <tr
+                    key={slug}
+                    className={cn("border-b border-white/5", isTotal && "font-semibold")}
+                  >
+                    <td className="py-2 pr-4 text-slate-400">{row.label}</td>
+                    <td className="py-2 pr-4 text-right text-emerald-300">
+                      <span data-testid={`dis-fin-pre-${slug}`}>{eur(row.pre)}</span>
+                    </td>
+                    <td className="py-2 pr-4 text-right text-rose-300">
+                      <span data-testid={`dis-fin-disrupted-${slug}`}>{eur(row.disrupted)}</span>
+                    </td>
+                    <td className="py-2 text-right text-cyan-300">
+                      <span data-testid={`dis-fin-recovery-${slug}`}>{eur(row.recovery)}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {avoidedImpact > 0 && (
+          <div className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-900/10 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
+              AVOIDED IMPACT
+            </p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span
+                className="text-2xl font-bold text-emerald-300"
+                data-testid="disruption-avoided-cost-value"
+              >
+                {eur(avoidedImpact)}
+              </span>
+              <span className="text-xs text-slate-400">
+                ({eur(keepCurrent?.financialImpact.totalCost ?? 0)} − {eur(rec?.financialImpact.totalCost ?? 0)})
+              </span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Schedule diff (current vs recovery)
+// ---------------------------------------------------------------------------
+
+function DisruptionScheduleDiff({
+  preResult,
+  disruptedResult,
+}: {
+  preResult: SchedulingDecisionResponse;
+  disruptedResult: SchedulingDecisionResponse;
+}) {
+  const rec = disruptedResult.strategies.find(
+    (s) => s.strategyId === disruptedResult.recommendedStrategy,
+  );
+
+  const lineIds = ["LINE-A", "LINE-B", "LINE-C"];
+  const lineNames: Record<string, string> = {
+    "LINE-A": "Machine A",
+    "LINE-B": "Machine B",
+    "LINE-C": "Machine C",
+  };
+
+  const preRec = preResult.strategies.find(
+    (s) => s.strategyId === preResult.recommendedStrategy,
+  );
+
+  const isDisruptedLine = (id: string) =>
+    id === disruptedResult.scenarioSnapshot.disruption.affectedLineId &&
+    disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor >= 1.0;
+
+  const movedOrderIds = new Set<string>();
+  if (rec) {
+    for (const task of rec.schedule) {
+      const preTask = preRec?.schedule.find((t) => t.orderId === task.orderId);
+      if (preTask && preTask.lineId !== task.lineId) {
+        movedOrderIds.add(task.orderId);
+      }
+    }
+  }
+
+  return (
+    <Card data-testid="disruption-schedule-diff">
+      <CardHeader>
+        <CardTitle className="text-base">Schedule Comparison</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {/* Current schedule */}
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-emerald-400">
+              CURRENT PLAN
+            </p>
+            {lineIds.map((lineId) => {
+              const tasks = (preRec?.schedule ?? []).filter(
+                (t) => t.lineId === lineId && t.day >= 1,
+              );
+              return (
+                <div key={lineId} className="mb-3">
+                  <p className="mb-1 text-xs font-medium text-slate-400">
+                    {lineNames[lineId] ?? lineId}
+                  </p>
+                  <div className="space-y-1">
+                    {tasks.length === 0 ? (
+                      <p className="text-xs text-slate-600">—</p>
+                    ) : (
+                      tasks.map((t) => (
+                        <div
+                          key={t.orderId}
+                          className="rounded bg-slate-800/50 px-2 py-1 text-xs text-slate-300"
+                        >
+                          {t.orderId} · D{t.day}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Recovery plan */}
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-cyan-400">
+              RECOVERY PLAN
+            </p>
+            {lineIds.map((lineId) => {
+              const disrupted = isDisruptedLine(lineId);
+              const tasks = (rec?.schedule ?? []).filter(
+                (t) => t.lineId === lineId && t.day >= 1,
+              );
+              return (
+                <div key={lineId} className="mb-3">
+                  <p className="mb-1 text-xs font-medium text-slate-400">
+                    {lineNames[lineId] ?? lineId}
+                    {disrupted && (
+                      <span className="ml-2 text-[10px] font-semibold text-rose-400">
+                        [UNAVAILABLE D1]
+                      </span>
+                    )}
+                  </p>
+                  {disrupted && tasks.length === 0 ? (
+                    <div className="rounded border border-rose-400/30 bg-rose-900/10 px-2 py-1 text-xs text-rose-400">
+                      MACHINE UNAVAILABLE
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {tasks.length === 0 ? (
+                        <p className="text-xs text-slate-600">—</p>
+                      ) : (
+                        tasks.map((t) => {
+                          const moved = movedOrderIds.has(t.orderId);
+                          const isOvertime = t.isOvertime;
+                          return (
+                            <div
+                              key={t.orderId}
+                              className={cn(
+                                "rounded px-2 py-1 text-xs",
+                                moved
+                                  ? "border border-cyan-400/40 bg-cyan-900/20 text-cyan-200"
+                                  : isOvertime
+                                    ? "border border-amber-400/40 bg-amber-900/20 text-amber-200"
+                                    : t.status === "DELAYED"
+                                      ? "border border-rose-400/30 bg-rose-900/10 text-rose-300"
+                                      : "bg-slate-800/50 text-slate-300",
+                              )}
+                            >
+                              {t.orderId} · D{t.day}
+                              {moved && <span className="ml-1 text-[10px]">↗ MOVED</span>}
+                              {isOvertime && <span className="ml-1 text-[10px]">OT</span>}
+                              {t.status === "DELAYED" && (
+                                <span className="ml-1 text-[10px]">⚠ {t.daysLate}d</span>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-slate-500">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded border border-cyan-400/40 bg-cyan-900/20" />
+            Moved
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded border border-amber-400/40 bg-amber-900/20" />
+            Overtime
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded border border-rose-400/30 bg-rose-900/10" />
+            Delayed
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Why this recovery plan?
+// ---------------------------------------------------------------------------
+
+function DisruptionWhyThisPlan({ disruptedResult }: { disruptedResult: SchedulingDecisionResponse }) {
+  return (
+    <Card data-testid="disruption-why-plan">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-4 w-4 text-amber-400" />
+          <CardTitle className="text-base">WHY THIS RECOVERY PLAN?</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {disruptedResult.explanation.reasons.map((r, i) => (
+          <div key={i} className="flex items-start gap-3">
+            {r.direction === "positive" ? (
+              <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+            ) : (
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
+            )}
+            <div>
+              <p className="text-sm font-medium text-slate-200">{r.label}</p>
+              <p className="text-xs text-slate-500">{r.evidence}</p>
+            </div>
+          </div>
+        ))}
+        {disruptedResult.explanation.rejectedStrategies.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-white/8 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Rejected alternatives
+            </p>
+            {disruptedResult.explanation.rejectedStrategies.map((r, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <XCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-rose-500/60" />
+                <p className="text-xs text-slate-500">
+                  <span className="font-medium text-slate-400">
+                    {r.strategyId.replace(/_/g, " ")}:{" "}
+                  </span>
+                  {r.reason}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Decision trace
+// ---------------------------------------------------------------------------
+
+function DisruptionDecisionTrace({ disruptedResult }: { disruptedResult: SchedulingDecisionResponse }) {
+  const rec = disruptedResult.strategies.find(
+    (s) => s.strategyId === disruptedResult.recommendedStrategy,
+  );
+  const keepCurrent = disruptedResult.strategies.find(
+    (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+  );
+
+  const traceEntries = rec?.constraintResults ?? [];
+  const keepEntries = keepCurrent?.constraintResults ?? [];
+
+  return (
+    <CollapseSection title="Decision Trace">
+      <div className="space-y-3" data-testid="disruption-decision-trace">
+        <p className="text-xs text-slate-500">
+          Rules that changed between Keep Current and the recommended recovery plan.
+        </p>
+
+        {/* Changed rules */}
+        {traceEntries.map((r) => {
+          const k = keepEntries.find((e) => e.ruleId === r.ruleId);
+          const changed = k && k.passed !== r.passed;
+          const rule = CONSTRAINT_RULES.find((cr) => cr.id === r.ruleId);
+          return (
+            <div
+              key={r.ruleId}
+              className={cn(
+                "rounded-xl border px-4 py-3",
+                changed ? "border-amber-300/30 bg-amber-900/10" : (r.passed ? "border-emerald-300/20 bg-emerald-900/10" : "border-rose-300/20 bg-rose-900/10"),
+              )}
+            >
+              <div className="flex items-start gap-3">
+                {r.passed ? (
+                  <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                ) : (
+                  <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-400" />
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-200">{r.ruleName}</p>
+                    {rule?.hard && (
+                      <Badge variant="rose" className="text-[9px]">Hard</Badge>
+                    )}
+                    {changed && k && (
+                      <span className="text-[10px] text-amber-400">
+                        {k.passed ? "PASS" : "FAIL"} → {r.passed ? "PASS" : "FAIL"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">{r.evidence}</p>
+                  {changed && k && (
+                    <p className="mt-1 text-[10px] text-slate-500">
+                      Keep Current: {k.evidence}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </CollapseSection>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Sensitivity (disruption duration threshold)
+// ---------------------------------------------------------------------------
+
+function DisruptionSensitivityPanel({ disruptionWhat }: { disruptionWhat: DisruptionWhatIfState }) {
+  const sensitivity = useMemo(
+    () => computeDisruptionSensitivity(disruptionWhat),
+    [disruptionWhat],
+  );
+
+  return (
+    <CollapseSection title="Recovery Sensitivity — At what point does strategy stop working?">
+      <div className="space-y-2" data-testid="disruption-sensitivity">
+        {sensitivity.map((entry) => (
+          <div
+            key={entry.hours}
+            className={cn(
+              "flex items-center justify-between rounded-lg border px-3 py-2",
+              entry.feasible
+                ? "border-emerald-300/20 bg-emerald-900/10"
+                : "border-rose-300/20 bg-rose-900/10",
+            )}
+          >
+            <span className="text-sm font-medium text-slate-200">
+              {entry.hours}h disruption
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">{entry.strategy}</span>
+              <Badge variant={entry.feasible ? "emerald" : "rose"} className="text-[9px]">
+                {entry.feasible ? "FEASIBLE" : "NO RECOVERY"}
+              </Badge>
+            </div>
+          </div>
+        ))}
+        <p className="text-xs text-slate-500">
+          Calculated from the current scenario configuration. Changes to overtime,
+          machine capacity or deadlines will shift these thresholds.
+        </p>
+      </div>
+    </CollapseSection>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTION DISRUPTION — Scenario lab controls
+// ---------------------------------------------------------------------------
+
+function DisruptionLabControls({
+  what,
+  onChange,
+}: {
+  what: DisruptionWhatIfState;
+  onChange: (patch: Partial<DisruptionWhatIfState>) => void;
+}) {
+  const hourOptions: Array<4 | 8 | 12 | 16> = [4, 8, 12, 16];
+  const capOptions: Array<4 | 6 | 8 | 10> = [4, 6, 8, 10];
+
+  return (
+    <div className="space-y-5">
+      {/* Machine B availability */}
+      <div className="flex items-center justify-between">
+        <Label className="text-xs text-slate-400">Machine B availability</Label>
+        <div className="flex gap-2">
+          {(["Available", "Unavailable"] as const).map((opt) => {
+            const isAvail = opt === "Available";
+            const isActive = what.machineBAvailable === isAvail;
+            return (
+              <button
+                key={opt}
+                onClick={() => onChange({ machineBAvailable: isAvail })}
+                data-testid={`dis-machine-b-${opt.toLowerCase()}`}
+                aria-pressed={isActive}
+                className={cn(
+                  "rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+                  isActive
+                    ? isAvail
+                      ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300"
+                      : "border-rose-400/50 bg-rose-400/10 text-rose-300"
+                    : "border-white/10 text-slate-500 hover:border-white/20",
+                )}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Disruption duration */}
+      <div>
+        <Label className="text-xs text-slate-400 mb-2 block">
+          Disruption duration:{" "}
+          <span data-testid="dis-lab-duration-value">{what.disruptionHours}</span>h
+        </Label>
+        <div className="flex gap-2" data-testid="dis-duration-selector">
+          {hourOptions.map((h) => (
+            <button
+              key={h}
+              onClick={() => onChange({ disruptionHours: h })}
+              data-testid={`dis-duration-${h}h`}
+              aria-pressed={what.disruptionHours === h}
+              className={cn(
+                "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition",
+                what.disruptionHours === h
+                  ? "border-rose-400/50 bg-rose-400/10 text-rose-300"
+                  : "border-white/10 text-slate-500 hover:border-white/20",
+              )}
+            >
+              {h}h
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Overtime */}
+      <div className="flex items-center justify-between">
+        <Label className="text-xs text-slate-400">Overtime</Label>
+        <button
+          onClick={() => onChange({ overtimeAvailable: !what.overtimeAvailable })}
+          data-testid="dis-overtime"
+          className={cn(
+            "relative h-5 w-10 shrink-0 overflow-hidden rounded-full transition",
+            what.overtimeAvailable ? "bg-emerald-500" : "bg-slate-700",
+          )}
+          aria-pressed={what.overtimeAvailable}
+          aria-label="Overtime"
+        >
+          <span
+            className={cn(
+              "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform",
+              what.overtimeAvailable ? "translate-x-[22px]" : "translate-x-0.5",
+            )}
+          />
+        </button>
+      </div>
+
+      {/* Overtime cost */}
+      <div>
+        <Label className="text-xs text-slate-400">
+          Overtime cost: €<span data-testid="dis-lab-overtime-cost-value">{what.overtimeCostPerHour}</span>/h
+        </Label>
+        <input
+          type="range"
+          min={50}
+          max={400}
+          step={10}
+          value={what.overtimeCostPerHour}
+          onChange={(e) => onChange({ overtimeCostPerHour: Number(e.target.value) })}
+          data-testid="dis-overtime-cost"
+          aria-label={`Overtime cost: €${what.overtimeCostPerHour}/h`}
+          className="mt-1 w-full accent-cyan-400"
+        />
+        <div className="flex justify-between text-[10px] text-slate-600">
+          <span>€50/h</span><span>€400/h</span>
+        </div>
+      </div>
+
+      {/* Critical deadline */}
+      <div>
+        <Label className="text-xs text-slate-400">
+          Critical deadline (PDR-104): Day{" "}
+          <span data-testid="dis-lab-deadline-value">{what.criticalDeadlineDays}</span>
+        </Label>
+        <input
+          type="range"
+          min={1}
+          max={3}
+          step={1}
+          value={what.criticalDeadlineDays}
+          onChange={(e) => onChange({ criticalDeadlineDays: Number(e.target.value) })}
+          data-testid="dis-critical-deadline"
+          aria-label={`Critical deadline: Day ${what.criticalDeadlineDays}`}
+          className="mt-1 w-full accent-cyan-400"
+        />
+        <div className="flex justify-between text-[10px] text-slate-600">
+          <span>Day 1</span><span>Day 3</span>
+        </div>
+      </div>
+
+      {/* Machine C capacity */}
+      <div>
+        <Label className="text-xs text-slate-400 mb-2 block">
+          Machine C capacity:{" "}
+          <span data-testid="dis-lab-capacity-value">{what.lineCCapacityHours}</span>h/day
+        </Label>
+        <div className="flex gap-2">
+          {capOptions.map((c) => (
+            <button
+              key={c}
+              onClick={() => onChange({ lineCCapacityHours: c })}
+              data-testid={`dis-capacity-${c}h`}
+              aria-pressed={what.lineCCapacityHours === c}
+              className={cn(
+                "flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition",
+                what.lineCCapacityHours === c
+                  ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-300"
+                  : "border-white/10 text-slate-500 hover:border-white/20",
+              )}
+            >
+              {c}h
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main workspace
 // ---------------------------------------------------------------------------
 
@@ -1625,9 +2658,17 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
     });
   }
 
+  // -------------------------------------------------------------------------
+  // Active scenario: "standard" or "production-disruption"
+  // -------------------------------------------------------------------------
+  const [activePresetId, setActivePresetId] = useState<string>(() => {
+    return searchParams.get("scenario") ?? "baseline";
+  });
+  const isDisruptionScenario = activePresetId === "production-disruption";
+
   const [whatIf, setWhatIf] = useState<WhatIfState>(() => {
     const scenarioParam = searchParams.get("scenario");
-    if (scenarioParam) {
+    if (scenarioParam && scenarioParam !== "production-disruption") {
       const match = SCENARIO_PRESETS.find((p) => p.id === scenarioParam);
       if (match) return match.state;
     }
@@ -1636,6 +2677,33 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
   const [simulationStep, setSimulationStep] = useState<SimulationStep>("idle");
   const [showFullPlan, setShowFullPlan] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // -------------------------------------------------------------------------
+  // Disruption scenario state
+  // -------------------------------------------------------------------------
+  const [disruptionStep, setDisruptionStep] = useState<DisruptionSimStep>("idle");
+  const [disruptionShowFullPlan, setDisruptionShowFullPlan] = useState(false);
+  const [disruptionWhatIf, setDisruptionWhatIf] = useState<DisruptionWhatIfState>(
+    BASELINE_DISRUPTION_WHAT_IF,
+  );
+
+  const pdrPreDisruptionResult = useMemo(
+    () => getPdrPreDisruptionDecision(),
+    [],
+  );
+
+  const pdrDisruptedResult = useMemo(() => {
+    const { scenario, costConfigOverride } = buildPdrScenario(disruptionWhatIf);
+    return runSchedulingEngine({
+      scenario,
+      costConfig: { ...DEFAULT_COST_CONFIG, ...costConfigOverride },
+    });
+  }, [disruptionWhatIf]);
+
+  const pdrOrdersAtRisk = useMemo(
+    () => getOrdersAtRisk(pdrDisruptedResult),
+    [pdrDisruptedResult],
+  );
 
   function clearTimers() {
     timers.current.forEach(clearTimeout);
@@ -1647,7 +2715,14 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
     clearTimers();
     setSimulationStep("idle");
     setShowFullPlan(false);
-    setWhatIf(preset.state);
+    setActivePresetId(preset.id);
+    if (preset.id === "production-disruption") {
+      setDisruptionStep("idle");
+      setDisruptionShowFullPlan(false);
+      setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
+    } else {
+      setWhatIf(preset.state);
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (preset.id === "baseline") {
       params.delete("scenario");
@@ -1679,7 +2754,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
 
   const displayResult = isBaseline ? baselineResult : scenResult;
 
-  // Simulation visibility logic
+  // Simulation visibility logic (standard scenario)
   const urgentActive = whatIf.includeUrgentOrder;
   const showProgress =
     simulationStep !== "idle" && simulationStep !== "complete";
@@ -1709,10 +2784,38 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
     setWhatIf(BASELINE_WHAT_IF);
     setSimulationStep("idle");
     setShowFullPlan(false);
+    setActivePresetId("baseline");
+    setDisruptionStep("idle");
+    setDisruptionShowFullPlan(false);
+    setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("scenario");
     const qs = params.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
+
+  // Disruption scenario handlers
+  function handleActivateDisruption() {
+    clearTimers();
+    setDisruptionShowFullPlan(false);
+    setDisruptionStep("detected");
+    timers.current = [
+      setTimeout(() => setDisruptionStep("impact"), 1000),
+      setTimeout(() => setDisruptionStep("evaluating"), 2200),
+      setTimeout(() => setDisruptionStep("complete"), 3400),
+    ];
+  }
+
+  function handleSkipDisruptionAnimation() {
+    clearTimers();
+    setDisruptionStep("complete");
+  }
+
+  function handleResetDisruption() {
+    clearTimers();
+    setDisruptionStep("idle");
+    setDisruptionShowFullPlan(false);
+    setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
   }
 
   // Cleanup pending timers when component unmounts
@@ -1765,75 +2868,183 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
           }
         />
 
-        {/* Disruption — always visible */}
-        <DisruptionPanel scenario={displayResult.scenarioSnapshot} />
+        {/* Disruption — always visible (standard scenario only) */}
+        {!isDisruptionScenario && <DisruptionPanel scenario={displayResult.scenarioSnapshot} />}
 
-        {/* WHAT IF? trigger — shown when no urgent order active */}
-        {showTrigger && (
-          <UrgentOrderTriggerCard onSimulate={handleSimulate} />
-        )}
-
-        {/* Simulation progress animation */}
-        {showProgress && (
-          <SimulationProgressCard
-            step={simulationStep as Exclude<SimulationStep, "idle" | "complete">}
-            onSkip={handleSkipAnimation}
-          />
-        )}
-
-        {/* Simulation result panels */}
-        {showUrgentResult && (
+        {/* ================================================================
+            PRODUCTION DISRUPTION SCENARIO
+            ================================================================ */}
+        {isDisruptionScenario && (
           <>
-            <BeforeAfterPanel
-              baselineResult={baselineResult}
-              urgentResult={scenResult}
-            />
-            <WhatShouldWeDoCard
-              baselineResult={baselineResult}
-              urgentResult={scenResult}
-            />
+            {/* Disruption disclaimer */}
+            <Disclaimer text="Synthetic demonstration — not production data." />
 
-            {!showFullPlan && (
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  onClick={() => setShowFullPlan(true)}
-                  data-testid="find-better-plan"
-                  className="gap-2 border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
-                  variant="secondary"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  {copy.buttons.findBetterPlan}
-                </Button>
-                <Button
-                  onClick={handleReset}
-                  data-testid="reset-baseline"
-                  variant="secondary"
-                  className="gap-2"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  {copy.buttons.resetToBaseline}
-                </Button>
-              </div>
+            {/* Step 0: Trigger card */}
+            {disruptionStep === "idle" && (
+              <DisruptionTriggerCard onActivate={handleActivateDisruption} />
+            )}
+
+            {/* Steps 1–3: Progress animation */}
+            {disruptionStep !== "idle" && disruptionStep !== "complete" && (
+              <DisruptionProgressCard
+                step={disruptionStep}
+                onSkip={handleSkipDisruptionAnimation}
+              />
+            )}
+
+            {/* Step 4: Results */}
+            {disruptionStep === "complete" && (
+              <>
+                <DisruptionImpactSummary
+                  preResult={pdrPreDisruptionResult}
+                  disruptedResult={pdrDisruptedResult}
+                  ordersAtRisk={pdrOrdersAtRisk}
+                />
+
+                <DisruptionDecisionSummary
+                  disruptedResult={pdrDisruptedResult}
+                  ordersAtRisk={pdrOrdersAtRisk}
+                />
+
+                {/* WOW button — Find Best Recovery Plan */}
+                {!disruptionShowFullPlan && (
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      onClick={() => setDisruptionShowFullPlan(true)}
+                      data-testid="find-best-recovery-plan"
+                      className="gap-2 border-rose-400/30 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30"
+                      variant="secondary"
+                    >
+                      <Siren className="h-4 w-4" />
+                      FIND BEST RECOVERY PLAN
+                    </Button>
+                    <Button
+                      onClick={handleResetDisruption}
+                      data-testid="reset-disruption"
+                      variant="secondary"
+                      className="gap-2"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      RESET TO BASELINE
+                    </Button>
+                  </div>
+                )}
+
+                {/* Full recovery plan */}
+                {disruptionShowFullPlan && (
+                  <>
+                    <DisruptionBeforeAfterPanel
+                      preResult={pdrPreDisruptionResult}
+                      disruptedResult={pdrDisruptedResult}
+                    />
+
+                    <DisruptionFinancialPanel
+                      preResult={pdrPreDisruptionResult}
+                      disruptedResult={pdrDisruptedResult}
+                    />
+
+                    <AlternativesTable result={pdrDisruptedResult} />
+
+                    <DisruptionScheduleDiff
+                      preResult={pdrPreDisruptionResult}
+                      disruptedResult={pdrDisruptedResult}
+                    />
+
+                    <DisruptionWhyThisPlan disruptedResult={pdrDisruptedResult} />
+
+                    <DisruptionDecisionTrace disruptedResult={pdrDisruptedResult} />
+
+                    <DisruptionSensitivityPanel disruptionWhat={disruptionWhatIf} />
+
+                    <Button
+                      onClick={handleResetDisruption}
+                      data-testid="reset-disruption"
+                      variant="secondary"
+                      className="gap-2"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      RESET TO BASELINE
+                    </Button>
+                  </>
+                )}
+              </>
             )}
           </>
         )}
 
-        {/* Main schedule panels */}
-        {showMainPanels && (
+        {/* ================================================================
+            STANDARD SCENARIO (urgent order / what-if)
+            ================================================================ */}
+        {!isDisruptionScenario && (
           <>
-            <RecommendedStrategyCard result={displayResult} />
-            <WhyThisSchedule result={displayResult} />
-            <FinancialImpactPanel result={displayResult} />
-            <AlternativesTable result={displayResult} />
-          </>
-        )}
+            {/* WHAT IF? trigger — shown when no urgent order active */}
+            {showTrigger && (
+              <UrgentOrderTriggerCard onSimulate={handleSimulate} />
+            )}
 
-        {/* Reset button after full plan is shown */}
-        {showUrgentResult && showFullPlan && (
-          <Button onClick={handleReset} data-testid="reset-baseline" variant="secondary" className="gap-2">
-            <RotateCcw className="h-3.5 w-3.5" />
-            {copy.buttons.resetToBaseline}
-          </Button>
+            {/* Simulation progress animation */}
+            {showProgress && (
+              <SimulationProgressCard
+                step={simulationStep as Exclude<SimulationStep, "idle" | "complete">}
+                onSkip={handleSkipAnimation}
+              />
+            )}
+
+            {/* Simulation result panels */}
+            {showUrgentResult && (
+              <>
+                <BeforeAfterPanel
+                  baselineResult={baselineResult}
+                  urgentResult={scenResult}
+                />
+                <WhatShouldWeDoCard
+                  baselineResult={baselineResult}
+                  urgentResult={scenResult}
+                />
+
+                {!showFullPlan && (
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      onClick={() => setShowFullPlan(true)}
+                      data-testid="find-better-plan"
+                      className="gap-2 border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
+                      variant="secondary"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      {copy.buttons.findBetterPlan}
+                    </Button>
+                    <Button
+                      onClick={handleReset}
+                      data-testid="reset-baseline"
+                      variant="secondary"
+                      className="gap-2"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      {copy.buttons.resetToBaseline}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Main schedule panels */}
+            {showMainPanels && (
+              <>
+                <RecommendedStrategyCard result={displayResult} />
+                <WhyThisSchedule result={displayResult} />
+                <FinancialImpactPanel result={displayResult} />
+                <AlternativesTable result={displayResult} />
+              </>
+            )}
+
+            {/* Reset button after full plan is shown */}
+            {showUrgentResult && showFullPlan && (
+              <Button onClick={handleReset} data-testid="reset-baseline" variant="secondary" className="gap-2">
+                <RotateCcw className="h-3.5 w-3.5" />
+                {copy.buttons.resetToBaseline}
+              </Button>
+            )}
+          </>
         )}
 
         {/* Scenario Lab */}
@@ -1844,7 +3055,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                 <FlaskConical className="h-5 w-5 text-cyan-400" />
                 <CardTitle className="text-base text-cyan-200">{copy.scenarioLab.title}</CardTitle>
               </div>
-              {!isBaseline && (
+              {(!isBaseline || isDisruptionScenario) && (
                 <button
                   onClick={handleReset}
                   data-testid="reset-baseline-lab"
@@ -1856,7 +3067,9 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               )}
             </div>
             <p className="text-xs text-slate-400">
-              {copy.scenarioLab.description}
+              {isDisruptionScenario
+                ? "Adjust disruption parameters and observe how recovery options change."
+                : copy.scenarioLab.description}
             </p>
 
             {/* Scenario presets */}
@@ -1867,7 +3080,9 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap gap-2">
                 {SCENARIO_PRESETS.map((preset) => {
                   const isActive =
-                    JSON.stringify(whatIf) === JSON.stringify(preset.state);
+                    preset.id === "production-disruption"
+                      ? isDisruptionScenario
+                      : !isDisruptionScenario && JSON.stringify(whatIf) === JSON.stringify(preset.state);
                   return (
                     <button
                       key={preset.id}
@@ -1886,6 +3101,9 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                       {preset.id === "critical-aerospace-order" && (
                         <Zap className="mr-1 inline h-3 w-3 text-amber-400" />
                       )}
+                      {preset.id === "production-disruption" && (
+                        <Siren className="mr-1 inline h-3 w-3 text-rose-400" />
+                      )}
                       {preset.label}
                     </button>
                   );
@@ -1894,33 +3112,91 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-8 lg:grid-cols-2">
-              <ScenarioLabControls
-                what={whatIf}
-                onChange={(patch) => setWhatIf((prev) => ({ ...prev, ...patch }))}
-              />
-              <div>
-                <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  {isBaseline ? copy.scenarioLab.baselineResult : copy.scenarioLab.scenarioResult}
-                </p>
-                <ScenarioLabResult
-                  baseResult={baselineResult}
-                  scenResult={scenResult}
-                  what={whatIf}
+            {isDisruptionScenario ? (
+              <div className="grid gap-8 lg:grid-cols-2">
+                <DisruptionLabControls
+                  what={disruptionWhatIf}
+                  onChange={(patch) =>
+                    setDisruptionWhatIf((prev) => ({ ...prev, ...patch }))
+                  }
                 />
+                <div>
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    DISRUPTION SCENARIO RESULT
+                  </p>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <StatBox
+                        label="Recommended recovery"
+                        value={
+                          pdrDisruptedResult.decisionStatus === "NO_FEASIBLE_ALTERNATIVE"
+                            ? "No recovery"
+                            : pdrDisruptedResult.strategies
+                                .find(
+                                  (s) =>
+                                    s.strategyId ===
+                                    pdrDisruptedResult.recommendedStrategy,
+                                )
+                                ?.strategyLabel.toUpperCase() ?? "—"
+                        }
+                        accent={
+                          pdrDisruptedResult.decisionStatus === "NO_FEASIBLE_ALTERNATIVE"
+                            ? "rose"
+                            : "emerald"
+                        }
+                      />
+                      <StatBox
+                        label="Orders at risk"
+                        value={`${pdrOrdersAtRisk.length}`}
+                        accent={pdrOrdersAtRisk.length > 0 ? "amber" : "emerald"}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <StatBox
+                        label="Avoided impact"
+                        value={eur(pdrDisruptedResult.avoidedCostVsBaseline)}
+                        accent="emerald"
+                      />
+                      <StatBox
+                        label="Total impact"
+                        value={eur(pdrDisruptedResult.totalFinancialImpact)}
+                        accent="amber"
+                      />
+                    </div>
+                    <DisruptionSensitivityPanel disruptionWhat={disruptionWhatIf} />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid gap-8 lg:grid-cols-2">
+                <ScenarioLabControls
+                  what={whatIf}
+                  onChange={(patch) => setWhatIf((prev) => ({ ...prev, ...patch }))}
+                />
+                <div>
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    {isBaseline ? copy.scenarioLab.baselineResult : copy.scenarioLab.scenarioResult}
+                  </p>
+                  <ScenarioLabResult
+                    baseResult={baselineResult}
+                    scenResult={scenResult}
+                    what={whatIf}
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Decision trace */}
-        <DecisionTracePanel result={displayResult} />
+        {!isDisruptionScenario && <DecisionTracePanel result={displayResult} />}
 
         {/* Assumptions */}
         <AssumptionsPanel />
 
         {/* Audit trail */}
-        <AuditTrailPanel result={displayResult} />
+        {!isDisruptionScenario && <AuditTrailPanel result={displayResult} />}
+        {isDisruptionScenario && <AuditTrailPanel result={pdrDisruptedResult} />}
       </div>
     </div>
     </PSCopyContext.Provider>
