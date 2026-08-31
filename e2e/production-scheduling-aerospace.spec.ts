@@ -58,11 +58,12 @@ test.describe("production-scheduling: Critical Aerospace Order (Part C)", () => 
     const aerBtn = page.getByTestId("preset-critical-aerospace-order");
     await aerBtn.click();
 
-    // Give engine time to recalculate
-    await page.waitForTimeout(300);
-
-    // Strategy scores section should still be present (engine ran)
-    await expect(page.getByTestId("strategy-scores")).toBeVisible({ timeout: 5_000 });
+    // The aerospace disclaimer appears only when this preset is active,
+    // confirming the engine has recalculated with the new scenario.
+    await expect(page.getByTestId("synthetic-disclaimer")).toContainText(
+      /synthetic aerospace/i,
+      { timeout: 5_000 },
+    );
   });
 
   // -------------------------------------------------------------------------

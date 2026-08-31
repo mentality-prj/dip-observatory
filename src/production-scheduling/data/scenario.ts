@@ -449,7 +449,7 @@ export const AERO_ORDER: SchedulingOrder = {
 export function buildAerospaceOrderScenario(
   base: SchedulingScenario,
 ): SchedulingScenario {
-  const scenarioId = base.scenarioId.includes("-AERO")
+  const scenarioId = base.scenarioId.endsWith("-AERO")
     ? base.scenarioId
     : `${base.scenarioId}-AERO`;
   if (base.orders.some((o) => o.id === AERO_ORDER.id)) {

@@ -1402,7 +1402,7 @@ describe("46. financial impact data model", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Critical Aerospace Order scenario tests (Part C — 13 cases)
+// Critical Aerospace Order scenario tests (Part C — 20 cases)
 // ---------------------------------------------------------------------------
 
 describe("47. Critical Aerospace Order — determinism", () => {

@@ -16,12 +16,12 @@ test.describe("public navigation: client-specific links removed (Part C Item 21)
     await page.goto("/en");
     await page.waitForURL(/\/en/, { timeout: 10_000 });
 
-    // EIDOS Observatory must not appear in the nav link row
-    const eidosLinks = await page
-      .locator("nav a[href*='/eidos'], a[href*='/eidos']")
+    // Scope strictly to the navigation link row — not the whole page —
+    // so unrelated sections linking to /eidos cannot produce false negatives.
+    const eidosNavLinks = await page
+      .locator("nav a[href*='/eidos']")
       .count();
-    // No public nav link to /eidos
-    expect(eidosLinks).toBe(0);
+    expect(eidosNavLinks).toBe(0);
   });
 
   test("public navigation contains Production Scheduling link", async ({ page }) => {
@@ -43,20 +43,19 @@ test.describe("public navigation: client-specific links removed (Part C Item 21)
 
 test.describe("direct route regression: removed nav links still resolve (Part C Item 22)", () => {
   test("/en/eidos route resolves directly", async ({ page }) => {
-    await page.goto("/en/eidos");
-    // Should not 404 — page loads with some content
-    await expect(page).not.toHaveURL(/\/404/);
-    const status = page.url();
-    expect(status).not.toContain("404");
+    const response = await page.goto("/en/eidos");
+    // HTTP status must be 2xx — catches Next.js 404 rendered at the original URL
+    expect(response?.status()).toBeLessThan(400);
   });
 
   test("/en/supplier-decision route resolves directly", async ({ page }) => {
-    await page.goto("/en/supplier-decision");
-    await expect(page).not.toHaveURL(/\/404/);
+    const response = await page.goto("/en/supplier-decision");
+    expect(response?.status()).toBeLessThan(400);
   });
 
   test("/en/production-scheduling route resolves directly", async ({ page }) => {
-    await page.goto("/en/production-scheduling");
+    const response = await page.goto("/en/production-scheduling");
+    expect(response?.status()).toBeLessThan(400);
     await page.waitForURL(/\/en\/production-scheduling/, { timeout: 10_000 });
     await expect(page.getByTestId("production-scheduling")).toBeVisible();
   });
