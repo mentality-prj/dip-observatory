@@ -220,7 +220,7 @@ test.describe("production-disruption: overtime cost change", () => {
     await expect(page.getByTestId("disruption-decision-summary")).toBeVisible({ timeout: 5_000 });
     // Enable overtime first
     const overtimeToggle = page.getByTestId("dis-overtime");
-    if (!(await overtimeToggle.isChecked())) {
+    if (await overtimeToggle.getAttribute("aria-pressed") !== "true") {
       await overtimeToggle.click();
     }
   });
