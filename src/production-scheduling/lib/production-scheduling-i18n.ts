@@ -4,7 +4,7 @@
  * Supports English ("en") and Polish ("pl").
  * All display strings live here; no translatable text inside React components.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 
 import type { Locale } from "@/lib/observatory-i18n";
@@ -233,13 +233,13 @@ const en: ProductionSchedulingCopy = {
   header: {
     backLink: "Observatory",
     title: "Production Scheduling",
-    subtitle: "SURMA SYSTEMS · Pergolas, Carports & Shading — Scheduling Decision Demonstrator",
+    subtitle: "Pergolas, Carports & Shading — Scheduling Decision Demonstrator",
     badgeLabel: "Decision Engine",
     localeAriaLabel: "Select language",
   },
 
   disclaimer: {
-    default: "Synthetic demonstration — not SURMA SYSTEMS production data",
+    default: "Synthetic demonstration — not real production data",
     aerospace: "Synthetic aerospace manufacturing scenario — not client production data",
   },
 
@@ -428,7 +428,7 @@ const en: ProductionSchedulingCopy = {
       "Delay penalty accrues from Day 1 overdue.",
       "Revenue at risk = revenue of orders that cannot be completed on time.",
       "Financial impact = delay cost + overtime cost + setup cost + unused capacity cost.",
-      "All values are synthetic — not SURMA SYSTEMS actual data.",
+      "All values are synthetic — not actual production data.",
     ],
   },
 
@@ -468,13 +468,13 @@ const pl: ProductionSchedulingCopy = {
     backLink: "Obserwatorium",
     title: "Harmonogramowanie Produkcji",
     subtitle:
-      "SURMA SYSTEMS · Pergole, Wiaty i Osłony — Demonstrator Decyzji Harmonogramowania",
+      "Pergole, Wiaty i Osłony — Demonstrator Decyzji Harmonogramowania",
     badgeLabel: "Silnik Decyzyjny",
     localeAriaLabel: "Wybierz język",
   },
 
   disclaimer: {
-    default: "Demonstracja syntetyczna — nie są to rzeczywiste dane SURMA SYSTEMS",
+    default: "Demonstracja syntetyczna — nie są to rzeczywiste dane produkcyjne",
     aerospace: "Syntetyczny scenariusz produkcji lotniczej — nie są to dane klienta",
   },
 
@@ -665,7 +665,7 @@ const pl: ProductionSchedulingCopy = {
       "Kara za opóźnienie naliczana jest od 1. dnia po terminie.",
       "Zagrożony przychód = przychód zamówień, których nie można ukończyć na czas.",
       "Wpływ finansowy = koszt opóźnień + nadgodziny + przezbrojenia + niewykorzystana moc.",
-      "Wszystkie wartości są syntetyczne — nie są to rzeczywiste dane SURMA SYSTEMS.",
+      "Wszystkie wartości są syntetyczne — nie są to rzeczywiste dane produkcyjne.",
     ],
   },
 

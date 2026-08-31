@@ -1,10 +1,9 @@
 /**
- * Synthetic scheduling scenario for the SURMA Production Scheduling demonstrator.
+ * Synthetic production scheduling scenario for the scheduling demonstrator.
  *
- * SURMA SYSTEMS — pergola, carport and shading system manufacturer.
- * All figures are synthetic demonstration values.
+ * Pergola, carport and shading system manufacturer — all figures are synthetic demonstration values.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 
 import type {
@@ -376,7 +375,7 @@ export const ORDERS: SchedulingOrder[] = [
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_SCENARIO: SchedulingScenario = {
-  scenarioId: "SURMA-DEMO-001",
+  scenarioId: "PS-DEMO-001",
   lines: PRODUCTION_LINES,
   orders: ORDERS,
   disruption: {
@@ -471,7 +470,7 @@ export function buildAerospaceOrderScenario(
 // disrupted LINE-B. KEEP_CURRENT cannot handle both URGENT-201 and ORDER-101
 // on time; REDISTRIBUTE absorbs it without changing the optimal strategy.
 //
-// SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS actual data.
+// SYNTHETIC DEMONSTRATION — not real production data.
 // ---------------------------------------------------------------------------
 
 export const URGENT_ORDER: SchedulingOrder = {

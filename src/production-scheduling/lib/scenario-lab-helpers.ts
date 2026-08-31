@@ -1,8 +1,8 @@
 /**
- * Scenario lab helpers for the SURMA production scheduling demonstrator.
+ * Scenario lab helpers for the production scheduling demonstrator.
  * Pure deterministic functions for sensitivity analysis and trace diff.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 import {
   runSchedulingEngine,

@@ -1,5 +1,5 @@
 /**
- * SURMA Production Scheduling Decision Engine.
+ * Production Scheduling Decision Engine.
  *
  * Pure, deterministic, stateless. No randomness, no external APIs,
  * no database, no hidden mutable state, no LLM.
@@ -19,7 +19,7 @@
  *
  * Same input + config + ENGINE_VERSION → identical output.
  *
- * SYNTHETIC DEMONSTRATION — not SURMA SYSTEMS production data.
+ * SYNTHETIC DEMONSTRATION — not real production data.
  */
 
 import type {
