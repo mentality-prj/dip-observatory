@@ -444,14 +444,22 @@ export const AERO_ORDER: SchedulingOrder = {
  * Also reduces LINE-A available hours slightly to create meaningful
  * capacity pressure (the machine already holds ORDER-102 and ORDER-105).
  * Never mutates the base scenario.
+ *
+ * If AERO-201 is already present, returns a scenario with the `-AERO` suffix
+ * in the scenarioId (idempotent with respect to orders and scenarioId form).
  */
 export function buildAerospaceOrderScenario(
   base: SchedulingScenario,
 ): SchedulingScenario {
-  if (base.orders.some((o) => o.id === AERO_ORDER.id)) return base;
+  const scenarioId = base.scenarioId.includes("-AERO")
+    ? base.scenarioId
+    : `${base.scenarioId}-AERO`;
+  if (base.orders.some((o) => o.id === AERO_ORDER.id)) {
+    return base.scenarioId === scenarioId ? base : { ...base, scenarioId };
+  }
   return {
     ...base,
-    scenarioId: `${base.scenarioId}-AERO`,
+    scenarioId,
     orders: [...base.orders, AERO_ORDER],
   };
 }

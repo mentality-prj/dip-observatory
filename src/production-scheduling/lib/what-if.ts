@@ -22,7 +22,9 @@ export interface WhatIfState {
   overtimeCostPerHour: number;
   /** Priority adjustment for ORDER-116 (normally NORMAL). */
   order116Priority: "HIGH" | "NORMAL" | "LOW";
+  /** When true, URGENT-201 is appended to the production queue. */
   includeUrgentOrder: boolean;
+  /** When true, AERO-201 (Critical Aerospace Order) is appended to the production queue. */
   includeAerospaceOrder: boolean;
 };
 
