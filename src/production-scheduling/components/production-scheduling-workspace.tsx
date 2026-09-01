@@ -2507,7 +2507,7 @@ function DisruptionSensitivityPanel({ disruptionWhat }: { disruptionWhat: Disrup
   const firstInfeasible = sensitivity.find((e) => !e.feasible);
 
   const explanation = hasBoundary
-    ? `Calculated from the current scenario configuration. Strategy feasibility changes at ${firstInfeasible!.hours}h disruption duration.`
+    ? `Calculated from the current scenario configuration. Strategy feasibility changes at ${firstInfeasible?.hours ?? 0}h disruption duration.`
     : "Calculated from the current scenario configuration. The recommended recovery strategy remains feasible across the tested disruption durations.";
 
   return (

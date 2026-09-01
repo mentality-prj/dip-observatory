@@ -781,18 +781,19 @@ describe("18. sensitivity heading semantics", () => {
     assert.equal(hasBoundary, false, "hasBoundary must be false for baseline config");
   });
 
-  test("sensitivity heading logic: hasBoundary is true when Machine C capacity reduced to infeasible", () => {
-    // With Machine C capacity at 4h/day and 16h disruption, recovery may become infeasible
+  test("sensitivity entries always have typed feasible and strategy fields regardless of config", () => {
+    // Verify the function returns well-typed data for all durations
+    // (even with restricted Machine C capacity, REDISTRIBUTE remains feasible)
     const restrictedWhat: typeof BASELINE_DISRUPTION_WHAT_IF = {
       ...BASELINE_DISRUPTION_WHAT_IF,
       lineCCapacityHours: 4,
     };
     const sensitivity = computeDisruptionSensitivity(restrictedWhat);
-    // At minimum, results for longer durations may become infeasible;
-    // verify the function correctly reports feasibility per entry
+    assert.equal(sensitivity.length, 4, "Must return 4 entries");
     for (const entry of sensitivity) {
       assert.equal(typeof entry.feasible, "boolean", `entry.feasible must be boolean for ${entry.hours}h`);
       assert.equal(typeof entry.strategy, "string", `entry.strategy must be string for ${entry.hours}h`);
+      assert.ok(entry.hours > 0, `entry.hours must be positive`);
     }
   });
 });
