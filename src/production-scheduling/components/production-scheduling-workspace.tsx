@@ -262,6 +262,7 @@ function DisruptionPanel({ scenario }: { scenario: SchedulingScenario }) {
           <StatBox
             label={copy.disruption.duration}
             value={`${scenario.disruption.durationDays} ${copy.scenarioLab.controls.dayUnit}`}
+            sub={`= ${hoursLost.toFixed(0)}h machine-hours lost`}
             accent="amber"
           />
           <StatBox
@@ -2198,11 +2199,18 @@ function DisruptionScheduleDiff({
     disruptedResult.scenarioSnapshot.disruption.capacityReductionFactor >= 1.0;
 
   const movedOrderIds = new Set<string>();
+  const rescuedOrderIds = new Set<string>();
   if (rec && keepCurrentSchedule) {
     for (const task of rec.schedule) {
       const baseTask = keepCurrentSchedule.schedule.find((t) => t.orderId === task.orderId);
-      if (baseTask && baseTask.lineId !== task.lineId) {
-        movedOrderIds.add(task.orderId);
+      if (baseTask) {
+        if (baseTask.lineId !== task.lineId) {
+          movedOrderIds.add(task.orderId);
+        }
+        // Rescued: was not on-time in keep-current, on time in recovery
+        if (baseTask.status !== "ON_TIME" && task.status === "ON_TIME") {
+          rescuedOrderIds.add(task.orderId);
+        }
       }
     }
   }
@@ -2278,6 +2286,7 @@ function DisruptionScheduleDiff({
                       ) : (
                         tasks.map((t) => {
                           const moved = movedOrderIds.has(t.orderId);
+                          const rescued = rescuedOrderIds.has(t.orderId);
                           const isOvertime = t.isOvertime;
                           return (
                             <div
@@ -2286,15 +2295,18 @@ function DisruptionScheduleDiff({
                                 "rounded px-2 py-1 text-xs",
                                 moved
                                   ? "border border-cyan-400/40 bg-cyan-900/20 text-cyan-200"
-                                  : isOvertime
-                                    ? "border border-amber-400/40 bg-amber-900/20 text-amber-200"
-                                    : t.status === "DELAYED"
-                                      ? "border border-rose-400/30 bg-rose-900/10 text-rose-300"
-                                      : "bg-slate-800/50 text-slate-300",
+                                  : rescued
+                                    ? "border border-emerald-400/40 bg-emerald-900/20 text-emerald-200"
+                                    : isOvertime
+                                      ? "border border-amber-400/40 bg-amber-900/20 text-amber-200"
+                                      : t.status === "DELAYED"
+                                        ? "border border-rose-400/30 bg-rose-900/10 text-rose-300"
+                                        : "bg-slate-800/50 text-slate-300",
                               )}
                             >
                               {t.orderId} · D{t.day}
                               {moved && <span className="ml-1 text-[10px]">↗ MOVED</span>}
+                              {rescued && <span className="ml-1 text-[10px]">✓ RESCUED</span>}
                               {isOvertime && <span className="ml-1 text-[10px]">OT</span>}
                               {t.status === "DELAYED" && (
                                 <span className="ml-1 text-[10px]">⚠ {t.daysLate}d</span>
@@ -2312,18 +2324,30 @@ function DisruptionScheduleDiff({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-slate-500">
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-2 w-3 rounded border border-cyan-400/40 bg-cyan-900/20" />
-            Moved
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-2 w-3 rounded border border-amber-400/40 bg-amber-900/20" />
-            Overtime
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-2 w-3 rounded border border-rose-400/30 bg-rose-900/10" />
-            Delayed
-          </span>
+          {movedOrderIds.size > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded border border-cyan-400/40 bg-cyan-900/20" />
+              Moved to another line
+            </span>
+          )}
+          {rescuedOrderIds.size > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded border border-emerald-400/40 bg-emerald-900/20" />
+              Rescued (was delayed or not scheduled without recovery)
+            </span>
+          )}
+          {rec?.schedule.some((t) => t.isOvertime) && (
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded border border-amber-400/40 bg-amber-900/20" />
+              Overtime
+            </span>
+          )}
+          {rec?.schedule.some((t) => t.status === "DELAYED") && (
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded border border-rose-400/30 bg-rose-900/10" />
+              Still delayed
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

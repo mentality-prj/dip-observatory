@@ -759,11 +759,31 @@ function buildExplanation(
     .length;
   const criticalTotal = tasks.filter((t) => t.priority === "CRITICAL").length;
   if (criticalOnTime > 0) {
-    reasons.push({
-      label: `Protects ${criticalOnTime} of ${criticalTotal} critical customer deadline(s)`,
-      direction: "positive",
-      evidence: `All CRITICAL orders complete within their delivery window.`,
-    });
+    // Distinguish orders that were genuinely at risk (DELAYED in the keep-current
+    // baseline) and rescued, versus those that were on-time in both strategies.
+    const baselineTasks = baseline.schedule;
+    const rescuedCriticalIds = tasks
+      .filter((t) => t.priority === "CRITICAL" && t.status === "ON_TIME")
+      .filter((t) => {
+        const bt = baselineTasks.find((b) => b.orderId === t.orderId);
+        return bt && bt.status !== "ON_TIME";
+      })
+      .map((t) => t.orderId);
+    const preservedCount = criticalOnTime - rescuedCriticalIds.length;
+
+    let label: string;
+    let evidence: string;
+    if (rescuedCriticalIds.length > 0 && preservedCount > 0) {
+      label = `Rescues ${rescuedCriticalIds.length} critical deadline(s); keeps ${preservedCount} further critical order(s) on time`;
+      evidence = `Rescued: ${rescuedCriticalIds.join(", ")} (delayed without recovery). ${preservedCount} critical order(s) unaffected by disruption.`;
+    } else if (rescuedCriticalIds.length > 0) {
+      label = `Rescues ${rescuedCriticalIds.length} of ${criticalTotal} critical deadline(s) from delay`;
+      evidence = `${rescuedCriticalIds.join(", ")} would have been late under Keep Current; this plan delivers them on time.`;
+    } else {
+      label = `Keeps all ${criticalTotal} critical order(s) on time`;
+      evidence = `All CRITICAL orders complete within their delivery window (none were at risk under this strategy).`;
+    }
+    reasons.push({ label, direction: "positive", evidence });
   }
 
   const avoidedDelay = baseline.financialImpact.delayCost - recommended.financialImpact.delayCost;
@@ -802,21 +822,21 @@ function buildExplanation(
     });
   }
 
-  const utilPct = Math.round(
-    (recommended.lineUtilization.reduce(
-      (s, l) => s + l.productionHours + l.setupHours,
-      0,
-    ) /
-      Math.max(
-        1,
-        recommended.lineUtilization.reduce((s, l) => s + l.availableHours, 0),
-      )) *
-      100,
+  const usedHours = recommended.lineUtilization.reduce(
+    (s, l) => s + l.productionHours + l.setupHours,
+    0,
   );
+  const availHours = Math.max(
+    1,
+    recommended.lineUtilization.reduce((s, l) => s + l.availableHours, 0),
+  );
+  const roundedUsedHours = Math.round(usedHours);
+  const roundedAvailHours = Math.round(availHours);
+  const utilPct = Math.round((roundedUsedHours / roundedAvailHours) * 100);
   reasons.push({
     label: `${utilPct}% of available capacity utilised`,
     direction: utilPct > 50 ? "positive" : "negative",
-    evidence: `Production + setup hours as a fraction of available hours (after applying scenario capacity reductions across all lines).`,
+    evidence: `${roundedUsedHours}h production + setup out of ${roundedAvailHours}h available across all lines over the full planning horizon (after disruption capacity reductions).`,
   });
 
   const rejectedStrategies = all
