@@ -239,7 +239,7 @@ const en: ProductionSchedulingCopy = {
   },
 
   disclaimer: {
-    default: "Synthetic demonstration — not real production data",
+    default: "Synthetic demonstration — not production data",
     aerospace: "Synthetic aerospace manufacturing scenario — not client production data",
   },
 
