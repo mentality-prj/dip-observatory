@@ -2170,10 +2170,8 @@ function DisruptionFinancialPanel({
 // ---------------------------------------------------------------------------
 
 function DisruptionScheduleDiff({
-  preResult,
   disruptedResult,
 }: {
-  preResult: SchedulingDecisionResponse;
   disruptedResult: SchedulingDecisionResponse;
 }) {
   const rec = disruptedResult.strategies.find(
@@ -2186,10 +2184,6 @@ function DisruptionScheduleDiff({
     "LINE-B": "Machine B",
     "LINE-C": "Machine C",
   };
-
-  const preRec = preResult.strategies.find(
-    (s) => s.strategyId === preResult.recommendedStrategy,
-  );
 
   // Use KEEP_CURRENT_SCHEDULE from the disrupted result as the baseline for
   // detecting which orders were moved to a different line. This reflects the
@@ -2973,7 +2967,6 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                     <AlternativesTable result={pdrDisruptedResult} />
 
                     <DisruptionScheduleDiff
-                      preResult={pdrPreDisruptionResult}
                       disruptedResult={pdrDisruptedResult}
                     />
 
