@@ -2207,7 +2207,7 @@ function DisruptionScheduleDiff({
         if (baseTask.lineId !== task.lineId) {
           movedOrderIds.add(task.orderId);
         }
-        // Rescued: was delayed (or not scheduled) in keep-current, on time in recovery
+        // Rescued: was not on-time in keep-current, on time in recovery
         if (baseTask.status !== "ON_TIME" && task.status === "ON_TIME") {
           rescuedOrderIds.add(task.orderId);
         }
@@ -2333,7 +2333,7 @@ function DisruptionScheduleDiff({
           {rescuedOrderIds.size > 0 && (
             <span className="inline-flex items-center gap-1">
               <span className="inline-block h-2 w-3 rounded border border-emerald-400/40 bg-emerald-900/20" />
-              Rescued (was delayed without recovery)
+              Rescued (was delayed or not scheduled without recovery)
             </span>
           )}
           {rec?.schedule.some((t) => t.isOvertime) && (

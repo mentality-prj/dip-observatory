@@ -830,11 +830,13 @@ function buildExplanation(
     1,
     recommended.lineUtilization.reduce((s, l) => s + l.availableHours, 0),
   );
-  const utilPct = Math.round((usedHours / availHours) * 100);
+  const roundedUsedHours = Math.round(usedHours);
+  const roundedAvailHours = Math.round(availHours);
+  const utilPct = Math.round((roundedUsedHours / roundedAvailHours) * 100);
   reasons.push({
     label: `${utilPct}% of available capacity utilised`,
     direction: utilPct > 50 ? "positive" : "negative",
-    evidence: `${Math.round(usedHours)}h production + setup out of ${Math.round(availHours)}h available across all lines over the full planning horizon (after disruption capacity reductions).`,
+    evidence: `${roundedUsedHours}h production + setup out of ${roundedAvailHours}h available across all lines over the full planning horizon (after disruption capacity reductions).`,
   });
 
   const rejectedStrategies = all
