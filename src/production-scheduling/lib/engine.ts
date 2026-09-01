@@ -814,9 +814,9 @@ function buildExplanation(
       100,
   );
   reasons.push({
-    label: `${utilPct}% available capacity utilised`,
+    label: `${utilPct}% of available capacity utilised`,
     direction: utilPct > 50 ? "positive" : "negative",
-    evidence: `Total used hours vs total available hours across all lines.`,
+    evidence: `Production + setup hours as a fraction of available hours (after applying scenario capacity reductions across all lines).`,
   });
 
   const rejectedStrategies = all
