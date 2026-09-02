@@ -614,7 +614,7 @@ describe("14. schedule label semantics", () => {
     assert.ok(rec, "Pre-disruption must have a recommended strategy");
     const machineBIds = ["PDR-104", "PDR-106", "PDR-108", "PDR-110"];
     for (const id of machineBIds) {
-      const task = rec!.schedule.find((t) => t.orderId === id);
+      const task: ScheduledTask | undefined = rec!.schedule.find((t) => t.orderId === id);
       assert.ok(task, `${id} must be scheduled in pre-disruption`);
       assert.equal(task!.status, "ON_TIME", `${id} must be ON_TIME in pre-disruption (BEFORE DISRUPTION state)`);
     }

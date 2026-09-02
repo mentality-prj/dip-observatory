@@ -1778,7 +1778,7 @@ function DisruptionImpactSummary({
     disruptedResult.scenarioSnapshot.disruption.durationDays;
 
   const machineBOrdersAtRiskCount = ordersAtRisk.filter((id) =>
-    PDR_MACHINE_B_ORDER_IDS.includes(id),
+    (PDR_MACHINE_B_ORDER_IDS as readonly string[]).includes(id),
   ).length;
   const unaffectedCount = Math.max(0, machineBOrderCount - machineBOrdersAtRiskCount);
 
