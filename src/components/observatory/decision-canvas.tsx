@@ -15,6 +15,7 @@ import {
   Pause,
   Play,
   RefreshCcw,
+  Settings,
   Sparkles,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -302,6 +303,14 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
               <span className="text-xs font-semibold tracking-[0.22em] uppercase text-cyan-400">
                 DIP Observatory
               </span>
+              <Link
+                href="/admin/plugins/gas-forecast/providers"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-1.5 text-slate-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+                aria-label="Open gas forecast providers admin page"
+                title="Open gas forecast providers admin page"
+              >
+                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
             </div>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">
               {localizedScenario?.name ?? copy.shell.title}
