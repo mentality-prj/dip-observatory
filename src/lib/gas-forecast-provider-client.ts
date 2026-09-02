@@ -31,10 +31,14 @@ function getGasForecastCapabilityPath() {
   );
 }
 
+function hasAbsoluteCapabilityUrl() {
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(getGasForecastCapabilityPath());
+}
+
 function buildGasForecastCapabilityUrl() {
   const path = getGasForecastCapabilityPath();
 
-  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(path)) {
+  if (hasAbsoluteCapabilityUrl()) {
     return path.replace(/\/+$/, "");
   }
 
@@ -67,7 +71,7 @@ export async function testGasForecastProviderConnection(
   const baseUrl = getDipBaseUrl();
   const apiKey = getDipApiKey();
 
-  if (!baseUrl || !apiKey) {
+  if ((!baseUrl && !hasAbsoluteCapabilityUrl()) || !apiKey) {
     return mapGasForecastFailure({
       providerId,
       httpStatus: 503,

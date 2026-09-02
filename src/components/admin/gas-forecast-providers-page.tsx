@@ -264,7 +264,7 @@ export function GasForecastProvidersPage() {
                     type="button"
                     size="lg"
                     className="w-full"
-                    disabled={isPending && pendingProviderId === provider.id}
+                    disabled={Boolean(pendingProviderId)}
                     onClick={() => handleTest(provider.id)}
                   >
                     {isPending && pendingProviderId === provider.id
