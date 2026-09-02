@@ -69,6 +69,14 @@ export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
   },
 ];
 
+export const DEFAULT_GAS_FORECAST_CAPABILITY_PATHS = [
+  "/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build",
+  "/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build/run",
+  "/api/v1/plugins/gas-forecast/capabilities/gas.dataset.build",
+  "/api/v1/plugin-runtime/gas-forecast/capabilities/gas.dataset.build",
+  "/api/v1/plugin-runtime/capabilities/gas.dataset.build?plugin=gas-forecast",
+] as const;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -288,6 +296,10 @@ export function getGasForecastErrorMessage(
     ["error"],
     ["title"],
   ]);
+
+  if (httpStatus === 404 && explicit?.toLowerCase() === "not found") {
+    return "Invalid API endpoint";
+  }
 
   if (explicit) {
     return explicit;

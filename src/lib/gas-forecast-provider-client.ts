@@ -1,7 +1,6 @@
-import "server-only";
-
 import { normalizeDipBaseUrl } from "@/lib/dip-url";
 import {
+  DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
   mapGasForecastFailure,
   mapGasForecastSuccess,
   type GasForecastConnectionResult,
@@ -27,22 +26,41 @@ function getGasForecastCapabilityPath() {
   return (
     process.env.DIP_GAS_FORECAST_CAPABILITY_PATH?.trim() ??
     process.env.GAS_FORECAST_CAPABILITY_PATH?.trim() ??
-    "/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build"
+    ""
   );
 }
 
-function hasAbsoluteCapabilityUrl() {
-  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(getGasForecastCapabilityPath());
+function isAbsoluteUrl(value: string) {
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value);
 }
 
-function buildGasForecastCapabilityUrl() {
+function hasAbsoluteCapabilityUrl() {
   const path = getGasForecastCapabilityPath();
+  return Boolean(path) && isAbsoluteUrl(path);
+}
 
-  if (hasAbsoluteCapabilityUrl()) {
-    return path.replace(/\/+$/, "");
+export function getGasForecastCapabilityPaths() {
+  const configuredPath = getGasForecastCapabilityPath();
+
+  if (!configuredPath) {
+    return [...DEFAULT_GAS_FORECAST_CAPABILITY_PATHS];
   }
 
-  return `${getDipBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+  return [configuredPath];
+}
+
+function buildGasForecastCapabilityUrls() {
+  const baseUrl = getDipBaseUrl();
+
+  return getGasForecastCapabilityPaths().map((path) =>
+    isAbsoluteUrl(path)
+      ? path.replace(/\/+$/, "")
+      : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`,
+  );
+}
+
+function buildInvalidEndpointMessage(urls: string[]) {
+  return `Invalid API endpoint. Tried: ${urls.join(", ")}`;
 }
 
 function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
@@ -70,6 +88,7 @@ export async function testGasForecastProviderConnection(
 ): Promise<GasForecastConnectionResult> {
   const baseUrl = getDipBaseUrl();
   const apiKey = getDipApiKey();
+  const capabilityUrls = buildGasForecastCapabilityUrls();
 
   if ((!baseUrl && !hasAbsoluteCapabilityUrl()) || !apiKey) {
     return mapGasForecastFailure({
@@ -83,33 +102,45 @@ export async function testGasForecastProviderConnection(
   const startedAt = performance.now();
 
   try {
-    const response = await fetch(buildGasForecastCapabilityUrl(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
-      body: JSON.stringify(buildGasForecastCapabilityRequest(providerId)),
-      cache: "no-store",
-    });
-
-    const responseTimeMs = Math.round(performance.now() - startedAt);
-    const payload = await readJsonOrText(response);
-
-    if (!response.ok) {
-      return mapGasForecastFailure({
-        providerId,
-        httpStatus: response.status,
-        responseTimeMs,
-        payload,
+    for (const capabilityUrl of capabilityUrls) {
+      const response = await fetch(capabilityUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify(buildGasForecastCapabilityRequest(providerId)),
+        cache: "no-store",
       });
+
+      const responseTimeMs = Math.round(performance.now() - startedAt);
+      const payload = await readJsonOrText(response);
+
+      if (response.ok) {
+        return mapGasForecastSuccess({
+          providerId,
+          httpStatus: response.status,
+          responseTimeMs,
+          payload,
+        });
+      }
+
+      if (response.status !== 404) {
+        return mapGasForecastFailure({
+          providerId,
+          httpStatus: response.status,
+          responseTimeMs,
+          payload,
+        });
+      }
     }
 
-    return mapGasForecastSuccess({
+    return mapGasForecastFailure({
       providerId,
-      httpStatus: response.status,
-      responseTimeMs,
-      payload,
+      httpStatus: 404,
+      responseTimeMs: Math.round(performance.now() - startedAt),
+      payload: null,
+      fallbackMessage: buildInvalidEndpointMessage(capabilityUrls),
     });
   } catch (error) {
     return mapGasForecastFailure({
