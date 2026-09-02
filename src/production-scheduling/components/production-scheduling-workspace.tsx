@@ -1758,10 +1758,12 @@ function DisruptionImpactSummary({
   preResult,
   disruptedResult,
   ordersAtRisk,
+  machineBOrderCount,
 }: {
   preResult: SchedulingDecisionResponse;
   disruptedResult: SchedulingDecisionResponse;
   ordersAtRisk: string[];
+  machineBOrderCount: number;
 }) {
   const keepCurrent = disruptedResult.strategies.find(
     (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
@@ -1775,12 +1777,17 @@ function DisruptionImpactSummary({
     8 *
     disruptedResult.scenarioSnapshot.disruption.durationDays;
 
+  const machineBOrdersAtRiskCount = ordersAtRisk.filter((id) =>
+    (PDR_MACHINE_B_ORDER_IDS as readonly string[]).includes(id),
+  ).length;
+  const unaffectedCount = Math.max(0, machineBOrderCount - machineBOrdersAtRiskCount);
+
   return (
     <div className="space-y-4" data-testid="disruption-impact-summary">
       {/* Story flow */}
       <div className="flex flex-wrap items-start gap-3 text-sm text-slate-400">
         <div className="rounded-lg border border-white/10 bg-slate-800/40 px-3 py-2 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">CURRENT PLAN</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">BEFORE DISRUPTION</p>
           <p className="text-lg font-bold text-white">{preRec?.onTimeCount ?? 0}/{preRec?.totalOrders ?? 0}</p>
           <p className="text-[10px] text-slate-500">orders on time</p>
         </div>
@@ -1792,10 +1799,26 @@ function DisruptionImpactSummary({
         </div>
         <div className="flex items-center text-slate-600 mt-4">↓</div>
         <div className="rounded-lg border border-amber-300/20 bg-amber-900/10 px-3 py-2 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-400">AT RISK</p>
-          <p className="text-lg font-bold text-amber-300">{ordersAtRisk.length}</p>
-          <p className="text-[10px] text-slate-500">orders affected</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-400">ORDERS ON MACHINE B</p>
+          <p className="text-lg font-bold text-amber-300">{machineBOrderCount}</p>
+          <p className="text-[10px] text-slate-500">total on disrupted line</p>
         </div>
+        <div className="flex items-center text-slate-600 mt-4">↓</div>
+        <div className="rounded-lg border border-rose-300/20 bg-rose-900/10 px-3 py-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-400">AT RISK</p>
+          <p className="text-lg font-bold text-rose-300" data-testid="disruption-at-risk-count">{ordersAtRisk.length}</p>
+          <p className="text-[10px] text-slate-500">delayed or unscheduled</p>
+        </div>
+        {unaffectedCount > 0 && (
+          <>
+            <div className="flex items-center text-slate-600 mt-4">·</div>
+            <div className="rounded-lg border border-emerald-300/20 bg-emerald-900/10 px-3 py-2 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">UNAFFECTED</p>
+              <p className="text-lg font-bold text-emerald-300" data-testid="disruption-unaffected-count">{unaffectedCount}</p>
+              <p className="text-[10px] text-slate-500">within deadline</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* At-risk orders */}
@@ -1859,7 +1882,7 @@ function DisruptionDecisionSummary({
             const days = disruptedResult.scenarioSnapshot.disruption.durationDays;
             const hoursLost = factor * 8 * days;
             if (factor >= 1.0) {
-              return `Machine B fully offline for ${days} production day${days !== 1 ? "s" : ""} — ${hoursLost.toFixed(0)}h capacity lost.`;
+              return `Machine B unavailable for ${hoursLost.toFixed(0)} production hours (${days} production day${days !== 1 ? "s" : ""}).`;
             }
             const pctLost = (factor * 100).toFixed(0);
             return `Machine B at ${(100 - factor * 100).toFixed(0)}% capacity for ${days} day${days !== 1 ? "s" : ""} — ${hoursLost.toFixed(0)}h lost (${pctLost}% reduction).`;
@@ -2222,10 +2245,10 @@ function DisruptionScheduleDiff({
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 sm:grid-cols-2">
-          {/* Current schedule */}
+          {/* Disrupted schedule (no recovery) */}
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              CURRENT PLAN
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-rose-400" data-testid="disruption-schedule-label-disrupted">
+              DISRUPTED PLAN
             </p>
             {lineIds.map((lineId) => {
               const tasks = (keepCurrentSchedule?.schedule ?? []).filter(
@@ -2257,7 +2280,7 @@ function DisruptionScheduleDiff({
 
           {/* Recovery plan */}
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-cyan-400">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-cyan-400" data-testid="disruption-schedule-label-recovery">
               RECOVERY PLAN
             </p>
             {lineIds.map((lineId) => {
@@ -2483,8 +2506,15 @@ function DisruptionSensitivityPanel({ disruptionWhat }: { disruptionWhat: Disrup
     [disruptionWhat],
   );
 
+  const hasBoundary = sensitivity.some((e) => !e.feasible);
+  const firstInfeasible = sensitivity.find((e) => !e.feasible);
+
+  const explanation = hasBoundary
+    ? `Calculated from the current scenario configuration. Strategy feasibility changes at ${firstInfeasible?.hours ?? 0}h disruption duration.`
+    : "Calculated from the current scenario configuration. The recommended recovery strategy remains feasible across the tested disruption durations.";
+
   return (
-    <CollapseSection title="Recovery Sensitivity — At what point does strategy stop working?">
+    <CollapseSection title="Recovery Sensitivity">
       <div className="space-y-2" data-testid="disruption-sensitivity">
         {sensitivity.map((entry) => (
           <div
@@ -2508,8 +2538,7 @@ function DisruptionSensitivityPanel({ disruptionWhat }: { disruptionWhat: Disrup
           </div>
         ))}
         <p className="text-xs text-slate-500">
-          Calculated from the current scenario configuration. Changes to overtime,
-          machine capacity or deadlines will shift these thresholds.
+          {explanation}
         </p>
       </div>
     </CollapseSection>
@@ -2921,9 +2950,6 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
             ================================================================ */}
         {isDisruptionScenario && (
           <>
-            {/* Disruption disclaimer */}
-            <Disclaimer text="Synthetic demonstration — not production data." />
-
             {/* Step 0: Trigger card */}
             {disruptionStep === "idle" && (
               <DisruptionTriggerCard onActivate={handleActivateDisruption} />
@@ -2944,6 +2970,7 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   preResult={pdrPreDisruptionResult}
                   disruptedResult={pdrDisruptedResult}
                   ordersAtRisk={pdrOrdersAtRisk}
+                  machineBOrderCount={PDR_MACHINE_B_ORDER_IDS.length}
                 />
 
                 <DisruptionDecisionSummary
