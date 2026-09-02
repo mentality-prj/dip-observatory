@@ -701,12 +701,10 @@ describe("16. financial invariants", () => {
     const avoided = Math.max(0, disruptedTotal - recoveryTotal);
     // avoided must be positive (recovery reduces cost)
     assert.ok(avoided > 0, `Avoided impact must be positive but got €${avoided}`);
-    // avoidedCostVsBaseline on disrupted result must equal disruptedTotal - recoveryTotal
-    // (engine may compute it differently; verify math holds)
     assert.equal(
+      Math.round(disrupted.avoidedCostVsBaseline),
       avoided,
-      disruptedTotal - recoveryTotal,
-      `avoidedImpact (${avoided}) must equal disruptedTotal (${disruptedTotal}) - recoveryTotal (${recoveryTotal})`,
+      `rounded avoidedCostVsBaseline (${Math.round(disrupted.avoidedCostVsBaseline)}) must equal disruptedTotal (${disruptedTotal}) - recoveryTotal (${recoveryTotal})`,
     );
   });
 
@@ -721,6 +719,11 @@ describe("16. financial invariants", () => {
     assert.equal(disruptedTotal, 6490, `Disrupted total expected €6490 but got €${disruptedTotal}`);
     assert.equal(recoveryTotal, 3400, `Recovery total expected €3400 but got €${recoveryTotal}`);
     assert.equal(avoided, 3090, `Avoided expected €3090 but got €${avoided}`);
+    assert.equal(
+      Math.round(disrupted.avoidedCostVsBaseline),
+      3090,
+      `avoidedCostVsBaseline expected €3090 but got €${Math.round(disrupted.avoidedCostVsBaseline)}`,
+    );
   });
 });
 
@@ -733,7 +736,6 @@ describe("17. schedule and decision consistency", () => {
     const disrupted = runPdrEngine();
     const rec = disrupted.strategies.find((s) => s.strategyId === disrupted.recommendedStrategy);
     assert.ok(rec, "Recommended strategy must be present in strategies array");
-    assert.equal(rec!.strategyId, disrupted.recommendedStrategy);
   });
 
   test("MOVED orders in recovery plan have different lineId from KEEP_CURRENT", () => {

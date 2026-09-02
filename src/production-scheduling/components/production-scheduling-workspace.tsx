@@ -1777,7 +1777,10 @@ function DisruptionImpactSummary({
     8 *
     disruptedResult.scenarioSnapshot.disruption.durationDays;
 
-  const unaffectedCount = Math.max(0, machineBOrderCount - ordersAtRisk.length);
+  const machineBOrdersAtRiskCount = ordersAtRisk.filter((id) =>
+    PDR_MACHINE_B_ORDER_IDS.includes(id),
+  ).length;
+  const unaffectedCount = Math.max(0, machineBOrderCount - machineBOrdersAtRiskCount);
 
   return (
     <div className="space-y-4" data-testid="disruption-impact-summary">
@@ -1798,13 +1801,13 @@ function DisruptionImpactSummary({
         <div className="rounded-lg border border-amber-300/20 bg-amber-900/10 px-3 py-2 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-400">ORDERS ON MACHINE B</p>
           <p className="text-lg font-bold text-amber-300">{machineBOrderCount}</p>
-          <p className="text-[10px] text-slate-500">total affected</p>
+          <p className="text-[10px] text-slate-500">total on disrupted line</p>
         </div>
         <div className="flex items-center text-slate-600 mt-4">↓</div>
         <div className="rounded-lg border border-rose-300/20 bg-rose-900/10 px-3 py-2 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-400">AT RISK</p>
           <p className="text-lg font-bold text-rose-300" data-testid="disruption-at-risk-count">{ordersAtRisk.length}</p>
-          <p className="text-[10px] text-slate-500">orders delayed</p>
+          <p className="text-[10px] text-slate-500">delayed or unscheduled</p>
         </div>
         {unaffectedCount > 0 && (
           <>
