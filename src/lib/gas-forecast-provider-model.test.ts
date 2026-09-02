@@ -81,3 +81,17 @@ test("maps provider failure payloads into operator-facing error messages", () =>
   assert.equal(result.dataset, null);
   assert.deepEqual(result.sample, []);
 });
+
+test("maps missing DIP connectivity config into the updated 503 operator message", () => {
+  const result = mapGasForecastFailure({
+    providerId: "agsi",
+    httpStatus: 503,
+    responseTimeMs: null,
+    payload: null,
+  });
+
+  assert.equal(
+    result.message,
+    "DIP gas forecast connectivity is not configured. Set DIP_API_KEY and either DIP_API_BASE_URL or an absolute DIP_GAS_FORECAST_CAPABILITY_PATH.",
+  );
+});

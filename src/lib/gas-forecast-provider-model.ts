@@ -302,7 +302,7 @@ export function getGasForecastErrorMessage(
   }
 
   if (httpStatus === 503) {
-    return "DIP API is not configured. Set DIP_API_BASE_URL and DIP_API_KEY.";
+    return "DIP gas forecast connectivity is not configured. Set DIP_API_KEY and either DIP_API_BASE_URL or an absolute DIP_GAS_FORECAST_CAPABILITY_PATH.";
   }
 
   return "Provider request failed";

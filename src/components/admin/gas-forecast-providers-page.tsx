@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Activity, AlertTriangle, CheckCircle2, PlugZap } from "lucide-react";
 
 import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/providers/actions";
@@ -134,33 +134,28 @@ export function GasForecastProvidersPage() {
   >({});
   const [pendingProviderId, setPendingProviderId] =
     useState<GasForecastProviderId | null>(null);
-  const [isPending, startTransition] = useTransition();
 
-  function handleTest(providerId: GasForecastProviderId) {
+  async function handleTest(providerId: GasForecastProviderId) {
     setPendingProviderId(providerId);
 
-    startTransition(async () => {
-      try {
-        const result = await testGasForecastProviderAction({ providerId });
-        setResults((current) => ({ ...current, [providerId]: result }));
-      } catch (error) {
-        setResults((current) => ({
-          ...current,
-          [providerId]: mapGasForecastFailure({
-            providerId,
-            httpStatus: null,
-            responseTimeMs: null,
-            payload: null,
-            fallbackMessage:
-              error instanceof Error ? error.message : "Unexpected provider error",
-          }),
-        }));
-      } finally {
-        setPendingProviderId((current) =>
-          current === providerId ? null : current,
-        );
-      }
-    });
+    try {
+      const result = await testGasForecastProviderAction({ providerId });
+      setResults((current) => ({ ...current, [providerId]: result }));
+    } catch (error) {
+      setResults((current) => ({
+        ...current,
+        [providerId]: mapGasForecastFailure({
+          providerId,
+          httpStatus: null,
+          responseTimeMs: null,
+          payload: null,
+          fallbackMessage:
+            error instanceof Error ? error.message : "Unexpected provider error",
+        }),
+      }));
+    } finally {
+      setPendingProviderId((current) => (current === providerId ? null : current));
+    }
   }
 
   return (
@@ -267,7 +262,7 @@ export function GasForecastProvidersPage() {
                     disabled={Boolean(pendingProviderId)}
                     onClick={() => handleTest(provider.id)}
                   >
-                    {isPending && pendingProviderId === provider.id
+                    {pendingProviderId === provider.id
                       ? "Testing..."
                       : "Test connection"}
                   </Button>
