@@ -71,3 +71,78 @@ test("returns a clear invalid-endpoint message after all fallback paths return 4
     true,
   );
 });
+
+test("classifies a network-level fetch failure as kind=network with the real error message", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () => {
+    throw new TypeError("fetch failed");
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "network");
+  assert.equal(result.httpStatus, null);
+  assert.equal(result.message, "fetch failed");
+});
+
+test("classifies a request timeout as kind=network with a timeout message", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  process.env.DIP_GAS_FORECAST_TIMEOUT_MS = "5";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async (_input, init) => {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener("abort", () => {
+        reject(new DOMException("The operation was aborted.", "AbortError"));
+      });
+    });
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "network");
+  assert.equal(result.httpStatus, null);
+  assert.match(result.message ?? "", /timed out/i);
+
+  delete process.env.DIP_GAS_FORECAST_TIMEOUT_MS;
+});
+
+test("classifies a missing configuration failure as kind=configuration", async () => {
+  delete process.env.DIP_API_BASE_URL;
+  delete process.env.DIP_URL;
+  delete process.env.NEXT_PUBLIC_DIP_API_BASE_URL;
+  delete process.env.DIP_API_KEY;
+  delete process.env.DIP_ADMIN_API_KEY;
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.httpStatus, 503);
+});
+
+test("classifies a non-2xx DIP HTTP response as kind=dip_http", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () =>
+    Response.json({ detail: "Invalid or missing API key" }, { status: 401 })) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "dip_http");
+  assert.equal(result.httpStatus, 401);
+});

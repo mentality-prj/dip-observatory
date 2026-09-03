@@ -55,6 +55,10 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
           <span className="text-slate-500">HTTP:</span> {result.httpStatus ?? "—"}
         </p>
         <p>
+          <span className="text-slate-500">Failure type:</span>{" "}
+          {result.kind ?? "—"}
+        </p>
+        <p>
           <span className="text-slate-500">Provider:</span> {result.provider}
         </p>
         <p>
@@ -149,6 +153,7 @@ export function GasForecastProvidersPage() {
           httpStatus: null,
           responseTimeMs: null,
           payload: null,
+          kind: "network",
           fallbackMessage:
             error instanceof Error ? error.message : "Unexpected provider error",
         }),
