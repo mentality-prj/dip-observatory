@@ -131,7 +131,7 @@ test("classifies a missing configuration failure as kind=configuration", async (
   assert.equal(result.httpStatus, 503);
 });
 
-test("classifies a non-2xx DIP HTTP response as kind=dip_http", async () => {
+test("classifies a DIP authentication rejection (401) as kind=dip_auth, not generic dip_http", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
   delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
@@ -143,6 +143,79 @@ test("classifies a non-2xx DIP HTTP response as kind=dip_http", async () => {
   const result = await testGasForecastProviderConnection("agsi");
 
   assert.equal(result.status, "failed");
-  assert.equal(result.kind, "dip_http");
+  assert.equal(result.kind, "dip_auth");
   assert.equal(result.httpStatus, 401);
+});
+
+test("classifies a non-2xx, non-auth DIP HTTP response as kind=dip_http", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () =>
+    Response.json({ detail: "Internal server error" }, { status: 500 })) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "dip_http");
+  assert.equal(result.httpStatus, 500);
+});
+
+test("preserves the structured DIP plugin-execution error (500 upstream AGSI failure) instead of a generic message", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () =>
+    Response.json(
+      {
+        error: {
+          code: "PLUGIN_EXECUTION_ERROR",
+          message: "Plugin execution failed",
+          provider: "GIE AGSI+",
+          plugin: "gas-forecast",
+          upstreamStatus: 503,
+          executionId: "exec-123",
+          cause: { message: "AGSI request failed: service unavailable" },
+        },
+      },
+      { status: 500 },
+    )) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.httpStatus, 500);
+  assert.equal(result.kind, "upstream_provider");
+  assert.equal(result.provider, "GIE AGSI+");
+  assert.equal(result.message, "AGSI request failed: service unavailable");
+  assert.equal(result.errorDetail?.code, "PLUGIN_EXECUTION_ERROR");
+  assert.equal(result.errorDetail?.provider, "GIE AGSI+");
+  assert.equal(result.errorDetail?.plugin, "gas-forecast");
+  assert.equal(result.errorDetail?.upstreamStatus, 503);
+  assert.equal(result.errorDetail?.executionId, "exec-123");
+});
+
+test("never surfaces the request's DIP_API_KEY in the failure message even if a non-JSON DIP body echoes it back", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "super-secret-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () =>
+    new Response(
+      "Internal Server Error: header x-api-key: super-secret-key rejected by upstream",
+      { status: 500, headers: { "content-type": "text/plain" } },
+    )) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.httpStatus, 500);
+  assert.ok(result.message);
+  assert.ok(!result.message!.includes("super-secret-key"));
+  assert.ok(result.message!.includes("[REDACTED]"));
 });

@@ -93,7 +93,28 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
 
       {result.message ? (
         <div className="rounded-2xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">
-          {result.message}
+          <p>
+            <span className="text-rose-300/70">Error:</span> {result.message}
+          </p>
+          {result.errorDetail?.code ? (
+            <p>
+              <span className="text-rose-300/70">Code:</span>{" "}
+              {result.errorDetail.code}
+            </p>
+          ) : null}
+          {result.errorDetail?.upstreamStatus !== null &&
+          result.errorDetail?.upstreamStatus !== undefined ? (
+            <p>
+              <span className="text-rose-300/70">Upstream status:</span>{" "}
+              {result.errorDetail.upstreamStatus}
+            </p>
+          ) : null}
+          {result.errorDetail?.executionId ? (
+            <p>
+              <span className="text-rose-300/70">Execution id:</span>{" "}
+              {result.errorDetail.executionId}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

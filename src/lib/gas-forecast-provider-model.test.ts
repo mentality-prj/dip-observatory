@@ -3,8 +3,12 @@ import test from "node:test";
 
 import {
   GAS_FORECAST_PROVIDER_CARDS,
+  classifyGasForecastFailureKind,
+  extractStructuredError,
   mapGasForecastFailure,
   mapGasForecastSuccess,
+  redactSecrets,
+  toSafeRawBody,
 } from "@/lib/gas-forecast-provider-model";
 
 test("AGSI provider card keeps the expected API label", () => {
@@ -94,4 +98,115 @@ test("maps missing DIP connectivity config into the updated 503 operator message
     result.message,
     "DIP gas forecast connectivity is not configured. Set DIP_API_KEY and either DIP_API_BASE_URL or an absolute DIP_GAS_FORECAST_CAPABILITY_PATH.",
   );
+});
+
+test("extracts structured DIP error fields (code, provider, plugin, upstream status, execution id)", () => {
+  const structured = extractStructuredError({
+    error: {
+      code: "PLUGIN_EXECUTION_ERROR",
+      message: "Plugin execution failed",
+      provider: "GIE AGSI+",
+      plugin: "gas-forecast",
+      upstreamStatus: 503,
+      executionId: "exec-123",
+    },
+  });
+
+  assert.deepEqual(structured, {
+    code: "PLUGIN_EXECUTION_ERROR",
+    provider: "GIE AGSI+",
+    plugin: "gas-forecast",
+    upstreamStatus: 503,
+    executionId: "exec-123",
+    rawBody: null,
+  });
+});
+
+test("returns null structured error for a plain unstructured payload", () => {
+  assert.equal(extractStructuredError({ message: "boom" }), null);
+  assert.equal(extractStructuredError(null), null);
+});
+
+test("sanitizes and truncates structured rawBody", () => {
+  const rawBody = `x-api-key: super-secret ${"x".repeat(5000)}`;
+  const structured = extractStructuredError({ rawBody });
+
+  assert.ok(structured);
+  assert.ok(structured.rawBody);
+  assert.equal(structured.rawBody, toSafeRawBody(rawBody));
+  assert.ok(!structured.rawBody?.includes("super-secret"));
+  assert.ok(structured.rawBody?.includes("[REDACTED]"));
+  assert.ok(structured.rawBody?.endsWith("[truncated]"));
+});
+
+test("prefers the deepest cause message over the generic wrapper message", () => {
+  const result = mapGasForecastFailure({
+    providerId: "agsi",
+    httpStatus: 500,
+    responseTimeMs: 6095,
+    payload: {
+      error: {
+        code: "PLUGIN_EXECUTION_ERROR",
+        message: "Plugin execution failed",
+        provider: "GIE AGSI+",
+        plugin: "gas-forecast",
+        upstreamStatus: 503,
+        executionId: "exec-123",
+        cause: { message: "AGSI request failed: service unavailable" },
+      },
+    },
+  });
+
+  assert.equal(result.kind, "upstream_provider");
+  assert.equal(result.provider, "GIE AGSI+");
+  assert.equal(result.message, "AGSI request failed: service unavailable");
+  assert.equal(result.errorDetail?.code, "PLUGIN_EXECUTION_ERROR");
+  assert.equal(result.errorDetail?.executionId, "exec-123");
+});
+
+test("classifyGasForecastFailureKind returns plugin_execution for a plugin-scoped structured error without a provider", () => {
+  const kind = classifyGasForecastFailureKind({
+    httpStatus: 500,
+    payload: {
+      error: {
+        code: "PLUGIN_RUNTIME_ERROR",
+        message: "Plugin crashed",
+        plugin: "gas-forecast",
+      },
+    },
+  });
+
+  assert.equal(kind, "plugin_execution");
+});
+
+test("classifyGasForecastFailureKind returns timeout for a structured timeout error", () => {
+  const kind = classifyGasForecastFailureKind({
+    httpStatus: 500,
+    payload: {
+      error: {
+        code: "UPSTREAM_TIMEOUT",
+        message: "AGSI request timed out after 15000ms",
+      },
+    },
+  });
+
+  assert.equal(kind, "timeout");
+});
+
+test("redactSecrets masks API keys and Authorization headers but keeps the rest of the text", () => {
+  const redacted = redactSecrets(
+    "rejected: x-api-key: super-secret-value, Authorization: ******",
+  );
+
+  assert.ok(!redacted.includes("super-secret-value"));
+  assert.ok(redacted.includes("[REDACTED]"));
+  assert.ok(redacted.includes("rejected:"));
+});
+
+test("toSafeRawBody truncates long raw response bodies", () => {
+  const longBody = "x".repeat(5000);
+  const safe = toSafeRawBody(longBody);
+
+  assert.ok(safe.length < longBody.length);
+  assert.ok(safe.endsWith("[truncated]"));
 });
