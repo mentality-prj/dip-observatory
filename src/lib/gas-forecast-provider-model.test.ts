@@ -127,6 +127,18 @@ test("returns null structured error for a plain unstructured payload", () => {
   assert.equal(extractStructuredError(null), null);
 });
 
+test("sanitizes and truncates structured rawBody", () => {
+  const rawBody = `x-api-key: super-secret ${"x".repeat(5000)}`;
+  const structured = extractStructuredError({ rawBody });
+
+  assert.ok(structured);
+  assert.ok(structured.rawBody);
+  assert.equal(structured.rawBody, toSafeRawBody(rawBody));
+  assert.ok(!structured.rawBody?.includes("super-secret"));
+  assert.ok(structured.rawBody?.includes("[REDACTED]"));
+  assert.ok(structured.rawBody?.endsWith("[truncated]"));
+});
+
 test("prefers the deepest cause message over the generic wrapper message", () => {
   const result = mapGasForecastFailure({
     providerId: "agsi",

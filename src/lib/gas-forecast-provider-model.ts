@@ -427,7 +427,8 @@ export function extractStructuredError(
     ...withContainer(["request_id"]),
   ]);
 
-  const rawBody = pickString(payload, [["rawBody"]]);
+  const rawBodyValue = pickString(payload, [["rawBody"]]);
+  const rawBody = rawBodyValue ? toSafeRawBody(rawBodyValue) : null;
 
   if (
     code === null &&
@@ -550,10 +551,9 @@ export function classifyGasForecastFailureKind(params: {
     return "unknown";
   }
 
-  // 401/403 responses mean the request never reached PluginRuntime/AGSI: DIP
-  // itself rejected the DIP_API_KEY. Keep this distinct from generic
-  // "dip_http" so the UI never masks an authentication failure as an
-  // unrelated HTTP error.
+  // 401/403 responses mean DIP rejected the request credentials. Keep this
+  // distinct from generic "dip_http" so the UI never masks an authentication
+  // failure as an unrelated HTTP error.
   if (httpStatus === 401 || httpStatus === 403) {
     return "dip_auth";
   }
