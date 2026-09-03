@@ -18,6 +18,7 @@ export type GasForecastProviderCard = {
 export type GasForecastFailureKind =
   | "configuration"
   | "network"
+  | "dip_auth"
   | "dip_http"
   | "plugin_execution"
   | "upstream_provider"
@@ -371,6 +372,7 @@ export function classifyGasForecastFailureKind(params: {
   const validKinds: GasForecastFailureKind[] = [
     "configuration",
     "network",
+    "dip_auth",
     "dip_http",
     "plugin_execution",
     "upstream_provider",
@@ -384,6 +386,14 @@ export function classifyGasForecastFailureKind(params: {
 
   if (httpStatus === null) {
     return "unknown";
+  }
+
+  // 401/403 responses mean the request never reached PluginRuntime/AGSI: DIP
+  // itself rejected the DIP_API_KEY. Keep this distinct from generic
+  // "dip_http" so the UI never masks an authentication failure as an
+  // unrelated HTTP error.
+  if (httpStatus === 401 || httpStatus === 403) {
+    return "dip_auth";
   }
 
   if (httpStatus === 502 || httpStatus === 504) {

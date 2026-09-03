@@ -131,7 +131,7 @@ test("classifies a missing configuration failure as kind=configuration", async (
   assert.equal(result.httpStatus, 503);
 });
 
-test("classifies a non-2xx DIP HTTP response as kind=dip_http", async () => {
+test("classifies a DIP authentication rejection (401) as kind=dip_auth, not generic dip_http", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
   delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
@@ -143,6 +143,22 @@ test("classifies a non-2xx DIP HTTP response as kind=dip_http", async () => {
   const result = await testGasForecastProviderConnection("agsi");
 
   assert.equal(result.status, "failed");
-  assert.equal(result.kind, "dip_http");
+  assert.equal(result.kind, "dip_auth");
   assert.equal(result.httpStatus, 401);
+});
+
+test("classifies a non-2xx, non-auth DIP HTTP response as kind=dip_http", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  globalThis.fetch = (async () =>
+    Response.json({ detail: "Internal server error" }, { status: 500 })) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("agsi");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "dip_http");
+  assert.equal(result.httpStatus, 500);
 });
