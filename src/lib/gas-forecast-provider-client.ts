@@ -3,6 +3,7 @@ import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
   mapGasForecastFailure,
   mapGasForecastSuccess,
+  toSafeRawBody,
   type GasForecastConnectionResult,
   type GasForecastProviderId,
 } from "@/lib/gas-forecast-provider-model";
@@ -119,7 +120,11 @@ async function readJsonOrText(response: Response) {
   try {
     return JSON.parse(body) as unknown;
   } catch {
-    return { message: body };
+    // Not JSON: never surface the raw DIP body verbatim — redact anything
+    // credential-shaped and truncate it to a safe length before it can ever
+    // reach the UI or a diagnostics log.
+    const safeBody = toSafeRawBody(body);
+    return { message: safeBody, rawBody: safeBody };
   }
 }
 
@@ -267,12 +272,26 @@ export async function testGasForecastProviderConnection(
       }
 
       if (response.status !== 404) {
-        return mapGasForecastFailure({
+        const failure = mapGasForecastFailure({
           providerId,
           httpStatus: response.status,
           responseTimeMs,
           payload,
         });
+
+        // Safe structured-error logging: only the parsed/classified fields,
+        // never the request headers, DIP_API_KEY, or any other credential.
+        logGasForecastDiagnostic("error", "dip_error_response", {
+          providerId,
+          requestUrl: capabilityUrl,
+          httpStatus: response.status,
+          responseTimeMs,
+          kind: failure.kind,
+          message: failure.message,
+          errorDetail: failure.errorDetail ?? null,
+        });
+
+        return failure;
       }
     }
 
