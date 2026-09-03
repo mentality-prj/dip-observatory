@@ -2,7 +2,10 @@
 
 import { z } from "zod";
 
-import { testGasForecastProviderConnection } from "@/lib/gas-forecast-provider-client";
+import {
+  logGasForecastDiagnostic,
+  testGasForecastProviderConnection,
+} from "@/lib/gas-forecast-provider-client";
 import {
   GAS_FORECAST_PROVIDER_IDS,
   mapGasForecastFailure,
@@ -23,9 +26,7 @@ const requestSchema = z.object({
 export async function testGasForecastProviderAction(input: {
   providerId: GasForecastProviderId;
 }): Promise<GasForecastConnectionResult> {
-  console.info("[gas-forecast-provider]", {
-    event: "server_action_entered",
-    timestamp: new Date().toISOString(),
+  logGasForecastDiagnostic("info", "server_action_entered", {
     providerIdRaw: input?.providerId ?? null,
   });
 
@@ -33,9 +34,7 @@ export async function testGasForecastProviderAction(input: {
     const { providerId } = requestSchema.parse(input);
     return await testGasForecastProviderConnection(providerId);
   } catch (error) {
-    console.error("[gas-forecast-provider]", {
-      event: "failure",
-      timestamp: new Date().toISOString(),
+    logGasForecastDiagnostic("error", "failure", {
       failureStage: "server_action_serialization",
       exceptionName: error instanceof Error ? error.name : typeof error,
       exceptionMessage:

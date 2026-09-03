@@ -8,6 +8,7 @@ import {
 } from "@/lib/gas-forecast-provider-model";
 
 const DEFAULT_DIP_REQUEST_TIMEOUT_MS = 15_000;
+const ENABLED_DIAGNOSTIC_VALUES = new Set(["1", "true", "yes", "on"]);
 
 function getDipRequestTimeoutMs() {
   const raw = process.env.DIP_GAS_FORECAST_TIMEOUT_MS?.trim();
@@ -19,16 +20,27 @@ function getDipRequestTimeoutMs() {
 }
 
 /**
- * Temporary safe structured diagnostics for the DIP gas forecast provider
+ * Temporary structured diagnostics for the DIP gas forecast provider
  * connectivity path. Never logs DIP_API_KEY (only its presence as a
- * boolean). Intended to be removed once the "Load failed" investigation is
- * closed.
+ * boolean). Logs are gated behind DIP_GAS_FORECAST_DIAGNOSTICS and default
+ * to off so production logging stays quiet unless explicitly enabled for an
+ * investigation.
  */
-function logGasForecastDiagnostic(
+function isGasForecastDiagnosticsEnabled() {
+  const raw = process.env.DIP_GAS_FORECAST_DIAGNOSTICS?.trim().toLowerCase();
+  return raw ? ENABLED_DIAGNOSTIC_VALUES.has(raw) : false;
+}
+
+export function logGasForecastDiagnostic(
+  level: "info" | "error",
   event: string,
   fields: Record<string, unknown>,
 ) {
-  console.info("[gas-forecast-provider]", {
+  if (!isGasForecastDiagnosticsEnabled()) {
+    return;
+  }
+
+  console[level]("[gas-forecast-provider]", {
     event,
     timestamp: new Date().toISOString(),
     ...fields,
@@ -120,7 +132,7 @@ export async function testGasForecastProviderConnection(
   const capabilityUrls = buildGasForecastCapabilityUrls();
   const timeoutMs = getDipRequestTimeoutMs();
 
-  logGasForecastDiagnostic("server_action_entered", {
+  logGasForecastDiagnostic("info", "server_action_entered", {
     providerId,
     dipApiBaseUrlPresent: Boolean(process.env.DIP_API_BASE_URL),
     dipApiBaseUrlNormalized: baseUrl || null,
@@ -131,7 +143,7 @@ export async function testGasForecastProviderConnection(
   });
 
   if ((!baseUrl && !hasAbsoluteCapabilityUrl()) || !apiKey) {
-    logGasForecastDiagnostic("failure", {
+    logGasForecastDiagnostic("error", "failure", {
       providerId,
       failureStage: "before_fetch",
       exceptionName: null,
@@ -173,7 +185,7 @@ export async function testGasForecastProviderConnection(
         const isAbort =
           fetchError instanceof Error && fetchError.name === "AbortError";
 
-        logGasForecastDiagnostic("failure", {
+        logGasForecastDiagnostic("error", "failure", {
           providerId,
           requestUrl: capabilityUrl,
           failureStage: "during_fetch",
@@ -210,7 +222,7 @@ export async function testGasForecastProviderConnection(
       try {
         payload = await readJsonOrText(response);
       } catch (parseError) {
-        logGasForecastDiagnostic("failure", {
+        logGasForecastDiagnostic("error", "failure", {
           providerId,
           requestUrl: capabilityUrl,
           failureStage: "during_response_parsing",
@@ -237,7 +249,7 @@ export async function testGasForecastProviderConnection(
         });
       }
 
-      logGasForecastDiagnostic("response_received", {
+      logGasForecastDiagnostic("info", "response_received", {
         providerId,
         requestUrl: capabilityUrl,
         httpStatus: response.status,
@@ -274,7 +286,7 @@ export async function testGasForecastProviderConnection(
   } catch (error) {
     const responseTimeMs = Math.round(performance.now() - startedAt);
 
-    logGasForecastDiagnostic("failure", {
+    logGasForecastDiagnostic("error", "failure", {
       providerId,
       failureStage: "unknown",
       exceptionName: error instanceof Error ? error.name : typeof error,
