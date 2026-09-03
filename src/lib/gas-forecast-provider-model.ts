@@ -15,6 +15,15 @@ export type GasForecastProviderCard = {
   initialStatus: "not_configured" | "not_tested";
 };
 
+export type GasForecastFailureKind =
+  | "configuration"
+  | "network"
+  | "dip_http"
+  | "plugin_execution"
+  | "upstream_provider"
+  | "parse"
+  | "unknown";
+
 export type GasForecastSampleRecord = {
   date: string | null;
   gasInStorage: string | null;
@@ -27,6 +36,7 @@ export type GasForecastConnectionResult = {
   providerId: GasForecastProviderId;
   status: "connected" | "failed";
   connection: "OK" | "FAILED";
+  kind?: GasForecastFailureKind;
   httpStatus: number | null;
   provider: string;
   api: string | null;
@@ -320,6 +330,77 @@ export function getGasForecastErrorMessage(
   return "Provider request failed";
 }
 
+/**
+ * Classifies a gas forecast provider failure into a structured `kind` so the
+ * UI can show the real failure category instead of a generic "Load failed".
+ *
+ * `stage` identifies where in the request lifecycle the failure happened when
+ * no HTTP status is available (missing configuration, network-level fetch
+ * failure, or response body parsing failure). When an HTTP status is
+ * available, the payload is inspected for an explicit hint before falling
+ * back to status-code heuristics.
+ */
+export function classifyGasForecastFailureKind(params: {
+  httpStatus: number | null;
+  payload: unknown;
+  stage?: "configuration" | "network" | "dip_http" | "parse" | null;
+}): GasForecastFailureKind {
+  const { httpStatus, payload, stage } = params;
+
+  if (stage === "configuration") {
+    return "configuration";
+  }
+
+  if (stage === "network") {
+    return "network";
+  }
+
+  if (stage === "parse") {
+    return "parse";
+  }
+
+  const hinted = pickString(payload, [
+    ["kind"],
+    ["errorKind"],
+    ["error", "kind"],
+    ["stage"],
+    ["source"],
+    ["error", "source"],
+  ]);
+
+  const validKinds: GasForecastFailureKind[] = [
+    "configuration",
+    "network",
+    "dip_http",
+    "plugin_execution",
+    "upstream_provider",
+    "parse",
+    "unknown",
+  ];
+
+  if (hinted && (validKinds as string[]).includes(hinted)) {
+    return hinted as GasForecastFailureKind;
+  }
+
+  if (httpStatus === null) {
+    return "unknown";
+  }
+
+  if (httpStatus === 502 || httpStatus === 504) {
+    return "upstream_provider";
+  }
+
+  if (httpStatus === 422) {
+    return "plugin_execution";
+  }
+
+  if (httpStatus >= 400 && httpStatus < 600) {
+    return "dip_http";
+  }
+
+  return "unknown";
+}
+
 export function mapGasForecastSuccess(params: {
   providerId: GasForecastProviderId;
   httpStatus: number;
@@ -396,15 +477,25 @@ export function mapGasForecastFailure(params: {
   responseTimeMs: number | null;
   payload: unknown;
   fallbackMessage?: string;
+  kind?: GasForecastFailureKind;
+  stage?: "configuration" | "network" | "dip_http" | "parse" | null;
 }) {
-  const { providerId, httpStatus, payload, responseTimeMs, fallbackMessage } =
-    params;
+  const {
+    providerId,
+    httpStatus,
+    payload,
+    responseTimeMs,
+    fallbackMessage,
+    kind,
+    stage,
+  } = params;
   const providerCard = pickProviderCard(providerId);
 
   return {
     providerId,
     status: "failed",
     connection: "FAILED",
+    kind: kind ?? classifyGasForecastFailureKind({ httpStatus, payload, stage }),
     httpStatus,
     provider: providerCard.api ?? providerCard.title,
     api: providerCard.api,
