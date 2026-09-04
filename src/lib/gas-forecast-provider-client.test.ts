@@ -21,10 +21,12 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
   delete process.env.GAS_FORECAST_CAPABILITY_PATH;
 
   const requestedUrls: string[] = [];
+  const requestBodies: string[] = [];
 
-  globalThis.fetch = (async (input) => {
+  globalThis.fetch = (async (input, init) => {
     const url = String(input);
     requestedUrls.push(url);
+    requestBodies.push(String(init?.body ?? ""));
 
     if (requestedUrls.length === 1) {
       return new Response("Not Found", { status: 404 });
@@ -45,9 +47,15 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
   assert.equal(result.httpStatus, 200);
   assert.equal(result.dataset?.records, 365);
   assert.deepEqual(requestedUrls, [
-    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build",
-    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build/run",
+    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check",
+    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check/run",
   ]);
+  assert.deepEqual(JSON.parse(requestBodies[0] ?? "{}"), {
+    plugin: "gas-forecast",
+    capability: "gas.provider.check",
+    provider: "agsi",
+    agsi: {},
+  });
 });
 
 test("returns a clear invalid-endpoint message after all fallback paths return 404", async () => {
