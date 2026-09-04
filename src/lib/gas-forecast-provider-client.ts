@@ -105,8 +105,13 @@ function buildInvalidEndpointMessage(urls: string[]) {
 }
 
 function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
+  const providerConfig: Record<string, Record<string, never>> = {
+    [providerId]: {},
+  };
+
   return {
     provider: providerId,
+    ...providerConfig,
   };
 }
 

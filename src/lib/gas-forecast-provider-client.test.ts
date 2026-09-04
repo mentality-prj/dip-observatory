@@ -21,10 +21,12 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
   delete process.env.GAS_FORECAST_CAPABILITY_PATH;
 
   const requestedUrls: string[] = [];
+  const requestBodies: string[] = [];
 
-  globalThis.fetch = (async (input) => {
+  globalThis.fetch = (async (input, init) => {
     const url = String(input);
     requestedUrls.push(url);
+    requestBodies.push(String(init?.body ?? ""));
 
     if (requestedUrls.length === 1) {
       return new Response("Not Found", { status: 404 });
@@ -45,9 +47,13 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
   assert.equal(result.httpStatus, 200);
   assert.equal(result.dataset?.records, 365);
   assert.deepEqual(requestedUrls, [
-    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build",
-    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build/run",
+    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check",
+    "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check/run",
   ]);
+  assert.deepEqual(JSON.parse(requestBodies[0] ?? "{}"), {
+    provider: "agsi",
+    agsi: {},
+  });
 });
 
 test("returns a clear invalid-endpoint message after all fallback paths return 404", async () => {
@@ -88,6 +94,31 @@ test("classifies a network-level fetch failure as kind=network with the real err
   assert.equal(result.kind, "network");
   assert.equal(result.httpStatus, null);
   assert.equal(result.message, "fetch failed");
+});
+
+test("includes the matching provider-specific object key for non-AGSI providers", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let requestBody = "";
+
+  globalThis.fetch = (async (_input, init) => {
+    requestBody = String(init?.body ?? "");
+    return Response.json({
+      provider: { name: "TTF" },
+      dataset: { records: 1, items: [{ date: "2026-01-01" }] },
+    });
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("ttf");
+
+  assert.equal(result.status, "connected");
+  assert.deepEqual(JSON.parse(requestBody), {
+    provider: "ttf",
+    ttf: {},
+  });
 });
 
 test("classifies a request timeout as kind=network with a timeout message", async () => {

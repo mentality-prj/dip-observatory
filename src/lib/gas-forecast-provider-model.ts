@@ -5,6 +5,10 @@ export const GAS_FORECAST_PROVIDER_IDS = [
   "weather",
 ] as const;
 
+export const GAS_FORECAST_PLUGIN_ID = "gas-forecast" as const;
+export const GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID =
+  "gas.provider.check" as const;
+
 export type GasForecastProviderId =
   (typeof GAS_FORECAST_PROVIDER_IDS)[number];
 
@@ -99,11 +103,11 @@ export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
 ];
 
 export const DEFAULT_GAS_FORECAST_CAPABILITY_PATHS = [
-  "/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build",
-  "/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.dataset.build/run",
-  "/api/v1/plugins/gas-forecast/capabilities/gas.dataset.build",
-  "/api/v1/plugin-runtime/gas-forecast/capabilities/gas.dataset.build",
-  "/api/v1/plugin-runtime/capabilities/gas.dataset.build?plugin=gas-forecast",
+  `/api/v1/plugin-runtime/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
+  `/api/v1/plugin-runtime/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}/run`,
+  `/api/v1/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
+  `/api/v1/plugin-runtime/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
+  `/api/v1/plugin-runtime/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}?plugin=${GAS_FORECAST_PLUGIN_ID}`,
 ] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
