@@ -1,8 +1,6 @@
 import { normalizeDipBaseUrl } from "@/lib/dip-url";
 import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
-  GAS_FORECAST_PLUGIN_ID,
-  GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID,
   mapGasForecastFailure,
   mapGasForecastSuccess,
   toSafeRawBody,
@@ -112,8 +110,6 @@ function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
   };
 
   return {
-    plugin: GAS_FORECAST_PLUGIN_ID,
-    capability: GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID,
     provider: providerId,
     ...providerConfig,
   };

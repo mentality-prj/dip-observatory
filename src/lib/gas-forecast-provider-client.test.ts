@@ -51,8 +51,6 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
     "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check/run",
   ]);
   assert.deepEqual(JSON.parse(requestBodies[0] ?? "{}"), {
-    plugin: "gas-forecast",
-    capability: "gas.provider.check",
     provider: "agsi",
     agsi: {},
   });
@@ -118,8 +116,6 @@ test("includes the matching provider-specific object key for non-AGSI providers"
 
   assert.equal(result.status, "connected");
   assert.deepEqual(JSON.parse(requestBody), {
-    plugin: "gas-forecast",
-    capability: "gas.provider.check",
     provider: "ttf",
     ttf: {},
   });
