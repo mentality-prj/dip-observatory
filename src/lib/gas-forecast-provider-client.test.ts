@@ -98,6 +98,33 @@ test("classifies a network-level fetch failure as kind=network with the real err
   assert.equal(result.message, "fetch failed");
 });
 
+test("includes the matching provider-specific object key for non-AGSI providers", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let requestBody = "";
+
+  globalThis.fetch = (async (_input, init) => {
+    requestBody = String(init?.body ?? "");
+    return Response.json({
+      provider: { name: "TTF" },
+      dataset: { records: 1, items: [{ date: "2026-01-01" }] },
+    });
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("ttf");
+
+  assert.equal(result.status, "connected");
+  assert.deepEqual(JSON.parse(requestBody), {
+    plugin: "gas-forecast",
+    capability: "gas.provider.check",
+    provider: "ttf",
+    ttf: {},
+  });
+});
+
 test("classifies a request timeout as kind=network with a timeout message", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
