@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, Home } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -53,6 +53,13 @@ export default async function EidosDocumentationPage({
 
           <div className="flex flex-wrap items-center gap-3">
             <EidosLocaleSwitcher locale={resolvedLocale} />
+            <Link
+              href={buildLocalePath("/", resolvedLocale)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Home className="h-4 w-4" aria-hidden="true" />
+              {copy.header.backLink}
+            </Link>
             <Link
               href={buildLocalePath("/eidos", resolvedLocale)}
               className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3.5 py-2 text-sm text-cyan-100 outline-none transition hover:border-cyan-200/60 hover:bg-cyan-300/16 focus-visible:ring-2 focus-visible:ring-cyan-300/60"

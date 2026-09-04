@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, PlugZap } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Home, PlugZap } from "lucide-react";
+import Link from "next/link";
 
 import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/providers/actions";
 import { Badge } from "@/components/ui/badge";
@@ -188,14 +189,23 @@ export function GasForecastProvidersPage() {
     <main className="relative min-h-screen overflow-hidden px-4 py-6 md:px-6 xl:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-              DIP Admin / Observatory
-            </span>
-            <Badge variant="amber" className="gap-1.5">
-              <PlugZap className="h-3 w-3" aria-hidden="true" />
-              Live provider path
-            </Badge>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                DIP Admin / Observatory
+              </span>
+              <Badge variant="amber" className="gap-1.5">
+                <PlugZap className="h-3 w-3" aria-hidden="true" />
+                Live provider path
+              </Badge>
+            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Home className="h-4 w-4" aria-hidden="true" />
+              DIP Observatory
+            </Link>
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, type ReactNode } from "react";
-import { ArrowLeft, ChevronDown, ChevronUp, Package } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Home, Package } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -1075,6 +1075,13 @@ export function SupplierWorkspace({ locale }: Props) {
               onReset={onReset}
               isDirty={isDirty}
             />
+            <Link
+              href={buildLocalePath("/", locale)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Home className="h-4 w-4" aria-hidden="true" />
+              DIP Observatory
+            </Link>
             <Link
               href={buildLocalePath("/eidos", locale)}
               className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"

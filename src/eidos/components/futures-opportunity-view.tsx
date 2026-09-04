@@ -28,7 +28,7 @@ import { ForwardCurveChart } from "@/eidos/components/forward-curve-chart";
 import { ValuationRangeBar } from "@/eidos/components/valuation-range";
 import { FuturesDecisionExplanation } from "@/eidos/components/futures-decision-explanation";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Home } from "lucide-react";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { getEidosCopy } from "@/eidos/lib/eidos-i18n";
 
@@ -179,13 +179,22 @@ export function FuturesOpportunityView({
               </div>
             )}
           </div>
-          <Link
-            href={buildLocalePath("/eidos/opportunity/documentation", locale)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3.5 py-2 text-sm text-emerald-100 outline-none transition hover:border-emerald-200/60 hover:bg-emerald-300/16 focus-visible:ring-2 focus-visible:ring-emerald-300/60"
-          >
-            <BookOpen className="h-4 w-4" aria-hidden="true" />
-            {copy.header.openOpportunityDocumentation}
-          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+            <Link
+              href={buildLocalePath("/", locale)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            >
+              <Home className="h-4 w-4" aria-hidden="true" />
+              {copy.header.backLink}
+            </Link>
+            <Link
+              href={buildLocalePath("/eidos/opportunity/documentation", locale)}
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3.5 py-2 text-sm text-emerald-100 outline-none transition hover:border-emerald-200/60 hover:bg-emerald-300/16 focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              {copy.header.openOpportunityDocumentation}
+            </Link>
+          </div>
         </header>
 
         {/* Primary decision card */}
