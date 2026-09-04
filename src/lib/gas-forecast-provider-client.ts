@@ -104,14 +104,23 @@ function buildInvalidEndpointMessage(urls: string[]) {
   return `Invalid API endpoint. Tried: ${urls.join(", ")}`;
 }
 
+const AGSI_CONNECTIVITY_CHECK_INPUT = {
+  start_date: "2025-01-01",
+  end_date: "2025-01-07",
+  scope: "eu",
+} as const;
+
 function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
-  const providerConfig: Record<string, Record<string, never>> = {
-    [providerId]: {},
-  };
+  if (providerId === "agsi") {
+    return {
+      provider: "agsi" as const,
+      agsi: AGSI_CONNECTIVITY_CHECK_INPUT,
+    };
+  }
 
   return {
     provider: providerId,
-    ...providerConfig,
+    [providerId]: {},
   };
 }
 
