@@ -52,7 +52,11 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
   ]);
   assert.deepEqual(JSON.parse(requestBodies[0] ?? "{}"), {
     provider: "agsi",
-    agsi: {},
+    agsi: {
+      start_date: "2025-01-01",
+      end_date: "2025-01-07",
+      scope: "eu",
+    },
   });
 });
 
