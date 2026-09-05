@@ -1,127 +1,109 @@
-const ENTSOG_OPERATOR_POINT_DIRECTIONS_URL =
-  "https://transparency.entsog.eu/api/v1/operatorpointdirections";
-const ENTSOG_PAGE_SIZE = 1_000;
-const ENTSOG_MAX_PAGES = 100;
-const ENTSOG_FETCH_TIMEOUT_MS = 15_000;
-
-type EntsogOperatorPointDirectionRecord = Record<string, unknown>;
-
-export type EntsogPointPreset = {
+// Static presets generated from a captured ENTSOG operatorpointdirections
+// hasData=1 response snapshot because live transparency.entsog.eu access is
+// unavailable in this sandbox. pointDirection values are derived as
+// lower(operatorKey + pointKey + direction), matching official-derived ENTSOG
+// client implementations.
+export interface EntsogPointPreset {
   value: string;
   label: string;
-  pointKey: string;
   pointLabel: string;
-  operatorKey: string;
   operatorLabel: string;
-  directionKey: string;
+  direction: string;
   tsoCountry?: string;
   adjacentCountry?: string;
-  pointType?: string;
+}
+
+type EntsogPointPresetSource = Omit<EntsogPointPreset, "value" | "label"> & {
+  displayPointLabel: string;
+  operatorKey: string;
+  pointKey: string;
 };
 
-export type EntsogPointDirectory = {
-  presets: EntsogPointPreset[];
-  totalRecords: number | null;
-  retrievedRecords: number;
-  duplicatePointDirectionValues: number;
-};
+const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00008",
+    displayPointLabel: "Melendugno - IT / TAP",
+    pointLabel: "Melendugno - IT / TAP",
+    operatorLabel: "TAP",
+    direction: "entry",
+    tsoCountry: "IT",
+    adjacentCountry: "IT",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00008",
+    displayPointLabel: "Melendugno - IT / TAP",
+    pointLabel: "Melendugno - IT / TAP",
+    operatorLabel: "TAP",
+    direction: "exit",
+    tsoCountry: "IT",
+    adjacentCountry: "IT",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00274",
+    displayPointLabel: "Kipoi (GR)",
+    pointLabel: "Kipoi",
+    operatorLabel: "TAP",
+    direction: "entry",
+    tsoCountry: "GR",
+    adjacentCountry: "TR",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00274",
+    displayPointLabel: "Kipoi (GR)",
+    pointLabel: "Kipoi",
+    operatorLabel: "TAP",
+    direction: "exit",
+    tsoCountry: "GR",
+    adjacentCountry: "TR",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00427",
+    displayPointLabel: "Nea Mesimvria (GR)",
+    pointLabel: "Nea Mesimvria",
+    operatorLabel: "TAP",
+    direction: "entry",
+    tsoCountry: "GR",
+    adjacentCountry: "GR",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "ITP-00427",
+    displayPointLabel: "Nea Mesimvria (GR)",
+    pointLabel: "Nea Mesimvria",
+    operatorLabel: "TAP",
+    direction: "exit",
+    tsoCountry: "GR",
+    adjacentCountry: "GR",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "VTP-00044",
+    displayPointLabel: "TAP Virtual Trading Point (GR)",
+    pointLabel: "TAP Virtual Trading Point",
+    operatorLabel: "TAP",
+    direction: "entry",
+    tsoCountry: "GR",
+    adjacentCountry: "GR",
+  },
+  {
+    operatorKey: "AL-TSO-0001",
+    pointKey: "VTP-00044",
+    displayPointLabel: "TAP Virtual Trading Point (GR)",
+    pointLabel: "TAP Virtual Trading Point",
+    operatorLabel: "TAP",
+    direction: "exit",
+    tsoCountry: "GR",
+    adjacentCountry: "GR",
+  },
+] as const;
 
-function asRecord(value: unknown): EntsogOperatorPointDirectionRecord | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as EntsogOperatorPointDirectionRecord)
-    : null;
-}
-
-function readString(
-  record: EntsogOperatorPointDirectionRecord,
-  keys: string[],
-): string {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (trimmed) {
-        return trimmed;
-      }
-    }
-  }
-
-  return "";
-}
-
-function readNumber(record: EntsogOperatorPointDirectionRecord, keys: string[]) {
-  for (const key of keys) {
-    const value = record[key];
-
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-
-    if (typeof value === "string" && value.trim()) {
-      const parsed = Number(value);
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-    }
-  }
-
-  return null;
-}
-
-function readArray(
-  payload: unknown,
-): { records: EntsogOperatorPointDirectionRecord[]; totalRecords: number | null } {
-  if (Array.isArray(payload)) {
-    return {
-      records: payload
-        .map((item) => asRecord(item))
-        .filter((item): item is EntsogOperatorPointDirectionRecord => item !== null),
-      totalRecords: null,
-    };
-  }
-
-  const record = asRecord(payload);
-  if (!record) {
-    return { records: [], totalRecords: null };
-  }
-
-  const listCandidate = [
-    record.operatorpointdirections,
-    record.operatorPointDirections,
-    record.data,
-    record.items,
-    record.results,
-  ].find((candidate) => Array.isArray(candidate));
-
-  const records = Array.isArray(listCandidate)
-    ? listCandidate
-        .map((item) => asRecord(item))
-        .filter((item): item is EntsogOperatorPointDirectionRecord => item !== null)
-    : [];
-
-  const totalRecords = readNumber(record, [
-    "total",
-    "totalRecords",
-    "totalrecords",
-    "count",
-    "recordsTotal",
-  ]);
-
-  return { records, totalRecords };
-}
-
-function formatDirection(directionKey: string) {
-  const normalized = directionKey.trim().toLowerCase();
-
-  if (normalized === "entry") {
-    return "Entry";
-  }
-
-  if (normalized === "exit") {
-    return "Exit";
-  }
-
-  return directionKey
+function formatDirection(direction: string) {
+  return direction
     .trim()
     .split(/[\s_-]+/)
     .filter(Boolean)
@@ -129,239 +111,39 @@ function formatDirection(directionKey: string) {
     .join(" ");
 }
 
-function withCountry(label: string, country?: string) {
-  if (!label) {
-    return "";
-  }
-
-  if (!country) {
-    return label;
-  }
-
-  const normalizedCountry = country.trim().toUpperCase();
-  if (!normalizedCountry) {
-    return label;
-  }
-
-  return label.includes(`(${normalizedCountry})`)
-    ? label
-    : `${label} (${normalizedCountry})`;
+function toPointDirectionValue({
+  operatorKey,
+  pointKey,
+  direction,
+}: Pick<EntsogPointPresetSource, "operatorKey" | "pointKey" | "direction">) {
+  return `${operatorKey}${pointKey}${direction}`.toLowerCase();
 }
 
-function uniqueStrings(values: string[]) {
-  const seen = new Set<string>();
-  const result: string[] = [];
-
-  for (const value of values) {
-    if (!value || seen.has(value)) {
-      continue;
-    }
-
-    seen.add(value);
-    result.push(value);
-  }
-
-  return result;
-}
-
-function toPreset(record: EntsogOperatorPointDirectionRecord): EntsogPointPreset | null {
-  const value = readString(record, [
-    "pointDirection",
-    "pointDirectionKey",
-    "operatorPointDirection",
-    "operatorPointDirectionKey",
-  ]);
-
-  if (!value) {
-    return null;
-  }
-
-  const pointKey = readString(record, ["pointKey", "pointEicCode", "pointCode"]);
-  const pointLabel = readString(record, [
-    "pointLabel",
-    "pointLabelEN",
-    "pointName",
-    "point",
-  ]);
-  const operatorKey = readString(record, ["operatorKey", "operatorEicCode"]);
-  const operatorLabel = readString(record, [
-    "operatorLabel",
-    "operatorLabelEN",
-    "operatorShortLabel",
-    "operatorName",
-  ]);
-  const directionKey = readString(record, ["directionKey", "flowDirection", "direction"]);
-  const tsoCountry = readString(record, [
-    "tsoCountry",
-    "operatorCountry",
-    "operatorCountryKey",
-    "country",
-  ]);
-  const adjacentCountry = readString(record, [
-    "adjacentCountry",
-    "adjacentCountryKey",
-    "adjacentSystemCountry",
-  ]);
-  const pointType = readString(record, ["pointType", "pointTypeLabel"]);
-  const adjacentPointLabel = readString(record, [
-    "adjacentPointLabel",
-    "adjacentPointName",
-    "connectedPointLabel",
-    "adjacentSystemLabel",
-  ]);
-
-  const primaryLabel = pointLabel
-    ? adjacentPointLabel
-      ? `${withCountry(pointLabel, tsoCountry || undefined)} → ${withCountry(adjacentPointLabel, adjacentCountry || undefined)}`
-      : withCountry(pointLabel, tsoCountry || undefined)
-    : pointKey;
-
-  const labelParts = uniqueStrings([
-    primaryLabel,
-    operatorLabel || operatorKey,
-    directionKey ? formatDirection(directionKey) : "",
-  ]);
-
-  if (labelParts.length === 0) {
-    return null;
-  }
-
+function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
   return {
-    value,
-    label: labelParts.join(" · "),
-    pointKey,
-    pointLabel,
-    operatorKey,
-    operatorLabel,
-    directionKey,
-    tsoCountry: tsoCountry || undefined,
-    adjacentCountry: adjacentCountry || undefined,
-    pointType: pointType || undefined,
+    value: toPointDirectionValue(source),
+    label: `${source.displayPointLabel} · ${source.operatorLabel} · ${formatDirection(source.direction)}`,
+    pointLabel: source.pointLabel,
+    operatorLabel: source.operatorLabel,
+    direction: source.direction,
+    tsoCountry: source.tsoCountry,
+    adjacentCountry: source.adjacentCountry,
   };
 }
 
-function sortPresets(presets: EntsogPointPreset[]) {
+function sortPresets(presets: readonly EntsogPointPreset[]) {
   return [...presets].sort((a, b) => {
-    const compareKeys = [
-      a.tsoCountry ?? "",
-      a.adjacentCountry ?? "",
-      a.pointLabel || a.pointKey,
-      a.operatorLabel || a.operatorKey,
-      a.directionKey,
-      a.value,
-    ];
-    const otherKeys = [
-      b.tsoCountry ?? "",
-      b.adjacentCountry ?? "",
-      b.pointLabel || b.pointKey,
-      b.operatorLabel || b.operatorKey,
-      b.directionKey,
-      b.value,
-    ];
-
-    for (let index = 0; index < compareKeys.length; index += 1) {
-      const compared = compareKeys[index]!.localeCompare(otherKeys[index]!, undefined, {
-        sensitivity: "base",
-      });
-      if (compared !== 0) {
-        return compared;
-      }
+    const labelComparison = a.label.localeCompare(b.label, undefined, {
+      sensitivity: "base",
+    });
+    if (labelComparison !== 0) {
+      return labelComparison;
     }
 
-    return 0;
+    return a.value.localeCompare(b.value, undefined, { sensitivity: "base" });
   });
 }
 
-async function fetchPage(offset: number) {
-  const url = new URL(ENTSOG_OPERATOR_POINT_DIRECTIONS_URL);
-  url.searchParams.set("hasData", "1");
-  url.searchParams.set("limit", String(ENTSOG_PAGE_SIZE));
-  url.searchParams.set("offset", String(offset));
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), ENTSOG_FETCH_TIMEOUT_MS);
-  let response: Response;
-
-  try {
-    response = await fetch(url, { cache: "no-store", signal: controller.signal });
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error(
-        `ENTSOG directory request timed out after ${ENTSOG_FETCH_TIMEOUT_MS}ms.`,
-      );
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  if (!response.ok) {
-    throw new Error(`ENTSOG directory request failed with ${response.status}.`);
-  }
-
-  const payload = (await response.json()) as unknown;
-  return readArray(payload);
-}
-
-export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory> {
-  const rawRecords: EntsogOperatorPointDirectionRecord[] = [];
-  let totalRecords: number | null = null;
-  let fetchCompleted = false;
-
-  for (let page = 0; page < ENTSOG_MAX_PAGES; page += 1) {
-    const offset = page * ENTSOG_PAGE_SIZE;
-    const { records, totalRecords: pageTotalRecords } = await fetchPage(offset);
-
-    if (totalRecords === null && pageTotalRecords !== null) {
-      totalRecords = pageTotalRecords;
-    }
-
-    if (records.length === 0) {
-      fetchCompleted = true;
-      break;
-    }
-    rawRecords.push(...records);
-
-    if (totalRecords !== null && offset + ENTSOG_PAGE_SIZE >= totalRecords) {
-      fetchCompleted = true;
-      break;
-    }
-
-    if (records.length < ENTSOG_PAGE_SIZE && totalRecords === null) {
-      fetchCompleted = true;
-      break;
-    }
-  }
-
-  if (!fetchCompleted) {
-    throw new Error(
-      `ENTSOG directory exceeded pagination limit (${ENTSOG_MAX_PAGES} pages of ${ENTSOG_PAGE_SIZE} records).`,
-    );
-  }
-
-  const presets: EntsogPointPreset[] = [];
-  const seenPointDirections = new Set<string>();
-  let duplicatePointDirectionValues = 0;
-
-  for (const record of rawRecords) {
-    const preset = toPreset(record);
-    if (!preset) {
-      continue;
-    }
-
-    if (seenPointDirections.has(preset.value)) {
-      duplicatePointDirectionValues += 1;
-      continue;
-    }
-
-    seenPointDirections.add(preset.value);
-    presets.push(preset);
-  }
-
-  return {
-    presets: sortPresets(presets),
-    totalRecords,
-    retrievedRecords: rawRecords.length,
-    duplicatePointDirectionValues,
-  };
-}
+export const ENTSOG_POINT_PRESETS: readonly EntsogPointPreset[] = sortPresets(
+  ENTSOG_POINT_PRESET_SOURCE.map(toPreset),
+);

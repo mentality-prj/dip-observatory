@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { GasForecastProvidersPage } from "@/components/admin/gas-forecast-providers-page";
+import {
+  FlowPointCombobox,
+  GasForecastProvidersPage,
+} from "@/components/admin/gas-forecast-providers-page";
+import { ENTSOG_POINT_PRESETS } from "@/lib/entsog-point-directory";
 
 test("renders ENTSOG date pickers with local-today max constraints", () => {
   const html = renderToStaticMarkup(<GasForecastProvidersPage />);
@@ -18,4 +22,21 @@ test("renders ENTSOG date pickers with local-today max constraints", () => {
   assert.equal(fromMax, toMax);
   assert.match(fromMax, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(html.includes(`min=""`), false);
+  assert.equal(html.includes("Loading ENTSOG flow points"), false);
+});
+
+test("renders static ENTSOG presets into the combobox selection flow", () => {
+  const selectedValue = "al-tso-0001itp-00274entry";
+  const html = renderToStaticMarkup(
+    <FlowPointCombobox
+      presets={ENTSOG_POINT_PRESETS}
+      selectedValue={selectedValue}
+      onSelect={() => {}}
+      initialOpen
+    />,
+  );
+
+  assert.equal(html.includes('id="entsog-point-direction-options"'), true);
+  assert.equal(html.includes(`id="entsog-point-direction-option-${selectedValue}"`), true);
+  assert.equal(html.includes("Kipoi (GR) · TAP · Entry"), true);
 });
