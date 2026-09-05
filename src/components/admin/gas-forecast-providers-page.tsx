@@ -189,6 +189,8 @@ function FlowPointCombobox({
   loading: boolean;
   error: string | null;
 }) {
+  const inputClassName =
+    "h-10 rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4";
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -230,6 +232,10 @@ function FlowPointCombobox({
         <Input
           id="entsog-point-direction"
           type="text"
+          className={cn(
+            inputClassName,
+            "pr-10 whitespace-nowrap overflow-hidden text-ellipsis",
+          )}
           role="combobox"
           aria-expanded={showListbox}
           aria-haspopup="listbox"
@@ -339,7 +345,7 @@ function FlowPointCombobox({
                       )}
                       aria-hidden="true"
                     />
-                    <span>{option.label}</span>
+                    <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   </li>
                 );
               })
@@ -617,6 +623,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id="entsog-from"
                             type="date"
+                            className="h-10 rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4"
                             value={entsogConfig.from}
                             max={entsogDateBounds.fromMax}
                             onChange={(event) => {
@@ -637,6 +644,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id="entsog-to"
                             type="date"
+                            className="h-10 rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4"
                             value={entsogConfig.to}
                             max={entsogDateBounds.toMax}
                             min={entsogDateBounds.toMin}
