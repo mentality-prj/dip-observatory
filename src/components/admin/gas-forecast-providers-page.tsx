@@ -216,7 +216,9 @@ function FlowPointCombobox({
   const activeOption = options[highlightedIndex] ?? null;
   const activeOptionId = activeOption
     ? `entsog-point-direction-option-${activeOption.value}`
-    : undefined;
+    : open && options.length === 0
+      ? "entsog-point-direction-option-empty"
+      : undefined;
   const showListbox = open && !loading && !error;
 
   return (
@@ -240,7 +242,11 @@ function FlowPointCombobox({
             setOpen(true);
           }}
           onChange={(event) => {
-            setQuery(event.target.value);
+            const nextValue = event.target.value;
+            setQuery(nextValue);
+            if (selectedPreset && nextValue !== selectedPreset.label) {
+              onSelect("");
+            }
             setHighlightedIndex(0);
             setOpen(true);
           }}
@@ -306,12 +312,14 @@ function FlowPointCombobox({
                 const selected = option.value === selectedValue;
                 const highlighted = highlightedIndex === index;
                 return (
-                  <li key={option.value}>
+                  <li
+                    key={option.value}
+                    id={`entsog-point-direction-option-${option.value}`}
+                    role="option"
+                    aria-selected={selected}
+                  >
                     <button
                       type="button"
-                      id={`entsog-point-direction-option-${option.value}`}
-                      role="option"
-                      aria-selected={selected}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => {
                         onSelect(option.value);
@@ -338,6 +346,7 @@ function FlowPointCombobox({
               })
             : (
               <li
+                id="entsog-point-direction-option-empty"
                 role="option"
                 aria-selected="false"
                 aria-disabled="true"
@@ -373,11 +382,20 @@ export function GasForecastProvidersPage() {
     loading: true,
     error: null,
   });
-  const entsogToday = useMemo(() => getTodayLocalDateIso(), []);
+  const [entsogToday, setEntsogToday] = useState(() => getTodayLocalDateIso());
   const entsogDateBounds = useMemo(
     () => getEntsogDatePickerBounds(entsogConfig.from, entsogToday),
     [entsogConfig.from, entsogToday],
   );
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const nextToday = getTodayLocalDateIso();
+      setEntsogToday((current) => (current === nextToday ? current : nextToday));
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
