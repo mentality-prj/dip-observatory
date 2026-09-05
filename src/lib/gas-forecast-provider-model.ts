@@ -119,7 +119,7 @@ export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
     id: "weather",
     title: "WEATHER",
     api: null,
-    initialStatus: "not_tested",
+    initialStatus: "not_configured",
   },
 ];
 

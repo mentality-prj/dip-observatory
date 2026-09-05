@@ -432,9 +432,7 @@ export function WeatherRegionsCombobox({
   const activeOption = options[highlightedIndex] ?? null;
   const activeOptionId = activeOption
     ? toOptionDomId(optionIdPrefix, activeOption.value)
-    : open && options.length === 0
-      ? `${optionIdPrefix}-empty`
-      : undefined;
+    : undefined;
 
   function toggleSelection(value: string) {
     onChange(
@@ -486,7 +484,7 @@ export function WeatherRegionsCombobox({
             }}
             onChange={(event) => {
               setQuery(event.target.value);
-              setHighlightedIndex(-1);
+              setHighlightedIndex(0);
               setOpen(true);
             }}
             onKeyDown={(event) => {
