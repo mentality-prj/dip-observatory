@@ -87,6 +87,37 @@ test("manual future-date input is rejected", () => {
   );
 });
 
+test('"From" is required', () => {
+  assert.equal(
+    validateEntsogHistoricalDateRange({ from: "", to: "2026-09-05" }, "2026-09-05"),
+    '"From" date is required.',
+  );
+});
+
+test('"To" is required', () => {
+  assert.equal(
+    validateEntsogHistoricalDateRange({ from: "2026-09-05", to: "" }, "2026-09-05"),
+    '"To" date is required.',
+  );
+});
+
+test("invalid/impossible ISO dates are rejected", () => {
+  assert.equal(
+    validateEntsogHistoricalDateRange(
+      { from: "2026-02-30", to: "2026-09-05" },
+      "2026-09-05",
+    ),
+    "Invalid date.",
+  );
+  assert.equal(
+    validateEntsogHistoricalDateRange(
+      { from: "2026-09-05", to: "2026-13-01" },
+      "2026-09-05",
+    ),
+    "Invalid date.",
+  );
+});
+
 test("computes local calendar date from local time", () => {
   const date = new Date(2026, 8, 5, 23, 59, 59);
   assert.equal(getTodayLocalDateIso(date), "2026-09-05");

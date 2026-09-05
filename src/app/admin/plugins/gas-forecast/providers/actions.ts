@@ -7,6 +7,10 @@ import {
   testGasForecastProviderConnection,
 } from "@/lib/gas-forecast-provider-client";
 import {
+  fetchEntsogPointDirectory,
+  type EntsogPointPreset,
+} from "@/lib/entsog-point-directory";
+import {
   getTodayLocalDateIso,
   validateEntsogHistoricalDateRange,
 } from "@/lib/entsog-date-range";
@@ -103,5 +107,35 @@ export async function testGasForecastProviderAction(input: {
             ? error.message
             : "Unexpected server action error",
     });
+  }
+}
+
+export async function loadEntsogPointDirectoryAction(): Promise<{
+  presets: EntsogPointPreset[];
+  totalRecords: number | null;
+  retrievedRecords: number;
+  duplicatePointDirectionValues: number;
+  error: string | null;
+}> {
+  try {
+    const directory = await fetchEntsogPointDirectory();
+
+    return {
+      ...directory,
+      error: null,
+    };
+  } catch (error) {
+    logGasForecastDiagnostic("error", "entsog_directory_load_failure", {
+      exceptionName: error instanceof Error ? error.name : typeof error,
+      exceptionMessage: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      presets: [],
+      totalRecords: null,
+      retrievedRecords: 0,
+      duplicatePointDirectionValues: 0,
+      error: "Failed to load ENTSOG flow points.",
+    };
   }
 }
