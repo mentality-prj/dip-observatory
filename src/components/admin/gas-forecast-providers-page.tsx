@@ -36,6 +36,7 @@ import {
   type GasForecastEntsogCheckInput,
   type GasForecastProviderCard,
   type GasForecastProviderId,
+  type GasForecastTtfCheckInput,
   type GasForecastWeatherCheckInput,
 } from "@/lib/gas-forecast-provider-model";
 import {
@@ -177,6 +178,33 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export function buildTtfCheckInput(
+  config: GasForecastTtfCheckInput,
+): GasForecastTtfCheckInput {
+  return {
+    start_date: config.start_date.trim(),
+    end_date: config.end_date.trim(),
+    instrument: config.instrument.trim(),
+  };
+}
+
+export function validateTtfCheckInput(
+  config: GasForecastTtfCheckInput,
+  todayIso: string,
+) {
+  if (!config.instrument.trim()) {
+    return "Instrument is required.";
+  }
+
+  return validateEntsogHistoricalDateRange(
+    {
+      from: config.start_date,
+      to: config.end_date,
+    },
+    todayIso,
   );
 }
 
@@ -622,6 +650,12 @@ export function GasForecastProvidersPage() {
     to: "",
   });
   const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
+  const [ttfConfig, setTtfConfig] = useState<GasForecastTtfCheckInput>({
+    start_date: "",
+    end_date: "",
+    instrument: "",
+  });
+  const [ttfValidationError, setTtfValidationError] = useState<string | null>(null);
   const [weatherConfig, setWeatherConfig] = useState<GasForecastWeatherCheckInput>({
     start_date: "",
     end_date: "",
@@ -636,6 +670,10 @@ export function GasForecastProvidersPage() {
   const weatherDateBounds = useMemo(
     () => getEntsogDatePickerBounds(weatherConfig.start_date, todayIso),
     [todayIso, weatherConfig.start_date],
+  );
+  const ttfDateBounds = useMemo(
+    () => getEntsogDatePickerBounds(ttfConfig.start_date, todayIso),
+    [todayIso, ttfConfig.start_date],
   );
 
   useEffect(() => {
@@ -694,10 +732,26 @@ export function GasForecastProvidersPage() {
     );
   }
 
+  function buildTtfInput(): GasForecastTtfCheckInput {
+    return buildTtfCheckInput(ttfConfig);
+  }
+
+  function validateTtfInput() {
+    return validateTtfCheckInput(ttfConfig, todayIso);
+  }
+
   async function handleTest(providerId: GasForecastProviderId) {
     if (providerId === "entsog") {
       const validationError = validateEntsogInput();
       setEntsogValidationError(validationError);
+      if (validationError) {
+        return;
+      }
+    }
+
+    if (providerId === "ttf") {
+      const validationError = validateTtfInput();
+      setTtfValidationError(validationError);
       if (validationError) {
         return;
       }
@@ -716,6 +770,7 @@ export function GasForecastProvidersPage() {
     try {
       const providerInput: GasForecastProviderCheckInput = {
         entsog: providerId === "entsog" ? buildEntsogInput() : undefined,
+        ttf: providerId === "ttf" ? buildTtfInput() : undefined,
         weather: providerId === "weather" ? buildWeatherInput() : undefined,
       };
       const result = await testGasForecastProviderAction({
@@ -785,8 +840,12 @@ export function GasForecastProvidersPage() {
             const weatherRegionsInputId = `${provider.id}-regions-search`;
             const weatherRegionsListboxId = `${provider.id}-regions-options`;
             const weatherRegionOptionPrefix = `${provider.id}-region-option`;
-            const weatherFromInputId = `${provider.id}-from`;
-            const weatherToInputId = `${provider.id}-to`;
+            const ttfFromInputId = `${provider.id}-start-date`;
+            const ttfToInputId = `${provider.id}-end-date`;
+            const ttfInstrumentInputId = `${provider.id}-instrument`;
+            const ttfErrorId = `${provider.id}-query-validation-error`;
+            const weatherFromInputId = `${provider.id}-start-date`;
+            const weatherToInputId = `${provider.id}-end-date`;
             const weatherMetricInputId = `${provider.id}-metric`;
 
             return (
@@ -996,6 +1055,83 @@ export function GasForecastProvidersPage() {
                       </div>
                       {weatherValidationError ? (
                         <p className="text-xs text-rose-300">{weatherValidationError}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {provider.id === "ttf" ? (
+                    <div className="min-w-0 w-full max-w-full space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                        TTF query
+                      </p>
+                      <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-2">
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor={ttfFromInputId}>From</Label>
+                          <Input
+                            id={ttfFromInputId}
+                            type="date"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            value={ttfConfig.start_date}
+                            max={ttfDateBounds.fromMax}
+                            aria-invalid={ttfValidationError ? "true" : undefined}
+                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
+                            onChange={(event) => {
+                              setTtfValidationError(null);
+                              setTtfConfig((current) => ({
+                                ...current,
+                                start_date: event.target.value,
+                                end_date:
+                                  current.end_date && event.target.value > current.end_date
+                                    ? event.target.value
+                                    : current.end_date,
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor={ttfToInputId}>To</Label>
+                          <Input
+                            id={ttfToInputId}
+                            type="date"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            value={ttfConfig.end_date}
+                            max={ttfDateBounds.toMax}
+                            min={ttfDateBounds.toMin}
+                            aria-invalid={ttfValidationError ? "true" : undefined}
+                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
+                            onChange={(event) => {
+                              setTtfValidationError(null);
+                              setTtfConfig((current) => ({
+                                ...current,
+                                end_date: event.target.value,
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={ttfInstrumentInputId}>Instrument</Label>
+                        <Input
+                          id={ttfInstrumentInputId}
+                          type="text"
+                          className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                          value={ttfConfig.instrument}
+                          placeholder="e.g. front_month"
+                          aria-invalid={ttfValidationError ? "true" : undefined}
+                          aria-describedby={ttfValidationError ? ttfErrorId : undefined}
+                          onChange={(event) => {
+                            setTtfValidationError(null);
+                            setTtfConfig((current) => ({
+                              ...current,
+                              instrument: event.target.value,
+                            }));
+                          }}
+                        />
+                      </div>
+                      {ttfValidationError ? (
+                        <p id={ttfErrorId} className="text-xs text-rose-300">
+                          {ttfValidationError}
+                        </p>
                       ) : null}
                     </div>
                   ) : null}

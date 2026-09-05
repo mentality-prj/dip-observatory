@@ -137,6 +137,13 @@ function buildGasForecastCapabilityRequest(
     };
   }
 
+  if (providerId === "ttf") {
+    return {
+      provider: "ttf" as const,
+      ttf: input?.ttf ?? {},
+    };
+  }
+
   return {
     provider: providerId,
     [providerId]: {},
@@ -287,6 +294,42 @@ export async function testGasForecastProviderConnection(
     const dateError = validateEntsogHistoricalDateRange({
       from: weatherInput.start_date,
       to: weatherInput.end_date,
+    });
+
+    if (dateError) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 400,
+        responseTimeMs: null,
+        payload: null,
+        kind: "configuration",
+        stage: "configuration",
+        fallbackMessage: dateError,
+      });
+    }
+  }
+
+  if (providerId === "ttf") {
+    const ttfInput = input?.ttf;
+    const missing: string[] = [];
+    if (!ttfInput?.start_date?.trim()) missing.push("start_date");
+    if (!ttfInput?.end_date?.trim()) missing.push("end_date");
+    if (!ttfInput?.instrument?.trim()) missing.push("instrument");
+
+    if (missing.length > 0) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage: `TTF provider check is not configured. Missing: ${missing.join(", ")}.`,
+      });
+    }
+
+    const dateError = validateEntsogHistoricalDateRange({
+      from: ttfInput?.start_date ?? "",
+      to: ttfInput?.end_date ?? "",
     });
 
     if (dateError) {

@@ -3,8 +3,10 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
+  buildTtfCheckInput,
   FlowPointCombobox,
   GasForecastProvidersPage,
+  validateTtfCheckInput,
   WeatherRegionsCombobox,
 } from "@/components/admin/gas-forecast-providers-page";
 import { ENTSOG_POINT_PRESETS } from "@/lib/entsog-point-directory";
@@ -45,11 +47,11 @@ test("renders static ENTSOG presets into the combobox selection flow", () => {
 
 test("renders Weather date pickers with local-today max constraints and fixed metric", () => {
   const html = renderToStaticMarkup(<GasForecastProvidersPage />);
-  const fromMaxMatch = html.match(/id="weather-from"[^>]*max="([^"]+)"/);
-  const toMaxMatch = html.match(/id="weather-to"[^>]*max="([^"]+)"/);
+  const fromMaxMatch = html.match(/id="weather-start-date"[^>]*max="([^"]+)"/);
+  const toMaxMatch = html.match(/id="weather-end-date"[^>]*max="([^"]+)"/);
 
-  assert.equal(html.includes('id="weather-from"'), true);
-  assert.equal(html.includes('id="weather-to"'), true);
+  assert.equal(html.includes('id="weather-start-date"'), true);
+  assert.equal(html.includes('id="weather-end-date"'), true);
   assert.equal(html.includes('id="weather-metric"'), true);
   assert.equal(html.includes('value="Temperature (°C)"'), true);
   assert.ok(fromMaxMatch);
@@ -57,6 +59,60 @@ test("renders Weather date pickers with local-today max constraints and fixed me
   assert.equal(fromMaxMatch[1], toMaxMatch[1]);
   assert.match(fromMaxMatch[1], /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(html.includes("Search/select regions..."), true);
+});
+
+test("renders TTF date pickers with local-today max constraints and an instrument field", () => {
+  const html = renderToStaticMarkup(<GasForecastProvidersPage />);
+  const fromMaxMatch = html.match(/id="ttf-start-date"[^>]*max="([^"]+)"/);
+  const toMaxMatch = html.match(/id="ttf-end-date"[^>]*max="([^"]+)"/);
+
+  assert.equal(html.includes('id="ttf-start-date"'), true);
+  assert.equal(html.includes('id="ttf-end-date"'), true);
+  assert.equal(html.includes('id="ttf-instrument"'), true);
+  assert.equal(html.includes('placeholder="e.g. front_month"'), true);
+  assert.ok(fromMaxMatch);
+  assert.ok(toMaxMatch);
+  assert.equal(fromMaxMatch[1], toMaxMatch[1]);
+  assert.match(fromMaxMatch[1], /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test("validates and trims TTF query input before submission", () => {
+  assert.equal(
+    validateTtfCheckInput(
+      {
+        start_date: "2026-01-01",
+        end_date: "2026-01-07",
+        instrument: "   ",
+      },
+      "2026-01-07",
+    ),
+    "Instrument is required.",
+  );
+
+  assert.equal(
+    validateTtfCheckInput(
+      {
+        start_date: "2999-01-01",
+        end_date: "2999-01-02",
+        instrument: "front_month",
+      },
+      "2026-01-07",
+    ),
+    "Future dates are not available.",
+  );
+
+  assert.deepEqual(
+    buildTtfCheckInput({
+      start_date: " 2026-01-01 ",
+      end_date: " 2026-01-07 ",
+      instrument: " front_month ",
+    }),
+    {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      instrument: "front_month",
+    },
+  );
 });
 
 test("renders static Weather presets into the multi-select combobox selection flow", () => {
