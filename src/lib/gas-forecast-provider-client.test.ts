@@ -382,3 +382,55 @@ test("never surfaces the request's DIP_API_KEY in the failure message even if a 
   assert.ok(!result.message!.includes("super-secret-key"));
   assert.ok(result.message!.includes("[REDACTED]"));
 });
+
+test("rejects future ENTSOG dates and never sends a backend request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("entsog", {
+    pointDirection: "RAW_POINT",
+    from: "2999-01-01",
+    to: "2999-01-02",
+    indicator: "Physical Flow",
+    periodType: "day",
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.message, "Future dates are not available.");
+  assert.equal(fetchCalls, 0);
+});
+
+test("rejects ENTSOG from>to and never sends a backend request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("entsog", {
+    pointDirection: "RAW_POINT",
+    from: "2026-01-07",
+    to: "2026-01-01",
+    indicator: "Physical Flow",
+    periodType: "day",
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.message, "From date must be on or before To date.");
+  assert.equal(fetchCalls, 0);
+});
