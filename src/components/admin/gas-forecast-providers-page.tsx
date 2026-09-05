@@ -13,7 +13,6 @@ import {
 import Link from "next/link";
 
 import {
-  loadEntsogPointDirectoryAction,
   testGasForecastProviderAction,
 } from "@/app/admin/plugins/gas-forecast/providers/actions";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +25,10 @@ import {
   getTodayLocalDateIso,
   validateEntsogHistoricalDateRange,
 } from "@/lib/entsog-date-range";
-import type { EntsogPointPreset } from "@/lib/entsog-point-directory";
+import {
+  ENTSOG_POINT_PRESETS,
+  type EntsogPointPreset,
+} from "@/lib/entsog-point-directory";
 import { cn } from "@/lib/utils";
 import {
   GAS_FORECAST_PROVIDER_CARDS,
@@ -374,15 +376,6 @@ export function GasForecastProvidersPage() {
     to: "",
   });
   const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
-  const [entsogDirectory, setEntsogDirectory] = useState<{
-    presets: EntsogPointPreset[];
-    loading: boolean;
-    error: string | null;
-  }>({
-    presets: [],
-    loading: true,
-    error: null,
-  });
   const [entsogToday, setEntsogToday] = useState(() => getTodayLocalDateIso());
   const entsogDateBounds = useMemo(
     () => getEntsogDatePickerBounds(entsogConfig.from, entsogToday),
@@ -396,26 +389,6 @@ export function GasForecastProvidersPage() {
     }, 60_000);
 
     return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    void loadEntsogPointDirectoryAction().then((result) => {
-      if (!mounted) {
-        return;
-      }
-
-      setEntsogDirectory({
-        presets: result.presets,
-        loading: false,
-        error: result.error,
-      });
-    });
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   function buildEntsogInput(): GasForecastEntsogCheckInput {
@@ -589,9 +562,9 @@ export function GasForecastProvidersPage() {
                         ENTSOG query
                       </p>
                       <FlowPointCombobox
-                        presets={entsogDirectory.presets}
-                        loading={entsogDirectory.loading}
-                        error={entsogDirectory.error}
+                        presets={[...ENTSOG_POINT_PRESETS]}
+                        loading={false}
+                        error={null}
                         selectedValue={entsogConfig.pointDirection}
                         onSelect={(value) => {
                           setEntsogValidationError(null);
