@@ -322,22 +322,13 @@ function readRecordPathField(
 }
 
 function isNormalizedObservationsPayload(payload: unknown) {
-  const observations =
-    getPathValue(payload, ["result", "observations"]) ??
-    getPathValue(payload, ["observations"]);
-  if (!Array.isArray(observations)) {
-    return false;
-  }
-
-  if (
-    getPathValue(payload, ["result", "observation_count"]) !== undefined ||
-    getPathValue(payload, ["observation_count"]) !== undefined
-  ) {
+  if (Array.isArray(getPathValue(payload, ["result", "observations"]))) {
     return true;
   }
 
-  return observations.some(
-    (row) => isRecord(row) && getPathValue(row, ["observation_date"]) !== undefined,
+  return (
+    Array.isArray(getPathValue(payload, ["observations"])) &&
+    getPathValue(payload, ["observation_count"]) !== undefined
   );
 }
 
