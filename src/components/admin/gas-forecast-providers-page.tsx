@@ -32,10 +32,16 @@ import {
   GAS_FORECAST_PROVIDER_CARDS,
   mapGasForecastFailure,
   type GasForecastConnectionResult,
+  type GasForecastProviderCheckInput,
   type GasForecastEntsogCheckInput,
   type GasForecastProviderCard,
   type GasForecastProviderId,
+  type GasForecastWeatherCheckInput,
 } from "@/lib/gas-forecast-provider-model";
+import {
+  WEATHER_REGION_PRESETS,
+  type WeatherRegionPreset,
+} from "@/lib/weather-region-presets";
 
 const statusLabel = {
   not_configured: "NOT CONFIGURED",
@@ -172,6 +178,16 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
       ) : null}
     </div>
   );
+}
+
+function toOptionDomId(prefix: string, value: string) {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `${prefix}-${normalized || "option"}`;
 }
 
 export function FlowPointCombobox({
@@ -364,28 +380,268 @@ export function FlowPointCombobox({
   );
 }
 
+export function WeatherRegionsCombobox({
+  presets,
+  selectedValues,
+  onChange,
+  initialOpen = false,
+  inputId = "weather-regions-search",
+  listboxId = "weather-regions-options",
+  optionIdPrefix = "weather-region-option",
+}: {
+  presets: readonly WeatherRegionPreset[];
+  selectedValues: readonly string[];
+  onChange: (values: string[]) => void;
+  initialOpen?: boolean;
+  inputId?: string;
+  listboxId?: string;
+  optionIdPrefix?: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(initialOpen);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const selectedPresets = presets.filter((preset) => selectedValues.includes(preset.value));
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
+
+  const options = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return presets;
+    }
+
+    return presets.filter((preset) =>
+      preset.label.toLowerCase().includes(normalizedQuery),
+    );
+  }, [presets, query]);
+
+  const activeOption = options[highlightedIndex] ?? null;
+  const activeOptionId = activeOption
+    ? toOptionDomId(optionIdPrefix, activeOption.value)
+    : open && options.length === 0
+      ? `${optionIdPrefix}-empty`
+      : undefined;
+
+  function toggleSelection(value: string) {
+    onChange(
+      selectedValues.includes(value)
+        ? selectedValues.filter((current) => current !== value)
+        : [...selectedValues, value],
+    );
+  }
+
+  return (
+    <div className="min-w-0 w-full space-y-2" ref={containerRef}>
+      <Label htmlFor={inputId}>Weather regions</Label>
+      <div className="relative min-w-0 w-full">
+        <div
+          className="box-border flex min-h-11 w-full min-w-0 max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus-within:border-cyan-300/60 focus-within:bg-white/8 focus-within:ring-2 focus-within:ring-cyan-300/20"
+          onClick={() => {
+            setOpen(true);
+            inputRef.current?.focus();
+          }}
+        >
+          {selectedPresets.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-100"
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleSelection(preset.value);
+              }}
+              aria-label={`Remove ${preset.label}`}
+            >
+              <span>{preset.label}</span>
+              <span aria-hidden="true">×</span>
+            </button>
+          ))}
+          <input
+            id={inputId}
+            ref={inputRef}
+            type="text"
+            className="min-w-[8rem] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+            role="combobox"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={open ? activeOptionId : undefined}
+            aria-controls={open ? listboxId : undefined}
+            autoComplete="off"
+            value={query}
+            onFocus={() => {
+              setOpen(true);
+            }}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setHighlightedIndex(0);
+              setOpen(true);
+            }}
+            onKeyDown={(event) => {
+              if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+                setOpen(true);
+                setHighlightedIndex(options.length > 0 ? 0 : -1);
+                return;
+              }
+
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                setHighlightedIndex((current) =>
+                  options.length === 0
+                    ? -1
+                    : Math.min(Math.max(current + 1, 0), options.length - 1),
+                );
+                return;
+              }
+
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setHighlightedIndex((current) =>
+                  options.length === 0
+                    ? -1
+                    : current <= 0
+                      ? 0
+                      : current - 1,
+                );
+                return;
+              }
+
+              if (event.key === "Enter" && open) {
+                const option = options[highlightedIndex];
+                if (option) {
+                  event.preventDefault();
+                  toggleSelection(option.value);
+                  setQuery("");
+                  setHighlightedIndex(-1);
+                }
+                return;
+              }
+
+              if (event.key === "Escape") {
+                setQuery("");
+                setOpen(false);
+                setHighlightedIndex(-1);
+              }
+            }}
+            placeholder={selectedValues.length > 0 ? "Search more regions..." : "Search/select regions..."}
+          />
+          <ChevronDown
+            className="pointer-events-none ml-auto h-4 w-4 shrink-0 text-slate-400"
+            aria-hidden="true"
+          />
+        </div>
+
+        {open ? (
+          <ul
+            id={listboxId}
+            role="listbox"
+            aria-multiselectable="true"
+            className="mt-2 max-h-56 w-full min-w-0 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
+          >
+            {options.length > 0
+              ? options.map((option) => {
+                  const selected = selectedValues.includes(option.value);
+                  const highlighted =
+                    option.value === options[highlightedIndex]?.value;
+
+                  return (
+                    <li key={option.value}>
+                      <button
+                        id={toOptionDomId(optionIdPrefix, option.value)}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        data-active={highlighted ? "true" : "false"}
+                        onClick={() => {
+                          toggleSelection(option.value);
+                          setQuery("");
+                          setHighlightedIndex(-1);
+                        }}
+                        className={cn(
+                          "flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                          highlighted
+                            ? "bg-white/10 text-white"
+                            : "text-slate-200 hover:bg-white/8",
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            "mt-0.5 h-4 w-4 shrink-0",
+                            selected ? "opacity-100" : "opacity-0",
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="block min-w-0 flex-1 truncate">{option.label}</span>
+                      </button>
+                    </li>
+                  );
+                })
+              : (
+                <li
+                  id={`${optionIdPrefix}-empty`}
+                  role="option"
+                  aria-selected="false"
+                  aria-disabled="true"
+                  className="px-2 py-1.5 text-sm text-slate-400"
+                >
+                  No matching weather regions.
+                </li>
+              )}
+          </ul>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function GasForecastProvidersPage() {
   const [results, setResults] = useState<
     Partial<Record<GasForecastProviderId, GasForecastConnectionResult>>
   >({});
   const [pendingProviderId, setPendingProviderId] =
     useState<GasForecastProviderId | null>(null);
+  const [todayIso, setTodayIso] = useState(() => getTodayLocalDateIso());
   const [entsogConfig, setEntsogConfig] = useState({
     pointDirection: "",
     from: "",
     to: "",
   });
   const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
-  const [entsogToday, setEntsogToday] = useState(() => getTodayLocalDateIso());
+  const [weatherConfig, setWeatherConfig] = useState<GasForecastWeatherCheckInput>({
+    start_date: "",
+    end_date: "",
+    regions: [],
+    metric: "temperature_c",
+  });
+  const [weatherValidationError, setWeatherValidationError] = useState<string | null>(null);
   const entsogDateBounds = useMemo(
-    () => getEntsogDatePickerBounds(entsogConfig.from, entsogToday),
-    [entsogConfig.from, entsogToday],
+    () => getEntsogDatePickerBounds(entsogConfig.from, todayIso),
+    [entsogConfig.from, todayIso],
+  );
+  const weatherDateBounds = useMemo(
+    () => getEntsogDatePickerBounds(weatherConfig.start_date, todayIso),
+    [todayIso, weatherConfig.start_date],
   );
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       const nextToday = getTodayLocalDateIso();
-      setEntsogToday((current) => (current === nextToday ? current : nextToday));
+      setTodayIso((current) => (current === nextToday ? current : nextToday));
     }, 60_000);
 
     return () => window.clearInterval(intervalId);
@@ -411,7 +667,30 @@ export function GasForecastProvidersPage() {
         from: entsogConfig.from,
         to: entsogConfig.to,
       },
-      entsogToday,
+      todayIso,
+    );
+  }
+
+  function buildWeatherInput(): GasForecastWeatherCheckInput {
+    return {
+      start_date: weatherConfig.start_date.trim(),
+      end_date: weatherConfig.end_date.trim(),
+      regions: weatherConfig.regions.map((region) => region.trim()).filter(Boolean),
+      metric: "temperature_c",
+    };
+  }
+
+  function validateWeatherInput() {
+    if (weatherConfig.regions.length === 0) {
+      return "Select at least one weather region.";
+    }
+
+    return validateEntsogHistoricalDateRange(
+      {
+        from: weatherConfig.start_date,
+        to: weatherConfig.end_date,
+      },
+      todayIso,
     );
   }
 
@@ -424,12 +703,24 @@ export function GasForecastProvidersPage() {
       }
     }
 
+    if (providerId === "weather") {
+      const validationError = validateWeatherInput();
+      setWeatherValidationError(validationError);
+      if (validationError) {
+        return;
+      }
+    }
+
     setPendingProviderId(providerId);
 
     try {
+      const providerInput: GasForecastProviderCheckInput = {
+        entsog: providerId === "entsog" ? buildEntsogInput() : undefined,
+        weather: providerId === "weather" ? buildWeatherInput() : undefined,
+      };
       const result = await testGasForecastProviderAction({
         providerId,
-        entsog: providerId === "entsog" ? buildEntsogInput() : undefined,
+        ...providerInput,
       });
       setResults((current) => ({ ...current, [providerId]: result }));
     } catch (error) {
@@ -491,6 +782,12 @@ export function GasForecastProvidersPage() {
               result,
               pendingProviderId,
             );
+            const weatherRegionsInputId = `${provider.id}-regions-search`;
+            const weatherRegionsListboxId = `${provider.id}-regions-options`;
+            const weatherRegionOptionPrefix = `${provider.id}-region-option`;
+            const weatherFromInputId = `${provider.id}-from`;
+            const weatherToInputId = `${provider.id}-to`;
+            const weatherMetricInputId = `${provider.id}-metric`;
 
             return (
               <Card key={provider.id} className="h-full">
@@ -624,6 +921,82 @@ export function GasForecastProvidersPage() {
                           <span className="text-slate-500">Period type:</span> day
                         </p>
                       </div>
+                    </div>
+                  ) : null}
+
+                  {provider.id === "weather" ? (
+                    <div className="min-w-0 w-full max-w-full space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                        Weather query
+                      </p>
+                      <WeatherRegionsCombobox
+                        presets={WEATHER_REGION_PRESETS}
+                        selectedValues={weatherConfig.regions}
+                        inputId={weatherRegionsInputId}
+                        listboxId={weatherRegionsListboxId}
+                        optionIdPrefix={weatherRegionOptionPrefix}
+                        onChange={(values) => {
+                          setWeatherValidationError(null);
+                          setWeatherConfig((current) => ({
+                            ...current,
+                            regions: values,
+                          }));
+                        }}
+                      />
+                      <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-2">
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor={weatherFromInputId}>From</Label>
+                          <Input
+                            id={weatherFromInputId}
+                            type="date"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            value={weatherConfig.start_date}
+                            max={weatherDateBounds.fromMax}
+                            onChange={(event) => {
+                              setWeatherValidationError(null);
+                              setWeatherConfig((current) => ({
+                                ...current,
+                                start_date: event.target.value,
+                                end_date:
+                                  current.end_date && event.target.value > current.end_date
+                                    ? event.target.value
+                                    : current.end_date,
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0 space-y-2">
+                          <Label htmlFor={weatherToInputId}>To</Label>
+                          <Input
+                            id={weatherToInputId}
+                            type="date"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            value={weatherConfig.end_date}
+                            max={weatherDateBounds.toMax}
+                            min={weatherDateBounds.toMin}
+                            onChange={(event) => {
+                              setWeatherValidationError(null);
+                              setWeatherConfig((current) => ({
+                                ...current,
+                                end_date: event.target.value,
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={weatherMetricInputId}>Metric</Label>
+                        <Input
+                          id={weatherMetricInputId}
+                          type="text"
+                          className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                          value="Temperature (°C)"
+                          readOnly
+                        />
+                      </div>
+                      {weatherValidationError ? (
+                        <p className="text-xs text-rose-300">{weatherValidationError}</p>
+                      ) : null}
                     </div>
                   ) : null}
 
