@@ -94,7 +94,12 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
 ] as const;
 
 function formatDirection(direction: string) {
-  return direction.charAt(0).toUpperCase() + direction.slice(1).toLowerCase();
+  return direction
+    .trim()
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
+    .join(" ");
 }
 
 function withCountry(pointLabel: string, tsoCountry?: string) {
