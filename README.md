@@ -13,6 +13,7 @@ The Observatory expects these backend settings:
 - `DIP_API_BASE_URL` — base URL of the DIP backend
 - `DIP_API_KEY` — API key used for Observatory and futures mispricing requests
 - `DIP_GAS_FORECAST_CAPABILITY_PATH` — optional exact DIP API path for the existing gas-forecast capability used by `/admin/plugins/gas-forecast/providers`; if unset, Observatory probes a short list of likely PluginRuntime capability paths
+- `DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH` — optional exact DIP API path for `/admin/plugins/gas-forecast/eidos`; if unset, Observatory probes likely PluginRuntime capability paths for `gas.forecast.experiment`
 
 First, run the development server:
 
