@@ -18,4 +18,5 @@ test("renders ENTSOG date pickers with local-today max constraints", () => {
   assert.equal(fromMax, toMax);
   assert.match(fromMax, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(html.includes(`min=""`), false);
+  assert.equal(html.includes("Loading ENTSOG flow points"), false);
 });

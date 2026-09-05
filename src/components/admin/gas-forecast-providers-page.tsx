@@ -12,10 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import {
-  loadEntsogPointDirectoryAction,
-  testGasForecastProviderAction,
-} from "@/app/admin/plugins/gas-forecast/providers/actions";
+import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/providers/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +24,7 @@ import {
   validateEntsogHistoricalDateRange,
 } from "@/lib/entsog-date-range";
 import {
+  ENTSOG_POINT_PRESETS,
   type EntsogPointPreset,
 } from "@/lib/entsog-point-directory";
 import { cn } from "@/lib/utils";
@@ -180,14 +178,10 @@ function FlowPointCombobox({
   presets,
   selectedValue,
   onSelect,
-  loading,
-  error,
 }: {
-  presets: EntsogPointPreset[];
+  presets: readonly EntsogPointPreset[];
   selectedValue: string;
   onSelect: (value: string) => void;
-  loading: boolean;
-  error: string | null;
 }) {
   const inputClassName =
     "h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4";
@@ -227,7 +221,7 @@ function FlowPointCombobox({
     : open && options.length === 0
       ? "entsog-point-direction-option-empty"
       : undefined;
-  const showListbox = open && !loading && !error;
+  const showListbox = open;
 
   return (
     <div className="min-w-0 w-full space-y-2" ref={containerRef}>
@@ -299,7 +293,7 @@ function FlowPointCombobox({
             }
           }}
           placeholder="Search/select ENTSOG point..."
-          disabled={loading || Boolean(error)}
+          disabled={presets.length === 0}
         />
         <ChevronDown
           className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -307,9 +301,7 @@ function FlowPointCombobox({
         />
       </div>
 
-      {loading ? <p className="text-xs text-slate-400">Loading ENTSOG flow points…</p> : null}
-      {error ? <p className="text-xs text-rose-300">{error}</p> : null}
-      {!loading && !error && presets.length === 0 ? (
+      {presets.length === 0 ? (
         <p className="text-xs text-slate-400">No ENTSOG flow points available.</p>
       ) : null}
 
@@ -382,15 +374,6 @@ export function GasForecastProvidersPage() {
     to: "",
   });
   const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
-  const [entsogDirectory, setEntsogDirectory] = useState<{
-    presets: EntsogPointPreset[];
-    loading: boolean;
-    error: string | null;
-  }>({
-    presets: [],
-    loading: true,
-    error: null,
-  });
   const [entsogToday, setEntsogToday] = useState(() => getTodayLocalDateIso());
   const entsogDateBounds = useMemo(
     () => getEntsogDatePickerBounds(entsogConfig.from, entsogToday),
@@ -404,38 +387,6 @@ export function GasForecastProvidersPage() {
     }, 60_000);
 
     return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    void loadEntsogPointDirectoryAction()
-      .then((result) => {
-        if (!mounted) {
-          return;
-        }
-
-        setEntsogDirectory({
-          presets: result.presets,
-          loading: false,
-          error: result.error,
-        });
-      })
-      .catch(() => {
-        if (!mounted) {
-          return;
-        }
-
-        setEntsogDirectory({
-          presets: [],
-          loading: false,
-          error: "Failed to load ENTSOG flow points.",
-        });
-      });
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   function buildEntsogInput(): GasForecastEntsogCheckInput {
@@ -609,9 +560,7 @@ export function GasForecastProvidersPage() {
                         ENTSOG query
                       </p>
                       <FlowPointCombobox
-                        presets={entsogDirectory.presets}
-                        loading={entsogDirectory.loading}
-                        error={entsogDirectory.error}
+                        presets={ENTSOG_POINT_PRESETS}
                         selectedValue={entsogConfig.pointDirection}
                         onSelect={(value) => {
                           setEntsogValidationError(null);
