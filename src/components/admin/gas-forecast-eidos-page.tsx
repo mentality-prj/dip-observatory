@@ -2,7 +2,7 @@
 
 import { FlaskConical, Home } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { runGasForecastExperimentAction } from "@/app/admin/plugins/gas-forecast/eidos/actions";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ export function GasForecastEidosPage({
   initialResult?: GasForecastExperimentResult | null;
 }) {
   const [isPending, startTransition] = useTransition();
+  const isSubmittingRef = useRef(false);
   const [form, setForm] = useState<GasForecastExperimentRequest>(DEFAULT_FORM);
   const [result, setResult] = useState<GasForecastExperimentResult | null>(
     initialResult,
@@ -82,9 +83,17 @@ export function GasForecastEidosPage({
               className="space-y-4"
               onSubmit={(event) => {
                 event.preventDefault();
+                if (isSubmittingRef.current || isPending) {
+                  return;
+                }
+                isSubmittingRef.current = true;
                 startTransition(async () => {
-                  const response = await runGasForecastExperimentAction(form);
-                  setResult(response);
+                  try {
+                    const response = await runGasForecastExperimentAction(form);
+                    setResult(response);
+                  } finally {
+                    isSubmittingRef.current = false;
+                  }
                 });
               }}
             >

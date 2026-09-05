@@ -137,8 +137,8 @@ export async function runGasForecastExperiment(
 
   const capabilityUrls = buildCapabilityUrls();
   const startedAt = performance.now();
-  let lastNetworkMessage: string | null = null;
-  let hasNotFoundResponse = false;
+  let allResponsesWere404 = true;
+  let lastFailure: GasForecastExperimentResult | null = null;
 
   try {
     for (const capabilityUrl of capabilityUrls) {
@@ -155,10 +155,18 @@ export async function runGasForecastExperiment(
           cache: "no-store",
         });
       } catch (error) {
-        lastNetworkMessage =
-          error instanceof Error
-            ? error.message
-            : "Network request to DIP failed.";
+        allResponsesWere404 = false;
+        lastFailure = {
+          status: "failed",
+          httpStatus: null,
+          responseTimeMs: Math.round(performance.now() - startedAt),
+          message:
+            error instanceof Error
+              ? error.message
+              : "Network request to DIP failed.",
+          payload: null,
+          executedAt: new Date().toISOString(),
+        };
         continue;
       }
 
@@ -177,7 +185,8 @@ export async function runGasForecastExperiment(
       }
 
       if (response.status !== 404) {
-        return {
+        allResponsesWere404 = false;
+        lastFailure = {
           status: "failed",
           httpStatus: response.status,
           responseTimeMs,
@@ -188,12 +197,11 @@ export async function runGasForecastExperiment(
           payload,
           executedAt: new Date().toISOString(),
         };
+        continue;
       }
-
-      hasNotFoundResponse = true;
     }
 
-    if (hasNotFoundResponse) {
+    if (allResponsesWere404) {
       return {
         status: "failed",
         httpStatus: 404,
@@ -204,15 +212,8 @@ export async function runGasForecastExperiment(
       };
     }
 
-    if (lastNetworkMessage) {
-      return {
-        status: "failed",
-        httpStatus: null,
-        responseTimeMs: Math.round(performance.now() - startedAt),
-        message: lastNetworkMessage,
-        payload: null,
-        executedAt: new Date().toISOString(),
-      };
+    if (lastFailure) {
+      return lastFailure;
     }
 
     return {

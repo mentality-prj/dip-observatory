@@ -112,7 +112,7 @@ test("continues probing fallback paths after a network failure", async () => {
   assert.equal(requestedUrls.length, 2);
 });
 
-test("prefers invalid-endpoint result when probes include 404 responses", async () => {
+test("returns the last non-404 failure when probes include 404 responses", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
   delete process.env.DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH;
@@ -139,8 +139,8 @@ test("prefers invalid-endpoint result when probes include 404 responses", async 
   });
 
   assert.equal(result.status, "failed");
-  assert.equal(result.httpStatus, 404);
-  assert.match(result.message ?? "", /Invalid API endpoint/);
+  assert.equal(result.httpStatus, null);
+  assert.equal(result.message, "fetch failed");
 });
 
 test("returns a clear configuration failure when DIP credentials are missing", async () => {

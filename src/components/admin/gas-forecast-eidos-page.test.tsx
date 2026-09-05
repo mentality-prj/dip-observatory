@@ -52,3 +52,20 @@ test("renders failure message when execution fails", () => {
   assert.equal(html.includes("FAILED"), true);
   assert.equal(html.includes("Provider timeout"), true);
 });
+
+test("renders null payload safely for failure responses", () => {
+  const html = renderToStaticMarkup(
+    <GasForecastEidosPage
+      initialResult={{
+        status: "failed",
+        httpStatus: 503,
+        responseTimeMs: null,
+        message: "Not configured",
+        payload: null,
+        executedAt: "2026-01-01T00:00:00.000Z",
+      }}
+    />,
+  );
+
+  assert.equal(html.includes(">null<"), true);
+});
