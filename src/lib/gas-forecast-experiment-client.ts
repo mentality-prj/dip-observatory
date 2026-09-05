@@ -198,7 +198,7 @@ export async function runGasForecastExperiment(
         status: "failed",
         httpStatus: 404,
         responseTimeMs: Math.round(performance.now() - startedAt),
-        message: `Invalid API endpoint. Tried: ${capabilityUrls.join(", ")}`,
+        message: "Invalid API endpoint for gas.forecast.experiment.",
         payload: null,
         executedAt: new Date().toISOString(),
       };

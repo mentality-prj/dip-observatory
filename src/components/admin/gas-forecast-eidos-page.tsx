@@ -78,6 +78,16 @@ export function GasForecastEidosPage({
             <CardTitle>Experiment request</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                startTransition(async () => {
+                  const response = await runGasForecastExperimentAction(form);
+                  setResult(response);
+                });
+              }}
+            >
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="start-date">start_date</Label>
@@ -143,19 +153,14 @@ export function GasForecastEidosPage({
             </div>
 
             <Button
-              type="button"
+              type="submit"
               size="lg"
               className="w-full"
               disabled={isPending}
-              onClick={() => {
-                startTransition(async () => {
-                  const response = await runGasForecastExperimentAction(form);
-                  setResult(response);
-                });
-              }}
             >
               {isPending ? "Running experiment..." : "Run experiment"}
             </Button>
+            </form>
           </CardContent>
         </Card>
 
