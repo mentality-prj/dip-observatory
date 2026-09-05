@@ -322,7 +322,18 @@ function readRecordPathField(
 }
 
 function isNormalizedObservationsPayload(payload: unknown) {
-  return Array.isArray(getPathValue(payload, ["result", "observations"]));
+  const observations = getPathValue(payload, ["result", "observations"]);
+  if (!Array.isArray(observations)) {
+    return false;
+  }
+
+  if (getPathValue(payload, ["result", "observation_count"]) !== undefined) {
+    return true;
+  }
+
+  return observations.some(
+    (row) => isRecord(row) && getPathValue(row, ["observation_date"]) !== undefined,
+  );
 }
 
 function getDateRangeFromRows(
