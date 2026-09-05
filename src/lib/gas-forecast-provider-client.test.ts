@@ -349,9 +349,13 @@ test("fails TTF check configuration when UI query inputs are missing and does no
 });
 
 test("does not read TTF query fields from environment variables", async () => {
+  const previousBaseUrl = process.env.DIP_API_BASE_URL;
+  const previousApiKey = process.env.DIP_API_KEY;
   const previousStartDate = process.env.DIP_TTF_START_DATE;
   const previousEndDate = process.env.DIP_TTF_END_DATE;
   const previousInstrument = process.env.DIP_TTF_INSTRUMENT;
+  const previousCapabilityPath = process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  const previousLegacyCapabilityPath = process.env.GAS_FORECAST_CAPABILITY_PATH;
 
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
@@ -381,6 +385,18 @@ test("does not read TTF query fields from environment variables", async () => {
       process.env.DIP_TTF_START_DATE = previousStartDate;
     }
 
+    if (previousBaseUrl === undefined) {
+      delete process.env.DIP_API_BASE_URL;
+    } else {
+      process.env.DIP_API_BASE_URL = previousBaseUrl;
+    }
+
+    if (previousApiKey === undefined) {
+      delete process.env.DIP_API_KEY;
+    } else {
+      process.env.DIP_API_KEY = previousApiKey;
+    }
+
     if (previousEndDate === undefined) {
       delete process.env.DIP_TTF_END_DATE;
     } else {
@@ -391,6 +407,18 @@ test("does not read TTF query fields from environment variables", async () => {
       delete process.env.DIP_TTF_INSTRUMENT;
     } else {
       process.env.DIP_TTF_INSTRUMENT = previousInstrument;
+    }
+
+    if (previousCapabilityPath === undefined) {
+      delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+    } else {
+      process.env.DIP_GAS_FORECAST_CAPABILITY_PATH = previousCapabilityPath;
+    }
+
+    if (previousLegacyCapabilityPath === undefined) {
+      delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+    } else {
+      process.env.GAS_FORECAST_CAPABILITY_PATH = previousLegacyCapabilityPath;
     }
   }
 });
