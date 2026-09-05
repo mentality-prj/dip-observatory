@@ -724,7 +724,7 @@ export function mapGasForecastSuccess(params: {
     ? (pickNumber(payload, [
         ["result", "observation_count"],
         ["observation_count"],
-      ]) ?? datasetRows.length)
+      ]) ?? (datasetRows.length > 0 ? datasetRows.length : null))
     : (pickNumber(payload, [
         ["dataset", "recordCount"],
         ["dataset", "recordsCount"],
@@ -734,7 +734,7 @@ export function mapGasForecastSuccess(params: {
         ["records"],
         ["count"],
         ["total"],
-      ]) ?? datasetRows.length);
+      ]) ?? (datasetRows.length > 0 ? datasetRows.length : null));
 
   return {
     providerId,
