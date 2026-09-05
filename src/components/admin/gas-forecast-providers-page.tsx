@@ -555,31 +555,34 @@ export function WeatherRegionsCombobox({
                     option.value === options[highlightedIndex]?.value;
 
                   return (
-                    <li
-                      key={option.value}
-                      id={toOptionDomId(optionIdPrefix, option.value)}
-                      role="option"
-                      aria-selected={selected}
-                      data-active={highlighted ? "true" : "false"}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        toggleSelection(option.value);
-                        setQuery("");
-                        setHighlightedIndex(-1);
-                      }}
-                      className={cn(
-                        "flex min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
-                        highlighted ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/8",
-                      )}
-                    >
-                      <Check
+                    <li key={option.value}>
+                      <button
+                        id={toOptionDomId(optionIdPrefix, option.value)}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        data-active={highlighted ? "true" : "false"}
+                        onClick={() => {
+                          toggleSelection(option.value);
+                          setQuery("");
+                          setHighlightedIndex(-1);
+                        }}
                         className={cn(
-                          "mt-0.5 h-4 w-4 shrink-0",
-                          selected ? "opacity-100" : "opacity-0",
+                          "flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                          highlighted
+                            ? "bg-white/10 text-white"
+                            : "text-slate-200 hover:bg-white/8",
                         )}
-                        aria-hidden="true"
-                      />
-                      <span className="block min-w-0 flex-1 truncate">{option.label}</span>
+                      >
+                        <Check
+                          className={cn(
+                            "mt-0.5 h-4 w-4 shrink-0",
+                            selected ? "opacity-100" : "opacity-0",
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="block min-w-0 flex-1 truncate">{option.label}</span>
+                      </button>
                     </li>
                   );
                 })
