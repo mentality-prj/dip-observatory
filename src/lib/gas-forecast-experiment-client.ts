@@ -138,6 +138,7 @@ export async function runGasForecastExperiment(
   const capabilityUrls = buildCapabilityUrls();
   const startedAt = performance.now();
   let lastNetworkMessage: string | null = null;
+  let hasNotFoundResponse = false;
 
   try {
     for (const capabilityUrl of capabilityUrls) {
@@ -188,6 +189,19 @@ export async function runGasForecastExperiment(
           executedAt: new Date().toISOString(),
         };
       }
+
+      hasNotFoundResponse = true;
+    }
+
+    if (hasNotFoundResponse) {
+      return {
+        status: "failed",
+        httpStatus: 404,
+        responseTimeMs: Math.round(performance.now() - startedAt),
+        message: `Invalid API endpoint. Tried: ${capabilityUrls.join(", ")}`,
+        payload: null,
+        executedAt: new Date().toISOString(),
+      };
     }
 
     if (lastNetworkMessage) {
@@ -203,9 +217,9 @@ export async function runGasForecastExperiment(
 
     return {
       status: "failed",
-      httpStatus: 404,
+      httpStatus: null,
       responseTimeMs: Math.round(performance.now() - startedAt),
-      message: `Invalid API endpoint. Tried: ${capabilityUrls.join(", ")}`,
+      message: "DIP request failed before any response was received.",
       payload: null,
       executedAt: new Date().toISOString(),
     };

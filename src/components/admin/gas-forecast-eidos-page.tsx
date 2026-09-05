@@ -23,10 +23,16 @@ const DEFAULT_FORM: GasForecastExperimentRequest = {
   procurement_threshold_eur_per_mwh: 0,
 };
 
-export function GasForecastEidosPage() {
+export function GasForecastEidosPage({
+  initialResult = null,
+}: {
+  initialResult?: GasForecastExperimentResult | null;
+}) {
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<GasForecastExperimentRequest>(DEFAULT_FORM);
-  const [result, setResult] = useState<GasForecastExperimentResult | null>(null);
+  const [result, setResult] = useState<GasForecastExperimentResult | null>(
+    initialResult,
+  );
 
   function update<K extends keyof GasForecastExperimentRequest>(
     key: K,
@@ -185,7 +191,10 @@ export function GasForecastEidosPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
                   Raw backend payload
                 </p>
-                <pre className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200">
+                <pre
+                  aria-label="Raw backend payload"
+                  className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200"
+                >
                   {JSON.stringify(result.payload, null, 2)}
                 </pre>
               </div>
