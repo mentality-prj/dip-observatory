@@ -198,15 +198,19 @@ function FlowPointCombobox({
   const selectedPreset = presets.find((preset) => preset.value === selectedValue) ?? null;
 
   useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
+    if (!open) {
+      return;
+    }
+
+    function onPointerDown(event: PointerEvent) {
       if (!containerRef.current?.contains(event.target as Node)) {
         setOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, []);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
 
   const options = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

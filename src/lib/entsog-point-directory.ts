@@ -2,6 +2,7 @@ const ENTSOG_OPERATOR_POINT_DIRECTIONS_URL =
   "https://transparency.entsog.eu/api/v1/operatorpointdirections";
 const ENTSOG_PAGE_SIZE = 1_000;
 const ENTSOG_MAX_PAGES = 100;
+const ENTSOG_FETCH_TIMEOUT_MS = 15_000;
 
 type EntsogOperatorPointDirectionRecord = Record<string, unknown>;
 
@@ -277,7 +278,22 @@ async function fetchPage(offset: number) {
   url.searchParams.set("limit", String(ENTSOG_PAGE_SIZE));
   url.searchParams.set("offset", String(offset));
 
-  const response = await fetch(url, { cache: "no-store" });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ENTSOG_FETCH_TIMEOUT_MS);
+  let response: Response;
+
+  try {
+    response = await fetch(url, { cache: "no-store", signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(
+        `ENTSOG directory request timed out after ${ENTSOG_FETCH_TIMEOUT_MS}ms.`,
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     throw new Error(`ENTSOG directory request failed with ${response.status}.`);
@@ -290,6 +306,7 @@ async function fetchPage(offset: number) {
 export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory> {
   const rawRecords: EntsogOperatorPointDirectionRecord[] = [];
   let totalRecords: number | null = null;
+  let fetchCompleted = false;
 
   for (let page = 0; page < ENTSOG_MAX_PAGES; page += 1) {
     const offset = page * ENTSOG_PAGE_SIZE;
@@ -300,17 +317,26 @@ export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory>
     }
 
     if (records.length === 0) {
+      fetchCompleted = true;
       break;
     }
     rawRecords.push(...records);
 
     if (totalRecords !== null && offset + ENTSOG_PAGE_SIZE >= totalRecords) {
+      fetchCompleted = true;
       break;
     }
 
     if (records.length < ENTSOG_PAGE_SIZE && totalRecords === null) {
+      fetchCompleted = true;
       break;
     }
+  }
+
+  if (!fetchCompleted) {
+    throw new Error(
+      `ENTSOG directory exceeded pagination limit (${ENTSOG_MAX_PAGES} pages of ${ENTSOG_PAGE_SIZE} records).`,
+    );
   }
 
   const presets: EntsogPointPreset[] = [];
