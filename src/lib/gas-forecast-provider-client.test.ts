@@ -50,14 +50,22 @@ test("tries the fallback capability paths until a non-404 response succeeds", as
     "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check",
     "https://dip.example.com/api/v1/plugin-runtime/plugins/gas-forecast/capabilities/gas.provider.check/run",
   ]);
-  assert.deepEqual(JSON.parse(requestBodies[0] ?? "{}"), {
+  const payload = JSON.parse(requestBodies[0] ?? "{}");
+
+  assert.deepEqual(payload, {
     provider: "agsi",
     agsi: {
       start_date: "2025-01-01",
       end_date: "2025-01-07",
-      scope: "eu",
+      type: "eu",
     },
   });
+  assert.equal(payload.provider, "agsi");
+  assert.equal(payload.agsi.start_date, "2025-01-01");
+  assert.equal(payload.agsi.end_date, "2025-01-07");
+  assert.equal(payload.agsi.type, "eu");
+  assert.equal("scope" in payload.agsi, false);
+  assert.equal((requestBodies[0] ?? "").includes("EU27"), false);
 });
 
 test("returns a clear invalid-endpoint message after all fallback paths return 404", async () => {
