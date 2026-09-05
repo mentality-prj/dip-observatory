@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import {
@@ -131,6 +132,60 @@ test("includes the matching provider-specific object key for non-AGSI providers"
     provider: "ttf",
     ttf: {},
   });
+});
+
+test("uses gas.provider.check with the exact ENTSOG payload and no unsupported fields", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  const requestedUrls: string[] = [];
+  let requestBody = "";
+
+  globalThis.fetch = (async (input, init) => {
+    requestedUrls.push(String(input));
+    requestBody = String(init?.body ?? "");
+    return Response.json({ provider: { name: "ENTSOG" }, dataset: {} });
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("entsog");
+
+  assert.equal(result.status, "connected");
+  assert.equal(requestedUrls.length, 1);
+  assert.equal(requestedUrls[0]?.includes("gas.provider.check"), true);
+  assert.equal(requestedUrls[0]?.includes("gas.dataset.build"), false);
+  const payload = JSON.parse(requestBody);
+  assert.deepEqual(payload, {
+    provider: "entsog",
+    entsog: {},
+  });
+  assert.equal(payload.provider, "entsog");
+  assert.equal("scope" in payload.entsog, false);
+  assert.equal("EU27" in payload.entsog, false);
+  assert.equal("region" in payload.entsog, false);
+  assert.equal("balancing_zone" in payload.entsog, false);
+  assert.equal("start_date" in payload.entsog, false);
+  assert.equal("end_date" in payload.entsog, false);
+  assert.equal("point" in payload.entsog, false);
+  assert.equal("connection" in payload.entsog, false);
+  assert.equal("corridor" in payload.entsog, false);
+  assert.equal("flow" in payload.entsog, false);
+  assert.equal(requestBody.includes("EU27"), false);
+  assert.equal(requestBody.includes("\"DE\""), false);
+  assert.equal(requestBody.includes("\"TTF\""), false);
+  assert.equal(requestBody.includes("default"), false);
+});
+
+test("frontend source does not call ENTSOG directly from browser code", () => {
+  const browserUiSource = fs.readFileSync(
+    "/home/runner/work/dip-observatory/dip-observatory/src/components/admin/gas-forecast-providers-page.tsx",
+    "utf8",
+  );
+
+  assert.equal(browserUiSource.includes("transparency.entsog.eu"), false);
+  assert.equal(browserUiSource.includes("gas.dataset.build"), false);
+  assert.equal(browserUiSource.includes("DIP_API_KEY"), false);
 });
 
 test("classifies a request timeout as kind=network with a timeout message", async () => {

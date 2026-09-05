@@ -110,11 +110,20 @@ const AGSI_CONNECTIVITY_CHECK_INPUT = {
   type: "eu",
 } as const;
 
+const ENTSOG_CONNECTIVITY_CHECK_INPUT = {} as const;
+
 function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
   if (providerId === "agsi") {
     return {
       provider: "agsi" as const,
       agsi: AGSI_CONNECTIVITY_CHECK_INPUT,
+    };
+  }
+
+  if (providerId === "entsog") {
+    return {
+      provider: "entsog" as const,
+      entsog: ENTSOG_CONNECTIVITY_CHECK_INPUT,
     };
   }
 

@@ -643,7 +643,7 @@ export function mapGasForecastSuccess(params: {
       ["records"],
       ["count"],
       ["total"],
-    ]) ?? datasetRows.length;
+    ]) ?? (datasetRows.length > 0 ? datasetRows.length : null);
 
   return {
     providerId,

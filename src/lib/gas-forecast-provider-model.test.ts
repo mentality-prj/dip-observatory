@@ -68,6 +68,21 @@ test("maps a successful provider payload into dataset summary and sample rows", 
   });
 });
 
+test("keeps records nullable when backend does not provide a count and no sample rows exist", () => {
+  const result = mapGasForecastSuccess({
+    providerId: "entsog",
+    httpStatus: 200,
+    responseTimeMs: 120,
+    payload: {
+      provider: { name: "ENTSOG" },
+      dataset: {},
+    },
+  });
+
+  assert.equal(result.status, "connected");
+  assert.equal(result.dataset?.records, null);
+});
+
 test("maps provider failure payloads into operator-facing error messages", () => {
   const result = mapGasForecastFailure({
     providerId: "agsi",
