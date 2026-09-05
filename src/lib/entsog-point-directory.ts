@@ -14,6 +14,7 @@ export interface EntsogPointPreset {
 }
 
 type EntsogPointPresetSource = Omit<EntsogPointPreset, "value" | "label"> & {
+  displayPointLabel: string;
   operatorKey: string;
   pointKey: string;
 };
@@ -22,6 +23,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00008",
+    displayPointLabel: "Melendugno - IT / TAP",
     pointLabel: "Melendugno - IT / TAP",
     operatorLabel: "TAP",
     direction: "entry",
@@ -31,6 +33,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00008",
+    displayPointLabel: "Melendugno - IT / TAP",
     pointLabel: "Melendugno - IT / TAP",
     operatorLabel: "TAP",
     direction: "exit",
@@ -40,6 +43,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00274",
+    displayPointLabel: "Kipoi (GR)",
     pointLabel: "Kipoi",
     operatorLabel: "TAP",
     direction: "entry",
@@ -49,6 +53,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00274",
+    displayPointLabel: "Kipoi (GR)",
     pointLabel: "Kipoi",
     operatorLabel: "TAP",
     direction: "exit",
@@ -58,6 +63,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00427",
+    displayPointLabel: "Nea Mesimvria (GR)",
     pointLabel: "Nea Mesimvria",
     operatorLabel: "TAP",
     direction: "entry",
@@ -67,6 +73,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "ITP-00427",
+    displayPointLabel: "Nea Mesimvria (GR)",
     pointLabel: "Nea Mesimvria",
     operatorLabel: "TAP",
     direction: "exit",
@@ -76,6 +83,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "VTP-00044",
+    displayPointLabel: "TAP Virtual Trading Point (GR)",
     pointLabel: "TAP Virtual Trading Point",
     operatorLabel: "TAP",
     direction: "entry",
@@ -85,6 +93,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
     operatorKey: "AL-TSO-0001",
     pointKey: "VTP-00044",
+    displayPointLabel: "TAP Virtual Trading Point (GR)",
     pointLabel: "TAP Virtual Trading Point",
     operatorLabel: "TAP",
     direction: "exit",
@@ -102,14 +111,6 @@ function formatDirection(direction: string) {
     .join(" ");
 }
 
-function withCountry(pointLabel: string, tsoCountry?: string) {
-  if (!tsoCountry || pointLabel.includes(`(${tsoCountry})`) || pointLabel.includes(`- ${tsoCountry} /`)) {
-    return pointLabel;
-  }
-
-  return `${pointLabel} (${tsoCountry})`;
-}
-
 function toPointDirectionValue({
   operatorKey,
   pointKey,
@@ -121,7 +122,7 @@ function toPointDirectionValue({
 function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
   return {
     value: toPointDirectionValue(source),
-    label: `${withCountry(source.pointLabel, source.tsoCountry)} · ${source.operatorLabel} · ${formatDirection(source.direction)}`,
+    label: `${source.displayPointLabel} · ${source.operatorLabel} · ${formatDirection(source.direction)}`,
     pointLabel: source.pointLabel,
     operatorLabel: source.operatorLabel,
     direction: source.direction,
