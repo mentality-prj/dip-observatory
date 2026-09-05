@@ -13,7 +13,9 @@ test("renders ENTSOG date pickers with local-today max constraints", () => {
   assert.equal(html.includes(`id="entsog-to"`), true);
   assert.ok(fromMaxMatch);
   assert.ok(toMaxMatch);
-  assert.equal(fromMaxMatch[1], toMaxMatch[1]);
-  assert.match(fromMaxMatch[1], /^\d{4}-\d{2}-\d{2}$/);
+  const fromMax = fromMaxMatch[1];
+  const toMax = toMaxMatch[1];
+  assert.equal(fromMax, toMax);
+  assert.match(fromMax, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(html.includes(`min=""`), false);
 });
