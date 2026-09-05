@@ -10,7 +10,10 @@ test("exports a deterministic static ENTSOG preset list with exact pointDirectio
   assert.equal(new Set(values).size, values.length);
 
   const labels = ENTSOG_POINT_PRESETS.map((preset) => preset.label);
-  assert.deepEqual(labels, [...labels].sort((a, b) => a.localeCompare(b)));
+  assert.deepEqual(
+    labels,
+    [...labels].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+  );
 
   assert.deepEqual(ENTSOG_POINT_PRESETS.find((preset) => preset.value === "al-tso-0001itp-00008entry"), {
     value: "al-tso-0001itp-00008entry",
@@ -18,17 +21,17 @@ test("exports a deterministic static ENTSOG preset list with exact pointDirectio
     pointLabel: "Melendugno - IT / TAP",
     operatorLabel: "TAP",
     direction: "entry",
-    tsoCountry: "CH",
+    tsoCountry: "IT",
     adjacentCountry: "IT",
   });
 
   assert.deepEqual(ENTSOG_POINT_PRESETS.find((preset) => preset.value === "al-tso-0001vtp-00044exit"), {
     value: "al-tso-0001vtp-00044exit",
-    label: "TAP Virtual Trading Point · TAP · Exit",
+    label: "TAP Virtual Trading Point (GR) · TAP · Exit",
     pointLabel: "TAP Virtual Trading Point",
     operatorLabel: "TAP",
     direction: "exit",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "GR",
   });
 });

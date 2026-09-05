@@ -1,6 +1,8 @@
 // Static presets generated from a captured ENTSOG operatorpointdirections
 // hasData=1 response snapshot because live transparency.entsog.eu access is
-// unavailable in this sandbox.
+// unavailable in this sandbox. pointDirection values are derived as
+// lower(operatorKey + pointKey + direction), matching official-derived ENTSOG
+// client implementations.
 export interface EntsogPointPreset {
   value: string;
   label: string;
@@ -23,7 +25,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Melendugno - IT / TAP",
     operatorLabel: "TAP",
     direction: "entry",
-    tsoCountry: "CH",
+    tsoCountry: "IT",
     adjacentCountry: "IT",
   },
   {
@@ -32,7 +34,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Melendugno - IT / TAP",
     operatorLabel: "TAP",
     direction: "exit",
-    tsoCountry: "CH",
+    tsoCountry: "IT",
     adjacentCountry: "IT",
   },
   {
@@ -41,7 +43,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Kipoi",
     operatorLabel: "TAP",
     direction: "entry",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "TR",
   },
   {
@@ -50,7 +52,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Kipoi",
     operatorLabel: "TAP",
     direction: "exit",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "TR",
   },
   {
@@ -59,7 +61,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Nea Mesimvria",
     operatorLabel: "TAP",
     direction: "entry",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "GR",
   },
   {
@@ -68,7 +70,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "Nea Mesimvria",
     operatorLabel: "TAP",
     direction: "exit",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "GR",
   },
   {
@@ -77,7 +79,7 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "TAP Virtual Trading Point",
     operatorLabel: "TAP",
     direction: "entry",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "GR",
   },
   {
@@ -86,13 +88,21 @@ const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
     pointLabel: "TAP Virtual Trading Point",
     operatorLabel: "TAP",
     direction: "exit",
-    tsoCountry: "CH",
+    tsoCountry: "GR",
     adjacentCountry: "GR",
   },
 ] as const;
 
 function formatDirection(direction: string) {
   return direction.charAt(0).toUpperCase() + direction.slice(1).toLowerCase();
+}
+
+function withCountry(pointLabel: string, tsoCountry?: string) {
+  if (!tsoCountry || pointLabel.includes(`(${tsoCountry})`) || pointLabel.includes(`- ${tsoCountry} /`)) {
+    return pointLabel;
+  }
+
+  return `${pointLabel} (${tsoCountry})`;
 }
 
 function toPointDirectionValue({
@@ -106,7 +116,7 @@ function toPointDirectionValue({
 function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
   return {
     value: toPointDirectionValue(source),
-    label: `${source.pointLabel} · ${source.operatorLabel} · ${formatDirection(source.direction)}`,
+    label: `${withCountry(source.pointLabel, source.tsoCountry)} · ${source.operatorLabel} · ${formatDirection(source.direction)}`,
     pointLabel: source.pointLabel,
     operatorLabel: source.operatorLabel,
     direction: source.direction,

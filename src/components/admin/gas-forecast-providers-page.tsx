@@ -174,19 +174,21 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
   );
 }
 
-function FlowPointCombobox({
+export function FlowPointCombobox({
   presets,
   selectedValue,
   onSelect,
+  initialOpen = false,
 }: {
   presets: readonly EntsogPointPreset[];
   selectedValue: string;
   onSelect: (value: string) => void;
+  initialOpen?: boolean;
 }) {
   const inputClassName =
     "h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4";
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const selectedPreset = presets.find((preset) => preset.value === selectedValue) ?? null;
