@@ -385,11 +385,17 @@ export function WeatherRegionsCombobox({
   selectedValues,
   onChange,
   initialOpen = false,
+  inputId = "weather-regions-search",
+  listboxId = "weather-regions-options",
+  optionIdPrefix = "weather-region-option",
 }: {
   presets: readonly WeatherRegionPreset[];
   selectedValues: readonly string[];
   onChange: (values: string[]) => void;
   initialOpen?: boolean;
+  inputId?: string;
+  listboxId?: string;
+  optionIdPrefix?: string;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(initialOpen);
@@ -425,9 +431,9 @@ export function WeatherRegionsCombobox({
 
   const activeOption = options[highlightedIndex] ?? null;
   const activeOptionId = activeOption
-    ? toOptionDomId("weather-region-option", activeOption.value)
+    ? toOptionDomId(optionIdPrefix, activeOption.value)
     : open && options.length === 0
-      ? "weather-region-option-empty"
+      ? `${optionIdPrefix}-empty`
       : undefined;
 
   function toggleSelection(value: string) {
@@ -440,7 +446,7 @@ export function WeatherRegionsCombobox({
 
   return (
     <div className="min-w-0 w-full space-y-2" ref={containerRef}>
-      <Label htmlFor="weather-regions-search">Weather regions</Label>
+      <Label htmlFor={inputId}>Weather regions</Label>
       <div className="relative min-w-0 w-full">
         <div
           className="box-border flex min-h-11 w-full min-w-0 max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus-within:border-cyan-300/60 focus-within:bg-white/8 focus-within:ring-2 focus-within:ring-cyan-300/20"
@@ -464,7 +470,7 @@ export function WeatherRegionsCombobox({
             </button>
           ))}
           <input
-            id="weather-regions-search"
+            id={inputId}
             type="text"
             className="min-w-[8rem] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
             role="combobox"
@@ -472,7 +478,7 @@ export function WeatherRegionsCombobox({
             aria-haspopup="listbox"
             aria-autocomplete="list"
             aria-activedescendant={open ? activeOptionId : undefined}
-            aria-controls={open ? "weather-regions-options" : undefined}
+            aria-controls={open ? listboxId : undefined}
             autoComplete="off"
             value={query}
             onFocus={() => {
@@ -539,7 +545,7 @@ export function WeatherRegionsCombobox({
 
         {open ? (
           <ul
-            id="weather-regions-options"
+            id={listboxId}
             role="listbox"
             aria-multiselectable="true"
             className="mt-2 max-h-56 w-full min-w-0 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
@@ -553,7 +559,7 @@ export function WeatherRegionsCombobox({
                   return (
                     <li
                       key={option.value}
-                      id={toOptionDomId("weather-region-option", option.value)}
+                      id={toOptionDomId(optionIdPrefix, option.value)}
                       role="option"
                       aria-selected={selected}
                       data-active={highlighted ? "true" : "false"}
@@ -581,7 +587,7 @@ export function WeatherRegionsCombobox({
                 })
               : (
                 <li
-                  id="weather-region-option-empty"
+                  id={`${optionIdPrefix}-empty`}
                   className="px-2 py-1.5 text-sm text-slate-400"
                 >
                   No matching weather regions.
@@ -767,6 +773,12 @@ export function GasForecastProvidersPage() {
               result,
               pendingProviderId,
             );
+            const weatherRegionsInputId = `${provider.id}-regions-search`;
+            const weatherRegionsListboxId = `${provider.id}-regions-options`;
+            const weatherRegionOptionPrefix = `${provider.id}-region-option`;
+            const weatherFromInputId = `${provider.id}-from`;
+            const weatherToInputId = `${provider.id}-to`;
+            const weatherMetricInputId = `${provider.id}-metric`;
 
             return (
               <Card key={provider.id} className="h-full">
@@ -911,6 +923,9 @@ export function GasForecastProvidersPage() {
                       <WeatherRegionsCombobox
                         presets={WEATHER_REGION_PRESETS}
                         selectedValues={weatherConfig.regions}
+                        inputId={weatherRegionsInputId}
+                        listboxId={weatherRegionsListboxId}
+                        optionIdPrefix={weatherRegionOptionPrefix}
                         onChange={(values) => {
                           setWeatherValidationError(null);
                           setWeatherConfig((current) => ({
@@ -921,9 +936,9 @@ export function GasForecastProvidersPage() {
                       />
                       <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-2">
                         <div className="min-w-0 space-y-2">
-                          <Label htmlFor="weather-from">From</Label>
+                          <Label htmlFor={weatherFromInputId}>From</Label>
                           <Input
-                            id="weather-from"
+                            id={weatherFromInputId}
                             type="date"
                             className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={weatherConfig.start_date}
@@ -942,9 +957,9 @@ export function GasForecastProvidersPage() {
                           />
                         </div>
                         <div className="min-w-0 space-y-2">
-                          <Label htmlFor="weather-to">To</Label>
+                          <Label htmlFor={weatherToInputId}>To</Label>
                           <Input
-                            id="weather-to"
+                            id={weatherToInputId}
                             type="date"
                             className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={weatherConfig.end_date}
@@ -961,9 +976,9 @@ export function GasForecastProvidersPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="weather-metric">Metric</Label>
+                        <Label htmlFor={weatherMetricInputId}>Metric</Label>
                         <Input
-                          id="weather-metric"
+                          id={weatherMetricInputId}
                           type="text"
                           className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                           value="Temperature (°C)"
