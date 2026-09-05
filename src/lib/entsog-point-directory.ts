@@ -304,10 +304,7 @@ export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory>
     }
     rawRecords.push(...records);
 
-    if (
-      records.length < ENTSOG_PAGE_SIZE &&
-      (totalRecords === null || rawRecords.length >= totalRecords)
-    ) {
+    if (records.length < ENTSOG_PAGE_SIZE && totalRecords === null) {
       break;
     }
 
