@@ -123,7 +123,12 @@ export async function loadEntsogPointDirectoryAction(): Promise<{
       ...directory,
       error: null,
     };
-  } catch {
+  } catch (error) {
+    logGasForecastDiagnostic("error", "entsog_directory_load_failure", {
+      exceptionName: error instanceof Error ? error.name : typeof error,
+      exceptionMessage: error instanceof Error ? error.message : String(error),
+    });
+
     return {
       presets: [],
       totalRecords: null,

@@ -217,6 +217,7 @@ function FlowPointCombobox({
   const activeOptionId = activeOption
     ? `entsog-point-direction-option-${activeOption.value}`
     : undefined;
+  const showListbox = open && !loading && !error;
 
   return (
     <div className="space-y-2" ref={containerRef}>
@@ -227,9 +228,10 @@ function FlowPointCombobox({
           type="text"
           role="combobox"
           aria-expanded={open}
+          aria-haspopup="listbox"
           aria-autocomplete="list"
           aria-activedescendant={open ? activeOptionId : undefined}
-          aria-controls="entsog-point-direction-options"
+          aria-controls={showListbox ? "entsog-point-direction-options" : undefined}
           autoComplete="off"
           value={query}
           onFocus={() => {
@@ -274,6 +276,7 @@ function FlowPointCombobox({
             }
 
             if (event.key === "Escape") {
+              setQuery(selectedPreset?.label ?? "");
               setOpen(false);
             }
           }}
@@ -292,48 +295,58 @@ function FlowPointCombobox({
         <p className="text-xs text-slate-400">No ENTSOG flow points available.</p>
       ) : null}
 
-      {open && !loading && !error && options.length > 0 ? (
+      {showListbox ? (
         <ul
           id="entsog-point-direction-options"
           role="listbox"
           className="max-h-56 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
         >
-          {options.map((option, index) => {
-            const selected = option.value === selectedValue;
-            const highlighted = highlightedIndex === index;
-            return (
-              <li key={option.value}>
-                <button
-                  type="button"
-                  id={`entsog-point-direction-option-${option.value}`}
-                  role="option"
-                  aria-selected={selected}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    onSelect(option.value);
-                    setQuery(option.label);
-                    setHighlightedIndex(index);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
-                    highlighted ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/8",
-                  )}
-                >
-                  <Check
-                    className={cn("mt-0.5 h-4 w-4 shrink-0", selected ? "opacity-100" : "opacity-0")}
-                    aria-hidden="true"
-                  />
-                  <span>{option.label}</span>
-                </button>
+          {options.length > 0
+            ? options.map((option, index) => {
+                const selected = option.value === selectedValue;
+                const highlighted = highlightedIndex === index;
+                return (
+                  <li key={option.value}>
+                    <button
+                      type="button"
+                      id={`entsog-point-direction-option-${option.value}`}
+                      role="option"
+                      aria-selected={selected}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        onSelect(option.value);
+                        setQuery(option.label);
+                        setHighlightedIndex(index);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                        highlighted ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/8",
+                      )}
+                    >
+                      <Check
+                        className={cn(
+                          "mt-0.5 h-4 w-4 shrink-0",
+                          selected ? "opacity-100" : "opacity-0",
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span>{option.label}</span>
+                    </button>
+                  </li>
+                );
+              })
+            : (
+              <li
+                role="option"
+                aria-selected="false"
+                aria-disabled="true"
+                className="px-2 py-1.5 text-sm text-slate-400"
+              >
+                No matching flow points.
               </li>
-            );
-          })}
+            )}
         </ul>
-      ) : null}
-
-      {open && !loading && !error && query.trim() && options.length === 0 ? (
-        <p className="text-xs text-slate-400">No matching flow points.</p>
       ) : null}
     </div>
   );
