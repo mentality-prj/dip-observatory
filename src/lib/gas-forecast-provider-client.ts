@@ -107,7 +107,7 @@ function buildInvalidEndpointMessage(urls: string[]) {
 const AGSI_CONNECTIVITY_CHECK_INPUT = {
   start_date: "2025-01-01",
   end_date: "2025-01-07",
-  scope: "eu",
+  type: "eu",
 } as const;
 
 function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId) {
