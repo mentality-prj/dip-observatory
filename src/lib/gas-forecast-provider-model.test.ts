@@ -115,6 +115,7 @@ test("maps normalized AGSI observations from result.observations and observation
     },
   });
 
+  assert.equal(result.provider, "GIE AGSI+");
   assert.equal(result.dataset?.records, 2);
   assert.equal(result.dataset?.firstDate, "2025-01-01");
   assert.equal(result.dataset?.lastDate, "2025-01-07");

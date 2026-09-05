@@ -743,17 +743,22 @@ export function mapGasForecastSuccess(params: {
   const normalizedObservations = isNormalizedObservationsPayload(payload);
   const firstRow = datasetRows[0];
   const dateRange = getDateRangeFromRows(datasetRows, normalizedObservations);
+  const providerName = pickString(payload, [
+    ["result", "provider", "name"],
+    ["result", "providerName"],
+    ["result", "provider"],
+    ["provider", "name"],
+    ["providerName"],
+    ["provider"],
+    ["meta", "provider"],
+    ["metadata", "provider"],
+  ]);
   const provider =
-    pickString(payload, [
-      ["result", "provider", "name"],
-      ["result", "providerName"],
-      ["result", "provider"],
-      ["provider", "name"],
-      ["providerName"],
-      ["provider"],
-      ["meta", "provider"],
-      ["metadata", "provider"],
-    ]) ?? providerCard.api ?? providerCard.title;
+    providerName === providerId
+      ? (providerCard.api ?? providerCard.title)
+      : (providerName ??
+        providerCard.api ??
+        providerCard.title);
   const api =
     pickString(payload, [
       ["result", "api"],
