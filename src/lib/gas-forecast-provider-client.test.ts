@@ -349,6 +349,10 @@ test("fails TTF check configuration when UI query inputs are missing and does no
 });
 
 test("does not read TTF query fields from environment variables", async () => {
+  const previousStartDate = process.env.DIP_TTF_START_DATE;
+  const previousEndDate = process.env.DIP_TTF_END_DATE;
+  const previousInstrument = process.env.DIP_TTF_INSTRUMENT;
+
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
   process.env.DIP_TTF_START_DATE = "2026-01-01";
@@ -363,12 +367,32 @@ test("does not read TTF query fields from environment variables", async () => {
     return Response.json({});
   }) as typeof fetch;
 
-  const result = await testGasForecastProviderConnection("ttf");
+  try {
+    const result = await testGasForecastProviderConnection("ttf");
 
-  assert.equal(result.status, "failed");
-  assert.equal(result.kind, "configuration");
-  assert.equal(result.httpStatus, 503);
-  assert.equal(fetchCalls, 0);
+    assert.equal(result.status, "failed");
+    assert.equal(result.kind, "configuration");
+    assert.equal(result.httpStatus, 503);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    if (previousStartDate === undefined) {
+      delete process.env.DIP_TTF_START_DATE;
+    } else {
+      process.env.DIP_TTF_START_DATE = previousStartDate;
+    }
+
+    if (previousEndDate === undefined) {
+      delete process.env.DIP_TTF_END_DATE;
+    } else {
+      process.env.DIP_TTF_END_DATE = previousEndDate;
+    }
+
+    if (previousInstrument === undefined) {
+      delete process.env.DIP_TTF_INSTRUMENT;
+    } else {
+      process.env.DIP_TTF_INSTRUMENT = previousInstrument;
+    }
+  }
 });
 
 test("frontend source does not call upstream providers directly from browser code", () => {
