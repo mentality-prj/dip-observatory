@@ -190,7 +190,7 @@ function FlowPointCombobox({
   error: string | null;
 }) {
   const inputClassName =
-    "h-10 rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4";
+    "h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4";
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -230,15 +230,15 @@ function FlowPointCombobox({
   const showListbox = open && !loading && !error;
 
   return (
-    <div className="min-w-0 space-y-2" ref={containerRef}>
+    <div className="min-w-0 w-full space-y-2" ref={containerRef}>
       <Label htmlFor="entsog-point-direction">Flow point</Label>
-      <div className="relative min-w-0">
+      <div className="relative min-w-0 w-full">
         <Input
           id="entsog-point-direction"
           type="text"
           className={cn(
             inputClassName,
-            "min-w-0 max-w-full pr-12 whitespace-nowrap overflow-hidden text-ellipsis",
+            "min-w-0 w-full max-w-full pr-12 whitespace-nowrap overflow-hidden text-ellipsis",
           )}
           role="combobox"
           aria-expanded={showListbox}
@@ -600,11 +600,11 @@ export function GasForecastProvidersPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="min-w-0 w-full max-w-full space-y-4">
                   {result ? <ResultBlock result={result} /> : null}
 
                   {provider.id === "entsog" ? (
-                    <div className="space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
+                    <div className="min-w-0 w-full max-w-full space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
                         ENTSOG query
                       </p>
@@ -621,13 +621,13 @@ export function GasForecastProvidersPage() {
                           }));
                         }}
                       />
-                      <div className="grid min-w-0 gap-3 md:grid-cols-2">
+                      <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-2">
                         <div className="min-w-0 space-y-2">
                           <Label htmlFor="entsog-from">From</Label>
                           <Input
                             id="entsog-from"
                             type="date"
-                            className="h-10 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={entsogConfig.from}
                             max={entsogDateBounds.fromMax}
                             onChange={(event) => {
@@ -648,7 +648,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id="entsog-to"
                             type="date"
-                            className="h-10 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:h-11 md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={entsogConfig.to}
                             max={entsogDateBounds.toMax}
                             min={entsogDateBounds.toMin}
