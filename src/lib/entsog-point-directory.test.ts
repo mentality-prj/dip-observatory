@@ -13,6 +13,16 @@ test.afterEach(() => {
 
 test("fetches paginated ENTSOG directory, de-duplicates pointDirection and sorts deterministically", async () => {
   const requestedUrls: string[] = [];
+  const filler = Array.from({ length: 998 }, (_, index) => ({
+    pointDirection: `RAW_FILLER_${index}`,
+    pointLabel: `Filler ${index}`,
+    operatorLabel: "ZZZ",
+    directionKey: "exit",
+    tsoCountry: "ZZ",
+    adjacentCountry: "ZZ",
+    pointKey: `PF${index}`,
+    operatorKey: "OF",
+  }));
 
   globalThis.fetch = (async (input) => {
     const url = new URL(String(input));
@@ -21,7 +31,7 @@ test("fetches paginated ENTSOG directory, de-duplicates pointDirection and sorts
 
     if (offset === 0) {
       return Response.json({
-        total: 3,
+        total: 1001,
         operatorpointdirections: [
           {
             pointDirection: "RAW_B",
@@ -43,13 +53,14 @@ test("fetches paginated ENTSOG directory, de-duplicates pointDirection and sorts
             pointKey: "P1",
             operatorKey: "O1",
           },
+          ...filler,
         ],
       });
     }
 
     if (offset === 1000) {
       return Response.json({
-        total: 3,
+        total: 1001,
         operatorpointdirections: [
           {
             pointDirection: "RAW_B",
@@ -66,24 +77,19 @@ test("fetches paginated ENTSOG directory, de-duplicates pointDirection and sorts
       });
     }
 
-    return Response.json({ total: 3, operatorpointdirections: [] });
+    return Response.json({ total: 1001, operatorpointdirections: [] });
   }) as typeof fetch;
 
   const result = await fetchEntsogPointDirectory();
 
-  assert.equal(result.totalRecords, 3);
-  assert.equal(result.retrievedRecords, 3);
+  assert.equal(result.totalRecords, 1001);
+  assert.equal(result.retrievedRecords, 1001);
   assert.equal(result.duplicatePointDirectionValues, 1);
-  assert.equal(result.presets.length, 2);
-  assert.deepEqual(
-    result.presets.map((preset) => preset.value),
-    ["RAW_A", "RAW_B"],
-  );
-  assert.equal(result.presets[0]?.label, "Kipoi (GR) · TAP · Entry");
-  assert.equal(
-    result.presets[1]?.label,
-    "Tarvisio (IT) → Arnoldstein (AT) · TAG · Exit",
-  );
+  assert.equal(result.presets.length, 1000);
+  const rawA = result.presets.find((preset) => preset.value === "RAW_A");
+  const rawB = result.presets.find((preset) => preset.value === "RAW_B");
+  assert.equal(rawA?.label, "Kipoi (GR) · TAP · Entry");
+  assert.equal(rawB?.label, "Tarvisio (IT) → Arnoldstein (AT) · TAG · Exit");
   assert.equal(requestedUrls.length, 2);
   assert.equal(requestedUrls.every((url) => url.includes("hasData=1")), true);
 });
