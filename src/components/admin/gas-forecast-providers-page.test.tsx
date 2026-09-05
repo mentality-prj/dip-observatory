@@ -61,15 +61,18 @@ test("renders Weather date pickers with local-today max constraints and fixed me
   assert.equal(html.includes("Search/select regions..."), true);
 });
 
-test("renders TTF date pickers with local-today max constraints and an instrument field", () => {
+test("renders TTF date pickers with local-today max constraints and fixed metadata", () => {
   const html = renderToStaticMarkup(<GasForecastProvidersPage />);
   const fromMaxMatch = html.match(/id="ttf-start-date"[^>]*max="([^"]+)"/);
   const toMaxMatch = html.match(/id="ttf-end-date"[^>]*max="([^"]+)"/);
 
   assert.equal(html.includes('id="ttf-start-date"'), true);
   assert.equal(html.includes('id="ttf-end-date"'), true);
-  assert.equal(html.includes('id="ttf-instrument"'), true);
-  assert.equal(html.includes('placeholder="e.g. front_month"'), true);
+  assert.equal(html.includes('id="ttf-instrument"'), false);
+  assert.equal(html.includes("European TTF Front-Month gas price"), true);
+  assert.equal(html.includes("Front-Month Settlement"), true);
+  assert.equal(html.includes("EUR/MWh"), true);
+  assert.equal(html.includes("Daily"), true);
   assert.ok(fromMaxMatch);
   assert.ok(toMaxMatch);
   assert.equal(fromMaxMatch[1], toMaxMatch[1]);
@@ -80,21 +83,8 @@ test("validates and trims TTF query input before submission", () => {
   assert.equal(
     validateTtfCheckInput(
       {
-        start_date: "2026-01-01",
-        end_date: "2026-01-07",
-        instrument: "   ",
-      },
-      "2026-01-07",
-    ),
-    "Instrument is required.",
-  );
-
-  assert.equal(
-    validateTtfCheckInput(
-      {
         start_date: "2999-01-01",
         end_date: "2999-01-02",
-        instrument: "front_month",
       },
       "2026-01-07",
     ),
@@ -105,12 +95,10 @@ test("validates and trims TTF query input before submission", () => {
     buildTtfCheckInput({
       start_date: " 2026-01-01 ",
       end_date: " 2026-01-07 ",
-      instrument: " front_month ",
     }),
     {
       start_date: "2026-01-01",
       end_date: "2026-01-07",
-      instrument: "front_month",
     },
   );
 });

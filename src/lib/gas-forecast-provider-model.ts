@@ -23,7 +23,6 @@ export type GasForecastEntsogCheckInput = {
 export type GasForecastTtfCheckInput = {
   start_date: string;
   end_date: string;
-  instrument: string;
 };
 
 export type GasForecastWeatherCheckInput = {
@@ -43,6 +42,10 @@ export type GasForecastProviderCard = {
   id: GasForecastProviderId;
   title: string;
   api: string | null;
+  description?: string;
+  target?: string;
+  unit?: string;
+  frequency?: string;
   initialStatus: "not_configured" | "not_tested";
 };
 
@@ -108,6 +111,10 @@ export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
     id: "ttf",
     title: "TTF",
     api: null,
+    description: "European TTF Front-Month gas price",
+    target: "Front-Month Settlement",
+    unit: "EUR/MWh",
+    frequency: "Daily",
     initialStatus: "not_configured",
   },
   {
@@ -476,6 +483,10 @@ function buildSample(rows: Array<Record<string, unknown>>) {
     metadata: row.metadata,
     source: row.source,
     source_identifier: row.source_identifier,
+    source_version: row.source_version,
+    settlement_price: row.settlement_price,
+    publication_date: row.publication_date,
+    retrieved_at: row.retrieved_at,
     country_code: row.country_code,
     facility_code: row.facility_code,
   }));
@@ -734,6 +745,9 @@ export function mapGasForecastSuccess(params: {
   const dateRange = getDateRangeFromRows(datasetRows, normalizedObservations);
   const provider =
     pickString(payload, [
+      ["result", "provider", "name"],
+      ["result", "providerName"],
+      ["result", "provider"],
       ["provider", "name"],
       ["providerName"],
       ["provider"],
@@ -742,6 +756,8 @@ export function mapGasForecastSuccess(params: {
     ]) ?? providerCard.api ?? providerCard.title;
   const api =
     pickString(payload, [
+      ["result", "api"],
+      ["result", "provider", "api"],
       ["api"],
       ["provider", "api"],
       ["meta", "api"],
