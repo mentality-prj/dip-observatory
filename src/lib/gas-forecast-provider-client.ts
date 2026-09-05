@@ -326,22 +326,9 @@ export async function testGasForecastProviderConnection(
       });
     }
 
-    const ttfInput = input?.ttf;
-    if (!ttfInput) {
-      return mapGasForecastFailure({
-        providerId,
-        httpStatus: 503,
-        responseTimeMs: null,
-        payload: null,
-        stage: "configuration",
-        fallbackMessage:
-          "TTF provider check is not configured. Missing: start_date, end_date, instrument.",
-      });
-    }
-
     const dateError = validateEntsogHistoricalDateRange({
-      from: ttfInput.start_date,
-      to: ttfInput.end_date,
+      from: input.ttf.start_date,
+      to: input.ttf.end_date,
     });
 
     if (dateError) {
