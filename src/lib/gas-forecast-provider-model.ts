@@ -48,10 +48,11 @@ export type GasForecastStructuredError = {
 
 export type GasForecastSampleRecord = {
   date: string | null;
-  gasInStorage: string | null;
-  injection: string | null;
-  withdrawal: string | null;
+  gasInStorage: string | number | null;
+  injection: string | number | null;
+  withdrawal: string | number | null;
   workingGasVolume: string | null;
+  [key: string]: unknown;
 };
 
 export type GasForecastConnectionResult = {
@@ -260,6 +261,8 @@ function toDisplayValue(value: unknown): string | null {
 
 function findDatasetRows(payload: unknown) {
   return pickArray(payload, [
+    ["result", "observations"],
+    ["observations"],
     ["sample"],
     ["dataset", "sample"],
     ["payload", "sample"],
@@ -294,6 +297,7 @@ function readRecordField(
 
 function extractDate(row: Record<string, unknown>) {
   return readRecordField(row, [
+    "observation_date",
     "date",
     "gasDay",
     "gas_day",
@@ -301,6 +305,67 @@ function extractDate(row: Record<string, unknown>) {
     "gas_day_start",
     "day",
   ]);
+}
+
+function readRecordPathField(
+  row: Record<string, unknown>,
+  paths: ReadonlyArray<readonly string[]>,
+): string | null {
+  for (const path of paths) {
+    const value = toDisplayValue(getPathValue(row, path));
+    if (value !== null) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function isNormalizedObservationsPayload(payload: unknown) {
+  if (Array.isArray(getPathValue(payload, ["result", "observations"]))) {
+    return true;
+  }
+
+  return (
+    Array.isArray(getPathValue(payload, ["observations"])) &&
+    getPathValue(payload, ["observation_count"]) !== undefined
+  );
+}
+
+function getDateRangeFromRows(
+  rows: Array<Record<string, unknown>>,
+  isNormalizedObservations: boolean,
+) {
+  const dates = rows
+    .map((row) =>
+      isNormalizedObservations
+        ? readRecordField(row, ["observation_date"])
+        : extractDate(row),
+    )
+    .filter((value): value is string => value !== null);
+
+  if (dates.length === 0) {
+    return { firstDate: null, lastDate: null };
+  }
+
+  if (!isNormalizedObservations) {
+    return { firstDate: dates[0] ?? null, lastDate: dates[dates.length - 1] ?? null };
+  }
+
+  let firstDate = dates[0];
+  let lastDate = dates[0];
+
+  for (const date of dates) {
+    if (date < firstDate) {
+      firstDate = date;
+    }
+
+    if (date > lastDate) {
+      lastDate = date;
+    }
+  }
+
+  return { firstDate, lastDate };
 }
 
 function extractCountryOrFacility(
@@ -318,6 +383,10 @@ function extractCountryOrFacility(
     ["meta", "facility"],
     ["metadata", "country"],
     ["metadata", "facility"],
+    ["scope"],
+    ["dataset", "scope"],
+    ["metadata", "scope"],
+    ["result", "scope"],
   ]);
 
   if (explicit) {
@@ -328,27 +397,35 @@ function extractCountryOrFacility(
     return null;
   }
 
-  const country = readRecordField(firstRow, ["country", "countryCode"]);
+  const country = readRecordField(firstRow, [
+    "country",
+    "countryCode",
+    "country_code",
+  ]);
   const facility = readRecordField(firstRow, [
     "facility",
     "facilityName",
+    "facility_code",
     "name",
   ]);
+  const scope = readRecordField(firstRow, ["scope"]);
 
   if (country && facility) {
     return `${country} / ${facility}`;
   }
 
-  return facility ?? country;
+  return facility ?? country ?? scope;
 }
 
 function buildSample(rows: Array<Record<string, unknown>>) {
   return rows.slice(0, 5).map((row) => ({
+    ...row,
     date: extractDate(row),
     gasInStorage: readRecordField(row, [
       "gasInStorage",
       "gas_in_storage",
       "gasInStorageValue",
+      "storage_level",
     ]),
     injection: readRecordField(row, [
       "injection",
@@ -364,7 +441,16 @@ function buildSample(rows: Array<Record<string, unknown>>) {
       "workingGasVolume",
       "working_gas_volume",
       "workingGas",
-    ]),
+    ]) ?? readRecordPathField(row, [["metadata", "working_gas_volume"]]),
+    storage_level: row.storage_level,
+    storage_fullness_pct: row.storage_fullness_pct,
+    observation_date: row.observation_date,
+    scope: row.scope,
+    metadata: row.metadata,
+    source: row.source,
+    source_identifier: row.source_identifier,
+    country_code: row.country_code,
+    facility_code: row.facility_code,
   }));
 }
 
@@ -616,8 +702,9 @@ export function mapGasForecastSuccess(params: {
   const { providerId, httpStatus, payload, responseTimeMs } = params;
   const providerCard = pickProviderCard(providerId);
   const datasetRows = findDatasetRows(payload);
+  const normalizedObservations = isNormalizedObservationsPayload(payload);
   const firstRow = datasetRows[0];
-  const lastRow = datasetRows[datasetRows.length - 1];
+  const dateRange = getDateRangeFromRows(datasetRows, normalizedObservations);
   const provider =
     pickString(payload, [
       ["provider", "name"],
@@ -633,17 +720,21 @@ export function mapGasForecastSuccess(params: {
       ["meta", "api"],
       ["metadata", "api"],
     ]) ?? providerCard.api;
-  const records =
-    pickNumber(payload, [
-      ["dataset", "recordCount"],
-      ["dataset", "recordsCount"],
-      ["dataset", "records"],
-      ["recordCount"],
-      ["recordsCount"],
-      ["records"],
-      ["count"],
-      ["total"],
-    ]) ?? datasetRows.length;
+  const records = normalizedObservations
+    ? (pickNumber(payload, [
+        ["result", "observation_count"],
+        ["observation_count"],
+      ]) ?? datasetRows.length)
+    : (pickNumber(payload, [
+        ["dataset", "recordCount"],
+        ["dataset", "recordsCount"],
+        ["dataset", "records"],
+        ["recordCount"],
+        ["recordsCount"],
+        ["records"],
+        ["count"],
+        ["total"],
+      ]) ?? datasetRows.length);
 
   return {
     providerId,
@@ -663,14 +754,14 @@ export function mapGasForecastSuccess(params: {
           ["firstDate"],
           ["meta", "firstDate"],
           ["metadata", "firstDate"],
-        ]) ?? (firstRow ? extractDate(firstRow) : null),
+        ]) ?? dateRange.firstDate,
       lastDate:
         pickString(payload, [
           ["dataset", "lastDate"],
           ["lastDate"],
           ["meta", "lastDate"],
           ["metadata", "lastDate"],
-        ]) ?? (lastRow ? extractDate(lastRow) : null),
+        ]) ?? dateRange.lastDate,
       countryOrFacility: extractCountryOrFacility(payload, firstRow),
     },
     sample: buildSample(datasetRows),
