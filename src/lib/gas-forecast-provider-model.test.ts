@@ -59,13 +59,127 @@ test("maps a successful provider payload into dataset summary and sample rows", 
   assert.equal(result.dataset?.firstDate, "2026-01-01");
   assert.equal(result.dataset?.lastDate, "2026-12-31");
   assert.equal(result.dataset?.countryOrFacility, "UA / Bilche-Volytsko-Uherske");
-  assert.deepEqual(result.sample[0], {
-    date: "2026-01-01",
-    gasInStorage: "12.3",
-    injection: "0.4",
-    withdrawal: "0.1",
-    workingGasVolume: "13.7",
+  assert.equal(result.sample[0]?.date, "2026-01-01");
+  assert.equal(result.sample[0]?.gasInStorage, "12.3");
+  assert.equal(result.sample[0]?.injection, "0.4");
+  assert.equal(result.sample[0]?.withdrawal, "0.1");
+  assert.equal(result.sample[0]?.workingGasVolume, "13.7");
+});
+
+test("maps normalized AGSI observations from result.observations and observation_count", () => {
+  const result = mapGasForecastSuccess({
+    providerId: "agsi",
+    httpStatus: 200,
+    responseTimeMs: 0.038,
+    payload: {
+      status: "completed",
+      result: {
+        provider: "agsi",
+        status: "ok",
+        observations: [
+          {
+            observation_date: "2025-01-01",
+            source: "GIE AGSI+",
+            source_identifier: "EU",
+            scope: "EU27",
+            country_code: null,
+            facility_code: null,
+            storage_level: 123.4,
+            storage_fullness_pct: 56.7,
+            injection: 1.2,
+            withdrawal: 0.3,
+            metadata: {
+              working_gas_volume: "1000",
+            },
+          },
+          {
+            observation_date: "2025-01-07",
+            source: "GIE AGSI+",
+            source_identifier: "EU",
+            scope: "EU27",
+            country_code: null,
+            facility_code: null,
+            storage_level: 124.5,
+            storage_fullness_pct: 57.1,
+            injection: 1.4,
+            withdrawal: 0.2,
+            metadata: {
+              working_gas_volume: "1000",
+            },
+          },
+        ],
+        observation_count: 2,
+        latency_ms: 0.038,
+        error: null,
+      },
+    },
   });
+
+  assert.equal(result.dataset?.records, 2);
+  assert.equal(result.dataset?.firstDate, "2025-01-01");
+  assert.equal(result.dataset?.lastDate, "2025-01-07");
+  assert.ok(result.sample.length > 0);
+  assert.equal(result.sample[0]?.observation_date, "2025-01-01");
+  assert.equal(result.sample[0]?.storage_level, 123.4);
+  assert.equal(result.sample[0]?.storage_fullness_pct, 56.7);
+  assert.equal(result.sample[0]?.injection, "1.2");
+  assert.equal(result.sample[0]?.withdrawal, "0.3");
+  assert.equal(result.sample[0]?.gasInStorage, "123.4");
+  assert.equal(result.sample[0]?.workingGasVolume, "1000");
+});
+
+test("treats normalized observation_count=0 as explicit zero, not missing", () => {
+  const result = mapGasForecastSuccess({
+    providerId: "agsi",
+    httpStatus: 200,
+    responseTimeMs: 0.038,
+    payload: {
+      result: {
+        observations: [],
+        observation_count: 0,
+      },
+    },
+  });
+
+  assert.equal(result.dataset?.records, 0);
+  assert.equal(result.dataset?.firstDate, null);
+  assert.equal(result.dataset?.lastDate, null);
+  assert.deepEqual(result.sample, []);
+});
+
+test("falls back to normalized observations.length when observation_count is missing", () => {
+  const result = mapGasForecastSuccess({
+    providerId: "agsi",
+    httpStatus: 200,
+    responseTimeMs: 0.038,
+    payload: {
+      result: {
+        observations: [
+          {
+            observation_date: "2025-01-03",
+            storage_level: 120,
+            storage_fullness_pct: 55,
+            injection: 1.1,
+            withdrawal: 0.4,
+            metadata: { working_gas_volume: "1000" },
+          },
+          {
+            observation_date: "2025-01-01",
+            storage_level: 121,
+            storage_fullness_pct: 55.5,
+            injection: 1.0,
+            withdrawal: 0.5,
+            metadata: { working_gas_volume: "1000" },
+          },
+        ],
+        total: 999,
+      },
+    },
+  });
+
+  assert.equal(result.dataset?.records, 2);
+  assert.equal(result.dataset?.firstDate, "2025-01-01");
+  assert.equal(result.dataset?.lastDate, "2025-01-03");
 });
 
 test("maps provider failure payloads into operator-facing error messages", () => {
