@@ -126,9 +126,16 @@ function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
 }
 
 function sortPresets(presets: readonly EntsogPointPreset[]) {
-  return [...presets].sort((a, b) =>
-    a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
-  );
+  return [...presets].sort((a, b) => {
+    const labelComparison = a.label.localeCompare(b.label, undefined, {
+      sensitivity: "base",
+    });
+    if (labelComparison !== 0) {
+      return labelComparison;
+    }
+
+    return a.value.localeCompare(b.value, undefined, { sensitivity: "base" });
+  });
 }
 
 export const ENTSOG_POINT_PRESETS: readonly EntsogPointPreset[] = sortPresets(
