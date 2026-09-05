@@ -109,15 +109,17 @@ test("classifies a network-level fetch failure as kind=network with the real err
   assert.equal(result.message, "fetch failed");
 });
 
-test("includes the matching provider-specific object key for non-AGSI providers", async () => {
+test("uses gas.provider.check with the exact TTF payload", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
   delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
   delete process.env.GAS_FORECAST_CAPABILITY_PATH;
 
+  const requestedUrls: string[] = [];
   let requestBody = "";
 
-  globalThis.fetch = (async (_input, init) => {
+  globalThis.fetch = (async (input, init) => {
+    requestedUrls.push(String(input));
     requestBody = String(init?.body ?? "");
     return Response.json({
       provider: { name: "TTF" },
@@ -125,12 +127,24 @@ test("includes the matching provider-specific object key for non-AGSI providers"
     });
   }) as typeof fetch;
 
-  const result = await testGasForecastProviderConnection("ttf");
+  const result = await testGasForecastProviderConnection("ttf", {
+    ttf: {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      instrument: "front_month",
+    },
+  });
 
   assert.equal(result.status, "connected");
+  assert.equal(requestedUrls.length, 1);
+  assert.equal(requestedUrls[0]?.includes("gas.provider.check"), true);
   assert.deepEqual(JSON.parse(requestBody), {
     provider: "ttf",
-    ttf: {},
+    ttf: {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      instrument: "front_month",
+    },
   });
 });
 
@@ -304,6 +318,52 @@ test("does not read Weather query fields from environment variables", async () =
   }) as typeof fetch;
 
   const result = await testGasForecastProviderConnection("weather");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.httpStatus, 503);
+  assert.equal(fetchCalls, 0);
+});
+
+test("fails TTF check configuration when UI query inputs are missing and does not send a request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("ttf");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.httpStatus, 503);
+  assert.equal(fetchCalls, 0);
+  assert.match(result.message ?? "", /start_date/);
+  assert.match(result.message ?? "", /end_date/);
+  assert.match(result.message ?? "", /instrument/);
+});
+
+test("does not read TTF query fields from environment variables", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  process.env.DIP_TTF_START_DATE = "2026-01-01";
+  process.env.DIP_TTF_END_DATE = "2026-01-07";
+  process.env.DIP_TTF_INSTRUMENT = "front_month";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("ttf");
 
   assert.equal(result.status, "failed");
   assert.equal(result.kind, "configuration");
@@ -527,6 +587,32 @@ test("rejects future Weather dates and never sends a backend request", async () 
       end_date: "2999-01-02",
       regions: ["Germany"],
       metric: "temperature_c",
+    },
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.message, "Future dates are not available.");
+  assert.equal(fetchCalls, 0);
+});
+
+test("rejects future TTF dates and never sends a backend request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("ttf", {
+    ttf: {
+      start_date: "2999-01-01",
+      end_date: "2999-01-02",
+      instrument: "front_month",
     },
   });
 

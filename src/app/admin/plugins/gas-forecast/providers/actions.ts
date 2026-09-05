@@ -17,6 +17,7 @@ import {
   type GasForecastEntsogCheckInput,
   type GasForecastProviderCheckInput,
   type GasForecastProviderId,
+  type GasForecastTtfCheckInput,
   type GasForecastWeatherCheckInput,
 } from "@/lib/gas-forecast-provider-model";
 
@@ -68,9 +69,34 @@ const weatherSchema = z
     }
   });
 
+const ttfSchema = z
+  .object({
+    start_date: z.string().trim().min(1),
+    end_date: z.string().trim().min(1),
+    instrument: z.string().trim().min(1),
+  })
+  .superRefine((input, context) => {
+    const dateError = validateEntsogHistoricalDateRange(
+      {
+        from: input.start_date,
+        to: input.end_date,
+      },
+      getTodayLocalDateIso(),
+    );
+
+    if (dateError) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["start_date"],
+        message: dateError,
+      });
+    }
+  });
+
 const requestSchema = z.object({
   providerId: z.enum(GAS_FORECAST_PROVIDER_IDS),
   entsog: entsogSchema.optional(),
+  ttf: ttfSchema.optional(),
   weather: weatherSchema.optional(),
 }).superRefine((input, context) => {
   if (input.providerId === "entsog" && !input.entsog) {
@@ -88,6 +114,14 @@ const requestSchema = z.object({
       message: "Weather query is required.",
     });
   }
+
+  if (input.providerId === "ttf" && !input.ttf) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["ttf"],
+      message: "TTF query is required.",
+    });
+  }
 });
 
 /**
@@ -99,6 +133,7 @@ const requestSchema = z.object({
 export async function testGasForecastProviderAction(input: {
   providerId: GasForecastProviderId;
   entsog?: GasForecastEntsogCheckInput;
+  ttf?: GasForecastTtfCheckInput;
   weather?: GasForecastWeatherCheckInput;
 }): Promise<GasForecastConnectionResult> {
   logGasForecastDiagnostic("info", "server_action_entered", {
@@ -106,11 +141,12 @@ export async function testGasForecastProviderAction(input: {
   });
 
   try {
-    const { providerId, entsog, weather } = requestSchema.parse(input);
+    const { providerId, entsog, ttf, weather } = requestSchema.parse(input);
     return await testGasForecastProviderConnection(
       providerId,
       {
         entsog: providerId === "entsog" ? entsog : undefined,
+        ttf: providerId === "ttf" ? ttf : undefined,
         weather: providerId === "weather" ? weather : undefined,
       } satisfies GasForecastProviderCheckInput,
     );

@@ -59,6 +59,21 @@ test("renders Weather date pickers with local-today max constraints and fixed me
   assert.equal(html.includes("Search/select regions..."), true);
 });
 
+test("renders TTF date pickers with local-today max constraints and an instrument field", () => {
+  const html = renderToStaticMarkup(<GasForecastProvidersPage />);
+  const fromMaxMatch = html.match(/id="ttf-from"[^>]*max="([^"]+)"/);
+  const toMaxMatch = html.match(/id="ttf-to"[^>]*max="([^"]+)"/);
+
+  assert.equal(html.includes('id="ttf-from"'), true);
+  assert.equal(html.includes('id="ttf-to"'), true);
+  assert.equal(html.includes('id="ttf-instrument"'), true);
+  assert.equal(html.includes('placeholder="e.g. front_month"'), true);
+  assert.ok(fromMaxMatch);
+  assert.ok(toMaxMatch);
+  assert.equal(fromMaxMatch[1], toMaxMatch[1]);
+  assert.match(fromMaxMatch[1], /^\d{4}-\d{2}-\d{2}$/);
+});
+
 test("renders static Weather presets into the multi-select combobox selection flow", () => {
   const html = renderToStaticMarkup(
     <WeatherRegionsCombobox

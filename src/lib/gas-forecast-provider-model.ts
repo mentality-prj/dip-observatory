@@ -20,6 +20,12 @@ export type GasForecastEntsogCheckInput = {
   periodType: "day";
 };
 
+export type GasForecastTtfCheckInput = {
+  start_date: string;
+  end_date: string;
+  instrument: string;
+};
+
 export type GasForecastWeatherCheckInput = {
   start_date: string;
   end_date: string;
@@ -29,6 +35,7 @@ export type GasForecastWeatherCheckInput = {
 
 export type GasForecastProviderCheckInput = {
   entsog?: GasForecastEntsogCheckInput;
+  ttf?: GasForecastTtfCheckInput;
   weather?: GasForecastWeatherCheckInput;
 };
 
