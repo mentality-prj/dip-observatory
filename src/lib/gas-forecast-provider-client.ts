@@ -314,7 +314,6 @@ export async function testGasForecastProviderConnection(
     const missing: string[] = [];
     if (!ttfInput?.start_date?.trim()) missing.push("start_date");
     if (!ttfInput?.end_date?.trim()) missing.push("end_date");
-    if (!ttfInput?.instrument?.trim()) missing.push("instrument");
 
     if (missing.length > 0) {
       return mapGasForecastFailure({

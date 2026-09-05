@@ -73,7 +73,6 @@ const ttfSchema = z
   .object({
     start_date: z.string().trim().min(1),
     end_date: z.string().trim().min(1),
-    instrument: z.string().trim().min(1),
   })
   .superRefine((input, context) => {
     const dateError = validateEntsogHistoricalDateRange(

@@ -131,7 +131,6 @@ test("uses gas.provider.check with the exact TTF payload", async () => {
     ttf: {
       start_date: "2026-01-01",
       end_date: "2026-01-07",
-      instrument: "front_month",
     },
   });
 
@@ -143,7 +142,6 @@ test("uses gas.provider.check with the exact TTF payload", async () => {
     ttf: {
       start_date: "2026-01-01",
       end_date: "2026-01-07",
-      instrument: "front_month",
     },
   });
 });
@@ -345,7 +343,6 @@ test("fails TTF check configuration when UI query inputs are missing and does no
   assert.equal(fetchCalls, 0);
   assert.match(result.message ?? "", /start_date/);
   assert.match(result.message ?? "", /end_date/);
-  assert.match(result.message ?? "", /instrument/);
 });
 
 test("does not read TTF query fields from environment variables", async () => {
@@ -664,7 +661,6 @@ test("rejects future TTF dates and never sends a backend request", async () => {
     ttf: {
       start_date: "2999-01-01",
       end_date: "2999-01-02",
-      instrument: "front_month",
     },
   });
 

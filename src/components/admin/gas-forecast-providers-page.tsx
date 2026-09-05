@@ -72,7 +72,13 @@ function getCardStatus(
   return result?.status ?? provider.initialStatus;
 }
 
-function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
+function ResultBlock({
+  result,
+  providerId,
+}: {
+  result: GasForecastConnectionResult;
+  providerId: GasForecastProviderId;
+}) {
   return (
     <div className="space-y-4 rounded-[20px] border border-white/8 bg-black/20 p-4">
       <div className="space-y-1 text-sm text-slate-200">
@@ -152,29 +158,85 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
             Sample
           </p>
           <div className="overflow-x-auto rounded-2xl border border-white/8">
-            <table className="min-w-full border-collapse text-left text-xs text-slate-200">
-              <thead className="bg-white/6 text-slate-400">
-                <tr>
-                  <th className="px-3 py-2 font-medium">date</th>
-                  <th className="px-3 py-2 font-medium">gasInStorage</th>
-                  <th className="px-3 py-2 font-medium">injection</th>
-                  <th className="px-3 py-2 font-medium">withdrawal</th>
-                  <th className="px-3 py-2 font-medium">workingGasVolume</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.sample.map((row, index) => (
-                  <tr key={`${row.date ?? "row"}-${index}`} className="border-t border-white/8">
-                    <td className="px-3 py-2">{row.date ?? "—"}</td>
-                    <td className="px-3 py-2">{row.gasInStorage ?? "—"}</td>
-                    <td className="px-3 py-2">{row.injection ?? "—"}</td>
-                    <td className="px-3 py-2">{row.withdrawal ?? "—"}</td>
-                    <td className="px-3 py-2">{row.workingGasVolume ?? "—"}</td>
+            {providerId === "ttf" ? (
+              <table className="min-w-full border-collapse text-left text-xs text-slate-200">
+                <thead className="bg-white/6 text-slate-400">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">observation_date</th>
+                    <th className="px-3 py-2 font-medium">settlement_price</th>
+                    <th className="px-3 py-2 font-medium">source</th>
+                    <th className="px-3 py-2 font-medium">source_identifier</th>
+                    <th className="px-3 py-2 font-medium">publication_date</th>
+                    <th className="px-3 py-2 font-medium">retrieved_at</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {result.sample.map((row, index) => (
+                    <tr
+                      key={`${(row.observation_date as string | undefined) ?? "row"}-${index}`}
+                      className="border-t border-white/8"
+                    >
+                      <td className="px-3 py-2">
+                        {(row.observation_date as string | undefined) ?? "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {(row.settlement_price as string | number | undefined) ?? "—"}
+                      </td>
+                      <td className="px-3 py-2">{(row.source as string | undefined) ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        {(row.source_identifier as string | undefined) ?? "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {(row.publication_date as string | undefined) ?? "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {(row.retrieved_at as string | undefined) ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="min-w-full border-collapse text-left text-xs text-slate-200">
+                <thead className="bg-white/6 text-slate-400">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">date</th>
+                    <th className="px-3 py-2 font-medium">gasInStorage</th>
+                    <th className="px-3 py-2 font-medium">injection</th>
+                    <th className="px-3 py-2 font-medium">withdrawal</th>
+                    <th className="px-3 py-2 font-medium">workingGasVolume</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.sample.map((row, index) => (
+                    <tr key={`${row.date ?? "row"}-${index}`} className="border-t border-white/8">
+                      <td className="px-3 py-2">{row.date ?? "—"}</td>
+                      <td className="px-3 py-2">{row.gasInStorage ?? "—"}</td>
+                      <td className="px-3 py-2">{row.injection ?? "—"}</td>
+                      <td className="px-3 py-2">{row.withdrawal ?? "—"}</td>
+                      <td className="px-3 py-2">{row.workingGasVolume ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
+        </div>
+      ) : null}
+
+      {providerId === "ttf" && result.connection === "OK" ? (
+        <div className="space-y-1 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-3 text-sm text-emerald-100">
+          <p className="font-medium">TTF Front-Month Settlement</p>
+          <p>
+            <span className="text-emerald-300/80">Status:</span> OK
+          </p>
+          <p>
+            <span className="text-emerald-300/80">Records:</span>{" "}
+            {result.dataset?.records ?? "—"}
+          </p>
+          {(result.dataset?.records ?? null) === 0 || result.sample.length === 0 ? (
+            <p className="text-emerald-200/90">No observations returned for this range.</p>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -187,7 +249,6 @@ export function buildTtfCheckInput(
   return {
     start_date: config.start_date.trim(),
     end_date: config.end_date.trim(),
-    instrument: config.instrument.trim(),
   };
 }
 
@@ -195,10 +256,6 @@ export function validateTtfCheckInput(
   config: GasForecastTtfCheckInput,
   todayIso: string,
 ) {
-  if (!config.instrument.trim()) {
-    return "Instrument is required.";
-  }
-
   return validateEntsogHistoricalDateRange(
     {
       from: config.start_date,
@@ -653,7 +710,6 @@ export function GasForecastProvidersPage() {
   const [ttfConfig, setTtfConfig] = useState<GasForecastTtfCheckInput>({
     start_date: "",
     end_date: "",
-    instrument: "",
   });
   const [ttfValidationError, setTtfValidationError] = useState<string | null>(null);
   const [weatherConfig, setWeatherConfig] = useState<GasForecastWeatherCheckInput>({
@@ -842,7 +898,6 @@ export function GasForecastProvidersPage() {
             const weatherRegionOptionPrefix = `${provider.id}-region-option`;
             const ttfFromInputId = `${provider.id}-start-date`;
             const ttfToInputId = `${provider.id}-end-date`;
-            const ttfInstrumentInputId = `${provider.id}-instrument`;
             const ttfErrorId = `${provider.id}-query-validation-error`;
             const weatherFromInputId = `${provider.id}-start-date`;
             const weatherToInputId = `${provider.id}-end-date`;
@@ -888,6 +943,24 @@ export function GasForecastProvidersPage() {
                   </div>
 
                   <div className="space-y-1 text-sm text-slate-300">
+                    {provider.id === "ttf" ? (
+                      <>
+                        <p>
+                          <span className="text-slate-500">Description:</span>{" "}
+                          {provider.description}
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Target:</span> {provider.target}
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Unit:</span> {provider.unit}
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Frequency:</span>{" "}
+                          {provider.frequency}
+                        </p>
+                      </>
+                    ) : null}
                     {provider.api ? (
                       <p>
                         <span className="text-slate-500">API:</span> {provider.api}
@@ -910,7 +983,7 @@ export function GasForecastProvidersPage() {
                 </CardHeader>
 
                 <CardContent className="min-w-0 w-full max-w-full space-y-4">
-                  {result ? <ResultBlock result={result} /> : null}
+                  {result ? <ResultBlock result={result} providerId={provider.id} /> : null}
 
                   {provider.id === "entsog" ? (
                     <div className="min-w-0 w-full max-w-full space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
@@ -1108,25 +1181,6 @@ export function GasForecastProvidersPage() {
                             }}
                           />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={ttfInstrumentInputId}>Instrument</Label>
-                        <Input
-                          id={ttfInstrumentInputId}
-                          type="text"
-                          className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
-                          value={ttfConfig.instrument}
-                          placeholder="e.g. front_month"
-                          aria-invalid={ttfValidationError ? "true" : undefined}
-                          aria-describedby={ttfValidationError ? ttfErrorId : undefined}
-                          onChange={(event) => {
-                            setTtfValidationError(null);
-                            setTtfConfig((current) => ({
-                              ...current,
-                              instrument: event.target.value,
-                            }));
-                          }}
-                        />
                       </div>
                       {ttfValidationError ? (
                         <p id={ttfErrorId} className="text-xs text-rose-300">
