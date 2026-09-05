@@ -234,6 +234,9 @@ function ResultBlock({
             <span className="text-emerald-300/80">Records:</span>{" "}
             {result.dataset?.records ?? "—"}
           </p>
+          {(result.dataset?.records ?? null) === 0 || result.sample.length === 0 ? (
+            <p className="text-emerald-200/90">No observations returned for this range.</p>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -1178,18 +1181,6 @@ export function GasForecastProvidersPage() {
                             }}
                           />
                         </div>
-                      </div>
-                      <div className="grid gap-3 text-xs text-slate-400 md:grid-cols-2">
-                        <p>
-                          <span className="text-slate-500">Target:</span> TTF Front-Month
-                          Settlement
-                        </p>
-                        <p>
-                          <span className="text-slate-500">Unit:</span> EUR/MWh
-                        </p>
-                        <p>
-                          <span className="text-slate-500">Frequency:</span> Daily
-                        </p>
                       </div>
                       {ttfValidationError ? (
                         <p id={ttfErrorId} className="text-xs text-rose-300">
