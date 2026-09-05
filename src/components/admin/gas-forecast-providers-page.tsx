@@ -181,6 +181,33 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
   );
 }
 
+export function buildTtfCheckInput(
+  config: GasForecastTtfCheckInput,
+): GasForecastTtfCheckInput {
+  return {
+    start_date: config.start_date.trim(),
+    end_date: config.end_date.trim(),
+    instrument: config.instrument.trim(),
+  };
+}
+
+export function validateTtfCheckInput(
+  config: GasForecastTtfCheckInput,
+  todayIso: string,
+) {
+  if (!config.instrument.trim()) {
+    return "Instrument is required.";
+  }
+
+  return validateEntsogHistoricalDateRange(
+    {
+      from: config.start_date,
+      to: config.end_date,
+    },
+    todayIso,
+  );
+}
+
 function toOptionDomId(prefix: string, value: string) {
   const normalized = value
     .trim()
@@ -706,25 +733,11 @@ export function GasForecastProvidersPage() {
   }
 
   function buildTtfInput(): GasForecastTtfCheckInput {
-    return {
-      start_date: ttfConfig.start_date.trim(),
-      end_date: ttfConfig.end_date.trim(),
-      instrument: ttfConfig.instrument.trim(),
-    };
+    return buildTtfCheckInput(ttfConfig);
   }
 
   function validateTtfInput() {
-    if (!ttfConfig.instrument.trim()) {
-      return "Instrument is required.";
-    }
-
-    return validateEntsogHistoricalDateRange(
-      {
-        from: ttfConfig.start_date,
-        to: ttfConfig.end_date,
-      },
-      todayIso,
-    );
+    return validateTtfCheckInput(ttfConfig, todayIso);
   }
 
   async function handleTest(providerId: GasForecastProviderId) {
@@ -830,6 +843,7 @@ export function GasForecastProvidersPage() {
             const ttfFromInputId = `${provider.id}-from`;
             const ttfToInputId = `${provider.id}-to`;
             const ttfInstrumentInputId = `${provider.id}-instrument`;
+            const ttfErrorId = `${provider.id}-validation-error`;
             const weatherFromInputId = `${provider.id}-from`;
             const weatherToInputId = `${provider.id}-to`;
             const weatherMetricInputId = `${provider.id}-metric`;
@@ -1059,6 +1073,8 @@ export function GasForecastProvidersPage() {
                             className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={ttfConfig.start_date}
                             max={ttfDateBounds.fromMax}
+                            aria-invalid={ttfValidationError ? "true" : undefined}
+                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
                             onChange={(event) => {
                               setTtfValidationError(null);
                               setTtfConfig((current) => ({
@@ -1081,6 +1097,8 @@ export function GasForecastProvidersPage() {
                             value={ttfConfig.end_date}
                             max={ttfDateBounds.toMax}
                             min={ttfDateBounds.toMin}
+                            aria-invalid={ttfValidationError ? "true" : undefined}
+                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
                             onChange={(event) => {
                               setTtfValidationError(null);
                               setTtfConfig((current) => ({
@@ -1099,6 +1117,8 @@ export function GasForecastProvidersPage() {
                           className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                           value={ttfConfig.instrument}
                           placeholder="e.g. front_month"
+                          aria-invalid={ttfValidationError ? "true" : undefined}
+                          aria-describedby={ttfValidationError ? ttfErrorId : undefined}
                           onChange={(event) => {
                             setTtfValidationError(null);
                             setTtfConfig((current) => ({
@@ -1109,7 +1129,9 @@ export function GasForecastProvidersPage() {
                         />
                       </div>
                       {ttfValidationError ? (
-                        <p className="text-xs text-rose-300">{ttfValidationError}</p>
+                        <p id={ttfErrorId} className="text-xs text-rose-300">
+                          {ttfValidationError}
+                        </p>
                       ) : null}
                     </div>
                   ) : null}

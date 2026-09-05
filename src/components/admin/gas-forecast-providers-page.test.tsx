@@ -3,8 +3,10 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
+  buildTtfCheckInput,
   FlowPointCombobox,
   GasForecastProvidersPage,
+  validateTtfCheckInput,
   WeatherRegionsCombobox,
 } from "@/components/admin/gas-forecast-providers-page";
 import { ENTSOG_POINT_PRESETS } from "@/lib/entsog-point-directory";
@@ -72,6 +74,45 @@ test("renders TTF date pickers with local-today max constraints and an instrumen
   assert.ok(toMaxMatch);
   assert.equal(fromMaxMatch[1], toMaxMatch[1]);
   assert.match(fromMaxMatch[1], /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test("validates and trims TTF query input before submission", () => {
+  assert.equal(
+    validateTtfCheckInput(
+      {
+        start_date: "2026-01-01",
+        end_date: "2026-01-07",
+        instrument: "   ",
+      },
+      "2026-01-07",
+    ),
+    "Instrument is required.",
+  );
+
+  assert.equal(
+    validateTtfCheckInput(
+      {
+        start_date: "2999-01-01",
+        end_date: "2999-01-02",
+        instrument: "front_month",
+      },
+      "2026-01-07",
+    ),
+    "Future dates are not available.",
+  );
+
+  assert.deepEqual(
+    buildTtfCheckInput({
+      start_date: " 2026-01-01 ",
+      end_date: " 2026-01-07 ",
+      instrument: " front_month ",
+    }),
+    {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      instrument: "front_month",
+    },
+  );
 });
 
 test("renders static Weather presets into the multi-select combobox selection flow", () => {
