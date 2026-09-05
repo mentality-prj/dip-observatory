@@ -322,12 +322,17 @@ function readRecordPathField(
 }
 
 function isNormalizedObservationsPayload(payload: unknown) {
-  const observations = getPathValue(payload, ["result", "observations"]);
+  const observations =
+    getPathValue(payload, ["result", "observations"]) ??
+    getPathValue(payload, ["observations"]);
   if (!Array.isArray(observations)) {
     return false;
   }
 
-  if (getPathValue(payload, ["result", "observation_count"]) !== undefined) {
+  if (
+    getPathValue(payload, ["result", "observation_count"]) !== undefined ||
+    getPathValue(payload, ["observation_count"]) !== undefined
+  ) {
     return true;
   }
 
@@ -725,7 +730,10 @@ export function mapGasForecastSuccess(params: {
       ["metadata", "api"],
     ]) ?? providerCard.api;
   const records = normalizedObservations
-    ? pickNumber(payload, [["result", "observation_count"]]) ?? datasetRows.length
+    ? (pickNumber(payload, [
+        ["result", "observation_count"],
+        ["observation_count"],
+      ]) ?? datasetRows.length)
     : (pickNumber(payload, [
         ["dataset", "recordCount"],
         ["dataset", "recordsCount"],
