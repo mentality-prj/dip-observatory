@@ -393,7 +393,7 @@ export function WeatherRegionsCombobox({
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(initialOpen);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const selectedPresets = presets.filter((preset) => selectedValues.includes(preset.value));
 
@@ -476,41 +476,49 @@ export function WeatherRegionsCombobox({
             autoComplete="off"
             value={query}
             onFocus={() => {
-              setHighlightedIndex(0);
               setOpen(true);
             }}
             onChange={(event) => {
               setQuery(event.target.value);
-              setHighlightedIndex(0);
+              setHighlightedIndex(-1);
               setOpen(true);
             }}
             onKeyDown={(event) => {
               if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
                 setOpen(true);
+                setHighlightedIndex(options.length > 0 ? 0 : -1);
                 return;
               }
 
               if (event.key === "ArrowDown") {
                 event.preventDefault();
                 setHighlightedIndex((current) =>
-                  Math.min(current + 1, Math.max(options.length - 1, 0)),
+                  options.length === 0
+                    ? -1
+                    : Math.min(Math.max(current + 1, 0), options.length - 1),
                 );
                 return;
               }
 
               if (event.key === "ArrowUp") {
                 event.preventDefault();
-                setHighlightedIndex((current) => Math.max(current - 1, 0));
+                setHighlightedIndex((current) =>
+                  options.length === 0
+                    ? -1
+                    : current <= 0
+                      ? 0
+                      : current - 1,
+                );
                 return;
               }
 
               if (event.key === "Enter" && open) {
-                event.preventDefault();
                 const option = options[highlightedIndex];
                 if (option) {
+                  event.preventDefault();
                   toggleSelection(option.value);
                   setQuery("");
-                  setHighlightedIndex(0);
+                  setHighlightedIndex(-1);
                 }
                 return;
               }
@@ -518,6 +526,7 @@ export function WeatherRegionsCombobox({
               if (event.key === "Escape") {
                 setQuery("");
                 setOpen(false);
+                setHighlightedIndex(-1);
               }
             }}
             placeholder={selectedValues.length > 0 ? "Search more regions..." : "Search/select regions..."}
@@ -536,9 +545,10 @@ export function WeatherRegionsCombobox({
             className="mt-2 max-h-56 w-full min-w-0 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
           >
             {options.length > 0
-              ? options.map((option, index) => {
+              ? options.map((option) => {
                   const selected = selectedValues.includes(option.value);
-                  const highlighted = highlightedIndex === index;
+                  const highlighted =
+                    option.value === options[highlightedIndex]?.value;
 
                   return (
                     <li
@@ -551,7 +561,7 @@ export function WeatherRegionsCombobox({
                       onClick={() => {
                         toggleSelection(option.value);
                         setQuery("");
-                        setHighlightedIndex(index);
+                        setHighlightedIndex(-1);
                       }}
                       className={cn(
                         "flex min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
@@ -572,9 +582,6 @@ export function WeatherRegionsCombobox({
               : (
                 <li
                   id="weather-region-option-empty"
-                  role="option"
-                  aria-selected="false"
-                  aria-disabled="true"
                   className="px-2 py-1.5 text-sm text-slate-400"
                 >
                   No matching weather regions.
