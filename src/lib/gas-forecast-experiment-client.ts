@@ -137,6 +137,7 @@ export async function runGasForecastExperiment(
 
   const capabilityUrls = buildCapabilityUrls();
   const startedAt = performance.now();
+  let lastNetworkMessage: string | null = null;
 
   try {
     for (const capabilityUrl of capabilityUrls) {
@@ -153,17 +154,11 @@ export async function runGasForecastExperiment(
           cache: "no-store",
         });
       } catch (error) {
-        return {
-          status: "failed",
-          httpStatus: null,
-          responseTimeMs: Math.round(performance.now() - startedAt),
-          message:
-            error instanceof Error
-              ? error.message
-              : "Network request to DIP failed.",
-          payload: null,
-          executedAt: new Date().toISOString(),
-        };
+        lastNetworkMessage =
+          error instanceof Error
+            ? error.message
+            : "Network request to DIP failed.";
+        continue;
       }
 
       const payload = await readJsonOrText(response);
@@ -193,6 +188,17 @@ export async function runGasForecastExperiment(
           executedAt: new Date().toISOString(),
         };
       }
+    }
+
+    if (lastNetworkMessage) {
+      return {
+        status: "failed",
+        httpStatus: null,
+        responseTimeMs: Math.round(performance.now() - startedAt),
+        message: lastNetworkMessage,
+        payload: null,
+        executedAt: new Date().toISOString(),
+      };
     }
 
     return {
