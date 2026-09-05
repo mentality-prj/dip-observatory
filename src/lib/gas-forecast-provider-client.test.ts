@@ -137,6 +137,9 @@ test("includes the matching provider-specific object key for non-AGSI providers"
 test("uses gas.provider.check with the exact ENTSOG payload and no unsupported fields", async () => {
   process.env.DIP_API_BASE_URL = "https://dip.example.com";
   process.env.DIP_API_KEY = "test-key";
+  process.env.DIP_ENTSOG_POINT_DIRECTION = "POINT_A%2BPOINT_B";
+  process.env.DIP_ENTSOG_FROM = "2026-01-01";
+  process.env.DIP_ENTSOG_TO = "2026-01-07";
   delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
   delete process.env.GAS_FORECAST_CAPABILITY_PATH;
 
@@ -158,9 +161,20 @@ test("uses gas.provider.check with the exact ENTSOG payload and no unsupported f
   const payload = JSON.parse(requestBody);
   assert.deepEqual(payload, {
     provider: "entsog",
-    entsog: {},
+    entsog: {
+      pointDirection: "POINT_A%2BPOINT_B",
+      from: "2026-01-01",
+      to: "2026-01-07",
+      indicator: "Physical Flow",
+      periodType: "day",
+    },
   });
   assert.equal(payload.provider, "entsog");
+  assert.equal(payload.entsog.pointDirection, "POINT_A%2BPOINT_B");
+  assert.equal(payload.entsog.from, "2026-01-01");
+  assert.equal(payload.entsog.to, "2026-01-07");
+  assert.equal(payload.entsog.indicator, "Physical Flow");
+  assert.equal(payload.entsog.periodType, "day");
   assert.equal("scope" in payload.entsog, false);
   assert.equal("EU27" in payload.entsog, false);
   assert.equal("region" in payload.entsog, false);
@@ -175,6 +189,32 @@ test("uses gas.provider.check with the exact ENTSOG payload and no unsupported f
   assert.equal(requestBody.includes("\"DE\""), false);
   assert.equal(requestBody.includes("\"TTF\""), false);
   assert.equal(requestBody.includes("default"), false);
+});
+
+test("fails ENTSOG check configuration when real pointDirection/date inputs are missing and does not send a request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_ENTSOG_POINT_DIRECTION;
+  delete process.env.DIP_ENTSOG_FROM;
+  delete process.env.DIP_ENTSOG_TO;
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("entsog");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.httpStatus, 503);
+  assert.equal(fetchCalls, 0);
+  assert.match(result.message ?? "", /DIP_ENTSOG_POINT_DIRECTION/);
+  assert.match(result.message ?? "", /DIP_ENTSOG_FROM/);
+  assert.match(result.message ?? "", /DIP_ENTSOG_TO/);
 });
 
 test("frontend source does not call ENTSOG directly from browser code", () => {
