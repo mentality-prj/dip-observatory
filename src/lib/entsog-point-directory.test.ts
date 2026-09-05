@@ -82,7 +82,7 @@ test("fetches paginated ENTSOG directory, de-duplicates pointDirection and sorts
     result.presets[1]?.label,
     "Tarvisio (IT) → Arnoldstein (AT) · TAG · Exit",
   );
-  assert.equal(requestedUrls.length, 3);
+  assert.equal(requestedUrls.length, 2);
   assert.equal(requestedUrls.every((url) => url.includes("hasData=1")), true);
 });
 

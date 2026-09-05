@@ -325,7 +325,10 @@ export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory>
     previousSignature = signature;
     rawRecords.push(...records);
 
-    if (records.length < ENTSOG_PAGE_SIZE) {
+    if (
+      records.length < ENTSOG_PAGE_SIZE &&
+      (totalRecords === null || rawRecords.length >= totalRecords)
+    ) {
       break;
     }
 

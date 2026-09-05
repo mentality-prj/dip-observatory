@@ -193,12 +193,6 @@ function FlowPointCombobox({
   const selectedPreset = presets.find((preset) => preset.value === selectedValue) ?? null;
 
   useEffect(() => {
-    if (selectedPreset) {
-      setQuery(selectedPreset.label);
-    }
-  }, [selectedPreset]);
-
-  useEffect(() => {
     function onPointerDown(event: MouseEvent) {
       if (!containerRef.current?.contains(event.target as Node)) {
         setOpen(false);
@@ -219,10 +213,6 @@ function FlowPointCombobox({
     );
   }, [presets, query]);
 
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [query, open]);
-
   return (
     <div className="space-y-2" ref={containerRef}>
       <Label htmlFor="entsog-point-direction">Flow point</Label>
@@ -235,9 +225,14 @@ function FlowPointCombobox({
           aria-controls="entsog-point-direction-options"
           autoComplete="off"
           value={query}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setQuery(selectedPreset?.label ?? query);
+            setHighlightedIndex(0);
+            setOpen(true);
+          }}
           onChange={(event) => {
             setQuery(event.target.value);
+            setHighlightedIndex(0);
             setOpen(true);
           }}
           onKeyDown={(event) => {
