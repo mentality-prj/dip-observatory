@@ -20,6 +20,18 @@ export type GasForecastEntsogCheckInput = {
   periodType: "day";
 };
 
+export type GasForecastWeatherCheckInput = {
+  start_date: string;
+  end_date: string;
+  regions: string[];
+  metric: "temperature_c";
+};
+
+export type GasForecastProviderCheckInput = {
+  entsog?: GasForecastEntsogCheckInput;
+  weather?: GasForecastWeatherCheckInput;
+};
+
 export type GasForecastProviderCard = {
   id: GasForecastProviderId;
   title: string;
@@ -107,7 +119,7 @@ export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
     id: "weather",
     title: "WEATHER",
     api: null,
-    initialStatus: "not_configured",
+    initialStatus: "not_tested",
   },
 ];
 

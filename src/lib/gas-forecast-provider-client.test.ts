@@ -150,11 +150,13 @@ test("uses gas.provider.check with the exact ENTSOG payload and no unsupported f
   }) as typeof fetch;
 
   const result = await testGasForecastProviderConnection("entsog", {
-    pointDirection: "POINT_A%2BPOINT_B",
-    from: "2026-01-01",
-    to: "2026-01-07",
-    indicator: "Physical Flow",
-    periodType: "day",
+    entsog: {
+      pointDirection: "POINT_A%2BPOINT_B",
+      from: "2026-01-01",
+      to: "2026-01-07",
+      indicator: "Physical Flow",
+      periodType: "day",
+    },
   });
 
   assert.equal(result.status, "connected");
@@ -192,6 +194,50 @@ test("uses gas.provider.check with the exact ENTSOG payload and no unsupported f
   assert.equal(requestBody.includes("\"DE\""), false);
   assert.equal(requestBody.includes("\"TTF\""), false);
   assert.equal(requestBody.includes("default"), false);
+});
+
+test("uses gas.provider.check with the exact Weather payload and array regions", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  const requestedUrls: string[] = [];
+  let requestBody = "";
+
+  globalThis.fetch = (async (input, init) => {
+    requestedUrls.push(String(input));
+    requestBody = String(init?.body ?? "");
+    return Response.json({ provider: { name: "WEATHER" }, dataset: {} });
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("weather", {
+    weather: {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      regions: ["Germany", "Italy"],
+      metric: "temperature_c",
+    },
+  });
+
+  assert.equal(result.status, "connected");
+  assert.equal(requestedUrls.length, 1);
+  assert.equal(requestedUrls[0]?.includes("gas.provider.check"), true);
+  const payload = JSON.parse(requestBody);
+  assert.deepEqual(payload, {
+    provider: "weather",
+    weather: {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      regions: ["Germany", "Italy"],
+      metric: "temperature_c",
+    },
+  });
+  assert.deepEqual(payload.weather.regions, ["Germany", "Italy"]);
+  assert.equal(typeof payload.weather.regions, "object");
+  assert.equal(Array.isArray(payload.weather.regions), true);
+  assert.equal(payload.weather.metric, "temperature_c");
+  assert.equal(requestBody.includes("Germany,Italy"), false);
 });
 
 test("fails ENTSOG check configuration when UI query inputs are missing and does not send a request", async () => {
@@ -242,13 +288,37 @@ test("does not read ENTSOG query fields from environment variables", async () =>
   assert.equal(fetchCalls, 0);
 });
 
-test("frontend source does not call ENTSOG directly from browser code", () => {
+test("does not read Weather query fields from environment variables", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  process.env.DIP_WEATHER_START_DATE = "2026-01-01";
+  process.env.DIP_WEATHER_END_DATE = "2026-01-07";
+  process.env.DIP_WEATHER_REGIONS = "Germany,Italy";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("weather");
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.httpStatus, 503);
+  assert.equal(fetchCalls, 0);
+});
+
+test("frontend source does not call upstream providers directly from browser code", () => {
   const browserUiSource = fs.readFileSync(
     "/home/runner/work/dip-observatory/dip-observatory/src/components/admin/gas-forecast-providers-page.tsx",
     "utf8",
   );
 
   assert.equal(browserUiSource.includes("transparency.entsog.eu"), false);
+  assert.equal(browserUiSource.includes("open-meteo"), false);
   assert.equal(browserUiSource.includes("gas.dataset.build"), false);
   assert.equal(browserUiSource.includes("DIP_API_KEY"), false);
 });
@@ -396,11 +466,13 @@ test("rejects future ENTSOG dates and never sends a backend request", async () =
   }) as typeof fetch;
 
   const result = await testGasForecastProviderConnection("entsog", {
-    pointDirection: "RAW_POINT",
-    from: "2999-01-01",
-    to: "2999-01-02",
-    indicator: "Physical Flow",
-    periodType: "day",
+    entsog: {
+      pointDirection: "RAW_POINT",
+      from: "2999-01-01",
+      to: "2999-01-02",
+      indicator: "Physical Flow",
+      periodType: "day",
+    },
   });
 
   assert.equal(result.status, "failed");
@@ -422,15 +494,71 @@ test("rejects ENTSOG from>to and never sends a backend request", async () => {
   }) as typeof fetch;
 
   const result = await testGasForecastProviderConnection("entsog", {
-    pointDirection: "RAW_POINT",
-    from: "2026-01-07",
-    to: "2026-01-01",
-    indicator: "Physical Flow",
-    periodType: "day",
+    entsog: {
+      pointDirection: "RAW_POINT",
+      from: "2026-01-07",
+      to: "2026-01-01",
+      indicator: "Physical Flow",
+      periodType: "day",
+    },
   });
 
   assert.equal(result.status, "failed");
   assert.equal(result.kind, "configuration");
   assert.equal(result.message, "From date must be on or before To date.");
+  assert.equal(fetchCalls, 0);
+});
+
+test("rejects future Weather dates and never sends a backend request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("weather", {
+    weather: {
+      start_date: "2999-01-01",
+      end_date: "2999-01-02",
+      regions: ["Germany"],
+      metric: "temperature_c",
+    },
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.equal(result.message, "Future dates are not available.");
+  assert.equal(fetchCalls, 0);
+});
+
+test("rejects Weather requests without regions and never sends a backend request", async () => {
+  process.env.DIP_API_BASE_URL = "https://dip.example.com";
+  process.env.DIP_API_KEY = "test-key";
+  delete process.env.DIP_GAS_FORECAST_CAPABILITY_PATH;
+  delete process.env.GAS_FORECAST_CAPABILITY_PATH;
+
+  let fetchCalls = 0;
+  globalThis.fetch = (async () => {
+    fetchCalls += 1;
+    return Response.json({});
+  }) as typeof fetch;
+
+  const result = await testGasForecastProviderConnection("weather", {
+    weather: {
+      start_date: "2026-01-01",
+      end_date: "2026-01-07",
+      regions: [],
+      metric: "temperature_c",
+    },
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.kind, "configuration");
+  assert.match(result.message ?? "", /regions/);
   assert.equal(fetchCalls, 0);
 });

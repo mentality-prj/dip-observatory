@@ -15,7 +15,9 @@ import {
   mapGasForecastFailure,
   type GasForecastConnectionResult,
   type GasForecastEntsogCheckInput,
+  type GasForecastProviderCheckInput,
   type GasForecastProviderId,
+  type GasForecastWeatherCheckInput,
 } from "@/lib/gas-forecast-provider-model";
 
 const entsogSchema = z
@@ -41,15 +43,49 @@ const entsogSchema = z
     }
   });
 
+const weatherSchema = z
+  .object({
+    start_date: z.string().trim().min(1),
+    end_date: z.string().trim().min(1),
+    regions: z.array(z.string().trim().min(1)).min(1),
+    metric: z.literal("temperature_c"),
+  })
+  .superRefine((input, context) => {
+    const dateError = validateEntsogHistoricalDateRange(
+      {
+        from: input.start_date,
+        to: input.end_date,
+      },
+      getTodayLocalDateIso(),
+    );
+
+    if (dateError) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["start_date"],
+        message: dateError,
+      });
+    }
+  });
+
 const requestSchema = z.object({
   providerId: z.enum(GAS_FORECAST_PROVIDER_IDS),
   entsog: entsogSchema.optional(),
+  weather: weatherSchema.optional(),
 }).superRefine((input, context) => {
   if (input.providerId === "entsog" && !input.entsog) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["entsog"],
       message: "ENTSOG query is required.",
+    });
+  }
+
+  if (input.providerId === "weather" && !input.weather) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["weather"],
+      message: "Weather query is required.",
     });
   }
 });
@@ -63,16 +99,20 @@ const requestSchema = z.object({
 export async function testGasForecastProviderAction(input: {
   providerId: GasForecastProviderId;
   entsog?: GasForecastEntsogCheckInput;
+  weather?: GasForecastWeatherCheckInput;
 }): Promise<GasForecastConnectionResult> {
   logGasForecastDiagnostic("info", "server_action_entered", {
     providerIdRaw: input?.providerId ?? null,
   });
 
   try {
-    const { providerId, entsog } = requestSchema.parse(input);
+    const { providerId, entsog, weather } = requestSchema.parse(input);
     return await testGasForecastProviderConnection(
       providerId,
-      providerId === "entsog" ? entsog : undefined,
+      {
+        entsog: providerId === "entsog" ? entsog : undefined,
+        weather: providerId === "weather" ? weather : undefined,
+      } satisfies GasForecastProviderCheckInput,
     );
   } catch (error) {
     logGasForecastDiagnostic("error", "failure", {

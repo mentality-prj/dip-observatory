@@ -2,7 +2,7 @@ import { normalizeDipBaseUrl } from "@/lib/dip-url";
 import { validateEntsogHistoricalDateRange } from "@/lib/entsog-date-range";
 import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
-  type GasForecastEntsogCheckInput,
+  type GasForecastProviderCheckInput,
   mapGasForecastFailure,
   mapGasForecastSuccess,
   toSafeRawBody,
@@ -114,7 +114,7 @@ const AGSI_CONNECTIVITY_CHECK_INPUT = {
 
 function buildGasForecastCapabilityRequest(
   providerId: GasForecastProviderId,
-  entsogInput?: GasForecastEntsogCheckInput,
+  input?: GasForecastProviderCheckInput,
 ) {
   if (providerId === "agsi") {
     return {
@@ -126,7 +126,14 @@ function buildGasForecastCapabilityRequest(
   if (providerId === "entsog") {
     return {
       provider: "entsog" as const,
-      entsog: entsogInput ?? {},
+      entsog: input?.entsog ?? {},
+    };
+  }
+
+  if (providerId === "weather") {
+    return {
+      provider: "weather" as const,
+      weather: input?.weather ?? {},
     };
   }
 
@@ -156,7 +163,7 @@ async function readJsonOrText(response: Response) {
 
 export async function testGasForecastProviderConnection(
   providerId: GasForecastProviderId,
-  entsogInput?: GasForecastEntsogCheckInput,
+  input?: GasForecastProviderCheckInput,
 ): Promise<GasForecastConnectionResult> {
   const baseUrl = getDipBaseUrl();
   const apiKey = getDipApiKey();
@@ -193,12 +200,12 @@ export async function testGasForecastProviderConnection(
 
   if (providerId === "entsog") {
     const missing: string[] = [];
-    if (!entsogInput?.pointDirection?.trim()) missing.push("pointDirection");
-    if (!entsogInput?.from?.trim()) missing.push("from");
-    if (!entsogInput?.to?.trim()) missing.push("to");
-    if (entsogInput?.indicator !== "Physical Flow")
+    if (!input?.entsog?.pointDirection?.trim()) missing.push("pointDirection");
+    if (!input?.entsog?.from?.trim()) missing.push("from");
+    if (!input?.entsog?.to?.trim()) missing.push("to");
+    if (input?.entsog?.indicator !== "Physical Flow")
       missing.push('indicator="Physical Flow"');
-    if (entsogInput?.periodType !== "day") missing.push('periodType="day"');
+    if (input?.entsog?.periodType !== "day") missing.push('periodType="day"');
 
     if (missing.length > 0) {
       return mapGasForecastFailure({
@@ -212,8 +219,48 @@ export async function testGasForecastProviderConnection(
     }
 
     const dateError = validateEntsogHistoricalDateRange({
-      from: entsogInput!.from,
-      to: entsogInput!.to,
+      from: input.entsog!.from,
+      to: input.entsog!.to,
+    });
+
+    if (dateError) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 400,
+        responseTimeMs: null,
+        payload: null,
+        kind: "configuration",
+        stage: "configuration",
+        fallbackMessage: dateError,
+      });
+    }
+  }
+
+  if (providerId === "weather") {
+    const missing: string[] = [];
+    if (!input?.weather?.start_date?.trim()) missing.push("start_date");
+    if (!input?.weather?.end_date?.trim()) missing.push("end_date");
+    if (!input?.weather?.regions?.some((region) => region.trim())) {
+      missing.push("regions");
+    }
+    if (input?.weather?.metric !== "temperature_c") {
+      missing.push('metric="temperature_c"');
+    }
+
+    if (missing.length > 0) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage: `Weather provider check is not configured. Missing: ${missing.join(", ")}.`,
+      });
+    }
+
+    const dateError = validateEntsogHistoricalDateRange({
+      from: input.weather!.start_date,
+      to: input.weather!.end_date,
     });
 
     if (dateError) {
@@ -231,7 +278,7 @@ export async function testGasForecastProviderConnection(
 
   const requestPayload = buildGasForecastCapabilityRequest(
     providerId,
-    providerId === "entsog" ? entsogInput : undefined,
+    input,
   );
 
   const startedAt = performance.now();
