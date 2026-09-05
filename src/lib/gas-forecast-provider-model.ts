@@ -12,6 +12,14 @@ export const GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID =
 export type GasForecastProviderId =
   (typeof GAS_FORECAST_PROVIDER_IDS)[number];
 
+export type GasForecastEntsogCheckInput = {
+  pointDirection: string;
+  from: string;
+  to: string;
+  indicator: "Physical Flow";
+  periodType: "day";
+};
+
 export type GasForecastProviderCard = {
   id: GasForecastProviderId;
   title: string;

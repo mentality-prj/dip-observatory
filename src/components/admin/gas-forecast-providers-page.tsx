@@ -8,11 +8,14 @@ import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
   GAS_FORECAST_PROVIDER_CARDS,
   mapGasForecastFailure,
   type GasForecastConnectionResult,
+  type GasForecastEntsogCheckInput,
   type GasForecastProviderCard,
   type GasForecastProviderId,
 } from "@/lib/gas-forecast-provider-model";
@@ -160,12 +163,30 @@ export function GasForecastProvidersPage() {
   >({});
   const [pendingProviderId, setPendingProviderId] =
     useState<GasForecastProviderId | null>(null);
+  const [entsogConfig, setEntsogConfig] = useState({
+    pointDirection: "",
+    from: "",
+    to: "",
+  });
+
+  function buildEntsogInput(): GasForecastEntsogCheckInput {
+    return {
+      pointDirection: entsogConfig.pointDirection.trim(),
+      from: entsogConfig.from.trim(),
+      to: entsogConfig.to.trim(),
+      indicator: "Physical Flow",
+      periodType: "day",
+    };
+  }
 
   async function handleTest(providerId: GasForecastProviderId) {
     setPendingProviderId(providerId);
 
     try {
-      const result = await testGasForecastProviderAction({ providerId });
+      const result = await testGasForecastProviderAction({
+        providerId,
+        entsog: providerId === "entsog" ? buildEntsogInput() : undefined,
+      });
       setResults((current) => ({ ...current, [providerId]: result }));
     } catch (error) {
       setResults((current) => ({
@@ -290,6 +311,67 @@ export function GasForecastProvidersPage() {
 
                 <CardContent className="space-y-4">
                   {result ? <ResultBlock result={result} /> : null}
+
+                  {provider.id === "entsog" ? (
+                    <div className="space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                        ENTSOG query
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="entsog-point-direction">Point Direction</Label>
+                        <Input
+                          id="entsog-point-direction"
+                          type="text"
+                          value={entsogConfig.pointDirection}
+                          onChange={(event) =>
+                            setEntsogConfig((current) => ({
+                              ...current,
+                              pointDirection: event.target.value,
+                            }))
+                          }
+                          placeholder="e.g. 5AT-TSO-0003ITP-00040exitIT-TSO-0001"
+                        />
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="entsog-from">From</Label>
+                          <Input
+                            id="entsog-from"
+                            type="date"
+                            value={entsogConfig.from}
+                            onChange={(event) =>
+                              setEntsogConfig((current) => ({
+                                ...current,
+                                from: event.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="entsog-to">To</Label>
+                          <Input
+                            id="entsog-to"
+                            type="date"
+                            value={entsogConfig.to}
+                            onChange={(event) =>
+                              setEntsogConfig((current) => ({
+                                ...current,
+                                to: event.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-3 text-xs text-slate-400 md:grid-cols-2">
+                        <p>
+                          <span className="text-slate-500">Indicator:</span> Physical Flow
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Period type:</span> day
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <Button
                     type="button"
