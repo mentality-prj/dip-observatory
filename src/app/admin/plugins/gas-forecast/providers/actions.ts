@@ -100,7 +100,9 @@ export async function testGasForecastProviderAction(input: {
       kind: error instanceof z.ZodError ? "configuration" : "unknown",
       fallbackMessage:
         error instanceof z.ZodError
-          ? (error.issues[0]?.message ?? "Invalid request.")
+          ? error.issues.some((issue) => issue.path[0] === "providerId")
+            ? "Invalid provider."
+            : (error.issues[0]?.message ?? "Invalid request.")
           : error instanceof Error
             ? error.message
             : "Unexpected server action error",

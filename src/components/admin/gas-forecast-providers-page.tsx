@@ -316,7 +316,7 @@ function FlowPointCombobox({
                     key={option.value}
                     id={`entsog-point-direction-option-${option.value}`}
                     role="option"
-                    aria-selected={highlighted}
+                    aria-selected={selected}
                     data-active={highlighted ? "true" : "false"}
                   >
                     <button

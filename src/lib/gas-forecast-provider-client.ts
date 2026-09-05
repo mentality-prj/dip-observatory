@@ -212,8 +212,8 @@ export async function testGasForecastProviderConnection(
     }
 
     const dateError = validateEntsogHistoricalDateRange({
-      from: entsogInput.from,
-      to: entsogInput.to,
+      from: entsogInput!.from,
+      to: entsogInput!.to,
     });
 
     if (dateError) {
