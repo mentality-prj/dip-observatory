@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, Home, PlugZap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Home,
+  PlugZap,
+} from "lucide-react";
 import Link from "next/link";
 
-import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/providers/actions";
+import {
+  loadEntsogPointDirectoryAction,
+  testGasForecastProviderAction,
+} from "@/app/admin/plugins/gas-forecast/providers/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getTodayLocalDateIso,
+  validateEntsogHistoricalDateRange,
+} from "@/lib/entsog-date-range";
+import type { EntsogPointPreset } from "@/lib/entsog-point-directory";
 import { cn } from "@/lib/utils";
 import {
   GAS_FORECAST_PROVIDER_CARDS,
@@ -157,6 +173,168 @@ function ResultBlock({ result }: { result: GasForecastConnectionResult }) {
   );
 }
 
+function FlowPointCombobox({
+  presets,
+  selectedValue,
+  onSelect,
+  loading,
+  error,
+}: {
+  presets: EntsogPointPreset[];
+  selectedValue: string;
+  onSelect: (value: string) => void;
+  loading: boolean;
+  error: string | null;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const selectedPreset = presets.find((preset) => preset.value === selectedValue) ?? null;
+
+  useEffect(() => {
+    if (selectedPreset) {
+      setQuery(selectedPreset.label);
+    }
+  }, [selectedPreset]);
+
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  const options = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return presets;
+    }
+    return presets.filter((preset) =>
+      preset.label.toLowerCase().includes(normalizedQuery),
+    );
+  }, [presets, query]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [query, open]);
+
+  return (
+    <div className="space-y-2" ref={containerRef}>
+      <Label htmlFor="entsog-point-direction">Flow point</Label>
+      <div className="relative">
+        <Input
+          id="entsog-point-direction"
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="entsog-point-direction-options"
+          autoComplete="off"
+          value={query}
+          onFocus={() => setOpen(true)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
+          onKeyDown={(event) => {
+            if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+              setOpen(true);
+              return;
+            }
+
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setHighlightedIndex((current) =>
+                Math.min(current + 1, Math.max(options.length - 1, 0)),
+              );
+              return;
+            }
+
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setHighlightedIndex((current) => Math.max(current - 1, 0));
+              return;
+            }
+
+            if (event.key === "Enter" && open) {
+              event.preventDefault();
+              const option = options[highlightedIndex];
+              if (option) {
+                onSelect(option.value);
+                setQuery(option.label);
+                setOpen(false);
+              }
+              return;
+            }
+
+            if (event.key === "Escape") {
+              setOpen(false);
+            }
+          }}
+          placeholder="Search/select ENTSOG point..."
+          disabled={loading || Boolean(error)}
+        />
+        <ChevronDown
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        />
+      </div>
+
+      {loading ? <p className="text-xs text-slate-400">Loading ENTSOG flow points…</p> : null}
+      {error ? <p className="text-xs text-rose-300">{error}</p> : null}
+      {!loading && !error && presets.length === 0 ? (
+        <p className="text-xs text-slate-400">No ENTSOG flow points available.</p>
+      ) : null}
+
+      {open && !loading && !error && options.length > 0 ? (
+        <ul
+          id="entsog-point-direction-options"
+          role="listbox"
+          className="max-h-56 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
+        >
+          {options.map((option, index) => {
+            const selected = option.value === selectedValue;
+            const highlighted = highlightedIndex === index;
+            return (
+              <li key={option.value}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onSelect(option.value);
+                    setQuery(option.label);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                    highlighted ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/8",
+                  )}
+                >
+                  <Check
+                    className={cn("mt-0.5 h-4 w-4 shrink-0", selected ? "opacity-100" : "opacity-0")}
+                    aria-hidden="true"
+                  />
+                  <span>{option.label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      {open && !loading && !error && query.trim() && options.length === 0 ? (
+        <p className="text-xs text-slate-400">No matching flow points.</p>
+      ) : null}
+    </div>
+  );
+}
+
 export function GasForecastProvidersPage() {
   const [results, setResults] = useState<
     Partial<Record<GasForecastProviderId, GasForecastConnectionResult>>
@@ -168,6 +346,37 @@ export function GasForecastProvidersPage() {
     from: "",
     to: "",
   });
+  const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
+  const [entsogDirectory, setEntsogDirectory] = useState<{
+    presets: EntsogPointPreset[];
+    loading: boolean;
+    error: string | null;
+  }>({
+    presets: [],
+    loading: true,
+    error: null,
+  });
+  const entsogToday = useMemo(() => getTodayLocalDateIso(), []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void loadEntsogPointDirectoryAction().then((result) => {
+      if (!mounted) {
+        return;
+      }
+
+      setEntsogDirectory({
+        presets: result.presets,
+        loading: false,
+        error: result.error,
+      });
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   function buildEntsogInput(): GasForecastEntsogCheckInput {
     return {
@@ -179,7 +388,29 @@ export function GasForecastProvidersPage() {
     };
   }
 
+  function validateEntsogInput() {
+    if (!entsogConfig.pointDirection.trim()) {
+      return "Flow point is required.";
+    }
+
+    return validateEntsogHistoricalDateRange(
+      {
+        from: entsogConfig.from,
+        to: entsogConfig.to,
+      },
+      entsogToday,
+    );
+  }
+
   async function handleTest(providerId: GasForecastProviderId) {
+    if (providerId === "entsog") {
+      const validationError = validateEntsogInput();
+      setEntsogValidationError(validationError);
+      if (validationError) {
+        return;
+      }
+    }
+
     setPendingProviderId(providerId);
 
     try {
@@ -317,21 +548,19 @@ export function GasForecastProvidersPage() {
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
                         ENTSOG query
                       </p>
-                      <div className="space-y-2">
-                        <Label htmlFor="entsog-point-direction">Point Direction</Label>
-                        <Input
-                          id="entsog-point-direction"
-                          type="text"
-                          value={entsogConfig.pointDirection}
-                          onChange={(event) =>
-                            setEntsogConfig((current) => ({
-                              ...current,
-                              pointDirection: event.target.value,
-                            }))
-                          }
-                          placeholder="e.g. 5AT-TSO-0003ITP-00040exitIT-TSO-0001"
-                        />
-                      </div>
+                      <FlowPointCombobox
+                        presets={entsogDirectory.presets}
+                        loading={entsogDirectory.loading}
+                        error={entsogDirectory.error}
+                        selectedValue={entsogConfig.pointDirection}
+                        onSelect={(value) => {
+                          setEntsogValidationError(null);
+                          setEntsogConfig((current) => ({
+                            ...current,
+                            pointDirection: value,
+                          }));
+                        }}
+                      />
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="entsog-from">From</Label>
@@ -339,12 +568,18 @@ export function GasForecastProvidersPage() {
                             id="entsog-from"
                             type="date"
                             value={entsogConfig.from}
-                            onChange={(event) =>
+                            max={entsogToday}
+                            onChange={(event) => {
+                              setEntsogValidationError(null);
                               setEntsogConfig((current) => ({
                                 ...current,
                                 from: event.target.value,
-                              }))
-                            }
+                                to:
+                                  current.to && event.target.value > current.to
+                                    ? event.target.value
+                                    : current.to,
+                              }));
+                            }}
                           />
                         </div>
                         <div className="space-y-2">
@@ -353,15 +588,21 @@ export function GasForecastProvidersPage() {
                             id="entsog-to"
                             type="date"
                             value={entsogConfig.to}
-                            onChange={(event) =>
+                            max={entsogToday}
+                            min={entsogConfig.from || undefined}
+                            onChange={(event) => {
+                              setEntsogValidationError(null);
                               setEntsogConfig((current) => ({
                                 ...current,
                                 to: event.target.value,
-                              }))
-                            }
+                              }));
+                            }}
                           />
                         </div>
                       </div>
+                      {entsogValidationError ? (
+                        <p className="text-xs text-rose-300">{entsogValidationError}</p>
+                      ) : null}
                       <div className="grid gap-3 text-xs text-slate-400 md:grid-cols-2">
                         <p>
                           <span className="text-slate-500">Indicator:</span> Physical Flow

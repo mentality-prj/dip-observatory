@@ -1,4 +1,5 @@
 import { normalizeDipBaseUrl } from "@/lib/dip-url";
+import { validateEntsogHistoricalDateRange } from "@/lib/entsog-date-range";
 import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
   type GasForecastEntsogCheckInput,
@@ -207,6 +208,22 @@ export async function testGasForecastProviderConnection(
         payload: null,
         stage: "configuration",
         fallbackMessage: `ENTSOG provider check is not configured. Missing: ${missing.join(", ")}.`,
+      });
+    }
+
+    const dateError = validateEntsogHistoricalDateRange({
+      from: entsogInput.from,
+      to: entsogInput.to,
+    });
+
+    if (dateError) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage: dateError,
       });
     }
   }
