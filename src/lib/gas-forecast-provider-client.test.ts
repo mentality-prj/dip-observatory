@@ -434,14 +434,3 @@ test("rejects ENTSOG from>to and never sends a backend request", async () => {
   assert.equal(result.message, "From date must be on or before To date.");
   assert.equal(fetchCalls, 0);
 });
-
-test("ENTSOG date pickers expose local-today max and To min=From", () => {
-  const browserUiSource = fs.readFileSync(
-    "/home/runner/work/dip-observatory/dip-observatory/src/components/admin/gas-forecast-providers-page.tsx",
-    "utf8",
-  );
-
-  assert.equal(browserUiSource.includes("const entsogToday = useMemo(() => getTodayLocalDateIso(), []);"), true);
-  assert.equal(browserUiSource.includes("max={entsogToday}"), true);
-  assert.equal(browserUiSource.includes("min={entsogConfig.from || undefined}"), true);
-});

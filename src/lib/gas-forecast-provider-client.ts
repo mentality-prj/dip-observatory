@@ -219,9 +219,10 @@ export async function testGasForecastProviderConnection(
     if (dateError) {
       return mapGasForecastFailure({
         providerId,
-        httpStatus: 503,
+        httpStatus: 400,
         responseTimeMs: null,
         payload: null,
+        kind: "configuration",
         stage: "configuration",
         fallbackMessage: dateError,
       });

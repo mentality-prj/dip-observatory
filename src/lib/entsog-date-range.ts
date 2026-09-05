@@ -3,6 +3,14 @@ export type EntsogDateRangeInput = {
   to: string;
 };
 
+export function getEntsogDatePickerBounds(from: string, todayIso: string) {
+  return {
+    fromMax: todayIso,
+    toMax: todayIso,
+    toMin: from.trim() || undefined,
+  };
+}
+
 export function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

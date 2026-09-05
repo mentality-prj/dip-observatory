@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  getEntsogDatePickerBounds,
   getTodayLocalDateIso,
   validateEntsogHistoricalDateRange,
 } from "@/lib/entsog-date-range";
@@ -212,6 +213,10 @@ function FlowPointCombobox({
       preset.label.toLowerCase().includes(normalizedQuery),
     );
   }, [presets, query]);
+  const activeOption = options[highlightedIndex] ?? null;
+  const activeOptionId = activeOption
+    ? `entsog-point-direction-option-${activeOption.value}`
+    : undefined;
 
   return (
     <div className="space-y-2" ref={containerRef}>
@@ -222,6 +227,8 @@ function FlowPointCombobox({
           type="text"
           role="combobox"
           aria-expanded={open}
+          aria-autocomplete="list"
+          aria-activedescendant={open ? activeOptionId : undefined}
           aria-controls="entsog-point-direction-options"
           autoComplete="off"
           value={query}
@@ -298,12 +305,14 @@ function FlowPointCombobox({
               <li key={option.value}>
                 <button
                   type="button"
+                  id={`entsog-point-direction-option-${option.value}`}
                   role="option"
                   aria-selected={selected}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     onSelect(option.value);
                     setQuery(option.label);
+                    setHighlightedIndex(index);
                     setOpen(false);
                   }}
                   className={cn(
@@ -352,6 +361,10 @@ export function GasForecastProvidersPage() {
     error: null,
   });
   const entsogToday = useMemo(() => getTodayLocalDateIso(), []);
+  const entsogDateBounds = useMemo(
+    () => getEntsogDatePickerBounds(entsogConfig.from, entsogToday),
+    [entsogConfig.from, entsogToday],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -563,7 +576,7 @@ export function GasForecastProvidersPage() {
                             id="entsog-from"
                             type="date"
                             value={entsogConfig.from}
-                            max={entsogToday}
+                            max={entsogDateBounds.fromMax}
                             onChange={(event) => {
                               setEntsogValidationError(null);
                               setEntsogConfig((current) => ({
@@ -583,8 +596,8 @@ export function GasForecastProvidersPage() {
                             id="entsog-to"
                             type="date"
                             value={entsogConfig.to}
-                            max={entsogToday}
-                            min={entsogConfig.from || undefined}
+                            max={entsogDateBounds.toMax}
+                            min={entsogDateBounds.toMin}
                             onChange={(event) => {
                               setEntsogValidationError(null);
                               setEntsogConfig((current) => ({
