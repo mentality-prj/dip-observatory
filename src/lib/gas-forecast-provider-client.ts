@@ -218,9 +218,22 @@ export async function testGasForecastProviderConnection(
       });
     }
 
+    const entsogInput = input?.entsog;
+    if (!entsogInput) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage:
+          'ENTSOG provider check is not configured. Missing: pointDirection, from, to, indicator="Physical Flow", periodType="day".',
+      });
+    }
+
     const dateError = validateEntsogHistoricalDateRange({
-      from: input.entsog!.from,
-      to: input.entsog!.to,
+      from: entsogInput.from,
+      to: entsogInput.to,
     });
 
     if (dateError) {
@@ -258,9 +271,22 @@ export async function testGasForecastProviderConnection(
       });
     }
 
+    const weatherInput = input?.weather;
+    if (!weatherInput) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage:
+          'Weather provider check is not configured. Missing: start_date, end_date, regions, metric="temperature_c".',
+      });
+    }
+
     const dateError = validateEntsogHistoricalDateRange({
-      from: input.weather!.start_date,
-      to: input.weather!.end_date,
+      from: weatherInput.start_date,
+      to: weatherInput.end_date,
     });
 
     if (dateError) {

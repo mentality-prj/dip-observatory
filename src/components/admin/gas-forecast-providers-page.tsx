@@ -401,6 +401,7 @@ export function WeatherRegionsCombobox({
   const [open, setOpen] = useState(initialOpen);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const selectedPresets = presets.filter((preset) => selectedValues.includes(preset.value));
 
   useEffect(() => {
@@ -432,7 +433,9 @@ export function WeatherRegionsCombobox({
   const activeOption = options[highlightedIndex] ?? null;
   const activeOptionId = activeOption
     ? toOptionDomId(optionIdPrefix, activeOption.value)
-    : undefined;
+    : open && options.length === 0
+      ? `${optionIdPrefix}-empty`
+      : undefined;
 
   function toggleSelection(value: string) {
     onChange(
@@ -450,6 +453,7 @@ export function WeatherRegionsCombobox({
           className="box-border flex min-h-11 w-full min-w-0 max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus-within:border-cyan-300/60 focus-within:bg-white/8 focus-within:ring-2 focus-within:ring-cyan-300/20"
           onClick={() => {
             setOpen(true);
+            inputRef.current?.focus();
           }}
         >
           {selectedPresets.map((preset) => (
@@ -469,6 +473,7 @@ export function WeatherRegionsCombobox({
           ))}
           <input
             id={inputId}
+            ref={inputRef}
             type="text"
             className="min-w-[8rem] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
             role="combobox"
@@ -589,6 +594,9 @@ export function WeatherRegionsCombobox({
               : (
                 <li
                   id={`${optionIdPrefix}-empty`}
+                  role="option"
+                  aria-selected="false"
+                  aria-disabled="true"
                   className="px-2 py-1.5 text-sm text-slate-400"
                 >
                   No matching weather regions.
