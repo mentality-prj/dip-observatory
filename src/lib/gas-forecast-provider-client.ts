@@ -1,6 +1,7 @@
 import { normalizeDipBaseUrl } from "@/lib/dip-url";
 import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
+  type GasForecastEntsogCheckInput,
   mapGasForecastFailure,
   mapGasForecastSuccess,
   toSafeRawBody,
@@ -110,66 +111,9 @@ const AGSI_CONNECTIVITY_CHECK_INPUT = {
   type: "eu",
 } as const;
 
-const ENTSOG_FLOW_INDICATOR = "Physical Flow" as const;
-const ENTSOG_FLOW_PERIOD_TYPE = "day" as const;
-
-type EntsogConnectivityCheckInput = {
-  pointDirection: string;
-  from: string;
-  to: string;
-  indicator: typeof ENTSOG_FLOW_INDICATOR;
-  periodType: typeof ENTSOG_FLOW_PERIOD_TYPE;
-};
-
-function readConfiguredValue(keys: readonly string[]) {
-  for (const key of keys) {
-    const value = process.env[key]?.trim();
-    if (value) {
-      return value;
-    }
-  }
-
-  return "";
-}
-
-function getEntsogConnectivityCheckInput() {
-  const pointDirection = readConfiguredValue([
-    "DIP_ENTSOG_POINT_DIRECTION",
-    "DIP_GAS_FORECAST_ENTSOG_POINT_DIRECTION",
-  ]);
-  const from = readConfiguredValue([
-    "DIP_ENTSOG_FROM",
-    "DIP_GAS_FORECAST_ENTSOG_FROM",
-  ]);
-  const to = readConfiguredValue([
-    "DIP_ENTSOG_TO",
-    "DIP_GAS_FORECAST_ENTSOG_TO",
-  ]);
-
-  const missing: string[] = [];
-  if (!pointDirection) missing.push("DIP_ENTSOG_POINT_DIRECTION");
-  if (!from) missing.push("DIP_ENTSOG_FROM");
-  if (!to) missing.push("DIP_ENTSOG_TO");
-
-  if (missing.length > 0) {
-    return { input: null, missing };
-  }
-
-  return {
-    input: {
-      pointDirection,
-      from,
-      to,
-      indicator: ENTSOG_FLOW_INDICATOR,
-      periodType: ENTSOG_FLOW_PERIOD_TYPE,
-    } satisfies EntsogConnectivityCheckInput,
-    missing: [],
-  };
-}
-
 function buildGasForecastCapabilityRequest(
   providerId: GasForecastProviderId,
-  entsogInput?: EntsogConnectivityCheckInput,
+  entsogInput?: GasForecastEntsogCheckInput,
 ) {
   if (providerId === "agsi") {
     return {
@@ -211,14 +155,13 @@ async function readJsonOrText(response: Response) {
 
 export async function testGasForecastProviderConnection(
   providerId: GasForecastProviderId,
+  entsogInput?: GasForecastEntsogCheckInput,
 ): Promise<GasForecastConnectionResult> {
   const baseUrl = getDipBaseUrl();
   const apiKey = getDipApiKey();
   const hasApiKey = Boolean(apiKey);
   const capabilityUrls = buildGasForecastCapabilityUrls();
   const timeoutMs = getDipRequestTimeoutMs();
-  const entsogQuery = providerId === "entsog" ? getEntsogConnectivityCheckInput() : null;
-
   logGasForecastDiagnostic("info", "server_action_entered", {
     providerId,
     dipApiBaseUrlPresent: Boolean(process.env.DIP_API_BASE_URL),
@@ -247,16 +190,31 @@ export async function testGasForecastProviderConnection(
     });
   }
 
-  if (providerId === "entsog" && !entsogQuery?.input) {
-    return mapGasForecastFailure({
-      providerId,
-      httpStatus: 503,
-      responseTimeMs: null,
-      payload: null,
-      stage: "configuration",
-      fallbackMessage: `ENTSOG provider check is not configured. Missing: ${entsogQuery?.missing.join(", ") ?? "DIP_ENTSOG_POINT_DIRECTION, DIP_ENTSOG_FROM, DIP_ENTSOG_TO"}.`,
-    });
+  if (providerId === "entsog") {
+    const missing: string[] = [];
+    if (!entsogInput?.pointDirection?.trim()) missing.push("pointDirection");
+    if (!entsogInput?.from?.trim()) missing.push("from");
+    if (!entsogInput?.to?.trim()) missing.push("to");
+    if (entsogInput?.indicator !== "Physical Flow")
+      missing.push('indicator="Physical Flow"');
+    if (entsogInput?.periodType !== "day") missing.push('periodType="day"');
+
+    if (missing.length > 0) {
+      return mapGasForecastFailure({
+        providerId,
+        httpStatus: 503,
+        responseTimeMs: null,
+        payload: null,
+        stage: "configuration",
+        fallbackMessage: `ENTSOG provider check is not configured. Missing: ${missing.join(", ")}.`,
+      });
+    }
   }
+
+  const requestPayload = buildGasForecastCapabilityRequest(
+    providerId,
+    providerId === "entsog" ? entsogInput : undefined,
+  );
 
   const startedAt = performance.now();
 
@@ -274,12 +232,7 @@ export async function testGasForecastProviderConnection(
             "Content-Type": "application/json",
             "x-api-key": apiKey,
           },
-          body: JSON.stringify(
-            buildGasForecastCapabilityRequest(
-              providerId,
-              entsogQuery?.input ?? undefined,
-            ),
-          ),
+          body: JSON.stringify(requestPayload),
           cache: "no-store",
           signal: controller.signal,
         });

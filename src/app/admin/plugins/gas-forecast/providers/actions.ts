@@ -10,11 +10,29 @@ import {
   GAS_FORECAST_PROVIDER_IDS,
   mapGasForecastFailure,
   type GasForecastConnectionResult,
+  type GasForecastEntsogCheckInput,
   type GasForecastProviderId,
 } from "@/lib/gas-forecast-provider-model";
 
+const entsogSchema = z.object({
+  pointDirection: z.string().trim().min(1),
+  from: z.string().trim().min(1),
+  to: z.string().trim().min(1),
+  indicator: z.literal("Physical Flow"),
+  periodType: z.literal("day"),
+});
+
 const requestSchema = z.object({
   providerId: z.enum(GAS_FORECAST_PROVIDER_IDS),
+  entsog: entsogSchema.optional(),
+}).superRefine((input, context) => {
+  if (input.providerId === "entsog" && !input.entsog) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["entsog"],
+      message: "ENTSOG query is required.",
+    });
+  }
 });
 
 /**
@@ -25,14 +43,18 @@ const requestSchema = z.object({
  */
 export async function testGasForecastProviderAction(input: {
   providerId: GasForecastProviderId;
+  entsog?: GasForecastEntsogCheckInput;
 }): Promise<GasForecastConnectionResult> {
   logGasForecastDiagnostic("info", "server_action_entered", {
     providerIdRaw: input?.providerId ?? null,
   });
 
   try {
-    const { providerId } = requestSchema.parse(input);
-    return await testGasForecastProviderConnection(providerId);
+    const { providerId, entsog } = requestSchema.parse(input);
+    return await testGasForecastProviderConnection(
+      providerId,
+      providerId === "entsog" ? entsog : undefined,
+    );
   } catch (error) {
     logGasForecastDiagnostic("error", "failure", {
       failureStage: "server_action_serialization",
