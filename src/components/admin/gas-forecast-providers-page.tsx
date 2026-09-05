@@ -229,10 +229,10 @@ function FlowPointCombobox({
           id="entsog-point-direction"
           type="text"
           role="combobox"
-          aria-expanded={open}
+          aria-expanded={showListbox}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          aria-activedescendant={open ? activeOptionId : undefined}
+          aria-activedescendant={showListbox ? activeOptionId : undefined}
           aria-controls={showListbox ? "entsog-point-direction-options" : undefined}
           autoComplete="off"
           value={query}
@@ -316,7 +316,8 @@ function FlowPointCombobox({
                     key={option.value}
                     id={`entsog-point-direction-option-${option.value}`}
                     role="option"
-                    aria-selected={selected}
+                    aria-selected={highlighted}
+                    data-active={highlighted ? "true" : "false"}
                   >
                     <button
                       type="button"

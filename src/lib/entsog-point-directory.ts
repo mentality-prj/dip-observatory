@@ -290,7 +290,6 @@ async function fetchPage(offset: number) {
 export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory> {
   const rawRecords: EntsogOperatorPointDirectionRecord[] = [];
   let totalRecords: number | null = null;
-  let previousSignature = "";
 
   for (let page = 0; page < ENTSOG_MAX_PAGES; page += 1) {
     const offset = page * ENTSOG_PAGE_SIZE;
@@ -303,26 +302,6 @@ export async function fetchEntsogPointDirectory(): Promise<EntsogPointDirectory>
     if (records.length === 0) {
       break;
     }
-
-    const firstValue = readString(records[0] ?? {}, [
-      "pointDirection",
-      "pointDirectionKey",
-      "operatorPointDirection",
-      "operatorPointDirectionKey",
-    ]);
-    const lastValue = readString(records.at(-1) ?? {}, [
-      "pointDirection",
-      "pointDirectionKey",
-      "operatorPointDirection",
-      "operatorPointDirectionKey",
-    ]);
-    const signature = `${records.length}:${firstValue}:${lastValue}`;
-
-    if (signature === previousSignature) {
-      break;
-    }
-
-    previousSignature = signature;
     rawRecords.push(...records);
 
     if (
