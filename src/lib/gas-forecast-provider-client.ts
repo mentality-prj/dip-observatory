@@ -310,10 +310,11 @@ export async function testGasForecastProviderConnection(
   }
 
   if (providerId === "ttf") {
+    const ttfInput = input?.ttf;
     const missing: string[] = [];
-    if (!input?.ttf?.start_date?.trim()) missing.push("start_date");
-    if (!input?.ttf?.end_date?.trim()) missing.push("end_date");
-    if (!input?.ttf?.instrument?.trim()) missing.push("instrument");
+    if (!ttfInput?.start_date?.trim()) missing.push("start_date");
+    if (!ttfInput?.end_date?.trim()) missing.push("end_date");
+    if (!ttfInput?.instrument?.trim()) missing.push("instrument");
 
     if (missing.length > 0) {
       return mapGasForecastFailure({
@@ -327,8 +328,8 @@ export async function testGasForecastProviderConnection(
     }
 
     const dateError = validateEntsogHistoricalDateRange({
-      from: input.ttf.start_date,
-      to: input.ttf.end_date,
+      from: ttfInput?.start_date ?? "",
+      to: ttfInput?.end_date ?? "",
     });
 
     if (dateError) {
