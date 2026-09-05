@@ -840,12 +840,12 @@ export function GasForecastProvidersPage() {
             const weatherRegionsInputId = `${provider.id}-regions-search`;
             const weatherRegionsListboxId = `${provider.id}-regions-options`;
             const weatherRegionOptionPrefix = `${provider.id}-region-option`;
-            const ttfFromInputId = `${provider.id}-from`;
-            const ttfToInputId = `${provider.id}-to`;
+            const ttfFromInputId = `${provider.id}-start-date`;
+            const ttfToInputId = `${provider.id}-end-date`;
             const ttfInstrumentInputId = `${provider.id}-instrument`;
-            const ttfErrorId = `${provider.id}-validation-error`;
-            const weatherFromInputId = `${provider.id}-from`;
-            const weatherToInputId = `${provider.id}-to`;
+            const ttfErrorId = `${provider.id}-query-validation-error`;
+            const weatherFromInputId = `${provider.id}-start-date`;
+            const weatherToInputId = `${provider.id}-end-date`;
             const weatherMetricInputId = `${provider.id}-metric`;
 
             return (

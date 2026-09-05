@@ -47,11 +47,11 @@ test("renders static ENTSOG presets into the combobox selection flow", () => {
 
 test("renders Weather date pickers with local-today max constraints and fixed metric", () => {
   const html = renderToStaticMarkup(<GasForecastProvidersPage />);
-  const fromMaxMatch = html.match(/id="weather-from"[^>]*max="([^"]+)"/);
-  const toMaxMatch = html.match(/id="weather-to"[^>]*max="([^"]+)"/);
+  const fromMaxMatch = html.match(/id="weather-start-date"[^>]*max="([^"]+)"/);
+  const toMaxMatch = html.match(/id="weather-end-date"[^>]*max="([^"]+)"/);
 
-  assert.equal(html.includes('id="weather-from"'), true);
-  assert.equal(html.includes('id="weather-to"'), true);
+  assert.equal(html.includes('id="weather-start-date"'), true);
+  assert.equal(html.includes('id="weather-end-date"'), true);
   assert.equal(html.includes('id="weather-metric"'), true);
   assert.equal(html.includes('value="Temperature (°C)"'), true);
   assert.ok(fromMaxMatch);
@@ -63,11 +63,11 @@ test("renders Weather date pickers with local-today max constraints and fixed me
 
 test("renders TTF date pickers with local-today max constraints and an instrument field", () => {
   const html = renderToStaticMarkup(<GasForecastProvidersPage />);
-  const fromMaxMatch = html.match(/id="ttf-from"[^>]*max="([^"]+)"/);
-  const toMaxMatch = html.match(/id="ttf-to"[^>]*max="([^"]+)"/);
+  const fromMaxMatch = html.match(/id="ttf-start-date"[^>]*max="([^"]+)"/);
+  const toMaxMatch = html.match(/id="ttf-end-date"[^>]*max="([^"]+)"/);
 
-  assert.equal(html.includes('id="ttf-from"'), true);
-  assert.equal(html.includes('id="ttf-to"'), true);
+  assert.equal(html.includes('id="ttf-start-date"'), true);
+  assert.equal(html.includes('id="ttf-end-date"'), true);
   assert.equal(html.includes('id="ttf-instrument"'), true);
   assert.equal(html.includes('placeholder="e.g. front_month"'), true);
   assert.ok(fromMaxMatch);
