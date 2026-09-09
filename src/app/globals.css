@@ -65,3 +65,20 @@ code,
 	background: rgba(34, 211, 238, 0.28);
 	color: white;
 }
+
+/* Shared outer geometry. Prototype-specific components own only their content and theme. */
+.prototype-shell-content > main {
+	width: 100%;
+	max-width: 1700px;
+	margin-inline: auto;
+}
+
+.prototype-shell-content > main > div {
+	width: 100%;
+}
+
+[data-prototype-theme="cyan"] { --prototype-accent: 103 232 249; }
+[data-prototype-theme="violet"] { --prototype-accent: 196 181 253; }
+[data-prototype-theme="amber"] { --prototype-accent: 252 211 77; }
+[data-prototype-theme="emerald"] { --prototype-accent: 110 231 183; }
+[data-prototype-theme="rose"] { --prototype-accent: 253 164 175; }
