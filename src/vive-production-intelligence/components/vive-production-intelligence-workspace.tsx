@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, ArrowRight, BrainCircuit, CheckCircle2, Network, Play, RotateCcw, ShieldAlert } from "lucide-react";
+import { Activity, ArrowRight, BrainCircuit, CheckCircle2, Network, Play, RotateCcw, ShieldAlert, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/observatory-i18n";
 
 type Inputs = {
@@ -37,7 +36,9 @@ const INITIAL: Inputs = {
   outbound_pressure: 68,
 };
 
-const LABELS: Record<Locale, Record<keyof Inputs | "title" | "subtitle" | "run" | "running" | "reset" | "bottleneck" | "propagation" | "alternatives" | "drivers" | "explanation" | "demo" | "human", string>> = {
+type ViveLocale = "en" | "pl";
+type CopyKey = keyof Inputs | "title" | "subtitle" | "run" | "running" | "reset" | "bottleneck" | "propagation" | "alternatives" | "drivers" | "explanation" | "demo" | "human";
+const LABELS: Record<ViveLocale, Record<CopyKey, string>> = {
   en: {
     title: "Production & Logistics → Decision",
     subtitle: "Digital Twin-style state simulation for bottleneck detection, risk propagation and what-if decisions.",
