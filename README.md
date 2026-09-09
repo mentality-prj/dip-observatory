@@ -12,8 +12,10 @@ The Observatory expects these backend settings:
 
 - `DIP_API_BASE_URL` — base URL of the DIP backend
 - `DIP_API_KEY` — API key used for Observatory and futures mispricing requests
-- `DIP_GAS_FORECAST_CAPABILITY_PATH` — optional exact DIP API path for the existing gas-forecast capability used by `/admin/plugins/gas-forecast/providers`; if unset, Observatory probes a short list of likely PluginRuntime capability paths
-- `DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH` — optional exact DIP API path for `/admin/plugins/gas-forecast/eidos`; if unset, Observatory probes likely PluginRuntime capability paths for `gas.forecast.experiment`
+- `DIP_GAS_FORECAST_CAPABILITY_PATH` — optional exact DIP API path for the gas-forecast provider capability; if unset, Observatory probes a short list of likely PluginRuntime capability paths
+- `DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH` — optional exact DIP API path for the gas forecasting engine capability; if unset, Observatory probes likely PluginRuntime capability paths for `gas.forecast.experiment`
+
+The public gas forecasting workspace is available at `/en/gas-forecast` and `/pl/gas-forecast`. It combines provider/data validation and the forecasting engine in one demonstrator.
 
 First, run the development server:
 
@@ -42,10 +44,8 @@ To learn more about Next.js, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The easiest way to deploy your Next.js app is to deploy the project through Vercel.
