@@ -1,83 +1,92 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRight, BrainCircuit, CheckCircle2, Info, LineChart, Play, RotateCcw, Target, Zap } from "lucide-react";
+import { useState } from "react";
+import { Activity, ArrowRight, BrainCircuit, CheckCircle2, ChevronRight, Clock3, Info, Play, RotateCcw, ShieldAlert, SlidersHorizontal, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/observatory-i18n";
 
-const ACTUAL = [108, 106, 111, 115, 112, 118, 121, 119, 124, 129, 127, 132];
-const HICP = [118.1, 118.4, 118.7, 119, 119.2, 119.7, 120.1, 120.4, 120.8, 121.1, 121.4, 121.8];
-const LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-type Scenario = "base" | "growth" | "shock";
-const scenarioConfig: Record<Scenario, { shift: number; pressure: number }> = { base: { shift: 0, pressure: 28 }, growth: { shift: 7, pressure: 42 }, shock: { shift: -10, pressure: 78 } };
+type Inputs = { demandChangePct: number; materialAvailabilityPct: number; productionCapacityPct: number; machineAvailabilityPct: number };
+type DecisionResult = {
+  audit_id: string; event_id: string; decision: string; rule: string; matched_conditions: number; total_conditions: number; explanation: string[]; timestamp: string;
+  rules_executed: Array<{ rule_name: string; matched: boolean; conditions_total: number; conditions_matched: number; evidence: Array<{ feature: string; operator: string; threshold: number | string | boolean | Array<number | string | boolean>; actual_value: number | string | boolean | null; passed: boolean }> }>;
+};
+type Stage = "idle" | "inputs" | "evaluating" | "decision" | "error";
 
-function linePoints(values: number[], min = 95, max = 150) {
-  return values.map((value, index) => `${(index / Math.max(values.length - 1, 1)) * 100},${Math.max(8, Math.min(92, 92 - ((value - min) / (max - min)) * 72))}`).join(" ");
-}
+const INITIAL_INPUTS: Inputs = { demandChangePct: 7, materialAvailabilityPct: 88, productionCapacityPct: 86, machineAvailabilityPct: 94 };
+const STAGES = ["INPUTS", "EVALUATION", "DECISION"] as const;
 
-function ForecastChart({ values, playing }: { values: number[]; playing: boolean }) {
-  const actual = values.slice(0, 12);
-  const forecast = values.slice(11);
+function SliderField({ label, value, min, max, step = 1, unit, onChange }: { label: string; value: number; min: number; max: number; step?: number; unit: string; onChange: (value: number) => void }) {
+  const percentage = ((value - min) / (max - min)) * 100;
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-slate-950/70 p-4">
-      {playing && <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-cyan-300/5 to-transparent animate-pulse" />}
-      <svg viewBox="0 0 100 100" className="h-64 w-full" role="img" aria-label="Demand forecast trajectory">
-        <defs><linearGradient id="wsp-area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" className="stop-cyan" stopOpacity=".20" /><stop offset="100%" className="stop-cyan" stopOpacity="0" /></linearGradient></defs>
-        {[20, 45, 70, 92].map((y) => <line key={y} x1="0" y1={y} x2="100" y2={y} className="stroke-white/6" strokeWidth=".5" />)}
-        <polygon points={`${linePoints(values)} 100,92 0,92`} fill="url(#wsp-area)" />
-        <polyline points={linePoints(actual)} fill="none" className="stroke-cyan-300" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-        <polyline points={linePoints(forecast)} fill="none" className="stroke-emerald-300" strokeWidth="2.5" strokeDasharray="5 3" vectorEffect="non-scaling-stroke" />
-        {actual.map((value, index) => <circle key={index} cx={(index / 11) * 100} cy={92 - ((value - 95) / 55) * 72} r="1.3" className="fill-cyan-300" />)}
-        <line x1="91" y1="7" x2="91" y2="94" className="stroke-white/15" strokeDasharray="2 2" />
-        <text x="92" y="10" className="fill-slate-500 text-[3px]">FORECAST</text>
-      </svg>
-      <div className="grid grid-cols-6 gap-2 text-[10px] text-slate-600 sm:grid-cols-12">{LABELS.map((label) => <span key={label} className="text-center">{label}</span>)}</div>
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-400"><span className="inline-flex items-center gap-2"><span className="h-2 w-6 rounded-full bg-cyan-300" /> observed demand</span><span className="inline-flex items-center gap-2"><span className="h-2 w-6 border-t-2 border-dashed border-emerald-300" /> decision forecast</span></div>
+    <div className="space-y-2">
+      <div className="flex items-end justify-between gap-3"><label className="text-xs font-medium text-slate-300">{label}</label><span className="text-sm font-semibold tabular-nums text-white">{value}{unit}</span></div>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} className="w-full accent-cyan-300" style={{ background: `linear-gradient(to right, rgb(103 232 249) ${percentage}%, rgb(255 255 255 / 0.08) ${percentage}%)` }} aria-label={label} />
+      <div className="flex justify-between text-[10px] tabular-nums text-slate-600"><span>{min}{unit}</span><span>{max}{unit}</span></div>
     </div>
   );
 }
 
-function SignalMeter({ label, value, tone = "cyan" }: { label: string; value: number; tone?: "cyan" | "amber" | "emerald" }) {
-  const toneClass = tone === "amber" ? "bg-amber-300" : tone === "emerald" ? "bg-emerald-300" : "bg-cyan-300";
-  return <div><div className="mb-2 flex justify-between text-xs"><span className="text-slate-400">{label}</span><span className="text-white">{value}%</span></div><div className="h-2 overflow-hidden rounded-full bg-white/8"><div className={cn("h-full rounded-full transition-all duration-700", toneClass)} style={{ width: `${value}%` }} /></div></div>;
-}
+function featureLabel(feature: string) { return feature.replaceAll("_pct", "").replaceAll("_", " "); }
 
 export function WspDemandForecastWorkspace({ locale }: { locale: Locale }) {
-  const [scenario, setScenario] = useState<Scenario>("base");
-  const [playing, setPlaying] = useState(false);
-  const [step, setStep] = useState(0);
-  const [horizon, setHorizon] = useState("1 month");
+  const [inputs, setInputs] = useState<Inputs>(INITIAL_INPUTS);
+  const [stage, setStage] = useState<Stage>("idle");
+  const [result, setResult] = useState<DecisionResult | null>(null);
+  const [history, setHistory] = useState<Array<{ id: string; inputs: Inputs; decision: string }>>([]);
+  const [error, setError] = useState<string | null>(null);
+
   const copy = locale === "pl" ? {
-    eyebrow: "WSP PROTOTYP", title: "Demand Forecast → Production Decision", subtitle: "Nie tylko prognoza. Silnik pokazuje, jak zmiana sygnałów rynkowych wpływa na decyzję planistyczną.", demo: "Dane demonstracyjne — do walidacji na danych WSP", base: "Bazowy", growth: "Wzrost", shock: "Szok rynkowy", forecast: "Prognoza popytu", interval: "Przedział niepewności", signal: "Sygnał kierunku", baseline: "Ostatnia obserwacja", signals: "Sygnały modelu", history: "Historia popytu", external: "Food HICP", pressure: "Presja rynkowa", decision: "DECISION ENGINE", recommendation: "Rekomendacja planistyczna", why: "Dlaczego decyzja się zmieniła", run: "Uruchom symulację", reset: "Reset", processing: "Silnik analizuje sygnały…", capacity: "Przygotuj dodatkową zdolność produkcyjną", monitor: "Monitoruj sygnał przed finalnym commitmentem", validated: "HUMAN-IN-THE-LOOP", model: "Model", horizon: "Horyzont"
+    eyebrow: "WSP PROTOTYP", title: "Production State → Decision", subtitle: "Zmień stan operacyjny, uruchom silnik i zobacz decyzję wygenerowaną przez DIP.", demo: "Dane demonstracyjne — do walidacji na danych WSP", demand: "Zmiana popytu", material: "Dostępność materiału", capacity: "Zdolność produkcyjna", machine: "Dostępność maszyn", run: "Uruchom decyzję", running: "DIP analizuje…", reset: "Reset", decision: "DECISION ENGINE", recommendation: "Rekomendacja", trace: "Ślad wykonania DIP", evidence: "Dowody warunków", history: "Historia uruchomień", ready: "Gotowe do uruchomienia", error: "Nie udało się wykonać decyzji", human: "HUMAN-IN-THE-LOOP", real: "Real execution · DIP Core", initial: "Ustaw parametry i uruchom decyzję.", changed: "Stan wejściowy zmieniony — uruchom DIP ponownie.", noData: "Brak wyników"
   } : {
-    eyebrow: "WSP PROTOTYPE", title: "Demand Forecast → Production Decision", subtitle: "Not just a forecast. The engine shows how changing market signals alter the planning decision.", demo: "Demonstration data — to be validated on WSP data", base: "Baseline", growth: "Growth", shock: "Market shock", forecast: "Demand forecast", interval: "Uncertainty interval", signal: "Direction signal", baseline: "Latest observation", signals: "Model signals", history: "Demand history", external: "Food HICP", pressure: "Market pressure", decision: "DECISION ENGINE", recommendation: "Planning recommendation", why: "Why the decision moved", run: "Run simulation", reset: "Reset", processing: "Engine is processing signals…", capacity: "Prepare additional production capacity", monitor: "Monitor the leading signal before final commitment", validated: "HUMAN-IN-THE-LOOP", model: "Model", horizon: "Horizon"
+    eyebrow: "WSP PROTOTYPE", title: "Production State → Decision", subtitle: "Change the operational state, run the engine, and see a decision generated by DIP.", demo: "Demonstration data — to be validated on WSP data", demand: "Demand change", material: "Material availability", capacity: "Production capacity", machine: "Machine availability", run: "Run decision", running: "DIP is evaluating…", reset: "Reset", decision: "DECISION ENGINE", recommendation: "Recommendation", trace: "DIP execution trace", evidence: "Condition evidence", history: "Run history", ready: "Ready to run", error: "Decision execution failed", human: "HUMAN-IN-THE-LOOP", real: "Real execution · DIP Core", initial: "Set the operating parameters and run the decision.", changed: "Input state changed — run DIP again.", noData: "No result yet"
   };
-  const config = scenarioConfig[scenario];
-  const forecast = 136 + config.shift;
-  const low = forecast - (scenario === "shock" ? 12 : 8);
-  const high = forecast + (scenario === "growth" ? 11 : 9);
-  const latest = ACTUAL[ACTUAL.length - 1];
-  const change = ((forecast - latest) / latest) * 100;
-  const direction = change > 2 ? "UP" : change < -2 ? "DOWN" : "STABLE";
-  const forecastSeries = useMemo(() => { const extension = step === 0 ? latest : step === 1 ? latest + (forecast - latest) * .35 : step === 2 ? latest + (forecast - latest) * .72 : forecast; return [...ACTUAL, extension, extension + (step >= 3 ? 1.5 : 0)]; }, [forecast, latest, step]);
-  useEffect(() => { if (!playing) return; if (step >= 3) { setPlaying(false); return; } const timer = window.setTimeout(() => setStep((value) => value + 1), 850); return () => window.clearTimeout(timer); }, [playing, step]);
-  function run() { setStep(0); setPlaying(true); }
-  function reset() { setPlaying(false); setStep(0); setScenario("base"); }
-  const phaseLabel = step === 0 ? "INPUTS" : step === 1 ? "FORECAST" : step === 2 ? "UNCERTAINTY" : "DECISION";
+
+  const setInput = <K extends keyof Inputs>(key: K, value: Inputs[K]) => { setInputs((current) => ({ ...current, [key]: value })); setStage("idle"); setError(null); };
+
+  async function runDecision() {
+    setStage("inputs"); setError(null); setResult(null);
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
+    setStage("evaluating");
+    try {
+      const response = await fetch("/api/dip/production-decision", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(inputs) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "DIP request failed");
+      await new Promise((resolve) => window.setTimeout(resolve, 300));
+      setResult(payload as DecisionResult); setStage("decision");
+      setHistory((current) => [{ id: payload.audit_id, inputs: { ...inputs }, decision: payload.decision }, ...current].slice(0, 5));
+    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Unable to execute DIP decision"); setStage("error"); }
+  }
+
+  function reset() { setInputs(INITIAL_INPUTS); setStage("idle"); setResult(null); setError(null); setHistory([]); }
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-white md:px-8">
       <div className="mx-auto max-w-[1500px] space-y-6">
-        <header className="flex flex-col gap-4 border-b border-white/8 pb-6 lg:flex-row lg:items-end lg:justify-between"><div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400"><LineChart className="h-4 w-4" />{copy.eyebrow}</div><h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{copy.title}</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{copy.subtitle}</p></div><Badge variant="amber">{copy.demo}</Badge></header>
-        <section className="grid gap-3 lg:grid-cols-[1fr_auto_auto]"><div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3"><div className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">Scenario</div><div className="flex flex-wrap gap-2">{([["base", copy.base], ["growth", copy.growth], ["shock", copy.shock]] as const).map(([id, label]) => <Button key={id} size="sm" variant={scenario === id ? "default" : "secondary"} onClick={() => { setScenario(id); setStep(0); setPlaying(false); }}>{label}</Button>)}</div></div><div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3"><div className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-500">{copy.horizon}</div><select value={horizon} onChange={(e) => setHorizon(e.target.value)} className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-200"><option>1 month</option><option>3 months</option><option>6 months</option></select></div><div className="flex items-center gap-2 rounded-2xl border border-cyan-300/20 bg-cyan-300/5 px-4 py-3"><BrainCircuit className="h-5 w-5 text-cyan-300" /><div><div className="text-[10px] uppercase tracking-[0.18em] text-cyan-300/70">{copy.model}</div><div className="text-sm font-medium text-cyan-100">wsp-demand-v0.1</div></div></div></section>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{[[copy.forecast, `${forecast} idx`, `${change >= 0 ? "+" : ""}${change.toFixed(1)}% vs latest`, "positive"], [copy.interval, `${low} — ${high}`, "model uncertainty range", "neutral"], [copy.signal, direction, "historical + external signals", direction === "UP" ? "positive" : "warning"], [copy.baseline, `${latest} idx`, "latest observed point", "neutral"]].map(([label, value, sub, tone]) => <div key={label} className="rounded-2xl border border-white/8 bg-white/4 p-4 transition-all duration-500"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</div><div className={cn("mt-2 text-2xl font-semibold", tone === "positive" ? "text-emerald-300" : tone === "warning" ? "text-amber-300" : "text-white")}>{value}</div><div className="mt-1 text-xs text-slate-500">{sub}</div></div>)}</section>
-        <section className="grid gap-4 xl:grid-cols-[1.55fr_.75fr]"><Card className="border-white/8 bg-white/[0.03]"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle>{copy.forecast}</CardTitle><p className="mt-1 text-sm text-slate-500">{phaseLabel} · {horizon}</p></div><Button onClick={playing ? () => setPlaying(false) : run} className="gap-2">{playing ? <Activity className="h-4 w-4 animate-pulse" /> : <Play className="h-4 w-4" />}{playing ? copy.processing : copy.run}</Button></div></CardHeader><CardContent><ForecastChart values={forecastSeries} playing={playing} /><div className="mt-4 grid grid-cols-4 gap-1">{["INPUTS", "FORECAST", "UNCERTAINTY", "DECISION"].map((label, index) => <div key={label} className={cn("h-1 rounded-full transition-all duration-500", step >= index ? "bg-cyan-300" : "bg-white/8")} />)}</div><div className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-slate-600"><span>signals</span><span>decision</span></div></CardContent></Card><Card className="border-cyan-300/15 bg-cyan-300/[0.04]"><CardHeader><div className="flex items-center gap-2 text-cyan-300"><Zap className="h-4 w-4" /><CardTitle>{copy.signals}</CardTitle></div></CardHeader><CardContent className="space-y-5"><SignalMeter label={copy.history} value={72} /><SignalMeter label={copy.external} value={28} tone="emerald" /><SignalMeter label={copy.pressure} value={config.pressure} tone={scenario === "shock" ? "amber" : "cyan"} /><div className="rounded-2xl border border-white/8 bg-white/4 p-4 transition-all duration-500"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Food HICP</div><div className="mt-1 text-2xl font-semibold text-white">{HICP[11].toFixed(1)}</div><div className="mt-1 text-xs text-slate-500">lagged external signal · conservative adjustment</div></div></CardContent></Card></section>
-        <section className={cn("overflow-hidden rounded-3xl border p-5 transition-all duration-700 md:p-7", step >= 3 ? "border-emerald-300/30 bg-emerald-300/[0.06]" : "border-white/8 bg-white/[0.025]")}><div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"><div className="flex items-start gap-4"><div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-500", step >= 3 ? "bg-emerald-300 text-slate-950" : "bg-white/8 text-cyan-300")}>{step >= 3 ? <CheckCircle2 className="h-6 w-6" /> : <Target className="h-6 w-6" />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">{copy.decision}</div><h2 className="mt-2 text-xl font-semibold md:text-2xl">{step >= 3 ? copy.capacity : "Forecast → uncertainty → decision"}</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{step >= 3 ? copy.monitor : "The interesting part is not the number. The engine turns signals into an explainable planning action with uncertainty attached."}</p></div></div><div className="flex shrink-0 items-center gap-2"><Badge variant={step >= 3 ? "emerald" : "neutral"}>{copy.validated}</Badge><Button variant="secondary" size="sm" onClick={reset}><RotateCcw className="h-4 w-4" />{copy.reset}</Button></div></div></section>
-        <section className="grid gap-4 xl:grid-cols-2"><Card className="border-emerald-300/15 bg-emerald-300/[0.035]"><CardHeader><div className="flex items-center gap-2 text-emerald-300"><ArrowRight className="h-4 w-4" /><CardTitle>{copy.recommendation}</CardTitle></div></CardHeader><CardContent><div className="rounded-2xl border border-emerald-300/15 bg-slate-950/50 p-5"><div className="text-2xl font-semibold text-white">{step >= 3 ? copy.capacity : "Run the engine to generate a decision"}</div><p className="mt-3 text-sm leading-6 text-slate-400">{step >= 3 ? copy.monitor : "A planner sees the forecast, interval, contributing signals and the resulting action in one flow."}</p></div></CardContent></Card><Card className="border-white/8 bg-white/[0.03]"><CardHeader><CardTitle>{copy.why}</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-slate-400"><div className="flex items-start gap-3"><span className="mt-1.5 h-2 w-2 rounded-full bg-cyan-300" />{scenario === "shock" ? "Market pressure pulls the forecast down and widens uncertainty." : scenario === "growth" ? "The positive demand trajectory lifts the forecast while external pressure remains manageable." : "Seasonality remains the primary driver; external price signals provide adjustment context."}</div><div className="flex items-start gap-3"><span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-300" />The output is an interval and decision, not an unexplained point estimate.</div><div className="flex items-start gap-3"><span className="mt-1.5 h-2 w-2 rounded-full bg-amber-300" />Final production commitment stays with the planner.</div></CardContent></Card></section>
-        <div className="flex items-start gap-2 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-xs leading-5 text-slate-500"><Info className="mt-0.5 h-4 w-4 shrink-0" /> Prototype only. Replace the aggregate public benchmark with WSP sales, orders, promotions, inventory and production data for customer validation.</div>
+        <header className="flex flex-col gap-4 border-b border-white/8 pb-6 lg:flex-row lg:items-end lg:justify-between">
+          <div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400"><BrainCircuit className="h-4 w-4" />{copy.eyebrow}</div><h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{copy.title}</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{copy.subtitle}</p></div>
+          <div className="flex flex-wrap gap-2"><Badge variant="amber">{copy.demo}</Badge><Badge variant="emerald">{copy.real}</Badge></div>
+        </header>
+
+        <section className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
+          <Card className="border-white/8 bg-white/[0.03]"><CardHeader><div className="flex items-center justify-between gap-4"><div><div className="flex items-center gap-2 text-cyan-300"><SlidersHorizontal className="h-4 w-4" /><CardTitle>Operational state</CardTitle></div><p className="mt-1 text-sm text-slate-500">{stage === "idle" && result ? copy.changed : copy.initial}</p></div><Button variant="ghost" size="icon" onClick={reset} aria-label={copy.reset}><RotateCcw className="h-4 w-4" /></Button></div></CardHeader>
+            <CardContent className="space-y-7"><SliderField label={copy.demand} value={inputs.demandChangePct} min={-15} max={15} unit="%" onChange={(value) => setInput("demandChangePct", value)} /><SliderField label={copy.material} value={inputs.materialAvailabilityPct} min={50} max={100} unit="%" onChange={(value) => setInput("materialAvailabilityPct", value)} /><SliderField label={copy.capacity} value={inputs.productionCapacityPct} min={60} max={100} unit="%" onChange={(value) => setInput("productionCapacityPct", value)} /><SliderField label={copy.machine} value={inputs.machineAvailabilityPct} min={70} max={100} unit="%" onChange={(value) => setInput("machineAvailabilityPct", value)} />
+              <Button onClick={runDecision} disabled={stage === "inputs" || stage === "evaluating"} className="h-12 w-full gap-2 text-sm font-semibold">{stage === "inputs" || stage === "evaluating" ? <Activity className="h-4 w-4 animate-pulse" /> : <Play className="h-4 w-4" />}{stage === "inputs" || stage === "evaluating" ? copy.running : copy.run}</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-cyan-300/15 bg-cyan-300/[0.035]"><CardHeader><div className="flex items-center justify-between"><CardTitle>{copy.decision}</CardTitle><Badge variant={stage === "decision" ? "emerald" : stage === "error" ? "rose" : "neutral"}>{stage === "decision" ? "READY" : stage === "error" ? "ERROR" : "WAITING"}</Badge></div></CardHeader><CardContent>
+              <div className="mb-6 grid grid-cols-3 gap-2">{STAGES.map((item, index) => { const active = (stage === "inputs" && index === 0) || (stage === "evaluating" && index === 1) || (stage === "decision" && index === 2) || (stage === "idle" && index === 0); const done = (stage === "evaluating" && index === 0) || (stage === "decision" && index < 2); return <div key={item} className="space-y-2"><div className={cn("h-1 rounded-full transition-all duration-500", active || done ? "bg-cyan-300" : "bg-white/8")} /><div className={cn("text-[10px] font-semibold tracking-[0.16em]", active || done ? "text-cyan-300" : "text-slate-600")}>{item}</div></div>; })}</div>
+              {error ? <div className="rounded-2xl border border-rose-300/20 bg-rose-300/5 p-5"><div className="flex items-center gap-2 text-rose-300"><ShieldAlert className="h-4 w-4" /><span className="font-semibold">{copy.error}</span></div><p className="mt-2 break-words text-sm text-slate-400">{error}</p></div> : result ? <div className="space-y-5"><div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.05] p-5"><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">{copy.recommendation}</div><div className="mt-2 flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" /><h2 className="text-xl font-semibold leading-7">{result.decision}</h2></div><div className="mt-4 flex flex-wrap gap-2"><Badge variant="emerald">Rule: {result.rule}</Badge><Badge variant="neutral">{result.matched_conditions}/{result.total_conditions} conditions</Badge></div></div><div className="rounded-2xl border border-white/8 bg-black/10 p-4"><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><Clock3 className="h-3.5 w-3.5" />{copy.trace}</div><div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"><div><div className="text-slate-600">Audit</div><div className="mt-1 truncate text-slate-300">{result.audit_id}</div></div><div><div className="text-slate-600">Rule</div><div className="mt-1 text-slate-300">{result.rule}</div></div><div><div className="text-slate-600">Conditions</div><div className="mt-1 text-slate-300">{result.matched_conditions}/{result.total_conditions}</div></div><div><div className="text-slate-600">Event</div><div className="mt-1 truncate text-slate-300">{result.event_id}</div></div></div></div></div> : <div className="flex min-h-[260px] flex-col items-center justify-center text-center"><Target className="h-8 w-8 text-cyan-300/50" /><p className="mt-3 text-sm text-slate-500">{copy.ready}</p><p className="mt-1 max-w-sm text-xs leading-5 text-slate-600">{copy.initial}</p></div>}
+            </CardContent></Card>
+        </section>
+
+        {result && <section className="grid gap-4 xl:grid-cols-[1.1fr_.9fr]"><Card className="border-white/8 bg-white/[0.025]"><CardHeader><div className="flex items-center gap-2"><Info className="h-4 w-4 text-cyan-300" /><CardTitle>{copy.evidence}</CardTitle></div></CardHeader><CardContent className="space-y-3">{result.rules_executed.map((trace) => <div key={trace.rule_name} className="rounded-xl border border-white/7 bg-black/10 p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-300">{trace.rule_name}</span><Badge variant={trace.matched ? "emerald" : "neutral"}>{trace.matched ? "MATCH" : "NO MATCH"}</Badge></div><div className="mt-3 space-y-2">{trace.evidence.map((item) => <div key={`${trace.rule_name}-${item.feature}`} className="flex items-center justify-between gap-3 text-xs"><span className="text-slate-500">{featureLabel(item.feature)}</span><span className={cn("tabular-nums", item.passed ? "text-emerald-300" : "text-slate-400")}>{String(item.actual_value)} {item.operator} {String(item.threshold)}</span></div>)}</div></div>)}</CardContent></Card>
+          <Card className="border-white/8 bg-white/[0.025]"><CardHeader><div className="flex items-center gap-2"><ChevronRight className="h-4 w-4 text-cyan-300" /><CardTitle>{copy.history}</CardTitle></div></CardHeader><CardContent className="space-y-2">{history.length ? history.map((item, index) => <div key={item.id} className="rounded-xl border border-white/7 bg-black/10 p-3"><div className="flex items-start justify-between gap-3"><div><div className="text-[10px] uppercase tracking-[0.16em] text-slate-600">Run #{history.length - index}</div><div className="mt-1 text-sm font-medium text-slate-200">{item.decision}</div></div><ArrowRight className="mt-1 h-4 w-4 text-slate-600" /></div><div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-600"><span>Demand {item.inputs.demandChangePct}%</span><span>Material {item.inputs.materialAvailabilityPct}%</span><span>Capacity {item.inputs.productionCapacityPct}%</span><span>Machine {item.inputs.machineAvailabilityPct}%</span></div></div>) : <div className="py-10 text-center text-xs text-slate-600">{copy.noData}</div>}</CardContent></Card></section>}
+
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/7 pt-4 text-[10px] uppercase tracking-[0.16em] text-slate-600"><span>{copy.human}</span><span>production-decision-v0.1 · inline workflow · DIP Core</span></footer>
       </div>
     </main>
   );
