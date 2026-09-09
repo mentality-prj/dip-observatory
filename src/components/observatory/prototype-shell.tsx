@@ -19,6 +19,7 @@ const NAV_ITEMS: PrototypeNavItem[] = [
   { href: "/production-scheduling", label: { en: "Production Scheduling", uk: "Планування виробництва", pl: "Planowanie produkcji" }, short: "SCH" },
   { href: "/supplier-decision", label: { en: "Supplier Decision", uk: "Вибір постачальника", pl: "Wybór dostawcy" }, short: "SUP" },
   { href: "/wsp-demand-forecast", label: { en: "WSP Demand Forecast", uk: "WSP прогноз попиту", pl: "WSP prognoza popytu" }, short: "WSP" },
+  { href: "/vive-production-intelligence", label: { en: "VIVE Production Intelligence", uk: "VIVE виробнича інтелігенція", pl: "VIVE Production Intelligence" }, short: "VIVE" },
 ];
 
 const LOCALE_SWITCHER: Locale[] = ["en", "pl", "uk"];
