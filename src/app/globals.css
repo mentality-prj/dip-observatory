@@ -82,3 +82,8 @@ code,
 [data-prototype-theme="amber"] { --prototype-accent: 252 211 77; }
 [data-prototype-theme="emerald"] { --prototype-accent: 110 231 183; }
 [data-prototype-theme="rose"] { --prototype-accent: 253 164 175; }
+
+/* The gas forecast workspace replaced the old admin-only provider shortcut. */
+a[href="/admin/plugins/gas-forecast/providers"] {
+	display: none !important;
+}
