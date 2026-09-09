@@ -1,6 +1,6 @@
 "use client";
 
-import { FlaskConical, Home } from "lucide-react";
+import { Check, Copy, FlaskConical, Home } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 
@@ -34,12 +34,24 @@ export function GasForecastEidosPage({
   const [result, setResult] = useState<GasForecastExperimentResult | null>(
     initialResult,
   );
+  const [isPayloadCopied, setIsPayloadCopied] = useState(false);
 
   function update<K extends keyof GasForecastExperimentRequest>(
     key: K,
     value: GasForecastExperimentRequest[K],
   ) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function copyRawPayload() {
+    if (!result) {
+      return;
+    }
+
+    const rawPayload = JSON.stringify(result.payload, null, 2) ?? "";
+    await navigator.clipboard.writeText(rawPayload);
+    setIsPayloadCopied(true);
+    window.setTimeout(() => setIsPayloadCopied(false), 1500);
   }
 
   return (
@@ -91,84 +103,85 @@ export function GasForecastEidosPage({
                   try {
                     const response = await runGasForecastExperimentAction(form);
                     setResult(response);
+                    setIsPayloadCopied(false);
                   } finally {
                     isSubmittingRef.current = false;
                   }
                 });
               }}
             >
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="start-date">start_date</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={form.start_date}
-                  onChange={(event) => update("start_date", event.target.value)}
-                />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="start-date">start_date</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={form.start_date}
+                    onChange={(event) => update("start_date", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end-date">end_date</Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={form.end_date}
+                    onChange={(event) => update("end_date", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="forecast-horizon-days">forecast_horizon_days</Label>
+                  <Input
+                    id="forecast-horizon-days"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={String(form.forecast_horizon_days)}
+                    onChange={(event) =>
+                      update("forecast_horizon_days", Number(event.target.value || "0"))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="volume-mwh">volume_mwh</Label>
+                  <Input
+                    id="volume-mwh"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={String(form.volume_mwh)}
+                    onChange={(event) =>
+                      update("volume_mwh", Number(event.target.value || "0"))
+                    }
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="procurement-threshold">
+                    procurement_threshold_eur_per_mwh
+                  </Label>
+                  <Input
+                    id="procurement-threshold"
+                    type="number"
+                    step={0.01}
+                    value={String(form.procurement_threshold_eur_per_mwh)}
+                    onChange={(event) =>
+                      update(
+                        "procurement_threshold_eur_per_mwh",
+                        Number(event.target.value || "0"),
+                      )
+                    }
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="end-date">end_date</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={form.end_date}
-                  onChange={(event) => update("end_date", event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="forecast-horizon-days">forecast_horizon_days</Label>
-                <Input
-                  id="forecast-horizon-days"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={String(form.forecast_horizon_days)}
-                  onChange={(event) =>
-                    update("forecast_horizon_days", Number(event.target.value || "0"))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="volume-mwh">volume_mwh</Label>
-                <Input
-                  id="volume-mwh"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={String(form.volume_mwh)}
-                  onChange={(event) =>
-                    update("volume_mwh", Number(event.target.value || "0"))
-                  }
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="procurement-threshold">
-                  procurement_threshold_eur_per_mwh
-                </Label>
-                <Input
-                  id="procurement-threshold"
-                  type="number"
-                  step={0.01}
-                  value={String(form.procurement_threshold_eur_per_mwh)}
-                  onChange={(event) =>
-                    update(
-                      "procurement_threshold_eur_per_mwh",
-                      Number(event.target.value || "0"),
-                    )
-                  }
-                />
-              </div>
-            </div>
 
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full"
-              disabled={isPending}
-            >
-              {isPending ? "Running experiment..." : "Run experiment"}
-            </Button>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={isPending}
+              >
+                {isPending ? "Running experiment..." : "Run experiment"}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -202,9 +215,26 @@ export function GasForecastEidosPage({
                 </div>
               ) : null}
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-                  Raw backend payload
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                    Raw backend payload
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-400 hover:text-white"
+                    aria-label="Copy raw backend payload"
+                    title="Copy raw backend payload"
+                    onClick={copyRawPayload}
+                  >
+                    {isPayloadCopied ? (
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
                 <pre
                   aria-label="Raw backend payload"
                   className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200"
