@@ -223,4 +223,25 @@ export async function runDipObservatoryScenario(
   return mapRunResponse(response);
 }
 
+export async function runDipPlugin(
+  pluginName: string,
+  capabilityId: string,
+  input: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  return dipFetch(
+    `/api/v1/plugins/${pluginName}/execute`,
+    z.record(z.string(), z.unknown()),
+    {
+      method: "POST",
+      body: JSON.stringify({
+        capability_id: capabilityId,
+        input,
+        config: {},
+        metadata: { source: "dip-observatory" },
+        features: input,
+      }),
+    },
+  );
+}
+
 export { DipApiError };
