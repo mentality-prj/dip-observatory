@@ -21,6 +21,9 @@ const NAV_ITEMS: PrototypeNavItem[] = [
   { href: "/wsp-demand-forecast", label: { en: "WSP Demand Forecast", uk: "WSP прогноз попиту", pl: "WSP prognoza popytu" }, short: "WSP" },
 ];
 
+const LOCALE_SWITCHER: Locale[] = ["en", "pl", "uk"];
+const LOCALE_SHORT_LABEL: Record<Locale, string> = { en: "EN", pl: "PL", uk: "UA" };
+
 const THEME_CLASS = {
   cyan: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
   violet: "text-violet-300 bg-violet-300/10 border-violet-300/20",
@@ -65,7 +68,7 @@ export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeSh
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             <div className="hidden items-center gap-1 rounded-lg border border-white/8 bg-white/[0.03] p-1 md:flex">
-              {SUPPORTED_LOCALES.map((option) => <button key={option} type="button" disabled={pending} onClick={() => changeLocale(option)} className={cn("rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition", option === locale ? "bg-white/10 text-white" : "text-slate-600 hover:text-slate-300")}>{option}</button>)}
+              {LOCALE_SWITCHER.map((option) => <button key={option} type="button" disabled={pending} onClick={() => changeLocale(option)} className={cn("rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider leading-none transition", option === locale ? "bg-white/10 text-white" : "text-slate-600 hover:text-slate-300")}>{LOCALE_SHORT_LABEL[option]}</button>)}
             </div>
             <Menu className="h-5 w-5 text-slate-400 lg:hidden" />
           </div>
@@ -75,10 +78,10 @@ export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeSh
         </div></div>
       </header>
       <div className="mx-auto w-full max-w-[1700px] px-0">
-        <div className="flex h-8 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 md:px-6 xl:px-10" aria-label="Breadcrumb">
-          <Home className="h-3 w-3 shrink-0 text-slate-600" />
-          <ChevronRight className="h-3 w-3 shrink-0 text-slate-700" />
-          <span className="truncate">{activeItem?.label[locale] ?? "Prototype"}</span>
+        <div className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 leading-none md:px-6 xl:px-10" aria-label="Breadcrumb">
+          <Home className="relative -top-px h-3 w-3 shrink-0 text-slate-600" />
+          <ChevronRight className="relative -top-px h-3 w-3 shrink-0 text-slate-700" />
+          <span className="truncate leading-none">{activeItem?.label[locale] ?? "Prototype"}</span>
         </div>
         <div className="prototype-shell-content">{children}</div>
       </div>
