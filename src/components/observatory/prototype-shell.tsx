@@ -32,7 +32,6 @@ export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeSh
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const navRef = useRef<HTMLElement>(null);
   const activeNavRef = useRef<HTMLAnchorElement>(null);
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
   const themeClass = THEME_CLASS[theme];
@@ -57,7 +56,7 @@ export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeSh
             <span className="hidden text-sm font-semibold tracking-tight sm:block">DIP Observatory</span>
           </Link>
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
-          <nav ref={navRef} className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex" aria-label="Prototype navigation" style={{ scrollbarWidth: "none" }}>
+          <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex" aria-label="Prototype navigation" style={{ scrollbarWidth: "none" }}>
             {NAV_ITEMS.map((item) => {
               const active = normalizedPath === item.href || (item.href !== "/" && normalizedPath.startsWith(`${item.href}/`));
               return <Link ref={active ? activeNavRef : undefined} key={item.href} href={buildLocalePath(item.href, locale)} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 text-xs font-medium leading-none transition", active ? cn(themeClass) : "text-slate-500 hover:bg-white/5 hover:text-slate-200")}><span className="w-7 text-center font-mono text-[9px] leading-none opacity-50">{item.short}</span><span className="whitespace-nowrap">{item.label[locale]}</span></Link>;
