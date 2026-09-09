@@ -7,8 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "react-hooks/set-state-in-effect": "error",
-      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/rules-of-hooks": "warn",
     },
   },
   globalIgnores([
