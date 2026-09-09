@@ -14,6 +14,7 @@ type PrototypeNavItem = { href: string; label: Record<Locale, string>; short: st
 const NAV_ITEMS: PrototypeNavItem[] = [
   { href: "/", label: { en: "Observatory", uk: "Observatory", pl: "Observatory" }, short: "OBS" },
   { href: "/gas-forecast", label: { en: "Gas Forecast", uk: "Прогноз газу", pl: "Prognoza gazu" }, short: "GAS" },
+  { href: "/production-decision", label: { en: "Production Decision", uk: "Виробничі рішення", pl: "Decyzje produkcyjne" }, short: "DEC" },
   { href: "/production-replanning", label: { en: "Production Replanning", uk: "Перепланування", pl: "Przeplanowanie" }, short: "REP" },
   { href: "/production-scheduling", label: { en: "Production Scheduling", uk: "Планування виробництва", pl: "Planowanie produkcji" }, short: "SCH" },
   { href: "/supplier-decision", label: { en: "Supplier Decision", uk: "Вибір постачальника", pl: "Wybór dostawcy" }, short: "SUP" },
