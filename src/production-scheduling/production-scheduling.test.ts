@@ -20,7 +20,6 @@ import {
   DEFAULT_REQUEST,
   getDemoDecision,
   ORDERS,
-  URGENT_ORDER,
   AERO_ORDER,
   buildUrgentOrderScenario,
   buildAerospaceOrderScenario,
@@ -39,7 +38,10 @@ import {
   computeSchedulingDecisionDelta,
   computeKeepCurrentTraceDiff,
 } from "@/production-scheduling/lib/scenario-lab-helpers";
-import type { SchedulingDecisionRequest, SchedulingScenario } from "@/production-scheduling/types";
+import type {
+  SchedulingDecisionRequest,
+  SchedulingScenario,
+} from "@/production-scheduling/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -94,9 +96,13 @@ describe("1. determinism", () => {
 describe("4. capacity constraint", () => {
   test("KEEP_CURRENT_SCHEDULE has capacity rule result", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE strategy should exist");
-    const cap = keep!.constraintResults.find((r) => r.ruleId === "RULE-CAPACITY");
+    const cap = keep!.constraintResults.find(
+      (r) => r.ruleId === "RULE-CAPACITY",
+    );
     assert.ok(cap, "RULE-CAPACITY should be evaluated");
   });
 
@@ -114,7 +120,9 @@ describe("4. capacity constraint", () => {
     const result = runSchedulingEngine(
       buildRequest({ orders: heavyOrders, planningHorizonDays: 1 }),
     );
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(
       keep!.schedule.some((t) => t.status === "NOT_SCHEDULED"),
       "Some orders should not be scheduled when capacity is exhausted",
@@ -133,16 +141,24 @@ describe("5. machine compatibility", () => {
     const modifiedOrders = DEFAULT_SCENARIO.orders.map((o) =>
       o.id === carportOrder.id ? { ...o, defaultLineId: "LINE-B" } : o,
     );
-    const result = runSchedulingEngine(buildRequest({ orders: modifiedOrders }));
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const compat = keep!.constraintResults.find((r) => r.ruleId === "RULE-MACHINE-COMPAT");
+    const result = runSchedulingEngine(
+      buildRequest({ orders: modifiedOrders }),
+    );
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const compat = keep!.constraintResults.find(
+      (r) => r.ruleId === "RULE-MACHINE-COMPAT",
+    );
     assert.ok(compat, "RULE-MACHINE-COMPAT should be evaluated");
   });
 
   test("all default assignments are compatible", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
     for (const strategy of result.strategies) {
-      const compat = strategy.constraintResults.find((r) => r.ruleId === "RULE-MACHINE-COMPAT");
+      const compat = strategy.constraintResults.find(
+        (r) => r.ruleId === "RULE-MACHINE-COMPAT",
+      );
       // With default assignments, all strategies use compatible lines
       if (strategy.strategyId !== "KEEP_CURRENT_SCHEDULE") {
         // REDISTRIBUTE may also use LINE-C which is universal — always compatible
@@ -159,23 +175,39 @@ describe("5. machine compatibility", () => {
 describe("6. material constraint", () => {
   test("UNAVAILABLE material makes strategy infeasible", () => {
     const ordersWithUnavailable = DEFAULT_SCENARIO.orders.map((o) =>
-      o.priority === "CRITICAL" ? { ...o, materialStatus: "UNAVAILABLE" as const } : o,
+      o.priority === "CRITICAL"
+        ? { ...o, materialStatus: "UNAVAILABLE" as const }
+        : o,
     );
-    const result = runSchedulingEngine(buildRequest({ orders: ordersWithUnavailable }));
+    const result = runSchedulingEngine(
+      buildRequest({ orders: ordersWithUnavailable }),
+    );
     // All strategies should have UNAVAILABLE constraint violations
     for (const strategy of result.strategies) {
-      const mat = strategy.constraintResults.find((r) => r.ruleId === "RULE-MATERIAL");
+      const mat = strategy.constraintResults.find(
+        (r) => r.ruleId === "RULE-MATERIAL",
+      );
       assert.ok(mat, "RULE-MATERIAL should be evaluated");
-      assert.equal(mat!.passed, false, "Material rule should fail when material unavailable");
+      assert.equal(
+        mat!.passed,
+        false,
+        "Material rule should fail when material unavailable",
+      );
     }
   });
 
   test("all AVAILABLE materials pass material rule", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
     for (const strategy of result.strategies) {
-      const mat = strategy.constraintResults.find((r) => r.ruleId === "RULE-MATERIAL");
+      const mat = strategy.constraintResults.find(
+        (r) => r.ruleId === "RULE-MATERIAL",
+      );
       assert.ok(mat, "RULE-MATERIAL should exist");
-      assert.equal(mat!.passed, true, "Material rule should pass with all AVAILABLE orders");
+      assert.equal(
+        mat!.passed,
+        true,
+        "Material rule should pass with all AVAILABLE orders",
+      );
     }
   });
 });
@@ -187,20 +219,36 @@ describe("6. material constraint", () => {
 describe("7. deadline constraint", () => {
   test("KEEP_CURRENT_SCHEDULE violates critical deadline under baseline disruption", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
     // The critical deadline rule should fail — ORDER-101 is pushed late
-    const dl = keep!.constraintResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE");
+    const dl = keep!.constraintResults.find(
+      (r) => r.ruleId === "RULE-CRITICAL-DEADLINE",
+    );
     assert.ok(dl, "RULE-CRITICAL-DEADLINE should be evaluated");
-    assert.equal(keep!.feasibility, "INFEASIBLE", "KEEP_CURRENT should be INFEASIBLE");
+    assert.equal(
+      keep!.feasibility,
+      "INFEASIBLE",
+      "KEEP_CURRENT should be INFEASIBLE",
+    );
   });
 
   test("recommended strategy protects all critical deadlines", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "Recommended strategy must exist");
-    const dl = rec!.constraintResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE");
-    assert.equal(dl!.passed, true, "Recommended strategy must protect critical deadlines");
+    const dl = rec!.constraintResults.find(
+      (r) => r.ruleId === "RULE-CRITICAL-DEADLINE",
+    );
+    assert.equal(
+      dl!.passed,
+      true,
+      "Recommended strategy must protect critical deadlines",
+    );
   });
 });
 
@@ -215,7 +263,10 @@ describe("8. setup/changeover", () => {
       (s) => s.feasibility === "FEASIBLE",
     );
     assert.ok(anyStrategy, "At least one strategy should be feasible");
-    const totalSetup = anyStrategy!.schedule.reduce((s, t) => s + t.setupHoursBefore, 0);
+    const totalSetup = anyStrategy!.schedule.reduce(
+      (s, t) => s + t.setupHoursBefore,
+      0,
+    );
     // There are mixed categories so some setup must occur
     assert.ok(totalSetup > 0, "Some setup/changeover time must be recorded");
   });
@@ -225,11 +276,14 @@ describe("8. setup/changeover", () => {
     const redistribute = result.strategies.find(
       (s) => s.strategyId === "REDISTRIBUTE_TO_OTHER_LINES",
     );
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(redistribute && keep);
     // REDISTRIBUTE should have equal or lower setup cost than KEEP_CURRENT
     assert.ok(
-      redistribute!.financialImpact.setupCost <= keep!.financialImpact.setupCost,
+      redistribute!.financialImpact.setupCost <=
+        keep!.financialImpact.setupCost,
       "REDISTRIBUTE should have ≤ setup cost compared to KEEP_CURRENT",
     );
   });
@@ -257,7 +311,9 @@ describe("9. alternative generation", () => {
 
   test("at least one strategy is feasible in baseline", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const feasible = result.strategies.filter((s) => s.feasibility === "FEASIBLE");
+    const feasible = result.strategies.filter(
+      (s) => s.feasibility === "FEASIBLE",
+    );
     assert.ok(feasible.length >= 1, "At least one strategy must be feasible");
   });
 });
@@ -269,7 +325,9 @@ describe("9. alternative generation", () => {
 describe("10. schedule scoring", () => {
   test("all feasible strategies have composite score > 0", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    for (const s of result.strategies.filter((s) => s.feasibility === "FEASIBLE")) {
+    for (const s of result.strategies.filter(
+      (s) => s.feasibility === "FEASIBLE",
+    )) {
       assert.ok(
         s.score.composite > 0,
         `${s.strategyId} should have positive composite score`,
@@ -279,10 +337,14 @@ describe("10. schedule scoring", () => {
 
   test("recommended strategy has the highest composite score among feasible", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec);
     const otherFeasible = result.strategies.filter(
-      (s) => s.feasibility === "FEASIBLE" && s.strategyId !== result.recommendedStrategy,
+      (s) =>
+        s.feasibility === "FEASIBLE" &&
+        s.strategyId !== result.recommendedStrategy,
     );
     for (const alt of otherFeasible) {
       assert.ok(
@@ -302,7 +364,8 @@ describe("11. financial calculation", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
     for (const s of result.strategies) {
       const fi = s.financialImpact;
-      const expected = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+      const expected =
+        fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
       assert.ok(
         Math.abs(fi.totalCost - expected) < 0.01,
         `${s.strategyId}: totalCost (${fi.totalCost}) should equal components sum (${expected})`,
@@ -382,9 +445,13 @@ describe("11. financial calculation", () => {
       },
       costConfig: DEFAULT_COST_CONFIG,
     });
-    const strategy = result.strategies.find((s) => s.strategyId === "USE_OVERTIME");
+    const strategy = result.strategies.find(
+      (s) => s.strategyId === "USE_OVERTIME",
+    );
     assert.ok(strategy);
-    const utilization = strategy!.lineUtilization.find((entry) => entry.lineId === "LINE-C");
+    const utilization = strategy!.lineUtilization.find(
+      (entry) => entry.lineId === "LINE-C",
+    );
     assert.ok(utilization);
     assert.equal(utilization!.overtimeHours, 1);
   });
@@ -397,10 +464,15 @@ describe("11. financial calculation", () => {
 describe("12. avoided cost calculation", () => {
   test("avoidedCostVsBaseline equals KEEP_CURRENT cost minus recommended cost", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     if (keep && rec) {
-      const expected = keep.financialImpact.totalCost - rec.financialImpact.totalCost;
+      const expected =
+        keep.financialImpact.totalCost - rec.financialImpact.totalCost;
       assert.ok(
         Math.abs(result.avoidedCostVsBaseline - expected) < 0.01,
         `avoidedCost (${result.avoidedCostVsBaseline}) should equal expected (${expected})`,
@@ -416,13 +488,27 @@ describe("12. avoided cost calculation", () => {
 describe("13–14. disruption calculation", () => {
   test("higher capacity reduction increases financial impact on KEEP_CURRENT", () => {
     const low = runSchedulingEngine(
-      buildRequest({ disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.1 } }),
+      buildRequest({
+        disruption: {
+          ...DEFAULT_SCENARIO.disruption,
+          capacityReductionFactor: 0.1,
+        },
+      }),
     );
     const high = runSchedulingEngine(
-      buildRequest({ disruption: { ...DEFAULT_SCENARIO.disruption, capacityReductionFactor: 0.5 } }),
+      buildRequest({
+        disruption: {
+          ...DEFAULT_SCENARIO.disruption,
+          capacityReductionFactor: 0.5,
+        },
+      }),
     );
-    const keepLow = low.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const keepHigh = high.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keepLow = low.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const keepHigh = high.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(keepLow && keepHigh);
     assert.ok(
       keepHigh!.financialImpact.totalCost >= keepLow!.financialImpact.totalCost,
@@ -432,13 +518,20 @@ describe("13–14. disruption calculation", () => {
 
   test("longer disruption produces a valid schedule with 5 strategies", () => {
     const long = runSchedulingEngine(
-      buildRequest({ disruption: { ...DEFAULT_SCENARIO.disruption, durationDays: 4 } }),
+      buildRequest({
+        disruption: { ...DEFAULT_SCENARIO.disruption, durationDays: 4 },
+      }),
     );
     // Engine should still produce all 5 strategies
     assert.equal(long.strategies.length, 5);
     // And at least one should be feasible
-    const feasible = long.strategies.filter((s) => s.feasibility === "FEASIBLE");
-    assert.ok(feasible.length >= 1, "At least one strategy should be feasible with 4-day disruption");
+    const feasible = long.strategies.filter(
+      (s) => s.feasibility === "FEASIBLE",
+    );
+    assert.ok(
+      feasible.length >= 1,
+      "At least one strategy should be feasible with 4-day disruption",
+    );
   });
 });
 
@@ -448,28 +541,46 @@ describe("13–14. disruption calculation", () => {
 
 describe("15. capacity reduction control (what-if)", () => {
   test("buildSchedulingScenario correctly maps lineBCapacityReductionPct", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, lineBCapacityReductionPct: 50 };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      lineBCapacityReductionPct: 50,
+    };
     const built = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     assert.equal(built.disruption.capacityReductionFactor, 0.5);
   });
 
   test("increasing Line B reduction changes financial impact", () => {
     const base = runSchedulingEngine(DEFAULT_REQUEST);
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, lineBCapacityReductionPct: 50 };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      lineBCapacityReductionPct: 50,
+    };
     const scenScenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const scenResult = runSchedulingEngine({ scenario: scenScenario, costConfig: DEFAULT_COST_CONFIG });
+    const scenResult = runSchedulingEngine({
+      scenario: scenScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
     // The scenario should produce a valid result (not an error)
     assert.ok(scenResult.strategies.length === 5);
     // The keep-current cost should be at least as high
-    const kBase = base.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const kScen = scenResult.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    assert.ok(kScen!.financialImpact.totalCost >= kBase!.financialImpact.totalCost);
+    const kBase = base.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const kScen = scenResult.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    assert.ok(
+      kScen!.financialImpact.totalCost >= kBase!.financialImpact.totalCost,
+    );
   });
 });
 
 describe("16. disruption duration control (what-if)", () => {
   test("buildSchedulingScenario correctly maps disruptionDurationDays", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, disruptionDurationDays: 4 };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      disruptionDurationDays: 4,
+    };
     const built = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     assert.equal(built.disruption.durationDays, 4);
   });
@@ -477,15 +588,24 @@ describe("16. disruption duration control (what-if)", () => {
 
 describe("17. critical deadline control (what-if)", () => {
   test("buildSchedulingScenario correctly maps criticalOrderDeadlineDays", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, criticalOrderDeadlineDays: 3 };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      criticalOrderDeadlineDays: 3,
+    };
     const built = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     const criticalOrder = built.orders.find((o) => o.id === "ORDER-101");
     assert.equal(criticalOrder?.deadlineDays, 3);
   });
 
   test("relaxing critical deadline reduces pressure on KEEP_CURRENT", () => {
-    const tight: WhatIfState = { ...BASELINE_WHAT_IF, criticalOrderDeadlineDays: 1 };
-    const loose: WhatIfState = { ...BASELINE_WHAT_IF, criticalOrderDeadlineDays: 5 };
+    const tight: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      criticalOrderDeadlineDays: 1,
+    };
+    const loose: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      criticalOrderDeadlineDays: 5,
+    };
     const tightResult = runSchedulingEngine({
       scenario: buildSchedulingScenario(DEFAULT_SCENARIO, tight),
       costConfig: DEFAULT_COST_CONFIG,
@@ -494,12 +614,17 @@ describe("17. critical deadline control (what-if)", () => {
       scenario: buildSchedulingScenario(DEFAULT_SCENARIO, loose),
       costConfig: DEFAULT_COST_CONFIG,
     });
-    const keepTight = tightResult.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const keepLoose = looseResult.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keepTight = tightResult.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const keepLoose = looseResult.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(keepTight && keepLoose);
     // With a relaxed deadline, the critical order is less likely to be "late"
     assert.ok(
-      keepLoose!.financialImpact.delayCost <= keepTight!.financialImpact.delayCost,
+      keepLoose!.financialImpact.delayCost <=
+        keepTight!.financialImpact.delayCost,
       "Relaxing the critical deadline should not increase delay cost",
     );
   });
@@ -507,7 +632,10 @@ describe("17. critical deadline control (what-if)", () => {
 
 describe("18. material control (what-if)", () => {
   test("buildSchedulingScenario correctly maps ORDER-103 material status", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, order103MaterialAvailable: false };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      order103MaterialAvailable: false,
+    };
     const built = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     const order103 = built.orders.find((o) => o.id === "ORDER-103");
     assert.equal(order103?.materialStatus, "UNAVAILABLE");
@@ -553,11 +681,16 @@ describe("19b. overtime cost control (what-if)", () => {
       scenario: { ...DEFAULT_SCENARIO, overtimeAvailable: true },
       costConfig: { ...DEFAULT_COST_CONFIG, overtimeCostPerHour: 50 },
     });
-    const otExpensive = expensive.strategies.find((s) => s.strategyId === "USE_OVERTIME");
-    const otCheap = cheap.strategies.find((s) => s.strategyId === "USE_OVERTIME");
+    const otExpensive = expensive.strategies.find(
+      (s) => s.strategyId === "USE_OVERTIME",
+    );
+    const otCheap = cheap.strategies.find(
+      (s) => s.strategyId === "USE_OVERTIME",
+    );
     assert.ok(otExpensive && otCheap);
     assert.ok(
-      otCheap!.financialImpact.overtimeCost <= otExpensive!.financialImpact.overtimeCost,
+      otCheap!.financialImpact.overtimeCost <=
+        otExpensive!.financialImpact.overtimeCost,
       "Cheaper overtime rate should not increase overtime cost",
     );
   });
@@ -576,7 +709,10 @@ describe("20. scenario reset", () => {
       costConfig: DEFAULT_COST_CONFIG,
     });
     // Decision should be the same after reset
-    assert.equal(baseResult.recommendedStrategy, rebuiltResult.recommendedStrategy);
+    assert.equal(
+      baseResult.recommendedStrategy,
+      rebuiltResult.recommendedStrategy,
+    );
   });
 });
 
@@ -590,8 +726,14 @@ describe("21. baseline immutability", () => {
       disruptionDurationDays: 4,
     };
     buildSchedulingScenario(original, what);
-    assert.equal(original.disruption.capacityReductionFactor, originalDisruption.capacityReductionFactor);
-    assert.equal(original.disruption.durationDays, originalDisruption.durationDays);
+    assert.equal(
+      original.disruption.capacityReductionFactor,
+      originalDisruption.capacityReductionFactor,
+    );
+    assert.equal(
+      original.disruption.durationDays,
+      originalDisruption.durationDays,
+    );
   });
 
   test("buildSchedulingScenario derives a distinct scenarioId from what-if inputs", () => {
@@ -643,7 +785,10 @@ describe("23. trace diff", () => {
     });
     const diff = computeSchedulingTraceDiff(base, scen);
     assert.ok(diff.length > 0, "Trace diff should have entries");
-    assert.ok(diff.every((d) => d.ruleId.length > 0), "Each entry should have a ruleId");
+    assert.ok(
+      diff.every((d) => d.ruleId.length > 0),
+      "Each entry should have a ruleId",
+    );
   });
 });
 
@@ -660,7 +805,10 @@ describe("24. sensitivity calculation", () => {
   test("sensitivity entries have valid levels", () => {
     const entries = computeSchedulingSensitivity(DEFAULT_REQUEST);
     for (const e of entries) {
-      assert.ok(["HIGH", "MEDIUM", "LOW"].includes(e.level), `Invalid level: ${e.level}`);
+      assert.ok(
+        ["HIGH", "MEDIUM", "LOW"].includes(e.level),
+        `Invalid level: ${e.level}`,
+      );
     }
   });
 });
@@ -703,9 +851,22 @@ describe("25. no hardcoded decision transitions", () => {
   test("delta correctly identifies no-change scenarios", () => {
     const base = runSchedulingEngine(DEFAULT_REQUEST);
     const same = runSchedulingEngine(DEFAULT_REQUEST);
-    const delta = computeSchedulingDecisionDelta(base, same, BASELINE_WHAT_IF, BASELINE_WHAT_IF);
-    assert.equal(delta.changed, false, "Same input should produce no decision change");
-    assert.equal(delta.changedReasons.length, 0, "No reasons should be given for unchanged decision");
+    const delta = computeSchedulingDecisionDelta(
+      base,
+      same,
+      BASELINE_WHAT_IF,
+      BASELINE_WHAT_IF,
+    );
+    assert.equal(
+      delta.changed,
+      false,
+      "Same input should produce no decision change",
+    );
+    assert.equal(
+      delta.changedReasons.length,
+      0,
+      "No reasons should be given for unchanged decision",
+    );
   });
 
   test("cached getDemoDecision returns same object", () => {
@@ -852,7 +1013,8 @@ describe("33. financial impact recalculated", () => {
     )!;
     // Urgent KEEP_CURRENT has an additional delayed CRITICAL order → higher cost
     assert.ok(
-      urgentKeep.financialImpact.totalCost >= baseKeep.financialImpact.totalCost,
+      urgentKeep.financialImpact.totalCost >=
+        baseKeep.financialImpact.totalCost,
       "KEEP_CURRENT cost must not decrease with urgent order",
     );
   });
@@ -932,7 +1094,9 @@ describe("37. trace diff between baseline and urgent", () => {
     const diff = computeKeepCurrentTraceDiff(baseResult, urgentResult);
     assert.ok(diff.length > 0, "Keep-current trace diff must have entries");
     // The critical deadline rule for KEEP_CURRENT must fail in both cases
-    const deadlineEntry = diff.find((d) => d.ruleId === "RULE-CRITICAL-DEADLINE");
+    const deadlineEntry = diff.find(
+      (d) => d.ruleId === "RULE-CRITICAL-DEADLINE",
+    );
     assert.ok(deadlineEntry, "RULE-CRITICAL-DEADLINE must be in diff");
     assert.equal(deadlineEntry.baselineResult, "FAIL");
     assert.equal(deadlineEntry.scenarioResult, "FAIL");
@@ -941,14 +1105,23 @@ describe("37. trace diff between baseline and urgent", () => {
 
 describe("38. reset restores exact baseline", () => {
   test("BASELINE_WHAT_IF scenario produces same result as DEFAULT_SCENARIO", () => {
-    const builtScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    const builtScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      BASELINE_WHAT_IF,
+    );
     // BASELINE_WHAT_IF parameters match DEFAULT_SCENARIO exactly
     const builtResult = runSchedulingEngine({
       scenario: builtScenario,
-      costConfig: { ...DEFAULT_COST_CONFIG, ...buildCostConfigOverride(BASELINE_WHAT_IF) },
+      costConfig: {
+        ...DEFAULT_COST_CONFIG,
+        ...buildCostConfigOverride(BASELINE_WHAT_IF),
+      },
     });
     const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
-    assert.equal(builtResult.recommendedStrategy, baseResult.recommendedStrategy);
+    assert.equal(
+      builtResult.recommendedStrategy,
+      baseResult.recommendedStrategy,
+    );
   });
 
   test("BASELINE_WHAT_IF has includeUrgentOrder=false", () => {
@@ -956,11 +1129,20 @@ describe("38. reset restores exact baseline", () => {
   });
 
   test("resetting includeUrgentOrder removes URGENT-201 from scenario", () => {
-    const urgentState: WhatIfState = { ...BASELINE_WHAT_IF, includeUrgentOrder: true };
-    const urgentScenario = buildSchedulingScenario(DEFAULT_SCENARIO, urgentState);
+    const urgentState: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeUrgentOrder: true,
+    };
+    const urgentScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      urgentState,
+    );
     assert.ok(urgentScenario.orders.some((o) => o.id === "URGENT-201"));
 
-    const resetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    const resetScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      BASELINE_WHAT_IF,
+    );
     assert.ok(!resetScenario.orders.some((o) => o.id === "URGENT-201"));
   });
 });
@@ -1029,10 +1211,16 @@ describe("41. Scenario Lab preset uses same engine path", () => {
 
   test("urgent-order preset produces same result as buildUrgentOrderScenario", () => {
     const urgentPreset = SCENARIO_PRESETS.find((p) => p.id === "urgent-order")!;
-    const presetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, urgentPreset.state);
+    const presetScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      urgentPreset.state,
+    );
     const presetResult = runSchedulingEngine({
       scenario: presetScenario,
-      costConfig: { ...DEFAULT_COST_CONFIG, ...buildCostConfigOverride(urgentPreset.state) },
+      costConfig: {
+        ...DEFAULT_COST_CONFIG,
+        ...buildCostConfigOverride(urgentPreset.state),
+      },
     });
 
     const directScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
@@ -1161,7 +1349,9 @@ describe("44. getInitialProductionScenario — baseline state", () => {
 
     const fresh = getInitialProductionScenario();
     const freshOrder = fresh.orders.find((order) => order.id === orderId);
-    const defaultOrder = DEFAULT_SCENARIO.orders.find((order) => order.id === orderId);
+    const defaultOrder = DEFAULT_SCENARIO.orders.find(
+      (order) => order.id === orderId,
+    );
     assert.ok(freshOrder);
     assert.ok(defaultOrder);
     assert.equal(fresh.lines[0].name, DEFAULT_SCENARIO.lines[0].name);
@@ -1182,10 +1372,14 @@ describe("44. getInitialProductionScenario — baseline state", () => {
 describe("45. score consistency — recommended always has highest composite", () => {
   test("baseline: recommended strategy has a strictly higher score than all non-recommended feasible strategies or is tied", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "A recommended strategy must exist");
     for (const alt of result.strategies.filter(
-      (s) => s.feasibility === "FEASIBLE" && s.strategyId !== result.recommendedStrategy,
+      (s) =>
+        s.feasibility === "FEASIBLE" &&
+        s.strategyId !== result.recommendedStrategy,
     )) {
       assert.ok(
         rec!.score.composite >= alt.score.composite - 1e-9,
@@ -1196,11 +1390,18 @@ describe("45. score consistency — recommended always has highest composite", (
 
   test("urgent order: recommended strategy has highest or equal composite score", () => {
     const urgentScenario = buildUrgentOrderScenario(DEFAULT_SCENARIO);
-    const result = runSchedulingEngine({ scenario: urgentScenario, costConfig: DEFAULT_COST_CONFIG });
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const result = runSchedulingEngine({
+      scenario: urgentScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "A recommended strategy must exist");
     for (const alt of result.strategies.filter(
-      (s) => s.feasibility === "FEASIBLE" && s.strategyId !== result.recommendedStrategy,
+      (s) =>
+        s.feasibility === "FEASIBLE" &&
+        s.strategyId !== result.recommendedStrategy,
     )) {
       assert.ok(
         rec!.score.composite >= alt.score.composite - 1e-9,
@@ -1214,10 +1415,12 @@ describe("45. score consistency — recommended always has highest composite", (
     for (const rejected of result.explanation.rejectedStrategies) {
       if (rejected.feasibility === "FEASIBLE") {
         const altFmt =
-          result.strategies.find((s) => s.strategyId === rejected.strategyId)
+          result.strategies
+            .find((s) => s.strategyId === rejected.strategyId)
             ?.score.composite.toFixed(4) ?? "";
         const recFmt =
-          result.strategies.find((s) => s.strategyId === result.recommendedStrategy)
+          result.strategies
+            .find((s) => s.strategyId === result.recommendedStrategy)
             ?.score.composite.toFixed(4) ?? "";
         if (altFmt === recFmt) {
           assert.ok(
@@ -1259,8 +1462,12 @@ describe("46. financial impact data model", () => {
 
   test("Test 1: delay cost — current 4000, recommended 0, delta -4000", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
     assert.ok(rec, "Recommended strategy must exist");
 
@@ -1271,28 +1478,55 @@ describe("46. financial impact data model", () => {
     // Values are separate numeric fields, not a combined string
     assert.equal(typeof current, "number", "current must be a number");
     assert.equal(typeof recommended, "number", "recommended must be a number");
-    assert.equal(delta, recommended - current, "delta must equal recommended - current");
+    assert.equal(
+      delta,
+      recommended - current,
+      "delta must equal recommended - current",
+    );
 
     // Format each independently — no concatenation
     const currentStr = eurFmt(current);
     const recommendedStr = eurFmt(recommended);
-    const deltaStr = delta === 0
-      ? eurFmt(0)
-      : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
+    const deltaStr =
+      delta === 0
+        ? eurFmt(0)
+        : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
 
     // They must be independent strings, not a combined one like "€0−€4,000"
-    assert.ok(!currentStr.includes("−"), "current formatted value must not contain −");
-    assert.ok(!recommendedStr.includes("−"), "recommended formatted value must not contain −");
+    assert.ok(
+      !currentStr.includes("−"),
+      "current formatted value must not contain −",
+    );
+    assert.ok(
+      !recommendedStr.includes("−"),
+      "recommended formatted value must not contain −",
+    );
     // delta string may contain − but is separate
-    assert.equal(currentStr, eurFmt(4000), `current delay cost should be €4,000, got ${currentStr}`);
-    assert.equal(recommendedStr, eurFmt(0), `recommended delay cost should be €0, got ${recommendedStr}`);
-    assert.equal(deltaStr, `−${eurFmt(4000)}`, `delta should be −€4,000, got ${deltaStr}`);
+    assert.equal(
+      currentStr,
+      eurFmt(4000),
+      `current delay cost should be €4,000, got ${currentStr}`,
+    );
+    assert.equal(
+      recommendedStr,
+      eurFmt(0),
+      `recommended delay cost should be €0, got ${recommendedStr}`,
+    );
+    assert.equal(
+      deltaStr,
+      `−${eurFmt(4000)}`,
+      `delta should be −€4,000, got ${deltaStr}`,
+    );
   });
 
   test("Test 2: total impact — current 6550, recommended 2550, delta -4000", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
     assert.ok(rec, "Recommended strategy must exist");
 
@@ -1300,10 +1534,20 @@ describe("46. financial impact data model", () => {
     const recommended = rec.financialImpact.totalCost;
     const delta = recommended - current;
 
-    assert.equal(eurFmt(current), eurFmt(6550), `current total should be €6,550, got ${eurFmt(current)}`);
-    assert.equal(eurFmt(recommended), eurFmt(2550), `recommended total should be €2,550, got ${eurFmt(recommended)}`);
     assert.equal(
-      delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
+      eurFmt(current),
+      eurFmt(6550),
+      `current total should be €6,550, got ${eurFmt(current)}`,
+    );
+    assert.equal(
+      eurFmt(recommended),
+      eurFmt(2550),
+      `recommended total should be €2,550, got ${eurFmt(recommended)}`,
+    );
+    assert.equal(
+      delta === 0
+        ? eurFmt(0)
+        : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
       `−${eurFmt(4000)}`,
       "delta should be −€4,000",
     );
@@ -1318,18 +1562,32 @@ describe("46. financial impact data model", () => {
     const delta = Math.round(recommended) - Math.round(current);
 
     assert.equal(delta, 0, "delta must be 0 when current === recommended");
-    assert.equal(eurFmt(current), eurFmt(recommended), "formatted current must equal formatted recommended");
+    assert.equal(
+      eurFmt(current),
+      eurFmt(recommended),
+      "formatted current must equal formatted recommended",
+    );
 
     // When equal, delta should format as €0, not "€0 higher cost"
-    const deltaStr = delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
+    const deltaStr =
+      delta === 0
+        ? eurFmt(0)
+        : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`;
     assert.equal(deltaStr, eurFmt(0), "delta of 0 must format as €0");
-    assert.ok(!deltaStr.includes("higher cost"), 'delta must not contain "higher cost" when equal');
+    assert.ok(
+      !deltaStr.includes("higher cost"),
+      'delta must not contain "higher cost" when equal',
+    );
   });
 
   test("Test 4: revenue at risk — current 8500, recommended 0, delta -8500", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
     assert.ok(rec, "Recommended strategy must exist");
 
@@ -1337,10 +1595,20 @@ describe("46. financial impact data model", () => {
     const recommended = rec.financialImpact.revenueAtRisk;
     const delta = recommended - current;
 
-    assert.equal(eurFmt(current), eurFmt(8500), `current revenue at risk should be €8,500, got ${eurFmt(current)}`);
-    assert.equal(eurFmt(recommended), eurFmt(0), `recommended revenue at risk should be €0, got ${eurFmt(recommended)}`);
     assert.equal(
-      delta === 0 ? eurFmt(0) : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
+      eurFmt(current),
+      eurFmt(8500),
+      `current revenue at risk should be €8,500, got ${eurFmt(current)}`,
+    );
+    assert.equal(
+      eurFmt(recommended),
+      eurFmt(0),
+      `recommended revenue at risk should be €0, got ${eurFmt(recommended)}`,
+    );
+    assert.equal(
+      delta === 0
+        ? eurFmt(0)
+        : `${delta < 0 ? "−" : "+"}${eurFmt(Math.abs(delta))}`,
       `−${eurFmt(8500)}`,
       "delta should be −€8,500",
     );
@@ -1348,11 +1616,14 @@ describe("46. financial impact data model", () => {
 
   test("financial invariant: totalCurrent equals sum of current cost components", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
     assert.ok(keep, "KEEP_CURRENT_SCHEDULE must exist");
 
     const fi = keep.financialImpact;
-    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    const sum =
+      fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
     assert.equal(
       Math.round(fi.totalCost),
       Math.round(sum),
@@ -1362,11 +1633,14 @@ describe("46. financial impact data model", () => {
 
   test("financial invariant: totalRecommended equals sum of recommended cost components", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "Recommended strategy must exist");
 
     const fi = rec.financialImpact;
-    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    const sum =
+      fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
     assert.equal(
       Math.round(fi.totalCost),
       Math.round(sum),
@@ -1376,16 +1650,27 @@ describe("46. financial impact data model", () => {
 
   test("financial invariant: delta equals recommended - current for total", () => {
     const result = runSchedulingEngine(DEFAULT_REQUEST);
-    const keep = result.strategies.find((s) => s.strategyId === "KEEP_CURRENT_SCHEDULE");
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const keep = result.strategies.find(
+      (s) => s.strategyId === "KEEP_CURRENT_SCHEDULE",
+    );
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(keep && rec);
 
-    const delta = rec.financialImpact.totalCost - keep.financialImpact.totalCost;
-    assert.equal(delta, -4000, "delta should be −4000 for the baseline scenario");
+    const delta =
+      rec.financialImpact.totalCost - keep.financialImpact.totalCost;
+    assert.equal(
+      delta,
+      -4000,
+      "delta should be −4000 for the baseline scenario",
+    );
     // avoidedCostVsBaseline in engine output matches
     assert.equal(
       Math.round(result.avoidedCostVsBaseline),
-      Math.round(keep.financialImpact.totalCost - rec.financialImpact.totalCost),
+      Math.round(
+        keep.financialImpact.totalCost - rec.financialImpact.totalCost,
+      ),
       "avoidedCostVsBaseline must equal current - recommended",
     );
   });
@@ -1397,7 +1682,10 @@ describe("46. financial impact data model", () => {
     assert.equal(eurFmt(380), "€380");
     assert.equal(eurFmt(0), "€0");
     // Must NOT use European period separator
-    assert.ok(!eurFmt(4000).includes("4.000"), "4000 must not use European period separator");
+    assert.ok(
+      !eurFmt(4000).includes("4.000"),
+      "4000 must not use European period separator",
+    );
   });
 });
 
@@ -1407,7 +1695,10 @@ describe("46. financial impact data model", () => {
 
 describe("47. Critical Aerospace Order — determinism", () => {
   test("1. scenario is deterministic (same result on repeated runs)", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     const req = { scenario, costConfig: DEFAULT_COST_CONFIG };
     const a = runSchedulingEngine(req);
@@ -1420,21 +1711,34 @@ describe("47. Critical Aerospace Order — determinism", () => {
 
 describe("48. Critical Aerospace Order — AERO-201 order presence", () => {
   test("2. AERO-201 is included only after scenario activation", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
     const hasAero = scenario.orders.some((o) => o.id === "AERO-201");
-    assert.equal(hasAero, true, "AERO-201 must be present when includeAerospaceOrder is true");
+    assert.equal(
+      hasAero,
+      true,
+      "AERO-201 must be present when includeAerospaceOrder is true",
+    );
   });
 
   test("3. Baseline does not contain AERO-201", () => {
-    const baselineScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
+    const baselineScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      BASELINE_WHAT_IF,
+    );
     const hasAero = baselineScenario.orders.some((o) => o.id === "AERO-201");
     assert.equal(hasAero, false, "Baseline must not contain AERO-201");
   });
 
   test("AERO-201 is included via buildAerospaceOrderScenario helper", () => {
     const scenario = buildAerospaceOrderScenario(DEFAULT_SCENARIO);
-    assert.ok(scenario.orders.some((o) => o.id === "AERO-201"), "helper must include AERO-201");
+    assert.ok(
+      scenario.orders.some((o) => o.id === "AERO-201"),
+      "helper must include AERO-201",
+    );
     // Calling again on already-patched scenario must be idempotent
     const again = buildAerospaceOrderScenario(scenario);
     const aeroCount = again.orders.filter((o) => o.id === "AERO-201").length;
@@ -1444,10 +1748,15 @@ describe("48. Critical Aerospace Order — AERO-201 order presence", () => {
 
 describe("49. Critical Aerospace Order — capacity constraints", () => {
   test("4. Capacity constraints are recalculated after adding AERO-201", () => {
-    const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const aerResult = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
 
     // Scenario snapshot must include AERO-201
     assert.ok(
@@ -1457,45 +1766,84 @@ describe("49. Critical Aerospace Order — capacity constraints", () => {
     // Engine must have produced a valid recommended strategy
     assert.ok(aerResult.recommendedStrategy, "recommendedStrategy must be set");
     // RULE-CAPACITY constraint must be evaluated
-    const rec = aerResult.strategies.find((s) => s.strategyId === aerResult.recommendedStrategy);
+    const rec = aerResult.strategies.find(
+      (s) => s.strategyId === aerResult.recommendedStrategy,
+    );
     assert.ok(rec, "recommended strategy must exist");
-    const capRule = rec.constraintResults.find((r) => r.ruleId === "RULE-CAPACITY");
-    assert.ok(capRule, "RULE-CAPACITY must be evaluated in the aerospace scenario");
+    const capRule = rec.constraintResults.find(
+      (r) => r.ruleId === "RULE-CAPACITY",
+    );
+    assert.ok(
+      capRule,
+      "RULE-CAPACITY must be evaluated in the aerospace scenario",
+    );
   });
 });
 
 describe("50. Critical Aerospace Order — deadline constraints", () => {
   test("5. Deadline constraints are recalculated for AERO-201 (3-day deadline)", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "Recommended strategy must exist");
     // RULE-CRITICAL-DEADLINE must be present in constraint results
-    const deadlineRule = rec.constraintResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE");
-    assert.ok(deadlineRule, "RULE-CRITICAL-DEADLINE must be evaluated in the aerospace scenario");
+    const deadlineRule = rec.constraintResults.find(
+      (r) => r.ruleId === "RULE-CRITICAL-DEADLINE",
+    );
+    assert.ok(
+      deadlineRule,
+      "RULE-CRITICAL-DEADLINE must be evaluated in the aerospace scenario",
+    );
   });
 });
 
 describe("51. Critical Aerospace Order — machine compatibility", () => {
   test("6. Machine compatibility is respected — AERO-201 is CARPORT category", () => {
-    assert.deepEqual(AERO_ORDER.compatibleLines, ["LINE-A", "LINE-C"],
-      "AERO-201 must be compatible with LINE-A and LINE-C only");
-    assert.equal(AERO_ORDER.setupCategory, "CARPORT",
-      "AERO-201 setup category must be CARPORT");
+    assert.deepEqual(
+      AERO_ORDER.compatibleLines,
+      ["LINE-A", "LINE-C"],
+      "AERO-201 must be compatible with LINE-A and LINE-C only",
+    );
+    assert.equal(
+      AERO_ORDER.setupCategory,
+      "CARPORT",
+      "AERO-201 setup category must be CARPORT",
+    );
   });
 });
 
 describe("52. Critical Aerospace Order — setup/changeover cost", () => {
   test("7. Setup/changeover is calculated (setupCost present in financial impact)", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "Recommended strategy must exist");
-    assert.ok(typeof rec.financialImpact.setupCost === "number",
-      "setupCost must be a number");
-    assert.ok(rec.financialImpact.setupCost >= 0, "setupCost must be non-negative");
+    assert.ok(
+      typeof rec.financialImpact.setupCost === "number",
+      "setupCost must be a number",
+    );
+    assert.ok(
+      rec.financialImpact.setupCost >= 0,
+      "setupCost must be non-negative",
+    );
   });
 });
 
@@ -1507,23 +1855,37 @@ describe("53. Critical Aerospace Order — overtime calculation", () => {
       overtimeAvailable: true,
     };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
     const ot = result.strategies.find((s) => s.strategyId === "USE_OVERTIME");
     assert.ok(ot, "USE_OVERTIME strategy must exist");
-    assert.ok(typeof ot.financialImpact.overtimeCost === "number",
-      "overtimeCost must be a number");
+    assert.ok(
+      typeof ot.financialImpact.overtimeCost === "number",
+      "overtimeCost must be a number",
+    );
   });
 });
 
 describe("54. Critical Aerospace Order — financial impact", () => {
   test("9. Financial impact is calculated and components are consistent", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
-    const rec = result.strategies.find((s) => s.strategyId === result.recommendedStrategy);
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const rec = result.strategies.find(
+      (s) => s.strategyId === result.recommendedStrategy,
+    );
     assert.ok(rec, "Recommended strategy must exist");
     const fi = rec.financialImpact;
-    const sum = fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
+    const sum =
+      fi.delayCost + fi.overtimeCost + fi.setupCost + fi.unusedCapacityCost;
     assert.equal(
       Math.round(fi.totalCost),
       Math.round(sum),
@@ -1534,9 +1896,15 @@ describe("54. Critical Aerospace Order — financial impact", () => {
 
 describe("55. Critical Aerospace Order — recommendation from engine", () => {
   test("10. Recommendation comes from engine output (not hardcoded)", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
     // The recommended strategy must be one of the known strategy IDs
     const validStrategies = [
       "KEEP_CURRENT_SCHEDULE",
@@ -1552,21 +1920,34 @@ describe("55. Critical Aerospace Order — recommendation from engine", () => {
     // Recommendation must match the strategy ranked #1 by the engine
     const topRankedStrategy = result.strategies.find((s) => s.rank === 1);
     assert.ok(topRankedStrategy, "A feasible strategy should be ranked #1");
-    assert.equal(topRankedStrategy.strategyId, result.recommendedStrategy,
-      "Rank #1 strategy must match recommendedStrategy");
+    assert.equal(
+      topRankedStrategy.strategyId,
+      result.recommendedStrategy,
+      "Rank #1 strategy must match recommendedStrategy",
+    );
   });
 });
 
 describe("56. Critical Aerospace Order — explanation matches engine output", () => {
   test("11. Explanation matches engine output (factors reference actual data)", () => {
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const result = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const result = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
     assert.ok(result.explanation, "explanation must exist");
-    assert.ok(result.explanation.reasons.length > 0, "explanation must have reasons");
+    assert.ok(
+      result.explanation.reasons.length > 0,
+      "explanation must have reasons",
+    );
     // All reasons must have a label
     for (const reason of result.explanation.reasons) {
-      assert.ok(typeof reason.label === "string" && reason.label.length > 0,
+      assert.ok(
+        typeof reason.label === "string" && reason.label.length > 0,
         "each reason must have a non-empty label",
       );
     }
@@ -1576,9 +1957,15 @@ describe("56. Critical Aerospace Order — explanation matches engine output", (
 describe("57. Critical Aerospace Order — trace matches engine output", () => {
   test("12. Trace diff reflects scenario changes", () => {
     const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
+    const aerResult = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
 
     const traceDiff = computeSchedulingTraceDiff(baseResult, aerResult);
     assert.ok(Array.isArray(traceDiff), "trace diff must be an array");
@@ -1586,8 +1973,14 @@ describe("57. Critical Aerospace Order — trace matches engine output", () => {
     for (const entry of traceDiff) {
       assert.ok(entry.ruleId, "trace entry must have ruleId");
       assert.ok(entry.ruleName, "trace entry must have ruleName");
-      assert.ok(["PASS", "FAIL"].includes(entry.baselineResult), "baselineResult must be PASS/FAIL");
-      assert.ok(["PASS", "FAIL"].includes(entry.scenarioResult), "scenarioResult must be PASS/FAIL");
+      assert.ok(
+        ["PASS", "FAIL"].includes(entry.baselineResult),
+        "baselineResult must be PASS/FAIL",
+      );
+      assert.ok(
+        ["PASS", "FAIL"].includes(entry.scenarioResult),
+        "scenarioResult must be PASS/FAIL",
+      );
     }
   });
 });
@@ -1595,20 +1988,37 @@ describe("57. Critical Aerospace Order — trace matches engine output", () => {
 describe("58. Critical Aerospace Order — reset restores exact baseline", () => {
   test("13. Reset restores exact baseline (no AERO-201 remains)", () => {
     // Simulate activating the aerospace preset then reverting to BASELINE_WHAT_IF
-    const aerWhat: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const aerWhat: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const aerScenario = buildSchedulingScenario(DEFAULT_SCENARIO, aerWhat);
-    assert.ok(aerScenario.orders.some((o) => o.id === "AERO-201"), "aerospace scenario has AERO-201");
+    assert.ok(
+      aerScenario.orders.some((o) => o.id === "AERO-201"),
+      "aerospace scenario has AERO-201",
+    );
 
     // Reset: rebuild with BASELINE_WHAT_IF
-    const resetScenario = buildSchedulingScenario(DEFAULT_SCENARIO, BASELINE_WHAT_IF);
-    assert.ok(!resetScenario.orders.some((o) => o.id === "AERO-201"),
-      "Reset scenario must not contain AERO-201");
+    const resetScenario = buildSchedulingScenario(
+      DEFAULT_SCENARIO,
+      BASELINE_WHAT_IF,
+    );
+    assert.ok(
+      !resetScenario.orders.some((o) => o.id === "AERO-201"),
+      "Reset scenario must not contain AERO-201",
+    );
 
     // Reset result must match original DEFAULT_REQUEST result
     const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
-    const resetResult = runSchedulingEngine({ scenario: resetScenario, costConfig: DEFAULT_COST_CONFIG });
-    assert.equal(resetResult.recommendedStrategy, baseResult.recommendedStrategy,
-      "Reset recommended strategy must match baseline");
+    const resetResult = runSchedulingEngine({
+      scenario: resetScenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    assert.equal(
+      resetResult.recommendedStrategy,
+      baseResult.recommendedStrategy,
+      "Reset recommended strategy must match baseline",
+    );
     assert.equal(
       Math.round(resetResult.totalFinancialImpact),
       Math.round(baseResult.totalFinancialImpact),
@@ -1617,22 +2027,41 @@ describe("58. Critical Aerospace Order — reset restores exact baseline", () =>
   });
 
   test("Scenario Lab preset for Critical Aerospace Order exists", () => {
-    const aerPreset = SCENARIO_PRESETS.find((p) => p.id === "critical-aerospace-order");
+    const aerPreset = SCENARIO_PRESETS.find(
+      (p) => p.id === "critical-aerospace-order",
+    );
     assert.ok(aerPreset, "critical-aerospace-order preset must exist");
     assert.equal(aerPreset.label, "Critical Aerospace Order");
     assert.equal(aerPreset.state.includeAerospaceOrder, true);
-    assert.equal(aerPreset.state.includeUrgentOrder, false,
-      "Aerospace preset must not activate urgent order");
+    assert.equal(
+      aerPreset.state.includeUrgentOrder,
+      false,
+      "Aerospace preset must not activate urgent order",
+    );
   });
 
   test("Decision delta mentions AERO-201 when aerospace order added", () => {
     const baseResult = runSchedulingEngine(DEFAULT_REQUEST);
-    const what: WhatIfState = { ...BASELINE_WHAT_IF, includeAerospaceOrder: true };
+    const what: WhatIfState = {
+      ...BASELINE_WHAT_IF,
+      includeAerospaceOrder: true,
+    };
     const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, what);
-    const aerResult = runSchedulingEngine({ scenario, costConfig: DEFAULT_COST_CONFIG });
-    const delta = computeSchedulingDecisionDelta(baseResult, aerResult, what, BASELINE_WHAT_IF);
+    const aerResult = runSchedulingEngine({
+      scenario,
+      costConfig: DEFAULT_COST_CONFIG,
+    });
+    const delta = computeSchedulingDecisionDelta(
+      baseResult,
+      aerResult,
+      what,
+      BASELINE_WHAT_IF,
+    );
     const mentions = delta.changedReasons.some((r) => r.includes("AERO-201"));
-    assert.ok(mentions, "changedReasons must mention AERO-201 when aerospace order is added");
+    assert.ok(
+      mentions,
+      "changedReasons must mention AERO-201 when aerospace order is added",
+    );
   });
 });
 
@@ -1646,7 +2075,10 @@ describe("59. Critical Aerospace Order — AERO-201 order values", () => {
   });
 
   test("AERO-201 has explicit delay penalty", () => {
-    assert.ok(AERO_ORDER.delayPenaltyPerDay > 0, "delay penalty must be positive");
+    assert.ok(
+      AERO_ORDER.delayPenaltyPerDay > 0,
+      "delay penalty must be positive",
+    );
   });
 
   test("AERO-201 has available material", () => {

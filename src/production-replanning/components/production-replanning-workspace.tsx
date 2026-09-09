@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -96,7 +96,9 @@ function DisruptionAlert({ scenario }: { scenario: ProductionScenario }) {
   const affectedLine = scenario.lines.find(
     (l) => l.id === scenario.disruption.affectedLineId,
   );
-  const before = (affectedLine?.normalCapacityTpd ?? 0) * (affectedLine?.availabilityFactor ?? 1);
+  const before =
+    (affectedLine?.normalCapacityTpd ?? 0) *
+    (affectedLine?.availabilityFactor ?? 1);
   const after = before * (1 - scenario.disruption.capacityReductionFactor);
   const capacityLost =
     before *
@@ -168,7 +170,9 @@ function StatBox({
   return (
     <div>
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={cn("mt-0.5 text-lg font-semibold", colourMap[accent])}>{value}</p>
+      <p className={cn("mt-0.5 text-lg font-semibold", colourMap[accent])}>
+        {value}
+      </p>
       {sub && <p className="text-xs text-slate-500">{sub}</p>}
     </div>
   );
@@ -184,7 +188,9 @@ function RecommendedAction({
   avoidedCost: number;
 }) {
   const rec = alternatives.find((a) => a.actionId === recommendedId)!;
-  const baseline = alternatives.find((a) => a.actionId === "KEEP_CURRENT_PLAN")!;
+  const baseline = alternatives.find(
+    (a) => a.actionId === "KEEP_CURRENT_PLAN",
+  )!;
 
   return (
     <Card className="border-emerald-300/20">
@@ -223,8 +229,16 @@ function RecommendedAction({
           />
           <StatBox
             label="Critical deadlines"
-            value={rec.operationalConsequences.criticalOrderDeadlineProtected ? "Protected" : "At risk"}
-            accent={rec.operationalConsequences.criticalOrderDeadlineProtected ? "emerald" : "rose"}
+            value={
+              rec.operationalConsequences.criticalOrderDeadlineProtected
+                ? "Protected"
+                : "At risk"
+            }
+            accent={
+              rec.operationalConsequences.criticalOrderDeadlineProtected
+                ? "emerald"
+                : "rose"
+            }
           />
         </div>
         <div className="mt-4 rounded-2xl border border-white/8 bg-white/4 px-4 py-3">
@@ -257,7 +271,14 @@ function WhyPanel({
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
               )}
               <div>
-                <span className={cn("text-sm font-medium", r.direction === "positive" ? "text-emerald-200" : "text-rose-200")}>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    r.direction === "positive"
+                      ? "text-emerald-200"
+                      : "text-rose-200",
+                  )}
+                >
                   {r.label}
                 </span>
                 <p className="text-xs text-slate-400">{r.evidence}</p>
@@ -279,7 +300,9 @@ function WhyPanel({
                     <span className="text-xs font-medium text-slate-300">
                       {r.actionId.replace(/_/g, " ")}
                     </span>
-                    <span className="ml-2 text-xs text-slate-500">— {r.reason}</span>
+                    <span className="ml-2 text-xs text-slate-500">
+                      — {r.reason}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -291,25 +314,47 @@ function WhyPanel({
   );
 }
 
-function ProductionPlanTable({ lineAllocations, label }: { lineAllocations: LineProductionAllocation[]; label: string }) {
+function ProductionPlanTable({
+  lineAllocations,
+  label,
+}: {
+  lineAllocations: LineProductionAllocation[];
+  label: string;
+}) {
   return (
     <div>
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </p>
       <div className="space-y-2">
         {lineAllocations.map((line) => (
-          <div key={line.lineId} className="rounded-xl border border-white/8 bg-white/3 px-3 py-2">
+          <div
+            key={line.lineId}
+            className="rounded-xl border border-white/8 bg-white/3 px-3 py-2"
+          >
             <p className="mb-1 text-xs font-semibold text-slate-300">
               {line.lineName} — {line.effectiveTpd.toFixed(0)} t/day
             </p>
             {line.orders.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No orders assigned</p>
+              <p className="text-xs text-slate-500 italic">
+                No orders assigned
+              </p>
             ) : (
               <div className="space-y-0.5">
                 {line.orders.map((o) => (
-                  <div key={o.orderId} className="flex items-center justify-between gap-2 text-xs">
+                  <div
+                    key={o.orderId}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
                     <span className="text-slate-400">{o.orderName}</span>
-                    <span className="text-slate-300">{o.allocatedTonnes} t</span>
-                    <span className={o.deadlineMet ? "text-emerald-400" : "text-rose-400"}>
+                    <span className="text-slate-300">
+                      {o.allocatedTonnes} t
+                    </span>
+                    <span
+                      className={
+                        o.deadlineMet ? "text-emerald-400" : "text-rose-400"
+                      }
+                    >
                       day {o.estimatedCompletionDay.toFixed(1)}
                       {!o.deadlineMet && " ⚠ LATE"}
                     </span>
@@ -342,7 +387,8 @@ function CurrentVsRecommended({
       recommended: rec.operationalConsequences.criticalOrderDeadlineProtected
         ? "Protected"
         : "At risk",
-      currentClass: current.operationalConsequences.criticalOrderDeadlineProtected
+      currentClass: current.operationalConsequences
+        .criticalOrderDeadlineProtected
         ? "text-emerald-200"
         : "text-rose-200",
       recommendedClass: rec.operationalConsequences
@@ -388,7 +434,10 @@ function CurrentVsRecommended({
       recommended: eur(rec.financialImpact.switchingCost),
     },
   ];
-  const avoidedCost = Math.max(0, current.financialImpact.total - rec.financialImpact.total);
+  const avoidedCost = Math.max(
+    0,
+    current.financialImpact.total - rec.financialImpact.total,
+  );
 
   return (
     <Card>
@@ -413,7 +462,9 @@ function CurrentVsRecommended({
               {operationalRows.map((row) => (
                 <tr key={row.label}>
                   <td className="py-2 text-xs text-slate-400">{row.label}</td>
-                  <td className={cn("py-2 text-xs text-white", row.currentClass)}>
+                  <td
+                    className={cn("py-2 text-xs text-white", row.currentClass)}
+                  >
                     {row.current}
                   </td>
                   <td
@@ -449,7 +500,9 @@ function CurrentVsRecommended({
                 </td>
               </tr>
               <tr>
-                <td className="py-2 text-xs font-semibold text-slate-200">TOTAL</td>
+                <td className="py-2 text-xs font-semibold text-slate-200">
+                  TOTAL
+                </td>
                 <td className="py-2 text-xs font-semibold text-white">
                   {eur(current.financialImpact.total)}
                 </td>
@@ -501,16 +554,24 @@ function AlternativeCard({ alt }: { alt: AlternativeEvaluation }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-slate-500">#{alt.rank}</span>
             <span className="font-medium text-white">{alt.actionLabel}</span>
-            <Badge variant={FEASIBILITY_COLOUR[alt.feasibility]}>{alt.feasibility}</Badge>
+            <Badge variant={FEASIBILITY_COLOUR[alt.feasibility]}>
+              {alt.feasibility}
+            </Badge>
             <Badge variant={colour}>{pct(alt.score.composite)} score</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-semibold text-slate-200">{eur(alt.financialImpact.total)}</span>
+            <span className="text-sm font-semibold text-slate-200">
+              {eur(alt.financialImpact.total)}
+            </span>
             <button
               onClick={() => setExpanded((v) => !v)}
               className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
             >
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {expanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
               {expanded ? "Less" : "Details"}
             </button>
           </div>
@@ -526,27 +587,39 @@ function AlternativeCard({ alt }: { alt: AlternativeEvaluation }) {
               <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500">Missed deadline</p>
-                  <p className="text-white">{eur(alt.financialImpact.missedDeadlineCost)}</p>
+                  <p className="text-white">
+                    {eur(alt.financialImpact.missedDeadlineCost)}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500">Overtime</p>
-                  <p className="text-white">{eur(alt.financialImpact.overtimeCost)}</p>
+                  <p className="text-white">
+                    {eur(alt.financialImpact.overtimeCost)}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500">Delay cost</p>
-                  <p className="text-white">{eur(alt.financialImpact.delayCost)}</p>
+                  <p className="text-white">
+                    {eur(alt.financialImpact.delayCost)}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500">Unused capacity</p>
-                  <p className="text-white">{eur(alt.financialImpact.unusedCapacityCost)}</p>
+                  <p className="text-white">
+                    {eur(alt.financialImpact.unusedCapacityCost)}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500">Switching cost</p>
-                  <p className="text-white">{eur(alt.financialImpact.switchingCost)}</p>
+                  <p className="text-white">
+                    {eur(alt.financialImpact.switchingCost)}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-white/4 px-3 py-2">
                   <p className="text-slate-500 font-medium">Total</p>
-                  <p className="text-white font-semibold">{eur(alt.financialImpact.total)}</p>
+                  <p className="text-white font-semibold">
+                    {eur(alt.financialImpact.total)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -565,8 +638,12 @@ function AlternativeCard({ alt }: { alt: AlternativeEvaluation }) {
                       <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-400" />
                     )}
                     <div>
-                      <span className="text-xs font-medium text-slate-300">{r.ruleId}</span>
-                      <span className="ml-1 text-xs text-slate-500">{r.ruleName}</span>
+                      <span className="text-xs font-medium text-slate-300">
+                        {r.ruleId}
+                      </span>
+                      <span className="ml-1 text-xs text-slate-500">
+                        {r.ruleName}
+                      </span>
                       <p className="text-xs text-slate-400">{r.evidence}</p>
                     </div>
                   </div>
@@ -581,7 +658,9 @@ function AlternativeCard({ alt }: { alt: AlternativeEvaluation }) {
                   Blocking constraints
                 </p>
                 {alt.blockingConstraints.map((c, i) => (
-                  <p key={i} className="text-xs text-rose-300">{c}</p>
+                  <p key={i} className="text-xs text-rose-300">
+                    {c}
+                  </p>
                 ))}
               </div>
             )}
@@ -599,45 +678,39 @@ function WhatIfControls({
   state: WhatIfState;
   onChange: (s: WhatIfState) => void;
 }) {
+  type RawFieldKey =
+    | "capacityReductionPct"
+    | "disruptionDurationDays"
+    | "materialATonnes"
+    | "criticalDeadlineDays";
+
   // Raw string display state allows the user to clear an input completely.
   // When the field is empty we use 0 as the numeric fallback; on blur we
   // normalise the displayed string back to the actual numeric value.
-  const [raw, setRaw] = useState({
-    capacityReductionPct: String(state.capacityReductionPct),
-    disruptionDurationDays: String(state.disruptionDurationDays),
-    materialATonnes: String(state.materialATonnes),
-    criticalDeadlineDays: String(state.criticalDeadlineDays),
-  });
+  const [raw, setRaw] = useState<Partial<Record<RawFieldKey, string>>>({});
 
-  // Keep raw display values in sync when the state prop changes externally
-  // (e.g. when the parent resets the scenario to baseline).
-  useEffect(() => {
-    setRaw({
-      capacityReductionPct: String(state.capacityReductionPct),
-      disruptionDurationDays: String(state.disruptionDurationDays),
-      materialATonnes: String(state.materialATonnes),
-      criticalDeadlineDays: String(state.criticalDeadlineDays),
-    });
-  }, [state.capacityReductionPct, state.disruptionDurationDays, state.materialATonnes, state.criticalDeadlineDays]);
+  function getRawValue(key: RawFieldKey) {
+    return raw[key] ?? String(state[key]);
+  }
 
-  function handleChange<K extends keyof typeof raw>(
-    key: K,
-    stateKey: keyof WhatIfState,
-    rawValue: string,
-  ) {
-    setRaw((r) => ({ ...r, [key]: rawValue }));
+  function handleChange(key: RawFieldKey, rawValue: string) {
+    setRaw((current) => ({ ...current, [key]: rawValue }));
     const num = rawValue === "" ? 0 : Number(rawValue);
     if (!Number.isNaN(num)) {
-      onChange({ ...state, [stateKey]: num });
+      onChange({ ...state, [key]: num } as WhatIfState);
     }
   }
 
-  function handleBlur<K extends keyof typeof raw>(
-    key: K,
-    stateKey: keyof WhatIfState,
-  ) {
-    // Normalise: show the actual numeric value (removes leading/trailing chars)
-    setRaw((r) => ({ ...r, [key]: String(state[stateKey as keyof WhatIfState]) }));
+  function handleBlur(key: RawFieldKey) {
+    setRaw((current) => {
+      if (current[key] === undefined) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   }
 
   return (
@@ -658,9 +731,11 @@ function WhatIfControls({
               min={0}
               max={60}
               step={5}
-              value={raw.capacityReductionPct}
-              onChange={(e) => handleChange("capacityReductionPct", "capacityReductionPct", e.target.value)}
-              onBlur={() => handleBlur("capacityReductionPct", "capacityReductionPct")}
+              value={getRawValue("capacityReductionPct")}
+              onChange={(e) =>
+                handleChange("capacityReductionPct", e.target.value)
+              }
+              onBlur={() => handleBlur("capacityReductionPct")}
             />
             <p className="text-xs text-slate-500">0–60%</p>
           </div>
@@ -673,9 +748,11 @@ function WhatIfControls({
               min={1}
               max={10}
               step={1}
-              value={raw.disruptionDurationDays}
-              onChange={(e) => handleChange("disruptionDurationDays", "disruptionDurationDays", e.target.value)}
-              onBlur={() => handleBlur("disruptionDurationDays", "disruptionDurationDays")}
+              value={getRawValue("disruptionDurationDays")}
+              onChange={(e) =>
+                handleChange("disruptionDurationDays", e.target.value)
+              }
+              onBlur={() => handleBlur("disruptionDurationDays")}
             />
             <p className="text-xs text-slate-500">1–10 days</p>
           </div>
@@ -688,24 +765,28 @@ function WhatIfControls({
               min={50}
               max={600}
               step={10}
-              value={raw.materialATonnes}
-              onChange={(e) => handleChange("materialATonnes", "materialATonnes", e.target.value)}
-              onBlur={() => handleBlur("materialATonnes", "materialATonnes")}
+              value={getRawValue("materialATonnes")}
+              onChange={(e) => handleChange("materialATonnes", e.target.value)}
+              onBlur={() => handleBlur("materialATonnes")}
             />
             <p className="text-xs text-slate-500">50–600 t</p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="critical-deadline">Critical order deadline (days)</Label>
+            <Label htmlFor="critical-deadline">
+              Critical order deadline (days)
+            </Label>
             <Input
               id="critical-deadline"
               type="number"
               min={1}
               max={14}
               step={1}
-              value={raw.criticalDeadlineDays}
-              onChange={(e) => handleChange("criticalDeadlineDays", "criticalDeadlineDays", e.target.value)}
-              onBlur={() => handleBlur("criticalDeadlineDays", "criticalDeadlineDays")}
+              value={getRawValue("criticalDeadlineDays")}
+              onChange={(e) =>
+                handleChange("criticalDeadlineDays", e.target.value)
+              }
+              onBlur={() => handleBlur("criticalDeadlineDays")}
             />
             <p className="text-xs text-slate-500">1–14 days</p>
           </div>
@@ -716,7 +797,12 @@ function WhatIfControls({
               role="checkbox"
               aria-checked={state.overtimeAvailable}
               aria-label="Overtime available"
-              onClick={() => onChange({ ...state, overtimeAvailable: !state.overtimeAvailable })}
+              onClick={() =>
+                onChange({
+                  ...state,
+                  overtimeAvailable: !state.overtimeAvailable,
+                })
+              }
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
                 state.overtimeAvailable ? "bg-cyan-500" : "bg-white/10",
@@ -757,7 +843,9 @@ function DecisionFactorsPanel({
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
               )}
               <div>
-                <span className="text-sm font-medium text-white">{f.label}</span>
+                <span className="text-sm font-medium text-white">
+                  {f.label}
+                </span>
                 <p className="text-xs text-slate-400">{f.evidence}</p>
               </div>
             </div>
@@ -771,12 +859,30 @@ function DecisionFactorsPanel({
 function AssumptionsPanel() {
   const costs = DEFAULT_COST_CONFIG;
   const rows = [
-    { label: "Missed CRITICAL deadline", value: `${eur(costs.missedCriticalDeadlineCostPerTonneDay)} / t·day` },
-    { label: "Missed HIGH deadline", value: `${eur(costs.missedHighDeadlineCostPerTonneDay)} / t·day` },
-    { label: "Overtime premium", value: `${eur(costs.overtimeCostPerTonne)} / t` },
-    { label: "Production delay (NORMAL)", value: `${eur(costs.productionDelayCostPerTonneDay)} / t·day` },
-    { label: "Unused capacity opportunity cost", value: `${eur(costs.unusedCapacityCostPerTpdDay)} / t/day · day` },
-    { label: "Material handling / line switching", value: `${eur(costs.materialHandlingSwitchCost)} (one-time)` },
+    {
+      label: "Missed CRITICAL deadline",
+      value: `${eur(costs.missedCriticalDeadlineCostPerTonneDay)} / t·day`,
+    },
+    {
+      label: "Missed HIGH deadline",
+      value: `${eur(costs.missedHighDeadlineCostPerTonneDay)} / t·day`,
+    },
+    {
+      label: "Overtime premium",
+      value: `${eur(costs.overtimeCostPerTonne)} / t`,
+    },
+    {
+      label: "Production delay (NORMAL)",
+      value: `${eur(costs.productionDelayCostPerTonneDay)} / t·day`,
+    },
+    {
+      label: "Unused capacity opportunity cost",
+      value: `${eur(costs.unusedCapacityCostPerTpdDay)} / t/day · day`,
+    },
+    {
+      label: "Material handling / line switching",
+      value: `${eur(costs.materialHandlingSwitchCost)} (one-time)`,
+    },
   ];
 
   return (
@@ -784,7 +890,8 @@ function AssumptionsPanel() {
       <CardHeader>
         <CardTitle>Cost assumptions</CardTitle>
         <p className="text-xs text-slate-500">
-          All values are synthetic demonstration assumptions. Not BTS &amp; SAKER figures.
+          All values are synthetic demonstration assumptions. Not BTS &amp;
+          SAKER figures.
         </p>
       </CardHeader>
       <CardContent>
@@ -793,7 +900,9 @@ function AssumptionsPanel() {
             {rows.map((r) => (
               <tr key={r.label}>
                 <td className="py-2 text-xs text-slate-400">{r.label}</td>
-                <td className="py-2 text-xs text-right font-mono text-slate-200">{r.value}</td>
+                <td className="py-2 text-xs text-right font-mono text-slate-200">
+                  {r.value}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -815,18 +924,53 @@ function AuditTrailPanel({
       </CardHeader>
       <CardContent>
         <div className="space-y-1.5 font-mono text-xs text-slate-400">
-          <p><span className="text-slate-500">Decision ID:</span> {audit.decisionId}</p>
-          <p><span className="text-slate-500">Scenario ID:</span> {audit.scenarioId}</p>
-          <p><span className="text-slate-500">Engine version:</span> {audit.engineVersion}</p>
-          <p><span className="text-slate-500">Config version:</span> {audit.configVersion}</p>
-          <p><span className="text-slate-500">Computed at:</span> {audit.computedAt}</p>
-          <p><span className="text-slate-500">Alternatives evaluated:</span> {audit.alternativesEvaluated.join(", ")}</p>
-          <p><span className="text-slate-500">Rules executed:</span> {audit.rulesExecuted.join(", ")}</p>
-          <p><span className="text-slate-500">Recommended action:</span> {audit.recommendedAction}</p>
-          <p><span className="text-slate-500">Decision status:</span> {audit.decisionStatus}</p>
-          <p><span className="text-slate-500">Total financial impact:</span> {eur(audit.totalFinancialImpact)}</p>
-          <p><span className="text-slate-500">Avoided cost vs baseline:</span> {eur(audit.avoidedCostVsBaseline)}</p>
-          <p><span className="text-slate-500">Source:</span> {audit.source}</p>
+          <p>
+            <span className="text-slate-500">Decision ID:</span>{" "}
+            {audit.decisionId}
+          </p>
+          <p>
+            <span className="text-slate-500">Scenario ID:</span>{" "}
+            {audit.scenarioId}
+          </p>
+          <p>
+            <span className="text-slate-500">Engine version:</span>{" "}
+            {audit.engineVersion}
+          </p>
+          <p>
+            <span className="text-slate-500">Config version:</span>{" "}
+            {audit.configVersion}
+          </p>
+          <p>
+            <span className="text-slate-500">Computed at:</span>{" "}
+            {audit.computedAt}
+          </p>
+          <p>
+            <span className="text-slate-500">Alternatives evaluated:</span>{" "}
+            {audit.alternativesEvaluated.join(", ")}
+          </p>
+          <p>
+            <span className="text-slate-500">Rules executed:</span>{" "}
+            {audit.rulesExecuted.join(", ")}
+          </p>
+          <p>
+            <span className="text-slate-500">Recommended action:</span>{" "}
+            {audit.recommendedAction}
+          </p>
+          <p>
+            <span className="text-slate-500">Decision status:</span>{" "}
+            {audit.decisionStatus}
+          </p>
+          <p>
+            <span className="text-slate-500">Total financial impact:</span>{" "}
+            {eur(audit.totalFinancialImpact)}
+          </p>
+          <p>
+            <span className="text-slate-500">Avoided cost vs baseline:</span>{" "}
+            {eur(audit.avoidedCostVsBaseline)}
+          </p>
+          <p>
+            <span className="text-slate-500">Source:</span> {audit.source}
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -874,17 +1018,14 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
       string,
       { from: string | number; to: string | number }
     > = {};
-    if (
-      whatIf.capacityReductionPct !== BASELINE_WHAT_IF.capacityReductionPct
-    ) {
+    if (whatIf.capacityReductionPct !== BASELINE_WHAT_IF.capacityReductionPct) {
       changedParams["Line A capacity reduction"] = {
         from: `${BASELINE_WHAT_IF.capacityReductionPct}%`,
         to: `${whatIf.capacityReductionPct}%`,
       };
     }
     if (
-      whatIf.disruptionDurationDays !==
-      BASELINE_WHAT_IF.disruptionDurationDays
+      whatIf.disruptionDurationDays !== BASELINE_WHAT_IF.disruptionDurationDays
     ) {
       changedParams["Disruption duration"] = {
         from: `${BASELINE_WHAT_IF.disruptionDurationDays} days`,
@@ -897,9 +1038,7 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
         to: `${whatIf.materialATonnes} t`,
       };
     }
-    if (
-      whatIf.criticalDeadlineDays !== BASELINE_WHAT_IF.criticalDeadlineDays
-    ) {
+    if (whatIf.criticalDeadlineDays !== BASELINE_WHAT_IF.criticalDeadlineDays) {
       changedParams["Critical deadline"] = {
         from: `${BASELINE_WHAT_IF.criticalDeadlineDays} days`,
         to: `${whatIf.criticalDeadlineDays} days`,
@@ -1009,7 +1148,9 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
                     {rule.id}
                   </span>
                   <div>
-                    <span className="text-sm font-medium text-white">{rule.name}</span>
+                    <span className="text-sm font-medium text-white">
+                      {rule.name}
+                    </span>
                     {rule.blocking && (
                       <Badge variant="rose" className="ml-2 text-[9px]">
                         blocking
@@ -1032,8 +1173,8 @@ export function ProductionReplanningWorkspace({ locale }: { locale: Locale }) {
         {/* Footer */}
         <div className="pb-8 text-center">
           <p className="text-xs text-slate-600">
-            Engine v{decision.engineVersion} · Config v{decision.configVersion} ·{" "}
-            Synthetic demonstration — not BTS &amp; SAKER production data
+            Engine v{decision.engineVersion} · Config v{decision.configVersion}{" "}
+            · Synthetic demonstration — not BTS &amp; SAKER production data
           </p>
         </div>
       </div>
