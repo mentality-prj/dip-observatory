@@ -13,7 +13,6 @@ import { test, describe } from "node:test";
 import {
   runSupplierDecisionPlugin,
   SUPPLIER_RULES,
-  DEFAULT_SUPPLIER_CONFIG,
 } from "@/supplier/lib/supplier-decision";
 import {
   getDemoDecision,
@@ -104,7 +103,10 @@ describe("demo scenario", () => {
       (e) => e.supplier.name === "Nova Casting Sp. z o.o.",
     );
     assert.ok(nova, "Nova Casting should appear in evaluations");
-    assert.ok(nova.blockingFailures >= 4, "should have at least 4 blocking failures");
+    assert.ok(
+      nova.blockingFailures >= 4,
+      "should have at least 4 blocking failures",
+    );
     assert.equal(nova.rank, 3);
   });
 });
@@ -156,7 +158,10 @@ describe("audit trail", () => {
 
   test("audit entry matches decision", () => {
     assert.equal(audit.decision, result.decisionTrace.decision);
-    assert.equal(audit.recommendedSupplier, result.recommendation.supplier.name);
+    assert.equal(
+      audit.recommendedSupplier,
+      result.recommendation.supplier.name,
+    );
   });
 
   test("all 6 rules are listed as executed", () => {
@@ -186,7 +191,7 @@ describe("configuration override", () => {
           deliveryPerformance: 0.89,
           qualityScore: 0.91,
           financialRisk: "LOW",
-          dependency: 0.40,
+          dependency: 0.4,
           leadTimeDays: 35,
           compliant: true,
           incidentsLast12Months: 0,
@@ -242,9 +247,14 @@ describe("R16. MEDIUM risk → APPROVE_WITH_CONDITIONS is explicitly explained",
     assert.ok(result.decisionTrace.conditions.length > 0);
     // The quarterly review condition must be present for MEDIUM financial risk
     const hasReview = result.decisionTrace.conditions.some(
-      (c) => c.toLowerCase().includes("quarterly") || c.toLowerCase().includes("financial review"),
+      (c) =>
+        c.toLowerCase().includes("quarterly") ||
+        c.toLowerCase().includes("financial review"),
     );
-    assert.ok(hasReview, "MEDIUM financial risk should trigger quarterly review condition");
+    assert.ok(
+      hasReview,
+      "MEDIUM financial risk should trigger quarterly review condition",
+    );
   });
 });
 
@@ -264,7 +274,11 @@ describe("R17. all-PASS rules do not appear as the cause of the condition", () =
     )!;
     const blockingRules = acme.ruleResults.filter((r) => r.rule.blocking);
     for (const r of blockingRules) {
-      assert.equal(r.passed, true, `Blocking rule ${r.rule.id} should pass for ACME`);
+      assert.equal(
+        r.passed,
+        true,
+        `Blocking rule ${r.rule.id} should pass for ACME`,
+      );
     }
   });
 });
@@ -273,17 +287,19 @@ describe("R18. changing risk to LOW removes the MEDIUM-risk condition", () => {
   test("LOW risk ACME gets APPROVE without conditions", () => {
     const request: SupplierDecisionRequest = {
       ...DEMO_REQUEST,
-      candidates: [
-        { ...DEMO_SUPPLIERS[0], financialRisk: "LOW" },
-      ],
+      candidates: [{ ...DEMO_SUPPLIERS[0], financialRisk: "LOW" }],
     };
     const result = runSupplierDecisionPlugin(request);
     assert.equal(result.decisionTrace.decision, "APPROVE");
     // No quarterly review condition
-    const hasReview = result.decisionTrace.conditions.some(
-      (c) => c.toLowerCase().includes("quarterly"),
+    const hasReview = result.decisionTrace.conditions.some((c) =>
+      c.toLowerCase().includes("quarterly"),
     );
-    assert.equal(hasReview, false, "LOW risk should not trigger quarterly review");
+    assert.equal(
+      hasReview,
+      false,
+      "LOW risk should not trigger quarterly review",
+    );
   });
 });
 
@@ -302,8 +318,13 @@ describe("R19. explanation changes consistently with decision", () => {
     const result = runSupplierDecisionPlugin(request);
     assert.equal(result.decisionTrace.decision, "REJECT");
     // At least one negative factor should be present
-    const negativeFactors = result.decisionTrace.factors.filter((f) => f.direction === "negative");
-    assert.ok(negativeFactors.length > 0, "REJECT decision should have at least one negative factor");
+    const negativeFactors = result.decisionTrace.factors.filter(
+      (f) => f.direction === "negative",
+    );
+    assert.ok(
+      negativeFactors.length > 0,
+      "REJECT decision should have at least one negative factor",
+    );
   });
 });
 

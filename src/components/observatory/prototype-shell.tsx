@@ -2,28 +2,107 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useTransition } from "react";
-import { ChevronRight, Home, Menu, Network } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Building2, ChevronRight, Home, Menu, Network } from "lucide-react";
 
-import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from "@/lib/observatory-i18n";
+import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 
-type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: "cyan" | "violet" | "amber" | "emerald" | "rose" };
-type PrototypeNavItem = { href: string; label: Record<Locale, string>; short: string };
+type PrototypeShellProps = {
+  locale: Locale;
+  children: React.ReactNode;
+  theme?: "cyan" | "violet" | "amber" | "emerald" | "rose";
+};
 
-const NAV_ITEMS: PrototypeNavItem[] = [
-  { href: "/", label: { en: "Observatory", uk: "Observatory", pl: "Observatory" }, short: "OBS" },
-  { href: "/gas-forecast", label: { en: "Gas Forecast", uk: "Прогноз газу", pl: "Prognoza gazu" }, short: "GAS" },
-  { href: "/production-decision", label: { en: "Production Decision", uk: "Виробничі рішення", pl: "Decyzje produkcyjne" }, short: "DEC" },
-  { href: "/production-replanning", label: { en: "Production Replanning", uk: "Перепланування", pl: "Przeplanowanie" }, short: "REP" },
-  { href: "/production-scheduling", label: { en: "Production Scheduling", uk: "Планування виробництва", pl: "Planowanie produkcji" }, short: "SCH" },
-  { href: "/supplier-decision", label: { en: "Supplier Decision", uk: "Вибір постачальника", pl: "Wybór dostawcy" }, short: "SUP" },
-  { href: "/wsp-demand-forecast", label: { en: "WSP Demand Forecast", uk: "WSP прогноз попиту", pl: "WSP prognoza popytu" }, short: "WSP" },
-  { href: "/vive-production-intelligence", label: { en: "VIVE Production Intelligence", uk: "VIVE виробнича інтелігенція", pl: "VIVE Production Intelligence" }, short: "VIVE" },
+type PrototypeNavItem = {
+  href: string;
+  label: Record<Locale, string>;
+  short: string;
+};
+
+const PRIMARY_NAV_ITEMS: PrototypeNavItem[] = [
+  {
+    href: "/",
+    label: { en: "Observatory", uk: "Observatory", pl: "Observatory" },
+    short: "OBS",
+  },
+  {
+    href: "/gas-forecast",
+    label: { en: "Gas Forecast", uk: "Прогноз газу", pl: "Prognoza gazu" },
+    short: "GAS",
+  },
+  {
+    href: "/production-decision",
+    label: {
+      en: "Production Decision",
+      uk: "Виробничі рішення",
+      pl: "Decyzje produkcyjne",
+    },
+    short: "DEC",
+  },
+  {
+    href: "/production-replanning",
+    label: {
+      en: "Production Replanning",
+      uk: "Перепланування",
+      pl: "Przeplanowanie",
+    },
+    short: "REP",
+  },
+  {
+    href: "/production-scheduling",
+    label: {
+      en: "Production Scheduling",
+      uk: "Планування виробництва",
+      pl: "Planowanie produkcji",
+    },
+    short: "SCH",
+  },
+  {
+    href: "/supplier-decision",
+    label: {
+      en: "Supplier Decision",
+      uk: "Вибір постачальника",
+      pl: "Wybór dostawcy",
+    },
+    short: "SUP",
+  },
 ];
 
+const COMPANY_NAV_ITEMS: PrototypeNavItem[] = [
+  {
+    href: "/wsp-demand-forecast",
+    label: {
+      en: "WSP Demand Forecast",
+      uk: "WSP прогноз попиту",
+      pl: "WSP prognoza popytu",
+    },
+    short: "WSP",
+  },
+  {
+    href: "/vive-production-intelligence",
+    label: {
+      en: "VIVE Production Intelligence",
+      uk: "VIVE виробнича інтелігенція",
+      pl: "VIVE Production Intelligence",
+    },
+    short: "VIVE",
+  },
+];
+
+const NAV_ITEMS = [...PRIMARY_NAV_ITEMS, ...COMPANY_NAV_ITEMS];
+
 const LOCALE_SWITCHER: Locale[] = ["en", "pl", "uk"];
-const LOCALE_SHORT_LABEL: Record<Locale, string> = { en: "EN", pl: "PL", uk: "UA" };
+const LOCALE_SHORT_LABEL: Record<Locale, string> = {
+  en: "EN",
+  pl: "PL",
+  uk: "UA",
+};
+const COMPANY_MENU_LABEL: Record<Locale, string> = {
+  en: "Company-specific demonstrators",
+  uk: "Демонстратори для компаній",
+  pl: "Demonstratory firmowe",
+};
 
 const THEME_CLASS = {
   cyan: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
@@ -33,57 +112,253 @@ const THEME_CLASS = {
   rose: "text-rose-300 bg-rose-300/10 border-rose-300/20",
 } as const;
 
-export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeShellProps) {
+export function PrototypeShell({
+  locale,
+  children,
+  theme = "cyan",
+}: PrototypeShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [isCompanyMenuOpen, setCompanyMenuOpen] = useState(false);
   const activeNavRef = useRef<HTMLAnchorElement>(null);
+  const companyMenuRef = useRef<HTMLDivElement>(null);
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
   const themeClass = THEME_CLASS[theme];
 
+  function isActivePath(itemHref: string) {
+    return (
+      normalizedPath === itemHref ||
+      (itemHref !== "/" && normalizedPath.startsWith(`${itemHref}/`))
+    );
+  }
+
   useEffect(() => {
-    activeNavRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    activeNavRef.current?.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
   }, [normalizedPath]);
+
+  useEffect(() => {
+    if (!isCompanyMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!companyMenuRef.current?.contains(event.target as Node)) {
+        setCompanyMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setCompanyMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isCompanyMenuOpen]);
 
   function changeLocale(next: Locale) {
     if (next === locale) return;
-    startTransition(() => router.replace(buildLocalePath(normalizedPath, next)));
+    setCompanyMenuOpen(false);
+    startTransition(() =>
+      router.replace(buildLocalePath(normalizedPath, next)),
+    );
   }
 
-  const activeItem = NAV_ITEMS.find((item) => normalizedPath === item.href || (item.href !== "/" && normalizedPath.startsWith(`${item.href}/`)));
+  const activeItem = NAV_ITEMS.find((item) => isActivePath(item.href));
+  const activeCompanyItem = COMPANY_NAV_ITEMS.find((item) =>
+    isActivePath(item.href),
+  );
 
   return (
-    <div className="min-h-screen bg-transparent text-white" data-prototype-theme={theme}>
+    <div
+      className="min-h-screen bg-transparent text-white"
+      data-prototype-theme={theme}
+    >
       <header className="sticky top-0 z-50 border-b border-white/8 bg-slate-950/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center gap-4 px-4 md:px-6 xl:px-10">
-          <Link href={buildLocalePath("/", locale)} className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-2 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-300/60" aria-label="DIP Observatory home">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-cyan-300"><Network className="h-4 w-4" /></span>
-            <span className="hidden text-sm font-semibold tracking-tight sm:block">DIP Observatory</span>
+          <Link
+            href={buildLocalePath("/", locale)}
+            onClick={() => setCompanyMenuOpen(false)}
+            className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-2 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            aria-label="DIP Observatory home"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-cyan-300">
+              <Network className="h-4 w-4" />
+            </span>
+            <span className="hidden text-sm font-semibold tracking-tight sm:block">
+              DIP Observatory
+            </span>
           </Link>
+
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
-          <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex" aria-label="Prototype navigation" style={{ scrollbarWidth: "none" }}>
-            {NAV_ITEMS.map((item) => {
-              const active = normalizedPath === item.href || (item.href !== "/" && normalizedPath.startsWith(`${item.href}/`));
-              return <Link ref={active ? activeNavRef : undefined} key={item.href} href={buildLocalePath(item.href, locale)} className={cn("flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 text-xs font-medium leading-none transition", active ? cn(themeClass) : "text-slate-500 hover:bg-white/5 hover:text-slate-200")}><span className="w-7 text-center font-mono text-[9px] leading-none opacity-50">{item.short}</span><span className="whitespace-nowrap">{item.label[locale]}</span></Link>;
+
+          <nav
+            className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex"
+            aria-label="Prototype navigation"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {PRIMARY_NAV_ITEMS.map((item) => {
+              const active = isActivePath(item.href);
+
+              return (
+                <Link
+                  ref={active ? activeNavRef : undefined}
+                  key={item.href}
+                  href={buildLocalePath(item.href, locale)}
+                  onClick={() => setCompanyMenuOpen(false)}
+                  className={cn(
+                    "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 text-xs font-medium leading-none transition",
+                    active
+                      ? themeClass
+                      : "text-slate-500 hover:bg-white/5 hover:text-slate-200",
+                  )}
+                >
+                  <span className="w-7 text-center font-mono text-[9px] leading-none opacity-50">
+                    {item.short}
+                  </span>
+                  <span className="whitespace-nowrap">
+                    {item.label[locale]}
+                  </span>
+                </Link>
+              );
             })}
           </nav>
+
           <div className="flex shrink-0 items-center gap-2">
-            <div className="hidden items-center gap-1 rounded-lg border border-white/8 bg-white/[0.03] p-1 md:flex">
-              {LOCALE_SWITCHER.map((option) => <button key={option} type="button" disabled={pending} onClick={() => changeLocale(option)} className={cn("rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider leading-none transition", option === locale ? "bg-white/10 text-white" : "text-slate-600 hover:text-slate-300")}>{LOCALE_SHORT_LABEL[option]}</button>)}
+            <div ref={companyMenuRef} className="relative">
+              <button
+                type="button"
+                title={COMPANY_MENU_LABEL[locale]}
+                aria-label={COMPANY_MENU_LABEL[locale]}
+                aria-haspopup="menu"
+                aria-expanded={isCompanyMenuOpen}
+                onClick={() => setCompanyMenuOpen((current) => !current)}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-500 transition hover:bg-white/5 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60",
+                  (isCompanyMenuOpen || activeCompanyItem) && themeClass,
+                )}
+              >
+                <Building2 className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only">{COMPANY_MENU_LABEL[locale]}</span>
+              </button>
+
+              {isCompanyMenuOpen ? (
+                <div
+                  role="menu"
+                  aria-label={COMPANY_MENU_LABEL[locale]}
+                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl"
+                >
+                  <p className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
+                    {COMPANY_MENU_LABEL[locale]}
+                  </p>
+
+                  <div className="space-y-1">
+                    {COMPANY_NAV_ITEMS.map((item) => {
+                      const active = isActivePath(item.href);
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={buildLocalePath(item.href, locale)}
+                          role="menuitem"
+                          onClick={() => setCompanyMenuOpen(false)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm transition",
+                            active
+                              ? themeClass
+                              : "text-slate-300 hover:bg-white/5 hover:text-white",
+                          )}
+                        >
+                          <span className="w-10 text-center font-mono text-[10px] uppercase tracking-[0.12em] opacity-60">
+                            {item.short}
+                          </span>
+                          <span className="whitespace-nowrap">
+                            {item.label[locale]}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </div>
+
+            <div className="hidden items-center gap-1 rounded-lg border border-white/8 bg-white/[0.03] p-1 md:flex">
+              {LOCALE_SWITCHER.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => changeLocale(option)}
+                  className={cn(
+                    "rounded-md px-2 py-1 text-[10px] font-semibold uppercase leading-none tracking-wider transition",
+                    option === locale
+                      ? "bg-white/10 text-white"
+                      : "text-slate-600 hover:text-slate-300",
+                  )}
+                >
+                  {LOCALE_SHORT_LABEL[option]}
+                </button>
+              ))}
+            </div>
+
             <Menu className="h-5 w-5 text-slate-400 lg:hidden" />
           </div>
         </div>
-        <div className="border-t border-white/5 lg:hidden"><div className="mx-auto flex w-full max-w-[1700px] gap-1 overflow-x-auto px-4 py-2 md:px-6" style={{ scrollbarWidth: "none" }}>
-          {NAV_ITEMS.map((item) => { const active = normalizedPath === item.href || (item.href !== "/" && normalizedPath.startsWith(`${item.href}/`)); return <Link key={item.href} href={buildLocalePath(item.href, locale)} className={cn("flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[10px] font-medium transition", active ? themeClass : "border-transparent text-slate-600 hover:bg-white/5 hover:text-slate-300")}><span className="font-mono opacity-50">{item.short}</span><span className="whitespace-nowrap">{item.label[locale]}</span></Link>; })}
-        </div></div>
+
+        <div className="border-t border-white/5 lg:hidden">
+          <div
+            className="mx-auto flex w-full max-w-[1700px] gap-1 overflow-x-auto px-4 py-2 md:px-6"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {PRIMARY_NAV_ITEMS.map((item) => {
+              const active = isActivePath(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={buildLocalePath(item.href, locale)}
+                  onClick={() => setCompanyMenuOpen(false)}
+                  className={cn(
+                    "flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[10px] font-medium transition",
+                    active
+                      ? themeClass
+                      : "border-transparent text-slate-600 hover:bg-white/5 hover:text-slate-300",
+                  )}
+                >
+                  <span className="font-mono opacity-50">{item.short}</span>
+                  <span className="whitespace-nowrap">
+                    {item.label[locale]}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </header>
+
       <div className="mx-auto w-full max-w-[1700px] px-0">
-        <div className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 leading-none md:px-6 xl:px-10" aria-label="Breadcrumb">
+        <div
+          className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase leading-none tracking-[0.16em] text-slate-500 md:px-6 xl:px-10"
+          aria-label="Breadcrumb"
+        >
           <Home className="relative -top-px h-3 w-3 shrink-0 text-slate-600" />
           <ChevronRight className="relative -top-px h-3 w-3 shrink-0 text-slate-700" />
-          <span className="truncate leading-none">{activeItem?.label[locale] ?? "Prototype"}</span>
+          <span className="truncate leading-none">
+            {activeItem?.label[locale] ?? "Prototype"}
+          </span>
         </div>
+
         <div className="prototype-shell-content">{children}</div>
       </div>
     </div>

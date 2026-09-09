@@ -11,7 +11,10 @@ interface OpportunityCardProps {
   decision: HedgeDecision;
 }
 
-const SIGNAL_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+const SIGNAL_STYLES: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
   BUY: {
     bg: "bg-emerald-950 border border-emerald-700",
     text: "text-emerald-400",
@@ -29,12 +32,6 @@ const SIGNAL_STYLES: Record<string, { bg: string; text: string; label: string }>
   },
 };
 
-const ROBUSTNESS_STYLES: Record<string, string> = {
-  HIGH: "text-emerald-400",
-  MEDIUM: "text-amber-400",
-  LOW: "text-zinc-400",
-};
-
 function fmt(n: number, decimals = 0): string {
   return n.toFixed(decimals);
 }
@@ -46,10 +43,10 @@ function fmtPct(n: number): string {
 
 export function OpportunityCard({ decision }: OpportunityCardProps) {
   const signal = SIGNAL_STYLES[decision.action] ?? SIGNAL_STYLES.NO_ACTION;
-  const rob = ROBUSTNESS_STYLES[decision.robustness] ?? "text-zinc-400";
 
   // Central discount = central valuation − current price. Positive = attractive.
-  const discountAbsolute = decision.valuationRange.central - decision.entryPrice;
+  const discountAbsolute =
+    decision.valuationRange.central - decision.entryPrice;
   const discountPct =
     decision.valuationRange.central > 0
       ? discountAbsolute / decision.valuationRange.central
@@ -57,7 +54,10 @@ export function OpportunityCard({ decision }: OpportunityCardProps) {
   const discountSign = discountAbsolute > 0 ? "+" : "";
 
   return (
-    <div className={`rounded-xl p-6 ${signal.bg}`} data-testid="opportunity-card">
+    <div
+      className={`rounded-xl p-6 ${signal.bg}`}
+      data-testid="opportunity-card"
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -128,7 +128,7 @@ function Metric({
     <div className="flex flex-col gap-1">
       <p className="text-xs uppercase tracking-widest text-zinc-500">{label}</p>
       <p
-        className={`text-lg font-semibold ${highlight ? "text-emerald-400" : valueClass ?? "text-white"}`}
+        className={`text-lg font-semibold ${highlight ? "text-emerald-400" : (valueClass ?? "text-white")}`}
       >
         {value}
       </p>

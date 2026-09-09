@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ArrowLeft, ChevronDown, ChevronUp, Home, Package } from "lucide-react";
 import Link from "next/link";
 
@@ -155,7 +155,9 @@ function ScenarioSection({
           <ChevronDown className="h-4 w-4 text-slate-500" />
         )}
       </button>
-      {open && <div className="border-t border-white/8 px-4 py-4">{children}</div>}
+      {open && (
+        <div className="border-t border-white/8 px-4 py-4">{children}</div>
+      )}
     </div>
   );
 }
@@ -167,69 +169,54 @@ function SupplierLabControls({
   state: SupplierScenarioState;
   onChange: (next: SupplierScenarioState) => void;
 }) {
+  type RawFieldKey =
+    | "deliveryPerformance"
+    | "qualityScore"
+    | "dependency"
+    | "minDeliveryPerformance"
+    | "minQualityScore"
+    | "maxIncidents"
+    | "weightDelivery"
+    | "weightQuality"
+    | "weightDependency";
+
   const [policyOpen, setPolicyOpen] = useState(true);
   const [weightsOpen, setWeightsOpen] = useState(true);
 
   // Raw string state allows typing decimals and clearing the field without
   // the value snapping back to "0" mid-edit.
-  const [raw, setRaw] = useState({
-    deliveryPerformance: String(state.deliveryPerformance),
-    qualityScore: String(state.qualityScore),
-    dependency: String(state.dependency),
-    minDeliveryPerformance: String(state.minDeliveryPerformance),
-    minQualityScore: String(state.minQualityScore),
-    maxIncidents: String(state.maxIncidents),
-    weightDelivery: String(state.weightDelivery),
-    weightQuality: String(state.weightQuality),
-    weightDependency: String(state.weightDependency),
-  });
+  const [raw, setRaw] = useState<Partial<Record<RawFieldKey, string>>>({});
 
-  // Keep raw display values in sync when the state prop changes externally
-  // (e.g. when the parent resets the scenario to baseline).
-  useEffect(() => {
-    setRaw({
-      deliveryPerformance: String(state.deliveryPerformance),
-      qualityScore: String(state.qualityScore),
-      dependency: String(state.dependency),
-      minDeliveryPerformance: String(state.minDeliveryPerformance),
-      minQualityScore: String(state.minQualityScore),
-      maxIncidents: String(state.maxIncidents),
-      weightDelivery: String(state.weightDelivery),
-      weightQuality: String(state.weightQuality),
-      weightDependency: String(state.weightDependency),
-    });
-  }, [
-    state.deliveryPerformance,
-    state.qualityScore,
-    state.dependency,
-    state.minDeliveryPerformance,
-    state.minQualityScore,
-    state.maxIncidents,
-    state.weightDelivery,
-    state.weightQuality,
-    state.weightDependency,
-  ]);
+  function getRawValue(key: RawFieldKey) {
+    return raw[key] ?? String(state[key]);
+  }
 
-  function handleNum<K extends keyof typeof raw>(
-    rawKey: K,
-    stateKey: keyof SupplierScenarioState,
+  function handleNum(
+    key: RawFieldKey,
     rawValue: string,
     transform?: (n: number) => number,
   ) {
-    setRaw((r) => ({ ...r, [rawKey]: rawValue }));
+    setRaw((current) => ({ ...current, [key]: rawValue }));
     if (rawValue === "" || rawValue.endsWith(".")) return; // still typing
     const num = Number(rawValue);
     if (!Number.isNaN(num)) {
-      onChange({ ...state, [stateKey]: transform ? transform(num) : num });
+      onChange({
+        ...state,
+        [key]: transform ? transform(num) : num,
+      } as SupplierScenarioState);
     }
   }
 
-  function handleBlur<K extends keyof typeof raw>(
-    rawKey: K,
-    stateKey: keyof SupplierScenarioState,
-  ) {
-    // Normalise display to the actual committed value on blur
-    setRaw((r) => ({ ...r, [rawKey]: String(state[stateKey]) }));
+  function handleBlur(key: RawFieldKey) {
+    setRaw((current) => {
+      if (current[key] === undefined) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   }
 
   const weightTotal =
@@ -262,7 +249,10 @@ function SupplierLabControls({
                 id="supplier-risk"
                 value={state.financialRisk}
                 onChange={(e) =>
-                  onChange({ ...state, financialRisk: e.target.value as RiskLevel })
+                  onChange({
+                    ...state,
+                    financialRisk: e.target.value as RiskLevel,
+                  })
                 }
                 className="flex h-11 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300/60 focus:bg-white/8 focus:ring-2 focus:ring-cyan-300/20"
               >
@@ -284,7 +274,9 @@ function SupplierLabControls({
                 role="checkbox"
                 aria-checked={state.compliant}
                 aria-label="Supplier compliant"
-                onClick={() => onChange({ ...state, compliant: !state.compliant })}
+                onClick={() =>
+                  onChange({ ...state, compliant: !state.compliant })
+                }
                 className={cn(
                   "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none",
                   state.compliant ? "bg-cyan-500" : "bg-white/10",
@@ -308,9 +300,11 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={raw.deliveryPerformance}
-                onChange={(e) => handleNum("deliveryPerformance", "deliveryPerformance", e.target.value, clamp01)}
-                onBlur={() => handleBlur("deliveryPerformance", "deliveryPerformance")}
+                value={getRawValue("deliveryPerformance")}
+                onChange={(e) =>
+                  handleNum("deliveryPerformance", e.target.value, clamp01)
+                }
+                onBlur={() => handleBlur("deliveryPerformance")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.deliveryPerformance)}
@@ -325,9 +319,11 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={raw.qualityScore}
-                onChange={(e) => handleNum("qualityScore", "qualityScore", e.target.value, clamp01)}
-                onBlur={() => handleBlur("qualityScore", "qualityScore")}
+                value={getRawValue("qualityScore")}
+                onChange={(e) =>
+                  handleNum("qualityScore", e.target.value, clamp01)
+                }
+                onBlur={() => handleBlur("qualityScore")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.qualityScore)}
@@ -342,9 +338,11 @@ function SupplierLabControls({
                 min={0}
                 max={1}
                 step={0.01}
-                value={raw.dependency}
-                onChange={(e) => handleNum("dependency", "dependency", e.target.value, clamp01)}
-                onBlur={() => handleBlur("dependency", "dependency")}
+                value={getRawValue("dependency")}
+                onChange={(e) =>
+                  handleNum("dependency", e.target.value, clamp01)
+                }
+                onBlur={() => handleBlur("dependency")}
               />
               <p className="text-xs text-slate-500">
                 {formatPctInput(state.dependency)}
@@ -368,9 +366,11 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.01}
-              value={raw.minDeliveryPerformance}
-              onChange={(e) => handleNum("minDeliveryPerformance", "minDeliveryPerformance", e.target.value, clamp01)}
-              onBlur={() => handleBlur("minDeliveryPerformance", "minDeliveryPerformance")}
+              value={getRawValue("minDeliveryPerformance")}
+              onChange={(e) =>
+                handleNum("minDeliveryPerformance", e.target.value, clamp01)
+              }
+              onBlur={() => handleBlur("minDeliveryPerformance")}
             />
           </div>
           <div className="space-y-1.5">
@@ -381,9 +381,11 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.01}
-              value={raw.minQualityScore}
-              onChange={(e) => handleNum("minQualityScore", "minQualityScore", e.target.value, clamp01)}
-              onBlur={() => handleBlur("minQualityScore", "minQualityScore")}
+              value={getRawValue("minQualityScore")}
+              onChange={(e) =>
+                handleNum("minQualityScore", e.target.value, clamp01)
+              }
+              onBlur={() => handleBlur("minQualityScore")}
             />
           </div>
           <div className="space-y-1.5">
@@ -394,9 +396,11 @@ function SupplierLabControls({
               min={0}
               max={10}
               step={1}
-              value={raw.maxIncidents}
-              onChange={(e) => handleNum("maxIncidents", "maxIncidents", e.target.value, (n) => Math.max(0, n))}
-              onBlur={() => handleBlur("maxIncidents", "maxIncidents")}
+              value={getRawValue("maxIncidents")}
+              onChange={(e) =>
+                handleNum("maxIncidents", e.target.value, (n) => Math.max(0, n))
+              }
+              onBlur={() => handleBlur("maxIncidents")}
             />
           </div>
         </div>
@@ -416,9 +420,13 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={raw.weightDelivery}
-              onChange={(e) => handleNum("weightDelivery", "weightDelivery", e.target.value, (n) => Math.max(0, n))}
-              onBlur={() => handleBlur("weightDelivery", "weightDelivery")}
+              value={getRawValue("weightDelivery")}
+              onChange={(e) =>
+                handleNum("weightDelivery", e.target.value, (n) =>
+                  Math.max(0, n),
+                )
+              }
+              onBlur={() => handleBlur("weightDelivery")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightDelivery).toFixed(0)}%
@@ -432,9 +440,13 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={raw.weightQuality}
-              onChange={(e) => handleNum("weightQuality", "weightQuality", e.target.value, (n) => Math.max(0, n))}
-              onBlur={() => handleBlur("weightQuality", "weightQuality")}
+              value={getRawValue("weightQuality")}
+              onChange={(e) =>
+                handleNum("weightQuality", e.target.value, (n) =>
+                  Math.max(0, n),
+                )
+              }
+              onBlur={() => handleBlur("weightQuality")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightQuality).toFixed(0)}%
@@ -448,9 +460,13 @@ function SupplierLabControls({
               min={0}
               max={1}
               step={0.05}
-              value={raw.weightDependency}
-              onChange={(e) => handleNum("weightDependency", "weightDependency", e.target.value, (n) => Math.max(0, n))}
-              onBlur={() => handleBlur("weightDependency", "weightDependency")}
+              value={getRawValue("weightDependency")}
+              onChange={(e) =>
+                handleNum("weightDependency", e.target.value, (n) =>
+                  Math.max(0, n),
+                )
+              }
+              onBlur={() => handleBlur("weightDependency")}
             />
             <p className="text-xs text-slate-500">
               Normalized {normalizedWeight(state.weightDependency).toFixed(0)}%
@@ -551,7 +567,7 @@ function SupplierProfileCard({
       tone:
         s.qualityScore >= 0.95
           ? "text-emerald-200"
-          : s.qualityScore < 0.90
+          : s.qualityScore < 0.9
             ? "text-rose-200"
             : "text-amber-200",
     },
@@ -566,7 +582,9 @@ function SupplierProfileCard({
     <div
       className={cn(
         "rounded-2xl border px-4 py-3",
-        highlight ? "border-cyan-300/30 bg-cyan-300/5" : "border-white/8 bg-white/3",
+        highlight
+          ? "border-cyan-300/30 bg-cyan-300/5"
+          : "border-white/8 bg-white/3",
       )}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -622,11 +640,7 @@ function AlternativesPanel({
   );
 }
 
-function RuleTracePanel({
-  evaluation,
-}: {
-  evaluation: SupplierEvaluation;
-}) {
+function RuleTracePanel({ evaluation }: { evaluation: SupplierEvaluation }) {
   return (
     <Card>
       <CardHeader>
@@ -688,7 +702,8 @@ function DecisionPanel({
   // Derive the trigger that caused APPROVE_WITH_CONDITIONS when all blocking rules pass.
   // This makes the causal chain explicit: a condition is not caused by a failed rule.
   const conditionTrigger =
-    trace.decision === "APPROVE_WITH_CONDITIONS" && recommendation.blockingFailures === 0
+    trace.decision === "APPROVE_WITH_CONDITIONS" &&
+    recommendation.blockingFailures === 0
       ? recommendation.supplier.financialRisk === "MEDIUM"
         ? "MEDIUM FINANCIAL RISK"
         : recommendation.supplier.dependency >= 0.8
@@ -731,10 +746,12 @@ function DecisionPanel({
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
               Trigger
             </p>
-            <p className="text-sm font-semibold text-amber-200">{conditionTrigger}</p>
+            <p className="text-sm font-semibold text-amber-200">
+              {conditionTrigger}
+            </p>
             <p className="mt-1 text-xs text-slate-400">
-              All blocking rules passed — conditions are required due to the trigger above,
-              not a failed rule.
+              All blocking rules passed — conditions are required due to the
+              trigger above, not a failed rule.
             </p>
           </div>
         )}
@@ -916,9 +933,8 @@ type Props = {
 };
 
 export function SupplierWorkspace({ locale }: Props) {
-  const [supplierScenario, setSupplierScenario] = useState<SupplierScenarioState>(
-    BASELINE_SUPPLIER_SCENARIO,
-  );
+  const [supplierScenario, setSupplierScenario] =
+    useState<SupplierScenarioState>(BASELINE_SUPPLIER_SCENARIO);
   const baselineResult = useMemo(
     () => runSupplierDecisionPlugin(DEMO_REQUEST),
     [],
@@ -958,7 +974,8 @@ export function SupplierWorkspace({ locale }: Props) {
       );
     }
     if (
-      baseCandidate.deliveryPerformance !== scenarioCandidate.deliveryPerformance
+      baseCandidate.deliveryPerformance !==
+      scenarioCandidate.deliveryPerformance
     ) {
       changedReasons.push(
         `Delivery performance: ${formatPctInput(baseCandidate.deliveryPerformance)} → ${formatPctInput(scenarioCandidate.deliveryPerformance)}`,
@@ -980,7 +997,8 @@ export function SupplierWorkspace({ locale }: Props) {
       );
     }
     if (
-      baseConfig.minDeliveryPerformance !== scenarioConfig.minDeliveryPerformance
+      baseConfig.minDeliveryPerformance !==
+      scenarioConfig.minDeliveryPerformance
     ) {
       changedReasons.push(
         `Min delivery threshold: ${formatPctInput(baseConfig.minDeliveryPerformance)} → ${formatPctInput(scenarioConfig.minDeliveryPerformance)}`,
@@ -1047,9 +1065,9 @@ export function SupplierWorkspace({ locale }: Props) {
               Supplier Decision
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-500">
-              Same deterministic decision-engine architecture — different decision
-              problem. Supplier selection with explicit rules, evidence and audit
-              trail.{" "}
+              Same deterministic decision-engine architecture — different
+              decision problem. Supplier selection with explicit rules, evidence
+              and audit trail.{" "}
               <span className="text-amber-400">
                 Synthetic demonstration — not production supplier data.
               </span>

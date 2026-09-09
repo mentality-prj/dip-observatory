@@ -59,7 +59,9 @@ export const DEFAULT_COST_CONFIG: CostConfig = {
   configVersion: "1.0",
 };
 
-function mergeCostConfig(override: Partial<CostConfig> | undefined): CostConfig {
+function mergeCostConfig(
+  override: Partial<CostConfig> | undefined,
+): CostConfig {
   return { ...DEFAULT_COST_CONFIG, ...override };
 }
 
@@ -71,7 +73,8 @@ export const PRODUCTION_RULES: ProductionRule[] = [
   {
     id: "RULE-CAPACITY",
     name: "Capacity feasibility",
-    description: "The proposed plan must fit within available production capacity.",
+    description:
+      "The proposed plan must fit within available production capacity.",
     blocking: true,
   },
   {
@@ -89,7 +92,8 @@ export const PRODUCTION_RULES: ProductionRule[] = [
   {
     id: "RULE-PRIORITY",
     name: "Priority ordering",
-    description: "Higher-priority orders should be scheduled before lower-priority ones.",
+    description:
+      "Higher-priority orders should be scheduled before lower-priority ones.",
     blocking: false,
   },
   {
@@ -101,13 +105,15 @@ export const PRODUCTION_RULES: ProductionRule[] = [
   {
     id: "RULE-DISRUPTION",
     name: "Disruption compensation",
-    description: "The alternative must adequately compensate for the production disruption.",
+    description:
+      "The alternative must adequately compensate for the production disruption.",
     blocking: false,
   },
   {
     id: "RULE-COST",
     name: "Financial consequence",
-    description: "The estimated total cost of the alternative must be evaluated.",
+    description:
+      "The estimated total cost of the alternative must be evaluated.",
     blocking: false,
   },
 ];
@@ -118,9 +124,9 @@ export const PRODUCTION_RULES: ProductionRule[] = [
 
 const SCORE_WEIGHTS = {
   deadlineProtection: 0.25,
-  criticalOrderProtection: 0.30,
+  criticalOrderProtection: 0.3,
   financialScore: 0.25,
-  capacityUtilization: 0.10,
+  capacityUtilization: 0.1,
   materialUtilization: 0.05,
   operationalDisruption: 0.05,
 } as const;
@@ -137,16 +143,29 @@ interface LineCapacity {
 
 function computeEffectiveCapacities(
   lines: ProductionLine[],
-  disruption: { affectedLineId: string; capacityReductionFactor: number; durationDays: number },
+  disruption: {
+    affectedLineId: string;
+    capacityReductionFactor: number;
+    durationDays: number;
+  },
   planHorizonDays: number,
 ): { perDay: LineCapacity[]; totalCapacityTonnes: number } {
   const perDay: LineCapacity[] = lines.map((line) => {
     const isAffected = line.id === disruption.affectedLineId;
     const disruptedTpd = isAffected
-      ? Math.max(0, line.normalCapacityTpd * line.availabilityFactor * (1 - disruption.capacityReductionFactor))
+      ? Math.max(
+          0,
+          line.normalCapacityTpd *
+            line.availabilityFactor *
+            (1 - disruption.capacityReductionFactor),
+        )
       : line.normalCapacityTpd * line.availabilityFactor;
     const effectiveTpd = disruptedTpd;
-    return { lineId: line.id, normalTpd: line.normalCapacityTpd * line.availabilityFactor, effectiveTpd };
+    return {
+      lineId: line.id,
+      normalTpd: line.normalCapacityTpd * line.availabilityFactor,
+      effectiveTpd,
+    };
   });
 
   // Total capacity over the planning horizon (disruption affects first N days)
@@ -158,9 +177,12 @@ function computeEffectiveCapacities(
       return sum + normalDailyTpd * planHorizonDays;
     }
 
-    const disruptedTpd = normalDailyTpd * (1 - disruption.capacityReductionFactor);
-    const disruptedCapacity = disruptedTpd * Math.min(disruption.durationDays, planHorizonDays);
-    const normalCapacity = normalDailyTpd * Math.max(0, planHorizonDays - disruption.durationDays);
+    const disruptedTpd =
+      normalDailyTpd * (1 - disruption.capacityReductionFactor);
+    const disruptedCapacity =
+      disruptedTpd * Math.min(disruption.durationDays, planHorizonDays);
+    const normalCapacity =
+      normalDailyTpd * Math.max(0, planHorizonDays - disruption.durationDays);
     return sum + disruptedCapacity + normalCapacity;
   }, 0);
 
@@ -194,7 +216,10 @@ function evaluateRulesForAlternative(
 ): RuleResult[] {
   const totalRequired = orders.reduce((s, o) => s + o.requiredTonnes, 0);
   const criticalOrders = orders.filter((o) => o.priority === "CRITICAL");
-  const criticalRequired = criticalOrders.reduce((s, o) => s + o.requiredTonnes, 0);
+  const criticalRequired = criticalOrders.reduce(
+    (s, o) => s + o.requiredTonnes,
+    0,
+  );
 
   // For critical deadline protection we need a rough completion estimate
   const effectiveCapacity = totalCapacityTonnes + overtimeTonnes;
@@ -202,10 +227,15 @@ function evaluateRulesForAlternative(
   // Simulate whether critical orders complete in time
   // Allocate capacity to critical orders first
   const criticalCanComplete = effectiveCapacity >= criticalRequired;
-  const criticalDeadlineDays = criticalOrders.length > 0 ? Math.min(...criticalOrders.map((o) => o.deadlineDays)) : 99;
+  const criticalDeadlineDays =
+    criticalOrders.length > 0
+      ? Math.min(...criticalOrders.map((o) => o.deadlineDays))
+      : 99;
   // Use criticalOrderTpd — disrupted affected-line rate for KEEP_CURRENT_PLAN, combined rate for other actions
-  const criticalCompletionDays = criticalOrderTpd > 0 ? criticalRequired / criticalOrderTpd : 999;
-  const criticalDeadlineProtected = criticalCanComplete && criticalCompletionDays <= criticalDeadlineDays;
+  const criticalCompletionDays =
+    criticalOrderTpd > 0 ? criticalRequired / criticalOrderTpd : 999;
+  const criticalDeadlineProtected =
+    criticalCanComplete && criticalCompletionDays <= criticalDeadlineDays;
 
   return PRODUCTION_RULES.map((rule): RuleResult => {
     switch (rule.id) {
@@ -264,11 +294,13 @@ function evaluateRulesForAlternative(
 
       case "RULE-PRIORITY": {
         // Heuristic: check if the action explicitly re-orders by priority
-        const passed = actionId !== "KEEP_CURRENT_PLAN" || criticalDeadlineProtected;
+        const passed =
+          actionId !== "KEEP_CURRENT_PLAN" || criticalDeadlineProtected;
         return {
           ruleId: rule.id,
           ruleName: rule.name,
-          condition: "Higher-priority orders are scheduled before lower-priority ones",
+          condition:
+            "Higher-priority orders are scheduled before lower-priority ones",
           passed,
           evidence: passed
             ? "Plan schedules orders in CRITICAL → HIGH → NORMAL priority sequence."
@@ -285,7 +317,9 @@ function evaluateRulesForAlternative(
           condition: "Capacity utilisation ≥ 65%",
           passed,
           evidence: `Plan achieves ${(capacityUtilization * 100).toFixed(0)}% capacity utilisation.`,
-          featureValues: { capacityUtilisationPct: +(capacityUtilization * 100).toFixed(1) },
+          featureValues: {
+            capacityUtilisationPct: +(capacityUtilization * 100).toFixed(1),
+          },
         };
       }
 
@@ -306,7 +340,9 @@ function evaluateRulesForAlternative(
           featureValues: {
             actionId,
             compensates,
-            lineCapacityReductionPct: +(capacityReductionFactor * 100).toFixed(1),
+            lineCapacityReductionPct: +(capacityReductionFactor * 100).toFixed(
+              1,
+            ),
           },
         };
       }
@@ -319,7 +355,9 @@ function evaluateRulesForAlternative(
           condition: "Total estimated cost evaluated",
           passed: true,
           evidence: "Financial impact calculated and included in scoring.",
-          featureValues: { capacityUtilisationPct: +(capacityUtilization * 100).toFixed(1) },
+          featureValues: {
+            capacityUtilisationPct: +(capacityUtilization * 100).toFixed(1),
+          },
         };
       }
 
@@ -356,7 +394,8 @@ function calcFinancialImpact(
   // Overtime cost applies when OT is used (only for REDISTRIBUTE or PRIORITIZE)
   const overtimeTonnes =
     overtimeAvailable &&
-    (actionId === "REDISTRIBUTE_PRODUCTION" || actionId === "PRIORITIZE_CRITICAL_ORDER")
+    (actionId === "REDISTRIBUTE_PRODUCTION" ||
+      actionId === "PRIORITIZE_CRITICAL_ORDER")
       ? Math.max(0, totalRequired - effectiveCapacityTonnes) * 0.5
       : 0;
 
@@ -369,29 +408,43 @@ function calcFinancialImpact(
     let criticalCumulative = 0;
     for (const o of criticalOrders) {
       criticalCumulative += o.requiredTonnes;
-      const estimatedCompletion = affectedLineTpd > 0 ? criticalCumulative / affectedLineTpd : 999;
+      const estimatedCompletion =
+        affectedLineTpd > 0 ? criticalCumulative / affectedLineTpd : 999;
       const overrun = Math.max(0, estimatedCompletion - o.deadlineDays);
-      missedDeadlineCost += overrun * o.requiredTonnes * costs.missedCriticalDeadlineCostPerTonneDay;
+      missedDeadlineCost +=
+        overrun *
+        o.requiredTonnes *
+        costs.missedCriticalDeadlineCostPerTonneDay;
     }
     // High orders also on affected line (queued behind critical).
-    let highCumulative = criticalOrders.reduce((s, o) => s + o.requiredTonnes, 0);
+    let highCumulative = criticalOrders.reduce(
+      (s, o) => s + o.requiredTonnes,
+      0,
+    );
     for (const o of highOrders) {
       highCumulative += o.requiredTonnes;
-      const estimatedCompletion = affectedLineTpd > 0 ? highCumulative / affectedLineTpd : 999;
+      const estimatedCompletion =
+        affectedLineTpd > 0 ? highCumulative / affectedLineTpd : 999;
       const overrun = Math.max(0, estimatedCompletion - o.deadlineDays);
-      missedDeadlineCost += overrun * o.requiredTonnes * costs.missedHighDeadlineCostPerTonneDay;
+      missedDeadlineCost +=
+        overrun * o.requiredTonnes * costs.missedHighDeadlineCostPerTonneDay;
     }
   } else if (actionId === "DELAY_LOW_PRIORITY_ORDER") {
     // Delay normal orders intentionally, protecting high & critical
     for (const o of normalOrders) {
       const delayDays = 3;
-      missedDeadlineCost += delayDays * o.requiredTonnes * costs.productionDelayCostPerTonneDay;
+      missedDeadlineCost +=
+        delayDays * o.requiredTonnes * costs.productionDelayCostPerTonneDay;
     }
   } else if (actionId === "PRIORITIZE_CRITICAL_ORDER") {
     // Critical protected, but HIGH might slip
     for (const o of highOrders) {
       const overrun = 1;
-      missedDeadlineCost += overrun * o.requiredTonnes * costs.missedHighDeadlineCostPerTonneDay * 0.5;
+      missedDeadlineCost +=
+        overrun *
+        o.requiredTonnes *
+        costs.missedHighDeadlineCostPerTonneDay *
+        0.5;
     }
   }
   // REDISTRIBUTE_PRODUCTION: no missed deadlines — all lines combined meet deadlines
@@ -411,8 +464,12 @@ function calcFinancialImpact(
   // Unused capacity cost: consistent across all alternatives.
   // unusedDailyTpd = total normal t/day minus the average daily throughput required.
   // This is the same for all plans because total production (270 t) does not change.
-  const unusedDailyTpd = Math.max(0, totalNormalTpd - totalRequired / planHorizonDays);
-  const unusedCapacityCost = unusedDailyTpd * costs.unusedCapacityCostPerTpdDay * planHorizonDays;
+  const unusedDailyTpd = Math.max(
+    0,
+    totalNormalTpd - totalRequired / planHorizonDays,
+  );
+  const unusedCapacityCost =
+    unusedDailyTpd * costs.unusedCapacityCostPerTpdDay * planHorizonDays;
 
   // Material switching / reconfiguration cost
   const switchingCost =
@@ -432,7 +489,12 @@ function calcFinancialImpact(
     delayCost: roundedDelayCost,
     unusedCapacityCost: roundedUnusedCapacityCost,
     switchingCost: roundedSwitchingCost,
-    total: roundedMissedDeadlineCost + roundedOvertimeCost + roundedDelayCost + roundedUnusedCapacityCost + roundedSwitchingCost,
+    total:
+      roundedMissedDeadlineCost +
+      roundedOvertimeCost +
+      roundedDelayCost +
+      roundedUnusedCapacityCost +
+      roundedSwitchingCost,
   };
 }
 
@@ -455,8 +517,11 @@ function computeLineAllocations(
     0,
   );
 
-  const criticalAndHigh = orders.filter((o) => o.priority === "CRITICAL" || o.priority === "HIGH")
-    .sort((a, _b) => (a.priority === "CRITICAL" ? -1 : 1));
+  const criticalAndHigh = orders
+    .filter((o) => o.priority === "CRITICAL" || o.priority === "HIGH")
+    .sort((a, b) =>
+      a.priority === b.priority ? 0 : a.priority === "CRITICAL" ? -1 : 1,
+    );
   const normalOrders = orders.filter((o) => o.priority === "NORMAL");
 
   if (actionId === "KEEP_CURRENT_PLAN") {
@@ -475,14 +540,16 @@ function computeLineAllocations(
       };
     });
 
-
     return [
       {
         lineId: affectedLine?.id ?? affectedLineId,
         lineName: affectedLine?.name ?? affectedLineId,
         effectiveTpd: affectedLineTpd,
         orders: affectedAllocs,
-        totalAllocatedTonnes: criticalAndHigh.reduce((s, o) => s + o.requiredTonnes, 0),
+        totalAllocatedTonnes: criticalAndHigh.reduce(
+          (s, o) => s + o.requiredTonnes,
+          0,
+        ),
       },
       ...unaffectedLines.map((line) => {
         const tpd = line.normalCapacityTpd * line.availabilityFactor;
@@ -505,7 +572,9 @@ function computeLineAllocations(
           lineName: line.name,
           effectiveTpd: tpd,
           orders: lineNormalAllocs,
-          totalAllocatedTonnes: Math.round(normalOrders.reduce((s, o) => s + o.requiredTonnes, 0) * share),
+          totalAllocatedTonnes: Math.round(
+            normalOrders.reduce((s, o) => s + o.requiredTonnes, 0) * share,
+          ),
         };
       }),
     ];
@@ -518,14 +587,16 @@ function computeLineAllocations(
   });
 
   return lines.map((line) => {
-    const lineTpd = line.id === affectedLineId
-      ? affectedLineTpd
-      : line.normalCapacityTpd * line.availabilityFactor;
+    const lineTpd =
+      line.id === affectedLineId
+        ? affectedLineTpd
+        : line.normalCapacityTpd * line.availabilityFactor;
     const share = dailyEffectiveTpd > 0 ? lineTpd / dailyEffectiveTpd : 0;
     let cum = 0;
     const orderAllocs = prioritised.map((o) => {
       cum += o.requiredTonnes;
-      const completionDay = dailyEffectiveTpd > 0 ? cum / dailyEffectiveTpd : 999;
+      const completionDay =
+        dailyEffectiveTpd > 0 ? cum / dailyEffectiveTpd : 999;
       return {
         orderId: o.id,
         orderName: o.name,
@@ -540,7 +611,9 @@ function computeLineAllocations(
       lineName: line.name,
       effectiveTpd: lineTpd,
       orders: orderAllocs,
-      totalAllocatedTonnes: Math.round(orders.reduce((s, o) => s + o.requiredTonnes, 0) * share),
+      totalAllocatedTonnes: Math.round(
+        orders.reduce((s, o) => s + o.requiredTonnes, 0) * share,
+      ),
     };
   });
 }
@@ -575,7 +648,9 @@ function calcOperationalConsequences(
     .reduce((s, l) => s + l.normalCapacityTpd * l.availabilityFactor, 0);
 
   const priorityOrder = { CRITICAL: 0, HIGH: 1, NORMAL: 2 };
-  const sorted = [...orders].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  const sorted = [...orders].sort(
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
+  );
 
   const expectedCompletionDays: Record<string, number> = {};
   const affectedOrderIds: string[] = [];
@@ -585,9 +660,8 @@ function calcOperationalConsequences(
     let cumulativeA = 0;
     for (const order of sorted.filter((o) => o.priority !== "NORMAL")) {
       cumulativeA += order.requiredTonnes;
-      const completionDay = affectedLineTpd > 0
-        ? Math.ceil(cumulativeA / affectedLineTpd)
-        : 999;
+      const completionDay =
+        affectedLineTpd > 0 ? Math.ceil(cumulativeA / affectedLineTpd) : 999;
       expectedCompletionDays[order.id] = completionDay;
       if (completionDay > order.deadlineDays) {
         affectedOrderIds.push(order.id);
@@ -597,9 +671,10 @@ function calcOperationalConsequences(
     let cumulativeB = 0;
     for (const order of sorted.filter((o) => o.priority === "NORMAL")) {
       cumulativeB += order.requiredTonnes;
-      const completionDay = unaffectedLineTpd > 0
-        ? Math.ceil(cumulativeB / unaffectedLineTpd)
-        : 999;
+      const completionDay =
+        unaffectedLineTpd > 0
+          ? Math.ceil(cumulativeB / unaffectedLineTpd)
+          : 999;
       expectedCompletionDays[order.id] = completionDay;
       if (completionDay > order.deadlineDays) {
         affectedOrderIds.push(order.id);
@@ -609,12 +684,16 @@ function calcOperationalConsequences(
     let cumulativeTonnes = 0;
     for (const order of sorted) {
       cumulativeTonnes += order.requiredTonnes;
-      const completionDay = criticalOrderTpd > 0
-        ? Math.ceil(cumulativeTonnes / criticalOrderTpd)
-        : 999;
+      const completionDay =
+        criticalOrderTpd > 0
+          ? Math.ceil(cumulativeTonnes / criticalOrderTpd)
+          : 999;
       expectedCompletionDays[order.id] = completionDay;
 
-      if (actionId === "DELAY_LOW_PRIORITY_ORDER" && order.priority === "NORMAL") {
+      if (
+        actionId === "DELAY_LOW_PRIORITY_ORDER" &&
+        order.priority === "NORMAL"
+      ) {
         expectedCompletionDays[order.id] = completionDay + 3;
         affectedOrderIds.push(order.id);
       }
@@ -627,9 +706,10 @@ function calcOperationalConsequences(
     return day <= o.deadlineDays;
   });
 
-  const capacityUtilizationFactor = normalCapacityTonnes > 0
-    ? Math.min(1, totalRequired / normalCapacityTonnes)
-    : 0;
+  const capacityUtilizationFactor =
+    normalCapacityTonnes > 0
+      ? Math.min(1, totalRequired / normalCapacityTonnes)
+      : 0;
 
   const lineAllocations = computeLineAllocations(
     actionId,
@@ -660,19 +740,29 @@ function computeScore(
   ruleResults: RuleResult[],
   maxFinancialCost: number,
 ): AlternativeScore {
-  const deadlineProtection =
-    ruleResults.find((r) => r.ruleId === "RULE-CRITICAL-DEADLINE")?.passed ? 1.0 : 0.0;
+  const deadlineProtection = ruleResults.find(
+    (r) => r.ruleId === "RULE-CRITICAL-DEADLINE",
+  )?.passed
+    ? 1.0
+    : 0.0;
 
-  const criticalOrderProtection = operational.criticalOrderDeadlineProtected ? 1.0 : 0.0;
+  const criticalOrderProtection = operational.criticalOrderDeadlineProtected
+    ? 1.0
+    : 0.0;
 
   const financialScore =
     maxFinancialCost > 0 ? 1 - financial.total / maxFinancialCost : 1.0;
 
-  const capacityUtilization = Math.min(1, operational.capacityUtilizationFactor);
+  const capacityUtilization = Math.min(
+    1,
+    operational.capacityUtilizationFactor,
+  );
 
   const materialUtilization = operational.totalTonnesProcessed > 0 ? 1.0 : 0.0;
 
-  const disruptionRule = ruleResults.find((r) => r.ruleId === "RULE-DISRUPTION");
+  const disruptionRule = ruleResults.find(
+    (r) => r.ruleId === "RULE-DISRUPTION",
+  );
   const operationalDisruption = disruptionRule?.passed ? 1.0 : 0.5;
 
   const composite =
@@ -727,7 +817,10 @@ function generateExplanation(
         evidence: r.evidence,
       });
     }
-    if (!r.passed && PRODUCTION_RULES.find((pr) => pr.id === r.ruleId)?.blocking) {
+    if (
+      !r.passed &&
+      PRODUCTION_RULES.find((pr) => pr.id === r.ruleId)?.blocking
+    ) {
       reasons.push({
         label: `Constraint: ${r.ruleName}`,
         direction: "negative",
@@ -738,8 +831,12 @@ function generateExplanation(
 
   // Financial advantage
   const baseline = ranked.find((a) => a.actionId === "KEEP_CURRENT_PLAN");
-  if (baseline && recommended.financialImpact.total < baseline.financialImpact.total) {
-    const saved = baseline.financialImpact.total - recommended.financialImpact.total;
+  if (
+    baseline &&
+    recommended.financialImpact.total < baseline.financialImpact.total
+  ) {
+    const saved =
+      baseline.financialImpact.total - recommended.financialImpact.total;
     reasons.push({
       label: "Lower total financial impact",
       direction: "positive",
@@ -757,7 +854,8 @@ function generateExplanation(
         };
       }
       if (a.financialImpact.total > recommended.financialImpact.total) {
-        const extra = a.financialImpact.total - recommended.financialImpact.total;
+        const extra =
+          a.financialImpact.total - recommended.financialImpact.total;
         return {
           actionId: a.actionId,
           reason: `Higher total cost — €${extra.toLocaleString("en-US")} more than recommended action.`,
@@ -804,10 +902,17 @@ export function runProductionReplanningEngine(
   const planHorizonDays = Math.max(...orders.map((o) => o.deadlineDays)) + 2;
 
   // Total available material
-  const totalMaterialTonnes = materials.reduce((s, m) => s + m.availableTonnes, 0);
+  const totalMaterialTonnes = materials.reduce(
+    (s, m) => s + m.availableTonnes,
+    0,
+  );
 
   // Effective capacities under disruption
-  const { totalCapacityTonnes } = computeEffectiveCapacities(lines, disruption, planHorizonDays);
+  const { totalCapacityTonnes } = computeEffectiveCapacities(
+    lines,
+    disruption,
+    planHorizonDays,
+  );
 
   // Normal capacity (no disruption)
   const normalCapacityTonnes = lines.reduce(
@@ -818,7 +923,12 @@ export function runProductionReplanningEngine(
   // Daily effective throughput (disrupted)
   const dailyLines = lines.map((l) => {
     if (l.id === disruption.affectedLineId) {
-      return Math.max(0, l.normalCapacityTpd * l.availabilityFactor * (1 - disruption.capacityReductionFactor));
+      return Math.max(
+        0,
+        l.normalCapacityTpd *
+          l.availabilityFactor *
+          (1 - disruption.capacityReductionFactor),
+      );
     }
     return l.normalCapacityTpd * l.availabilityFactor;
   });
@@ -827,11 +937,22 @@ export function runProductionReplanningEngine(
   // Disrupted throughput of the affected line only (used for KEEP_CURRENT_PLAN deadline estimation)
   const affectedLineTpd = lines.reduce((s, l) => {
     if (l.id !== disruption.affectedLineId) return s;
-    return s + Math.max(0, l.normalCapacityTpd * l.availabilityFactor * (1 - disruption.capacityReductionFactor));
+    return (
+      s +
+      Math.max(
+        0,
+        l.normalCapacityTpd *
+          l.availabilityFactor *
+          (1 - disruption.capacityReductionFactor),
+      )
+    );
   }, 0);
 
   // Sum of all lines' normal t/day (no disruption) — for unused-capacity calculation
-  const totalNormalTpd = lines.reduce((s, l) => s + l.normalCapacityTpd * l.availabilityFactor, 0);
+  const totalNormalTpd = lines.reduce(
+    (s, l) => s + l.normalCapacityTpd * l.availabilityFactor,
+    0,
+  );
 
   // Daily overtime bonus (t/day) when overtime is available
   const dailyOvertimeTpd = overtimeAvailable
@@ -870,78 +991,93 @@ export function runProductionReplanningEngine(
   });
   const maxFinancialCost = Math.max(...rawFinancials.map((f) => f.total), 1);
 
-  const evaluations: AlternativeEvaluation[] = actionIds.map((actionId, idx) => {
-    const overtimeTonnes =
-      overtimeAvailable &&
-      (actionId === "REDISTRIBUTE_PRODUCTION" || actionId === "PRIORITIZE_CRITICAL_ORDER")
-        ? overtimeBonusTonnes
-        : 0;
+  const evaluations: AlternativeEvaluation[] = actionIds.map(
+    (actionId, idx) => {
+      const overtimeTonnes =
+        overtimeAvailable &&
+        (actionId === "REDISTRIBUTE_PRODUCTION" ||
+          actionId === "PRIORITIZE_CRITICAL_ORDER")
+          ? overtimeBonusTonnes
+          : 0;
 
-    // For KEEP_CURRENT_PLAN: critical orders are on the disrupted line only → use affectedLineTpd.
-    // For other actions: all lines work together → use combined effective tpd (+ overtime when applicable).
-    const criticalOrderTpd =
-      actionId === "KEEP_CURRENT_PLAN"
-        ? affectedLineTpd
-        : overtimeTonnes > 0
+      // For KEEP_CURRENT_PLAN: critical orders are on the disrupted line only → use affectedLineTpd.
+      // For other actions: all lines work together → use combined effective tpd (+ overtime when applicable).
+      const criticalOrderTpd =
+        actionId === "KEEP_CURRENT_PLAN"
+          ? affectedLineTpd
+          : overtimeTonnes > 0
+            ? dailyEffectiveTpd + dailyOvertimeTpd
+            : dailyEffectiveTpd;
+
+      const operational = calcOperationalConsequences(
+        actionId,
+        orders,
+        totalCapacityTonnes,
+        overtimeTonnes,
+        normalCapacityTonnes,
+        criticalOrderTpd,
+        lines,
+        disruption.affectedLineId,
+        affectedLineTpd,
+        overtimeTonnes > 0
           ? dailyEffectiveTpd + dailyOvertimeTpd
-          : dailyEffectiveTpd;
+          : dailyEffectiveTpd,
+      );
 
-    const operational = calcOperationalConsequences(
-      actionId,
-      orders,
-      totalCapacityTonnes,
-      overtimeTonnes,
-      normalCapacityTonnes,
-      criticalOrderTpd,
-      lines,
-      disruption.affectedLineId,
-      affectedLineTpd,
-      overtimeTonnes > 0 ? dailyEffectiveTpd + dailyOvertimeTpd : dailyEffectiveTpd,
-    );
+      const capacityUtilization = Math.min(
+        1,
+        orders.reduce((s, o) => s + o.requiredTonnes, 0) /
+          Math.max(totalCapacityTonnes + overtimeTonnes, 1),
+      );
 
-    const capacityUtilization = Math.min(
-      1,
-      orders.reduce((s, o) => s + o.requiredTonnes, 0) /
-        Math.max(totalCapacityTonnes + overtimeTonnes, 1),
-    );
+      const ruleResults = evaluateRulesForAlternative(
+        actionId,
+        orders,
+        totalCapacityTonnes,
+        totalMaterialTonnes,
+        overtimeTonnes,
+        capacityUtilization,
+        disruption.durationDays,
+        normalCapacityTonnes,
+        planHorizonDays,
+        criticalOrderTpd,
+        disruption.capacityReductionFactor,
+        lines.find((l) => l.id === disruption.affectedLineId)?.name ??
+          disruption.affectedLineId,
+      );
 
-    const ruleResults = evaluateRulesForAlternative(
-      actionId,
-      orders,
-      totalCapacityTonnes,
-      totalMaterialTonnes,
-      overtimeTonnes,
-      capacityUtilization,
-      disruption.durationDays,
-      normalCapacityTonnes,
-      planHorizonDays,
-      criticalOrderTpd,
-      disruption.capacityReductionFactor,
-      lines.find((l) => l.id === disruption.affectedLineId)?.name ?? disruption.affectedLineId,
-    );
+      const blockingConstraints = ruleResults
+        .filter(
+          (r) =>
+            !r.passed &&
+            PRODUCTION_RULES.find((pr) => pr.id === r.ruleId)?.blocking,
+        )
+        .map((r) => r.evidence);
 
-    const blockingConstraints = ruleResults
-      .filter((r) => !r.passed && PRODUCTION_RULES.find((pr) => pr.id === r.ruleId)?.blocking)
-      .map((r) => r.evidence);
+      const feasibility: FeasibilityStatus =
+        blockingConstraints.length === 0 ? "FEASIBLE" : "INFEASIBLE";
 
-    const feasibility: FeasibilityStatus =
-      blockingConstraints.length === 0 ? "FEASIBLE" : "INFEASIBLE";
+      const financial = rawFinancials[idx];
+      const score = computeScore(
+        operational,
+        financial,
+        ruleResults,
+        maxFinancialCost,
+      );
 
-    const financial = rawFinancials[idx];
-    const score = computeScore(operational, financial, ruleResults, maxFinancialCost);
-
-    return {
-      actionId,
-      actionLabel: ACTION_LABELS[actionId],
-      feasibility,
-      blockingConstraints,
-      ruleResults,
-      financialImpact: financial,
-      operationalConsequences: operational,
-      score,
-      rank: 0, // assigned after sorting
-    };
-  });
+      return {
+        actionId,
+        actionLabel: ACTION_LABELS[actionId],
+        feasibility,
+        blockingConstraints,
+        ruleResults,
+        financialImpact: financial,
+        operationalConsequences: operational,
+        score,
+        rank: 0, // assigned after sorting
+      };
+    },
+  );
 
   // ------------------------------------------------------------------
   // Rank: feasible first, then by composite score descending
