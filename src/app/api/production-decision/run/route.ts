@@ -18,14 +18,23 @@ export async function POST(request: Request) {
       "production.decision.evaluate",
       input,
     );
+
     return NextResponse.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid production state." }, { status: 422 });
+      return NextResponse.json(
+        { error: "Invalid production state." },
+        { status: 422 },
+      );
     }
+
     if (error instanceof DipApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    return NextResponse.json({ error: "Unexpected decision engine error." }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "Unexpected decision engine error." },
+      { status: 500 },
+    );
   }
 }
