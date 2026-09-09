@@ -74,7 +74,11 @@ export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeSh
         </div></div>
       </header>
       <div className="mx-auto w-full max-w-[1700px] px-0">
-        <div className="flex items-center gap-1 px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-slate-600 md:px-6 xl:px-10"><Home className="h-3 w-3" /><ChevronRight className="h-3 w-3" /><span>{activeItem?.label[locale] ?? "Prototype"}</span></div>
+        <div className="flex h-8 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 md:px-6 xl:px-10" aria-label="Breadcrumb">
+          <Home className="h-3 w-3 shrink-0 text-slate-600" />
+          <ChevronRight className="h-3 w-3 shrink-0 text-slate-700" />
+          <span className="truncate">{activeItem?.label[locale] ?? "Prototype"}</span>
+        </div>
         <div className="prototype-shell-content">{children}</div>
       </div>
     </div>
