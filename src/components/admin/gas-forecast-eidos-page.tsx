@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, FlaskConical, Home } from "lucide-react";
+import { Check, Copy, Download, FlaskConical, Home } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 
@@ -52,6 +52,24 @@ export function GasForecastEidosPage({
     await navigator.clipboard.writeText(rawPayload);
     setIsPayloadCopied(true);
     window.setTimeout(() => setIsPayloadCopied(false), 1500);
+  }
+
+  function exportRawPayload() {
+    if (!result) {
+      return;
+    }
+
+    const rawPayload = JSON.stringify(result.payload, null, 2) ?? "";
+    const blob = new Blob([rawPayload], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `gas-forecast-experiment-${result.executedAt.replace(/[:.]/g, "-")}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -221,21 +239,34 @@ export function GasForecastEidosPage({
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
                     Raw backend payload
                   </p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-400 hover:text-white"
-                    aria-label="Copy raw backend payload"
-                    title="Copy raw backend payload"
-                    onClick={copyRawPayload}
-                  >
-                    {isPayloadCopied ? (
-                      <Check className="h-4 w-4" aria-hidden="true" />
-                    ) : (
-                      <Copy className="h-4 w-4" aria-hidden="true" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-white"
+                      aria-label="Copy raw backend payload"
+                      title="Copy raw backend payload"
+                      onClick={copyRawPayload}
+                    >
+                      {isPayloadCopied ? (
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <Copy className="h-4 w-4" aria-hidden="true" />
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-white"
+                      aria-label="Export raw backend payload as TXT"
+                      title="Export raw backend payload as TXT"
+                      onClick={exportRawPayload}
+                    >
+                      <Download className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
                 </div>
                 <pre
                   aria-label="Raw backend payload"
