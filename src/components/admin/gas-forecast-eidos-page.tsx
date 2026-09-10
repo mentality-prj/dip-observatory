@@ -16,8 +16,8 @@ import type {
 } from "@/lib/gas-forecast-experiment-client";
 
 const DEFAULT_FORM: GasForecastExperimentRequest = {
-  start_date: "",
-  end_date: "",
+  start_date: "2025-01-01",
+  end_date: "2026-09-09",
   forecast_horizon_days: 7,
   volume_mwh: 10_000_000,
   procurement_threshold_eur_per_mwh: 0,
@@ -116,6 +116,7 @@ export function GasForecastEidosPage({
                   <Input
                     id="start-date"
                     type="date"
+                    className="h-11 min-h-11 max-h-11 appearance-none"
                     value={form.start_date}
                     onChange={(event) => update("start_date", event.target.value)}
                   />
@@ -125,6 +126,7 @@ export function GasForecastEidosPage({
                   <Input
                     id="end-date"
                     type="date"
+                    className="h-11 min-h-11 max-h-11 appearance-none"
                     value={form.end_date}
                     onChange={(event) => update("end_date", event.target.value)}
                   />
