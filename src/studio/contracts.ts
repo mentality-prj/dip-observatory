@@ -64,9 +64,10 @@ export async function studioRequest<T>(path: string, init?: RequestInit): Promis
     ...init, headers: { "Content-Type": "application/json", ...init?.headers }, cache: "no-store",
   });
   if (response.status === 204) return undefined as T;
-  const body = await response.json();
+  const body = await response.json().catch(() => null);
+  if (body === null) throw new Error(`Studio returned an unexpected response (HTTP ${response.status}). Check that the frontend and backend deployments include Decision Studio.`);
   if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail :
-    typeof body.error === "string" ? body.error : JSON.stringify(body.detail ?? body));
+    typeof body.error === "string" ? body.error : body.error?.message ?? body.message ?? JSON.stringify(body.detail ?? body));
   return body as T;
 }
 
