@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { emptyProfile, studioRequest, type Binding, type Dimension, type Plugin, type Profile, type ProfileDimension } from "./contracts";
 import { JsonField, SchemaField } from "./schema-form";
+import { RuleSummary, type ProfileSection } from "./presentation";
 
-export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, filter }: {
+export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, filter, section }: {
   initial: Profile; existing: boolean; plugins: Plugin[]; dimensions: Dimension[];
-  onSave: (profile: Profile) => Promise<void>; filter?: string;
+  onSave: (profile: Profile) => Promise<void>; filter?: string; section?: ProfileSection;
 }) {
   const [profile, setProfile] = useState<Profile>(initial);
   const [bindings, setBindings] = useState<Binding[]>([]);
@@ -33,11 +34,11 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
       <span className="studio-tag">{profile.active ? "Active" : "Draft"}</span></header>
       <div className="studio-grid">
         <label className="studio-field">Profile ID<input required pattern="[a-zA-Z0-9][a-zA-Z0-9_-]*" readOnly={existing} value={profile.id} onChange={(e) => setProfile({ ...profile, id: e.target.value })} /></label>
-        <label className="studio-field">Name<input required value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} /></label>
+        {(!section || section === "overview") && <label className="studio-field">Name<input required value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} /></label>}
         <label className="studio-field">{existing ? "New version" : "Version"}<input required value={profile.version} onChange={(e) => setProfile({ ...profile, version: e.target.value })} />
           {existing && <small>Use a new version to preserve previous configuration.</small>}</label>
       </div>
-      <div className="studio-grid">
+      {(!section || section === "overview") && <><div className="studio-grid">
         <label className="studio-field">Plugin<select required value={profile.plugin_id} onChange={(e) => {
           const selected = plugins.find((p) => p.name === e.target.value)!;
           const fresh = emptyProfile(selected);
@@ -55,9 +56,9 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
       {plugin && (profile.plugin_version !== plugin.version || profile.capability_version !== plugin.capability_versions[profile.capability_id]) &&
         <button type="button" className="studio-secondary" onClick={() => setProfile({ ...profile,
           plugin_version: plugin.version, capability_version: plugin.capability_versions[profile.capability_id] ?? "" })}>Use installed contract versions</button>}
-      <label className="studio-check"><input type="checkbox" checked={profile.active} onChange={(e) => setProfile({ ...profile, active: e.target.checked })} />Activate after validation</label>
+      <label className="studio-check"><input type="checkbox" checked={profile.active} onChange={(e) => setProfile({ ...profile, active: e.target.checked })} />Activate after validation</label></>}
     </div>
-    {!filter && <div className="studio-card"><h2>Alternatives</h2><p>Describe the options and their attributes. Dimensions evaluate each option separately.</p>
+    {(!section || section === "alternatives") && <div className="studio-card"><h2>Alternatives</h2><p>Describe the options and their attributes. Dimensions evaluate each option separately.</p>
       {profile.alternatives.map((alternative, index) => <div key={index} className="studio-schema">
         <div className="studio-grid">
           <label className="studio-field">Alternative ID<input required value={alternative.id} onChange={(e) => setProfile({ ...profile, alternatives: profile.alternatives.map((a, i) => i === index ? { ...a, id: e.target.value } : a) })} /></label>
@@ -69,7 +70,7 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
       </div>)}
       <button type="button" className="studio-secondary" onClick={() => setProfile({ ...profile, alternatives: [...profile.alternatives, { id: `alternative-${profile.alternatives.length + 1}`, label: "", attributes: {} }] })}>Add alternative</button>
     </div>}
-    <div className="studio-card"><h2>Decision dimensions</h2><p>Select relevant dimensions, pin their contracts, and configure evaluation.</p>
+    {(!section || !["overview", "alternatives"].includes(section)) && <div className="studio-card"><h2>Decision dimensions</h2><p>Select relevant dimensions, pin their contracts, and configure evaluation.</p>
       <div className="studio-grid">{ids.filter((id) => !filter || id === filter).map((id) => {
         const selected = profile.dimensions.some((d) => d.dimension_id === id);
         const definition = dimensions.find((d) => d.id === id)!;
@@ -88,13 +89,14 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
         const definition = dimensions.find((d) => d.id === item.dimension_id && d.version === item.version);
         return <section key={item.dimension_id} className="studio-schema">
           <h3>{definition?.name ?? item.dimension_id}</h3>
+          {definition?.type === "rules" && <RuleSummary configuration={item.configuration} />}
           {!definition && <p className="studio-error">This pinned dimension contract is unavailable.</p>}
           <div className="studio-grid">
             <label className="studio-field">Contract version<select value={item.version} onChange={(e) => changeDimension(index, { version: e.target.value })}>
               {!definition && <option value={item.version}>{item.version} (unavailable)</option>}
               {dimensions.filter((d) => d.id === item.dimension_id).map((d) => <option key={d.version} value={d.version}>{d.version} · {d.evaluator_id}@{d.evaluator_version}</option>)}
             </select></label>
-            <label className="studio-field">Weight<input type="number" min={0} step="any" required value={item.weight} onChange={(e) => changeDimension(index, { weight: e.target.valueAsNumber })} /></label>
+            {definition?.type !== "rules" && <label className="studio-field">Weight<input type="number" min={0} step="any" required value={item.weight} onChange={(e) => changeDimension(index, { weight: e.target.valueAsNumber })} /></label>}
             <label className="studio-field">Plugin output binding<select value={item.binding_id ? `${item.binding_id}|${item.binding_version}` : ""} onChange={(e) => {
               const binding = bindings.find((b) => `${b.id}|${b.version}` === e.target.value);
               changeDimension(index, { binding_id: binding?.id ?? null, binding_version: binding?.version ?? null });
@@ -108,8 +110,8 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
             onChange={(configuration) => changeDimension(index, { configuration: configuration as Record<string, unknown> })} />}
         </section>;
       })}
-    </div>
-    {!filter && <details className="studio-card"><summary>Runtime context schema</summary>
+    </div>}
+    {(!section || section === "overview") && <details className="studio-card"><summary>Runtime context schema</summary>
       <p>Validate application-supplied context separately from business configuration and plugin inputs.</p>
       <JsonField label="JSON Schema" value={profile.context_schema} onChange={(schema) => setProfile({ ...profile, context_schema: schema as Profile["context_schema"] })} />
     </details>}

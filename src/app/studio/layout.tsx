@@ -9,13 +9,13 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
     <aside className="studio-sidebar"><Link className="studio-brand" href="/studio">DIP <span>Decision Studio</span></Link>
       <p>Define how decisions are evaluated.</p>
       <nav aria-label="Decision Studio">
-        <Link href="/studio/profiles">Decision profiles</Link>
-        <Link href="/studio/plugins">Plugins & capabilities</Link>
-        <Link href="/studio/dimensions">Dimension registry</Link>
-        <Link href="/studio/bindings">Output bindings</Link>
-        <Link href="/studio/constraints">Constraints</Link>
-        <Link href="/studio/policies">Policies</Link>
-        <Link href="/studio/compliance">Compliance</Link>
+        <Link href="/studio/profiles">Decision Profiles</Link>
+        <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
+          <strong>Plugin Registry</strong>
+          <Link href="/studio/plugins">Plugins &amp; Capabilities</Link>
+          <Link href="/studio/bindings">Output Bindings</Link>
+        </div>
+        <Link href="/studio/dimensions">Dimension Registry</Link>
       </nav>
       <Link className="studio-observatory-link" href="/observatory/decisions">Open Observatory ↗</Link>
     </aside>

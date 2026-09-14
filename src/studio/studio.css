@@ -4,6 +4,14 @@
 .studio-brand span { display: block; margin-top: 6px; font-size: 17px; font-weight: 400; }
 .studio-sidebar p { color: #9bacc5; margin: 20px 0 30px; }
 .studio-sidebar nav { display: grid; gap: 8px; }
+.studio-nav-group { display: grid; gap: 4px; padding: 12px 0; border-block: 1px solid #354761; }
+.studio-nav-group strong { padding: 0 12px; }
+.studio-nav-group a { margin-left: 12px; }
+.studio-breadcrumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; color: #52647e; }
+.studio-profile-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; border-bottom: 1px solid #ccd5e3; padding-bottom: 12px; }
+.studio-profile-nav a { padding: 8px 12px; border-radius: 6px; }
+.studio-profile-nav a[aria-current="page"] { background: #14233b; color: white; }
+.studio-flow { padding: 16px; background: #edf5f7; border-radius: 8px; line-height: 2; }
 .studio-sidebar nav a { padding: 10px 12px; border-radius: 6px; text-decoration: none; }
 .studio-sidebar nav a:hover, .studio-sidebar nav a:focus-visible { background: #263b5b; }
 .studio-observatory-link { display: block; margin-top: 40px; color: #9ddcd6; }

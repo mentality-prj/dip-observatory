@@ -1,7 +1,18 @@
 # Decision Studio
 
-Open `/studio` to configure decision profiles, dimensions, plugin output bindings,
-constraints, policies and compliance. `/observatory/decisions` provides read-only decision
+Open `/studio/profiles` to create or import profiles. Open a profile to access Overview,
+Alternatives, Dimensions, Constraints, Policies and Compliance at
+`/studio/profiles/{id}` and its named subroutes. Each section saves a new version of the
+same profile; rule sections preserve other dimensions and alternatives. Old global rule
+routes redirect to the profile list so the user can choose a profile.
+
+Plugin Registry groups `/studio/plugins` and `/studio/bindings`. Bindings show semantic
+capability outputs; internal source paths and field mappings are under Advanced details.
+`/studio/dimensions` is the global registry of dimension definitions and schemas, without
+profile configuration. The profile dimension table distinguishes plugin supplied, DIP
+calculated, business configured and runtime supplied inputs.
+
+`/observatory/decisions` provides read-only decision
 inspection and replay verification. The existing scenario Observatory remains available at
 its locale routes and `/observatory`.
 
