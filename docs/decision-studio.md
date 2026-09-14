@@ -5,7 +5,11 @@ constraints, policies and compliance. `/observatory/decisions` provides read-onl
 inspection and replay verification. The existing scenario Observatory remains available at
 its locale routes and `/observatory`.
 
-Use the existing `DIP_API_BASE_URL` and an organization-scoped `DIP_API_KEY`. The backend
+Use the existing `DIP_API_BASE_URL` and `DIP_API_KEY`, as Observatory does (with
+`DIP_ADMIN_API_KEY` as the same legacy fallback). No Studio-specific key is needed or read.
+Platform keys use the backend's existing `PLUGIN_RUNTIME_DEFAULT_ORGANIZATION_ID`
+workspace, exactly like the plugin API; organization keys retain their own organization.
+The backend
 requires `decision-profiles:read`, `decision-profiles:write`, `decisions:execute` and
 `audit:read` according to the operation. Studio keeps the key on the server, limits proxy
 resources and methods, and requires same-origin mutation requests. Deployment access control
