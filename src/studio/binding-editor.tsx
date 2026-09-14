@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { studioRequest, type Binding, type Dimension, type Plugin } from "./contracts";
+import { outputLabel } from "./presentation";
 import { JsonField } from "./schema-form";
 
 export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensions: Dimension[] }) {
@@ -30,7 +31,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
   }}>
     <p>Map declared outputs to dimension inputs. Change a binding’s version when editing its contract.</p>
     {bindings.map((binding, index) => <section className="studio-card" key={index}>
-      <h3>{binding.source_path} → {binding.dimension_id}</h3>
+      <h3>{outputLabel(binding.capability_id, binding.source_path)} → {dimensions.find((d) => d.id === binding.dimension_id)?.name ?? binding.dimension_id}</h3>
       <p>Pinned contracts: plugin {binding.plugin_version} · capability {binding.capability_version}</p>
       {(binding.plugin_version !== plugin.version || binding.capability_version !== plugin.capability_versions[binding.capability_id]) &&
         <button className="studio-secondary" type="button" onClick={() => update(index, {
@@ -42,7 +43,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
           const [capability_id, dimension_id, source_path] = e.target.value.split("|");
           update(index, { capability_id, capability_version: plugin.capability_versions[capability_id], dimension_id,
             dimension_version: dimensions.find((d) => d.id === dimension_id)?.version ?? "1.0", source_path });
-        }}>{plugin.dimension_outputs.map((o) => <option key={`${o.capability_id}|${o.dimension_id}|${o.source_path}`} value={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}>{o.capability_id}: {o.source_path} → {o.dimension_id}</option>)}</select></label>
+        }}>{plugin.dimension_outputs.map((o) => <option key={`${o.capability_id}|${o.dimension_id}|${o.source_path}`} value={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}>{outputLabel(o.capability_id, o.source_path)} → {dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}</option>)}</select></label>
         <label className="studio-field">Dimension version<select value={binding.dimension_version} onChange={(e) => update(index, { dimension_version: e.target.value })}>
           {!dimensions.some((d) => d.id === binding.dimension_id && d.version === binding.dimension_version) && <option value={binding.dimension_version}>{binding.dimension_version} (unavailable)</option>}
           {dimensions.filter((d) => d.id === binding.dimension_id).map((d) => <option key={d.version}>{d.version}</option>)}
@@ -50,7 +51,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
       </div>
       <label className="studio-check"><input type="checkbox" checked={binding.required} onChange={(e) => update(index, { required: e.target.checked })} />Required output</label>
       <label className="studio-check"><input type="checkbox" checked={binding.enabled} onChange={(e) => update(index, { enabled: e.target.checked })} />Enabled</label>
-      <details><summary>Object field mapping</summary><JsonField label="Target field → relative source path (or null)" value={binding.mapping} onChange={(mapping) => update(index, { mapping: mapping as Binding["mapping"] })} /></details>
+      <details><summary>Advanced details</summary><p>Internal source path: <code>{binding.source_path}</code></p><JsonField label="Target field → relative source path (or null)" value={binding.mapping} onChange={(mapping) => update(index, { mapping: mapping as Binding["mapping"] })} /></details>
       <button className="studio-secondary" type="button" onClick={() => setBindings(bindings.filter((_, i) => i !== index))}>Remove binding</button>
     </section>)}
     <div className="studio-toolbar">

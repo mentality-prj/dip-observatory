@@ -9,7 +9,7 @@ export type JsonSchema = {
 export type Dimension = {
   id: string; name: string; version: string; type: string; source: string;
   evaluator_id: string; evaluator_version: string; blocking: boolean; required: boolean;
-  configuration_schema: JsonSchema; value_schema: JsonSchema;
+  configuration_schema: JsonSchema; value_schema: JsonSchema; phase?: string;
 };
 
 export type Binding = {

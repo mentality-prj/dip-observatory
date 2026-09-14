@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { Breadcrumbs, outputLabel } from "./presentation";
 import { useEffect, useState } from "react";
 import { BindingEditor } from "./binding-editor";
 import { emptyProfile, studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from "./contracts";
@@ -7,8 +9,8 @@ import { ProfileEditor } from "./profile-editor";
 import { ProfileRunner } from "./profile-runner";
 
 const titles: Record<string, string> = {
-  profiles: "Decision profiles", plugins: "Plugins & capabilities", dimensions: "Dimension registry",
-  bindings: "Output bindings", constraints: "Constraints", policies: "Policies", compliance: "Compliance",
+  profiles: "Decision Profiles", plugins: "Plugins & Capabilities", dimensions: "Dimension Registry",
+  bindings: "Output Bindings",
 };
 
 export function DecisionStudio({ section }: { section: string }) {
@@ -23,11 +25,11 @@ export function DecisionStudio({ section }: { section: string }) {
   useEffect(() => {
     let disposed = false;
     Promise.all([studioRequest<Dimension[]>("dimensions"), studioRequest<Plugin[]>("decision-studio/plugins"),
-      studioRequest<ProfileView[]>("decision-profiles")]).then(([dimensions, plugins, profiles]) => {
+      (section === "profiles" ? studioRequest<ProfileView[]>("decision-profiles") : Promise.resolve([]))]).then(([dimensions, plugins, profiles]) => {
       if (!disposed) { setData({ dimensions, plugins, profiles }); setError(""); }
     }).catch((reason) => { if (!disposed) setError(String(reason)); });
     return () => { disposed = true; };
-  }, [retry]);
+  }, [retry, section]);
   async function refreshProfiles() {
     const profiles = await studioRequest<ProfileView[]>("decision-profiles");
     setData((previous) => previous && { ...previous, profiles });
@@ -38,6 +40,7 @@ export function DecisionStudio({ section }: { section: string }) {
     setEditor({ profile: clean, existing, key: Date.now() }); setMessage("");
   }
   return <>
+    <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: "/studio/plugins" }] : []), { label: titles[section] }]} />
     <h1>{titles[section]}</h1>
     <p>Domain intelligence, reusable dimensions, and business configuration.</p>
     {error && <div role="alert" className="studio-error">{error} <button className="studio-secondary" onClick={() => setRetry(retry + 1)}>Retry</button></div>}
@@ -48,11 +51,11 @@ export function DecisionStudio({ section }: { section: string }) {
         <header><h2>{plugin.ui?.label ?? plugin.name}</h2><span className="studio-tag">{plugin.enabled ? "Enabled" : "Disabled"}</span></header>
         <p>{plugin.description}</p><dl><dt>Plugin version</dt><dd>{plugin.version}</dd><dt>Category</dt><dd>{plugin.ui?.category ?? "General"}</dd></dl>
         <h3>Capabilities</h3><ul>{plugin.capabilities.map((c) => <li key={c}>{c} <span className="studio-muted">@{plugin.capability_versions[c] ?? "unversioned"}</span></li>)}</ul>
-        <h3>Available outputs</h3>{plugin.dimension_outputs.length ? <ul>{plugin.dimension_outputs.map((o) => <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>{o.source_path} → {o.dimension_id}</li>)}</ul> : <p>No dimension outputs declared.</p>}
+        <h3>Available outputs</h3>{plugin.dimension_outputs.length ? <ul>{plugin.dimension_outputs.map((o) => <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>{outputLabel(o.capability_id, o.source_path)} → {data.dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}</li>)}</ul> : <p>No dimension outputs declared.</p>}
       </article>)}</div>}
       {section === "dimensions" && <div className="studio-grid">{data.dimensions.map((dimension) => <article className="studio-card" key={`${dimension.id}-${dimension.version}`}>
         <header><h2>{dimension.name}</h2><span className="studio-tag">{dimension.version}</span></header>
-        <dl><dt>Source</dt><dd>{dimension.source}</dd><dt>Evaluator</dt><dd>{dimension.evaluator_id}@{dimension.evaluator_version}</dd><dt>Blocking</dt><dd>{dimension.blocking ? "Yes" : "No"}</dd></dl>
+        <dl><dt>ID</dt><dd>{dimension.id}</dd><dt>Type</dt><dd>{dimension.type}</dd><dt>Phase</dt><dd>{dimension.phase ?? "Unavailable"}</dd><dt>Source</dt><dd>{dimension.source}</dd><dt>Evaluator</dt><dd>{dimension.evaluator_id}@{dimension.evaluator_version}</dd><dt>Blocking</dt><dd>{dimension.blocking ? "Yes" : "No"}</dd></dl>
         <details><summary>Configuration schema</summary><pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre></details>
         <details><summary>Value schema</summary><pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre></details>
       </article>)}</div>}
@@ -60,7 +63,7 @@ export function DecisionStudio({ section }: { section: string }) {
         <label className="studio-field">Plugin<select value={pluginId} onChange={(e) => setPluginId(e.target.value)}><option value="">Select a plugin</option>{data.plugins.map((p) => <option key={p.name} value={p.name}>{p.ui?.label ?? p.name}</option>)}</select></label>
         {data.plugins.find((p) => p.name === pluginId) && <BindingEditor key={pluginId} plugin={data.plugins.find((p) => p.name === pluginId)!} dimensions={data.dimensions} />}
       </>}
-      {["profiles", "constraints", "policies", "compliance"].includes(section) && <>
+      {section === "profiles" && <>
         <div className="studio-toolbar">
           <button onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}>Create profile</button>
           <label className="studio-field">Import profile JSON<input type="file" accept="application/json,.json" onChange={async (e) => {
@@ -75,12 +78,12 @@ export function DecisionStudio({ section }: { section: string }) {
         </div>
         {!data.profiles.length && <div className="studio-card"><h2>No profiles yet</h2><p>Create a profile or import an example to configure alternatives, dimensions, and rules.</p></div>}
         <div className="studio-grid">{data.profiles.map((profile) => <article key={profile.id} className="studio-card">
-          <header><h2>{profile.name}</h2><span className="studio-tag">{profile.validation.status}</span></header>
+          <header><h2><Link href={`/studio/profiles/${encodeURIComponent(profile.id)}`}>{profile.name}</Link></h2><span className="studio-tag">{profile.validation.status}</span></header>
           <p>{profile.plugin_id} · {profile.capability_id}<br />Version {profile.version} · {profile.active ? "Active" : "Draft"}</p>
           <p>{profile.dimensions.map((d) => d.dimension_id).join(" · ")}</p>
           {profile.validation.errors.map((error) => <div key={error} className="studio-error">{error}</div>)}
           {profile.validation.warnings.map((warning) => <p key={warning}>{warning}</p>)}
-          <div className="studio-toolbar"><button className="studio-secondary" onClick={() => openProfile(profile, true)}>Edit</button>
+          <div className="studio-toolbar"><Link className="studio-secondary" href={`/studio/profiles/${encodeURIComponent(profile.id)}`}>Open profile</Link>
             <button className="studio-secondary" disabled={!profile.active || profile.validation.status !== "VALID"}
               onClick={() => setRunningProfile(profile)}>Evaluate</button>
             {deleting !== profile.id ? <button className="studio-secondary" onClick={() => setDeleting(profile.id)}>Delete</button> : <>
@@ -95,7 +98,6 @@ export function DecisionStudio({ section }: { section: string }) {
         </article>)}</div>
         {editor && <ProfileEditor key={editor.key} initial={editor.profile} existing={editor.existing}
           plugins={data.plugins} dimensions={data.dimensions}
-          filter={section === "profiles" ? undefined : section === "policies" ? "policy" : section}
           onSave={async (profile) => {
             await studioRequest(editor.existing ? `decision-profiles/${encodeURIComponent(profile.id)}` : "decision-profiles",
               { method: editor.existing ? "PATCH" : "POST", body: JSON.stringify(profile) });
