@@ -2,6 +2,9 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Decision configuration is available at `/studio`; historical dimension evaluations are at
+`/observatory/decisions`. See [Decision Studio](docs/decision-studio.md) for setup and tests.
+
 Create a `.env` file before running the app:
 
 ```bash
