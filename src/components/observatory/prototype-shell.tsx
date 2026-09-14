@@ -232,6 +232,9 @@ export function PrototypeShell({
             {renderNav(GENERAL_NAV_ITEMS)}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
+            <Link href="/studio" className="rounded-lg px-3 py-2 text-xs text-cyan-200 hover:bg-white/5">
+              Decision Studio
+            </Link>
             <div ref={companyMenuRef} className="relative">
               <button
                 type="button"
