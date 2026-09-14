@@ -25,8 +25,8 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     return NextResponse.json({ error: "A same-origin request is required" }, { status: 403 });
   }
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL ?? process.env.NEXT_PUBLIC_DIP_API_BASE_URL);
-  const apiKey = (process.env.DIP_API_KEY ?? "").trim();
-  if (!base || !apiKey) return NextResponse.json({ error: "Set DIP_API_BASE_URL and an organization-scoped DIP_API_KEY to connect Decision Studio." }, { status: 503 });
+  const apiKey = (process.env.DIP_API_KEY ?? process.env.DIP_ADMIN_API_KEY ?? "").trim();
+  if (!base || !apiKey) return NextResponse.json({ error: "Set DIP_API_BASE_URL and DIP_API_KEY to connect Decision Studio." }, { status: 503 });
   try {
     const upstream = await fetch(`${base}/api/v1/${path.join("/")}${request.nextUrl.search}`, {
       method: request.method,
