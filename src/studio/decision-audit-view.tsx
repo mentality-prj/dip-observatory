@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { studioRequest, type Audit } from "./contracts";
+import { GasForecastPanel } from "./gas-forecast-panel";
 
 export function DecisionAuditView({ initialId }: { initialId?: string }) {
   const [audits, setAudits] = useState<Audit[]>([]);
@@ -35,12 +36,15 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
       <section className="studio-card"><header><h2>{selected.profile.name}</h2><span className="studio-tag">{selected.status}</span></header>
         <p>Selected alternative: <strong>{selected.selected_alternative ?? "None"}</strong> · Profile version {selected.profile_version}</p>
         {selected.explanation.map((line) => <p key={line}>{line}</p>)}
+      </section>
+      <GasForecastPanel audit={selected} />
+      {selected.profile.plugin_id !== "gas-forecast" && <section className="studio-card">
         <div className="studio-table-wrap"><table className="studio-table"><thead><tr><th>Alternative</th><th>Feasible</th><th>Score</th><th>Rank</th><th>Required actions</th></tr></thead>
           <tbody>{selected.dimension_results.map((alternative) => <tr key={alternative.alternative_id}>
             <td>{alternative.alternative_id}</td><td>{alternative.feasible ? "Yes" : "No"}</td><td>{alternative.score?.toFixed(4) ?? "—"}</td><td>{alternative.rank ?? "—"}</td>
             <td>{alternative.dimensions.flatMap((d) => d.required_actions).join(", ") || "—"}</td>
           </tr>)}</tbody></table></div>
-      </section>
+      </section>}
       {selected.dimension_results.map((alternative) => <section key={alternative.alternative_id} className="studio-card">
         <h2>{alternative.alternative_id}</h2>
         {alternative.dimensions.map((dimension) => <details key={dimension.dimension_id}>
