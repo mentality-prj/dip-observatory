@@ -54,6 +54,7 @@ export type Audit = {
   selected_alternative: string | null; status: string; explanation: string[];
   dimension_results: { alternative_id: string; feasible: boolean; score: number | null;
     rank: number | null; dimensions: DimensionResult[] }[];
+  plugin_outputs: Record<string, unknown>;
   plugin_versions: Record<string, string>; capability_versions: Record<string, string>;
   dimension_versions: Record<string, string>; evaluator_versions: Record<string, string>;
   binding_versions: Record<string, string>;
