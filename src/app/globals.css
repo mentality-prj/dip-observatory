@@ -83,6 +83,19 @@ code,
 [data-prototype-theme="emerald"] { --prototype-accent: 110 231 183; }
 [data-prototype-theme="rose"] { --prototype-accent: 253 164 175; }
 
+@keyframes allocation-flow {
+	to { stroke-dashoffset: -32; }
+}
+
+.allocation-flow {
+	stroke-dasharray: 8 8;
+	animation: allocation-flow 1.15s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.allocation-flow { animation: none; }
+}
+
 /* The gas forecast workspace replaced the old admin-only provider shortcut. */
 a[href="/admin/plugins/gas-forecast/providers"] {
 	display: none !important;
