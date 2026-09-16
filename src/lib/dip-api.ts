@@ -32,8 +32,8 @@ async function parseResponse<T>(response: Response, schema: z.ZodType<T>) {
   if (!response.ok) {
     let message = `DIP request failed with status ${response.status}`;
     try {
-      const payload = (await response.json()) as { detail?: string; error?: { message?: string } };
-      message = payload.detail ?? payload.error?.message ?? message;
+      const payload = (await response.json()) as { detail?: string | { code?: string }; error?: { message?: string } };
+      message = typeof payload.detail === "string" ? payload.detail : payload.detail?.code ?? payload.error?.message ?? message;
     } catch {}
     throw new DipApiError(message, response.status);
   }
@@ -105,6 +105,21 @@ export async function runDipPlugin(pluginName: string, capabilityId: string, inp
     },
   );
   return response.result;
+}
+
+const lifecycleMutationSchema = z.object({ decision_id: z.string(), status: z.string() });
+const lifecycleCreateSchema = z.object({ decision_id: z.string(), status: z.string(), result: z.record(z.string(), z.unknown()) });
+
+export function createResourceAllocationDecision(input: Record<string, unknown>) {
+  return dipFetch("/api/v1/resource-allocation/decisions", lifecycleCreateSchema, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function recordResourceAllocationFeedback(decisionId: string, feedback: Record<string, unknown>) {
+  return dipFetch(`/api/v1/resource-allocation/decisions/${encodeURIComponent(decisionId)}/feedback`, lifecycleMutationSchema, { method: "POST", body: JSON.stringify(feedback) });
+}
+
+export function recordResourceAllocationOutcome(decisionId: string, outcome: Record<string, unknown>) {
+  return dipFetch(`/api/v1/resource-allocation/decisions/${encodeURIComponent(decisionId)}/outcomes`, lifecycleMutationSchema, { method: "POST", body: JSON.stringify(outcome) });
 }
 
 export { DipApiError };
