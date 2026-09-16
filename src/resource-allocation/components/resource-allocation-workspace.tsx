@@ -1,51 +1,100 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Check, CircleAlert, Play, RotateCcw, SlidersHorizontal, Users, X } from "lucide-react";
+import { CircleAlert, Play, RotateCcw, Route, Users } from "lucide-react";
 import type { Locale } from "@/lib/observatory-i18n";
 
-const DEMO = {
-  planning_period: { id: "synthetic-week-01", label: "Демонстраційний тиждень" },
-  communities: [
-    { id: "Громада А", region: "Схід · synthetic", accessible: true, max_teams: 2, demand: [{ service: "psychologist", units: 8, priority: "critical" as const }, { service: "social-worker", units: 5, priority: "high" as const }] },
-    { id: "Громада Б", region: "Схід · synthetic", accessible: true, max_teams: 2, demand: [{ service: "legal", units: 6, priority: "high" as const }, { service: "social-worker", units: 4, priority: "normal" as const }] },
-    { id: "Громада В", region: "Схід · synthetic", accessible: false, max_teams: 1, demand: [{ service: "psychologist", units: 5, priority: "high" as const }] },
-  ],
-  teams: [
-    { id: "Команда 1", current_community: "Громада Б", skills: ["psychologist", "social-worker"], capacity: 10 },
-    { id: "Команда 2", current_community: "Громада А", skills: ["legal", "social-worker"], capacity: 8 },
-    { id: "Команда 3", current_community: "Громада Б", skills: ["psychologist"], capacity: 5, allowed_communities: ["Громада А", "Громада Б"] },
-  ],
-  travel_edges: [{ from: "Громада Б", to: "Громада А", cost: 4 }, { from: "Громада А", to: "Громада Б", cost: 4 }],
-  current_allocation: { "Команда 1": "Громада Б", "Команда 2": "Громада А", "Команда 3": "Громада Б" }, synthetic: true,
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const SERVICES = ["psychologist", "social-worker", "legal", "protection", "case-manager", "child-support"];
+const NAMES = Array.from({ length: 18 }, (_, index) => `Громада ${String.fromCharCode(65 + index)}`);
+const communities = NAMES.map((id, index) => ({
+  id,
+  accessible: ![7, 14].includes(index),
+  max_teams: index % 4 === 0 ? 2 : 3,
+  demand: [0, 1, 2].map((offset) => ({
+    service: SERVICES[(index + offset) % SERVICES.length],
+    units: 9,
+    priority: (offset === 0 && index % 3 === 0 ? "critical" : offset < 2 ? "high" : "normal") as "critical" | "high" | "normal",
+  })),
+  accessibility: index === 5 ? { Wed: false, Thu: false } : {},
+  daily_demand: index % 5 === 0 ? { Wed: [{ service: SERVICES[index % SERVICES.length], units: 3, priority: "high" as const }] } : {},
+}));
+const teams = Array.from({ length: 10 }, (_, index) => ({
+  id: `Команда ${index + 1}`,
+  current_community: NAMES[(index * 2) % NAMES.length],
+  skills: [SERVICES[index % SERVICES.length], SERVICES[(index + 1) % SERVICES.length]],
+  capacity: 12 + (index % 3) * 2,
+  availability: index === 8 ? { Fri: false } : {},
+  daily_capacity: index === 3 ? { Thu: 8 } : {},
+  max_travel_cost: 18,
+  cost_per_capacity: 0.4 + (index % 3) * 0.1,
+  programs: [],
+}));
+const travel_edges = NAMES.flatMap((from, index) => [1, 2, 3].flatMap((step) => {
+  const to = NAMES[(index + step) % NAMES.length];
+  const back = NAMES[(index - step + NAMES.length) % NAMES.length];
+  return [{ from, to, cost: step * 4, minutes: step * 18 }, { from, to: back, cost: step * 4, minutes: step * 18 }];
+}));
+const current_allocation = Object.fromEntries(teams.map((team) => [team.id, team.current_community]));
+const DEMO = { operation: "optimize" as const, planning_period: { days: DAYS }, communities, teams, travel_edges, current_allocation, provenance: { source: "dip-observatory-synthetic-demo", mapping_version: "resource-allocation-demo/2" } };
+
+type Metrics = { priority_coverage: number; total_coverage: number; unmet_need: number; capacity_utilization: number; travel_cost: number; operating_cost?: number };
+type DayPlan = { day: string; status: string; recommended: { assignments: Record<string, string | null>; metrics: Metrics; evidence?: string[] }; demand: { opening: number; served: number; closing_unmet: number } };
+type PeriodPlan = { daily: DayPlan[]; aggregate_metrics: Metrics; period_score: number; demand_summary: { total_available: number; served: number; closing_unmet: number } };
+type Result = { status: string; daily: DayPlan[]; aggregate_metrics: Metrics; demand_summary: PeriodPlan["demand_summary"]; alternatives: PeriodPlan[]; solver: string; search_space: number; evaluated_plans: number; engine_version: string; evidence: string[] };
+
+const pct = (value: number) => `${Math.round(value * 100)}%`;
+const copy: Record<Locale, { title: string; subtitle: string; run: string; running: string }> = {
+  uk: { title: "План розподілу мобільних команд", subtitle: "10 команд · 18 громад · 486 початкових потреб · горизонт 5 днів", run: "Оптимізувати тиждень", running: "Розрахунок…" },
+  en: { title: "Mobile team allocation plan", subtitle: "10 teams · 18 communities · 486 opening needs · 5-day horizon", run: "Optimize week", running: "Calculating…" },
+  pl: { title: "Plan alokacji zespołów mobilnych", subtitle: "10 zespołów · 18 społeczności · 486 potrzeb początkowych · 5 dni", run: "Optymalizuj tydzień", running: "Obliczanie…" },
 };
 
-type Metrics = { priority_coverage: number; total_coverage: number; unmet_need: number; capacity_utilization: number; travel_cost: number };
-type Alternative = { assignments: Record<string, string | null>; score: number; metrics: Metrics; binding_constraints: string[]; evidence: string[] };
-type Result = { status: string; recommended: Alternative; alternatives: Alternative[]; baseline: Alternative | null; delta_vs_baseline: Record<string, number> | null; evidence: string[]; uncertainty: string[]; engine_version: string };
-type DecisionState = "accepted" | "modify" | "rejected" | null;
-const pct=(v:number)=>`${Math.round(v*100)}%`;
-const evidenceLabels:Record<Locale,Record<string,string>>={uk:{"priority coverage":"Покриття пріоритетних потреб","total coverage":"Загальне покриття потреб","capacity utilization":"Використання команд","travel cost":"Витрати на переміщення"},en:{"priority coverage":"Priority needs covered","total coverage":"Total needs covered","capacity utilization":"Team capacity used","travel cost":"Travel cost"},pl:{"priority coverage":"Pokrycie potrzeb priorytetowych","total coverage":"Łączne pokrycie potrzeb","capacity utilization":"Wykorzystanie zespołów","travel cost":"Koszt przejazdów"}};
-function evidence(line:string,locale:Locale){const m=line.match(/^([^=]+)=(-?\d+(?:\.\d+)?)$/);if(!m)return line;const k=m[1].trim(),v=Number(m[2]),label=evidenceLabels[locale][k]??k;return ["priority coverage","total coverage","capacity utilization"].includes(k)?`${label}: ${pct(v)}`:`${label}: ${v.toFixed(0)}`;}
+export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
+  const t = copy[locale];
+  const [result, setResult] = useState<Result | null>(null);
+  const [selectedAlternative, setSelectedAlternative] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [capacityFactor, setCapacityFactor] = useState(100);
+  const [blockedCommunity, setBlockedCommunity] = useState<string>("");
 
-function ImpactChart({baseline,active}:{baseline:Metrics|null;active:Metrics}){const rows=[{label:"Пріоритетні потреби",before:(baseline?.priority_coverage??0)*100,after:active.priority_coverage*100},{label:"Загальне покриття",before:(baseline?.total_coverage??0)*100,after:active.total_coverage*100},{label:"Використання команд",before:(baseline?.capacity_utilization??0)*100,after:active.capacity_utilization*100}];return <div className="space-y-5">{rows.map(r=><div key={r.label}><div className="mb-2 flex justify-between text-xs"><b>{r.label}</b><span>{Math.round(r.before)}% → <b>{Math.round(r.after)}%</b></span></div><div className="relative h-3 overflow-hidden rounded-full bg-black/10"><div className="absolute inset-y-0 left-0 bg-black/20 transition-all duration-700" style={{width:`${Math.min(100,r.before)}%`}}/><div className="absolute inset-y-0 left-0 bg-[#d5222a] transition-all duration-700" style={{width:`${Math.min(100,r.after)}%`}}/></div></div>)}</div>}
+  async function run() {
+    setRunning(true); setError(null);
+    try {
+      const input = {
+        ...DEMO,
+        teams: DEMO.teams.map((team) => ({ ...team, capacity: team.capacity * capacityFactor / 100 })),
+        communities: DEMO.communities.map((community) => ({ ...community, accessible: community.id === blockedCommunity ? false : community.accessible })),
+      };
+      const response = await fetch("/api/resource-allocation/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "DIP request failed");
+      setResult(payload as Result); setSelectedAlternative(0); setSelectedDay(0);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "DIP request failed"); }
+    finally { setRunning(false); }
+  }
 
-export function ResourceAllocationWorkspace({locale}:{locale:Locale}){
- const [result,setResult]=useState<Result|null>(null),[selected,setSelected]=useState(0),[running,setRunning]=useState(false),[error,setError]=useState<string|null>(null),[decision,setDecision]=useState<DecisionState>(null),[edit,setEdit]=useState(false),[manual,setManual]=useState<Record<string,string|null>>({...DEMO.current_allocation}),[availableC,setAvailableC]=useState(true),[capacityBoost,setCapacityBoost]=useState(0);
- async function run(overrides?:Record<string,string|null>){setRunning(true);setError(null);try{const input={...DEMO,communities:DEMO.communities.map(c=>c.id==="Громада В"?{...c,accessible:availableC}:c),teams:DEMO.teams.map(t=>({...t,capacity:t.capacity+capacityBoost})),current_allocation:overrides??DEMO.current_allocation};const response=await fetch("/api/resource-allocation/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(input)});const payload=await response.json();if(!response.ok)throw new Error(payload.error??"DIP request failed");setResult(payload);setSelected(0);if(!overrides)setManual(payload.recommended.assignments);}catch(e){setError(e instanceof Error?e.message:"DIP request failed")}finally{setRunning(false)}}
- const active=result?.alternatives[selected]??result?.recommended;
- const changed=useMemo(()=>active?Object.entries(active.assignments).filter(([team,to])=>DEMO.current_allocation[team as keyof typeof DEMO.current_allocation]!==to).length:0,[active]);
- function reset(){setResult(null);setError(null);setDecision(null);setEdit(false);setManual({...DEMO.current_allocation});setAvailableC(false);setCapacityBoost(0)}
- function startModify(){if(active)setManual({...active.assignments});setEdit(true);setDecision("modify")}
- function applyManual(){void run(manual);setEdit(false)}
- return <main className="min-h-screen bg-[#f7f5f2] text-[#191919]"><div className="mx-auto max-w-[1500px] px-5 py-8 md:px-10 lg:py-12">
- <header className="border-b border-black/15 pb-7"><div className="flex flex-wrap justify-between gap-3"><div className="text-xs font-bold uppercase tracking-[.18em] text-[#d5222a]">DIP · Resource Allocation</div><div className="rounded-full border border-[#d5222a]/30 bg-white px-3 py-1 text-xs font-semibold text-[#b51e25]">Синтетичні демонстраційні дані</div></div><h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">Центр розподілу мобільних команд</h1><p className="mt-4 max-w-3xl text-black/55">Порівнюйте поточний план, рекомендацію DIP та власний сценарій. Змінюйте доступність і ресурси та одразу перевіряйте наслідки.</p></header>
- <section className="grid gap-5 py-7 xl:grid-cols-[360px_1fr]"><aside className="space-y-4"><div className="bg-[#191919] p-6 text-white"><div className="flex justify-between"><h2 className="font-bold">01 · Сценарій</h2><button onClick={reset}><RotateCcw className="h-4 w-4"/></button></div><div className="mt-5 space-y-5"><label className="flex items-center justify-between gap-3 text-sm"><span>Громада В доступна</span><input type="checkbox" checked={availableC} onChange={e=>setAvailableC(e.target.checked)} className="h-5 w-5 accent-[#d5222a]"/></label><label className="block text-sm"><div className="flex justify-between"><span>Додаткова місткість команд</span><b>+{capacityBoost}</b></div><input type="range" min="0" max="5" value={capacityBoost} onChange={e=>setCapacityBoost(Number(e.target.value))} className="mt-3 w-full accent-[#d5222a]"/></label></div><button onClick={()=>run()} disabled={running} className="mt-6 flex w-full items-center justify-center gap-2 bg-[#d5222a] p-4 font-bold disabled:opacity-50"><Play className="h-4 w-4"/>{running?"Перерахунок…":"Розрахувати сценарій"}</button></div>
- <div className="bg-white p-6"><h2 className="font-bold">02 · Операційний стан</h2><div className="mt-4 space-y-3">{DEMO.communities.map(c=><div key={c.id} className="border-t border-black/10 pt-3"><div className="flex justify-between"><b>{c.id}</b><span className="text-xs text-black/45">{c.id==="Громада В"?(availableC?"доступна":"недоступна"):"доступна"}</span></div><div className="mt-1 text-xs text-black/50">{c.demand.reduce((s,d)=>s+d.units,0)} потреб · до {c.max_teams} команд</div></div>)}</div></div></aside>
- <div className="space-y-5">{error&&<div className="border border-red-200 bg-white p-4 text-red-700"><CircleAlert className="mr-2 inline h-4 w-4"/>{error}</div>}{!result&&<div className="flex min-h-[520px] items-center justify-center border border-dashed border-black/15 bg-white text-center"><div><SlidersHorizontal className="mx-auto h-10 w-10 text-[#d5222a]"/><h2 className="mt-4 text-2xl font-black">Змініть умови та запустіть сценарій</h2><p className="mt-2 text-black/45">DIP побудує допустимі альтернативи і покаже вплив кожної.</p></div></div>}
- {result&&active&&<><div className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]"><div className="bg-white p-6"><div className="flex items-start justify-between"><div><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">03 · Карта рішення</div><h2 className="mt-2 text-2xl font-black">{changed} команд змінюють розміщення</h2></div><span className="text-xs text-black/35">{result.engine_version}</span></div><div className="mt-6 grid gap-3 md:grid-cols-3">{DEMO.communities.map(c=><div key={c.id} className={`min-h-40 border p-4 transition-all duration-500 ${c.id==="Громада В"&&!availableC?"border-dashed opacity-45":"border-black/10"}`}><b>{c.id}</b><div className="mt-1 text-xs text-black/45">{c.demand.reduce((s,d)=>s+d.units,0)} потреб</div><div className="mt-5 space-y-2">{Object.entries(active.assignments).filter(([,place])=>place===c.id).map(([team])=><div key={team} className="rounded-full bg-[#d5222a] px-3 py-2 text-xs font-bold text-white transition-all duration-700">{team}</div>)}</div></div>)}</div></div><div className="bg-white p-6"><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">Вплив рішення</div><h3 className="mt-2 text-xl font-black">Поточний план → обраний</h3><div className="mt-7"><ImpactChart baseline={result.baseline?.metrics??null} active={active.metrics}/></div><div className="mt-6 grid grid-cols-2 gap-3"><div className="bg-[#f7f5f2] p-3"><div className="text-xs text-black/45">Незакриті потреби</div><b className="text-xl">{active.metrics.unmet_need.toFixed(0)}</b></div><div className="bg-[#f7f5f2] p-3"><div className="text-xs text-black/45">Переміщення</div><b className="text-xl">{active.metrics.travel_cost.toFixed(0)}</b></div></div></div></div>
- <div className="grid gap-5 lg:grid-cols-2"><div className="bg-white p-6"><h3 className="text-xl font-black">04 · Альтернативи</h3><div className="mt-4 space-y-2">{result.alternatives.map((a,i)=><button key={i} onClick={()=>{setSelected(i);setDecision(null)}} className={`w-full border p-4 text-left transition ${selected===i?"border-[#d5222a] bg-red-50":"border-black/10 hover:border-black/30"}`}><div className="flex justify-between gap-3"><b>{i===0?"Рекомендація DIP":`Сценарій ${i+1}`}</b><span>{pct(a.metrics.priority_coverage)}</span></div><div className="mt-1 text-xs text-black/45">покриття {pct(a.metrics.total_coverage)} · незакрито {a.metrics.unmet_need.toFixed(0)}</div></button>)}</div></div><div className="bg-white p-6"><h3 className="text-xl font-black">05 · Чому це рішення?</h3><div className="mt-4 space-y-3">{active.evidence.map(line=><div key={line} className="flex gap-2 text-sm"><ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#d5222a]"/>{evidence(line,locale)}</div>)}</div></div></div>
- {edit&&<div className="border-2 border-[#d5222a] bg-white p-6"><div className="flex items-center justify-between"><div><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">Ручний сценарій</div><h3 className="mt-1 text-xl font-black">Змініть розміщення команд</h3></div><button onClick={()=>setEdit(false)}><X className="h-5 w-5"/></button></div><div className="mt-5 grid gap-3 md:grid-cols-3">{DEMO.teams.map(team=><label key={team.id} className="border border-black/10 p-4"><b>{team.id}</b><select value={manual[team.id]??""} onChange={e=>setManual(v=>({...v,[team.id]:e.target.value||null}))} className="mt-3 w-full border border-black/15 bg-white p-2"><option value="">Резерв</option>{DEMO.communities.map(c=><option key={c.id} value={c.id} disabled={c.id==="Громада В"&&!availableC}>{c.id}</option>)}</select></label>)}</div><button onClick={applyManual} className="mt-5 bg-[#191919] px-5 py-3 font-bold text-white">Перевірити мій сценарій</button></div>}
- <div className="sticky bottom-4 flex flex-wrap items-center gap-3 border border-black/10 bg-white/95 p-4 shadow-xl backdrop-blur"><div className="mr-auto"><div className="text-xs font-bold uppercase tracking-wider text-black/40">Рішення менеджера</div><div className="text-sm">{decision==="accepted"?"Рекомендацію прийнято":decision==="rejected"?"Рекомендацію відхилено":decision==="modify"?"Редагування сценарію":"Оберіть дію"}</div></div><button onClick={()=>setDecision("rejected")} className="border px-4 py-3 font-semibold"><X className="mr-1 inline h-4 w-4"/>Відхилити</button><button onClick={startModify} className="border px-4 py-3 font-semibold"><SlidersHorizontal className="mr-1 inline h-4 w-4"/>Змінити</button><button onClick={()=>setDecision("accepted")} className="bg-[#d5222a] px-5 py-3 font-bold text-white"><Check className="mr-1 inline h-4 w-4"/>Прийняти</button></div></>}
- </div></section></div></main>;
+  const activePlan = result ? (result.alternatives[selectedAlternative] ?? { daily: result.daily, aggregate_metrics: result.aggregate_metrics, demand_summary: result.demand_summary, period_score: 0 }) : null;
+  const day = activePlan?.daily[selectedDay] ?? null;
+  const moved = useMemo(() => day ? Object.entries(day.recommended.assignments).filter(([team, target]) => current_allocation[team] !== target).length : 0, [day]);
+
+  return <main className="min-h-screen bg-[#f7f5f2] text-[#191919]"><div className="mx-auto max-w-[1540px] px-5 py-8 md:px-10 lg:py-12">
+    <header className="border-b border-black/15 pb-7"><div className="flex flex-wrap items-center justify-between gap-3"><div className="text-xs font-bold uppercase tracking-[.18em] text-[#d5222a]">DIP · Resource Allocation · Client Demo</div><span className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs">Synthetic operational data · no PII</span></div><h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">{t.title}</h1><p className="mt-4 text-black/55">{t.subtitle}</p></header>
+
+    <section className="grid gap-5 py-7 xl:grid-cols-[330px_1fr]"><aside className="space-y-4"><div className="bg-[#191919] p-6 text-white"><div className="flex items-center justify-between"><b>01 · WHAT-IF</b><button onClick={() => { setCapacityFactor(100); setBlockedCommunity(""); setResult(null); }}><RotateCcw className="h-4 w-4"/></button></div><label className="mt-6 block text-sm"><span className="flex justify-between"><span>Team capacity</span><b>{capacityFactor}%</b></span><input className="mt-3 w-full accent-[#d5222a]" type="range" min="70" max="130" step="5" value={capacityFactor} onChange={(event) => setCapacityFactor(Number(event.target.value))}/></label><label className="mt-5 block text-sm"><span>Temporarily inaccessible</span><select className="mt-2 w-full bg-white p-2 text-black" value={blockedCommunity} onChange={(event) => setBlockedCommunity(event.target.value)}><option value="">None</option>{NAMES.filter((_, index) => ![7,14].includes(index)).map((name) => <option key={name}>{name}</option>)}</select></label><button disabled={running} onClick={run} className="mt-6 flex w-full items-center justify-center gap-2 bg-[#d5222a] p-4 font-bold disabled:opacity-50"><Play className="h-4 w-4"/>{running ? t.running : t.run}</button></div>
+      <div className="bg-white p-6"><b>02 · STATE</b><div className="mt-5 grid grid-cols-2 gap-3 text-sm"><div><span className="block text-black/45">Communities</span><b className="text-2xl">18</b></div><div><span className="block text-black/45">Teams</span><b className="text-2xl">10</b></div><div><span className="block text-black/45">Opening need</span><b className="text-2xl">486</b></div><div><span className="block text-black/45">Services</span><b className="text-2xl">6</b></div></div><div className="mt-5 border-t border-black/10 pt-4 text-xs text-black/50">Hard constraints: accessibility, skills, capacity, team/community limits and directed travel routes.</div></div></aside>
+
+      <div className="space-y-5">{error && <div className="border border-red-200 bg-white p-4 text-red-700"><CircleAlert className="mr-2 inline h-4 w-4"/>{error}</div>}{!result && <div className="flex min-h-[560px] items-center justify-center border border-dashed border-black/15 bg-white text-center"><div className="max-w-xl px-8"><Route className="mx-auto h-11 w-11 text-[#d5222a]"/><h2 className="mt-5 text-3xl font-black">11? No. 10 teams, 18 communities, 5 days.</h2><p className="mt-3 text-black/50">This is a horizon decision: tomorrow's location changes which routes remain feasible later in the week. Run DIP to calculate the weekly allocation.</p></div></div>}
+
+      {result && activePlan && day && <><div className="grid gap-4 md:grid-cols-4"><Metric label="Priority coverage" value={pct(activePlan.aggregate_metrics.priority_coverage)}/><Metric label="Total coverage" value={pct(activePlan.aggregate_metrics.total_coverage)}/><Metric label="Needs served" value={`${activePlan.demand_summary.served.toFixed(0)} / ${activePlan.demand_summary.total_available.toFixed(0)}`}/><Metric label="Closing unmet" value={activePlan.demand_summary.closing_unmet.toFixed(0)}/></div>
+        <div className="bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">03 · WEEKLY PLAN</div><h2 className="mt-2 text-2xl font-black">Day-by-day allocation with evolving locations</h2></div><div className="text-right text-xs text-black/40"><div>{result.engine_version}</div><div>{result.solver} · evaluated {result.evaluated_plans}</div></div></div><div className="mt-6 flex gap-2 overflow-x-auto">{activePlan.daily.map((item, index) => <button key={item.day} onClick={() => setSelectedDay(index)} className={`min-w-28 border px-4 py-3 text-left ${selectedDay === index ? "border-[#d5222a] bg-red-50" : "border-black/10"}`}><b>{item.day}</b><div className="mt-1 text-xs text-black/45">served {item.demand.served.toFixed(0)}</div></button>)}</div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{NAMES.map((community) => <div key={community} className="min-h-32 border border-black/10 p-3"><div className="flex justify-between gap-2"><b className="text-sm">{community}</b></div><div className="mt-3 space-y-1">{Object.entries(day.recommended.assignments).filter(([, target]) => target === community).map(([team]) => <div key={team} className="bg-[#191919] px-2 py-1 text-xs font-semibold text-white">{team}</div>)}</div></div>)}</div><div className="mt-4 flex flex-wrap gap-4 border-t border-black/10 pt-4 text-sm"><span><Users className="mr-1 inline h-4 w-4"/>Moved vs opening state: <b>{moved}</b></span><span>Opening need: <b>{day.demand.opening.toFixed(0)}</b></span><span>Served: <b>{day.demand.served.toFixed(0)}</b></span><span>Closing unmet: <b>{day.demand.closing_unmet.toFixed(0)}</b></span></div></div>
+
+        <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><div className="bg-white p-6"><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">04 · ALTERNATIVES</div><div className="mt-4 space-y-2">{result.alternatives.map((alternative, index) => <button key={index} onClick={() => { setSelectedAlternative(index); setSelectedDay(0); }} className={`w-full border p-4 text-left ${selectedAlternative === index ? "border-[#d5222a] bg-red-50" : "border-black/10"}`}><div className="flex justify-between"><b>{index === 0 ? "Recommended plan" : `Alternative ${index + 1}`}</b><span>{pct(alternative.aggregate_metrics.priority_coverage)}</span></div><div className="mt-1 text-xs text-black/45">served {alternative.demand_summary.served.toFixed(0)} · unmet {alternative.demand_summary.closing_unmet.toFixed(0)} · score {alternative.period_score.toFixed(0)}</div></button>)}</div></div><div className="bg-white p-6"><div className="text-xs font-bold uppercase tracking-wider text-[#d5222a]">05 · DECISION EVIDENCE</div><h3 className="mt-2 text-xl font-black">Why this weekly plan?</h3><div className="mt-5 grid gap-3 md:grid-cols-2">{result.evidence.slice(0, 8).map((item, index) => <div key={`${item}-${index}`} className="border-l-2 border-[#d5222a] pl-3 text-sm text-black/65">{item}</div>)}</div><div className="mt-6 border-t border-black/10 pt-4 text-xs text-black/45">Large search spaces use deterministic branch-aware beam search. The UI reports the solver rather than presenting a heuristic as a mathematical global optimum.</div></div></div>
+      </>}</div></section>
+  </div></main>;
 }
+
+function Metric({ label, value }: { label: string; value: string }) { return <div className="bg-white p-5"><div className="text-xs text-black/45">{label}</div><div className="mt-2 text-2xl font-black">{value}</div></div>; }
