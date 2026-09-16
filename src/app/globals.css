@@ -18,7 +18,7 @@ body {
 	margin: 0;
 	min-height: 100vh;
 	overflow-x: hidden;
-	color: var(--foreground);
+	color: var(--foreground;
 	font-family: "Space Grotesk", "Aptos", "Trebuchet MS", sans-serif;
 	background:
 		radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 30%),
@@ -82,6 +82,19 @@ code,
 [data-prototype-theme="amber"] { --prototype-accent: 252 211 77; }
 [data-prototype-theme="emerald"] { --prototype-accent: 110 231 183; }
 [data-prototype-theme="rose"] { --prototype-accent: 253 164 175; }
+
+@keyframes allocation-flow {
+	to { stroke-dashoffset: -32; }
+}
+
+.allocation-flow {
+	stroke-dasharray: 8 8;
+	animation: allocation-flow 1.15s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.allocation-flow { animation: none; }
+}
 
 /* The gas forecast workspace replaced the old admin-only provider shortcut. */
 a[href="/admin/plugins/gas-forecast/providers"] {
