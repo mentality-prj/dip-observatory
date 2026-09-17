@@ -38,18 +38,16 @@
   padding-bottom: 17px;
   border-bottom: 1px solid rgba(255, 255, 255, .1);
 }
-.studio-brand { display: inline-flex; color: white; text-decoration: none; }
-.studio-brand img { width: 126px; height: auto; }
-.studio-brand-lockup > span {
-  padding: 5px 8px;
-  border: 1px solid rgba(0, 194, 70, .42);
-  border-radius: 7px;
-  color: #74e39c;
-  background: rgba(0, 194, 70, .1);
-  font: 700 9px/1 "IBM Plex Mono", monospace;
-  letter-spacing: .13em;
-  text-transform: uppercase;
+.studio-brand {
+  display: inline-flex;
+  align-items: baseline;
+  color: white;
+  font-size: 21px;
+  letter-spacing: -.035em;
+  text-decoration: none;
 }
+.studio-brand strong { font-weight: 800; }
+.studio-brand span { color: #74e39c; font-weight: 650; }
 
 .studio-sidebar-intro { padding: 26px 8px 29px; }
 .studio-sidebar-intro small,

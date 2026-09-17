@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
-import { QdipLogo } from "@/components/marketing/qdip-logo";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 import { StudioNav } from "@/studio/studio-nav";
 
@@ -11,8 +10,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
   return <div className="studio-shell">
     <aside className="studio-sidebar">
       <div className="studio-brand-lockup">
-        <Link aria-label="QDIP home" className="studio-brand" href={marketingHref("en")}><QdipLogo inverse /></Link>
-        <span>studio</span>
+        <Link aria-label="QDIP home" className="studio-brand" href={marketingHref("en")}><strong>QDIP</strong><span>.Studio</span></Link>
       </div>
       <div className="studio-sidebar-intro">
         <small>DECISION SYSTEM WORKSPACE</small>

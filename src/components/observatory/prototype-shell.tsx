@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Building2, ChevronRight, Home, Menu, Network } from "lucide-react";
+import { Building2, ChevronRight, Home, Menu } from "lucide-react";
 
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
@@ -90,7 +90,7 @@ const COMPANY_NAV_ITEMS: PrototypeNavItem[] = [
   },
 ];
 
-const LOCALE_SWITCHER: Locale[] = ["en", "pl", "uk"];
+const LOCALE_SWITCHER: Locale[] = ["en", "uk", "pl"];
 const LOCALE_SHORT_LABEL: Record<Locale, string> = {
   en: "EN",
   pl: "PL",
@@ -206,23 +206,19 @@ export function PrototypeShell({
 
   return (
     <div
-      className="min-h-screen bg-transparent text-white"
+      className="observatory-shell min-h-screen text-white"
       data-prototype-theme={theme}
     >
-      <header className="sticky top-0 z-50 border-b border-white/8 bg-slate-950/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center gap-4 px-4 md:px-6 xl:px-10">
+      <header className="observatory-header sticky top-0 z-50">
+        <div className="observatory-header-inner mx-auto flex w-full max-w-[1700px] items-center gap-4 px-4 md:px-6 xl:px-10">
           <Link
             href={buildLocalePath("/", locale)}
             onClick={() => setCompanyMenuOpen(false)}
-            className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-2 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+            className="observatory-brand group flex shrink-0 items-baseline rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-300/60"
             aria-label="QDIP Observatory home"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-cyan-300">
-              <Network className="h-4 w-4" />
-            </span>
-            <span className="hidden text-sm font-semibold tracking-tight sm:block">
-              QDIP Observatory
-            </span>
+            <strong className="text-lg font-extrabold tracking-[-.035em] text-white">QDIP</strong>
+            <span className="text-lg font-semibold tracking-[-.035em] text-cyan-300">.Observatory</span>
           </Link>
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
           <nav
@@ -233,7 +229,7 @@ export function PrototypeShell({
             {renderNav(GENERAL_NAV_ITEMS)}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Link href={studioHref()} className="rounded-lg px-3 py-2 text-xs text-cyan-200 hover:bg-white/5">
+            <Link href={studioHref()} className="observatory-studio-link rounded-xl px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-white/5">
               Decision Studio
             </Link>
             <div ref={companyMenuRef} className="relative">
@@ -320,7 +316,7 @@ export function PrototypeShell({
           </div>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-[1700px] px-0">
+      <div className="observatory-stage mx-auto w-full max-w-[1700px] px-0">
         <div
           className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 leading-none md:px-6 xl:px-10"
           aria-label="Breadcrumb"
