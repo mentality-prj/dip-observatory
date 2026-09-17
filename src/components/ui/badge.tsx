@@ -3,32 +3,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva(
-  "inline-flex items-center rounded-[var(--radius-pill)] border px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em]",
-  {
-    variants: {
-      variant: {
-        neutral: "border-white/12 bg-white/6 text-slate-300",
-        cyan: "border-cyan-300/30 bg-cyan-300/10 text-cyan-100",
-        emerald: "border-emerald-300/30 bg-emerald-300/10 text-emerald-100",
-        amber: "border-amber-300/30 bg-amber-300/10 text-amber-100",
-        rose: "border-rose-300/30 bg-rose-300/10 text-rose-100",
-      },
-    },
-    defaultVariants: {
-      variant: "neutral",
+const badgeVariants = cva("ds-badge", {
+  variants: {
+    variant: {
+      neutral: "ds-badge-neutral",
+      cyan: "ds-badge-accent",
+      emerald: "ds-badge-accent",
+      amber: "ds-badge-accent",
+      rose: "ds-badge-danger",
     },
   },
-);
+  defaultVariants: { variant: "neutral" },
+});
 
-function Badge({
-  className,
-  variant,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  );
+function Badge({ className, variant, ...props }: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>) {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
 export { Badge, badgeVariants };
