@@ -1,2 +1,4 @@
 import { redirect } from "next/navigation";
-export default function StudioHome() { redirect("/studio/profiles"); }
+import { studioHref } from "@/lib/platform-urls";
+
+export default function StudioHome() { redirect(studioHref("profiles")); }

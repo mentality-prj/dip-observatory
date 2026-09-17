@@ -1,23 +1,24 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
+import { observatoryHref, studioHref } from "@/lib/platform-urls";
 
-export const metadata = { title: "DIP Decision Studio" };
+export const metadata = { title: "QDIP Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return <div className="studio-shell">
-    <aside className="studio-sidebar"><Link className="studio-brand" href="/studio">DIP <span>Decision Studio</span></Link>
+    <aside className="studio-sidebar"><Link className="studio-brand" href={studioHref()}>QDIP <span>Decision Studio</span></Link>
       <p>Define how decisions are evaluated.</p>
       <nav aria-label="Decision Studio">
-        <Link href="/studio/profiles">Decision Profiles</Link>
+        <Link href={studioHref("profiles")}>Decision Profiles</Link>
         <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
           <strong>Plugin Registry</strong>
-          <Link href="/studio/plugins">Plugins &amp; Capabilities</Link>
-          <Link href="/studio/bindings">Output Bindings</Link>
+          <Link href={studioHref("plugins")}>Plugins &amp; Capabilities</Link>
+          <Link href={studioHref("bindings")}>Output Bindings</Link>
         </div>
-        <Link href="/studio/dimensions">Dimension Registry</Link>
+        <Link href={studioHref("dimensions")}>Dimension Registry</Link>
       </nav>
-      <Link className="studio-observatory-link" href="/observatory/decisions">Open Observatory ↗</Link>
+      <Link className="studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory ↗</Link>
     </aside>
     <main className="studio-main">{children}</main>
   </div>;

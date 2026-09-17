@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { studioHref } from "@/lib/platform-urls";
 import type { ProfileDimension } from "./contracts";
 
 export const profileSections = ["overview", "alternatives", "dimensions", "constraints", "policies", "compliance"] as const;
@@ -16,7 +17,7 @@ export function dimensionSource(item: ProfileDimension): string {
 }
 
 export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
-  return <nav aria-label="Breadcrumb" className="studio-breadcrumbs"><Link href="/studio">Decision Studio</Link>
+  return <nav aria-label="Breadcrumb" className="studio-breadcrumbs"><Link href={studioHref()}>Decision Studio</Link>
     {items.map((item, index) => <span key={index}><span aria-hidden="true"> / </span>{item.href ? <Link href={item.href}>{item.label}</Link> : <span aria-current="page">{item.label}</span>}</span>)}
   </nav>;
 }

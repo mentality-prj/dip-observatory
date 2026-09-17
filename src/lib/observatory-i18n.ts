@@ -1,6 +1,6 @@
 import type { ObservatoryScenario } from "@/lib/dip-contracts";
 
-export const LOCALE_STORAGE_KEY = "dip-observatory-locale";
+export const LOCALE_STORAGE_KEY = "qdip-observatory-locale";
 export const SUPPORTED_LOCALES = ["en", "uk", "pl"] as const;
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -1159,10 +1159,10 @@ export function getLocaleMetadata(locale: Locale) {
   return {
     title:
       locale === "uk"
-        ? "DIP Observatory | Український інтерфейс"
+        ? "QDIP Observatory | Український інтерфейс"
         : locale === "pl"
-          ? "DIP Observatory | Polski interfejs"
-          : "DIP Observatory | English interface",
+          ? "QDIP Observatory | Polski interfejs"
+          : "QDIP Observatory | English interface",
     description: copy.shell.description,
   };
 }

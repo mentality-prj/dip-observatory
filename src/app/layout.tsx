@@ -3,9 +3,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DIP Observatory",
+  metadataBase: new URL("https://qdip.ai"),
+  title: {
+    default: "QDIP — Quality-driven Decision Intelligence Platform",
+    template: "%s · QDIP",
+  },
   description:
-    "Interactive scientific frontend for the live Decision Intelligence Platform API with English, Ukrainian, and Polish UI.",
+    "QDIP connects decision authoring, governed execution and observable outcomes across Studio, Engine and Observatory.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

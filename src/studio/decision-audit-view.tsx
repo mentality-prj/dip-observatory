@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { observatoryHref, studioHref } from "@/lib/platform-urls";
 import { studioRequest, type Audit } from "./contracts";
 import { GasForecastPanel } from "./gas-forecast-panel";
 
@@ -21,9 +22,9 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
     return () => { disposed = true; };
   }, [initialId]);
   return <div className="studio-shell"><aside className="studio-sidebar">
-    <Link className="studio-brand" href="/observatory">DIP <span>Observatory</span></Link>
+    <Link className="studio-brand" href={observatoryHref()}>QDIP <span>Observatory</span></Link>
     <p>Inspect decisions, evidence, and exact evaluation versions.</p>
-    <nav><Link href="/observatory">Scenario Observatory</Link><Link href="/observatory/decisions">Decision audit</Link><Link href="/studio">Decision Studio ↗</Link></nav>
+    <nav><Link href={observatoryHref()}>Scenario Observatory</Link><Link href={observatoryHref("decisions")}>Decision audit</Link><Link href={studioHref()}>Decision Studio ↗</Link></nav>
   </aside><main className="studio-main"><h1>Decision audit</h1><p>Historical decisions and alternative comparisons.</p>
     {loading && <p role="status">Loading decisions…</p>}
     {error && <div className="studio-error" role="alert">{error}</div>}
