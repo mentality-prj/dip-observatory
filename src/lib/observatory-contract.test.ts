@@ -79,7 +79,7 @@ test("locale helpers support route-based localization", () => {
   assert.equal(isSupportedLocale("de"), false);
   assert.equal(
     getLocaleMetadata("pl").title,
-    "qdip Observatory | Polski interfejs",
+    "QDIP Observatory | Polski interfejs",
   );
 });
 

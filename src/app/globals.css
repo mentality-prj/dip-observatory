@@ -32,11 +32,10 @@ body::before {
 	position: fixed;
 	inset: 0;
 	pointer-events: none;
-	background-image:
-		linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
-	background-size: 48px 48px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23a9345b' stroke-opacity='.16' stroke-width='1'%3E%3Cpath d='m80 50 18 10v21L80 92 62 81V60Z'/%3E%3Cpath d='m62 60 18 11 18-11M80 71v21'/%3E%3C/g%3E%3Ccircle cx='80' cy='71' r='2' fill='%23d97757' fill-opacity='.18'/%3E%3C/svg%3E");
+	background-size: 160px 160px;
 	mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+	opacity: .72;
 }
 
 body::after {
@@ -94,6 +93,14 @@ code,
 
 @media (prefers-reduced-motion: reduce) {
 	.allocation-flow { animation: none; }
+}
+
+@media (max-width: 640px) {
+	.prototype-shell-content .text-sm { font-size: .9375rem; line-height: 1.55rem; }
+	.prototype-shell-content .text-xs { font-size: .8125rem; line-height: 1.25rem; }
+	.prototype-shell-content [class~="text-[9px]"],
+	.prototype-shell-content [class~="text-[10px]"],
+	.prototype-shell-content [class~="text-[11px]"] { font-size: .75rem; line-height: 1.1rem; }
 }
 
 /* The gas forecast workspace replaced the old admin-only provider shortcut. */

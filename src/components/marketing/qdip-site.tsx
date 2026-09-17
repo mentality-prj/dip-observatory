@@ -96,7 +96,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
     <main className={styles.site} lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link aria-label="qdip home" href={marketingLocaleHref(locale)}>
+          <Link aria-label="QDIP home" href={marketingLocaleHref(locale)}>
             <QdipLogo />
           </Link>
           <nav aria-label="Primary navigation" className={styles.nav}>
@@ -144,7 +144,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
           <div className={styles.heroProof}><ShieldCheck size={17} /> {copy.heroProof}</div>
         </div>
 
-        <div className={styles.heroVisual} aria-label="qdip decision trace preview">
+        <div className={styles.heroVisual} aria-label="QDIP decision trace preview">
           <div className={styles.visualTopbar}>
             <span>{copy.trace.title}</span>
             <span className={styles.liveIndicator}>{copy.trace.online}</span>
@@ -274,7 +274,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
           <Link href={studioHref()}>Studio</Link><Link href={observatoryHref(observatoryLocale)}>Observatory</Link>
           <a href="#demos">{copy.nav[2]}</a><a href="#platform">{copy.nav[0]}</a>
         </nav>
-        <span>© {new Date().getFullYear()} qdip</span>
+        <span>© {new Date().getFullYear()} QDIP</span>
       </footer>
     </main>
   );

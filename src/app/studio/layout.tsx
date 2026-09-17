@@ -5,13 +5,13 @@ import { QdipLogo } from "@/components/marketing/qdip-logo";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 import { StudioNav } from "@/studio/studio-nav";
 
-export const metadata = { title: "qdip Studio" };
+export const metadata = { title: "QDIP Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return <div className="studio-shell">
     <aside className="studio-sidebar">
       <div className="studio-brand-lockup">
-        <Link aria-label="qdip home" className="studio-brand" href={marketingHref("en")}><QdipLogo inverse /></Link>
+        <Link aria-label="QDIP home" className="studio-brand" href={marketingHref("en")}><QdipLogo inverse /></Link>
         <span>studio</span>
       </div>
       <div className="studio-sidebar-intro">
@@ -21,12 +21,12 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
       <StudioNav />
       <div className="studio-sidebar-footer">
         <Link className="studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory <span>↗</span></Link>
-        <small>qdip decision intelligence</small>
+        <small>QDIP decision intelligence</small>
       </div>
     </aside>
     <div className="studio-workspace">
       <header className="studio-topbar">
-        <div><span>qdip</span><b>/</b><strong>studio</strong></div>
+        <div><span>QDIP</span><b>/</b><strong>Studio</strong></div>
         <div className="studio-engine-status"><i /> Engine connected</div>
       </header>
       <main className="studio-main">{children}</main>

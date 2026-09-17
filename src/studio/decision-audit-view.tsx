@@ -22,7 +22,7 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
     return () => { disposed = true; };
   }, [initialId]);
   return <div className="studio-shell"><aside className="studio-sidebar">
-    <Link className="studio-brand" href={observatoryHref()}>qdip <span>Observatory</span></Link>
+    <Link className="studio-brand" href={observatoryHref()}>QDIP <span>Observatory</span></Link>
     <p>Inspect decisions, evidence, and exact evaluation versions.</p>
     <nav><Link href={observatoryHref()}>Scenario Observatory</Link><Link href={observatoryHref("decisions")}>Decision audit</Link><Link href={studioHref()}>Decision Studio ↗</Link></nav>
   </aside><main className="studio-main"><h1>Decision audit</h1><p>Historical decisions and alternative comparisons.</p>

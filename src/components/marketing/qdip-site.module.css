@@ -397,7 +397,8 @@
   .primaryButton { min-height: 40px; padding: 0 15px; }
   .hero { min-height: auto; gap: 52px; padding: 64px 0 76px; }
   .hero h1 { font-size: clamp(47px, 14vw, 66px); }
-  .heroCopy > p { font-size: 16px; }
+  .heroCopy > p { font-size: 17px; }
+  .eyebrow { font-size: 12px; }
   .heroActions { align-items: stretch; flex-direction: column; }
   .heroActions a { width: 100%; }
   .heroProof { line-height: 1.5; }
@@ -410,16 +411,21 @@
   .proofStrip { align-items: flex-start; flex-direction: column; gap: 15px; padding: 28px 24px; }
   .problemGrid { min-height: 0; padding: 75px 0; }
   .problemAnswer { padding: 28px; }
+  .answerRows span { font-size: 15px; }
   .platform, .demoSection, .trust { padding-top: 82px; padding-bottom: 82px; }
+  .sectionIntro p, .demoHeading > p, .trustLead > p { font-size: 18px; }
   .platformLayers, .demoGrid, .capabilityGrid { grid-template-columns: 1fr; }
   .layerCard:last-child { grid-column: auto; }
   .layerIcon { margin-bottom: 55px; }
   .demoCard { min-height: 260px; }
+  .layerCard p, .demoCard p, .capabilityGrid p { font-size: 15px; }
+  .layerCard ul { font-size: 14px; }
   .trust { gap: 45px; }
   .finalCta { align-items: flex-start; flex-direction: column; padding-top: 76px; padding-bottom: 76px; }
   .ctaActions { width: 100%; }
   .footer { grid-template-columns: 1fr; gap: 32px; }
   .footer nav { flex-wrap: wrap; }
+  .footer p, .footer nav, .footer > span { font-size: 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -9,15 +9,15 @@ import { QdipSite } from "@/components/marketing/qdip-site";
 
 const metadataByLocale: Record<MarketingLocale, { title: string; description: string }> = {
   en: {
-    title: "qdip — Quality-driven Decision Intelligence Platform",
+    title: "QDIP — Quality-driven Decision Intelligence Platform",
     description: "Model alternatives, quantify uncertainty and preserve the evidence behind every decision.",
   },
   uk: {
-    title: "qdip — платформа інтелектуального прийняття рішень",
+    title: "QDIP — платформа інтелектуального прийняття рішень",
     description: "Моделюйте альтернативи, оцінюйте невизначеність і зберігайте докази для кожного рішення.",
   },
   pl: {
-    title: "qdip — platforma Decision Intelligence",
+    title: "QDIP — platforma Decision Intelligence",
     description: "Modeluj alternatywy, szacuj niepewność i zachowuj dowody stojące za każdą decyzją.",
   },
 };

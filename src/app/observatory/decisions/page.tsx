@@ -1,7 +1,7 @@
 import { DecisionAuditView } from "@/studio/decision-audit-view";
 import "@/studio/studio.css";
 
-export const metadata = { title: "Decision Audit · qdip Observatory" };
+export const metadata = { title: "Decision Audit · QDIP Observatory" };
 
 export default async function DecisionsPage({ searchParams }: {
   searchParams: Promise<{ decision?: string }>;
