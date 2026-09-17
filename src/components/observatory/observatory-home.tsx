@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Factory, HeartHandshake, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Building2, Factory, HeartHandshake, Sparkles } from "lucide-react";
 import {
   buildLocalePath,
   type Locale,
@@ -15,7 +15,6 @@ type Localized = Record<Locale, string>;
 type Demo = { href: string; title: Localized; description: Localized; tag: Localized; icon: typeof Building2 };
 
 const demos: Demo[] = [
-  { href: "/customer-opportunities", title: { en: "Customer Opportunities", uk: "Потенційні клієнти", pl: "Szanse sprzedażowe" }, description: { en: "Evidence-aware outreach prioritization with explicit opportunity, uncertainty and next action.", uk: "Пріоритизація потенційних клієнтів за доказами, можливістю, невизначеністю та наступною дією.", pl: "Priorytetyzacja kontaktów na podstawie dowodów, szansy, niepewności i następnej akcji." }, tag: { en: "COMMERCIAL", uk: "КОМЕРЦІЙНИЙ", pl: "KOMERCYJNY" }, icon: Users },
   { href: "/resource-allocation", title: { en: "Resource Allocation", uk: "Розподіл ресурсів", pl: "Alokacja zasobów" }, description: { en: "Humanitarian mobile-team allocation under capacity, skills, accessibility and travel constraints.", uk: "Розподіл гуманітарних мобільних команд з урахуванням місткості, навичок, доступності та переміщення.", pl: "Alokacja mobilnych zespołów humanitarnych z uwzględnieniem pojemności, kompetencji, dostępności i przejazdów." }, tag: { en: "HUMANITARIAN", uk: "ГУМАНІТАРНИЙ", pl: "HUMANITARNY" }, icon: HeartHandshake },
   { href: "/gas-forecast", title: { en: "European Gas Forecasting", uk: "Прогнозування європейського газового ринку", pl: "Prognozowanie europejskiego rynku gazu" }, description: { en: "Market inputs, data providers and gas forecasting decision support in one workspace.", uk: "Ринкові дані, провайдери та підтримка рішень на основі прогнозу газового ринку в одному середовищі.", pl: "Dane rynkowe, dostawcy danych i wsparcie decyzji oparte na prognozie rynku gazu w jednym środowisku." }, tag: { en: "ENERGY", uk: "ЕНЕРГЕТИКА", pl: "ENERGIA" }, icon: Sparkles },
   { href: "/production-decision", title: { en: "Production Decision", uk: "Виробничі рішення", pl: "Decyzje produkcyjne" }, description: { en: "Operational production state translated into explicit alternatives and decisions.", uk: "Перетворення операційного стану виробництва на явні альтернативи та рішення.", pl: "Przekształcenie stanu operacyjnego produkcji w jawne alternatywy i decyzje." }, tag: { en: "PRODUCTION", uk: "ВИРОБНИЦТВО", pl: "PRODUKCJA" }, icon: Factory },
