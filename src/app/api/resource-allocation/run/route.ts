@@ -26,10 +26,34 @@ const requestSchema = z.object({
   marginal_team_capacity: z.number().positive().default(16), target_priority_coverage: z.number().min(0).max(1).default(0.9),
 }).strict();
 
+function evidenceText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object") return String(value ?? "");
+  const item = value as Record<string, unknown>;
+  const day = typeof item.day === "string" ? `${item.day}: ` : "";
+  const metric = typeof item.metric === "string" ? item.metric.replaceAll("_", " ") : "evidence";
+  const metricValue = typeof item.value === "number" || typeof item.value === "string" ? ` = ${item.value}` : "";
+  return `${day}${metric}${metricValue}`;
+}
+
+function normalizeEvidence(payload: Record<string, unknown>): Record<string, unknown> {
+  const normalizeResult = (value: unknown): unknown => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+    const result = { ...(value as Record<string, unknown>) };
+    if (Array.isArray(result.evidence)) result.evidence = result.evidence.map(evidenceText);
+    return result;
+  };
+  const normalized = { ...payload };
+  if (normalized.operation === "simulate" && normalized.result) normalized.result = normalizeResult(normalized.result);
+  else Object.assign(normalized, normalizeResult(normalized));
+  return normalized;
+}
+
 export async function POST(request: Request) {
   try {
     const input = requestSchema.parse(await request.json());
-    return NextResponse.json(await runDipPlugin("resource-allocation", "humanitarian.resource-allocation.optimize", input));
+    const output = await runDipPlugin("resource-allocation", "humanitarian.resource-allocation.optimize", input);
+    return NextResponse.json(normalizeEvidence(output));
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid resource-allocation state.", issues: error.issues }, { status: 422 });
     if (error instanceof DipApiError) return NextResponse.json({ error: error.message }, { status: error.status });
