@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, ChevronDown, ChevronUp, Home, Package } from "lucide-react";
+import { useId, useMemo, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronUp, Home, Package } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -139,11 +139,14 @@ function ScenarioSection({
   onToggle: () => void;
   children: ReactNode;
 }) {
+  const contentId = useId();
   return (
     <div className="rounded-2xl border border-white/8 bg-white/3">
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
@@ -156,7 +159,7 @@ function ScenarioSection({
         )}
       </button>
       {open && (
-        <div className="border-t border-white/8 px-4 py-4">{children}</div>
+        <div id={contentId} className="border-t border-white/8 px-4 py-4">{children}</div>
       )}
     </div>
   );
@@ -269,9 +272,9 @@ function SupplierLabControls({
             </div>
 
             <div className="flex items-center gap-3 pt-6">
-              <button
+              <button type="button"
                 id="supplier-compliant"
-                role="checkbox"
+                role="switch"
                 aria-checked={state.compliant}
                 aria-label="Supplier compliant"
                 onClick={() =>
@@ -1099,13 +1102,6 @@ export function SupplierWorkspace({ locale }: Props) {
             >
               <Home className="h-4 w-4" aria-hidden="true" />
               DIP Observatory
-            </Link>
-            <Link
-              href={buildLocalePath("/eidos", locale)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to Observatory
             </Link>
           </div>
         </header>

@@ -33,7 +33,7 @@ import type {
   MinimaxResult,
   HedgeSignal,
   Robustness,
-} from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/domain";
 import { DEFAULT_CONFIG } from "./config";
 import type { FuturesMispricingConfigV1 } from "./types";
 

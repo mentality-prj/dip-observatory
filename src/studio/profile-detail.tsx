@@ -22,7 +22,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
       .catch((reason) => { if (!disposed) setError(String(reason)); });
     return () => { disposed = true; };
   }, [id, retry]);
-  if (!data) return <>{error ? <div role="alert">{error} <button onClick={() => setRetry(retry + 1)}>Retry</button></div> : <p role="status">Loading profile…</p>}<Link href={studioHref("profiles")}>Decision Profiles</Link></>;
+  if (!data) return <>{error ? <div role="alert">{error} <button type="button" onClick={() => setRetry(retry + 1)}>Retry</button></div> : <p role="status">Loading profile…</p>}<Link href={studioHref("profiles")}>Decision Profiles</Link></>;
   const { profile, dimensions, plugins } = data;
   const plugin = plugins.find((p) => p.name === profile.plugin_id);
   const pluginName = plugin?.ui?.label ?? profile.plugin_id;
@@ -41,7 +41,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         <dt>Status</dt><dd>{profile.active ? "Active" : "Draft"}</dd><dt>Plugin</dt><dd>{pluginName} @ {profile.plugin_version}</dd>
         <dt>Capability</dt><dd>{profile.capability_id} @ {profile.capability_version}</dd>
       </dl><h3>Execution model</h3><p className="studio-flow">{pluginName} → Output Bindings → Decision Dimensions → Alternatives → Decision</p></section>
-      <button disabled={!profile.active || profile.validation.status !== "VALID"} onClick={() => setRunning(!running)}>Evaluate</button>
+      <button type="button" disabled={!profile.active || profile.validation.status !== "VALID"} onClick={() => setRunning(!running)}>Evaluate</button>
       {running && <ProfileRunner profile={clean} />}
     </>}
     {section === "dimensions" && <section className="studio-card"><h2>Enabled dimensions</h2><div className="studio-table-wrap"><table>

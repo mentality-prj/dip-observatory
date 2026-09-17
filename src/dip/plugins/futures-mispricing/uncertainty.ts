@@ -19,7 +19,7 @@
  *   6. Half-width = k × σ_combined where k = 1.5 (conservative coverage factor).
  */
 
-import type { MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
+import type { MarketSnapshot, ValuationRange } from "@/dip/plugins/futures-mispricing/domain";
 import { DEFAULT_CONFIG } from "./config";
 import type { FuturesMispricingConfigV1 } from "./types";
 import { FuturesMispricingInputError } from "./types";

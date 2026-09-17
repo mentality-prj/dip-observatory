@@ -563,7 +563,7 @@ function AlternativeCard({ alt }: { alt: AlternativeEvaluation }) {
             <span className="text-sm font-semibold text-slate-200">
               {eur(alt.financialImpact.total)}
             </span>
-            <button
+            <button type="button"
               onClick={() => setExpanded((v) => !v)}
               className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
             >
@@ -792,9 +792,9 @@ function WhatIfControls({
           </div>
 
           <div className="flex items-center gap-3 pt-4">
-            <button
+            <button type="button"
               id="overtime"
-              role="checkbox"
+              role="switch"
               aria-checked={state.overtimeAvailable}
               aria-label="Overtime available"
               onClick={() =>

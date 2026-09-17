@@ -24,7 +24,7 @@ import type {
   MinimaxResult,
   MispricingSignal,
   CurveMetrics,
-} from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/domain";
 import { FuturesMispricingInputError } from "./types";
 import { computeCurveMetrics, computeStructuralValuation } from "./curve-analysis";
 import {
@@ -105,7 +105,6 @@ export function computeHedgeDecision(
   // 9. Rationale
   const rationale = buildRationale(
     targetContract,
-    currentPrice,
     valuation,
     minimax,
     signal.signal,
@@ -152,7 +151,6 @@ export function assembleHedgeDecision(params: {
   const robustness: Robustness = signal.robustness;
   const rationale = buildRationale(
     targetContract,
-    currentPrice,
     valuation,
     minimax,
     signal.signal,
@@ -175,7 +173,6 @@ export function assembleHedgeDecision(params: {
 
 function buildRationale(
   contract: string,
-  currentPrice: number,
   valuation: ValuationRange,
   minimax: { worstCaseLow: number; robustDiscount: number },
   signal: string,

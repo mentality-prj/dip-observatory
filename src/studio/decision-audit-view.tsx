@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ProductLockup } from "@/components/platform/product-lockup";
 import { observatoryHref, studioHref } from "@/lib/platform-urls";
 import { studioRequest, type Audit } from "./contracts";
 import { GasForecastPanel } from "./gas-forecast-panel";
@@ -21,11 +22,16 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
       .finally(() => { if (!disposed) setLoading(false); });
     return () => { disposed = true; };
   }, [initialId]);
-  return <div className="studio-shell"><aside className="studio-sidebar">
-    <Link className="studio-brand" href={observatoryHref()}>QDIP <span>Observatory</span></Link>
+  return <div className="observatory-shell observatory-audit min-h-screen text-white" data-prototype-theme="cyan">
+    <header className="product-header observatory-header"><div className="product-header-inner observatory-header-inner">
+      <ProductLockup href={observatoryHref()} product="Observatory" />
+      <div className="ml-auto"><Link className="product-switch-link observatory-studio-link" href={studioHref()}>Studio</Link></div>
+    </div></header>
+    <div className="observatory-audit-layout"><aside className="observatory-audit-sidebar">
+    <h2>Decision audit</h2>
     <p>Inspect decisions, evidence, and exact evaluation versions.</p>
     <nav><Link href={observatoryHref()}>Scenario Observatory</Link><Link href={observatoryHref("decisions")}>Decision audit</Link><Link href={studioHref()}>Decision Studio ↗</Link></nav>
-  </aside><main className="studio-main"><h1>Decision audit</h1><p>Historical decisions and alternative comparisons.</p>
+  </aside><main id="main-content" tabIndex={-1} className="observatory-audit-main studio-main"><h1>Decision audit</h1><p>Historical decisions and alternative comparisons.</p>
     {loading && <p role="status">Loading decisions…</p>}
     {error && <div className="studio-error" role="alert">{error}</div>}
     {!loading && !audits.length && !selected && !error && <div className="studio-card">No decisions have been evaluated yet.</div>}
@@ -59,7 +65,7 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
         <pre>{JSON.stringify({ profile: selected.profile_version, plugins: selected.plugin_versions,
           capabilities: selected.capability_versions, dimensions: selected.dimension_versions,
           evaluators: selected.evaluator_versions, bindings: selected.binding_versions }, null, 2)}</pre>
-        <button onClick={async () => {
+        <button type="button" onClick={async () => {
           try { const response = await studioRequest<{ matches: boolean }>(`dimension-decisions/${encodeURIComponent(selected.decision_id)}/replay`, { method: "POST" });
             setMessage(response.matches ? "Replay matches the recorded evaluation." : "Replay differs from the recorded evaluation."); }
           catch (reason) { setError(String(reason)); }
@@ -68,5 +74,5 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
         <details><summary>Complete audit snapshot</summary><pre>{JSON.stringify(selected, null, 2)}</pre></details>
       </section>
     </>}
-  </main></div>;
+  </main></div></div>;
 }

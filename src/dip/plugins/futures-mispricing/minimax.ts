@@ -21,7 +21,7 @@
  * No random sampling. No Monte Carlo. Deterministic and reproducible.
  */
 
-import type { ValuationRange, MinimaxResult } from "@/eidos/types/futures";
+import type { ValuationRange, MinimaxResult } from "@/dip/plugins/futures-mispricing/domain";
 import { FuturesMispricingInputError } from "./types";
 
 /** Number of grid points for the minimax search. */

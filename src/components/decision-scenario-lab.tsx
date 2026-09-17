@@ -20,7 +20,14 @@
  * Generic over T = the decision result type.
  */
 
-import { useState, useMemo, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   FlaskConical,
   X,
@@ -106,6 +113,21 @@ export function DecisionScenarioLab<T>({
 }: ScenarioLabProps<T>) {
   const [open, setOpen] = useState(false);
   const [traceDiffExpanded, setTraceDiffExpanded] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogTitleId = useId();
+  const traceDiffId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    closeButtonRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   const baselineLabel = getDecisionLabel(baselineResult);
   const scenarioLabel = getDecisionLabel(scenarioResult);
@@ -113,24 +135,21 @@ export function DecisionScenarioLab<T>({
   // Defer expensive engine computations until the panel is open
   const delta = useMemo(
     () => (open ? getDecisionDelta(baselineResult, scenarioResult) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, baselineResult, scenarioResult],
+    [open, getDecisionDelta, baselineResult, scenarioResult],
   );
   const sensitivity = useMemo(
     () => (open ? getSensitivity() : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, baselineResult, scenarioResult],
+    [open, getSensitivity],
   );
   const traceDiff = useMemo(
     () => (open ? getTraceDiff(baselineResult, scenarioResult) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, baselineResult, scenarioResult],
+    [open, getTraceDiff, baselineResult, scenarioResult],
   );
   const changedRules = traceDiff.filter((e) => e.changed);
 
   return (
     <>
-      <button
+      <button type="button"
         onClick={() => setOpen(true)}
         className={cn(
           "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors",
@@ -158,12 +177,17 @@ export function DecisionScenarioLab<T>({
             onClick={() => setOpen(false)}
           />
 
-          <div className="flex h-full w-full max-w-xl flex-col overflow-y-auto bg-[#0a0d16] shadow-2xl ring-1 ring-white/10">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogTitleId}
+            className="flex h-full w-full max-w-xl flex-col overflow-y-auto bg-[#0a0d16] shadow-2xl ring-1 ring-white/10"
+          >
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/8 bg-[#0a0d16] px-6 py-4">
               <div>
                 <div className="flex items-center gap-2">
                   <FlaskConical className="h-4 w-4 text-cyan-400" />
-                  <span className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-400">
+                  <span id={dialogTitleId} className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-400">
                     {domainLabel} Scenario Lab
                   </span>
                 </div>
@@ -173,7 +197,7 @@ export function DecisionScenarioLab<T>({
               </div>
               <div className="flex items-center gap-2">
                 {isDirty && (
-                  <button
+                  <button type="button"
                     onClick={() => {
                       onReset();
                     }}
@@ -184,6 +208,7 @@ export function DecisionScenarioLab<T>({
                   </button>
                 )}
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   aria-label="Close Scenario Lab"
                   onClick={() => setOpen(false)}
@@ -309,8 +334,10 @@ export function DecisionScenarioLab<T>({
               </section>
 
               <section>
-                <button
+                <button type="button"
                   onClick={() => setTraceDiffExpanded((v) => !v)}
+                  aria-expanded={traceDiffExpanded}
+                  aria-controls={traceDiffId}
                   className="flex w-full items-center justify-between"
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -330,7 +357,7 @@ export function DecisionScenarioLab<T>({
                 </button>
 
                 {traceDiffExpanded && (
-                  <div className="mt-3 space-y-2">
+                  <div id={traceDiffId} className="mt-3 space-y-2">
                     {traceDiff.map((entry) => (
                       <div
                         key={entry.ruleId}

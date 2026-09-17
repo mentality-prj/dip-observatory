@@ -5,7 +5,7 @@
  * implementation, {@link StructuralCurveValuationV1}.
  */
 
-import type { MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
+import type { MarketSnapshot, ValuationRange } from "@/dip/plugins/futures-mispricing/domain";
 import type { FuturesMispricingConfigV1 } from "./types";
 import { computeStructuralValuation } from "./curve-analysis";
 

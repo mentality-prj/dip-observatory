@@ -34,7 +34,7 @@ import {
   computeAnnualSpread,
   computeNormalisedDeviation,
   computeRelativePosition,
-} from "@/eidos/lib/futures-curve";
+} from "@/dip/plugins/futures-mispricing/curve-analysis";
 import {
   computeHistoricalDispersion,
   computeLocalCurveDispersion,
@@ -42,22 +42,22 @@ import {
   computeDataDensityFactor,
   computeCombinedUncertainty,
   buildUncertaintyRange,
-} from "@/eidos/lib/uncertainty";
+} from "@/dip/plugins/futures-mispricing/uncertainty";
 import {
   generateMinimaxGrid,
   computeStateLoss,
   runMinimax,
   computeMinimaxSensitivity,
   MINIMAX_GRID_SIZE,
-} from "@/eidos/lib/minimax";
+} from "@/dip/plugins/futures-mispricing/minimax";
 import {
   classifyRobustness,
   classifySignal,
   MIN_BUY_DISCOUNT_PCT,
   MIN_DISCOUNT_UNCERTAINTY_RATIO,
   MIN_ABSOLUTE_DISCOUNT_PLN,
-} from "@/eidos/lib/mispricing-model";
-import { computeHedgeDecision, computeOutcome } from "@/eidos/lib/hedge-decision";
+} from "@/dip/plugins/futures-mispricing/mispricing";
+import { computeHedgeDecision, computeOutcome } from "@/dip/plugins/futures-mispricing/hedge-decision";
 import {
   EIDOS_MARKET_SNAPSHOT,
   EIDOS_Q1_2027_HISTORY,
@@ -68,8 +68,8 @@ import {
   getFuturesContract,
   getQuarterlyContracts,
   getAnnualContracts,
-} from "@/eidos/data/synthetic-futures-data";
-import type { ForwardCurvePoint, MarketSnapshot, ValuationRange } from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/test-fixtures";
+import type { ForwardCurvePoint, MarketSnapshot, ValuationRange } from "@/dip/plugins/futures-mispricing/domain";
 import type { FuturesMispricingRequest } from "@/dip/plugins/futures-mispricing/types";
 
 // ---------------------------------------------------------------------------

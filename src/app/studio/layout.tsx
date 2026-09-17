@@ -29,7 +29,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
       </div>
     </aside>
     <div className="studio-workspace">
-      <main className="studio-main">{children}</main>
+      <main className="studio-main" id="main-content" tabIndex={-1}>{children}</main>
     </div>
   </div>;
 }

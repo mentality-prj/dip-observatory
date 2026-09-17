@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { observatoryHref } from "@/lib/platform-urls";
 import { studioRequest, type Audit, type Profile } from "./contracts";
 import { JsonField, SchemaField, schemaDefault } from "./schema-form";
 
@@ -24,7 +25,7 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
     <button disabled={busy} type="submit">{busy ? "Evaluating…" : "Evaluate alternatives"}</button>
     {error && <div role="alert" className="studio-error">{error}</div>}
     {result && <div className="studio-success" role="status">{result.status}: {result.selected_alternative ?? "No feasible alternative"}.{" "}
-      <Link href={`/observatory/decisions?decision=${encodeURIComponent(result.decision_id)}`}>Inspect decision and audit ↗</Link>
+      <Link href={observatoryHref(`decisions?decision=${encodeURIComponent(result.decision_id)}`)}>Inspect decision and audit ↗</Link>
     </div>}
   </form>;
 }
