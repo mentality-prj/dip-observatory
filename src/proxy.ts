@@ -47,6 +47,17 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  const explicitMarketingLocale = pathname.match(/^\/platform\/(en|uk|pl)\/?$/)?.[1];
+  if (
+    isMarketingHost(host) &&
+    explicitMarketingLocale &&
+    MARKETING_LOCALES.has(explicitMarketingLocale)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${explicitMarketingLocale}`;
+    return NextResponse.redirect(url);
+  }
+
   const marketingLocale = pathname.match(/^\/(en|uk|pl)\/?$/)?.[1];
   if (isMarketingHost(host) && marketingLocale && MARKETING_LOCALES.has(marketingLocale)) {
     const url = request.nextUrl.clone();

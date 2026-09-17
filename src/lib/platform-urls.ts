@@ -26,5 +26,5 @@ export function marketingHref(locale: "en" | "uk" | "pl") {
 }
 
 export function marketingLocaleHref(locale: "en" | "uk" | "pl") {
-  return isDevelopment ? `/platform/${locale}` : `/${locale}`;
+  return `/platform/${locale}`;
 }

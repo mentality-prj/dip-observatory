@@ -38,11 +38,21 @@ test("leaves the QDIP marketing site unchanged", () => {
 
 test("routes localized marketing URLs without affecting Observatory locales", () => {
   const ukrainianSite = proxy(request("qdip.ai", "/uk"));
+  const canonicalMarketingPath = proxy(request("qdip.ai", "/platform/uk"));
+  const previewMarketingPath = proxy(
+    request("feature-qdip.vercel.app", "/platform/uk"),
+  );
   const polishObservatory = proxy(request("observatory.qdip.ai", "/pl"));
 
   assert.equal(
     new URL(getRewrittenUrl(ukrainianSite)!).pathname,
     "/platform/uk",
   );
+  assert.equal(canonicalMarketingPath.status, 307);
+  assert.equal(
+    new URL(canonicalMarketingPath.headers.get("location")!).pathname,
+    "/uk",
+  );
+  assert.equal(isRewrite(previewMarketingPath), false);
   assert.equal(isRewrite(polishObservatory), false);
 });

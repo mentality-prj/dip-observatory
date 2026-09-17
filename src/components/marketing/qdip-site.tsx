@@ -96,9 +96,9 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
     <main className={styles.site} lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link aria-label="QDIP home" href={marketingLocaleHref(locale)}>
+          <a aria-label="QDIP home" href={marketingLocaleHref(locale)}>
             <QdipLogo />
-          </Link>
+          </a>
           <nav aria-label="Primary navigation" className={styles.nav}>
             <a href="#platform">{copy.nav[0]}</a>
             <a href="#products">{copy.nav[1]}</a>
@@ -106,15 +106,17 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
             <a href="#trust">{copy.nav[3]}</a>
           </nav>
           <div className={styles.headerActions}>
+            {/* Hard navigations are intentional: the host-aware proxy canonicalizes
+                /platform/[locale] on qdip.ai while previews keep the explicit route. */}
             <nav aria-label="Language" className={styles.languageNav}>
               {marketingLocales.map((item) => (
-                <Link
+                <a
                   aria-current={locale === item ? "page" : undefined}
                   href={marketingLocaleHref(item)}
                   key={item}
                 >
                   {localeLabels[item]}
-                </Link>
+                </a>
               ))}
             </nav>
             <Link className={styles.textLink} href={studioHref()}>
