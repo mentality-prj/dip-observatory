@@ -4,12 +4,13 @@ import { ProductLockup } from "@/components/platform/product-lockup";
 import { cn } from "@/lib/utils";
 
 export type DesignTheme = "green" | "cyan" | "emerald" | "amber" | "rose" | "violet";
+export type ProductName = ComponentProps<typeof ProductLockup>["product"];
 
 export function DesignSystemProvider({ theme, children, className }: { theme: DesignTheme; children: ReactNode; className?: string }) {
   return <div data-ds-theme={theme} className={className}>{children}</div>;
 }
 
-export function ProductHeader({ href, product, center, actions, className }: { href: string; product?: string; center?: ReactNode; actions?: ReactNode; className?: string }) {
+export function ProductHeader({ href, product, center, actions, className }: { href: string; product: ProductName; center?: ReactNode; actions?: ReactNode; className?: string }) {
   return <header className={cn("ds-product-header product-header", className)}>
     <div className="ds-product-header-inner product-header-inner">
       <ProductLockup href={href} product={product} />
