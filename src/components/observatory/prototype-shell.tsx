@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Building2, ChevronRight, Home, Menu } from "lucide-react";
 
+import { ProductLockup } from "@/components/platform/product-lockup";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 import { studioHref } from "@/lib/platform-urls";
@@ -209,17 +210,13 @@ export function PrototypeShell({
       className="observatory-shell min-h-screen text-white"
       data-prototype-theme={theme}
     >
-      <header className="observatory-header sticky top-0 z-50">
-        <div className="observatory-header-inner mx-auto flex w-full max-w-[1700px] items-center gap-4 px-4 md:px-6 xl:px-10">
-          <Link
+      <header className="product-header observatory-header">
+        <div className="product-header-inner observatory-header-inner">
+          <ProductLockup
             href={buildLocalePath("/", locale)}
             onClick={() => setCompanyMenuOpen(false)}
-            className="observatory-brand group flex shrink-0 items-baseline rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            aria-label="QDIP Observatory home"
-          >
-            <strong className="text-lg font-extrabold tracking-[-.035em] text-white">QDIP</strong>
-            <span className="text-lg font-semibold tracking-[-.035em] text-cyan-300">.Observatory</span>
-          </Link>
+            product="Observatory"
+          />
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
           <nav
             className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex"
@@ -229,7 +226,7 @@ export function PrototypeShell({
             {renderNav(GENERAL_NAV_ITEMS)}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Link href={studioHref()} className="observatory-studio-link rounded-xl px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-white/5">
+            <Link href={studioHref()} className="product-switch-link observatory-studio-link">
               Decision Studio
             </Link>
             <div ref={companyMenuRef} className="relative">

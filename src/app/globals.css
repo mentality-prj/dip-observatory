@@ -67,6 +67,62 @@ code,
 	color: white;
 }
 
+/* Shared product identity and shell navigation for Studio and Observatory. */
+.product-header {
+	position: sticky;
+	top: 0;
+	z-index: 50;
+	border-bottom: 1px solid var(--product-header-line, rgba(255, 255, 255, .08));
+	background: var(--product-header-background, rgba(3, 8, 17, .82));
+	backdrop-filter: blur(20px);
+}
+
+.product-header-inner {
+	display: flex;
+	width: min(100% - 48px, 1700px);
+	min-height: 76px;
+	margin-inline: auto;
+	align-items: center;
+	gap: 16px;
+}
+
+.product-lockup {
+	display: inline-flex;
+	min-height: 44px;
+	align-items: center;
+	flex-shrink: 0;
+	color: var(--product-header-text, white);
+	font-size: 1.125rem;
+	letter-spacing: -.035em;
+	text-decoration: none;
+	transition: opacity 160ms ease;
+}
+
+.product-lockup:hover { opacity: .82; }
+.product-lockup strong { font-weight: 800; }
+.product-lockup span { color: var(--product-accent); font-weight: 650; }
+
+.product-switch-link {
+	display: inline-flex;
+	min-height: 38px;
+	align-items: center;
+	gap: 8px;
+	padding: 0 13px;
+	border: 1px solid color-mix(in srgb, var(--product-accent) 22%, transparent);
+	border-radius: 12px;
+	color: var(--product-switch-text, var(--product-accent));
+	background: color-mix(in srgb, var(--product-accent) 7%, transparent);
+	font-size: .75rem;
+	font-weight: 700;
+	text-decoration: none;
+	transition: border-color 160ms ease, background 160ms ease;
+}
+
+.product-switch-link:hover {
+	border-color: color-mix(in srgb, var(--product-accent) 38%, transparent);
+	background: color-mix(in srgb, var(--product-accent) 11%, transparent);
+}
+
 /* Shared outer geometry. Prototype-specific components own only their content and theme. */
 .prototype-shell-content > main {
 	width: 100%;
@@ -86,6 +142,8 @@ code,
 
 /* Observatory uses the QDIP product geometry while retaining its dark spectrum. */
 .observatory-shell {
+	--product-accent: rgb(var(--prototype-accent));
+	--product-switch-text: rgb(var(--prototype-accent));
 	position: relative;
 	isolation: isolate;
 	background:
@@ -105,19 +163,12 @@ code,
 	opacity: .055;
 }
 
-.observatory-header {
-	border-bottom: 1px solid rgba(255, 255, 255, .08);
-	background: rgba(3, 8, 17, .82);
-	backdrop-filter: blur(20px);
+.observatory-header-inner {
+	width: min(100% - 32px, 1700px);
 }
 
-.observatory-header-inner { min-height: 76px; }
-.observatory-brand { min-height: 44px; }
-.observatory-brand:hover { opacity: .88; }
-
 .observatory-studio-link {
-	border: 1px solid rgb(var(--prototype-accent) / .16);
-	background: rgb(var(--prototype-accent) / .06);
+	color: rgb(var(--prototype-accent));
 }
 
 .observatory-stage { position: relative; }
@@ -198,7 +249,7 @@ code,
 }
 
 @media (max-width: 640px) {
-	.observatory-header-inner { min-height: 68px; }
+	.product-header-inner { width: min(100% - 32px, 1700px); min-height: 68px; }
 	.prototype-shell-content .text-sm { font-size: .9375rem; line-height: 1.55rem; }
 	.prototype-shell-content .text-xs { font-size: .8125rem; line-height: 1.25rem; }
 	.prototype-shell-content [class~="text-[9px]"],
