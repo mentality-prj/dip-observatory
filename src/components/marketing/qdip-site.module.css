@@ -41,9 +41,7 @@
 }
 
 .logo[data-inverse] { color: white; }
-.logoWordmark { width: 91px; height: 39px; overflow: visible; }
-.wordmarkStroke { fill: none; stroke: currentColor; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
-.wordmarkDot { fill: var(--signal, #d97757); }
+.logoWordmark { display: block; width: 132px; height: auto; }
 
 .nav { display: flex; align-items: center; gap: 30px; }
 .nav a, .textLink {
@@ -394,7 +392,7 @@
   .headerInner { height: 68px; }
   .headerActions { gap: 8px; }
   .headerActions .textLink, .headerActions > .primaryButton { display: none; }
-  .logoWordmark { width: 80px; height: 35px; }
+  .logoWordmark { width: 116px; }
   .languageNav a { min-width: 27px; }
   .primaryButton { min-height: 40px; padding: 0 15px; }
   .hero { min-height: auto; gap: 52px; padding: 64px 0 76px; }
