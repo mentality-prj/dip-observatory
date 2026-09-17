@@ -1,54 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QDIP Platform
 
-## Getting Started
+One Next.js application serving the QDIP product family:
 
-Decision configuration is available at `/studio`; historical dimension evaluations are at
-`/observatory/decisions`. See [Decision Studio](docs/decision-studio.md) for setup and tests.
+| Host | Surface | Internal route |
+| --- | --- | --- |
+| `qdip.ai` | Product and platform site | `/` |
+| `studio.qdip.ai` | Decision configuration | `/studio` |
+| `observatory.qdip.ai` | Demonstrators and decision audit | `/en`, `/pl`, `/observatory/decisions` |
 
-Create a `.env` file before running the app:
+Host-based rewrites live in `src/proxy.ts`. During local development, Studio remains available at `/studio` and Observatory at `/en`.
 
-```bash
-cp /home/runner/work/dip-observatory/dip-observatory/.env.example /home/runner/work/dip-observatory/dip-observatory/.env
-```
-
-The Observatory expects these backend settings:
-
-- `DIP_API_BASE_URL` — base URL of the DIP backend
-- `DIP_API_KEY` — API key used for Observatory and futures mispricing requests
-- `DIP_GAS_FORECAST_CAPABILITY_PATH` — optional exact DIP API path for the gas-forecast provider capability; if unset, Observatory probes a short list of likely PluginRuntime capability paths
-- `DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH` — optional exact DIP API path for the gas forecasting engine capability; if unset, Observatory probes likely PluginRuntime capability paths for `gas.forecast.experiment`
-
-The public gas forecasting workspace is available at `/en/gas-forecast` and `/pl/gas-forecast`. It combines provider/data validation and the forecasting engine in one demonstrator.
-
-First, run the development server:
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cp .env.example .env
+pnpm install --frozen-lockfile
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Decision Studio is at `/studio`; the default Observatory is at `/en`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-## Contributing
+Platform URLs have production-safe defaults and can be overridden:
 
-Every new feature must be developed in its own **feature branch** — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full branching workflow and naming conventions.
+- `NEXT_PUBLIC_SITE_URL` — defaults to `https://qdip.ai`
+- `NEXT_PUBLIC_STUDIO_URL` — defaults to `https://studio.qdip.ai` in production
+- `NEXT_PUBLIC_OBSERVATORY_URL` — defaults to `https://observatory.qdip.ai` in production
 
-## Learn More
+Backend integration uses:
 
-To learn more about Next.js, take a look at the following resources:
+- `DIP_API_BASE_URL` — DIP backend base URL
+- `DIP_API_KEY` — API key for Observatory and futures requests
+- `DIP_GAS_FORECAST_CAPABILITY_PATH` — optional gas-provider capability path
+- `DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH` — optional forecasting-engine capability path
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The public gas forecasting workspace is available at `/en/gas-forecast` and `/pl/gas-forecast`. See [Decision Studio](docs/decision-studio.md) for its setup and tests.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome.
+## Deployment
 
-## Deploy on Vercel
+Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. The application selects the correct surface from the request host; no separate build is required. Configure the three DNS records according to the hosting provider and set the backend environment variables above.
 
-The easiest way to deploy your Next.js app is to deploy the project through Vercel.
+## Verification
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+New work must use a feature branch; see [CONTRIBUTING.md](CONTRIBUTING.md).

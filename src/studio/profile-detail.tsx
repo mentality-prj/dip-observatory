@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { studioHref } from "@/lib/platform-urls";
 import { studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from "./contracts";
 import { ProfileEditor } from "./profile-editor";
 import { ProfileRunner } from "./profile-runner";
@@ -21,14 +22,14 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
       .catch((reason) => { if (!disposed) setError(String(reason)); });
     return () => { disposed = true; };
   }, [id, retry]);
-  if (!data) return <>{error ? <div role="alert">{error} <button onClick={() => setRetry(retry + 1)}>Retry</button></div> : <p role="status">Loading profile…</p>}<Link href="/studio/profiles">Decision Profiles</Link></>;
+  if (!data) return <>{error ? <div role="alert">{error} <button onClick={() => setRetry(retry + 1)}>Retry</button></div> : <p role="status">Loading profile…</p>}<Link href={studioHref("profiles")}>Decision Profiles</Link></>;
   const { profile, dimensions, plugins } = data;
   const plugin = plugins.find((p) => p.name === profile.plugin_id);
   const pluginName = plugin?.ui?.label ?? profile.plugin_id;
-  const base = `/studio/profiles/${encodeURIComponent(id)}`;
+  const base = studioHref(`profiles/${encodeURIComponent(id)}`);
   const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== "validation")) as Profile;
   return <>
-    <Breadcrumbs items={[{ label: "Decision Profiles", href: "/studio/profiles" }, { label: profile.name, href: base }, { label: sectionLabel(section) }]} />
+    <Breadcrumbs items={[{ label: "Decision Profiles", href: studioHref("profiles") }, { label: profile.name, href: base }, { label: sectionLabel(section) }]} />
     <h1>{profile.name}</h1><p>Version {profile.version} · {profile.active ? "Active" : "Draft"}</p>
     <nav aria-label="Profile sections" className="studio-profile-nav">{profileSections.map((tab) => <Link key={tab} aria-current={section === tab ? "page" : undefined} href={tab === "overview" ? base : `${base}/${tab}`}>{sectionLabel(tab)}</Link>)}</nav>
     {error && <p role="alert" className="studio-error">{error}</p>}

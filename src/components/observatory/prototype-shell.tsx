@@ -7,6 +7,7 @@ import { Building2, ChevronRight, Home, Menu, Network } from "lucide-react";
 
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
+import { studioHref } from "@/lib/platform-urls";
 
 type PrototypeShellProps = {
   locale: Locale;
@@ -214,13 +215,13 @@ export function PrototypeShell({
             href={buildLocalePath("/", locale)}
             onClick={() => setCompanyMenuOpen(false)}
             className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-2 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            aria-label="DIP Observatory home"
+            aria-label="QDIP Observatory home"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-cyan-300">
               <Network className="h-4 w-4" />
             </span>
             <span className="hidden text-sm font-semibold tracking-tight sm:block">
-              DIP Observatory
+              QDIP Observatory
             </span>
           </Link>
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
@@ -232,7 +233,7 @@ export function PrototypeShell({
             {renderNav(GENERAL_NAV_ITEMS)}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Link href="/studio" className="rounded-lg px-3 py-2 text-xs text-cyan-200 hover:bg-white/5">
+            <Link href={studioHref()} className="rounded-lg px-3 py-2 text-xs text-cyan-200 hover:bg-white/5">
               Decision Studio
             </Link>
             <div ref={companyMenuRef} className="relative">
