@@ -2,109 +2,25 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Building2, ChevronRight, Home } from "lucide-react";
+import { useEffect, useRef, useTransition } from "react";
+import { ChevronRight, Home } from "lucide-react";
 
 import { ProductLockup } from "@/components/platform/product-lockup";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 import { studioHref } from "@/lib/platform-urls";
+import { observableUseCases, type UseCaseTheme } from "@/use-cases/registry";
 
-export type PrototypeTheme = "cyan" | "violet" | "amber" | "emerald" | "rose";
+export type PrototypeTheme = UseCaseTheme;
 
 type PrototypeShellProps = {
   locale: Locale;
   children: React.ReactNode;
   theme?: PrototypeTheme;
 };
-type PrototypeNavItem = {
-  href: string;
-  label: Record<Locale, string>;
-  short: string;
-};
-
-const GENERAL_NAV_ITEMS: PrototypeNavItem[] = [
-  {
-    href: "/",
-    label: { en: "Observatory", uk: "Observatory", pl: "Observatory" },
-    short: "OBS",
-  },
-  {
-    href: "/gas-forecast",
-    label: { en: "Gas Forecast", uk: "Прогноз газу", pl: "Prognoza gazu" },
-    short: "GAS",
-  },
-  {
-    href: "/production-decision",
-    label: {
-      en: "Production Decision",
-      uk: "Виробничі рішення",
-      pl: "Decyzje produkcyjne",
-    },
-    short: "DEC",
-  },
-  {
-    href: "/production-replanning",
-    label: {
-      en: "Production Replanning",
-      uk: "Перепланування",
-      pl: "Przeplanowanie",
-    },
-    short: "REP",
-  },
-  {
-    href: "/production-scheduling",
-    label: {
-      en: "Production Scheduling",
-      uk: "Планування виробництва",
-      pl: "Planowanie produkcji",
-    },
-    short: "SCH",
-  },
-  {
-    href: "/supplier-decision",
-    label: {
-      en: "Supplier Decision",
-      uk: "Вибір постачальника",
-      pl: "Wybór dostawcy",
-    },
-    short: "SUP",
-  },
-];
-
-const COMPANY_NAV_ITEMS: PrototypeNavItem[] = [
-  {
-    href: "/wsp-demand-forecast",
-    label: {
-      en: "WSP Demand Forecast",
-      uk: "WSP прогноз попиту",
-      pl: "WSP prognoza popytu",
-    },
-    short: "WSP",
-  },
-  {
-    href: "/vive-production-intelligence",
-    label: {
-      en: "VIVE Production Intelligence",
-      uk: "VIVE виробнича інтелігенція",
-      pl: "VIVE Production Intelligence",
-    },
-    short: "VIVE",
-  },
-];
 
 const LOCALE_SWITCHER: Locale[] = ["en", "uk", "pl"];
-const LOCALE_SHORT_LABEL: Record<Locale, string> = {
-  en: "EN",
-  pl: "PL",
-  uk: "UA",
-};
-const COMPANY_MENU_LABEL: Record<Locale, string> = {
-  en: "Company-specific demonstrators",
-  pl: "Demonstratory firmowe",
-  uk: "Демонстратори для компаній",
-};
-
+const LOCALE_SHORT_LABEL: Record<Locale, string> = { en: "EN", pl: "PL", uk: "UA" };
 const THEME_CLASS = {
   cyan: "text-cyan-300 bg-cyan-300/10 border-cyan-300/20",
   violet: "text-violet-300 bg-violet-300/10 border-violet-300/20",
@@ -113,184 +29,57 @@ const THEME_CLASS = {
   rose: "text-rose-300 bg-rose-300/10 border-rose-300/20",
 } as const;
 
-export function PrototypeShell({
-  locale,
-  children,
-  theme = "cyan",
-}: PrototypeShellProps) {
+export function PrototypeShell({ locale, children, theme = "cyan" }: PrototypeShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [isCompanyMenuOpen, setCompanyMenuOpen] = useState(false);
   const activeNavRef = useRef<HTMLAnchorElement>(null);
-  const companyMenuRef = useRef<HTMLDivElement>(null);
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
   const themeClass = THEME_CLASS[theme];
+  const navItems = observableUseCases();
 
-  function isActivePath(itemHref: string) {
-    return (
-      normalizedPath === itemHref ||
-      (itemHref !== "/" && normalizedPath.startsWith(`${itemHref}/`))
-    );
-  }
+  const isActivePath = (href: string) => normalizedPath === href || normalizedPath.startsWith(`${href}/`);
+  const activeItem = navItems.find((item) => isActivePath(item.route));
 
   useEffect(() => {
-    activeNavRef.current?.scrollIntoView({
-      block: "nearest",
-      inline: "nearest",
-    });
+    activeNavRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [normalizedPath]);
-
-  useEffect(() => {
-    if (!isCompanyMenuOpen) {
-      return;
-    }
-
-    function handlePointerDown(event: MouseEvent) {
-      if (!companyMenuRef.current?.contains(event.target as Node)) {
-        setCompanyMenuOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setCompanyMenuOpen(false);
-      }
-    }
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isCompanyMenuOpen]);
 
   function changeLocale(next: Locale) {
     if (next === locale) return;
-    setCompanyMenuOpen(false);
-    startTransition(() =>
-      router.replace(buildLocalePath(normalizedPath, next)),
+    startTransition(() => router.replace(buildLocalePath(normalizedPath, next)));
+  }
+
+  const renderNav = () => navItems.map((item) => {
+    const active = isActivePath(item.route);
+    return (
+      <Link
+        ref={active ? activeNavRef : undefined}
+        key={item.id}
+        href={buildLocalePath(item.route, locale)}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "flex h-9 shrink-0 items-center rounded-lg border border-transparent px-3 text-sm font-medium leading-none transition",
+          active ? themeClass : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+        )}
+      >
+        <span className="whitespace-nowrap">{item.title[locale]}</span>
+      </Link>
     );
-  }
-
-  const activeItem = [...GENERAL_NAV_ITEMS, ...COMPANY_NAV_ITEMS].find((item) =>
-    isActivePath(item.href),
-  );
-  const activeCompanyItem = COMPANY_NAV_ITEMS.find((item) =>
-    isActivePath(item.href),
-  );
-
-  function renderNav(items: PrototypeNavItem[]) {
-    return items.map((item) => {
-      const active = isActivePath(item.href);
-      return (
-        <Link
-          ref={active ? activeNavRef : undefined}
-          key={item.href}
-          href={buildLocalePath(item.href, locale)}
-          aria-current={active ? "page" : undefined}
-          onClick={() => setCompanyMenuOpen(false)}
-          className={cn(
-            "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 text-xs font-medium leading-none transition",
-            active
-              ? cn(themeClass)
-              : "text-slate-500 hover:bg-white/5 hover:text-slate-200",
-          )}
-        >
-          <span className="w-7 text-center font-mono text-[9px] leading-none opacity-50">
-            {item.short}
-          </span>
-          <span className="whitespace-nowrap">{item.label[locale]}</span>
-        </Link>
-      );
-    });
-  }
+  });
 
   return (
-    <div
-      className="observatory-shell min-h-screen text-white"
-      data-prototype-theme={theme}
-    >
+    <div className="observatory-shell min-h-screen text-white" data-prototype-theme={theme}>
       <header className="product-header observatory-header">
         <div className="product-header-inner observatory-header-inner">
-          <ProductLockup
-            href={buildLocalePath("/", locale)}
-            onClick={() => setCompanyMenuOpen(false)}
-            product="Observatory"
-          />
+          <ProductLockup href={buildLocalePath("/", locale)} product="Observatory" />
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
-          <nav
-            className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex"
-            aria-label="Prototype navigation"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {renderNav(GENERAL_NAV_ITEMS)}
+          <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex" aria-label="Observatory applications" style={{ scrollbarWidth: "none" }}>
+            {renderNav()}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Link href={studioHref()} className="product-switch-link observatory-studio-link">
-              Studio
-            </Link>
-            <div ref={companyMenuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setCompanyMenuOpen((current) => !current)}
-                aria-label={COMPANY_MENU_LABEL[locale]}
-                aria-expanded={isCompanyMenuOpen}
-                aria-haspopup="menu"
-                title={COMPANY_MENU_LABEL[locale]}
-                className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-lg border text-slate-500 transition hover:bg-white/5 hover:text-slate-200",
-                  isCompanyMenuOpen || activeCompanyItem
-                    ? themeClass
-                    : "border-white/8 bg-white/[0.03]",
-                )}
-              >
-                <Building2 className="h-4 w-4" />
-                <span className="sr-only">{COMPANY_MENU_LABEL[locale]}</span>
-              </button>
-              {isCompanyMenuOpen && (
-                <div
-                  role="menu"
-                  aria-label={COMPANY_MENU_LABEL[locale]}
-                  className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl"
-                >
-                  <div className="space-y-1">
-                    {COMPANY_NAV_ITEMS.map((item) => {
-                      const active = isActivePath(item.href);
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={buildLocalePath(item.href, locale)}
-                          role="menuitem"
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => setCompanyMenuOpen(false)}
-                          className={cn(
-                            "flex items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm transition",
-                            active
-                              ? themeClass
-                              : "text-slate-300 hover:bg-white/5 hover:text-white",
-                          )}
-                        >
-                          <span className="w-10 text-center font-mono text-[10px] uppercase tracking-[0.12em] opacity-60">
-                            {item.short}
-                          </span>
-                          <span className="whitespace-nowrap">
-                            {item.label[locale]}
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div
-              className="flex items-center gap-0.5 rounded-lg border border-white/8 bg-white/[0.03] p-1"
-              aria-label="Language"
-            >
+            <Link href={studioHref()} className="product-switch-link observatory-studio-link">Studio</Link>
+            <div className="flex items-center gap-0.5 rounded-lg border border-white/8 bg-white/[0.03] p-1" aria-label="Language">
               {LOCALE_SWITCHER.map((option) => (
                 <button
                   key={option}
@@ -300,10 +89,8 @@ export function PrototypeShell({
                   aria-current={option === locale ? "page" : undefined}
                   aria-label={`Switch language to ${option}`}
                   className={cn(
-                    "min-h-8 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider leading-none transition",
-                    option === locale
-                      ? "bg-white/10 text-white"
-                      : "text-slate-600 hover:text-slate-300",
+                    "min-h-8 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wider leading-none transition",
+                    option === locale ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-200",
                   )}
                 >
                   {LOCALE_SHORT_LABEL[option]}
@@ -313,24 +100,16 @@ export function PrototypeShell({
           </div>
         </div>
         <div className="border-t border-white/5 lg:hidden">
-          <div
-            className="mx-auto flex w-full max-w-[1700px] gap-1 overflow-x-auto px-4 py-2 md:px-6"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {renderNav(GENERAL_NAV_ITEMS)}
+          <div className="mx-auto flex w-full max-w-[1700px] gap-1 overflow-x-auto px-4 py-2 md:px-6" style={{ scrollbarWidth: "none" }}>
+            {renderNav()}
           </div>
         </div>
       </header>
       <div className="observatory-stage mx-auto w-full max-w-[1700px] px-0">
-        <div
-          className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 leading-none md:px-6 xl:px-10"
-          aria-label="Breadcrumb"
-        >
-          <Home className="relative -top-px h-3 w-3 shrink-0 text-slate-600" />
-          <ChevronRight className="relative -top-px h-3 w-3 shrink-0 text-slate-700" />
-          <span className="truncate leading-none">
-            {activeItem?.label[locale] ?? "Prototype"}
-          </span>
+        <div className="flex h-10 items-center gap-1 px-4 text-xs font-medium uppercase tracking-[0.16em] text-slate-400 leading-none md:px-6 xl:px-10" aria-label="Breadcrumb">
+          <Home className="relative -top-px h-3 w-3 shrink-0 text-slate-500" />
+          <ChevronRight className="relative -top-px h-3 w-3 shrink-0 text-slate-600" />
+          <span className="truncate leading-none">{activeItem?.title[locale] ?? "Observatory"}</span>
         </div>
         <div className="prototype-shell-content" id="main-content" tabIndex={-1}>{children}</div>
       </div>
