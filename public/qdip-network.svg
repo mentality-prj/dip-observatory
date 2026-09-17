@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <symbol id="cube" viewBox="-18 -18 36 36">
+      <path d="M0-16 14-8v16L0 16-14 8V-8Z"/>
+      <path d="M-14-8 0 0l14-8M0 0v16"/>
+    </symbol>
+  </defs>
+  <g fill="none" stroke="#a9345b" stroke-linecap="round" stroke-width="1.2" opacity=".2">
+    <path d="M-40 188 126 116 286 224 438 82 598 178 756 92 914 216 1082 104 1260 188 1480 74"/>
+    <path d="M-30 522 142 426 318 548 486 382 662 502 842 348 1018 494 1194 356 1470 462"/>
+    <path d="M-20 820 170 700 350 806 528 656 710 778 896 624 1074 754 1252 614 1470 714"/>
+    <path d="M126 116 142 426 170 700M286 224l32 324 32 258M438 82l48 300 42 274M598 178l64 324 48 276M756 92l86 256 54 276M914 216l104 278 56 260M1082 104l112 252 58 258M1260 188l-66 168 58 258"/>
+    <path d="M126 116 318 548 528 656M286 224 486 382 710 778M438 82 662 502 896 624M598 178 842 348 1074 754M756 92 1018 494 1252 614M914 216 1194 356 1470 714"/>
+    <path d="M-30 522 286 224 598 178 842 348 1082 104 1470 462M142 426 438 82 662 502 914 216 1194 356 1480 74" opacity=".58"/>
+  </g>
+  <g fill="none" stroke="#b84a6b" stroke-width="1.3" opacity=".34">
+    <use href="#cube" x="108" y="98" width="36" height="36"/>
+    <use href="#cube" x="268" y="206" width="36" height="36"/>
+    <use href="#cube" x="418" y="62" width="40" height="40"/>
+    <use href="#cube" x="580" y="160" width="36" height="36"/>
+    <use href="#cube" x="734" y="70" width="44" height="44"/>
+    <use href="#cube" x="896" y="198" width="36" height="36"/>
+    <use href="#cube" x="1064" y="86" width="36" height="36"/>
+    <use href="#cube" x="1242" y="170" width="36" height="36"/>
+    <use href="#cube" x="124" y="408" width="36" height="36"/>
+    <use href="#cube" x="300" y="530" width="36" height="36"/>
+    <use href="#cube" x="468" y="364" width="36" height="36"/>
+    <use href="#cube" x="640" y="480" width="44" height="44"/>
+    <use href="#cube" x="824" y="330" width="36" height="36"/>
+    <use href="#cube" x="1000" y="476" width="36" height="36"/>
+    <use href="#cube" x="1176" y="338" width="36" height="36"/>
+    <use href="#cube" x="152" y="682" width="36" height="36"/>
+    <use href="#cube" x="332" y="788" width="36" height="36"/>
+    <use href="#cube" x="510" y="638" width="36" height="36"/>
+    <use href="#cube" x="692" y="760" width="36" height="36"/>
+    <use href="#cube" x="878" y="606" width="36" height="36"/>
+    <use href="#cube" x="1056" y="736" width="36" height="36"/>
+    <use href="#cube" x="1234" y="596" width="36" height="36"/>
+  </g>
+  <g fill="#d97757" opacity=".42">
+    <circle cx="756" cy="92" r="3"/>
+    <circle cx="662" cy="502" r="4"/>
+    <circle cx="1082" cy="104" r="3"/>
+  </g>
+</svg>

@@ -32,10 +32,12 @@ body::before {
 	position: fixed;
 	inset: 0;
 	pointer-events: none;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%23a9345b' stroke-opacity='.16' stroke-width='1'%3E%3Cpath d='m80 50 18 10v21L80 92 62 81V60Z'/%3E%3Cpath d='m62 60 18 11 18-11M80 71v21'/%3E%3C/g%3E%3Ccircle cx='80' cy='71' r='2' fill='%23d97757' fill-opacity='.18'/%3E%3C/svg%3E");
-	background-size: 160px 160px;
-	mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
-	opacity: .72;
+	background-image: url("/qdip-network.svg");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	mask-image: radial-gradient(ellipse at center, black 30%, rgba(0, 0, 0, .78) 68%, transparent 100%);
+	opacity: .68;
 }
 
 body::after {
