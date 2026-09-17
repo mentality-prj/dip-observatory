@@ -35,7 +35,7 @@ const demos = [
     domain: "ENERGY",
     href: observatoryHref("en/gas-forecast"),
     icon: BarChart3,
-    accent: "lime",
+    accent: "indigo",
   },
   {
     title: "Production replanning",
@@ -80,7 +80,7 @@ const demos = [
     domain: "PLATFORM",
     href: observatoryHref("en/scenarios"),
     icon: GitBranch,
-    accent: "emerald",
+    accent: "azure",
   },
 ] as const;
 
@@ -182,7 +182,7 @@ export function QdipSite() {
             </div>
             <div className={styles.alternatives}>
               <div>
-                <span><i className={styles.greenDot} /> Reroute supply</span>
+                <span><i className={styles.signalDot} /> Reroute supply</span>
                 <strong>82.4</strong>
                 <small>RECOMMENDED</small>
               </div>
