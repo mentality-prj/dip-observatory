@@ -311,7 +311,7 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold tracking-[0.22em] uppercase text-cyan-400">
-                QDIP Observatory
+                qdip Observatory
               </span>
             </div>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">

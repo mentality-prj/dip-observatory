@@ -5,11 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://qdip.ai"),
   title: {
-    default: "QDIP — Quality-driven Decision Intelligence Platform",
-    template: "%s · QDIP",
+    default: "qdip — Quality-driven Decision Intelligence Platform",
+    template: "%s · qdip",
   },
   description:
-    "QDIP connects decision authoring, governed execution and observable outcomes across Studio, Engine and Observatory.",
+    "qdip connects decision authoring, governed execution and observable outcomes across Studio, Engine and Observatory.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -35,3 +35,14 @@ test("leaves the QDIP marketing site unchanged", () => {
 
   assert.equal(isRewrite(response), false);
 });
+
+test("routes localized marketing URLs without affecting Observatory locales", () => {
+  const ukrainianSite = proxy(request("qdip.ai", "/uk"));
+  const polishObservatory = proxy(request("observatory.qdip.ai", "/pl"));
+
+  assert.equal(
+    new URL(getRewrittenUrl(ukrainianSite)!).pathname,
+    "/platform/uk",
+  );
+  assert.equal(isRewrite(polishObservatory), false);
+});

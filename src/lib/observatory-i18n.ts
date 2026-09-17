@@ -1159,10 +1159,10 @@ export function getLocaleMetadata(locale: Locale) {
   return {
     title:
       locale === "uk"
-        ? "QDIP Observatory | Український інтерфейс"
+        ? "qdip Observatory | Український інтерфейс"
         : locale === "pl"
-          ? "QDIP Observatory | Polski interfejs"
-          : "QDIP Observatory | English interface",
+          ? "qdip Observatory | Polski interfejs"
+          : "qdip Observatory | English interface",
     description: copy.shell.description,
   };
 }

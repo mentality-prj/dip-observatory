@@ -9,6 +9,7 @@ One Next.js application serving the QDIP product family:
 | `observatory.qdip.ai` | Demonstrators and decision audit | `/en`, `/pl`, `/observatory/decisions` |
 
 Host-based rewrites live in `src/proxy.ts`. During local development, Studio remains available at `/studio` and Observatory at `/en`.
+The marketing site is localized at `/en`, `/uk`, and `/pl`; these paths are rewritten to the internal `/platform/[locale]` route only on the main `qdip.ai` host.
 
 ## Local development
 

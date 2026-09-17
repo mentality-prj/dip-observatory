@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 import "@/studio/studio.css";
 import { observatoryHref, studioHref } from "@/lib/platform-urls";
 
-export const metadata = { title: "QDIP Studio" };
+export const metadata = { title: "qdip Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return <div className="studio-shell">
-    <aside className="studio-sidebar"><Link className="studio-brand" href={studioHref()}>QDIP <span>Decision Studio</span></Link>
+    <aside className="studio-sidebar"><Link className="studio-brand" href={studioHref()}>qdip <span>Decision Studio</span></Link>
       <p>Define how decisions are evaluated.</p>
       <nav aria-label="Decision Studio">
         <Link href={studioHref("profiles")}>Decision Profiles</Link>
