@@ -1,6 +1,14 @@
-import { findUseCaseByPlugin } from "@/use-cases/registry";
+"use client";
+
+import dynamic from "next/dynamic";
+import { findUseCaseByPlugin, type StudioRendererId } from "@/use-cases/registry";
 import type { Audit } from "./contracts";
-import { GasForecastPanel } from "./gas-forecast-panel";
+
+const studioRenderers: Record<StudioRendererId, React.ComponentType<{ audit: Audit }>> = {
+  "gas-forecast": dynamic(() => import("@/use-cases/gas-forecast/studio-panel"), {
+    loading: () => <section className="studio-card"><p role="status">Loading application view…</p></section>,
+  }),
+};
 
 function GenericDecisionPanel({ audit }: { audit: Audit }) {
   return <section className="studio-card">
@@ -12,17 +20,10 @@ function GenericDecisionPanel({ audit }: { audit: Audit }) {
   </section>;
 }
 
-/**
- * Studio extension point for application-specific decision presentation.
- * A new plugin works immediately with GenericDecisionPanel. Specialized UX is
- * opt-in through `studioRenderer` in src/use-cases/registry.ts.
- */
 export function StudioUseCasePanel({ audit }: { audit: Audit }) {
   const useCase = findUseCaseByPlugin(audit.profile.plugin_id, audit.profile.capability_id);
-  switch (useCase?.plugin?.studioRenderer) {
-    case "gas-forecast":
-      return <GasForecastPanel audit={audit} />;
-    default:
-      return <GenericDecisionPanel audit={audit} />;
-  }
+  const rendererId = useCase?.presentation.studioRenderer;
+  if (!rendererId) return <GenericDecisionPanel audit={audit} />;
+  const Renderer = studioRenderers[rendererId];
+  return <Renderer audit={audit} />;
 }
