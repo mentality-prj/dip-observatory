@@ -1,0 +1,1 @@
+Temporary integration note: ResourceAllocationAlternatives is the presentation component for outcome-distinct weekly plans. The workspace should replace its legacy section 05 card markup with this component and preserve selectedAlternative/setSelectedAlternative semantics. Remove this note when the workspace is decomposed.
