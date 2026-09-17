@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
 import { QdipLogo } from "@/components/marketing/qdip-logo";
-import { marketingHref, observatoryHref, studioHref } from "@/lib/platform-urls";
+import { marketingHref, observatoryHref } from "@/lib/platform-urls";
+import { StudioNav } from "@/studio/studio-nav";
 
 export const metadata = { title: "qdip Studio" };
 
@@ -17,17 +18,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         <small>DECISION SYSTEM WORKSPACE</small>
         <p>Design how governed decisions are evaluated, explained and reproduced.</p>
       </div>
-      <nav aria-label="Decision Studio">
-        <span className="studio-nav-label">DESIGN</span>
-        <Link href={studioHref("profiles")}><i>01</i><span>Decision Profiles</span></Link>
-        <span className="studio-nav-label">REGISTRIES</span>
-        <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
-          <strong>Plugin Registry</strong>
-          <Link href={studioHref("plugins")}><i>02</i><span>Plugins &amp; Capabilities</span></Link>
-          <Link href={studioHref("bindings")}><i>03</i><span>Output Bindings</span></Link>
-        </div>
-        <Link href={studioHref("dimensions")}><i>04</i><span>Dimension Registry</span></Link>
-      </nav>
+      <StudioNav />
       <div className="studio-sidebar-footer">
         <Link className="studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory <span>↗</span></Link>
         <small>qdip decision intelligence</small>
