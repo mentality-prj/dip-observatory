@@ -37,7 +37,7 @@ body::before {
 	background-repeat: no-repeat;
 	background-size: cover;
 	mask-image: radial-gradient(ellipse at center, black 30%, rgba(0, 0, 0, .78) 68%, transparent 100%);
-	opacity: .68;
+	opacity: .48;
 }
 
 body::after {
