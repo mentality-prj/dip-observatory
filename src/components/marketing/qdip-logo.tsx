@@ -8,10 +8,10 @@ export function QdipLogo({ inverse = false }: { inverse?: boolean }) {
         alt=""
         aria-hidden="true"
         className={styles.logoWordmark}
-        height={926}
+        height={311}
         priority
         src="/qdip-logo.png"
-        width={1699}
+        width={720}
       />
     </span>
   );
