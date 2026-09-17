@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 import {
-  marketingHref,
+  marketingLocaleHref,
   observatoryHref,
   studioHref,
 } from "@/lib/platform-urls";
@@ -96,7 +96,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
     <main className={styles.site} lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link aria-label="qdip home" href={marketingHref(locale)}>
+          <Link aria-label="qdip home" href={marketingLocaleHref(locale)}>
             <QdipLogo />
           </Link>
           <nav aria-label="Primary navigation" className={styles.nav}>
@@ -110,7 +110,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
               {marketingLocales.map((item) => (
                 <Link
                   aria-current={locale === item ? "page" : undefined}
-                  href={marketingHref(item)}
+                  href={marketingLocaleHref(item)}
                   key={item}
                 >
                   {localeLabels[item]}
