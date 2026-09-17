@@ -32,8 +32,29 @@ function evidenceText(value: unknown, locale: UiLocale): string {
   const metricValue = percentage ? ` = ${Math.round(rawValue * 100)}%` : typeof rawValue === "number" || typeof rawValue === "string" ? ` = ${rawValue}` : "";
   return `${day}${metric}${metricValue}`;
 }
+function visibleOutcomeKey(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "invalid";
+  const plan = value as Record<string, unknown>;
+  const metrics = plan.aggregate_metrics && typeof plan.aggregate_metrics === "object" ? plan.aggregate_metrics as Record<string, unknown> : {};
+  const summary = plan.demand_summary && typeof plan.demand_summary === "object" ? plan.demand_summary as Record<string, unknown> : {};
+  const priorityCoverage = typeof metrics.priority_coverage === "number" ? Math.round(metrics.priority_coverage * 100) : "na";
+  return `${priorityCoverage}|${String(summary.served ?? "na")}|${String(summary.closing_unmet ?? "na")}`;
+}
+function distinctAlternatives(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const result = { ...(value as Record<string, unknown>) };
+  if (!Array.isArray(result.alternatives)) return result;
+  const seen = new Set<string>();
+  result.alternatives = result.alternatives.filter((plan) => {
+    const key = visibleOutcomeKey(plan);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 4);
+  return result;
+}
 function normalizeEvidence(payload: Record<string, unknown>, locale: UiLocale): Record<string, unknown> {
-  const normalizeResult = (value: unknown): unknown => { if (!value || typeof value !== "object" || Array.isArray(value)) return value; const result = { ...(value as Record<string, unknown>) }; if (Array.isArray(result.evidence)) result.evidence = result.evidence.map((item) => evidenceText(item, locale)); return result; };
+  const normalizeResult = (value: unknown): unknown => { if (!value || typeof value !== "object" || Array.isArray(value)) return value; const result = { ...(distinctAlternatives(value) as Record<string, unknown>) }; if (Array.isArray(result.evidence)) result.evidence = result.evidence.map((item) => evidenceText(item, locale)); return result; };
   const normalized = { ...payload };
   if (normalized.operation === "simulate" && normalized.result) normalized.result = normalizeResult(normalized.result); else Object.assign(normalized, normalizeResult(normalized));
   return normalized;
