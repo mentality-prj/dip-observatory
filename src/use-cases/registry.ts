@@ -1,9 +1,8 @@
 import type { Locale } from "@/lib/observatory-i18n";
-import type { PrototypeTheme } from "@/components/observatory/prototype-shell";
 
 export type LocalizedText = Record<Locale, string>;
 export type UseCaseIcon = "building" | "factory" | "heart" | "sparkles" | "users";
-export type UseCaseTheme = PrototypeTheme;
+export type UseCaseTheme = "cyan" | "violet" | "amber" | "emerald" | "rose";
 export type StudioRendererId = "gas-forecast";
 
 export type DipUseCase = {
@@ -27,8 +26,6 @@ export const DIP_USE_CASES: readonly DipUseCase[] = [
   { id: "production-replanning", route: "/production-replanning", navigation: visible(50), title: { en: "Production Replanning", uk: "Перепланування виробництва", pl: "Przeplanowanie produkcji" }, description: { en: "Real-time disruption response and production replanning.", uk: "Реакція на збої та перепланування виробництва в реальному часі.", pl: "Reakcja na zakłócenia i przeplanowanie produkcji w czasie rzeczywistym." }, tag: { en: "PRODUCTION", uk: "ВИРОБНИЦТВО", pl: "PRODUKCJA" }, presentation: { icon: "factory", theme: "amber" } },
   { id: "production-scheduling", route: "/production-scheduling", navigation: visible(60), title: { en: "Production Scheduling", uk: "Планування виробництва", pl: "Planowanie produkcji" }, description: { en: "Capacity, deadlines and disruptions in an interactive scheduling decision lab.", uk: "Потужності, терміни та збої в інтерактивній лабораторії планування.", pl: "Moce, terminy i zakłócenia w interaktywnym laboratorium planowania." }, tag: { en: "PRODUCTION", uk: "ВИРОБНИЦТВО", pl: "PRODUKCJA" }, presentation: { icon: "factory", theme: "cyan" } },
   { id: "supplier-decision", route: "/supplier-decision", navigation: visible(70), title: { en: "Supplier Decision", uk: "Вибір постачальника", pl: "Wybór dostawcy" }, description: { en: "Multi-criteria supplier evaluation with explicit constraints and alternatives.", uk: "Багатокритеріальна оцінка постачальників з явними обмеженнями та альтернативами.", pl: "Wielokryterialna ocena dostawców z jawnymi ograniczeniami i alternatywami." }, tag: { en: "SUPPLY", uk: "ПОСТАЧАННЯ", pl: "DOSTAWY" }, presentation: { icon: "building", theme: "emerald" } },
-  { id: "wsp-demand-forecast", route: "/wsp-demand-forecast", navigation: visible(80), title: { en: "WSP Demand Forecast", uk: "WSP прогноз попиту", pl: "WSP prognoza popytu" }, description: { en: "Company-specific demand forecasting demonstrator.", uk: "Демонстратор прогнозування попиту для конкретної компанії.", pl: "Demonstrator prognozowania popytu dla konkretnej firmy." }, tag: { en: "PARTNER", uk: "ПАРТНЕР", pl: "PARTNER" }, presentation: { icon: "building", theme: "cyan" }, plugin: { id: "wsp-demand-forecast", capability: "wsp.demand.forecast" } },
-  { id: "vive-production-intelligence", route: "/vive-production-intelligence", navigation: visible(90), title: { en: "VIVE Production Intelligence", uk: "VIVE виробничі рішення", pl: "VIVE Production Intelligence" }, description: { en: "Production and logistics bottleneck, propagation and what-if decision demonstrator.", uk: "Демонстратор виробничих і логістичних вузьких місць, поширення ризику та what-if рішень.", pl: "Demonstrator wąskich gardeł produkcji i logistyki, propagacji ryzyka oraz decyzji what-if." }, tag: { en: "PARTNER", uk: "ПАРТНЕР", pl: "PARTNER" }, presentation: { icon: "building", theme: "emerald" } },
 ] as const;
 
 export const observableUseCases = () => DIP_USE_CASES.filter((item) => item.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order);
