@@ -43,7 +43,7 @@
 .logo[data-inverse] { color: white; }
 .logoWordmark { width: 91px; height: 39px; overflow: visible; }
 .wordmarkStroke { fill: none; stroke: currentColor; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
-.wordmarkDot { fill: var(--signal); }
+.wordmarkDot { fill: var(--signal, #d97757); }
 
 .nav { display: flex; align-items: center; gap: 30px; }
 .nav a, .textLink {
