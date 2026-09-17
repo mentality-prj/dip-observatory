@@ -1,0 +1,43 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { ArrowUpRight, FileUp, Search } from "lucide-react";
+
+type Customer = Record<string, unknown>;
+type Result = { customer_id:string; company_name:string; decision:string; opportunity_score:number; uncertainty:number; expected_effect_eur:number|null; explanation:string[]; missing_information:string[]; signals:Record<string,number> };
+
+type ApiResult = { results: Result[]; counts: Record<string, number> };
+
+const numeric = new Set(["employee_count","revenue_eur","decision_process_intensity","manual_process_level","data_availability","ai_maturity","problem_evidence_strength","estimated_problem_cost_eur","expected_dip_impact","strategic_fit"]);
+const booleans = new Set(["existing_decision_system","decision_maker_identified","contact_available","previous_contact"]);
+const required = ["customer_id","company_name","country","industry","problem_evidence_strength","strategic_fit"];
+
+function parseCsv(text:string): Customer[] {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) throw new Error("CSV must contain a header and at least one customer.");
+  const split = (line:string) => { const out:string[]=[]; let value="", quoted=false; for(let i=0;i<line.length;i++){ const c=line[i]; if(c==='"'){ if(quoted && line[i+1]==='"'){value+='"';i++;} else quoted=!quoted; } else if(c===','&&!quoted){out.push(value.trim());value="";} else value+=c; } out.push(value.trim()); return out; };
+  const headers=split(lines[0]);
+  for(const field of required) if(!headers.includes(field)) throw new Error(`Missing required column: ${field}`);
+  return lines.slice(1).map((line) => Object.fromEntries(split(line).map((raw,i) => {
+    const key=headers[i]; if(!key) return [String(i),raw];
+    if(raw==="") return [key,null];
+    if(numeric.has(key)) { const n=Number(raw); if(!Number.isFinite(n)) throw new Error(`Invalid number in ${key}`); return [key,n]; }
+    if(booleans.has(key)) return [key,raw.toLowerCase()==="true"];
+    return [key,raw];
+  })));
+}
+
+export function CustomerOpportunityLab() {
+  const [customers,setCustomers]=useState<Customer[]>([]); const [data,setData]=useState<ApiResult|null>(null); const [error,setError]=useState<string|null>(null); const [loading,setLoading]=useState(false); const [query,setQuery]=useState("");
+  const visible=useMemo(()=>data?.results.filter(r=>r.company_name.toLowerCase().includes(query.toLowerCase()))??[],[data,query]);
+  async function load(file:File){ try{setError(null);setData(null);setCustomers(parseCsv(await file.text()));}catch(e){setError(e instanceof Error?e.message:"Invalid CSV");} }
+  async function evaluate(){setLoading(true);setError(null);try{const res=await fetch("/api/customer-opportunities/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customers})});const body=await res.json();if(!res.ok)throw new Error(body.error??"DIP evaluation failed");setData(body);}catch(e){setError(e instanceof Error?e.message:"DIP evaluation failed");}finally{setLoading(false);}}
+  return <main className="min-h-screen bg-slate-950 px-4 py-10 text-white md:px-8"><div className="mx-auto max-w-[1500px]">
+    <div className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-300">QDIP · COMMERCIAL DECISION LAB</div><h1 className="mt-4 text-4xl font-semibold tracking-[-.04em] md:text-6xl">Customer Opportunities</h1><p className="mt-4 max-w-3xl text-slate-400">Prioritize outreach using problem evidence, feasibility, strategic fit and explicit uncertainty. Opportunity is a decision signal, not a purchase probability.</p>
+    <section className="mt-8 grid gap-4 lg:grid-cols-[1fr_auto]"><label className="flex cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-white/15 bg-white/[.035] p-5 hover:border-cyan-300/40"><FileUp className="h-5 w-5 text-cyan-300"/><span><b>Import customer CSV</b><span className="block text-sm text-slate-500">Required: customer_id, company_name, country, industry, problem_evidence_strength, strategic_fit</span></span><input className="sr-only" type="file" accept=".csv,text/csv" onChange={e=>e.target.files?.[0]&&load(e.target.files[0])}/></label><button disabled={!customers.length||loading} onClick={evaluate} className="rounded-2xl bg-cyan-300 px-7 py-4 font-semibold text-slate-950 disabled:opacity-40">{loading?"Evaluating…":`Evaluate ${customers.length||""} customers`}</button></section>
+    {error&&<div role="alert" className="mt-4 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">{error}</div>}
+    {data&&<><section className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">{["CONTACT_NOW","RESEARCH_FIRST","DEFER","SKIP"].map(k=><div key={k} className="rounded-2xl border border-white/10 bg-white/[.035] p-5"><div className="text-3xl font-semibold">{data.counts[k]??0}</div><div className="mt-1 text-xs tracking-wider text-slate-500">{k.replaceAll("_"," ")}</div></div>)}</section>
+    <div className="mt-8 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] px-4"><Search className="h-4 w-4 text-slate-500"/><input aria-label="Search companies" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search companies" className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-slate-600"/></div>
+    <section className="mt-4 space-y-3">{visible.map((r,index)=><details key={r.customer_id} className="group rounded-2xl border border-white/10 bg-white/[.035] p-5"><summary className="grid cursor-pointer list-none gap-3 md:grid-cols-[3rem_1fr_10rem_8rem_8rem_auto] md:items-center"><span className="text-slate-600">#{index+1}</span><span className="font-semibold">{r.company_name}</span><span className="text-xs font-semibold text-cyan-300">{r.decision.replaceAll("_"," ")}</span><span><b>{Math.round(r.opportunity_score*100)}%</b><small className="block text-slate-600">opportunity</small></span><span><b>{Math.round(r.uncertainty*100)}%</b><small className="block text-slate-600">uncertainty</small></span><ArrowUpRight className="h-4 w-4 text-slate-600"/></summary><div className="mt-5 grid gap-5 border-t border-white/10 pt-5 md:grid-cols-3"><div><h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Why</h3>{r.explanation.map(x=><p key={x} className="mt-2 text-sm text-slate-300">{x}</p>)}</div><div><h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Missing information</h3>{r.missing_information.length?r.missing_information.map(x=><p key={x} className="mt-2 text-sm text-slate-400">{x}</p>):<p className="mt-2 text-sm text-slate-500">No material gaps.</p>}</div><div><h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Expected effect</h3><p className="mt-2 text-2xl font-semibold">{r.expected_effect_eur==null?"Unknown":new Intl.NumberFormat("en",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(r.expected_effect_eur)}</p></div></div></details>)}</section></>}
+  </div></main>;
+}
