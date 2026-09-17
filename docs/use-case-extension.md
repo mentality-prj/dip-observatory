@@ -1,28 +1,33 @@
-# QDIP use-case extension contract
+# QDIP application extension contract
 
-`src/use-cases/registry.ts` is the frontend manifest for applications built on DIP plugins. Observatory discovery and Studio presentation must resolve through this manifest rather than checking plugin IDs in page components.
+`src/use-cases/registry.ts` is the single frontend application manifest. Routing metadata, Observatory discovery/navigation, visual theme and DIP plugin/capability association belong here. Infrastructure must not branch on concrete plugin IDs.
 
-## Add a new application
+## Application boundary
 
-1. Implement the DIP plugin and expose its capability through the plugin registry.
-2. Add the application frontend route under `src/app/[locale]/<route>` (the application can keep its own components and API adapter).
-3. Add one `DipUseCase` entry to `DIP_USE_CASES` with localized catalog copy and route.
-4. If the application is backed by a DIP plugin, declare `plugin.id` and `plugin.capability`. Studio then recognizes the application while continuing to use the generic Decision Profile / dimensions / bindings configuration flow.
-5. Do **not** add plugin-ID conditionals to `DecisionAuditView`. Generic decision rendering is the default. If a domain genuinely needs a richer audit presentation, add a renderer to `StudioUseCasePanel` and opt into it through `plugin.studioRenderer`.
+Each domain-specific frontend belongs under `src/use-cases/<id>/`. Domain presentation must not live in `src/studio` or generic Observatory components. Specialized Studio audit renderers are lazy-loaded so domain code is excluded until required.
+
+## Add an application
+
+1. Implement/register the DIP plugin and capability when the application has domain execution.
+2. Implement the use-case frontend under `src/use-cases/<id>/` and expose it from its Next.js route.
+3. Add one `DipUseCase` manifest entry: route, navigation order/visibility, localized catalog metadata, theme, icon and optional plugin/capability binding.
+4. Generic Studio configuration and audit work automatically for plugin-backed applications.
+5. Only if domain-specific audit UX is necessary, add a lazy renderer adapter and set `presentation.studioRenderer` in the manifest.
 
 ## Responsibility boundaries
 
-- **DIP plugin:** execution, schemas, capabilities, outputs, domain rules and versioning.
-- **Decision Studio:** generic plugin discovery, Decision Profiles, dimensions, bindings, policies/constraints and evaluation configuration.
-- **Use-case registry:** frontend discovery metadata and optional presentation extension key.
-- **Observatory application:** interactive demonstrator for the use case.
+- **DIP plugin:** execution, schemas, capabilities, outputs, domain rules, versioning.
+- **Application manifest:** routing/discovery/navigation metadata, theme and plugin/capability association.
+- **Use-case package:** domain-specific Observatory frontend and optional specialized Studio presentation.
+- **Observatory infrastructure:** renders manifest-driven discovery and navigation.
+- **Decision Studio:** generic plugin discovery, profiles, dimensions, bindings, constraints and audit; delegates optional presentation to the application adapter.
 
-This keeps a new plugin usable in Studio without adding a bespoke Studio page. A specialized Observatory frontend remains optional: plugins can still be configured and audited generically.
+## Invariants
 
-## Current migration
+- No plugin-ID conditionals in `DecisionAuditView` or generic Observatory infrastructure.
+- No duplicated use-case lists for homepage/navigation/theme resolution.
+- Missing specialized renderer always falls back to generic Studio audit.
+- Specialized domain components are lazy-loaded.
+- A normal new application changes the DIP plugin, its isolated frontend package/route, and one manifest entry. Generic infrastructure stays unchanged.
 
-The Observatory home catalog now reads from the manifest. Gas Forecast remains the first specialized Studio renderer, but the audit view no longer knows about `gas-forecast`; it resolves the renderer through the manifest. All other plugins use the generic audit panel automatically.
-
-## Rule
-
-A use case should require changes in at most three places: DIP plugin, its Observatory route, and one manifest entry. A fourth change is allowed only for an optional specialized Studio renderer.
+Gas Forecast is the first migrated specialized Studio renderer and now lives under `src/use-cases/gas-forecast/` rather than `src/studio/`.
