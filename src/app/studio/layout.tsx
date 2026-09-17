@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
+import "@/studio/readability.css";
 import { ProductLockup } from "@/components/platform/product-lockup";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 import { StudioNav } from "@/studio/studio-nav";
@@ -12,9 +13,11 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
     <header className="product-header studio-header">
       <div className="product-header-inner studio-header-inner">
         <ProductLockup href={marketingHref("en")} product="Studio" />
+        <div className="hidden h-6 w-px shrink-0 bg-black/10 lg:block" />
+        <div className="min-w-0 flex-1" />
         <div className="studio-header-actions">
           <div className="studio-engine-status"><i /> Engine connected</div>
-          <Link className="product-switch-link studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory <span>↗</span></Link>
+          <Link className="product-switch-link studio-observatory-link" href={observatoryHref()}>Open Observatory <span>↗</span></Link>
         </div>
       </div>
     </header>
