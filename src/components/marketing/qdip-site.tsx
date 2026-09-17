@@ -35,7 +35,7 @@ const demos = [
     domain: "ENERGY",
     href: observatoryHref("en/gas-forecast"),
     icon: BarChart3,
-    accent: "indigo",
+    accent: "burgundy",
   },
   {
     title: "Production replanning",
@@ -53,7 +53,7 @@ const demos = [
     domain: "OPERATIONS",
     href: observatoryHref("en/resource-allocation"),
     icon: Network,
-    accent: "cyan",
+    accent: "copper",
   },
   {
     title: "Supplier decision",
@@ -80,7 +80,7 @@ const demos = [
     domain: "PLATFORM",
     href: observatoryHref("en/scenarios"),
     icon: GitBranch,
-    accent: "azure",
+    accent: "wine",
   },
 ] as const;
 
