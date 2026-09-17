@@ -1,4 +1,4 @@
-import type { Audit, DimensionResult } from "./contracts";
+import type { Audit, DimensionResult } from "@/studio/contracts";
 
 type GasSignals = {
   current_price_eur_mwh?: number;
@@ -38,8 +38,7 @@ function valueText(result?: DimensionResult): string {
   return JSON.stringify(result.value);
 }
 
-export function GasForecastPanel({ audit }: { audit: Audit }) {
-  if (audit.profile.plugin_id !== "gas-forecast" || audit.profile.capability_id !== "gas.forecast") return null;
+export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
   const signals = audit.plugin_outputs as GasSignals;
   const evidence = signals.evidence?.[0];
   const baseline = evidence?.model_status === "baseline";
@@ -73,7 +72,6 @@ export function GasForecastPanel({ audit }: { audit: Audit }) {
         <pre>{JSON.stringify({ data_quality: signals.data_quality, evidence: signals.evidence, provenance: signals.provenance }, null, 2)}</pre>
       </details>
     </section>
-
     <section className="studio-card"><h2>Procurement alternatives</h2>
       <div className="studio-table-wrap"><table className="studio-table"><thead><tr>
         <th>Alternative</th><th>Expected cost</th><th>Expected effect</th><th>Risk</th><th>Uncertainty</th><th>Constraints</th><th>Policy</th><th>Score</th>
@@ -82,10 +80,8 @@ export function GasForecastPanel({ audit }: { audit: Audit }) {
         const policy = dimension(alternative, "policy");
         return <tr key={alternative.alternative_id} className={audit.selected_alternative === alternative.alternative_id ? "gas-selected" : ""}>
           <td><strong>{alternative.alternative_id}</strong>{!alternative.feasible && <small className="gas-blocked">INFEASIBLE</small>}</td>
-          <td>{valueText(dimension(alternative, "cost"))}</td>
-          <td>{valueText(dimension(alternative, "expected_effect"))}</td>
-          <td>{valueText(dimension(alternative, "risk"))}</td>
-          <td>{valueText(dimension(alternative, "uncertainty"))}</td>
+          <td>{valueText(dimension(alternative, "cost"))}</td><td>{valueText(dimension(alternative, "expected_effect"))}</td>
+          <td>{valueText(dimension(alternative, "risk"))}</td><td>{valueText(dimension(alternative, "uncertainty"))}</td>
           <td>{constraints?.status ?? "—"}</td><td>{policy?.status ?? "—"}</td><td>{alternative.score?.toFixed(4) ?? "—"}</td>
         </tr>;
       })}</tbody></table></div>
