@@ -20,7 +20,7 @@ import type {
   MarketSnapshot,
   ValuationRange,
   CurveMetrics,
-} from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/domain";
 import { FuturesMispricingInputError } from "./types";
 
 // ---------------------------------------------------------------------------

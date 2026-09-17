@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const EIDOS_SUPPORTED_LOCALES = new Set(["en", "pl"]);
 const MARKETING_LOCALES = new Set(["en", "uk", "pl"]);
-const EIDOS_PATH_PATTERN = /^\/([^/]+)(\/eidos(?:\/.*)?)$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
 function requestHost(request: NextRequest) {
@@ -65,22 +63,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  const match = request.nextUrl.pathname.match(EIDOS_PATH_PATTERN);
-
-  if (!match) {
-    return NextResponse.next();
-  }
-
-  const [, locale, eidosPath] = match;
-
-  if (EIDOS_SUPPORTED_LOCALES.has(locale)) {
-    return NextResponse.next();
-  }
-
-  const url = request.nextUrl.clone();
-  url.pathname = `/en${eidosPath}`;
-
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 export const config = {

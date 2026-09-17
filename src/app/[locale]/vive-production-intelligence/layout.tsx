@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 
-import { PrototypeShell } from "@/components/observatory/prototype-shell";
-import type { Locale } from "@/lib/observatory-i18n";
+import { PrototypeRouteLayout } from "@/components/observatory/prototype-route-layout";
 
-export default async function ViveProductionIntelligenceLayout({
+export default function ViveProductionIntelligenceLayout({
   children,
   params,
 }: {
   children: ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const resolvedLocale: Locale = locale === "pl" ? "pl" : "en";
-  return <PrototypeShell locale={resolvedLocale} theme="emerald">{children}</PrototypeShell>;
+  return <PrototypeRouteLayout params={params} theme="emerald">{children}</PrototypeRouteLayout>;
 }

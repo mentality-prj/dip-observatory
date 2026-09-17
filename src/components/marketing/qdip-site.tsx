@@ -93,7 +93,7 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
   const observatoryLocale = locale === "uk" ? "en" : locale;
 
   return (
-    <main className={styles.site} lang={locale}>
+    <main className={styles.site} id="main-content" lang={locale} tabIndex={-1}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <a aria-label="QDIP home" href={marketingLocaleHref(locale)}>

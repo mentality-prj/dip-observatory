@@ -422,7 +422,7 @@ test("does not read TTF query fields from environment variables", async () => {
 
 test("frontend source does not call upstream providers directly from browser code", () => {
   const browserUiSource = fs.readFileSync(
-    "/home/runner/work/dip-observatory/dip-observatory/src/components/admin/gas-forecast-providers-page.tsx",
+    new URL("../components/admin/gas-forecast-providers-page.tsx", import.meta.url),
     "utf8",
   );
 

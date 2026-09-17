@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Activity, BrainCircuit, CheckCircle2, Gauge, Loader2, Play, RotateCcw, ShieldAlert } from "lucide-react";
 
-import { PrototypeShell } from "@/components/observatory/prototype-shell";
 import type { Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 
@@ -87,7 +86,6 @@ export function ProductionDecisionWorkspace({ locale }: { locale: Locale }) {
   }
 
   return (
-    <PrototypeShell locale={locale} theme="emerald">
       <main className="px-4 pb-12 md:px-6 xl:px-10">
         <section className="rounded-[28px] border border-emerald-300/15 bg-slate-950/55 shadow-2xl shadow-black/20">
           <header className="border-b border-white/8 px-5 py-6 md:px-8 md:py-7">
@@ -138,7 +136,6 @@ export function ProductionDecisionWorkspace({ locale }: { locale: Locale }) {
 
         {history.length > 0 && <section className="mt-5 rounded-[22px] border border-white/8 bg-slate-950/45 p-5 md:p-6"><div className="mb-4 flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{labels.history}</h2><span className="font-mono text-[10px] text-slate-700">{history.length} runs</span></div><div className="space-y-2">{history.map((item, index) => <button key={item.id} type="button" onClick={() => { setInputs(item.inputs); setResult(item.result); }} className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl border border-white/6 bg-white/[0.015] px-4 py-3 text-left transition hover:bg-white/[0.04]"><span className="font-mono text-[10px] text-slate-700">#{history.length - index}</span><span className="text-xs text-slate-400">Demand {item.inputs.demand_change >= 0 ? "+" : ""}{item.inputs.demand_change}% · Material {item.inputs.material_availability}% · Capacity {item.inputs.production_capacity}%</span><span className="text-xs font-medium text-emerald-300">{item.result.decision}</span></button>)}</div></section>}
       </main>
-    </PrototypeShell>
   );
 }
 

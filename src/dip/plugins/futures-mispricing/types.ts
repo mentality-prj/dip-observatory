@@ -3,7 +3,7 @@
  *
  * DIP-specific request/response and configuration types for the futures
  * mispricing decision plugin. These adapt the Observatory domain types in
- * `@/eidos/types/futures` for use across the DIP plugin boundary (HTTP API).
+ * `@/dip/plugins/futures-mispricing/domain` for use across the DIP plugin boundary (HTTP API).
  *
  * LOOK-AHEAD PROTECTION:
  *   The request contract intentionally contains ONLY pre-decision information.
@@ -18,7 +18,7 @@ import type {
   MispricingSignal,
   HedgeDecision,
   HedgeSignal,
-} from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/domain";
 
 /** Plugin metadata describing identity and capabilities. */
 export interface FuturesMispricingPluginMeta {

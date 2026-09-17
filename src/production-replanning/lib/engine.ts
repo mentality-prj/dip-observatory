@@ -205,8 +205,6 @@ function evaluateRulesForAlternative(
   overtimeTonnes: number,
   capacityUtilization: number,
   disruptionDurationDays: number,
-  normalCapacityTonnes: number,
-  planHorizonDays: number,
   /** For KEEP_CURRENT_PLAN this is the disrupted affected-line tpd; for other actions the combined effective tpd. */
   criticalOrderTpd: number,
   /** Fraction of normal capacity removed from the affected line, e.g. 0.30 = 30%. */
@@ -375,9 +373,6 @@ function calcFinancialImpact(
   actionId: ActionId,
   orders: ProductionOrder[],
   effectiveCapacityTonnes: number,
-  normalCapacityTonnes: number,
-  totalMaterialTonnes: number,
-  dailyEffectiveTpd: number,
   /** Disrupted rate of the affected line only — used for KEEP_CURRENT_PLAN critical deadline. */
   affectedLineTpd: number,
   /** Sum of all lines' normal t/day (no disruption) — used for unused-capacity calculation. */
@@ -979,9 +974,6 @@ export function runProductionReplanningEngine(
       actionId,
       orders,
       totalCapacityTonnes,
-      normalCapacityTonnes,
-      totalMaterialTonnes,
-      dailyEffectiveTpd,
       affectedLineTpd,
       totalNormalTpd,
       planHorizonDays,
@@ -1038,8 +1030,6 @@ export function runProductionReplanningEngine(
         overtimeTonnes,
         capacityUtilization,
         disruption.durationDays,
-        normalCapacityTonnes,
-        planHorizonDays,
         criticalOrderTpd,
         disruption.capacityReductionFactor,
         lines.find((l) => l.id === disruption.affectedLineId)?.name ??

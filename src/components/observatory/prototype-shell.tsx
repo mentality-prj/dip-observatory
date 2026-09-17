@@ -3,16 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Building2, ChevronRight, Home, Menu, Network } from "lucide-react";
+import { Building2, ChevronRight, Home } from "lucide-react";
 
+import { ProductLockup } from "@/components/platform/product-lockup";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 import { studioHref } from "@/lib/platform-urls";
 
+export type PrototypeTheme = "cyan" | "violet" | "amber" | "emerald" | "rose";
+
 type PrototypeShellProps = {
   locale: Locale;
   children: React.ReactNode;
-  theme?: "cyan" | "violet" | "amber" | "emerald" | "rose";
+  theme?: PrototypeTheme;
 };
 type PrototypeNavItem = {
   href: string;
@@ -90,7 +93,7 @@ const COMPANY_NAV_ITEMS: PrototypeNavItem[] = [
   },
 ];
 
-const LOCALE_SWITCHER: Locale[] = ["en", "pl", "uk"];
+const LOCALE_SWITCHER: Locale[] = ["en", "uk", "pl"];
 const LOCALE_SHORT_LABEL: Record<Locale, string> = {
   en: "EN",
   pl: "PL",
@@ -187,6 +190,7 @@ export function PrototypeShell({
           ref={active ? activeNavRef : undefined}
           key={item.href}
           href={buildLocalePath(item.href, locale)}
+          aria-current={active ? "page" : undefined}
           onClick={() => setCompanyMenuOpen(false)}
           className={cn(
             "flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 text-xs font-medium leading-none transition",
@@ -206,24 +210,16 @@ export function PrototypeShell({
 
   return (
     <div
-      className="min-h-screen bg-transparent text-white"
+      className="observatory-shell min-h-screen text-white"
       data-prototype-theme={theme}
     >
-      <header className="sticky top-0 z-50 border-b border-white/8 bg-slate-950/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center gap-4 px-4 md:px-6 xl:px-10">
-          <Link
+      <header className="product-header observatory-header">
+        <div className="product-header-inner observatory-header-inner">
+          <ProductLockup
             href={buildLocalePath("/", locale)}
             onClick={() => setCompanyMenuOpen(false)}
-            className="group flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-2 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            aria-label="QDIP Observatory home"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-cyan-300">
-              <Network className="h-4 w-4" />
-            </span>
-            <span className="hidden text-sm font-semibold tracking-tight sm:block">
-              QDIP Observatory
-            </span>
-          </Link>
+            product="Observatory"
+          />
           <div className="hidden h-6 w-px shrink-0 bg-white/10 lg:block" />
           <nav
             className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1 lg:flex"
@@ -233,8 +229,8 @@ export function PrototypeShell({
             {renderNav(GENERAL_NAV_ITEMS)}
           </nav>
           <div className="flex shrink-0 items-center gap-2">
-            <Link href={studioHref()} className="rounded-lg px-3 py-2 text-xs text-cyan-200 hover:bg-white/5">
-              Decision Studio
+            <Link href={studioHref()} className="product-switch-link observatory-studio-link">
+              Studio
             </Link>
             <div ref={companyMenuRef} className="relative">
               <button
@@ -269,6 +265,7 @@ export function PrototypeShell({
                           key={item.href}
                           href={buildLocalePath(item.href, locale)}
                           role="menuitem"
+                          aria-current={active ? "page" : undefined}
                           onClick={() => setCompanyMenuOpen(false)}
                           className={cn(
                             "flex items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-sm transition",
@@ -290,15 +287,20 @@ export function PrototypeShell({
                 </div>
               )}
             </div>
-            <div className="hidden items-center gap-1 rounded-lg border border-white/8 bg-white/[0.03] p-1 md:flex">
+            <div
+              className="flex items-center gap-0.5 rounded-lg border border-white/8 bg-white/[0.03] p-1"
+              aria-label="Language"
+            >
               {LOCALE_SWITCHER.map((option) => (
                 <button
                   key={option}
                   type="button"
                   disabled={pending}
                   onClick={() => changeLocale(option)}
+                  aria-current={option === locale ? "page" : undefined}
+                  aria-label={`Switch language to ${option}`}
                   className={cn(
-                    "rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider leading-none transition",
+                    "min-h-8 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider leading-none transition",
                     option === locale
                       ? "bg-white/10 text-white"
                       : "text-slate-600 hover:text-slate-300",
@@ -308,7 +310,6 @@ export function PrototypeShell({
                 </button>
               ))}
             </div>
-            <Menu className="h-5 w-5 text-slate-400 lg:hidden" />
           </div>
         </div>
         <div className="border-t border-white/5 lg:hidden">
@@ -320,7 +321,7 @@ export function PrototypeShell({
           </div>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-[1700px] px-0">
+      <div className="observatory-stage mx-auto w-full max-w-[1700px] px-0">
         <div
           className="flex h-10 items-center gap-1 px-4 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500 leading-none md:px-6 xl:px-10"
           aria-label="Breadcrumb"
@@ -331,7 +332,7 @@ export function PrototypeShell({
             {activeItem?.label[locale] ?? "Prototype"}
           </span>
         </div>
-        <div className="prototype-shell-content">{children}</div>
+        <div className="prototype-shell-content" id="main-content" tabIndex={-1}>{children}</div>
       </div>
     </div>
   );

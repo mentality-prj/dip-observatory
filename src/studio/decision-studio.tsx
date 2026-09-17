@@ -44,7 +44,7 @@ export function DecisionStudio({ section }: { section: string }) {
     <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: studioHref("plugins") }] : []), { label: titles[section] }]} />
     <h1>{titles[section]}</h1>
     <p>Domain intelligence, reusable dimensions, and business configuration.</p>
-    {error && <div role="alert" className="studio-error">{error} <button className="studio-secondary" onClick={() => setRetry(retry + 1)}>Retry</button></div>}
+    {error && <div role="alert" className="studio-error">{error} <button type="button" className="studio-secondary" onClick={() => setRetry(retry + 1)}>Retry</button></div>}
     {message && <div role="status" className="studio-success">{message}</div>}
     {!data && !error && <p role="status">Loading Decision Studio…</p>}
     {data && <>
@@ -66,7 +66,7 @@ export function DecisionStudio({ section }: { section: string }) {
       </>}
       {section === "profiles" && <>
         <div className="studio-toolbar">
-          <button onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}>Create profile</button>
+          <button type="button" onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}>Create profile</button>
           <label className="studio-field">Import profile JSON<input type="file" accept="application/json,.json" onChange={async (e) => {
             const file = e.target.files?.[0]; if (!file) return;
             try {
@@ -85,15 +85,15 @@ export function DecisionStudio({ section }: { section: string }) {
           {profile.validation.errors.map((error) => <div key={error} className="studio-error">{error}</div>)}
           {profile.validation.warnings.map((warning) => <p key={warning}>{warning}</p>)}
           <div className="studio-toolbar"><Link className="studio-secondary" href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>Open profile</Link>
-            <button className="studio-secondary" disabled={!profile.active || profile.validation.status !== "VALID"}
+            <button type="button" className="studio-secondary" disabled={!profile.active || profile.validation.status !== "VALID"}
               onClick={() => setRunningProfile(profile)}>Evaluate</button>
-            {deleting !== profile.id ? <button className="studio-secondary" onClick={() => setDeleting(profile.id)}>Delete</button> : <>
-              <button className="studio-danger" onClick={async () => {
+            {deleting !== profile.id ? <button type="button" className="studio-secondary" onClick={() => setDeleting(profile.id)}>Delete</button> : <>
+              <button type="button" className="studio-danger" onClick={async () => {
                 try { await studioRequest(`decision-profiles/${encodeURIComponent(profile.id)}`, { method: "DELETE" });
                   if (editor?.profile.id === profile.id) setEditor(null);
                   setDeleting(""); await refreshProfiles(); setMessage("Profile deleted. Historical decisions are retained.");
                 } catch (reason) { setError(String(reason)); }
-              }}>Confirm delete</button><button className="studio-secondary" onClick={() => setDeleting("")}>Cancel</button>
+              }}>Confirm delete</button><button type="button" className="studio-secondary" onClick={() => setDeleting("")}>Cancel</button>
             </>}
           </div>
         </article>)}</div>

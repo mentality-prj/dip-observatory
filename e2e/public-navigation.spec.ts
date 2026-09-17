@@ -1,8 +1,8 @@
 /**
- * Public Navigation — E2E tests (Part C, Items 21–22)
+ * Public navigation regression tests.
  *
  * Verifies:
- * - Public navigation does NOT contain client-specific links (EIDOS, etc.)
+ * - Public navigation does not expose removed client-specific links
  * - Generic capability links are still present (Supplier Decision, Production Scheduling)
  * - Removing nav links does not break direct URL access
  *
@@ -11,7 +11,7 @@
 
 import { test, expect } from "@playwright/test";
 
-test.describe("public navigation: client-specific links removed (Part C Item 21)", () => {
+test.describe("public navigation", () => {
   test("public navigation does NOT contain EIDOS Observatory link", async ({ page }) => {
     await page.goto("/en");
     await page.waitForURL(/\/en/, { timeout: 10_000 });
@@ -41,13 +41,7 @@ test.describe("public navigation: client-specific links removed (Part C Item 21)
   });
 });
 
-test.describe("direct route regression: removed nav links still resolve (Part C Item 22)", () => {
-  test("/en/eidos route resolves directly", async ({ page }) => {
-    const response = await page.goto("/en/eidos");
-    // HTTP status must be 2xx — catches Next.js 404 rendered at the original URL
-    expect(response?.status()).toBeLessThan(400);
-  });
-
+test.describe("direct route regression", () => {
   test("/en/supplier-decision route resolves directly", async ({ page }) => {
     const response = await page.goto("/en/supplier-decision");
     expect(response?.status()).toBeLessThan(400);

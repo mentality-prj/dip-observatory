@@ -14,7 +14,7 @@ import type {
   FuturesContract,
   MarketSnapshot,
   OutcomeData,
-} from "@/eidos/types/futures";
+} from "@/dip/plugins/futures-mispricing/domain";
 
 /** The decision date for the historical EIDOS case study. */
 export const EIDOS_DECISION_DATE = "2026-05-26";
