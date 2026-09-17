@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -22,208 +23,177 @@ import {
   Workflow,
 } from "lucide-react";
 
-import { observatoryHref, studioHref } from "@/lib/platform-urls";
+import {
+  marketingLocaleHref,
+  observatoryHref,
+  studioHref,
+} from "@/lib/platform-urls";
 
+import {
+  marketingCopy,
+  marketingLocales,
+  type MarketingLocale,
+} from "./qdip-copy";
 import { QdipLogo } from "./qdip-logo";
 import styles from "./qdip-site.module.css";
 
-const demos = [
-  {
-    title: "European gas forecasting",
-    description:
-      "Forecast market conditions, compare BUY / WAIT / SPLIT alternatives and inspect calibration evidence.",
-    domain: "ENERGY",
-    href: observatoryHref("en/gas-forecast"),
-    icon: BarChart3,
-    accent: "burgundy",
-  },
-  {
-    title: "Production replanning",
-    description:
-      "Respond to live disruptions, test recovery scenarios and expose propagation risk before acting.",
-    domain: "MANUFACTURING",
-    href: observatoryHref("en/production-replanning"),
-    icon: Factory,
-    accent: "amber",
-  },
-  {
-    title: "Resource allocation",
-    description:
-      "Allocate mobile teams across demand, skills, capacity, accessibility and travel constraints.",
-    domain: "OPERATIONS",
-    href: observatoryHref("en/resource-allocation"),
-    icon: Network,
-    accent: "copper",
-  },
-  {
-    title: "Supplier decision",
-    description:
-      "Compare suppliers across cost, resilience, uncertainty and explicit operational constraints.",
-    domain: "SUPPLY CHAIN",
-    href: observatoryHref("en/supplier-decision"),
-    icon: Scale,
-    accent: "violet",
-  },
-  {
-    title: "Production scheduling",
-    description:
-      "Explore capacity, deadlines and disruptions in an interactive scheduling decision lab.",
-    domain: "PLANNING",
-    href: observatoryHref("en/production-scheduling"),
-    icon: Workflow,
-    accent: "rose",
-  },
-  {
-    title: "Decision core lab",
-    description:
-      "Run reference scenarios through state, alternatives, risk, uncertainty and evidence.",
-    domain: "PLATFORM",
-    href: observatoryHref("en/scenarios"),
-    icon: GitBranch,
-    accent: "wine",
-  },
+const localeLabels: Record<MarketingLocale, string> = {
+  en: "EN",
+  uk: "UA",
+  pl: "PL",
+};
+
+const demoMeta = [
+  { path: "gas-forecast", icon: BarChart3, accent: "burgundy" },
+  { path: "production-replanning", icon: Factory, accent: "amber" },
+  { path: "resource-allocation", icon: Network, accent: "copper" },
+  { path: "supplier-decision", icon: Scale, accent: "violet" },
+  { path: "production-scheduling", icon: Workflow, accent: "rose" },
+  { path: "scenarios", icon: GitBranch, accent: "wine" },
 ] as const;
 
-const capabilities = [
-  ["Hybrid reasoning", "Combine rules, analytical models and optimization in one traceable execution path.", Blocks],
-  ["Decision evidence", "See which conditions passed, which rules matched and why an alternative ranked first.", FileSearch],
-  ["Human control", "Keep experts in the loop for review, adjustment, approval and outcome feedback.", SlidersHorizontal],
-  ["Tenant boundaries", "Scope API keys, decision profiles and audit records to the organization that owns them.", KeyRound],
+const capabilityIcons = [
+  Blocks,
+  FileSearch,
+  SlidersHorizontal,
+  KeyRound,
 ] as const;
 
-export function QdipSite() {
+function ModelField() {
   return (
-    <main className={styles.site}>
+    <div aria-hidden="true" className={styles.modelField}>
+      <svg viewBox="0 0 980 700">
+        <g className={styles.modelEdges}>
+          <path d="M535 105 645 188 728 116" />
+          <path d="M535 105 598 291 733 347" />
+          <path d="M645 188 598 291 805 252" />
+          <path d="M728 116 805 252 887 174" />
+          <path d="M598 291 733 347 668 467" />
+          <path d="M733 347 864 429 774 553" />
+          <path d="M668 467 774 553 585 594" />
+        </g>
+        <path className={styles.decisionBoundary} d="M470 620C565 510 506 398 635 323S774 213 902 54" />
+        <g className={styles.modelNodes}>
+          {[[535,105],[645,188],[728,116],[598,291],[733,347],[805,252],[887,174],[668,467],[864,429],[774,553],[585,594]].map(([cx, cy], index) => (
+            <circle cx={cx} cy={cy} key={`${cx}-${cy}`} r={index === 4 ? 9 : 5} data-focus={index === 4 || undefined} />
+          ))}
+        </g>
+        <g className={styles.latentPoints}>
+          {[[508,504],[544,458],[564,534],[618,416],[704,254],[758,198],[816,142],[842,302],[713,501],[824,517],[625,151],[760,410]].map(([cx, cy]) => (
+            <circle cx={cx} cy={cy} key={`${cx}-${cy}`} r="3" />
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
+  const copy = marketingCopy[locale];
+  const observatoryLocale = locale === "uk" ? "en" : locale;
+
+  return (
+    <main className={styles.site} lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link aria-label="QDIP home" href="/">
+          <a aria-label="QDIP home" href={marketingLocaleHref(locale)}>
             <QdipLogo />
-          </Link>
+          </a>
           <nav aria-label="Primary navigation" className={styles.nav}>
-            <a href="#platform">Platform</a>
-            <a href="#products">Products</a>
-            <a href="#demos">Live demos</a>
-            <a href="#trust">Trust</a>
+            <a href="#platform">{copy.nav[0]}</a>
+            <a href="#products">{copy.nav[1]}</a>
+            <a href="#demos">{copy.nav[2]}</a>
+            <a href="#trust">{copy.nav[3]}</a>
           </nav>
           <div className={styles.headerActions}>
+            {/* Hard navigations are intentional: the host-aware proxy canonicalizes
+                /platform/[locale] on qdip.ai while previews keep the explicit route. */}
+            <nav aria-label="Language" className={styles.languageNav}>
+              {marketingLocales.map((item) => (
+                <a
+                  aria-current={locale === item ? "page" : undefined}
+                  href={marketingLocaleHref(item)}
+                  key={item}
+                >
+                  {localeLabels[item]}
+                </a>
+              ))}
+            </nav>
             <Link className={styles.textLink} href={studioHref()}>
-              Open Studio
+              {copy.openStudio}
             </Link>
-            <Link className={styles.primaryButton} href={observatoryHref("en")}>
-              Explore demos <ArrowRight size={16} />
+            <Link className={styles.primaryButton} href={observatoryHref(observatoryLocale)}>
+              {copy.exploreDemos} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </header>
 
       <section className={styles.hero}>
-        <div aria-hidden="true" className={styles.heroGrid} />
+        <ModelField />
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>
-            <span /> Quality-driven decision intelligence
-          </div>
-          <h1>
-            From complex signals to decisions <em>you can defend.</em>
-          </h1>
-          <p>
-            QDIP models alternatives, quantifies uncertainty and preserves the
-            evidence behind every recommendation—before people or systems act.
-          </p>
+          <div className={styles.eyebrow}><span /> {copy.eyebrow}</div>
+          <h1>{copy.heroTitle} <em>{copy.heroAccent}</em></h1>
+          <p>{copy.heroBody}</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryButtonLarge} href={observatoryHref("en")}>
-              <Play fill="currentColor" size={16} /> Explore live demos
+            <Link className={styles.primaryButtonLarge} href={observatoryHref(observatoryLocale)}>
+              <Play fill="currentColor" size={16} /> {copy.exploreDemos}
             </Link>
             <Link className={styles.secondaryButton} href={studioHref()}>
-              Build in Studio <ArrowRight size={16} />
+              {copy.buildStudio} <ArrowRight size={16} />
             </Link>
           </div>
-          <div className={styles.heroProof}>
-            <ShieldCheck size={17} />
-            Explainable by design · Human-governed · API-first
-          </div>
+          <div className={styles.heroProof}><ShieldCheck size={17} /> {copy.heroProof}</div>
         </div>
 
         <div className={styles.heroVisual} aria-label="QDIP decision trace preview">
           <div className={styles.visualTopbar}>
-            <span>LIVE DECISION TRACE</span>
-            <span className={styles.liveIndicator}>ENGINE ONLINE</span>
+            <span>{copy.trace.title}</span>
+            <span className={styles.liveIndicator}>{copy.trace.online}</span>
           </div>
           <div className={styles.visualBody}>
             <div className={styles.stateHeader}>
-              <div>
-                <small>CURRENT STATE</small>
-                <strong>Supply disruption</strong>
-              </div>
-              <div className={styles.confidenceRing}>
-                <span>87%</span>
-                <small>confidence</small>
-              </div>
+              <div><small>{copy.trace.state}</small><strong>{copy.trace.disruption}</strong></div>
+              <div className={styles.confidenceRing}><span>87%</span><small>{copy.trace.confidence}</small></div>
             </div>
             <div className={styles.traceFlow}>
-              <div className={styles.flowStep} data-active="true">
-                <i><CircleGauge size={16} /></i>
-                <span>STATE</span>
-              </div>
-              <b />
-              <div className={styles.flowStep} data-active="true">
-                <i><GitBranch size={16} /></i>
-                <span>OPTIONS</span>
-              </div>
-              <b />
-              <div className={styles.flowStep} data-active="true">
-                <i><Scale size={16} /></i>
-                <span>RISK</span>
-              </div>
-              <b />
-              <div className={styles.flowStep} data-active="true">
-                <i><Check size={16} /></i>
-                <span>DECISION</span>
-              </div>
+              {[CircleGauge, GitBranch, Scale, Check].map((Icon, index) => (
+                <Fragment key={copy.trace.steps[index]}>
+                  {index > 0 && <b />}
+                  <div className={styles.flowStep} data-active="true">
+                    <i><Icon size={16} /></i><span>{copy.trace.steps[index]}</span>
+                  </div>
+                </Fragment>
+              ))}
             </div>
             <div className={styles.alternatives}>
-              <div>
-                <span><i className={styles.signalDot} /> Reroute supply</span>
-                <strong>82.4</strong>
-                <small>RECOMMENDED</small>
-              </div>
-              <div>
-                <span><i className={styles.amberDot} /> Hold schedule</span>
-                <strong>61.8</strong>
-                <small>HIGHER RISK</small>
-              </div>
+              <div><span><i className={styles.signalDot} /> {copy.trace.reroute}</span><strong>82.4</strong><small>{copy.trace.recommended}</small></div>
+              <div><span><i className={styles.amberDot} /> {copy.trace.hold}</span><strong>61.8</strong><small>{copy.trace.higherRisk}</small></div>
             </div>
             <div className={styles.explanation}>
               <Sparkles size={17} />
-              <p>
-                <strong>Why this decision?</strong>
-                Rerouting protects the service threshold while keeping cost and
-                propagation risk inside policy limits.
-              </p>
+              <p><strong>{copy.trace.why}</strong>{copy.trace.explanation}</p>
             </div>
           </div>
         </div>
       </section>
 
       <section className={styles.proofStrip} aria-label="Platform qualities">
-        <span>One decision layer</span>
-        <div><Check size={15} /> Rules + models + optimization</div>
-        <div><Check size={15} /> Evidence on every run</div>
-        <div><Check size={15} /> Human approval when it matters</div>
+        <span>{copy.proof[0]}</span>
+        {copy.proof.slice(1).map((item) => <div key={item}><Check size={15} /> {item}</div>)}
       </section>
 
       <section className={styles.problem}>
         <div className={styles.problemGrid}>
           <div>
-            <div className={styles.darkEyebrow}>THE PROBLEM</div>
-            <h2>More AI.<br />More dashboards.<br /><span>Still no accountable decision.</span></h2>
+            <div className={styles.darkEyebrow}>{copy.problem.label}</div>
+            <h2>{copy.problem.lines[0]}<br />{copy.problem.lines[1]}<br /><span>{copy.problem.lines[2]}</span></h2>
           </div>
           <div className={styles.problemAnswer}>
-            <div className={styles.darkEyebrow}>THE QDIP SHIFT</div>
-            <h3>Move from insight to a decision—with the reasoning attached.</h3>
+            <div className={styles.darkEyebrow}>{copy.problem.shift}</div>
+            <h3>{copy.problem.answer}</h3>
             <div className={styles.answerRows}>
-              <div><strong>01</strong><span>Uncertainty is explicit</span></div>
-              <div><strong>02</strong><span>Alternatives are comparable</span></div>
-              <div><strong>03</strong><span>Every outcome is auditable</span></div>
+              {copy.problem.rows.map((item, index) => <div key={item}><strong>0{index + 1}</strong><span>{item}</span></div>)}
             </div>
           </div>
         </div>
@@ -231,145 +201,80 @@ export function QdipSite() {
 
       <section className={styles.platform} id="platform">
         <div className={styles.sectionIntro}>
-          <div className={styles.eyebrow}><span /> One platform, full decision lifecycle</div>
-          <h2>Model. Decide. Observe. Improve.</h2>
-          <p>
-            QDIP keeps authoring, execution and observation connected without
-            collapsing them into one opaque AI workflow.
-          </p>
+          <div className={styles.eyebrow}><span /> {copy.platform.eyebrow}</div>
+          <h2>{copy.platform.title}</h2>
+          <p>{copy.platform.body}</p>
         </div>
-
         <div className={styles.platformLayers} id="products">
-          <article className={styles.layerCard}>
-            <div className={styles.layerNumber}>01</div>
-            <div className={styles.layerIcon}><Braces size={24} /></div>
-            <div>
-              <span>QDIP ENGINE</span>
-              <h3>Execute governed decisions</h3>
-              <p>Evaluate rules, models, constraints, uncertainty and alternatives behind one stable API.</p>
-              <ul>
-                <li>Hybrid rule + ML execution</li>
-                <li>Risk and uncertainty analysis</li>
-                <li>Versioned traces and evidence</li>
-              </ul>
-            </div>
-          </article>
-
-          <article className={styles.layerCard}>
-            <div className={styles.layerNumber}>02</div>
-            <div className={styles.layerIcon}><SlidersHorizontal size={24} /></div>
-            <div>
-              <span>QDIP STUDIO</span>
-              <h3>Design decision systems</h3>
-              <p>Configure profiles, plugins, dimensions and output bindings without hiding the execution contract.</p>
-              <ul>
-                <li>Decision profile authoring</li>
-                <li>Plugin and capability registry</li>
-                <li>Schema-driven configuration</li>
-              </ul>
-              <Link href={studioHref()}>Open Studio <ArrowRight size={15} /></Link>
-            </div>
-          </article>
-
-          <article className={styles.layerCard}>
-            <div className={styles.layerNumber}>03</div>
-            <div className={styles.layerIcon}><Eye size={24} /></div>
-            <div>
-              <span>QDIP OBSERVATORY</span>
-              <h3>See decisions before they scale</h3>
-              <p>Replay scenarios, compare alternatives and inspect risk, evidence and outcomes in context.</p>
-              <ul>
-                <li>Interactive scenario analysis</li>
-                <li>State and trajectory views</li>
-                <li>Human feedback and audit</li>
-              </ul>
-              <Link href={observatoryHref("en")}>Open Observatory <ArrowRight size={15} /></Link>
-            </div>
-          </article>
+          {copy.platform.layers.map((layer, index) => {
+            const Icon = [Braces, SlidersHorizontal, Eye][index];
+            const href = index === 1 ? studioHref() : observatoryHref(observatoryLocale);
+            return (
+              <article className={styles.layerCard} key={layer.label}>
+                <div className={styles.layerNumber}>0{index + 1}</div>
+                <div className={styles.layerIcon}><Icon size={24} /></div>
+                <div>
+                  <span>{layer.label}</span><h3>{layer.title}</h3><p>{layer.description}</p>
+                  <ul>{layer.bullets.map((item) => <li key={item}>{item}</li>)}</ul>
+                  {layer.link && <Link href={href}>{layer.link} <ArrowRight size={15} /></Link>}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
       <section className={styles.demoSection} id="demos">
         <div className={styles.demoHeading}>
-          <div>
-            <div className={styles.eyebrow}><span /> QDIP in action</div>
-            <h2>Live decision demonstrators</h2>
-          </div>
-          <p>
-            Explore domain-specific workspaces with explicit alternatives,
-            uncertainty, constraints and decision evidence—not static mockups.
-          </p>
+          <div><div className={styles.eyebrow}><span /> {copy.demos.eyebrow}</div><h2>{copy.demos.title}</h2></div>
+          <p>{copy.demos.body}</p>
         </div>
         <div className={styles.demoGrid}>
-          {demos.map(({ title, description, domain, href, icon: Icon, accent }) => (
-            <Link className={styles.demoCard} data-accent={accent} href={href} key={title}>
-              <div className={styles.demoCardTop}>
-                <span className={styles.demoIcon}><Icon size={20} /></span>
-                <span>{domain}</span>
-              </div>
-              <h3>{title}</h3>
-              <p>{description}</p>
-              <div className={styles.demoLink}>Run demo <ArrowRight size={16} /></div>
-            </Link>
-          ))}
+          {copy.demos.items.map((item, index) => {
+            const meta = demoMeta[index];
+            const Icon = meta.icon;
+            return (
+              <Link className={styles.demoCard} data-accent={meta.accent} href={observatoryHref(`${observatoryLocale}/${meta.path}`)} key={item.title}>
+                <div className={styles.demoCardTop}><span className={styles.demoIcon}><Icon size={20} /></span><span>{item.domain}</span></div>
+                <h3>{item.title}</h3><p>{item.description}</p>
+                <div className={styles.demoLink}>{copy.demos.run} <ArrowRight size={16} /></div>
+              </Link>
+            );
+          })}
         </div>
         <div className={styles.allDemos}>
-          <Link className={styles.secondaryButtonDark} href={observatoryHref("en")}>
-            View every demonstrator <ArrowRight size={16} />
-          </Link>
+          <Link className={styles.secondaryButtonDark} href={observatoryHref(observatoryLocale)}>{copy.demos.all} <ArrowRight size={16} /></Link>
         </div>
       </section>
 
       <section className={styles.trust} id="trust">
         <div className={styles.trustLead}>
-          <div className={styles.eyebrow}><span /> Built for accountable automation</div>
-          <h2>Trust is part of the execution path.</h2>
-          <p>
-            QDIP does not ask teams to accept an unexplained score. Evidence,
-            ownership and review remain attached to the decision lifecycle.
-          </p>
-          <div className={styles.trustBadge}>
-            <ShieldCheck size={20} /> Explainable and auditable by design
-          </div>
+          <div className={styles.eyebrow}><span /> {copy.trust.eyebrow}</div>
+          <h2>{copy.trust.title}</h2><p>{copy.trust.body}</p>
+          <div className={styles.trustBadge}><ShieldCheck size={20} /> {copy.trust.badge}</div>
         </div>
         <div className={styles.capabilityGrid}>
-          {capabilities.map(([title, description, Icon]) => (
-            <article key={title}>
-              <Icon size={21} />
-              <h3>{title}</h3>
-              <p>{description}</p>
-            </article>
-          ))}
+          {copy.trust.capabilities.map((capability, index) => {
+            const Icon = capabilityIcons[index];
+            return <article key={capability.title}><Icon size={21} /><h3>{capability.title}</h3><p>{capability.description}</p></article>;
+          })}
         </div>
       </section>
 
       <section className={styles.finalCta}>
         <div aria-hidden="true" className={styles.ctaGlow} />
-        <div>
-          <Globe2 size={28} />
-          <h2>See the decision—not just the dashboard.</h2>
-          <p>Run a live scenario, inspect the evidence and challenge the recommended action.</p>
-        </div>
+        <div><Globe2 size={28} /><h2>{copy.cta.title}</h2><p>{copy.cta.body}</p></div>
         <div className={styles.ctaActions}>
-          <Link className={styles.primaryButtonLarge} href={observatoryHref("en")}>
-            Explore Observatory <ArrowRight size={16} />
-          </Link>
-          <Link className={styles.darkTextLink} href={studioHref()}>
-            Configure in Studio <ChevronRight size={16} />
-          </Link>
+          <Link className={styles.primaryButtonLarge} href={observatoryHref(observatoryLocale)}>{copy.cta.observatory} <ArrowRight size={16} /></Link>
+          <Link className={styles.darkTextLink} href={studioHref()}>{copy.cta.studio} <ChevronRight size={16} /></Link>
         </div>
       </section>
 
       <footer className={styles.footer}>
-        <div>
-          <QdipLogo inverse />
-          <p>Quality-driven Decision Intelligence Platform.</p>
-        </div>
+        <div><QdipLogo inverse /><p>{copy.footer}</p></div>
         <nav aria-label="Footer navigation">
-          <Link href={studioHref()}>Studio</Link>
-          <Link href={observatoryHref("en")}>Observatory</Link>
-          <a href="#demos">Demos</a>
-          <a href="#platform">Platform</a>
+          <Link href={studioHref()}>Studio</Link><Link href={observatoryHref(observatoryLocale)}>Observatory</Link>
+          <a href="#demos">{copy.nav[2]}</a><a href="#platform">{copy.nav[0]}</a>
         </nav>
         <span>© {new Date().getFullYear()} QDIP</span>
       </footer>

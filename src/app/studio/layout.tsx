@@ -1,25 +1,35 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
-import { observatoryHref, studioHref } from "@/lib/platform-urls";
+import { QdipLogo } from "@/components/marketing/qdip-logo";
+import { marketingHref, observatoryHref } from "@/lib/platform-urls";
+import { StudioNav } from "@/studio/studio-nav";
 
 export const metadata = { title: "QDIP Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return <div className="studio-shell">
-    <aside className="studio-sidebar"><Link className="studio-brand" href={studioHref()}>QDIP <span>Decision Studio</span></Link>
-      <p>Define how decisions are evaluated.</p>
-      <nav aria-label="Decision Studio">
-        <Link href={studioHref("profiles")}>Decision Profiles</Link>
-        <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
-          <strong>Plugin Registry</strong>
-          <Link href={studioHref("plugins")}>Plugins &amp; Capabilities</Link>
-          <Link href={studioHref("bindings")}>Output Bindings</Link>
-        </div>
-        <Link href={studioHref("dimensions")}>Dimension Registry</Link>
-      </nav>
-      <Link className="studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory ↗</Link>
+    <aside className="studio-sidebar">
+      <div className="studio-brand-lockup">
+        <Link aria-label="QDIP home" className="studio-brand" href={marketingHref("en")}><QdipLogo inverse /></Link>
+        <span>studio</span>
+      </div>
+      <div className="studio-sidebar-intro">
+        <small>DECISION SYSTEM WORKSPACE</small>
+        <p>Design how governed decisions are evaluated, explained and reproduced.</p>
+      </div>
+      <StudioNav />
+      <div className="studio-sidebar-footer">
+        <Link className="studio-observatory-link" href={observatoryHref("decisions")}>Open Observatory <span>↗</span></Link>
+        <small>QDIP decision intelligence</small>
+      </div>
     </aside>
-    <main className="studio-main">{children}</main>
+    <div className="studio-workspace">
+      <header className="studio-topbar">
+        <div><span>QDIP</span><b>/</b><strong>Studio</strong></div>
+        <div className="studio-engine-status"><i /> Engine connected</div>
+      </header>
+      <main className="studio-main">{children}</main>
+    </div>
   </div>;
 }

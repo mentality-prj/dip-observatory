@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { studioHref } from "@/lib/platform-urls";
 import { Breadcrumbs, outputLabel } from "./presentation";
 import { useEffect, useState } from "react";
 import { BindingEditor } from "./binding-editor";
@@ -40,7 +41,7 @@ export function DecisionStudio({ section }: { section: string }) {
     setEditor({ profile: clean, existing, key: Date.now() }); setMessage("");
   }
   return <>
-    <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: "/studio/plugins" }] : []), { label: titles[section] }]} />
+    <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: studioHref("plugins") }] : []), { label: titles[section] }]} />
     <h1>{titles[section]}</h1>
     <p>Domain intelligence, reusable dimensions, and business configuration.</p>
     {error && <div role="alert" className="studio-error">{error} <button className="studio-secondary" onClick={() => setRetry(retry + 1)}>Retry</button></div>}
@@ -78,12 +79,12 @@ export function DecisionStudio({ section }: { section: string }) {
         </div>
         {!data.profiles.length && <div className="studio-card"><h2>No profiles yet</h2><p>Create a profile or import an example to configure alternatives, dimensions, and rules.</p></div>}
         <div className="studio-grid">{data.profiles.map((profile) => <article key={profile.id} className="studio-card">
-          <header><h2><Link href={`/studio/profiles/${encodeURIComponent(profile.id)}`}>{profile.name}</Link></h2><span className="studio-tag">{profile.validation.status}</span></header>
+          <header><h2><Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>{profile.name}</Link></h2><span className="studio-tag">{profile.validation.status}</span></header>
           <p>{profile.plugin_id} · {profile.capability_id}<br />Version {profile.version} · {profile.active ? "Active" : "Draft"}</p>
           <p>{profile.dimensions.map((d) => d.dimension_id).join(" · ")}</p>
           {profile.validation.errors.map((error) => <div key={error} className="studio-error">{error}</div>)}
           {profile.validation.warnings.map((warning) => <p key={warning}>{warning}</p>)}
-          <div className="studio-toolbar"><Link className="studio-secondary" href={`/studio/profiles/${encodeURIComponent(profile.id)}`}>Open profile</Link>
+          <div className="studio-toolbar"><Link className="studio-secondary" href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>Open profile</Link>
             <button className="studio-secondary" disabled={!profile.active || profile.validation.status !== "VALID"}
               onClick={() => setRunningProfile(profile)}>Evaluate</button>
             {deleting !== profile.id ? <button className="studio-secondary" onClick={() => setDeleting(profile.id)}>Delete</button> : <>

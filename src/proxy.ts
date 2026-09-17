@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const EIDOS_SUPPORTED_LOCALES = new Set(["en", "pl"]);
+const MARKETING_LOCALES = new Set(["en", "uk", "pl"]);
 const EIDOS_PATH_PATTERN = /^\/([^/]+)(\/eidos(?:\/.*)?)$/;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
@@ -14,6 +15,10 @@ function requestHost(request: NextRequest) {
 function isSurfaceHost(host: string, surface: "studio" | "observatory") {
   if (!host || LOCAL_HOSTS.has(host)) return false;
   return host === `${surface}.qdip.ai` || host.startsWith(`${surface}.`);
+}
+
+function isMarketingHost(host: string) {
+  return host === "qdip.ai" || host === "www.qdip.ai";
 }
 
 export function proxy(request: NextRequest) {
@@ -40,6 +45,24 @@ export function proxy(request: NextRequest) {
       url.pathname = "/observatory/decisions";
       return NextResponse.rewrite(url);
     }
+  }
+
+  const explicitMarketingLocale = pathname.match(/^\/platform\/(en|uk|pl)\/?$/)?.[1];
+  if (
+    isMarketingHost(host) &&
+    explicitMarketingLocale &&
+    MARKETING_LOCALES.has(explicitMarketingLocale)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${explicitMarketingLocale}`;
+    return NextResponse.redirect(url);
+  }
+
+  const marketingLocale = pathname.match(/^\/(en|uk|pl)\/?$/)?.[1];
+  if (isMarketingHost(host) && marketingLocale && MARKETING_LOCALES.has(marketingLocale)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/platform/${marketingLocale}`;
+    return NextResponse.rewrite(url);
   }
 
   const match = request.nextUrl.pathname.match(EIDOS_PATH_PATTERN);

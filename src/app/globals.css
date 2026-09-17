@@ -32,11 +32,12 @@ body::before {
 	position: fixed;
 	inset: 0;
 	pointer-events: none;
-	background-image:
-		linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
-	background-size: 48px 48px;
-	mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+	background-image: url("/qdip-network.svg");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	mask-image: radial-gradient(ellipse at center, black 30%, rgba(0, 0, 0, .78) 68%, transparent 100%);
+	opacity: .48;
 }
 
 body::after {
@@ -94,6 +95,14 @@ code,
 
 @media (prefers-reduced-motion: reduce) {
 	.allocation-flow { animation: none; }
+}
+
+@media (max-width: 640px) {
+	.prototype-shell-content .text-sm { font-size: .9375rem; line-height: 1.55rem; }
+	.prototype-shell-content .text-xs { font-size: .8125rem; line-height: 1.25rem; }
+	.prototype-shell-content [class~="text-[9px]"],
+	.prototype-shell-content [class~="text-[10px]"],
+	.prototype-shell-content [class~="text-[11px]"] { font-size: .75rem; line-height: 1.1rem; }
 }
 
 /* The gas forecast workspace replaced the old admin-only provider shortcut. */

@@ -3,10 +3,17 @@ import type { Metadata } from "next";
 import { QdipSite } from "@/components/marketing/qdip-site";
 
 export const metadata: Metadata = {
-  title: "QDIP — Quality-driven Decision Intelligence Platform",
+  title: { absolute: "QDIP — Quality-driven Decision Intelligence Platform" },
   description:
     "Model alternatives, quantify uncertainty and preserve the evidence behind every decision with QDIP Engine, Studio and Observatory.",
-  alternates: { canonical: "https://qdip.ai" },
+  alternates: {
+    canonical: "https://qdip.ai/en",
+    languages: {
+      en: "https://qdip.ai/en",
+      uk: "https://qdip.ai/uk",
+      pl: "https://qdip.ai/pl",
+    },
+  },
   openGraph: {
     title: "QDIP — Decisions you can defend",
     description:
@@ -18,5 +25,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <QdipSite />;
+  return <QdipSite locale="en" />;
 }
