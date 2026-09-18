@@ -11,6 +11,13 @@ export {
   type FinancialImpactRow,
 } from "./disruption-presentation";
 export {
+  DISRUPTION_SEQUENCE,
+  URGENT_ORDER_SEQUENCE,
+  type DisruptionSimulationStep,
+  type SimulationSequenceStep,
+  type SimulationStep,
+} from "./simulation";
+export {
   ProductionSchedulingCopyProvider,
   useProductionSchedulingCopy,
 } from "./copy-context";
