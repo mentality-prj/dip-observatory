@@ -271,7 +271,6 @@ export function QdipSite({ locale = "en" }: { locale?: MarketingLocale }) {
       </section>
 
       <footer className={styles.footer}>
-        <div><QdipLogo inverse /><p>{copy.footer}</p></div>
         <nav aria-label="Footer navigation">
           <Link href={studioHref()}>Studio</Link><Link href={observatoryHref(observatoryLocale)}>Observatory</Link>
           <a href="#demos">{copy.nav[2]}</a><a href="#platform">{copy.nav[0]}</a>
