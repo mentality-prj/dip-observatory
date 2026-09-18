@@ -22,17 +22,17 @@ import Link from "next/link";
 
 import { StateSpaceChart } from "@/components/observatory/state-space-chart";
 import { StateTimeline } from "@/components/observatory/state-timeline";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Input,
+  Label,
+} from "@/design-system";
 import {
   observatoryRunResponseSchema,
   type DipScalar,
@@ -145,8 +145,7 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
     {
       href: "/production-replanning",
       title: "Production Replanning",
-      description:
-        "Real-time production disruption response and rescheduling.",
+      description: "Real-time production disruption response and rescheduling.",
       badgeLabel: "Demonstrator",
       className:
         "group rounded-[20px] border border-white/10 bg-white/5 p-5 outline-none transition hover:border-cyan-300/30 hover:bg-cyan-300/6 focus-visible:ring-2 focus-visible:ring-cyan-300/60",
@@ -940,7 +939,6 @@ export function DecisionCanvas({ initialPayload, initialLocale }: Props) {
           </div>
           {/* end side panels grid */}
         </section>
-
       </div>
     </main>
   );

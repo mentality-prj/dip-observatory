@@ -4,11 +4,16 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, Home, Package } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DecisionScenarioLab } from "@/components/decision-scenario-lab";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@/design-system";
 import { cn } from "@/lib/utils";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import {
@@ -159,7 +164,9 @@ function ScenarioSection({
         )}
       </button>
       {open && (
-        <div id={contentId} className="border-t border-white/8 px-4 py-4">{children}</div>
+        <div id={contentId} className="border-t border-white/8 px-4 py-4">
+          {children}
+        </div>
       )}
     </div>
   );
@@ -272,7 +279,8 @@ function SupplierLabControls({
             </div>
 
             <div className="flex items-center gap-3 pt-6">
-              <button type="button"
+              <button
+                type="button"
                 id="supplier-compliant"
                 role="switch"
                 aria-checked={state.compliant}
