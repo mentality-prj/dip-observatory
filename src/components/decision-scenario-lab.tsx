@@ -37,7 +37,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/design-system";
 import { cn } from "@/lib/utils";
 
 export interface SensitivityEntry {
