@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/design-system";
 import { findUseCaseByPlugin, type StudioRendererId } from "@/use-cases/registry";
 import type { Audit } from "./contracts";
 
