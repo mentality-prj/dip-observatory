@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { JsonSchema } from "./contracts";
 
 export function schemaDefault(schema: JsonSchema): unknown {
@@ -25,7 +27,7 @@ export function JsonField({ label, value, onChange }: {
   const { text, error } = state;
   useEffect(() => { inputRef.current?.setCustomValidity(error); }, [error]);
   return <label className="studio-field" htmlFor={id}>{label}
-    <textarea ref={inputRef} id={id} value={text} rows={5} spellCheck={false} aria-invalid={Boolean(error)}
+    <textarea className="ds-textarea" ref={inputRef} id={id} value={text} rows={5} spellCheck={false} aria-invalid={Boolean(error)}
       onChange={(event) => {
         const text = event.target.value;
         try {
@@ -52,7 +54,7 @@ export function SchemaField({ schema, value, onChange, label = "Configuration", 
     if (resolved) return <SchemaField schema={resolved} value={value} onChange={onChange} label={label} root={document} depth={depth + 1} />;
   }
   if (schema.enum) return <label className="studio-field" htmlFor={id}>{label}
-    <select id={id} value={JSON.stringify(value)} onChange={(event) => onChange(JSON.parse(event.target.value))}>
+    <select className="ds-select" id={id} value={JSON.stringify(value)} onChange={(event) => onChange(JSON.parse(event.target.value))}>
       {schema.enum.map((option) => <option key={JSON.stringify(option)} value={JSON.stringify(option)}>{String(option)}</option>)}
     </select>
   </label>;
@@ -82,15 +84,15 @@ export function SchemaField({ schema, value, onChange, label = "Configuration", 
       {items.map((item, index) => <div key={index} className="studio-array-item">
         <SchemaField schema={schema.items!} root={document} value={item} label={`${label} ${index + 1}`} depth={depth + 1}
           onChange={(next) => onChange(items.map((entry, i) => i === index ? next : entry))} />
-        <button type="button" className="studio-secondary" onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove item {index + 1}</button>
+        <Button type="button" variant="secondary" onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove item {index + 1}</Button>
       </div>)}
-      <button type="button" className="studio-secondary" onClick={() => onChange([...items, schemaDefault(schema.items!)])}>Add item</button>
+      <Button type="button" variant="secondary" onClick={() => onChange([...items, schemaDefault(schema.items!)])}>Add item</Button>
     </fieldset>;
   }
   if (schema.type === "boolean") return <label className="studio-check"><input type="checkbox" checked={Boolean(value)}
     onChange={(event) => onChange(event.target.checked)} />{label}</label>;
   if (["string", "number", "integer"].includes(schema.type ?? "")) return <label className="studio-field" htmlFor={id}>{label}
-    <input id={id} required minLength={schema.minLength} min={schema.minimum} max={schema.maximum}
+    <Input id={id} required minLength={schema.minLength} min={schema.minimum} max={schema.maximum}
       type={schema.type === "string" ? "text" : "number"} step={schema.type === "integer" ? 1 : "any"}
       value={typeof value === "number" || typeof value === "string" ? value : ""}
       onChange={(event) => onChange(schema.type === "string" ? event.target.value :
