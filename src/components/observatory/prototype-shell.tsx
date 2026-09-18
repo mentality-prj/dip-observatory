@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
 import { ChevronRight, Home } from "lucide-react";
-import { DesignSystemProvider, ProductHeader, ProductSwitchLink, type DesignTheme } from "@/design-system/components";
+import { DesignSystemProvider, ProductHeader, ProductSwitchLink, type DesignTheme } from "@/design-system";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { cn } from "@/lib/utils";
 import { studioHref } from "@/lib/platform-urls";

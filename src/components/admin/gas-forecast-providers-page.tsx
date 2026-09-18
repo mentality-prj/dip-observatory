@@ -13,11 +13,16 @@ import {
 import Link from "next/link";
 
 import { testGasForecastProviderAction } from "@/app/admin/plugins/gas-forecast/providers/actions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@/design-system";
 import {
   getEntsogDatePickerBounds,
   getTodayLocalDateIso,
@@ -83,10 +88,12 @@ function ResultBlock({
     <div className="space-y-4 rounded-[20px] border border-white/8 bg-black/20 p-4">
       <div className="space-y-1 text-sm text-slate-200">
         <p>
-          <span className="text-slate-500">Connection:</span> {result.connection}
+          <span className="text-slate-500">Connection:</span>{" "}
+          {result.connection}
         </p>
         <p>
-          <span className="text-slate-500">HTTP:</span> {result.httpStatus ?? "—"}
+          <span className="text-slate-500">HTTP:</span>{" "}
+          {result.httpStatus ?? "—"}
         </p>
         <p>
           <span className="text-slate-500">Failure type:</span>{" "}
@@ -180,9 +187,14 @@ function ResultBlock({
                         {(row.observation_date as string | undefined) ?? "—"}
                       </td>
                       <td className="px-3 py-2">
-                        {(row.settlement_price as string | number | undefined) ?? "—"}
+                        {(row.settlement_price as
+                          | string
+                          | number
+                          | undefined) ?? "—"}
                       </td>
-                      <td className="px-3 py-2">{(row.source as string | undefined) ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        {(row.source as string | undefined) ?? "—"}
+                      </td>
                       <td className="px-3 py-2">
                         {(row.source_identifier as string | undefined) ?? "—"}
                       </td>
@@ -209,12 +221,17 @@ function ResultBlock({
                 </thead>
                 <tbody>
                   {result.sample.map((row, index) => (
-                    <tr key={`${row.date ?? "row"}-${index}`} className="border-t border-white/8">
+                    <tr
+                      key={`${row.date ?? "row"}-${index}`}
+                      className="border-t border-white/8"
+                    >
                       <td className="px-3 py-2">{row.date ?? "—"}</td>
                       <td className="px-3 py-2">{row.gasInStorage ?? "—"}</td>
                       <td className="px-3 py-2">{row.injection ?? "—"}</td>
                       <td className="px-3 py-2">{row.withdrawal ?? "—"}</td>
-                      <td className="px-3 py-2">{row.workingGasVolume ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        {row.workingGasVolume ?? "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -234,8 +251,11 @@ function ResultBlock({
             <span className="text-emerald-300/80">Records:</span>{" "}
             {result.dataset?.records ?? "—"}
           </p>
-          {(result.dataset?.records ?? null) === 0 || result.sample.length === 0 ? (
-            <p className="text-emerald-200/90">No observations returned for this range.</p>
+          {(result.dataset?.records ?? null) === 0 ||
+          result.sample.length === 0 ? (
+            <p className="text-emerald-200/90">
+              No observations returned for this range.
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -286,13 +306,13 @@ export function FlowPointCombobox({
   onSelect: (value: string) => void;
   initialOpen?: boolean;
 }) {
-  const inputClassName =
-    "h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4";
+  const inputClassName = "h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4";
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(initialOpen);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const selectedPreset = presets.find((preset) => preset.value === selectedValue) ?? null;
+  const selectedPreset =
+    presets.find((preset) => preset.value === selectedValue) ?? null;
 
   useEffect(() => {
     if (!open) {
@@ -342,7 +362,9 @@ export function FlowPointCombobox({
           aria-haspopup="listbox"
           aria-autocomplete="list"
           aria-activedescendant={showListbox ? activeOptionId : undefined}
-          aria-controls={showListbox ? "entsog-point-direction-options" : undefined}
+          aria-controls={
+            showListbox ? "entsog-point-direction-options" : undefined
+          }
           autoComplete="off"
           value={query}
           onFocus={() => {
@@ -360,7 +382,10 @@ export function FlowPointCombobox({
             setOpen(true);
           }}
           onKeyDown={(event) => {
-            if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            if (
+              !open &&
+              (event.key === "ArrowDown" || event.key === "ArrowUp")
+            ) {
               setOpen(true);
               return;
             }
@@ -405,7 +430,9 @@ export function FlowPointCombobox({
       </div>
 
       {presets.length === 0 ? (
-        <p className="text-xs text-slate-400">No ENTSOG flow points available.</p>
+        <p className="text-xs text-slate-400">
+          No ENTSOG flow points available.
+        </p>
       ) : null}
 
       {showListbox ? (
@@ -414,51 +441,55 @@ export function FlowPointCombobox({
           role="listbox"
           className="max-h-56 w-full min-w-0 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
         >
-          {options.length > 0
-            ? options.map((option, index) => {
-                const selected = option.value === selectedValue;
-                const highlighted = highlightedIndex === index;
-                return (
-                  <li
-                    key={option.value}
-                    id={`entsog-point-direction-option-${option.value}`}
-                    role="option"
-                    aria-selected={selected}
-                    data-active={highlighted ? "true" : "false"}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      onSelect(option.value);
-                      setQuery(option.label);
-                      setHighlightedIndex(index);
-                      setOpen(false);
-                    }}
+          {options.length > 0 ? (
+            options.map((option, index) => {
+              const selected = option.value === selectedValue;
+              const highlighted = highlightedIndex === index;
+              return (
+                <li
+                  key={option.value}
+                  id={`entsog-point-direction-option-${option.value}`}
+                  role="option"
+                  aria-selected={selected}
+                  data-active={highlighted ? "true" : "false"}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onSelect(option.value);
+                    setQuery(option.label);
+                    setHighlightedIndex(index);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "flex min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                    highlighted
+                      ? "bg-white/10 text-white"
+                      : "text-slate-200 hover:bg-white/8",
+                  )}
+                >
+                  <Check
                     className={cn(
-                      "flex min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
-                      highlighted ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/8",
+                      "mt-0.5 h-4 w-4 shrink-0",
+                      selected ? "opacity-100" : "opacity-0",
                     )}
-                  >
-                    <Check
-                      className={cn(
-                        "mt-0.5 h-4 w-4 shrink-0",
-                        selected ? "opacity-100" : "opacity-0",
-                      )}
-                      aria-hidden="true"
-                    />
-                    <span className="block min-w-0 flex-1 truncate">{option.label}</span>
-                  </li>
-                );
-              })
-            : (
-              <li
-                id="entsog-point-direction-option-empty"
-                role="option"
-                aria-selected="false"
-                aria-disabled="true"
-                className="px-2 py-1.5 text-sm text-slate-400"
-              >
-                No matching flow points.
-              </li>
-            )}
+                    aria-hidden="true"
+                  />
+                  <span className="block min-w-0 flex-1 truncate">
+                    {option.label}
+                  </span>
+                </li>
+              );
+            })
+          ) : (
+            <li
+              id="entsog-point-direction-option-empty"
+              role="option"
+              aria-selected="false"
+              aria-disabled="true"
+              className="px-2 py-1.5 text-sm text-slate-400"
+            >
+              No matching flow points.
+            </li>
+          )}
         </ul>
       ) : null}
     </div>
@@ -487,7 +518,9 @@ export function WeatherRegionsCombobox({
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const selectedPresets = presets.filter((preset) => selectedValues.includes(preset.value));
+  const selectedPresets = presets.filter((preset) =>
+    selectedValues.includes(preset.value),
+  );
 
   useEffect(() => {
     if (!open) {
@@ -578,7 +611,10 @@ export function WeatherRegionsCombobox({
               setOpen(true);
             }}
             onKeyDown={(event) => {
-              if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+              if (
+                !open &&
+                (event.key === "ArrowDown" || event.key === "ArrowUp")
+              ) {
                 setOpen(true);
                 setHighlightedIndex(options.length > 0 ? 0 : -1);
                 return;
@@ -597,11 +633,7 @@ export function WeatherRegionsCombobox({
               if (event.key === "ArrowUp") {
                 event.preventDefault();
                 setHighlightedIndex((current) =>
-                  options.length === 0
-                    ? -1
-                    : current <= 0
-                      ? 0
-                      : current - 1,
+                  options.length === 0 ? -1 : current <= 0 ? 0 : current - 1,
                 );
                 return;
               }
@@ -623,7 +655,11 @@ export function WeatherRegionsCombobox({
                 setHighlightedIndex(-1);
               }
             }}
-            placeholder={selectedValues.length > 0 ? "Search more regions..." : "Search/select regions..."}
+            placeholder={
+              selectedValues.length > 0
+                ? "Search more regions..."
+                : "Search/select regions..."
+            }
           />
           <ChevronDown
             className="pointer-events-none ml-auto h-4 w-4 shrink-0 text-slate-400"
@@ -638,55 +674,57 @@ export function WeatherRegionsCombobox({
             aria-multiselectable="true"
             className="mt-2 max-h-56 w-full min-w-0 overflow-auto rounded-xl border border-white/12 bg-slate-950 p-1"
           >
-            {options.length > 0
-              ? options.map((option) => {
-                  const selected = selectedValues.includes(option.value);
-                  const highlighted =
-                    option.value === options[highlightedIndex]?.value;
+            {options.length > 0 ? (
+              options.map((option) => {
+                const selected = selectedValues.includes(option.value);
+                const highlighted =
+                  option.value === options[highlightedIndex]?.value;
 
-                  return (
-                    <li key={option.value}>
-                      <button
-                        id={toOptionDomId(optionIdPrefix, option.value)}
-                        type="button"
-                        role="option"
-                        aria-selected={selected}
-                        data-active={highlighted ? "true" : "false"}
-                        onClick={() => {
-                          toggleSelection(option.value);
-                          setQuery("");
-                          setHighlightedIndex(-1);
-                        }}
+                return (
+                  <li key={option.value}>
+                    <button
+                      id={toOptionDomId(optionIdPrefix, option.value)}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      data-active={highlighted ? "true" : "false"}
+                      onClick={() => {
+                        toggleSelection(option.value);
+                        setQuery("");
+                        setHighlightedIndex(-1);
+                      }}
+                      className={cn(
+                        "flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
+                        highlighted
+                          ? "bg-white/10 text-white"
+                          : "text-slate-200 hover:bg-white/8",
+                      )}
+                    >
+                      <Check
                         className={cn(
-                          "flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
-                          highlighted
-                            ? "bg-white/10 text-white"
-                            : "text-slate-200 hover:bg-white/8",
+                          "mt-0.5 h-4 w-4 shrink-0",
+                          selected ? "opacity-100" : "opacity-0",
                         )}
-                      >
-                        <Check
-                          className={cn(
-                            "mt-0.5 h-4 w-4 shrink-0",
-                            selected ? "opacity-100" : "opacity-0",
-                          )}
-                          aria-hidden="true"
-                        />
-                        <span className="block min-w-0 flex-1 truncate">{option.label}</span>
-                      </button>
-                    </li>
-                  );
-                })
-              : (
-                <li
-                  id={`${optionIdPrefix}-empty`}
-                  role="option"
-                  aria-selected="false"
-                  aria-disabled="true"
-                  className="px-2 py-1.5 text-sm text-slate-400"
-                >
-                  No matching weather regions.
-                </li>
-              )}
+                        aria-hidden="true"
+                      />
+                      <span className="block min-w-0 flex-1 truncate">
+                        {option.label}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })
+            ) : (
+              <li
+                id={`${optionIdPrefix}-empty`}
+                role="option"
+                aria-selected="false"
+                aria-disabled="true"
+                className="px-2 py-1.5 text-sm text-slate-400"
+              >
+                No matching weather regions.
+              </li>
+            )}
           </ul>
         ) : null}
       </div>
@@ -706,19 +744,26 @@ export function GasForecastProvidersPage() {
     from: "",
     to: "",
   });
-  const [entsogValidationError, setEntsogValidationError] = useState<string | null>(null);
+  const [entsogValidationError, setEntsogValidationError] = useState<
+    string | null
+  >(null);
   const [ttfConfig, setTtfConfig] = useState<GasForecastTtfCheckInput>({
     start_date: "",
     end_date: "",
   });
-  const [ttfValidationError, setTtfValidationError] = useState<string | null>(null);
-  const [weatherConfig, setWeatherConfig] = useState<GasForecastWeatherCheckInput>({
-    start_date: "",
-    end_date: "",
-    regions: [],
-    metric: "temperature_c",
-  });
-  const [weatherValidationError, setWeatherValidationError] = useState<string | null>(null);
+  const [ttfValidationError, setTtfValidationError] = useState<string | null>(
+    null,
+  );
+  const [weatherConfig, setWeatherConfig] =
+    useState<GasForecastWeatherCheckInput>({
+      start_date: "",
+      end_date: "",
+      regions: [],
+      metric: "temperature_c",
+    });
+  const [weatherValidationError, setWeatherValidationError] = useState<
+    string | null
+  >(null);
   const entsogDateBounds = useMemo(
     () => getEntsogDatePickerBounds(entsogConfig.from, todayIso),
     [entsogConfig.from, todayIso],
@@ -769,7 +814,9 @@ export function GasForecastProvidersPage() {
     return {
       start_date: weatherConfig.start_date.trim(),
       end_date: weatherConfig.end_date.trim(),
-      regions: weatherConfig.regions.map((region) => region.trim()).filter(Boolean),
+      regions: weatherConfig.regions
+        .map((region) => region.trim())
+        .filter(Boolean),
       metric: "temperature_c",
     };
   }
@@ -844,11 +891,15 @@ export function GasForecastProvidersPage() {
           payload: null,
           kind: "network",
           fallbackMessage:
-            error instanceof Error ? error.message : "Unexpected provider error",
+            error instanceof Error
+              ? error.message
+              : "Unexpected provider error",
         }),
       }));
     } finally {
-      setPendingProviderId((current) => (current === providerId ? null : current));
+      setPendingProviderId((current) =>
+        current === providerId ? null : current,
+      );
     }
   }
 
@@ -908,7 +959,9 @@ export function GasForecastProvidersPage() {
                 <CardHeader className="space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-2">
-                      <CardTitle className="text-xl">{provider.title}</CardTitle>
+                      <CardTitle className="text-xl">
+                        {provider.title}
+                      </CardTitle>
                       <Badge
                         variant={statusVariant[currentStatus]}
                         className="w-fit"
@@ -950,10 +1003,12 @@ export function GasForecastProvidersPage() {
                           {provider.description}
                         </p>
                         <p>
-                          <span className="text-slate-500">Target:</span> {provider.target}
+                          <span className="text-slate-500">Target:</span>{" "}
+                          {provider.target}
                         </p>
                         <p>
-                          <span className="text-slate-500">Unit:</span> {provider.unit}
+                          <span className="text-slate-500">Unit:</span>{" "}
+                          {provider.unit}
                         </p>
                         <p>
                           <span className="text-slate-500">Frequency:</span>{" "}
@@ -963,10 +1018,12 @@ export function GasForecastProvidersPage() {
                     ) : null}
                     {provider.api ? (
                       <p>
-                        <span className="text-slate-500">API:</span> {provider.api}
+                        <span className="text-slate-500">API:</span>{" "}
+                        {provider.api}
                       </p>
                     ) : null}
-                    {result?.httpStatus !== null && result?.httpStatus !== undefined ? (
+                    {result?.httpStatus !== null &&
+                    result?.httpStatus !== undefined ? (
                       <p>
                         <span className="text-slate-500">Last response:</span>{" "}
                         {result.httpStatus}
@@ -983,7 +1040,9 @@ export function GasForecastProvidersPage() {
                 </CardHeader>
 
                 <CardContent className="min-w-0 w-full max-w-full space-y-4">
-                  {result ? <ResultBlock result={result} providerId={provider.id} /> : null}
+                  {result ? (
+                    <ResultBlock result={result} providerId={provider.id} />
+                  ) : null}
 
                   {provider.id === "entsog" ? (
                     <div className="min-w-0 w-full max-w-full space-y-3 rounded-[20px] border border-white/8 bg-black/20 p-4">
@@ -1043,14 +1102,18 @@ export function GasForecastProvidersPage() {
                         </div>
                       </div>
                       {entsogValidationError ? (
-                        <p className="text-xs text-rose-300">{entsogValidationError}</p>
+                        <p className="text-xs text-rose-300">
+                          {entsogValidationError}
+                        </p>
                       ) : null}
                       <div className="grid gap-3 text-xs text-slate-400 md:grid-cols-2">
                         <p>
-                          <span className="text-slate-500">Indicator:</span> Physical Flow
+                          <span className="text-slate-500">Indicator:</span>{" "}
+                          Physical Flow
                         </p>
                         <p>
-                          <span className="text-slate-500">Period type:</span> day
+                          <span className="text-slate-500">Period type:</span>{" "}
+                          day
                         </p>
                       </div>
                     </div>
@@ -1090,7 +1153,8 @@ export function GasForecastProvidersPage() {
                                 ...current,
                                 start_date: event.target.value,
                                 end_date:
-                                  current.end_date && event.target.value > current.end_date
+                                  current.end_date &&
+                                  event.target.value > current.end_date
                                     ? event.target.value
                                     : current.end_date,
                               }));
@@ -1127,7 +1191,9 @@ export function GasForecastProvidersPage() {
                         />
                       </div>
                       {weatherValidationError ? (
-                        <p className="text-xs text-rose-300">{weatherValidationError}</p>
+                        <p className="text-xs text-rose-300">
+                          {weatherValidationError}
+                        </p>
                       ) : null}
                     </div>
                   ) : null}
@@ -1146,15 +1212,20 @@ export function GasForecastProvidersPage() {
                             className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
                             value={ttfConfig.start_date}
                             max={ttfDateBounds.fromMax}
-                            aria-invalid={ttfValidationError ? "true" : undefined}
-                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
+                            aria-invalid={
+                              ttfValidationError ? "true" : undefined
+                            }
+                            aria-describedby={
+                              ttfValidationError ? ttfErrorId : undefined
+                            }
                             onChange={(event) => {
                               setTtfValidationError(null);
                               setTtfConfig((current) => ({
                                 ...current,
                                 start_date: event.target.value,
                                 end_date:
-                                  current.end_date && event.target.value > current.end_date
+                                  current.end_date &&
+                                  event.target.value > current.end_date
                                     ? event.target.value
                                     : current.end_date,
                               }));
@@ -1170,8 +1241,12 @@ export function GasForecastProvidersPage() {
                             value={ttfConfig.end_date}
                             max={ttfDateBounds.toMax}
                             min={ttfDateBounds.toMin}
-                            aria-invalid={ttfValidationError ? "true" : undefined}
-                            aria-describedby={ttfValidationError ? ttfErrorId : undefined}
+                            aria-invalid={
+                              ttfValidationError ? "true" : undefined
+                            }
+                            aria-describedby={
+                              ttfValidationError ? ttfErrorId : undefined
+                            }
                             onChange={(event) => {
                               setTtfValidationError(null);
                               setTtfConfig((current) => ({

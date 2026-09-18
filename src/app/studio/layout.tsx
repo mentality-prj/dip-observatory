@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
-import { DesignSystemProvider, ProductHeader, ProductSwitchLink, StatusBadge } from "@/design-system/components";
+import { DesignSystemProvider, ProductHeader, ProductSwitchLink, StatusBadge } from "@/design-system";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 import { StudioNav } from "@/studio/studio-nav";
 
 export const metadata = { title: "QDIP Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
-  return <DesignSystemProvider theme="green" className="studio-shell">
+  return <DesignSystemProvider theme="green" mode="light" className="studio-shell">
     <ProductHeader
       href={marketingHref("en")}
       product="Studio"

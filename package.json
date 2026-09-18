@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "test": "node --import tsx --test src/app/admin/plugins/gas-forecast/eidos/actions.test.ts src/components/admin/gas-forecast-eidos-page.test.tsx src/components/admin/gas-forecast-providers-page.test.tsx src/dip/plugins/futures-mispricing/futures-mispricing.test.ts src/lib/entsog-date-range.test.ts src/lib/entsog-point-directory.test.ts src/lib/gas-forecast-experiment-client.test.ts src/lib/gas-forecast-provider-client.test.ts src/lib/gas-forecast-provider-model.test.ts src/lib/observatory-contract.test.ts src/production-replanning/production-replanning.test.ts src/production-replanning/scenario-lab.test.ts src/production-replanning/what-if-controls.test.ts src/production-scheduling/production-disruption.test.ts src/production-scheduling/production-scheduling.test.ts src/proxy.test.ts src/studio/proxy.test.ts src/supplier/supplier-decision.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "all": "pnpm check && pnpm test && pnpm test:e2e"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

@@ -29,10 +29,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Label,
+} from "@/design-system";
 import { cn } from "@/lib/utils";
 import {
   buildLocalePath,
@@ -222,7 +227,8 @@ function CollapseSection({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-2xl border border-white/8 bg-slate-900/60">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between px-5 py-4 text-left"
         aria-expanded={open}
@@ -1051,7 +1057,8 @@ function UrgentOrderTriggerCard({ onSimulate }: { onSimulate: () => void }) {
             <h2 className="text-lg font-bold text-white">{u.title}</h2>
             <p className="text-sm text-slate-400">{u.description}</p>
           </div>
-          <button type="button"
+          <button
+            type="button"
             onClick={onSimulate}
             data-testid="simulate-urgent-order"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/20 px-5 py-2.5 text-sm font-semibold text-violet-200 outline-none transition hover:border-violet-400/60 hover:bg-violet-500/30 focus-visible:ring-2 focus-visible:ring-violet-400/60"
@@ -1170,7 +1177,8 @@ function SimulationProgressCard({
               ))}
             </div>
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onSkip}
             data-testid="simulation-skip"
             className="text-xs text-slate-600 transition hover:text-slate-400"
@@ -1598,7 +1606,8 @@ function ScenarioLabControls({
         <Label className="text-xs text-slate-400">
           {ctrl.materialAvailable}
         </Label>
-        <button type="button"
+        <button
+          type="button"
           onClick={() =>
             onChange({
               order103MaterialAvailable: !what.order103MaterialAvailable,
@@ -1625,7 +1634,8 @@ function ScenarioLabControls({
 
       <div className="flex items-center justify-between">
         <Label className="text-xs text-slate-400">{ctrl.overtimeEnabled}</Label>
-        <button type="button"
+        <button
+          type="button"
           onClick={() =>
             onChange({ overtimeAvailable: !what.overtimeAvailable })
           }
@@ -1679,7 +1689,8 @@ function ScenarioLabControls({
         </Label>
         <div className="flex gap-2" data-testid="scenario-order-priority">
           {(["HIGH", "NORMAL", "LOW"] as const).map((p) => (
-            <button type="button"
+            <button
+              type="button"
               key={p}
               onClick={() => onChange({ order116Priority: p })}
               data-testid={`priority-${p.toLowerCase()}`}
@@ -1934,7 +1945,8 @@ function DisruptionTriggerCard({ onActivate }: { onActivate: () => void }) {
               the best operational response.
             </p>
           </div>
-          <button type="button"
+          <button
+            type="button"
             onClick={onActivate}
             data-testid="activate-disruption"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-rose-400/40 bg-rose-500/20 px-5 py-2.5 text-sm font-semibold text-rose-200 outline-none transition hover:border-rose-400/60 hover:bg-rose-500/30 focus-visible:ring-2 focus-visible:ring-rose-400/60"
@@ -2027,7 +2039,8 @@ function DisruptionProgressCard({
             </p>
             <p className="mt-1 text-sm text-slate-400">{info.desc}</p>
           </div>
-          <button type="button"
+          <button
+            type="button"
             onClick={onSkip}
             data-testid="disruption-skip"
             className="text-xs text-slate-600 transition hover:text-slate-400"
@@ -2961,7 +2974,8 @@ function DisruptionLabControls({
             const isAvail = opt === "Available";
             const isActive = what.machineBAvailable === isAvail;
             return (
-              <button type="button"
+              <button
+                type="button"
                 key={opt}
                 onClick={() => onChange({ machineBAvailable: isAvail })}
                 data-testid={`dis-machine-b-${opt.toLowerCase()}`}
@@ -2993,7 +3007,8 @@ function DisruptionLabControls({
         </Label>
         <div className="flex gap-2" data-testid="dis-duration-selector">
           {hourOptions.map((h) => (
-            <button type="button"
+            <button
+              type="button"
               key={h}
               onClick={() => onChange({ disruptionHours: h })}
               data-testid={`dis-duration-${h}h`}
@@ -3014,7 +3029,8 @@ function DisruptionLabControls({
       {/* Overtime */}
       <div className="flex items-center justify-between">
         <Label className="text-xs text-slate-400">Overtime</Label>
-        <button type="button"
+        <button
+          type="button"
           onClick={() =>
             onChange({ overtimeAvailable: !what.overtimeAvailable })
           }
@@ -3101,7 +3117,8 @@ function DisruptionLabControls({
         </Label>
         <div className="flex gap-2">
           {capOptions.map((c) => (
-            <button type="button"
+            <button
+              type="button"
               key={c}
               onClick={() => onChange({ lineCCapacityHours: c })}
               data-testid={`dis-capacity-${c}h`}
@@ -3565,7 +3582,8 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                   </CardTitle>
                 </div>
                 {(!isBaseline || isDisruptionScenario) && (
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={
                       isDisruptionScenario ? handleResetDisruption : handleReset
                     }
@@ -3597,7 +3615,8 @@ export function ProductionSchedulingWorkspace({ locale }: { locale: Locale }) {
                           JSON.stringify(whatIf) ===
                             JSON.stringify(preset.state);
                     return (
-                      <button type="button"
+                      <button
+                        type="button"
                         key={preset.id}
                         data-testid={`preset-${preset.id}`}
                         onClick={() => applyPreset(preset)}

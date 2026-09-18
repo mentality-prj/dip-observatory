@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/design-system";
 import { studioHref } from "@/lib/platform-urls";
 import type { ProfileDimension } from "./contracts";
 
@@ -28,11 +29,19 @@ function readable(value: unknown): string {
 }
 export function RuleSummary({ configuration }: { configuration: Record<string, unknown> }) {
   const rules = Array.isArray(configuration.rules) ? configuration.rules as Record<string, unknown>[] : [];
-  return <div className="studio-grid">{rules.map((rule, index) => <article className="studio-card" key={index}>
-    <h3>{sectionLabel(readable(rule.id ?? `Rule ${index + 1}`))}</h3>
-    {rule.framework != null && <p>Framework: {String(rule.framework)}</p>}
-    <p>{readable(rule.path)} {operators[String(rule.operator)] ?? String(rule.operator)} {readable(rule.limit_path ?? rule.limit)}</p>
-    {rule.action != null && <p>Action: {readable(rule.action)}{rule.required_action != null ? ` · ${readable(rule.required_action)}` : ""}</p>}
-    {rule.severity != null && <p>Severity: {readable(rule.severity)}</p>}
-  </article>)}{configuration.budget != null && <article className="studio-card"><h3>Budget constraint</h3><p>Calculated cost must stay within the configured budget.</p></article>}</div>;
+  return <div className="studio-grid">
+    {rules.map((rule, index) => <Card key={index}>
+      <CardHeader><CardTitle>{sectionLabel(readable(rule.id ?? `Rule ${index + 1}`))}</CardTitle></CardHeader>
+      <CardContent>
+        {rule.framework != null && <p>Framework: {String(rule.framework)}</p>}
+        <p>{readable(rule.path)} {operators[String(rule.operator)] ?? String(rule.operator)} {readable(rule.limit_path ?? rule.limit)}</p>
+        {rule.action != null && <p>Action: {readable(rule.action)}{rule.required_action != null ? ` · ${readable(rule.required_action)}` : ""}</p>}
+        {rule.severity != null && <p>Severity: {readable(rule.severity)}</p>}
+      </CardContent>
+    </Card>)}
+    {configuration.budget != null && <Card>
+      <CardHeader><CardTitle>Budget constraint</CardTitle></CardHeader>
+      <CardContent><p>Calculated cost must stay within the configured budget.</p></CardContent>
+    </Card>}
+  </div>;
 }
