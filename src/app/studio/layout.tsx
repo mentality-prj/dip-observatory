@@ -7,7 +7,7 @@ import { StudioNav } from "@/studio/studio-nav";
 export const metadata = { title: "QDIP Studio" };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
-  return <DesignSystemProvider theme="green" className="studio-shell">
+  return <DesignSystemProvider theme="green" mode="light" className="studio-shell">
     <ProductHeader
       href={marketingHref("en")}
       product="Studio"
