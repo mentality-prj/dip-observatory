@@ -13,8 +13,10 @@ export {
 } from "./containers/production-scheduling-container";
 export {
   useProductionSchedulingViewModel,
+  useSchedulingResults,
   type DisruptionSimulationStep,
   type ProductionSchedulingViewModel,
+  type SchedulingResults,
   type SimulationStep,
 } from "./hooks";
 export {
