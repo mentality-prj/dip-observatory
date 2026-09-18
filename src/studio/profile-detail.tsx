@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Table } from "@/design-system";
 import { studioHref } from "@/lib/platform-urls";
 import { studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from "./contracts";
 import { ProfileEditor } from "./profile-editor";
@@ -12,56 +10,17 @@ import { ProfileRunner } from "./profile-runner";
 import { Breadcrumbs, dimensionSource, profileSections, sectionLabel, type ProfileSection } from "./presentation";
 
 export function ProfileDetail({ id, section }: { id: string; section: ProfileSection }) {
-  const [data, setData] = useState<{ profile: ProfileView; dimensions: Dimension[]; plugins: Plugin[] } | null>(null);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [retry, setRetry] = useState(0);
-  const [running, setRunning] = useState(false);
-  useEffect(() => {
-    let disposed = false;
-    Promise.all([studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`),
-      studioRequest<Dimension[]>("dimensions"), studioRequest<Plugin[]>("decision-studio/plugins")])
-      .then(([profile, dimensions, plugins]) => { if (!disposed) { setData({ profile, dimensions, plugins }); setError(""); } })
-      .catch((reason) => { if (!disposed) setError(String(reason)); });
-    return () => { disposed = true; };
-  }, [id, retry]);
+  const [data, setData] = useState<{ profile: ProfileView; dimensions: Dimension[]; plugins: Plugin[] } | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [retry, setRetry] = useState(0); const [running, setRunning] = useState(false);
+  useEffect(() => { let disposed = false; Promise.all([studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`), studioRequest<Dimension[]>("dimensions"), studioRequest<Plugin[]>("decision-studio/plugins")]).then(([profile, dimensions, plugins]) => { if (!disposed) { setData({ profile, dimensions, plugins }); setError(""); } }).catch((reason) => { if (!disposed) setError(String(reason)); }); return () => { disposed = true; }; }, [id, retry]);
   if (!data) return <>{error ? <div role="alert">{error} <Button variant="secondary" type="button" onClick={() => setRetry(retry + 1)}>Retry</Button></div> : <p role="status">Loading profile…</p>}<Link href={studioHref("profiles")}>Decision Profiles</Link></>;
-  const { profile, dimensions, plugins } = data;
-  const plugin = plugins.find((p) => p.name === profile.plugin_id);
-  const pluginName = plugin?.ui?.label ?? profile.plugin_id;
-  const base = studioHref(`profiles/${encodeURIComponent(id)}`);
-  const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== "validation")) as Profile;
-  return <>
-    <Breadcrumbs items={[{ label: "Decision Profiles", href: studioHref("profiles") }, { label: profile.name, href: base }, { label: sectionLabel(section) }]} />
+  const { profile, dimensions, plugins } = data; const plugin = plugins.find((p) => p.name === profile.plugin_id); const pluginName = plugin?.ui?.label ?? profile.plugin_id; const base = studioHref(`profiles/${encodeURIComponent(id)}`); const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== "validation")) as Profile;
+  return <><Breadcrumbs items={[{ label: "Decision Profiles", href: studioHref("profiles") }, { label: profile.name, href: base }, { label: sectionLabel(section) }]} />
     <div className="studio-title-row"><div><h1>{profile.name}</h1><p>Version {profile.version}</p></div><Badge variant={profile.active ? "emerald" : "neutral"}>{profile.active ? "Active" : "Draft"}</Badge></div>
     <nav aria-label="Profile sections" className="studio-profile-nav">{profileSections.map((tab) => <Link key={tab} aria-current={section === tab ? "page" : undefined} href={tab === "overview" ? base : `${base}/${tab}`}>{sectionLabel(tab)}</Link>)}</nav>
-    {error && <p role="alert" className="studio-error">{error}</p>}
-    {message && <p role="status" className="studio-success">{message}</p>}
-    {profile.validation.errors.map((validationError) => <p key={validationError} className="studio-error">{validationError}</p>)}
-    {section === "overview" && <>
-      <Card><CardHeader><CardTitle>Overview</CardTitle></CardHeader><CardContent><dl>
-        <dt>Profile</dt><dd>{profile.name}</dd><dt>ID</dt><dd>{profile.id}</dd><dt>Version</dt><dd>{profile.version}</dd>
-        <dt>Status</dt><dd>{profile.active ? "Active" : "Draft"}</dd><dt>Plugin</dt><dd>{pluginName} @ {profile.plugin_version}</dd>
-        <dt>Capability</dt><dd>{profile.capability_id} @ {profile.capability_version}</dd>
-      </dl><h3>Execution model</h3><p className="studio-flow">{pluginName} → Output Bindings → Decision Dimensions → Alternatives → Decision</p></CardContent></Card>
-      <Button type="button" disabled={!profile.active || profile.validation.status !== "VALID"} onClick={() => setRunning(!running)}>Evaluate</Button>
-      {running && <ProfileRunner profile={clean} />}
-    </>}
-    {section === "dimensions" && <Card><CardHeader><CardTitle>Enabled dimensions</CardTitle></CardHeader><CardContent><div className="studio-table-wrap"><table>
-      <thead><tr><th>Dimension</th><th>Source</th><th>Weight</th><th>Required</th></tr></thead>
-      <tbody>{profile.dimensions.map((item) => {
-        const definition = dimensions.find((d) => d.id === item.dimension_id && d.version === item.version);
-        const source = dimensionSource(item);
-        return <tr key={item.dimension_id}><td>{definition?.name ?? item.dimension_id}</td><td>{source}{source === "Plugin supplied" ? ` · ${pluginName}` : source === "DIP calculated" ? " · DIP evaluator" : ""}</td><td>{definition?.type === "rules" ? "—" : item.weight}</td><td>{item.required ? "Yes" : "No"}</td></tr>;
-      })}</tbody></table></div></CardContent></Card>}
-    {section === "constraints" && <><h2>Constraints</h2><p>Rules for this profile determine whether each alternative is feasible. Blocking: Yes.</p></>}
-    {section === "policies" && <><h2>Policies</h2><p>Policies may require actions or approvals without necessarily making an alternative infeasible.</p></>}
-    {section === "compliance" && <><h2>Compliance</h2><p>Frameworks and rules for this profile, including conditions, actions and severity. A framework such as GDPR is a ruleset, not a numeric score.</p></>}
-    <ProfileEditor key={`${profile.id}-${profile.version}`} initial={clean} existing plugins={plugins} dimensions={dimensions} section={section}
-      filter={section === "policies" ? "policy" : ["constraints", "compliance"].includes(section) ? section : undefined}
-      onSave={async (next) => {
-        const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(next) });
-        setData({ ...data, profile: saved }); setMessage(`Profile ${next.name} saved at version ${next.version}.`);
-      }} />
+    {error && <p role="alert" className="studio-error">{error}</p>}{message && <p role="status" className="studio-success">{message}</p>}{profile.validation.errors.map((validationError) => <p key={validationError} className="studio-error">{validationError}</p>)}
+    {section === "overview" && <><Card><CardHeader><CardTitle>Overview</CardTitle></CardHeader><CardContent><dl><dt>Profile</dt><dd>{profile.name}</dd><dt>ID</dt><dd>{profile.id}</dd><dt>Version</dt><dd>{profile.version}</dd><dt>Status</dt><dd>{profile.active ? "Active" : "Draft"}</dd><dt>Plugin</dt><dd>{pluginName} @ {profile.plugin_version}</dd><dt>Capability</dt><dd>{profile.capability_id} @ {profile.capability_version}</dd></dl><h3>Execution model</h3><p className="studio-flow">{pluginName} → Output Bindings → Decision Dimensions → Alternatives → Decision</p></CardContent></Card><Button type="button" disabled={!profile.active || profile.validation.status !== "VALID"} onClick={() => setRunning(!running)}>Evaluate</Button>{running && <ProfileRunner profile={clean} />}</>}
+    {section === "dimensions" && <Card><CardHeader><CardTitle>Enabled dimensions</CardTitle></CardHeader><CardContent><Table><thead><tr><th>Dimension</th><th>Source</th><th>Weight</th><th>Required</th></tr></thead><tbody>{profile.dimensions.map((item) => { const definition = dimensions.find((d) => d.id === item.dimension_id && d.version === item.version); const source = dimensionSource(item); return <tr key={item.dimension_id}><td>{definition?.name ?? item.dimension_id}</td><td>{source}{source === "Plugin supplied" ? ` · ${pluginName}` : source === "DIP calculated" ? " · DIP evaluator" : ""}</td><td>{definition?.type === "rules" ? "—" : item.weight}</td><td>{item.required ? "Yes" : "No"}</td></tr>; })}</tbody></Table></CardContent></Card>}
+    {section === "constraints" && <><h2>Constraints</h2><p>Rules for this profile determine whether each alternative is feasible. Blocking: Yes.</p></>}{section === "policies" && <><h2>Policies</h2><p>Policies may require actions or approvals without necessarily making an alternative infeasible.</p></>}{section === "compliance" && <><h2>Compliance</h2><p>Frameworks and rules for this profile, including conditions, actions and severity. A framework such as GDPR is a ruleset, not a numeric score.</p></>}
+    <ProfileEditor key={`${profile.id}-${profile.version}`} initial={clean} existing plugins={plugins} dimensions={dimensions} section={section} filter={section === "policies" ? "policy" : ["constraints", "compliance"].includes(section) ? section : undefined} onSave={async (next) => { const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(next) }); setData({ ...data, profile: saved }); setMessage(`Profile ${next.name} saved at version ${next.version}.`); }} />
   </>;
 }
