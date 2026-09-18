@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/design-system";
 import { studioHref } from "@/lib/platform-urls";
 import type { ProfileDimension } from "./contracts";
 
