@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/design-system";
 import { studioRequest, type Binding, type Dimension, type Plugin } from "./contracts";
 import { outputLabel } from "./presentation";
 import { JsonField } from "./schema-form";
