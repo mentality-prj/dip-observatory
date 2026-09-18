@@ -4,3 +4,7 @@ export {
   DisruptionResults,
   type DisruptionResultsProps,
 } from "./disruption-results";
+export {
+  DisruptionScenarioView,
+  type DisruptionScenarioViewProps,
+} from "./disruption-scenario-view";
