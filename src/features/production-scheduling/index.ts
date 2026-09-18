@@ -4,8 +4,10 @@ export { ProductionSchedulingWorkspace } from "@/production-scheduling/component
 export {
   DisruptionFinancialPanel,
   DisruptionResults,
+  DisruptionScenarioView,
   DisruptionScheduleDiff,
   type DisruptionResultsProps,
+  type DisruptionScenarioViewProps,
 } from "./components";
 export {
   ProductionSchedulingContainer,
