@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 
 import { BASELINE_DISRUPTION_WHAT_IF, type DisruptionWhatIfState } from "@/production-scheduling/data/production-disruption-scenario";
 
@@ -23,7 +30,7 @@ export interface DisruptionSimulationController {
   skip: () => void;
   revealFullPlan: () => void;
   reset: () => void;
-  setWhatIf: React.Dispatch<React.SetStateAction<DisruptionWhatIfState>>;
+  setWhatIf: Dispatch<SetStateAction<DisruptionWhatIfState>>;
 }
 
 export function useDisruptionSimulation(
