@@ -20,9 +20,15 @@
   --ds-border: rgba(255,255,255,.10); --ds-text: #f8fafc; --ds-text-muted: #94a3b8;
   --ds-accent: #67e8f9; --ds-accent-rgb: 103 232 249; --ds-accent-contrast: #061216;
   --ds-focus: rgba(103,232,249,.58); --ds-shadow-card: 0 18px 60px rgba(0,0,0,.28);
+  --ds-hover: rgba(255,255,255,.09);
 }
 
-[data-ds-theme="green"], [data-ds-theme="emerald"] { --ds-accent:#6ee7b7; --ds-accent-rgb:110 231 183; --ds-focus:rgba(110,231,183,.58); }
+[data-ds-mode="light"] {
+  --ds-bg:#f7faf8; --ds-surface:#f1f7f3; --ds-surface-raised:#fff;
+  --ds-border:#dce7e1; --ds-text:#0e1116; --ds-text-muted:#69736f;
+  --ds-shadow-card:0 15px 38px rgba(0,68,55,.055); --ds-hover:rgba(0,68,55,.055);
+}
+[data-ds-theme="green"], [data-ds-theme="emerald"] { --ds-accent:#00c246; --ds-accent-rgb:0 194 70; --ds-accent-contrast:#00180a; --ds-focus:rgba(0,194,70,.5); }
 [data-ds-theme="cyan"] { --ds-accent:#67e8f9; --ds-accent-rgb:103 232 249; --ds-focus:rgba(103,232,249,.58); }
 [data-ds-theme="amber"] { --ds-accent:#fcd34d; --ds-accent-rgb:252 211 77; --ds-focus:rgba(252,211,77,.58); }
 [data-ds-theme="rose"] { --ds-accent:#fda4af; --ds-accent-rgb:253 164 175; --ds-focus:rgba(253,164,175,.58); }
