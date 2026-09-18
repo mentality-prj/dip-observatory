@@ -1,24 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import {
   BASELINE_DISRUPTION_WHAT_IF,
-  buildPdrScenario,
-  getOrdersAtRisk,
-  getPdrPreDisruptionDecision,
   type DisruptionWhatIfState,
 } from "@/production-scheduling/data/production-disruption-scenario";
-import { DEFAULT_SCENARIO, SCENARIO_PRESETS } from "@/production-scheduling/data/scenario";
-import { DEFAULT_COST_CONFIG, runSchedulingEngine } from "@/production-scheduling/lib/engine";
+import { SCENARIO_PRESETS } from "@/production-scheduling/data/scenario";
 import {
   BASELINE_WHAT_IF,
-  buildCostConfigOverride,
-  buildSchedulingScenario,
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
+import { useSchedulingResults } from "./use-scheduling-results";
 
 export type SimulationStep = "idle" | "event" | "impact" | "decision" | "complete";
 export type DisruptionSimulationStep = "idle" | "detected" | "impact" | "evaluating" | "complete";
@@ -47,38 +42,14 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   );
   const [disruptionWhatIf, setDisruptionWhatIf] = useState<DisruptionWhatIfState>(BASELINE_DISRUPTION_WHAT_IF);
 
+  const results = useSchedulingResults(whatIf, disruptionWhatIf);
+
   const clearTimers = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
   }, []);
 
   useEffect(() => clearTimers, [clearTimers]);
-
-  const baselineResult = useMemo(
-    () => runSchedulingEngine({ scenario: DEFAULT_SCENARIO, costConfig: DEFAULT_COST_CONFIG }),
-    [],
-  );
-  const scenarioResult = useMemo(() => {
-    const scenario = buildSchedulingScenario(DEFAULT_SCENARIO, whatIf);
-    return runSchedulingEngine({
-      scenario,
-      costConfig: { ...DEFAULT_COST_CONFIG, ...buildCostConfigOverride(whatIf) },
-    });
-  }, [whatIf]);
-  const isBaseline = useMemo(
-    () => JSON.stringify(whatIf) === JSON.stringify(BASELINE_WHAT_IF),
-    [whatIf],
-  );
-
-  const preDisruptionResult = useMemo(() => getPdrPreDisruptionDecision(), []);
-  const disruptedResult = useMemo(() => {
-    const { scenario, costConfigOverride } = buildPdrScenario(disruptionWhatIf);
-    return runSchedulingEngine({
-      scenario,
-      costConfig: { ...DEFAULT_COST_CONFIG, ...costConfigOverride },
-    });
-  }, [disruptionWhatIf]);
-  const ordersAtRisk = useMemo(() => getOrdersAtRisk(disruptedResult), [disruptedResult]);
 
   const replaceScenarioQuery = useCallback((id: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -155,13 +126,7 @@ export function useProductionSchedulingViewModel(locale: Locale) {
     setDisruptionShowFullPlan,
     disruptionWhatIf,
     setDisruptionWhatIf,
-    baselineResult,
-    scenarioResult,
-    displayResult: isBaseline ? baselineResult : scenarioResult,
-    isBaseline,
-    preDisruptionResult,
-    disruptedResult,
-    ordersAtRisk,
+    ...results,
     visibility: {
       showProgress: isAnimating,
       showUrgentResult: whatIf.includeUrgentOrder && !isAnimating,
