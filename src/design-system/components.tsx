@@ -4,10 +4,11 @@ import { ProductLockup } from "@/components/platform/product-lockup";
 import { cn } from "@/lib/utils";
 
 export type DesignTheme = "green" | "cyan" | "emerald" | "amber" | "rose" | "violet";
+export type DesignMode = "dark" | "light";
 export type ProductName = ComponentProps<typeof ProductLockup>["product"];
 
-export function DesignSystemProvider({ theme, children, className }: { theme: DesignTheme; children: ReactNode; className?: string }) {
-  return <div data-ds-theme={theme} className={className}>{children}</div>;
+export function DesignSystemProvider({ theme, mode = "dark", children, className }: { theme: DesignTheme; mode?: DesignMode; children: ReactNode; className?: string }) {
+  return <div data-ds-theme={theme} data-ds-mode={mode} className={className}>{children}</div>;
 }
 
 export function ProductHeader({ href, product, center, actions, className }: { href: string; product: ProductName; center?: ReactNode; actions?: ReactNode; className?: string }) {
