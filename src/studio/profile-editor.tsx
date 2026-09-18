@@ -115,7 +115,7 @@ export function ProfileEditor({ initial, existing, plugins, dimensions, onSave, 
         </section>;
       })}
     </CardContent></Card>}
-    {(!section || section === "overview") && <details className="studio-card"><summary>Runtime context schema</summary>
+    {(!section || section === "overview") && <details className="studio-schema"><summary>Runtime context schema</summary>
       <p>Validate application-supplied context separately from business configuration and plugin inputs.</p>
       <JsonField label="JSON Schema" value={profile.context_schema} onChange={(schema) => setProfile({ ...profile, context_schema: schema as Profile["context_schema"] })} />
     </details>}
