@@ -2,6 +2,7 @@
 .ds-container{width:100%;max-width:var(--ds-content-max);margin-inline:auto;padding-inline:1.5rem}.ds-page{width:100%;padding-block:2rem 4rem}.ds-section{margin-block:var(--ds-space-12)}
 .ds-product-header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--ds-border);background:color-mix(in srgb,var(--ds-bg) 88%,transparent);backdrop-filter:blur(18px)}
 .ds-product-header-inner{width:100%;max-width:var(--ds-content-max);min-height:var(--ds-header-height);margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1rem}
+.ds-product-lockup{display:inline-flex;min-height:44px;align-items:center;flex-shrink:0;color:var(--ds-text);font-size:1.125rem;font-weight:400;letter-spacing:-.025em;text-decoration:none;transition:opacity 160ms}.ds-product-lockup:hover{opacity:.82}.ds-product-lockup-brand{font-weight:450}.ds-product-lockup-product{color:var(--ds-accent);font-weight:350}
 .ds-product-header-center{min-width:0;flex:1;display:flex;align-items:center}.ds-product-header-spacer{flex:1}.ds-product-header-actions{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
 .ds-product-switch-link{display:inline-flex;min-height:2.5rem;align-items:center;justify-content:center;border:1px solid var(--ds-border);border-radius:var(--ds-radius-control);padding:.625rem .875rem;color:var(--ds-text);font-size:var(--ds-text-sm);font-weight:600;transition:background .15s,border-color .15s,color .15s}
 .ds-product-switch-link:hover{border-color:rgb(var(--ds-accent-rgb)/.38);background:rgb(var(--ds-accent-rgb)/.09);color:var(--ds-accent)}
