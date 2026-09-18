@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
@@ -14,6 +14,7 @@ import {
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
 import { useSchedulingResults } from "./use-scheduling-results";
+import { useTimeoutSequence } from "./use-timeout-sequence";
 
 export type SimulationStep =
   | "idle"
@@ -28,11 +29,28 @@ export type DisruptionSimulationStep =
   | "evaluating"
   | "complete";
 
+const URGENT_ORDER_SEQUENCE = [
+  { afterMs: 1200, value: "impact" },
+  { afterMs: 2400, value: "decision" },
+  { afterMs: 3600, value: "complete" },
+] as const satisfies readonly {
+  afterMs: number;
+  value: SimulationStep;
+}[];
+
+const DISRUPTION_SEQUENCE = [
+  { afterMs: 1000, value: "impact" },
+  { afterMs: 2200, value: "evaluating" },
+  { afterMs: 3400, value: "complete" },
+] as const satisfies readonly {
+  afterMs: number;
+  value: DisruptionSimulationStep;
+}[];
+
 export function useProductionSchedulingViewModel(locale: Locale) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const [activePresetId, setActivePresetId] = useState(
     () => searchParams.get("scenario") ?? "baseline",
@@ -61,14 +79,15 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   const [disruptionWhatIf, setDisruptionWhatIf] =
     useState<DisruptionWhatIfState>(BASELINE_DISRUPTION_WHAT_IF);
 
+  const urgentSequence = useTimeoutSequence<SimulationStep>(setSimulationStep);
+  const disruptionSequence =
+    useTimeoutSequence<DisruptionSimulationStep>(setDisruptionStep);
   const results = useSchedulingResults(whatIf, disruptionWhatIf);
 
-  const clearTimers = useCallback(() => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  }, []);
-
-  useEffect(() => clearTimers, [clearTimers]);
+  const cancelAnimations = useCallback(() => {
+    urgentSequence.cancel();
+    disruptionSequence.cancel();
+  }, [disruptionSequence, urgentSequence]);
 
   const replaceScenarioQuery = useCallback(
     (id: string) => {
@@ -85,7 +104,7 @@ export function useProductionSchedulingViewModel(locale: Locale) {
 
   const applyPreset = useCallback(
     (preset: (typeof SCENARIO_PRESETS)[number]) => {
-      clearTimers();
+      cancelAnimations();
       setSimulationStep("idle");
       setShowFullPlan(false);
       setActivePresetId(preset.id);
@@ -98,34 +117,26 @@ export function useProductionSchedulingViewModel(locale: Locale) {
       }
       replaceScenarioQuery(preset.id);
     },
-    [clearTimers, replaceScenarioQuery],
+    [cancelAnimations, replaceScenarioQuery],
   );
 
   const simulateUrgentOrder = useCallback(() => {
-    clearTimers();
+    cancelAnimations();
     setWhatIf((current) => ({ ...current, includeUrgentOrder: true }));
     setShowFullPlan(false);
     setSimulationStep("event");
-    timers.current = [
-      setTimeout(() => setSimulationStep("impact"), 1200),
-      setTimeout(() => setSimulationStep("decision"), 2400),
-      setTimeout(() => setSimulationStep("complete"), 3600),
-    ];
-  }, [clearTimers]);
+    urgentSequence.start(URGENT_ORDER_SEQUENCE);
+  }, [cancelAnimations, urgentSequence]);
 
   const activateDisruption = useCallback(() => {
-    clearTimers();
+    cancelAnimations();
     setDisruptionShowFullPlan(false);
     setDisruptionStep("detected");
-    timers.current = [
-      setTimeout(() => setDisruptionStep("impact"), 1000),
-      setTimeout(() => setDisruptionStep("evaluating"), 2200),
-      setTimeout(() => setDisruptionStep("complete"), 3400),
-    ];
-  }, [clearTimers]);
+    disruptionSequence.start(DISRUPTION_SEQUENCE);
+  }, [cancelAnimations, disruptionSequence]);
 
   const reset = useCallback(() => {
-    clearTimers();
+    cancelAnimations();
     setWhatIf(BASELINE_WHAT_IF);
     setSimulationStep("idle");
     setShowFullPlan(false);
@@ -134,7 +145,7 @@ export function useProductionSchedulingViewModel(locale: Locale) {
     setDisruptionShowFullPlan(false);
     setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
     replaceScenarioQuery("baseline");
-  }, [clearTimers, replaceScenarioQuery]);
+  }, [cancelAnimations, replaceScenarioQuery]);
 
   const isAnimating =
     simulationStep !== "idle" && simulationStep !== "complete";
@@ -166,16 +177,16 @@ export function useProductionSchedulingViewModel(locale: Locale) {
       applyPreset,
       simulateUrgentOrder,
       skipUrgentAnimation: () => {
-        clearTimers();
+        urgentSequence.cancel();
         setSimulationStep("complete");
       },
       activateDisruption,
       skipDisruptionAnimation: () => {
-        clearTimers();
+        disruptionSequence.cancel();
         setDisruptionStep("complete");
       },
       resetDisruption: () => {
-        clearTimers();
+        disruptionSequence.cancel();
         setDisruptionStep("idle");
         setDisruptionShowFullPlan(false);
         setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
