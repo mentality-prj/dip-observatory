@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-export interface TimeoutStep<TStep> {
-  readonly afterMs: number;
-  readonly value: TStep;
-}
+import type { SimulationSequenceStep } from "../model/simulation";
 
 /**
  * Owns lifecycle-safe timeout orchestration for progressive UI simulations.
@@ -32,7 +29,7 @@ export function useTimeoutSequence<TStep>(
   useEffect(() => cancel, [cancel]);
 
   const start = useCallback(
-    (steps: readonly TimeoutStep<TStep>[]) => {
+    (steps: readonly SimulationSequenceStep<TStep>[]) => {
       cancel();
       timersRef.current = steps.map(({ afterMs, value }) =>
         setTimeout(() => onStepRef.current(value), afterMs),
