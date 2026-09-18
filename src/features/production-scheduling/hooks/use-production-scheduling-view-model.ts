@@ -13,23 +13,14 @@ import {
   SCENARIO_PRESETS,
   type WhatIfState,
 } from "@/production-scheduling/lib/what-if";
+import {
+  DISRUPTION_SEQUENCE,
+  URGENT_ORDER_SEQUENCE,
+  type DisruptionSimulationStep,
+  type SimulationStep,
+} from "../model/simulation";
 import { useSchedulingResults } from "./use-scheduling-results";
 import { useTimeoutSequence } from "./use-timeout-sequence";
-
-export type SimulationStep = "idle" | "event" | "impact" | "decision" | "complete";
-export type DisruptionSimulationStep = "idle" | "detected" | "impact" | "evaluating" | "complete";
-
-const URGENT_ORDER_SEQUENCE = [
-  { afterMs: 1200, value: "impact" },
-  { afterMs: 2400, value: "decision" },
-  { afterMs: 3600, value: "complete" },
-] as const satisfies readonly { afterMs: number; value: SimulationStep }[];
-
-const DISRUPTION_SEQUENCE = [
-  { afterMs: 1000, value: "impact" },
-  { afterMs: 2200, value: "evaluating" },
-  { afterMs: 3400, value: "complete" },
-] as const satisfies readonly { afterMs: number; value: DisruptionSimulationStep }[];
 
 export function useProductionSchedulingViewModel(locale: Locale) {
   const searchParams = useSearchParams();
