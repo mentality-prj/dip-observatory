@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
-import "@/studio/readability.css";
 import { DesignSystemProvider, ProductHeader, ProductSwitchLink, StatusBadge } from "@/design-system/components";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 import { StudioNav } from "@/studio/studio-nav";

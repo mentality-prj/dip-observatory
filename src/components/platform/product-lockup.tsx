@@ -22,8 +22,8 @@ export function ProductLockup({
       href={href}
       onClick={onClick}
     >
-      <strong style={product === "Studio" ? { fontWeight: 650 } : undefined}>QDIP</strong>
-      <span style={product === "Studio" ? { fontWeight: 500 } : undefined}>.{product}</span>
+      <span className="product-lockup-brand">QDIP</span>
+      <span className="product-lockup-product">.{product}</span>
     </Link>
   );
 }

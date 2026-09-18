@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 import type { Locale } from "@/lib/observatory-i18n";
+import type { UseCaseId } from "@/use-cases/registry";
 
 export type ApplicationFrontendProps = { locale: Locale };
 
@@ -14,7 +15,7 @@ const ProductionScheduling = dynamic<ApplicationFrontendProps>(() => import("@/p
 const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/resource-allocation/components/resource-allocation-workspace").then((m) => ({ default: m.ResourceAllocationWorkspace })));
 const SupplierDecision = dynamic<ApplicationFrontendProps>(() => import("@/supplier/components/supplier-workspace").then((m) => ({ default: m.SupplierWorkspace })));
 
-const frontends: Record<string, ComponentType<ApplicationFrontendProps>> = {
+const frontends = {
   "customer-opportunities": CustomerOpportunities,
   "gas-forecast": GasForecast,
   "production-decision": ProductionDecision,
@@ -22,14 +23,13 @@ const frontends: Record<string, ComponentType<ApplicationFrontendProps>> = {
   "production-scheduling": ProductionScheduling,
   "resource-allocation": ResourceAllocation,
   "supplier-decision": SupplierDecision,
-};
+} satisfies Record<UseCaseId, ComponentType<ApplicationFrontendProps>>;
 
-export function ApplicationFrontend({ id, locale }: { id: string; locale: Locale }) {
+export function ApplicationFrontend({ id, locale }: { id: UseCaseId; locale: Locale }) {
   const Frontend = frontends[id];
-  if (!Frontend) return null;
   return <Frontend locale={locale} />;
 }
 
-export function hasApplicationFrontend(id: string): boolean {
+export function hasApplicationFrontend(id: string): id is UseCaseId {
   return id in frontends;
 }
