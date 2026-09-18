@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/design-system";
+
 import type { ProductionSchedulingVM } from "../model/view-model";
 import { DisruptionResults } from "./disruption-results";
 
@@ -8,7 +10,7 @@ export interface DisruptionScenarioViewProps {
     ProductionSchedulingVM,
     | "disruptionStep"
     | "disruptionShowFullPlan"
-    | "preResult"
+    | "preDisruptionResult"
     | "disruptedResult"
     | "actions"
   >;
@@ -27,7 +29,7 @@ export function DisruptionScenarioView({
   const {
     disruptionStep,
     disruptionShowFullPlan,
-    preResult,
+    preDisruptionResult,
     disruptedResult,
     actions,
   } = viewModel;
@@ -35,9 +37,9 @@ export function DisruptionScenarioView({
   if (disruptionStep === "idle") {
     return (
       <section data-testid="disruption-scenario-idle">
-        <button type="button" onClick={actions.activateDisruption}>
+        <Button type="button" onClick={actions.activateDisruption}>
           Simulate disruption
-        </button>
+        </Button>
       </section>
     );
   }
@@ -46,9 +48,9 @@ export function DisruptionScenarioView({
     return (
       <section data-testid="disruption-scenario-progress" aria-live="polite">
         <p>{disruptionStep}</p>
-        <button type="button" onClick={actions.skipDisruptionAnimation}>
+        <Button type="button" onClick={actions.skipDisruptionAnimation}>
           Skip simulation
-        </button>
+        </Button>
       </section>
     );
   }
@@ -56,19 +58,14 @@ export function DisruptionScenarioView({
   return (
     <section data-testid="disruption-scenario-complete">
       <DisruptionResults
-        preResult={preResult}
+        preResult={preDisruptionResult}
         disruptedResult={disruptedResult}
       />
-      <div>
-        {!disruptionShowFullPlan ? (
-          <button
-            type="button"
-            onClick={() => viewModel.actions.resetDisruption()}
-          >
-            Reset disruption
-          </button>
-        ) : null}
-      </div>
+      {!disruptionShowFullPlan ? (
+        <Button type="button" variant="secondary" onClick={actions.resetDisruption}>
+          Reset disruption
+        </Button>
+      ) : null}
     </section>
   );
 }
