@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../design-system/tokens.css";
+@import "../design-system/themes.css";
 @import "../design-system/components.css";
 
 :root { color-scheme: dark; --background:var(--ds-bg); --foreground:var(--ds-text); --radius-control:var(--ds-radius-control); --radius-card:var(--ds-radius-card); --radius-pill:var(--ds-radius-pill); --shadow-card:var(--ds-shadow-card); --focus-ring:var(--ds-focus); }
