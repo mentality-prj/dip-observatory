@@ -4,32 +4,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
-import { DEFAULT_SCENARIO, SCENARIO_PRESETS } from "@/production-scheduling/data/scenario";
-import {
-  DEFAULT_COST_CONFIG,
-  runSchedulingEngine,
-} from "@/production-scheduling/lib/engine";
-import {
-  BASELINE_WHAT_IF,
-  buildCostConfigOverride,
-  buildSchedulingScenario,
-  type WhatIfState,
-} from "@/production-scheduling/lib/what-if";
 import {
   BASELINE_DISRUPTION_WHAT_IF,
   buildPdrScenario,
   getOrdersAtRisk,
   getPdrPreDisruptionDecision,
   type DisruptionWhatIfState,
-} from "@/production-scheduling/lib/production-disruption";
+} from "@/production-scheduling/data/production-disruption-scenario";
+import { DEFAULT_SCENARIO, SCENARIO_PRESETS } from "@/production-scheduling/data/scenario";
+import { DEFAULT_COST_CONFIG, runSchedulingEngine } from "@/production-scheduling/lib/engine";
+import {
+  BASELINE_WHAT_IF,
+  buildCostConfigOverride,
+  buildSchedulingScenario,
+  type WhatIfState,
+} from "@/production-scheduling/lib/what-if";
 
 export type SimulationStep = "idle" | "event" | "impact" | "decision" | "complete";
-export type DisruptionSimulationStep =
-  | "idle"
-  | "detected"
-  | "impact"
-  | "evaluating"
-  | "complete";
+export type DisruptionSimulationStep = "idle" | "detected" | "impact" | "evaluating" | "complete";
 
 export function useProductionSchedulingViewModel(locale: Locale) {
   const searchParams = useSearchParams();
@@ -37,9 +29,7 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   const pathname = usePathname();
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const [activePresetId, setActivePresetId] = useState(
-    () => searchParams.get("scenario") ?? "baseline",
-  );
+  const [activePresetId, setActivePresetId] = useState(() => searchParams.get("scenario") ?? "baseline");
   const [whatIf, setWhatIf] = useState<WhatIfState>(() => {
     const id = searchParams.get("scenario");
     if (id && id !== "production-disruption") {
@@ -55,9 +45,7 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   const [disruptionShowFullPlan, setDisruptionShowFullPlan] = useState(
     () => searchParams.get("scenario") === "production-disruption",
   );
-  const [disruptionWhatIf, setDisruptionWhatIf] = useState<DisruptionWhatIfState>(
-    BASELINE_DISRUPTION_WHAT_IF,
-  );
+  const [disruptionWhatIf, setDisruptionWhatIf] = useState<DisruptionWhatIfState>(BASELINE_DISRUPTION_WHAT_IF);
 
   const clearTimers = useCallback(() => {
     timers.current.forEach(clearTimeout);
@@ -92,34 +80,28 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   }, [disruptionWhatIf]);
   const ordersAtRisk = useMemo(() => getOrdersAtRisk(disruptedResult), [disruptedResult]);
 
-  const replaceScenarioQuery = useCallback(
-    (id: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (id === "baseline") params.delete("scenario");
-      else params.set("scenario", id);
-      const query = params.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
-    },
-    [pathname, router, searchParams],
-  );
+  const replaceScenarioQuery = useCallback((id: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id === "baseline") params.delete("scenario");
+    else params.set("scenario", id);
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  }, [pathname, router, searchParams]);
 
-  const applyPreset = useCallback(
-    (preset: (typeof SCENARIO_PRESETS)[number]) => {
-      clearTimers();
-      setSimulationStep("idle");
-      setShowFullPlan(false);
-      setActivePresetId(preset.id);
-      if (preset.id === "production-disruption") {
-        setDisruptionStep("idle");
-        setDisruptionShowFullPlan(false);
-        setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
-      } else {
-        setWhatIf(preset.state);
-      }
-      replaceScenarioQuery(preset.id);
-    },
-    [clearTimers, replaceScenarioQuery],
-  );
+  const applyPreset = useCallback((preset: (typeof SCENARIO_PRESETS)[number]) => {
+    clearTimers();
+    setSimulationStep("idle");
+    setShowFullPlan(false);
+    setActivePresetId(preset.id);
+    if (preset.id === "production-disruption") {
+      setDisruptionStep("idle");
+      setDisruptionShowFullPlan(false);
+      setDisruptionWhatIf(BASELINE_DISRUPTION_WHAT_IF);
+    } else {
+      setWhatIf(preset.state);
+    }
+    replaceScenarioQuery(preset.id);
+  }, [clearTimers, replaceScenarioQuery]);
 
   const simulateUrgentOrder = useCallback(() => {
     clearTimers();
@@ -156,6 +138,8 @@ export function useProductionSchedulingViewModel(locale: Locale) {
     replaceScenarioQuery("baseline");
   }, [clearTimers, replaceScenarioQuery]);
 
+  const isAnimating = simulationStep !== "idle" && simulationStep !== "complete";
+
   return {
     locale,
     backHref: buildLocalePath("/", locale),
@@ -179,20 +163,10 @@ export function useProductionSchedulingViewModel(locale: Locale) {
     disruptedResult,
     ordersAtRisk,
     visibility: {
-      showProgress: simulationStep !== "idle" && simulationStep !== "complete",
-      showUrgentResult:
-        whatIf.includeUrgentOrder &&
-        simulationStep !== "event" &&
-        simulationStep !== "impact" &&
-        simulationStep !== "decision",
-      showMainPanels:
-        simulationStep !== "event" &&
-        simulationStep !== "impact" &&
-        simulationStep !== "decision" &&
-        (!whatIf.includeUrgentOrder || showFullPlan),
-      showTrigger:
-        !whatIf.includeUrgentOrder &&
-        (simulationStep === "idle" || simulationStep === "complete"),
+      showProgress: isAnimating,
+      showUrgentResult: whatIf.includeUrgentOrder && !isAnimating,
+      showMainPanels: !isAnimating && (!whatIf.includeUrgentOrder || showFullPlan),
+      showTrigger: !whatIf.includeUrgentOrder && !isAnimating,
     },
     actions: {
       applyPreset,
@@ -217,6 +191,4 @@ export function useProductionSchedulingViewModel(locale: Locale) {
   } as const;
 }
 
-export type ProductionSchedulingViewModel = ReturnType<
-  typeof useProductionSchedulingViewModel
->;
+export type ProductionSchedulingViewModel = ReturnType<typeof useProductionSchedulingViewModel>;
