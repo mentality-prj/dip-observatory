@@ -1,23 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Card, CardContent } from "@/components/ui/card";
 import { findUseCaseByPlugin, type StudioRendererId } from "@/use-cases/registry";
 import type { Audit } from "./contracts";
 
 const studioRenderers: Record<StudioRendererId, React.ComponentType<{ audit: Audit }>> = {
   "gas-forecast": dynamic(() => import("@/use-cases/gas-forecast/studio-panel"), {
-    loading: () => <section className="studio-card"><p role="status">Loading application view…</p></section>,
+    loading: () => <Card><CardContent><p role="status">Loading application view…</p></CardContent></Card>,
   }),
 };
 
 function GenericDecisionPanel({ audit }: { audit: Audit }) {
-  return <section className="studio-card">
+  return <Card><CardContent>
     <div className="studio-table-wrap"><table className="studio-table"><thead><tr><th>Alternative</th><th>Feasible</th><th>Score</th><th>Rank</th><th>Required actions</th></tr></thead>
       <tbody>{audit.dimension_results.map((alternative) => <tr key={alternative.alternative_id}>
         <td>{alternative.alternative_id}</td><td>{alternative.feasible ? "Yes" : "No"}</td><td>{alternative.score?.toFixed(4) ?? "—"}</td><td>{alternative.rank ?? "—"}</td>
         <td>{alternative.dimensions.flatMap((dimension) => dimension.required_actions).join(", ") || "—"}</td>
       </tr>)}</tbody></table></div>
-  </section>;
+  </CardContent></Card>;
 }
 
 export function StudioUseCasePanel({ audit }: { audit: Audit }) {
