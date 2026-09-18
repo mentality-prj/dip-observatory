@@ -3,15 +3,20 @@ import styles from "./qdip-site.module.css";
 
 export function QdipLogo({ inverse = false }: { inverse?: boolean }) {
   return (
-    <span aria-label="QDIP" className={styles.logo} data-inverse={inverse || undefined} role="img">
+    <span
+      aria-label="QDIP"
+      className={styles.logo}
+      data-inverse={inverse || undefined}
+      role="img"
+    >
       <Image
         alt=""
         aria-hidden="true"
         className={styles.logoWordmark}
-        height={221}
+        height={157}
         priority
-        src="/qdip-logo.svg"
-        width={512}
+        src="/qdip-logo.png"
+        width={300}
       />
     </span>
   );
