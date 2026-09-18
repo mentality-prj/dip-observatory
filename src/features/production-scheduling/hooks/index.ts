@@ -1,3 +1,6 @@
-// Client orchestration boundary.
-// Hooks in this directory may coordinate feature state/effects but must not render JSX.
-export {};
+export {
+  useProductionSchedulingViewModel,
+  type ProductionSchedulingViewModel,
+  type SimulationStep,
+  type DisruptionSimulationStep,
+} from "./use-production-scheduling-view-model";
