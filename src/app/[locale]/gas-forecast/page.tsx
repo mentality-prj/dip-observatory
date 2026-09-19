@@ -1,4 +1,4 @@
-import { GasForecastWorkspace } from "@/components/observatory/gas-forecast-workspace";
+import { GasForecastWorkspace } from "@/features/gas-forecast";
 
 export default function GasForecastPage() {
   return <GasForecastWorkspace />;
