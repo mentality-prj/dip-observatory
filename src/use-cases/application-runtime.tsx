@@ -12,7 +12,7 @@ const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/g
 const ProductionDecision = dynamic<ApplicationFrontendProps>(() => import("@/features/production-decision").then((m) => ({ default: m.ProductionDecisionWorkspace })));
 const ProductionReplanning = dynamic<ApplicationFrontendProps>(() => import("@/features/production-replanning").then((m) => ({ default: m.ProductionReplanningWorkspace })));
 const ProductionScheduling = dynamic<ApplicationFrontendProps>(() => import("@/features/production-scheduling").then((m) => ({ default: m.ProductionSchedulingWorkspace })));
-const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/resource-allocation/components/resource-allocation-workspace").then((m) => ({ default: m.ResourceAllocationWorkspace })));
+const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/features/resource-allocation").then((m) => ({ default: m.ResourceAllocationWorkspace })));
 const SupplierDecision = dynamic<ApplicationFrontendProps>(() => import("@/features/supplier").then((m) => ({ default: m.SupplierWorkspace })));
 
 const frontends = {
