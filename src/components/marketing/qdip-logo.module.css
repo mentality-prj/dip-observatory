@@ -1,5 +1,14 @@
+.brand {
+  min-width: 0;
+}
+
 .tagline {
   display: none;
+}
+
+:global(footer) .brand {
+  align-items: flex-start;
+  flex-direction: column;
 }
 
 :global(footer) .tagline {
@@ -14,9 +23,4 @@
 :global(main[lang="uk"] footer) .tagline[data-locale="uk"],
 :global(main[lang="pl"] footer) .tagline[data-locale="pl"] {
   display: block;
-}
-
-:global(footer) :global(.logo) {
-  align-items: flex-start;
-  flex-direction: column;
 }
