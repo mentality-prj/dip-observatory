@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Factory, HeartHandshake, Sparkles, Users } from "lucide-react";
+import { ArrowRight, HeartHandshake, Sparkles } from "lucide-react";
 import { buildLocalePath, type Locale } from "@/lib/observatory-i18n";
 import { observableUseCases, type UseCaseIcon } from "@/use-cases/registry";
 
 const copy = {
   en: { eyebrow: "Quality-driven Decision Intelligence Platform", title: "QDIP Observatory", subtitle: "Focused decision demonstrators. HR and other reference scenarios live in their own lab; domain and partner pilots stay visible here.", defaultTitle: "Reference scenarios", defaultBody: "HR and other QDIP scenarios for exploring state, alternatives, risk, uncertainty and evidence.", open: "Open scenarios", partner: "Domain & partner demonstrators" },
   uk: { eyebrow: "Quality-driven Decision Intelligence Platform", title: "QDIP Observatory", subtitle: "Окремі демонстратори для конкретних рішень. HR та інші базові сценарії знаходяться у власній лабораторії; доменні та партнерські пілоти залишаються тут.", defaultTitle: "Базові сценарії", defaultBody: "HR та інші QDIP-сценарії для дослідження стану, альтернатив, ризику, невизначеності та доказів.", open: "Відкрити сценарії", partner: "Доменні та партнерські демонстратори" },
-  pl: { eyebrow: "Quality-driven Decision Intelligence Platform", title: "QDIP Observatory", subtitle: "Oddzielne demonstratory dla konkretnych decyzji. HR i inne scenariusze bazowe są w osobnym laboratorium; pilotaże domenowe i partnerskie pozostają tutaj.", defaultTitle: "Scenariusze bazowe", defaultBody: "HR i inne scenariusze QDIP do analizy stanu, alternatyw, ryzyka, niepewności i dowodów.", open: "Otwórz scenariusze", partner: "Demonstratory domenowe i partnerskie" },
+  pl: { eyebrow: "Quality-driven Decision Intelligence Platform", title: "QDIP Observatory", subtitle: "Oddzielne demonstratory dla konkretnych decyzji. HR i inne scenariusze bazowe są w osobnym laboratorium; pilotaże domenowe i partnerskie pozostają tutaj.", defaultTitle: "Scenariusze bazowe", defaultBody: "HR oraz inne scenariusze QDIP do analizy stanu, alternatyw, ryzyka, niepewności i dowodów.", open: "Otwórz scenariusze", partner: "Demonstratory domenowe i partnerskie" },
 } as const;
-const icons: Record<UseCaseIcon, typeof Building2> = { building: Building2, factory: Factory, heart: HeartHandshake, sparkles: Sparkles, users: Users };
+const icons: Record<UseCaseIcon, typeof Sparkles> = { heart: HeartHandshake, sparkles: Sparkles };
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
   const t = copy[locale];
