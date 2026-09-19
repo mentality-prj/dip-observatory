@@ -1,3 +1,3 @@
 // Public API for the resource-allocation feature.
-// Consumers must depend on this boundary rather than implementation paths.
-export { ResourceAllocationWorkspace } from "@/resource-allocation/components/resource-allocation-workspace";
+// External consumers depend on this boundary, never implementation paths.
+export { ResourceAllocationWorkspace } from "./components/resource-allocation-workspace";
