@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { ObservatoryHome } from "@/components/observatory/observatory-home";
-import { PrototypeShell } from "@/components/observatory/prototype-shell";
+import { ObservatoryHome, PrototypeShell } from "@/features/observatory";
 import { isSupportedLocale, type Locale } from "@/lib/observatory-i18n";
 
 export default async function LocalizedHome({ params }: { params: Promise<{ locale: string }> }) {

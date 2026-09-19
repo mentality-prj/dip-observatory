@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button, CardContent, CardDescription, CardHeader, CardTitle } from "@/design-system";
+import {
+  Button,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/design-system";
 import { observatoryHref } from "@/lib/platform-urls";
 import { studioRequest, type Audit, type Profile } from "./contracts";
 import { JsonField, SchemaField, schemaDefault } from "./schema-form";
@@ -16,7 +22,7 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
 
   return (
     <form
-      className="rounded-2xl border border-white/10 bg-white/[0.03]"
+      className="ds-card"
       onSubmit={async (event) => {
         event.preventDefault();
         setBusy(true);
@@ -42,7 +48,8 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
       <CardHeader>
         <CardTitle>Evaluate {profile.name}</CardTitle>
         <CardDescription>
-          Supply context for this execution. The result will be recorded in Observatory.
+          Supply context for this execution. The result will be recorded in
+          Observatory.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -52,7 +59,11 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
           onChange={setContext}
           label="Runtime decision context"
         />
-        <JsonField label="Plugin capability input" value={input} onChange={setInput} />
+        <JsonField
+          label="Plugin capability input"
+          value={input}
+          onChange={setInput}
+        />
         <Button disabled={busy} type="submit">
           {busy ? "Evaluating…" : "Evaluate alternatives"}
         </Button>
@@ -63,7 +74,8 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
         )}
         {result && (
           <div className="studio-success" role="status">
-            {result.status}: {result.selected_alternative ?? "No feasible alternative"}.{" "}
+            {result.status}:{" "}
+            {result.selected_alternative ?? "No feasible alternative"}.{" "}
             <Link
               href={observatoryHref(
                 `decisions?decision=${encodeURIComponent(result.decision_id)}`,

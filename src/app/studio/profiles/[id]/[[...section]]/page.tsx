@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
-import { ProfileDetail } from "@/studio/profile-detail";
-import { profileSections, type ProfileSection } from "@/studio/presentation";
+import {
+  ProfileDetail,
+  profileSections,
+  type ProfileSection,
+} from "@/features/studio";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string; section?: string[] }> }) {
   const { id, section } = await params;
