@@ -1,0 +1,26 @@
+.brand {
+  min-width: 0;
+}
+
+.tagline {
+  display: none;
+}
+
+:global(footer) .brand {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+:global(footer) .tagline {
+  max-width: 260px;
+  margin-top: 6px;
+  color: #6f6267;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+:global(main[lang="en"] footer) .tagline[data-locale="en"],
+:global(main[lang="uk"] footer) .tagline[data-locale="uk"],
+:global(main[lang="pl"] footer) .tagline[data-locale="pl"] {
+  display: block;
+}
