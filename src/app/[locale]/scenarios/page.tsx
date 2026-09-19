@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
-import { DecisionCanvas } from "@/components/observatory/decision-canvas";
+import { DecisionCanvas } from "@/features/observatory";
 import { getObservatoryBootstrapPayload } from "@/lib/dip-api";
 import { isSupportedLocale, type Locale } from "@/lib/observatory-i18n";
 
