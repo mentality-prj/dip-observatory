@@ -1,4 +1,4 @@
-import { SupplierWorkspace } from "@/supplier/components/supplier-workspace";
+import { SupplierWorkspace } from "@/features/supplier";
 import type { Locale } from "@/lib/observatory-i18n";
 
 export default async function SupplierDecisionPage({
