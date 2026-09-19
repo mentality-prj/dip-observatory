@@ -1,4 +1,4 @@
-import { ProductionReplanningWorkspace } from "@/production-replanning/components/production-replanning-workspace";
+import { ProductionReplanningWorkspace } from "@/features/production-replanning";
 import type { Locale } from "@/lib/observatory-i18n";
 
 export default async function ProductionReplanningPage({

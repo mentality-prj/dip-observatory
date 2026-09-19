@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { PrototypeRouteLayout } from "@/components/observatory/prototype-route-layout";
+import { PrototypeRouteLayout } from "@/features/observatory";
 
 export default function ViveProductionIntelligenceLayout({
   children,

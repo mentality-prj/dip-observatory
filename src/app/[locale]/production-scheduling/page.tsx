@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { ProductionSchedulingWorkspace } from "@/production-scheduling/components/production-scheduling-workspace";
+import { ProductionSchedulingWorkspace } from "@/features/production-scheduling";
 import type { Locale } from "@/lib/observatory-i18n";
 
 export default async function ProductionSchedulingPage({

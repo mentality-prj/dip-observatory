@@ -7,13 +7,13 @@ import type { UseCaseId } from "@/use-cases/registry";
 
 export type ApplicationFrontendProps = { locale: Locale };
 
-const CustomerOpportunities = dynamic<ApplicationFrontendProps>(() => import("@/components/customer-opportunities/customer-opportunity-lab").then((m) => ({ default: () => <m.CustomerOpportunityLab /> })));
-const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/components/observatory/gas-forecast-workspace").then((m) => ({ default: () => <m.GasForecastWorkspace /> })));
-const ProductionDecision = dynamic<ApplicationFrontendProps>(() => import("@/production-decision/components/production-decision-workspace").then((m) => ({ default: m.ProductionDecisionWorkspace })));
-const ProductionReplanning = dynamic<ApplicationFrontendProps>(() => import("@/production-replanning/components/production-replanning-workspace").then((m) => ({ default: m.ProductionReplanningWorkspace })));
-const ProductionScheduling = dynamic<ApplicationFrontendProps>(() => import("@/production-scheduling/components/production-scheduling-workspace").then((m) => ({ default: m.ProductionSchedulingWorkspace })));
-const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/resource-allocation/components/resource-allocation-workspace").then((m) => ({ default: m.ResourceAllocationWorkspace })));
-const SupplierDecision = dynamic<ApplicationFrontendProps>(() => import("@/supplier/components/supplier-workspace").then((m) => ({ default: m.SupplierWorkspace })));
+const CustomerOpportunities = dynamic<ApplicationFrontendProps>(() => import("@/features/customer-opportunities").then((m) => ({ default: () => <m.CustomerOpportunityLab /> })));
+const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/gas-forecast").then((m) => ({ default: () => <m.GasForecastWorkspace /> })));
+const ProductionDecision = dynamic<ApplicationFrontendProps>(() => import("@/features/production-decision").then((m) => ({ default: m.ProductionDecisionWorkspace })));
+const ProductionReplanning = dynamic<ApplicationFrontendProps>(() => import("@/features/production-replanning").then((m) => ({ default: m.ProductionReplanningWorkspace })));
+const ProductionScheduling = dynamic<ApplicationFrontendProps>(() => import("@/features/production-scheduling").then((m) => ({ default: m.ProductionSchedulingWorkspace })));
+const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/features/resource-allocation").then((m) => ({ default: m.ResourceAllocationWorkspace })));
+const SupplierDecision = dynamic<ApplicationFrontendProps>(() => import("@/features/supplier").then((m) => ({ default: m.SupplierWorkspace })));
 
 const frontends = {
   "customer-opportunities": CustomerOpportunities,

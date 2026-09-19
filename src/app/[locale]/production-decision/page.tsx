@@ -1,5 +1,5 @@
+import { ProductionDecisionWorkspace } from "@/features/production-decision";
 import type { Locale } from "@/lib/observatory-i18n";
-import { ProductionDecisionWorkspace } from "@/production-decision/components/production-decision-workspace";
 
 type PageProps = {
   params: Promise<{ locale: Locale }>;

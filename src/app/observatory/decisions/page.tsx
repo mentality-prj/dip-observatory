@@ -1,4 +1,4 @@
-import { DecisionAuditView } from "@/studio/decision-audit-view";
+import { DecisionAuditView } from "@/features/observatory";
 import "@/studio/studio.css";
 
 export const metadata = { title: "Decision Audit · QDIP Observatory" };

@@ -15,7 +15,9 @@ export function QdipLogo({ inverse = false }: { inverse?: boolean }) {
         className={styles.logoWordmark}
         height={157}
         priority
+        sizes="264px"
         src="/qdip-logo.png"
+        style={{ height: "auto", width: 264 }}
         width={300}
       />
     </span>
