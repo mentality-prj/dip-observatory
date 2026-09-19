@@ -9,7 +9,7 @@ export type ApplicationFrontendProps = { locale: Locale };
 
 const CustomerOpportunities = dynamic<ApplicationFrontendProps>(() => import("@/components/customer-opportunities/customer-opportunity-lab").then((m) => ({ default: () => <m.CustomerOpportunityLab /> })));
 const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/gas-forecast").then((m) => ({ default: () => <m.GasForecastWorkspace /> })));
-const ProductionDecision = dynamic<ApplicationFrontendProps>(() => import("@/production-decision/components/production-decision-workspace").then((m) => ({ default: m.ProductionDecisionWorkspace })));
+const ProductionDecision = dynamic<ApplicationFrontendProps>(() => import("@/features/production-decision").then((m) => ({ default: m.ProductionDecisionWorkspace })));
 const ProductionReplanning = dynamic<ApplicationFrontendProps>(() => import("@/features/production-replanning").then((m) => ({ default: m.ProductionReplanningWorkspace })));
 const ProductionScheduling = dynamic<ApplicationFrontendProps>(() => import("@/features/production-scheduling").then((m) => ({ default: m.ProductionSchedulingWorkspace })));
 const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/resource-allocation/components/resource-allocation-workspace").then((m) => ({ default: m.ResourceAllocationWorkspace })));
