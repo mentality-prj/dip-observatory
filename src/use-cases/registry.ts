@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/observatory-i18n";
 
 export type LocalizedText = Record<Locale, string>;
-export type UseCaseIcon = "heart" | "sparkles" | "users";
+export type UseCaseIcon = "heart" | "sparkles";
 export type UseCaseTheme = "cyan" | "violet" | "amber" | "emerald" | "rose";
 export type StudioRendererId = "gas-forecast";
 
@@ -21,7 +21,6 @@ const visible = (order: number) => ({ visible: true, order }) as const;
 const useCases = [
   { id: "gas-forecast", route: "/gas-forecast", navigation: visible(10), title: { en: "European Gas Forecasting", uk: "Прогнозування європейського газового ринку", pl: "Prognozowanie europejskiego rynku gazu" }, description: { en: "Market inputs, data providers and gas forecasting decision support in one workspace.", uk: "Ринкові дані, провайдери та підтримка рішень на основі прогнозу газового ринку в одному середовищі.", pl: "Dane rynkowe, dostawcy danych i wsparcie decyzji oparte na prognozie rynku gazu w jednym środowisku." }, tag: { en: "ENERGY", uk: "ЕНЕРГЕТИКА", pl: "ENERGIA" }, presentation: { icon: "sparkles", theme: "cyan", studioRenderer: "gas-forecast" }, plugin: { id: "gas-forecast", capability: "gas.forecast" } },
   { id: "resource-allocation", route: "/resource-allocation", navigation: visible(20), title: { en: "Resource Allocation", uk: "Розподіл ресурсів", pl: "Alokacja zasobów" }, description: { en: "Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.", uk: "Розподіл гуманітарних мобільних команд з урахуванням пропускної здатності, навичок, доступності та обмежень на переміщення.", pl: "Alokacja mobilnych zespołów humanitarnych z uwzględnieniem przepustowości, kompetencji, dostępności i ograniczeń związanych z przejazdami." }, tag: { en: "HUMANITARIAN", uk: "ГУМАНІТАРНИЙ", pl: "HUMANITARNY" }, presentation: { icon: "heart", theme: "rose" } },
-  { id: "gtm-lab", route: "/gtm-lab", navigation: visible(30), title: { en: "GTM Lab", uk: "GTM Lab", pl: "GTM Lab" }, description: { en: "Decision intelligence workspace for go-to-market analysis and commercial decisions.", uk: "Середовище decision intelligence для GTM-аналізу та комерційних рішень.", pl: "Środowisko decision intelligence do analizy GTM i decyzji komercyjnych." }, tag: { en: "COMMERCIAL", uk: "КОМЕРЦІЙНИЙ", pl: "KOMERCYJNY" }, presentation: { icon: "users", theme: "violet" }, plugin: { id: "gtm-lab", capability: "gtm.decision" } },
 ] as const satisfies readonly DipUseCase[];
 
 export type UseCaseId = (typeof useCases)[number]["id"];
