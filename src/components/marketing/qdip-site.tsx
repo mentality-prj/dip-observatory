@@ -19,12 +19,26 @@ function Header({ locale }: { locale: MarketingLocale }) {
   </div></header>;
 }
 
-function Flow({ labels }: { labels: readonly string[] }) { return <div className={styles.flow} aria-label={labels.join(" to ")}>{labels.map((x,i)=><div className={styles.flowItem} key={x}><span>{x}</span>{i<labels.length-1&&<ArrowRight aria-hidden="true" size={18}/>}</div>)}</div>; }
+function Flow({ labels }: { labels: readonly string[] }) {
+  return <div className={styles.flow} aria-label={labels.join(" to ")}>{labels.map((label,index)=><div className={styles.flowPart} key={`${label}-${index}`}><span className={styles.flowNode}>{label}</span>{index<labels.length-1&&<span className={styles.flowConnector} aria-hidden="true"><ArrowRight size={18}/></span>}</div>)}</div>;
+}
+
+function DecisionEngineDiagram() {
+  return <div className={styles.heroVisual} aria-label="Information, alternatives, objectives and constraints enter QDIP. QDIP produces a recommendation with explanation and evidence for a human decision.">
+    <div className={styles.inputCloud}><span>Information</span><span>Alternatives</span><span>Objectives</span><span>Constraints</span></div>
+    <span className={styles.diagramConnector} aria-hidden="true"><ArrowRight size={20}/></span>
+    <div className={styles.engine}>QDIP<small>DECISION ENGINE</small></div>
+    <span className={styles.diagramConnector} aria-hidden="true"><ArrowRight size={20}/></span>
+    <div className={styles.output}>Recommendation<small>explanation + evidence</small></div>
+    <span className={styles.diagramConnector} aria-hidden="true"><ArrowRight size={20}/></span>
+    <div className={styles.person}>Human decision</div>
+  </div>;
+}
 
 export function QdipSite({ locale="en" }: { locale?: MarketingLocale }) {
   const c=marketingCopy[locale]; const ol=locale==="uk"?"en":locale;
   return <main className={styles.site} id="main-content" lang={locale}><Header locale={locale}/>
-    <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link><Link className={styles.textLink} href={path(locale,"core")}>{c.nav[3]} <ArrowRight size={15}/></Link></div></div><div className={styles.heroVisual}><div className={styles.inputCloud}><span>Information</span><span>Alternatives</span><span>Objectives</span><span>Constraints</span></div><div className={styles.engine}>QDIP<small>DECISION ENGINE</small></div><ArrowRight/><div className={styles.output}>Recommendation<small>explanation + evidence</small></div><ArrowRight/><div className={styles.person}>Human decision</div></div></section>
+    <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link><Link className={styles.textLink} href={path(locale,"core")}>{c.nav[3]} <ArrowRight size={15}/></Link></div></div><DecisionEngineDiagram/></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div><div className={styles.questionGrid}>{c.problem.slice(1,5).map(x=><article key={x}>{x}</article>)}</div><p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p></section>
     <section className={styles.darkSection}><div className={styles.compareGrid}><article><span>{c.compare[0]}</span><Flow labels={["Information","Rules / priorities","Compare alternatives","Human reasoning","Decision"]}/><p>{c.compare[1]}</p></article><article><span>{c.compare[2]}</span><Flow labels={["Information + alternatives","QDIP","Evaluation","Recommendation + evidence","Human decision"]}/><p>{c.compare[3]}</p></article></div></section>
     <section className={styles.section}><div className={styles.sectionIntro}><div className={styles.eyebrow}>{c.how[0]}</div><h2>{c.how[0]}</h2></div><Flow labels={c.how.slice(1,6)}/><div className={styles.centerAction}><Link className={styles.secondaryButton} href={path(locale,"how-it-works")}>{c.how[6]} <ArrowRight size={16}/></Link></div></section>
