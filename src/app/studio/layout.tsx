@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import "@/studio/studio.css";
-import { DesignSystemProvider, ProductHeader, ProductSwitchLink, StatusBadge } from "@/design-system";
+import { DesignSystemProvider, ProductHeader, StatusBadge } from "@/design-system";
 import { StudioNav } from "@/features/studio";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 
@@ -11,7 +11,8 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
     <ProductHeader
       href={marketingHref("en")}
       product="Studio"
-      actions={<><StatusBadge><i /> Engine connected</StatusBadge><ProductSwitchLink href={observatoryHref()}>Inspect in Observatory <span aria-hidden>↗</span></ProductSwitchLink></>}
+      productSwitch={{ href: observatoryHref(), label: "Inspect in Observatory" }}
+      status={<StatusBadge><i /> Engine connected</StatusBadge>}
     />
     <aside className="studio-sidebar">
       <div className="studio-sidebar-intro"><small>CONFIGURE THE DECISION SYSTEM</small><p>Model alternatives, priorities, evidence and constraints. QDIP Core evaluates them; Observatory makes the result inspectable.</p></div>
