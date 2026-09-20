@@ -5,7 +5,6 @@ import { marketingCopy, marketingLocales, type MarketingLocale } from "./qdip-co
 import { QdipLogo } from "./qdip-logo";
 import { MobileMenu } from "./mobile-menu";
 import { DecisionSpace } from "./decision-space";
-import { DecisionSpaceStory } from "./decision-space-story";
 import { DecisionPatterns } from "./decision-patterns";
 import { DecisionPlayground } from "./decision-playground";
 import { PilotPath } from "./pilot-path";
@@ -20,15 +19,12 @@ function Header({ locale }: { locale: MarketingLocale }) {
   const items=[{href:path(locale,"how-it-works"),label:c.nav[0]},{href:path(locale,"use-cases"),label:c.nav[1]},{href:"#why",label:c.nav[2]},{href:path(locale,"core"),label:c.nav[3]},{href:`${path(locale,"use-cases")}#demos`,label:c.nav[4]}];
   return <header className={styles.header}><div className={styles.headerInner}><Link className={styles.brand} href={marketingLocaleHref(locale)}><QdipLogo/></Link><nav aria-label="Primary navigation" className={styles.nav}>{items.map(item=><Link href={item.href} key={`${item.href}-${item.label}`}>{item.label}</Link>)}</nav><div className={styles.headerTools}><nav aria-label="Language" className={styles.languageNav}>{marketingLocales.map(l=><a aria-current={locale===l?"page":undefined} href={marketingLocaleHref(l)} key={l}>{localeLabels[l]}</a>)}</nav><MobileMenu items={items}/></div></div></header>;
 }
-function Flow({labels}:{labels:readonly string[]}){return <div className={styles.flow} aria-label={labels.join(" to ")}>{labels.map((label,index)=><div className={styles.flowPart} key={`${label}-${index}`}><span className={styles.flowNode}>{label}</span>{index<labels.length-1&&<span className={styles.flowConnector} aria-hidden="true"><ArrowRight size={18}/></span>}</div>)}</div>}
 
 export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
   const c=marketingCopy[locale]; const valueIndexes=[1,3,11,5,7,9]; const decisionHref=path(locale,"decision");
   return <main className={styles.site} id="main-content" lang={locale}><Header locale={locale}/>
     <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link></div></div><DecisionSpace locale={locale}/></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div><div className={styles.questionGrid}>{c.problem.slice(1,5).map(x=><article key={x}>{x}</article>)}</div><p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p><p className={styles.businessBridge}>{c.bridge}</p></section>
-    <section className={styles.darkSection}><div className={styles.compareGrid}><article><span>{c.compare[0]}</span><Flow labels={[c.diagram[0],locale==="en"?"Rules / priorities":locale==="uk"?"Правила / пріоритети":"Reguły / priorytety",locale==="en"?"Compare options":locale==="uk"?"Порівняння варіантів":"Porównanie opcji",locale==="en"?"Human reasoning":locale==="uk"?"Людське міркування":"Ocena człowieka",locale==="en"?"Decision":locale==="uk"?"Рішення":"Decyzja"]}/><p>{c.compare[1]}</p></article><article><span>{c.compare[2]}</span><Flow labels={[`${c.diagram[0]} + ${c.diagram[1]}`,"QDIP",locale==="en"?"Evaluation":locale==="uk"?"Оцінювання":"Ocena",`${c.diagram[5]} + ${c.diagram[6]}`,c.diagram[7]]}/><p>{c.compare[3]}</p></article></div></section>
-    <DecisionSpaceStory locale={locale}/>
     <DecisionPlayground locale={locale}/>
     <section className={`${styles.section} ${styles.patternSection}`} id="demos"><div className={styles.sectionIntro}><div className={styles.eyebrow}>ALLOCATE · DECIDE · PRIORITIZE</div><h2>{c.cases[0]}</h2></div><DecisionPatterns locale={locale} cases={c.cases}/><div className={styles.demoBridge}><span>{conversionBridgeCopy[locale].question}</span><Link href={decisionHref}>{c.conversion[2]} <ArrowRight size={14}/></Link></div></section>
     <section className={styles.softSection} id="why"><div className={styles.sectionIntro}><h2>{c.why[0]}</h2></div><div className={styles.valueGrid}>{valueIndexes.map((i,index)=><article className={index<3?styles.featuredCase:undefined} key={c.why[i]}><Check size={18}/><h3>{c.why[i]}</h3><p>{c.why[i+1]}</p></article>)}</div></section>
