@@ -7,6 +7,7 @@ import { useRef, useState, useTransition } from "react";
 import { runGasForecastExperimentAction } from "@/app/admin/plugins/gas-forecast/eidos/actions";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@/design-system";
 import { GasForecastResearchEvidence } from "@/features/gas-forecast/components/gas-forecast-research-evidence";
+import { deriveResearchEvidence } from "@/features/gas-forecast/model/research-evidence";
 import type { GasForecastExperimentRequest, GasForecastExperimentResult } from "@/lib/gas-forecast-experiment-client";
 
 const DEFAULT_FORM: GasForecastExperimentRequest = {
@@ -23,6 +24,7 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
   const [form, setForm] = useState<GasForecastExperimentRequest>(DEFAULT_FORM);
   const [result, setResult] = useState<GasForecastExperimentResult | null>(initialResult);
   const [isPayloadCopied, setIsPayloadCopied] = useState(false);
+  const evidence = result?.status === "succeeded" ? deriveResearchEvidence(result.payload) : null;
 
   function update<K extends keyof GasForecastExperimentRequest>(key: K, value: GasForecastExperimentRequest[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -88,7 +90,7 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
           </form>
         </CardContent></Card>
 
-        {result?.status === "succeeded" ? <GasForecastResearchEvidence payload={result.payload} /> : null}
+        {evidence ? <GasForecastResearchEvidence evidence={evidence} /> : null}
 
         {result ? <Card><CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Execution result</CardTitle><Badge variant={result.status === "succeeded" ? "emerald" : "rose"}>{result.status === "succeeded" ? "SUCCEEDED" : "FAILED"}</Badge></div>
