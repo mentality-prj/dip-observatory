@@ -1,6 +1,6 @@
 import { NextRequest,NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { allowSubmission,decisionLeadSchema,GmailMailDelivery,isReplay,submissionId } from "@/lib/decision-lead";
+import { allowSubmission,decisionLeadSchema,isReplay,submissionId,ZohoMailDelivery } from "@/lib/decision-lead";
 
 export const runtime="nodejs";
 const MAX_BODY_BYTES=18_000;
@@ -15,7 +15,7 @@ export async function POST(request:NextRequest){
   const lead=decisionLeadSchema.parse(json);
   if(lead.website){console.warn("decision_inquiry",{submissionId:id,status:"honeypot",locale:lead.locale});return NextResponse.json({ok:true},{status:200});}
   if(isReplay(lead)){console.warn("decision_inquiry",{submissionId:id,status:"duplicate",locale:lead.locale});return NextResponse.json({ok:true},{status:200});}
-  await new GmailMailDelivery().sendDecisionLead(lead,id);
+  await new ZohoMailDelivery().sendDecisionLead(lead,id);
   console.info("decision_inquiry",{submissionId:id,status:"sent",locale:lead.locale});
   return NextResponse.json({ok:true,id},{status:200});
  }catch(error){
