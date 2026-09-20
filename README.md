@@ -38,21 +38,23 @@ Backend integration uses:
 
 ### Decision inquiry email delivery
 
-The public Describe your decision form is delivered server-side through the official Gmail API. Configure these server-only variables in local `.env` and in the production secret store:
+The public Describe your decision form is delivered server-side through authenticated Zoho Mail SMTP. Configure these server-only variables in local `.env` and in the production secret store:
 
-- `GMAIL_CLIENT_ID` — Google OAuth client ID
-- `GMAIL_CLIENT_SECRET` — Google OAuth client secret
-- `GMAIL_REFRESH_TOKEN` — refresh token for the sending mailbox
-- `GMAIL_FROM` — authorized Gmail sender address
-- `QDIP_LEAD_MAILBOX` — mailbox that receives QDIP decision inquiries
+- `ZOHO_SMTP_USER` — Zoho mailbox used as the sender, e.g. `hello@qdip.ai`
+- `ZOHO_SMTP_PASSWORD` — Zoho app password for the sender mailbox
+- `QDIP_LEAD_MAILBOX` — mailbox receiving decision inquiries, currently `hello@qdip.ai`
+- `ZOHO_SMTP_HOST` — optional; defaults to `smtp.zoho.com`. Override it if the Zoho Admin Console assigns a data-center-specific SMTP hostname.
+- `ZOHO_SMTP_PORT` — optional; defaults to `465` using implicit TLS/SSL.
 
-Manual Google setup is required: enable Gmail API in the Google Cloud project, configure the OAuth consent/client, authorize the sending mailbox with the `https://www.googleapis.com/auth/gmail.send` scope, obtain a refresh token, and add the values above to the deployment environment. Never expose these values through `NEXT_PUBLIC_*` variables or commit them to the repository.
+The SMTP connection is created only from the Node.js server route. Credentials are never exposed through `NEXT_PUBLIC_*` variables or sent to the browser. The visitor email is used only as the validated `Reply-To`; the authenticated Zoho mailbox remains the `From` address.
+
+Zoho supports authenticated SMTP over SSL on port 465. If the account uses a data-center-specific SMTP hostname, use the exact value shown in the Zoho Mail account/Admin Console rather than changing application code.
 
 The public gas forecasting workspace is available at `/en/gas-forecast` and `/pl/gas-forecast`. See `docs/decision-studio.md` for its setup and tests.
 
 ## Deployment
 
-Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. The application selects the correct surface from the request host; no separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Gmail environment variables above.
+Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. The application selects the correct surface from the request host; no separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Zoho SMTP environment variables above.
 
 ## Verification
 
