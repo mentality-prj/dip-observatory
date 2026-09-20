@@ -9,9 +9,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DesignSystemProvider,
-  ProductHeader,
-  ProductSwitchLink,
+  ProductShell,
 } from "@/design-system";
 import { observatoryHref, studioHref } from "@/lib/platform-urls";
 import { studioRequest, type Audit } from "./contracts";
@@ -22,8 +20,7 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
   const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(true);
   useEffect(() => { let disposed = false; Promise.all([studioRequest<Audit[]>("dimension-decisions"), initialId ? studioRequest<Audit>(`dimension-decisions/${encodeURIComponent(initialId)}`) : Promise.resolve(null)])
     .then(([items, detail]) => { if (!disposed) { setAudits(items); setSelected(detail ?? items[0] ?? null); } }).catch((reason) => { if (!disposed) setError(String(reason)); }).finally(() => { if (!disposed) setLoading(false); }); return () => { disposed = true; }; }, [initialId]);
-  return <DesignSystemProvider theme="cyan" className="observatory-shell observatory-audit min-h-screen text-white">
-    <ProductHeader href={observatoryHref()} product="Observatory" className="observatory-header" actions={<ProductSwitchLink className="observatory-studio-link" href={studioHref()}>Studio</ProductSwitchLink>} />
+  return <ProductShell theme="cyan" className="observatory-shell observatory-audit min-h-screen text-white" href={observatoryHref()} product="Observatory" productSwitch={{ href: studioHref(), label: "Open Studio" }}>
     <div className="observatory-audit-layout"><aside className="observatory-audit-sidebar"><h2>Decision audit</h2><p>Inspect decisions, evidence, and exact evaluation versions.</p><nav><Link href={observatoryHref()}>Scenario Observatory</Link><Link href={observatoryHref("decisions")}>Decision audit</Link><Link href={studioHref()}>Decision Studio ↗</Link></nav></aside>
     <main id="main-content" tabIndex={-1} className="observatory-audit-main studio-main"><h1>Decision audit</h1><p>Historical decisions and alternative comparisons.</p>
       {loading && <p role="status">Loading decisions…</p>}{error && <div className="studio-error" role="alert">{error}</div>}
@@ -35,5 +32,5 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
         <Card><CardHeader><CardTitle>Reproducibility</CardTitle></CardHeader><CardContent><pre>{JSON.stringify({ profile: selected.profile_version, plugins: selected.plugin_versions, capabilities: selected.capability_versions, dimensions: selected.dimension_versions, evaluators: selected.evaluator_versions, bindings: selected.binding_versions }, null, 2)}</pre><Button type="button" onClick={async () => { try { const response = await studioRequest<{ matches: boolean }>(`dimension-decisions/${encodeURIComponent(selected.decision_id)}/replay`, { method: "POST" }); setMessage(response.matches ? "Replay matches the recorded evaluation." : "Replay differs from the recorded evaluation."); } catch (reason) { setError(String(reason)); } }}>Verify replay</Button>{message && <p role="status">{message}</p>}<details><summary>Complete audit snapshot</summary><pre>{JSON.stringify(selected, null, 2)}</pre></details></CardContent></Card>
       </>}
     </main></div>
-  </DesignSystemProvider>;
+  </ProductShell>;
 }
