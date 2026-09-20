@@ -1,5 +1,5 @@
 import type { GtmDemo } from "./contracts";
-import type { PipelineRun } from "./import-contracts";
+import type { PipelineProspect, PipelineRun } from "./import-contracts";
 
 export type GtmDecision = "PURSUE" | "RESEARCH" | "WATCH" | "SKIP";
 export type EvidenceKind = "FACT" | "SIGNAL" | "HYPOTHESIS" | "UNKNOWN";
@@ -17,6 +17,8 @@ export type PortfolioEvidence = {
 
 export type PortfolioItem = {
   id: string;
+  companyId: string;
+  opportunityId: string;
   name: string;
   domain?: string | null;
   country?: string | null;
@@ -32,9 +34,27 @@ export type PortfolioItem = {
   missingInformation: string[];
   researchObjectives: string[];
   evidence: PortfolioEvidence[];
-  capability?: { id: string; name: string; problem?: string | null; rationale: string[] } | null;
-  nextAction?: { type: string; title: string; description?: string | null; targetRole?: string | null; reason?: string | null } | null;
-  provenance?: { decisionId: string; executedAt: string; pluginId: string; pluginVersion?: string | null; modelVersion?: string | null; traceId?: string | null } | null;
+  capability?: {
+    id: string;
+    name: string;
+    problem?: string | null;
+    rationale: string[];
+  } | null;
+  nextAction?: {
+    type: string;
+    title: string;
+    description?: string | null;
+    targetRole?: string | null;
+    reason?: string | null;
+  } | null;
+  provenance?: {
+    decisionId: string;
+    executedAt: string;
+    pluginId: string;
+    pluginVersion?: string | null;
+    modelVersion?: string | null;
+    traceId?: string | null;
+  } | null;
   error?: string | null;
 };
 
@@ -46,6 +66,10 @@ export type PortfolioModel = {
   failed: number;
 };
 
+function decisionIdentity(companyId: string, opportunityId: string, decisionId?: string | null) {
+  return `${companyId}:${opportunityId}:${decisionId ?? "decision"}`;
+}
+
 export function fromDemo(data: GtmDemo): PortfolioModel {
   return {
     source: "DEMO",
@@ -53,7 +77,13 @@ export function fromDemo(data: GtmDemo): PortfolioModel {
     status: "COMPLETED",
     failed: 0,
     items: data.prospects.map((prospect) => ({
-      id: prospect.company.id,
+      id: decisionIdentity(
+        prospect.company.id,
+        prospect.decision.opportunity_id,
+        prospect.decision.opportunity_id,
+      ),
+      companyId: prospect.company.id,
+      opportunityId: prospect.decision.opportunity_id,
       name: prospect.company.name,
       domain: prospect.company.domain,
       country: prospect.company.country,
@@ -88,39 +118,73 @@ export function fromDemo(data: GtmDemo): PortfolioModel {
   };
 }
 
+function fromProspect(prospect: PipelineProspect): PortfolioItem[] {
+  return prospect.decisions.flatMap((decision) => {
+    const opportunity = prospect.opportunities.find(
+      (candidate) => candidate.id === decision.opportunity_id,
+    );
+    if (!opportunity) return [];
+
+    const fit = decision.qdip_capability_fit ?? opportunity.capability_fit ?? null;
+    const decisionId = decision.provenance?.decision_id ?? null;
+
+    return [
+      {
+        id: decisionIdentity(prospect.company.id, opportunity.id, decisionId),
+        companyId: prospect.company.id,
+        opportunityId: opportunity.id,
+        name: prospect.company.name,
+        domain: prospect.company.domain,
+        country: prospect.company.country,
+        industry: prospect.company.industry,
+        decision: decision.decision,
+        opportunity: opportunity.problem_probability,
+        uncertainty: decision.uncertainty,
+        evidenceQuality: decision.evidence_quality,
+        confidence: decision.confidence,
+        qdipFit: opportunity.qdip_fit,
+        reasons: decision.explanation_details?.reasons.length
+          ? decision.explanation_details.reasons
+          : decision.explanation,
+        risks: decision.explanation_details?.risks ?? [],
+        missingInformation: decision.explanation_details?.missing_information.length
+          ? decision.explanation_details.missing_information
+          : decision.missing_information,
+        researchObjectives: decision.explanation_details?.research_objectives.length
+          ? decision.explanation_details.research_objectives
+          : decision.research_objectives,
+        evidence: [],
+        capability: fit
+          ? {
+              id: fit.capability_id,
+              name: fit.capability_name,
+              problem: fit.problem_statement,
+              rationale: fit.rationale,
+            }
+          : null,
+        nextAction: decision.next_action,
+        provenance: decision.provenance
+          ? {
+              decisionId: decision.provenance.decision_id,
+              executedAt: decision.provenance.executed_at,
+              pluginId: decision.provenance.plugin_id,
+              pluginVersion: decision.provenance.plugin_version,
+              modelVersion: decision.provenance.model_version,
+              traceId: decision.provenance.trace_id,
+            }
+          : null,
+        error: prospect.error,
+      },
+    ];
+  });
+}
+
 export function fromPipeline(run: PipelineRun): PortfolioModel {
   return {
     source: "IMPORTED",
     id: run.run_id,
     status: run.status,
     failed: run.summary.failed_prospects,
-    items: run.prospects.flatMap((prospect) => {
-      const decision = prospect.decisions[0];
-      if (!decision) return [];
-      const opportunity = prospect.opportunities.find((item) => item.id === decision.opportunity_id) ?? prospect.opportunities[0];
-      const fit = decision.qdip_capability_fit ?? opportunity?.capability_fit ?? null;
-      return [{
-        id: prospect.company.id,
-        name: prospect.company.name,
-        domain: prospect.company.domain,
-        country: prospect.company.country,
-        industry: prospect.company.industry,
-        decision: decision.decision,
-        opportunity: opportunity?.problem_probability ?? 0,
-        uncertainty: decision.uncertainty,
-        evidenceQuality: decision.evidence_quality,
-        confidence: decision.confidence,
-        qdipFit: opportunity?.qdip_fit ?? fit?.fit ?? 0,
-        reasons: decision.explanation_details?.reasons.length ? decision.explanation_details.reasons : decision.explanation,
-        risks: decision.explanation_details?.risks ?? [],
-        missingInformation: decision.explanation_details?.missing_information.length ? decision.explanation_details.missing_information : decision.missing_information,
-        researchObjectives: decision.explanation_details?.research_objectives.length ? decision.explanation_details.research_objectives : decision.research_objectives,
-        evidence: [],
-        capability: fit ? { id: fit.capability_id, name: fit.capability_name, problem: fit.problem_statement, rationale: fit.rationale } : null,
-        nextAction: decision.next_action,
-        provenance: decision.provenance ? { decisionId: decision.provenance.decision_id, executedAt: decision.provenance.executed_at, pluginId: decision.provenance.plugin_id, pluginVersion: decision.provenance.plugin_version, modelVersion: decision.provenance.model_version, traceId: decision.provenance.trace_id } : null,
-        error: prospect.error,
-      }];
-    }),
+    items: run.prospects.flatMap(fromProspect),
   };
 }
