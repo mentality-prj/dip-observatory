@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { deriveResearchEvidence, V04_PROTOCOL } from "./research-evidence";
+import { deriveResearchEvidence } from "./research-evidence";
 
 test("derives failed v0.3 gate without treating disabled procurement as economic success", () => {
   const evidence = deriveResearchEvidence({
@@ -27,9 +27,7 @@ test("derives failed v0.3 gate without treating disabled procurement as economic
   assert.equal(evidence?.fallbackRate, 0.2307);
 });
 
-test("v0.4 protocol makes economic decision metrics primary", () => {
-  assert.equal(V04_PROTOCOL.version, "v0.4");
-  assert.equal(V04_PROTOCOL.primaryMetrics[0], "Cost €/MWh");
-  assert.ok(V04_PROTOCOL.diagnosticMetrics.includes("MAE"));
-  assert.deepEqual(V04_PROTOCOL.alternatives, ["BUY NOW", "WAIT"]);
+test("rejects malformed backend evidence instead of guessing defaults", () => {
+  assert.equal(deriveResearchEvidence({ backtest: {}, procurement: {} }), null);
+  assert.equal(deriveResearchEvidence(null), null);
 });
