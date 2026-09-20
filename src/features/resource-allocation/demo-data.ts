@@ -1,5 +1,6 @@
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-export const RESOURCE_ALLOCATION_SERVICES = ["psychologist", "social-worker", "legal", "protection", "case-manager", "child-support"] as const;
+const RESOURCE_ALLOCATION_SERVICES = ["psychologist", "social-worker", "legal", "protection", "case-manager", "child-support"] as const;
+
 export const RESOURCE_ALLOCATION_COMMUNITY_NAMES = Array.from(
   { length: 18 },
   (_, index) => `Громада ${String.fromCharCode(65 + index)}`,
