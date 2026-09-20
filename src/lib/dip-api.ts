@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { importTemplateSchema, importValidationSchema, pipelineRunSchema, type ProspectSeed } from "@/features/gtm-lab/import-contracts";
 import { normalizeDipBaseUrl } from "@/lib/dip-url";
 
 class DipApiError extends Error {
@@ -55,6 +56,21 @@ export async function runDipPlugin(pluginName: string, capabilityId: string, inp
     },
   );
   return response.result;
+}
+
+export function getGtmImportTemplate() {
+  return dipFetch("/api/v1/gtm-lab/imports/template", importTemplateSchema);
+}
+
+export function validateGtmImport(rows: Record<string, unknown>[]) {
+  return dipFetch("/api/v1/gtm-lab/imports/validate", importValidationSchema, { method: "POST", body: JSON.stringify({ rows }) });
+}
+
+export function runGtmPipeline(rows: ProspectSeed[]) {
+  return dipFetch("/api/v1/gtm-lab/pipeline/run", pipelineRunSchema, {
+    method: "POST",
+    body: JSON.stringify({ connector_ids: ["inline-prospects"], ingestion_request: { rows } }),
+  });
 }
 
 const lifecycleMutationSchema = z.object({ decision_id: z.string(), status: z.string() });
