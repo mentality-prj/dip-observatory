@@ -1,10 +1,11 @@
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type DesignTheme = "green" | "cyan" | "emerald" | "amber" | "rose" | "violet";
 export type DesignMode = "dark" | "light";
 export type ProductName = "Studio" | "Observatory";
+export type ProductSwitch = { href: string; label: string };
 
 export function DesignSystemProvider({ theme, mode = "dark", children, className }: { theme: DesignTheme; mode?: DesignMode; children: ReactNode; className?: string }) {
   return <div data-ds-theme={theme} data-ds-mode={mode} className={className}>{children}</div>;
@@ -16,18 +17,50 @@ export function ProductLockup({ href, product, className, onClick }: { href: str
   </Link>;
 }
 
-export function ProductHeader({ href, product, center, actions, className }: { href: string; product: ProductName; center?: ReactNode; actions?: ReactNode; className?: string }) {
+export function ProductSwitchLink({ href, label }: ProductSwitch) {
+  return <Link className="ds-product-switch-link" href={href}>{label} <span aria-hidden>↗</span></Link>;
+}
+
+export function ProductHeader({ href, product, navigation, productSwitch, status, utilities, className }: {
+  href: string;
+  product: ProductName;
+  navigation?: ReactNode;
+  productSwitch: ProductSwitch;
+  status?: ReactNode;
+  utilities?: ReactNode;
+  className?: string;
+}) {
   return <header className={cn("ds-product-header", className)}>
     <div className="ds-product-header-inner">
       <ProductLockup href={href} product={product} />
-      {center ? <div className="ds-product-header-center">{center}</div> : <div className="ds-product-header-spacer" />}
-      {actions ? <div className="ds-product-header-actions">{actions}</div> : null}
+      {navigation ? <div className="ds-product-header-center">{navigation}</div> : <div className="ds-product-header-spacer" />}
+      <div className="ds-product-header-actions">
+        {status}
+        <ProductSwitchLink {...productSwitch} />
+        {utilities}
+      </div>
     </div>
   </header>;
 }
 
-export function ProductSwitchLink(props: ComponentProps<typeof Link>) {
-  return <Link {...props} className={cn("ds-product-switch-link", props.className)} />;
+export function ProductShell({ theme, mode = "dark", className, href, product, navigation, mobileNavigation, productSwitch, status, utilities, children }: {
+  theme: DesignTheme;
+  mode?: DesignMode;
+  className?: string;
+  href: string;
+  product: ProductName;
+  navigation?: ReactNode;
+  mobileNavigation?: ReactNode;
+  productSwitch: ProductSwitch;
+  status?: ReactNode;
+  utilities?: ReactNode;
+  children: ReactNode;
+}) {
+  return <DesignSystemProvider theme={theme} mode={mode} className={className}>
+    <ProductHeader href={href} product={product} navigation={navigation} productSwitch={productSwitch} status={status} utilities={utilities} />
+    {mobileNavigation ? <div className="ds-product-mobile-navigation">{mobileNavigation}</div> : null}
+    {children}
+  </DesignSystemProvider>;
 }
 
 export function Surface({ as: Tag = "section", className, children }: { as?: "section" | "article" | "div"; className?: string; children: ReactNode }) {
