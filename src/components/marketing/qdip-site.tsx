@@ -7,11 +7,6 @@ import { MobileMenu } from "./mobile-menu";
 import styles from "./qdip-site.module.css";
 
 const localeLabels: Record<MarketingLocale, string> = { en: "EN", uk: "UA", pl: "PL" };
-const footerTagline: Record<MarketingLocale, string> = {
-  en: "Decision Engine for consistent, explainable decisions.",
-  uk: "Рушій для послідовних і пояснюваних рішень.",
-  pl: "Silnik decyzyjny dla spójnych i wyjaśnialnych decyzji.",
-};
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`;
 
 function Header({ locale }: { locale: MarketingLocale }) {
@@ -51,6 +46,6 @@ export function QdipSite({ locale="en" }: { locale?: MarketingLocale }) {
     <section className={styles.softSection} id="why"><div className={styles.sectionIntro}><h2>{c.why[0]}</h2></div><div className={styles.valueGrid}>{[1,3,5,7,9,11].map(i=><article key={c.why[i]}><Check size={18}/><h3>{c.why[i]}</h3><p>{c.why[i+1]}</p></article>)}</div></section>
     <section className={styles.finalCta}><h2>{c.conversion[0]}</h2><p>{c.conversion[1]}</p><Link className={styles.primaryButtonLarge} href={path(locale,"decision")}>{c.conversion[2]} <ArrowRight size={16}/></Link></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.adoption[0]}</h2></div><Flow labels={c.adoption.slice(1)}/></section>
-    <footer className={styles.footer}><div className={styles.footerBrand}><QdipLogo/><p>{footerTagline[locale]}</p></div><nav><Link href={path(locale,"how-it-works")}>{c.nav[0]}</Link><Link href={path(locale,"use-cases")}>{c.nav[1]}</Link><Link href={path(locale,"core")}>QDIP Core</Link><Link href={path(locale,"core/research")}>Research</Link></nav><span>© {new Date().getFullYear()} QDIP</span></footer>
+    <footer className={styles.footer}><QdipLogo/><nav><Link href={path(locale,"how-it-works")}>{c.nav[0]}</Link><Link href={path(locale,"use-cases")}>{c.nav[1]}</Link><Link href={path(locale,"core")}>QDIP Core</Link><Link href={path(locale,"core/research")}>Research</Link></nav><span>© {new Date().getFullYear()} QDIP</span></footer>
   </main>;
 }

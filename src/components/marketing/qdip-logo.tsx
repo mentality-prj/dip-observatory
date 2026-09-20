@@ -15,9 +15,9 @@ export function QdipLogo({ inverse = false }: { inverse?: boolean }) {
         style={{ clipPath: "inset(0 10%)", marginInline: "-10%" }}
         width={300}
       />
-      <span className={logoStyles.tagline} data-locale="en">Decision Engine for repeatable, explainable decisions.</span>
-      <span className={logoStyles.tagline} data-locale="uk">Рушій прийняття рішень для повторюваних і пояснюваних рішень.</span>
-      <span className={logoStyles.tagline} data-locale="pl">Silnik decyzyjny dla powtarzalnych i wyjaśnialnych decyzji.</span>
+      <span className={logoStyles.tagline} data-locale="en">Decision Engine for consistent, explainable decisions.</span>
+      <span className={logoStyles.tagline} data-locale="uk">Рушій прийняття рішень для послідовних і пояснюваних рішень.</span>
+      <span className={logoStyles.tagline} data-locale="pl">Silnik decyzyjny dla spójnych i wyjaśnialnych decyzji.</span>
     </span>
   );
 }
