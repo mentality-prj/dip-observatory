@@ -1,0 +1,2 @@
+import { conversionBridgeCopy } from "./conversion-copy";
+describe("conversion bridge positioning",()=>{it("speaks about the buyer's recurring decision",()=>{expect(conversionBridgeCopy.en.question.toLowerCase()).toContain("recurring decision");expect(conversionBridgeCopy.uk.question.toLowerCase()).toContain("рішення");expect(conversionBridgeCopy.pl.question.toLowerCase()).toContain("decyzję")})});

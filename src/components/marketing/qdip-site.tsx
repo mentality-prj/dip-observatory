@@ -7,6 +7,8 @@ import { MobileMenu } from "./mobile-menu";
 import { DecisionSpace } from "./decision-space";
 import { DecisionSpaceStory } from "./decision-space-story";
 import { DecisionPatterns } from "./decision-patterns";
+import { PilotPath } from "./pilot-path";
+import { conversionBridgeCopy } from "./conversion-copy";
 import styles from "./qdip-site.module.css";
 
 const localeLabels: Record<MarketingLocale, string> = { en: "EN", uk: "UA", pl: "PL" };
@@ -22,15 +24,16 @@ function Flow({labels}:{labels:readonly string[]}){return <div className={styles
 export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
   const c=marketingCopy[locale];
   const valueIndexes=[1,3,11,5,7,9];
+  const decisionHref=path(locale,"decision");
   return <main className={styles.site} id="main-content" lang={locale}><Header locale={locale}/>
     <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link></div></div><DecisionSpace locale={locale}/></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div><div className={styles.questionGrid}>{c.problem.slice(1,5).map(x=><article key={x}>{x}</article>)}</div><p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p><p className={styles.businessBridge}>{c.bridge}</p></section>
     <section className={styles.darkSection}><div className={styles.compareGrid}><article><span>{c.compare[0]}</span><Flow labels={[c.diagram[0],locale==="en"?"Rules / priorities":locale==="uk"?"Правила / пріоритети":"Reguły / priorytety",locale==="en"?"Compare options":locale==="uk"?"Порівняння варіантів":"Porównanie opcji",locale==="en"?"Human reasoning":locale==="uk"?"Людське міркування":"Ocena człowieka",locale==="en"?"Decision":locale==="uk"?"Рішення":"Decyzja"]}/><p>{c.compare[1]}</p></article><article><span>{c.compare[2]}</span><Flow labels={[`${c.diagram[0]} + ${c.diagram[1]}`,"QDIP",locale==="en"?"Evaluation":locale==="uk"?"Оцінювання":"Ocena",`${c.diagram[5]} + ${c.diagram[6]}`,c.diagram[7]]}/><p>{c.compare[3]}</p></article></div></section>
     <DecisionSpaceStory locale={locale}/>
-    <section className={`${styles.section} ${styles.patternSection}`} id="demos"><div className={styles.sectionIntro}><div className={styles.eyebrow}>QDIP</div><h2>{c.cases[0]}</h2></div><DecisionPatterns locale={locale} cases={c.cases}/></section>
+    <section className={`${styles.section} ${styles.patternSection}`} id="demos"><div className={styles.sectionIntro}><div className={styles.eyebrow}>QDIP</div><h2>{c.cases[0]}</h2></div><DecisionPatterns locale={locale} cases={c.cases}/><div className={styles.demoBridge}><span>{conversionBridgeCopy[locale].question}</span><Link href={decisionHref}>{c.conversion[2]} <ArrowRight size={14}/></Link></div></section>
     <section className={styles.softSection} id="why"><div className={styles.sectionIntro}><h2>{c.why[0]}</h2></div><div className={styles.valueGrid}>{valueIndexes.map((i,index)=><article className={index<3?styles.featuredCase:undefined} key={c.why[i]}><Check size={18}/><h3>{c.why[i]}</h3><p>{c.why[i+1]}</p></article>)}</div></section>
-    <section className={`${styles.section} ${styles.adoptionSection}`}><div className={styles.sectionIntro}><h2>{c.adoption[0]}</h2></div><Flow labels={c.adoption.slice(1)}/></section>
-    <section className={styles.finalCta}><h2>{c.conversion[0]}</h2><p>{c.conversion[1]}</p><Link className={styles.primaryButtonLarge} href={path(locale,"decision")}>{c.conversion[2]} <ArrowRight size={16}/></Link></section>
+    <PilotPath locale={locale} decisionHref={decisionHref}/>
+    <section className={styles.finalCta}><h2>{c.conversion[0]}</h2><p>{c.conversion[1]}</p><Link className={styles.primaryButtonLarge} href={decisionHref}>{c.conversion[2]} <ArrowRight size={16}/></Link></section>
     <footer className={styles.footer}><QdipLogo/><nav><Link href={path(locale,"how-it-works")}>{c.nav[0]}</Link><Link href={path(locale,"use-cases")}>{c.nav[1]}</Link><Link href={path(locale,"core")}>QDIP Core</Link><Link href={path(locale,"core/research")}>Research</Link></nav><span>© {new Date().getFullYear()} QDIP</span></footer>
   </main>;
 }
