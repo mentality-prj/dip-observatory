@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import { buildResourceAllocationInput, runResourceAllocationScenario } from "../api";
 import type { ResourceAllocationPeriodPlan, ResourceAllocationResult } from "../contracts";
 import { RESOURCE_ALLOCATION_CURRENT as currentAllocation } from "../demo-data";
-import type { EvaluatedManualAllocation } from "../components/resource-allocation-manual-editor";
+
+type ManualAllocationSelection = {
+  actual_allocation: Record<string, Record<string, string>>;
+  metrics: Record<string, number>;
+};
 
 const fallbackPlan = (result: ResourceAllocationResult): ResourceAllocationPeriodPlan => ({
   daily: result.daily,
@@ -22,7 +26,7 @@ export function useResourceAllocationWorkspace() {
   const [capacityFactor, setCapacityFactor] = useState(100);
   const [blockedCommunity, setBlockedCommunity] = useState("");
   const [lastInput, setLastInput] = useState<Record<string, unknown> | null>(null);
-  const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null);
+  const [manualSelected, setManualSelected] = useState<ManualAllocationSelection | null>(null);
   const [runRevision, setRunRevision] = useState(0);
 
   async function run() {
