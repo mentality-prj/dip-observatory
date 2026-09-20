@@ -40,13 +40,12 @@ Backend integration uses:
 
 The public Describe your decision form is delivered server-side through authenticated Zoho Mail SMTP. Configure these server-only variables in local `.env` and in the production secret store:
 
-- `ZOHO_SMTP_USER` — Zoho mailbox used as the sender, e.g. `hello@qdip.ai`
-- `ZOHO_SMTP_PASSWORD` — Zoho app password for the sender mailbox
-- `QDIP_LEAD_MAILBOX` — mailbox receiving decision inquiries, currently `hello@qdip.ai`
+- `ZOHO_SMTP_USER` — Zoho mailbox used as both sender and recipient, e.g. `hello@qdip.ai`
+- `ZOHO_SMTP_PASSWORD` — Zoho app password for that mailbox
 - `ZOHO_SMTP_HOST` — optional; defaults to `smtp.zoho.com`. Override it if the Zoho Admin Console assigns a data-center-specific SMTP hostname.
 - `ZOHO_SMTP_PORT` — optional; defaults to `465` using implicit TLS/SSL.
 
-The SMTP connection is created only from the Node.js server route. Credentials are never exposed through `NEXT_PUBLIC_*` variables or sent to the browser. The visitor email is used only as the validated `Reply-To`; the authenticated Zoho mailbox remains the `From` address.
+The SMTP connection is created only from the Node.js server route. Credentials are never exposed through `NEXT_PUBLIC_*` variables or sent to the browser. The visitor email is used only as the validated `Reply-To`; the authenticated Zoho mailbox remains both the `From` and delivery address.
 
 Zoho supports authenticated SMTP over SSL on port 465. If the account uses a data-center-specific SMTP hostname, use the exact value shown in the Zoho Mail account/Admin Console rather than changing application code.
 

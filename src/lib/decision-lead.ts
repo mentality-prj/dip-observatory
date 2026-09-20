@@ -41,7 +41,7 @@ export class NodeTlsSmtpTransport implements SmtpTransport{
 export class ZohoMailDelivery implements MailDelivery{
  constructor(private readonly transport:SmtpTransport=new NodeTlsSmtpTransport()){}
  async sendDecisionLead(lead:DecisionLead,submissionId:string){
-  const user=required("ZOHO_SMTP_USER"),password=required("ZOHO_SMTP_PASSWORD"),to=required("QDIP_LEAD_MAILBOX"),host=process.env.ZOHO_SMTP_HOST||"smtp.zoho.com",port=Number(process.env.ZOHO_SMTP_PORT||465);
+  const user=required("ZOHO_SMTP_USER"),password=required("ZOHO_SMTP_PASSWORD"),to=user,host=process.env.ZOHO_SMTP_HOST||"smtp.zoho.com",port=Number(process.env.ZOHO_SMTP_PORT||465);
   if(!Number.isInteger(port)||port<=0||port>65535)throw new Error("smtp_config_invalid");
   const rows:[[string,string],...Array<[string,string]>]=[["Name",lead.name],["Organization",lead.organization],["Email",lead.email],["Recurring decision",lead.decision],["Information used",lead.information],["Alternatives",lead.alternatives],["Constraints",lead.constraints],["Additional context",lead.context],["Submitted",new Date().toISOString()],["Locale",lead.locale],["Submission ID",submissionId]];
   const text=["New QDIP decision inquiry","",...rows.map(([k,v])=>`${k}:\n${v||"—"}`)].join("\n\n"),bodyHtml=`<h2>New QDIP decision inquiry</h2>${rows.map(([k,v])=>`<p><strong>${html(k)}</strong><br>${html(v||"—")}</p>`).join("")}`,boundary=`qdip-${submissionId}`;
