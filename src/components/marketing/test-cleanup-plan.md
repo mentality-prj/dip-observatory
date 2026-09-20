@@ -1,0 +1,1 @@
+Remove temporary Jest/RTL-style tests; repository uses node:test and Playwright.
