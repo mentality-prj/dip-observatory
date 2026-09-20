@@ -7,7 +7,7 @@ test("accepts backend GTM import validation", () => {
   assert.equal(parsed.rows[0]?.name, "Acme");
 });
 
-test("accepts pipeline summary without coupling FE to domain internals", () => {
-  const parsed = pipelineRunSchema.parse({ run_id: "run-1", status: "COMPLETED", imported_rows: 1, deduplicated_rows: 0, summary: { total_prospects: 1, evaluated_prospects: 1, failed_prospects: 0, total_opportunities: 1, total_evidence: 2, decisions: { PURSUE: 1, RESEARCH: 0, SKIP: 0 } }, prospects: [{ company: { id: "c1", name: "Acme" }, lifecycle: null, problems: [], opportunities: [], decisions: [], evidence_count: 2, error: null }] });
-  assert.equal(parsed.summary.decisions.PURSUE, 1);
+test("accepts all backend decision states including WATCH", () => {
+  const parsed = pipelineRunSchema.parse({ run_id: "run-1", status: "COMPLETED", imported_rows: 1, deduplicated_rows: 0, summary: { total_prospects: 1, evaluated_prospects: 1, failed_prospects: 0, total_opportunities: 0, total_evidence: 0, decisions: { PURSUE: 0, RESEARCH: 0, WATCH: 1, SKIP: 0 } }, prospects: [{ company: { id: "c1", name: "Acme" }, lifecycle: null, problems: [], opportunities: [], decisions: [], evidence_count: 0, error: null }] });
+  assert.equal(parsed.summary.decisions.WATCH, 1);
 });

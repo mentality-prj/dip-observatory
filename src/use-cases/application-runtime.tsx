@@ -9,12 +9,7 @@ export type ApplicationFrontendProps = { locale: Locale };
 
 const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/gas-forecast").then((m) => ({ default: () => <m.GasForecastWorkspace /> })));
 const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/features/resource-allocation").then((m) => ({ default: m.ResourceAllocationWorkspace })));
-const GtmLabWorkspace = dynamic<ApplicationFrontendProps>(() => import("@/features/gtm-lab").then((m) => ({ default: m.GtmLabWorkspace })));
-const GtmProductionImport = dynamic(() => import("@/features/gtm-lab/components/gtm-production-import").then((m) => ({ default: m.GtmProductionImport })));
-
-function GtmLab(props: ApplicationFrontendProps) {
-  return <><GtmProductionImport/><GtmLabWorkspace {...props}/></>;
-}
+const GtmLab = dynamic<ApplicationFrontendProps>(() => import("@/features/gtm-lab").then((m) => ({ default: m.GtmLabWorkspace })));
 
 const frontends = {
   "gas-forecast": GasForecast,
