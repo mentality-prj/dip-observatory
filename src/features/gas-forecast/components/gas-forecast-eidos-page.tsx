@@ -6,10 +6,8 @@ import { useRef, useState, useTransition } from "react";
 
 import { runGasForecastExperimentAction } from "@/app/admin/plugins/gas-forecast/eidos/actions";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@/design-system";
-import type {
-  GasForecastExperimentRequest,
-  GasForecastExperimentResult,
-} from "@/lib/gas-forecast-experiment-client";
+import { GasForecastResearchEvidence } from "@/features/gas-forecast/components/gas-forecast-research-evidence";
+import type { GasForecastExperimentRequest, GasForecastExperimentResult } from "@/lib/gas-forecast-experiment-client";
 
 const DEFAULT_FORM: GasForecastExperimentRequest = {
   start_date: "2025-01-01",
@@ -19,11 +17,7 @@ const DEFAULT_FORM: GasForecastExperimentRequest = {
   procurement_threshold_eur_per_mwh: 0,
 };
 
-export function GasForecastEidosPage({
-  initialResult = null,
-}: {
-  initialResult?: GasForecastExperimentResult | null;
-}) {
+export function GasForecastEidosPage({ initialResult = null }: { initialResult?: GasForecastExperimentResult | null }) {
   const [isPending, startTransition] = useTransition();
   const isSubmittingRef = useRef(false);
   const [form, setForm] = useState<GasForecastExperimentRequest>(DEFAULT_FORM);
@@ -60,16 +54,16 @@ export function GasForecastEidosPage({
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">DIP Admin / Observatory</span>
-              <Badge variant="amber" className="gap-1.5"><FlaskConical className="h-3 w-3" aria-hidden="true" />EIDOS experiment</Badge>
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">QDIP Admin / Observatory</span>
+              <Badge variant="amber" className="gap-1.5"><FlaskConical className="h-3 w-3" aria-hidden="true" />Research experiment</Badge>
             </div>
             <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60">
-              <Home className="h-4 w-4" aria-hidden="true" />DIP Observatory
+              <Home className="h-4 w-4" aria-hidden="true" />QDIP Observatory
             </Link>
           </div>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Gas Forecast — EIDOS Experiment</h1>
-            <p className="max-w-3xl text-sm text-slate-400">Configure and execute the backend capability <code>gas.forecast.experiment</code>. No forecasting logic runs in the browser.</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Gas Procurement Decision Experiment</h1>
+            <p className="max-w-3xl text-sm text-slate-400">Execute the backend research capability and inspect decision evidence. No forecasting or decision logic runs in the browser.</p>
           </div>
         </header>
 
@@ -93,6 +87,8 @@ export function GasForecastEidosPage({
             <Button type="submit" size="lg" className="w-full" disabled={isPending}>{isPending ? "Running experiment..." : "Run experiment"}</Button>
           </form>
         </CardContent></Card>
+
+        {result?.status === "succeeded" ? <GasForecastResearchEvidence payload={result.payload} /> : null}
 
         {result ? <Card><CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Execution result</CardTitle><Badge variant={result.status === "succeeded" ? "emerald" : "rose"}>{result.status === "succeeded" ? "SUCCEEDED" : "FAILED"}</Badge></div>
