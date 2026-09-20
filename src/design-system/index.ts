@@ -1,12 +1,14 @@
 export {
   DesignSystemProvider,
   ProductHeader,
+  ProductShell,
   ProductSwitchLink,
   Surface,
   PageHeader,
   StatusBadge,
   type DesignMode,
   type DesignTheme,
+  type ProductSwitch,
 } from "./components";
 export { AppShell, Container, Page, Section, Select, Textarea, Checkbox, Table, Disclosure } from "./primitives";
 

@@ -4,9 +4,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { GasForecastEidosPage } from "./gas-forecast-eidos-page";
 
-test("renders gas forecast eidos experiment request fields", () => {
+test("renders gas procurement decision experiment request fields", () => {
   const html = renderToStaticMarkup(<GasForecastEidosPage />);
-  assert.equal(html.includes("Gas Forecast — EIDOS Experiment"), true);
+  assert.equal(html.includes("Gas Procurement Decision Experiment"), true);
   assert.equal(html.includes('id="start-date"'), true);
   assert.equal(html.includes('id="end-date"'), true);
   assert.equal(html.includes('id="forecast-horizon-days"'), true);
