@@ -1,0 +1,47 @@
+import "server-only";
+import { createHash, randomUUID } from "node:crypto";
+import { z } from "zod";
+
+export const decisionLeadSchema=z.object({
+ name:z.string().trim().min(2).max(120),
+ organization:z.string().trim().min(2).max(160),
+ email:z.string().trim().email().max(254),
+ decision:z.string().trim().min(10).max(4000),
+ information:z.string().trim().max(3000).default(""),
+ alternatives:z.string().trim().max(3000).default(""),
+ constraints:z.string().trim().max(3000).default(""),
+ context:z.string().trim().max(4000).default(""),
+ locale:z.enum(["en","uk","pl"]),
+ website:z.string().max(0).default(""),
+}).strict();
+export type DecisionLead=z.infer<typeof decisionLeadSchema>;
+
+export interface MailDelivery { sendDecisionLead(lead:DecisionLead,submissionId:string):Promise<void> }
+
+function required(name:string){const value=process.env[name];if(!value)throw new Error(`Missing server configuration: ${name}`);return value}
+function encodeHeader(value:string){return value.replace(/[\r\n]+/g," ").trim()}
+function html(value:string){return value.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!)).replace(/\n/g,"<br>")}
+function b64url(value:string){return Buffer.from(value).toString("base64url")}
+
+export class GmailMailDelivery implements MailDelivery {
+ async sendDecisionLead(lead:DecisionLead,submissionId:string){
+  const clientId=required("GMAIL_CLIENT_ID"),clientSecret=required("GMAIL_CLIENT_SECRET"),refreshToken=required("GMAIL_REFRESH_TOKEN"),from=required("GMAIL_FROM"),to=required("QDIP_LEAD_MAILBOX");
+  const tokenResponse=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:clientId,client_secret:clientSecret,refresh_token:refreshToken,grant_type:"refresh_token"}),cache:"no-store"});
+  if(!tokenResponse.ok)throw new Error("gmail_auth_failed");
+  const token=await tokenResponse.json() as {access_token?:string}; if(!token.access_token)throw new Error("gmail_auth_failed");
+  const submitted=new Date().toISOString();
+  const rows:[[string,string],...Array<[string,string]>]=[["Name",lead.name],["Organization",lead.organization],["Email",lead.email],["Recurring decision",lead.decision],["Information used",lead.information],["Alternatives",lead.alternatives],["Constraints",lead.constraints],["Additional context",lead.context],["Submitted",submitted],["Locale",lead.locale],["Submission ID",submissionId]];
+  const text=["New QDIP decision inquiry","",...rows.map(([k,v])=>`${k}:\n${v||"—"}`)].join("\n\n");
+  const bodyHtml=`<h2>New QDIP decision inquiry</h2>${rows.map(([k,v])=>`<p><strong>${html(k)}</strong><br>${html(v||"—")}</p>`).join("")}`;
+  const boundary=`qdip-${submissionId}`;
+  const raw=[`From: ${encodeHeader(from)}`,`To: ${encodeHeader(to)}`,`Reply-To: ${encodeHeader(lead.email)}`,`Subject: ${encodeHeader(`QDIP decision inquiry — ${lead.organization}`)}`,"MIME-Version: 1.0",`Content-Type: multipart/alternative; boundary=\"${boundary}\"`,"",`--${boundary}`,"Content-Type: text/plain; charset=UTF-8","",text,`--${boundary}`,"Content-Type: text/html; charset=UTF-8","",bodyHtml,`--${boundary}--`].join("\r\n");
+  const response=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{authorization:`Bearer ${token.access_token}`,"content-type":"application/json"},body:JSON.stringify({raw:b64url(raw)}),cache:"no-store"});
+  if(!response.ok)throw new Error("gmail_delivery_failed");
+ }
+}
+
+const windows=new Map<string,{count:number;reset:number}>();
+const replays=new Map<string,number>();
+export function allowSubmission(key:string,now=Date.now()){const current=windows.get(key);if(!current||current.reset<=now){windows.set(key,{count:1,reset:now+10*60_000});return true}if(current.count>=5)return false;current.count++;return true}
+export function isReplay(lead:DecisionLead,now=Date.now()){const key=createHash("sha256").update(`${lead.email.toLowerCase()}\n${lead.organization}\n${lead.decision}`).digest("hex");const seen=replays.get(key);if(seen&&seen>now)return true;replays.set(key,now+5*60_000);return false}
+export function submissionId(){return randomUUID()}
