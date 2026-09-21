@@ -33,70 +33,78 @@ export type EvaluatedManualAllocation = {
 }
 const copy = {
   uk: {
-    section: 'РУЧНЕ КОРИГУВАННЯ',
-    title: 'Змініть розподіл команд і перевірте наслідки',
+    section: 'ПЕРЕВІРТЕ ВЛАСНЕ РІШЕННЯ',
+    title: 'Не погоджуєтесь з рекомендацією? Перевірте свій варіант',
     description:
-      'Менеджер може змінити призначення. DIP не оптимізує їх повторно, а оцінює саме ручний план: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
+      'Змініть призначення команд. QDIP не скасує ваші зміни — він оцінить їх наслідки: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
     reset: 'Скинути',
     team: 'Команда',
     unassigned: 'Не призначено',
-    evaluate: 'Перевірити ручний план',
+    evaluate: 'Оцінити мої зміни',
     evaluating: 'Перевірка…',
-    use: 'Використати як рішення менеджера',
+    use: 'Використати мій варіант для рішення',
     priority: 'Пріоритетні потреби',
     total: 'Усі потреби',
     served: 'Буде покрито',
     unmet: 'Не буде покрито',
     travel: 'Вартість переміщень',
     violations: 'порушень обмежень',
-    feasible:
-      'Ручний план допустимий за поточних обмежень. Тепер його можна порівняти з рекомендацією DIP на схемі вище.',
+    feasible: 'Ручний план допустимий за поточних обмежень.',
+    qdip: 'План QDIP',
+    yours: 'Ваш план',
+    difference: 'Різниця',
   },
   en: {
-    section: 'MANUAL OVERRIDE',
-    title: 'Adjust team allocation and evaluate the consequences',
+    section: 'TEST YOUR OWN DECISION',
+    title: 'Disagree with the recommendation? Test your own allocation',
     description:
-      'A manager can change assignments. DIP does not optimize them back; it evaluates the manual plan itself: coverage, unmet demand, movement and constraint violations.',
+      'Change team assignments. QDIP will not optimize your edits away — it evaluates their consequences: coverage, unmet demand, movement and constraint violations.',
     reset: 'Reset',
     team: 'Team',
     unassigned: 'Unassigned',
-    evaluate: 'Evaluate manual plan',
+    evaluate: 'Evaluate my changes',
     evaluating: 'Evaluating…',
-    use: 'Use as manager decision',
+    use: 'Use my plan for the decision',
     priority: 'Priority needs',
     total: 'All needs',
     served: 'Expected covered',
     unmet: 'Expected uncovered',
     travel: 'Movement cost',
     violations: 'constraint violations',
-    feasible:
-      'The manual plan is feasible under current constraints. It can now be compared with the DIP recommendation in the network above.',
+    feasible: 'The manual plan is feasible under current constraints.',
+    qdip: 'QDIP plan',
+    yours: 'Your plan',
+    difference: 'Difference',
   },
   pl: {
-    section: 'KOREKTA RĘCZNA',
-    title: 'Zmień alokację zespołów i oceń konsekwencje',
+    section: 'SPRAWDŹ WŁASNĄ DECYZJĘ',
+    title: 'Nie zgadzasz się z rekomendacją? Sprawdź własny wariant',
     description:
-      'Menedżer może zmienić przydziały. DIP nie optymalizuje ich ponownie, lecz ocenia sam plan ręczny: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
+      'Zmień przydziały zespołów. QDIP nie cofnie Twoich zmian — oceni ich skutki: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
     reset: 'Resetuj',
     team: 'Zespół',
     unassigned: 'Nieprzydzielony',
-    evaluate: 'Oceń plan ręczny',
+    evaluate: 'Oceń moje zmiany',
     evaluating: 'Ocena…',
-    use: 'Użyj jako decyzji menedżera',
+    use: 'Użyj mojego wariantu do decyzji',
     priority: 'Potrzeby priorytetowe',
     total: 'Wszystkie potrzeby',
     served: 'Zostanie pokryte',
     unmet: 'Pozostanie bez pokrycia',
     travel: 'Koszt przemieszczeń',
     violations: 'naruszeń ograniczeń',
-    feasible:
-      'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach. Można go teraz porównać z rekomendacją DIP na schemacie powyżej.',
+    feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
+    qdip: 'Plan QDIP',
+    yours: 'Twój plan',
+    difference: 'Różnica',
   },
 } as const
 
 export function ResourceAllocationManualEditor({
   input,
   plan,
+  referenceMetrics,
+  referenceSummary,
   communities,
   teams,
   onUseModified,
@@ -104,6 +112,8 @@ export function ResourceAllocationManualEditor({
 }: {
   input: Record<string, unknown>
   plan: { daily: DayPlan[] }
+  referenceMetrics: ManualMetrics
+  referenceSummary: { served: number; closing_unmet: number }
   communities: string[]
   teams: string[]
   onUseModified: (selected: EvaluatedManualAllocation) => void
@@ -214,7 +224,7 @@ export function ResourceAllocationManualEditor({
       <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 basis-[16rem]">
-            <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">07 · {t.section}</div>
+            <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
             <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
             <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
               {t.description}
@@ -328,18 +338,57 @@ export function ResourceAllocationManualEditor({
           </div>
         )}
         {evaluation && (
-          <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-5">
-            <Kpi
-              label={t.priority}
-              value={metrics?.priority_coverage == null ? '—' : `${Math.round(metrics.priority_coverage * 100)}%`}
-            />
-            <Kpi
-              label={t.total}
-              value={metrics?.total_coverage == null ? '—' : `${Math.round(metrics.total_coverage * 100)}%`}
-            />
-            <Kpi label={t.served} value={demand?.served?.toFixed(0) ?? '—'} />
-            <Kpi label={t.unmet} value={demand?.closing_unmet?.toFixed(0) ?? '—'} />
-            <Kpi label={t.travel} value={metrics?.travel_cost?.toFixed(1) ?? '—'} />
+          <div className="mt-5 overflow-hidden border border-white/10">
+            <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-px bg-white/10 text-xs">
+              <div className="bg-slate-950/70 p-3" />
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.qdip}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.yours}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.difference}</div>
+              <ComparisonRow
+                label={t.priority}
+                reference={referenceMetrics.priority_coverage}
+                actual={metrics?.priority_coverage}
+                percentage
+              />
+              <ComparisonRow
+                label={t.served}
+                reference={referenceSummary.served}
+                actual={demand?.served}
+              />
+              <ComparisonRow
+                label={t.unmet}
+                reference={referenceSummary.closing_unmet}
+                actual={demand?.closing_unmet}
+                inverse
+              />
+              <ComparisonRow
+                label={t.travel}
+                reference={referenceMetrics.travel_cost}
+                actual={metrics?.travel_cost}
+                inverse
+              />
+            </div>
+            {typeof demand?.served === 'number' && (
+              <div className="border-t border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+                {locale === 'uk'
+                  ? demand.served === referenceSummary.served
+                    ? 'Ваш план покриває стільки ж одиниць потреб, як план QDIP.'
+                    : demand.served > referenceSummary.served
+                      ? `Ваш план покриває на ${Math.round(demand.served - referenceSummary.served)} одиниць потреб більше.`
+                      : `Ваш план покриває на ${Math.round(referenceSummary.served - demand.served)} одиниць потреб менше.`
+                  : locale === 'pl'
+                    ? demand.served === referenceSummary.served
+                      ? 'Twój plan pokrywa tyle samo jednostek potrzeb co plan QDIP.'
+                      : demand.served > referenceSummary.served
+                        ? `Twój plan pokrywa o ${Math.round(demand.served - referenceSummary.served)} jednostek potrzeb więcej.`
+                        : `Twój plan pokrywa o ${Math.round(referenceSummary.served - demand.served)} jednostek potrzeb mniej.`
+                    : demand.served === referenceSummary.served
+                      ? 'Your plan covers the same number of demand units as the QDIP plan.'
+                      : demand.served > referenceSummary.served
+                        ? `Your plan covers ${Math.round(demand.served - referenceSummary.served)} more demand units.`
+                        : `Your plan covers ${Math.round(referenceSummary.served - demand.served)} fewer demand units.`}
+              </div>
+            )}
           </div>
         )}
         {evaluation && (
@@ -371,11 +420,40 @@ export function ResourceAllocationManualEditor({
     </div>
   )
 }
-function Kpi({ label, value }: { label: string; value: string }) {
+function ComparisonRow({
+  label,
+  reference,
+  actual,
+  percentage = false,
+  inverse = false,
+}: {
+  label: string
+  reference?: number
+  actual?: number
+  percentage?: boolean
+  inverse?: boolean
+}) {
+  const render = (value?: number) =>
+    value == null ? '—' : percentage ? `${Math.round(value * 100)}%` : value.toFixed(0)
+  const delta = reference == null || actual == null ? null : actual - reference
+  const favorable = delta == null || Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
+  const deltaText =
+    delta == null
+      ? '—'
+      : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
+
   return (
-    <div className="min-w-0 border border-white/10 p-3">
-      <div className="break-words text-xs text-slate-500 [overflow-wrap:anywhere]">{label}</div>
-      <div className="mt-1 break-words text-xl font-black">{value}</div>
-    </div>
+    <>
+      <div className="bg-white/[0.03] p-3 text-slate-500">{label}</div>
+      <div className="bg-white/[0.03] p-3 font-bold">{render(reference)}</div>
+      <div className="bg-white/[0.03] p-3 font-bold">{render(actual)}</div>
+      <div
+        className={`bg-white/[0.03] p-3 font-bold ${
+          favorable === true ? 'text-emerald-300' : favorable === false ? 'text-rose-200' : 'text-slate-500'
+        }`}
+      >
+        {deltaText}
+      </div>
+    </>
   )
 }
