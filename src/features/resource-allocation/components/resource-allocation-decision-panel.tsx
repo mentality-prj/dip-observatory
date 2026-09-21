@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, CircleAlert, Flag, Gauge, History, Save, X } from 'lucide-react'
+import { Check, CircleAlert, Flag, Gauge, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
 
@@ -59,14 +59,15 @@ type Props = {
   priorityCoverage: number
   served: number
   unmet: number
+  selectionKind?: 'recommended' | 'alternative'
   locale?: Locale
 }
 
 const copy = {
   uk: {
-    capacity: 'ДЕФІЦИТ РЕСУРСІВ',
-    capacityTitle: 'Яких ресурсів бракує для кращого результату?',
-    analyze: 'Розрахувати потребу для 90% пріоритетного покриття',
+    capacity: 'ЧОГО БРАКУЄ ДЛЯ КРАЩОГО РЕЗУЛЬТАТУ',
+    capacityTitle: 'Яких ресурсів бракує, щоб досягти бажаного покриття?',
+    analyze: 'Розрахувати необхідні ресурси',
     analyzing: 'Розрахунок…',
     infeasible: 'Для поточної операційної ситуації неможливо виконати аналіз доступної потужності.',
     gap: 'До цілі бракує',
@@ -86,33 +87,38 @@ const copy = {
     available: 'доступна потужність',
     shortfall: 'дефіцит',
     firstTeam: 'від першого екв. команди',
-    decision: 'РІШЕННЯ МЕНЕДЖЕРА',
-    decisionTitle: 'Рекомендація → рішення → фактичний результат',
+    decision: 'ПРИЙНЯТИ РІШЕННЯ',
+    decisionTitle: 'Що ви хочете зробити з рекомендацією QDIP?',
     staged: 'Перевірений ручний план підготовлено як рішення менеджера.',
-    snapshot: 'Створити незмінний знімок рішення',
-    snapshotBusy: 'Створення знімка…',
+    snapshot: 'Зафіксувати рішення',
+    snapshotBusy: 'Фіксую рішення…',
     decisionId: 'ID рішення',
     reason: 'Обґрунтування зміни або відхилення',
-    accept: 'Прийняти план DIP',
+    accept: 'Прийняти рекомендацію QDIP',
     modify: 'Прийняти ручне коригування',
-    alternative: 'Вибрати альтернативу',
-    reject: 'Відхилити',
+    alternative: 'Прийняти вибраний альтернативний план',
+    reject: 'Відхилити рекомендацію',
     outcomeNotes: 'Що відбулося фактично після виконання рішення',
     record: 'Зафіксувати фактичний результат',
     recording: 'Збереження…',
     completed: 'Рішення завершено.',
-    completedText: 'Рекомендація DIP, дія менеджера та фактичний результат пов’язані в одному життєвому циклі рішення.',
+    completedText: 'QDIP зберіг рекомендацію, рішення менеджера та фактичний результат в одній історії рішення.',
     timeline: 'ІСТОРІЯ РІШЕННЯ',
     proposed: 'Рекомендацію зафіксовано',
     actual: 'Фактичний результат зафіксовано',
     actor: 'виконавець',
     engine: 'Версії',
     refresh: 'Оновити історію',
+    target: 'Бажане покриття пріоритетних потреб',
+    currentCoverage: 'Поточне покриття',
+    decisionHelp: 'Оберіть план, який буде виконуватися. QDIP автоматично збереже стан даних, рекомендацію та ваше рішення.',
+    outcome: 'ФАКТИЧНИЙ РЕЗУЛЬТАТ',
+    outcomeTitle: 'Що сталося після виконання плану?',
   },
   en: {
-    capacity: 'CAPACITY GAP',
-    capacityTitle: 'What additional capacity would improve the result?',
-    analyze: 'Analyze capacity needed for 90% priority coverage',
+    capacity: 'WHAT IS NEEDED FOR A BETTER RESULT',
+    capacityTitle: 'What resources are needed to reach the coverage you want?',
+    analyze: 'Calculate required resources',
     analyzing: 'Analyzing…',
     infeasible: 'Capacity analysis is infeasible for the current operational state.',
     gap: 'Gap to target',
@@ -132,33 +138,38 @@ const copy = {
     available: 'available capacity',
     shortfall: 'shortfall',
     firstTeam: 'from first team eq.',
-    decision: 'HUMAN DECISION',
-    decisionTitle: 'Recommendation → decision → actual outcome',
+    decision: 'MAKE THE DECISION',
+    decisionTitle: 'What do you want to do with the QDIP recommendation?',
     staged: 'A feasible manager-edited plan is staged as the manager decision.',
     snapshot: 'Create immutable decision snapshot',
     snapshotBusy: 'Creating snapshot…',
     decisionId: 'Decision ID',
     reason: 'Reason for modification or rejection',
-    accept: 'Accept DIP plan',
+    accept: 'Accept QDIP recommendation',
     modify: 'Approve manual modification',
-    alternative: 'Use selected alternative',
-    reject: 'Reject',
+    alternative: 'Accept selected alternative plan',
+    reject: 'Reject recommendation',
     outcomeNotes: 'What actually happened after the decision was executed',
     record: 'Record actual outcome',
     recording: 'Recording…',
     completed: 'Decision completed.',
-    completedText: 'The DIP recommendation, manager action and actual outcome are linked in one decision lifecycle.',
+    completedText: 'QDIP stored the recommendation, manager decision and actual outcome in one decision history.',
     timeline: 'DECISION HISTORY',
     proposed: 'Recommendation captured',
     actual: 'Actual outcome recorded',
     actor: 'actor',
     engine: 'Versions',
     refresh: 'Refresh history',
+    target: 'Desired priority-needs coverage',
+    currentCoverage: 'Current coverage',
+    decisionHelp: 'Choose the plan that will be executed. QDIP automatically stores the data state, recommendation and your decision.',
+    outcome: 'ACTUAL RESULT',
+    outcomeTitle: 'What happened after the plan was executed?',
   },
   pl: {
-    capacity: 'DEFICYT ZASOBÓW',
-    capacityTitle: 'Jakich zasobów brakuje, aby poprawić wynik?',
-    analyze: 'Oblicz potrzeby dla 90% pokrycia priorytetów',
+    capacity: 'CZEGO BRAKUJE DO LEPSZEGO WYNIKU',
+    capacityTitle: 'Jakich zasobów potrzeba, aby osiągnąć oczekiwane pokrycie?',
+    analyze: 'Oblicz wymagane zasoby',
     analyzing: 'Analiza…',
     infeasible: 'Dla bieżącej sytuacji operacyjnej nie można wykonać analizy dostępnej zdolności.',
     gap: 'Brak do celu',
@@ -178,29 +189,34 @@ const copy = {
     available: 'dostępna zdolność',
     shortfall: 'deficyt',
     firstTeam: 'od pierwszego ekw. zespołu',
-    decision: 'DECYZJA MENEDŻERA',
-    decisionTitle: 'Rekomendacja → decyzja → wynik rzeczywisty',
+    decision: 'PODEJMIJ DECYZJĘ',
+    decisionTitle: 'Co chcesz zrobić z rekomendacją QDIP?',
     staged: 'Zweryfikowany plan ręczny przygotowano jako decyzję menedżera.',
     snapshot: 'Utwórz niezmienny zapis decyzji',
     snapshotBusy: 'Tworzenie zapisu…',
     decisionId: 'ID decyzji',
     reason: 'Uzasadnienie zmiany lub odrzucenia',
-    accept: 'Zaakceptuj plan DIP',
+    accept: 'Zaakceptuj rekomendację QDIP',
     modify: 'Zaakceptuj korektę ręczną',
-    alternative: 'Wybierz alternatywę',
-    reject: 'Odrzuć',
+    alternative: 'Zaakceptuj wybrany wariant alternatywny',
+    reject: 'Odrzuć rekomendację',
     outcomeNotes: 'Co faktycznie wydarzyło się po wykonaniu decyzji',
     record: 'Zapisz rzeczywisty wynik',
     recording: 'Zapisywanie…',
     completed: 'Decyzja zakończona.',
     completedText:
-      'Rekomendacja DIP, działanie menedżera i rzeczywisty wynik są połączone w jednym cyklu życia decyzji.',
+      'QDIP zapisał rekomendację, decyzję menedżera i rzeczywisty wynik w jednej historii decyzji.',
     timeline: 'HISTORIA DECYZJI',
     proposed: 'Rekomendacja zapisana',
     actual: 'Wynik rzeczywisty zapisany',
     actor: 'wykonawca',
     engine: 'Wersje',
     refresh: 'Odśwież historię',
+    target: 'Docelowe pokrycie potrzeb priorytetowych',
+    currentCoverage: 'Bieżące pokrycie',
+    decisionHelp: 'Wybierz plan, który ma zostać wykonany. QDIP automatycznie zapisze stan danych, rekomendację i Twoją decyzję.',
+    outcome: 'WYNIK RZECZYWISTY',
+    outcomeTitle: 'Co wydarzyło się po wykonaniu planu?',
   },
 } as const
 
@@ -281,10 +297,12 @@ export function ResourceAllocationDecisionPanel({
   priorityCoverage,
   served,
   unmet,
+  selectionKind = 'recommended',
   locale = 'uk',
 }: Props) {
   const t = copy[locale]
   const [capacity, setCapacity] = useState<CapacityGap | null>(null)
+  const [targetCoverage, setTargetCoverage] = useState(0.9)
   const [lifecycle, setLifecycle] = useState<Lifecycle>(null)
   const [record, setRecord] = useState<DecisionRecord | null>(null)
   const [reason, setReason] = useState('')
@@ -303,27 +321,19 @@ export function ResourceAllocationDecisionPanel({
     setBusy('capacity')
     setError(null)
     try {
-      setCapacity(await post<CapacityGap>('/api/resource-allocation/capacity-gap', { ...input, target_priority_coverage: 0.9 }))
+      setCapacity(
+        await post<CapacityGap>('/api/resource-allocation/capacity-gap', {
+          ...input,
+          target_priority_coverage: targetCoverage,
+        })
+      )
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Capacity analysis failed')
     } finally {
       setBusy(null)
     }
   }
-  async function persist() {
-    setBusy('persist')
-    setError(null)
-    try {
-      const payload = await post<{ decision_id: string; status: string }>('/api/resource-allocation/decisions', input)
-      await loadDecision(payload.decision_id)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Decision persistence failed')
-    } finally {
-      setBusy(null)
-    }
-  }
-  async function feedback(status: 'accepted' | 'modified' | 'rejected') {
-    if (!lifecycle) return
+  async function decide(status: 'accepted' | 'modified' | 'rejected') {
     if ((status === 'modified' || status === 'rejected') && !reason.trim()) {
       setError(t.reason)
       return
@@ -331,6 +341,7 @@ export function ResourceAllocationDecisionPanel({
     setBusy(status)
     setError(null)
     try {
+      const created = await post<{ decision_id: string; status: string }>('/api/resource-allocation/decisions', input)
       const body: Record<string, unknown> = { status }
       if (status === 'modified') {
         body.reason = reason.trim()
@@ -345,8 +356,11 @@ export function ResourceAllocationDecisionPanel({
           : selected
       }
       if (status === 'rejected') body.reason = reason.trim()
-      await post(`/api/resource-allocation/decisions/${encodeURIComponent(lifecycle.decisionId)}/feedback`, body)
-      await loadDecision(lifecycle.decisionId)
+      await post(
+        `/api/resource-allocation/decisions/${encodeURIComponent(created.decision_id)}/feedback`,
+        body
+      )
+      await loadDecision(created.decision_id)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision update failed')
     } finally {
@@ -396,19 +410,41 @@ export function ResourceAllocationDecisionPanel({
       <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">08 · {t.capacity}</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">06 · {t.capacity}</div>
             <h3 className="mt-2 text-xl font-black">{t.capacityTitle}</h3>
           </div>
           <Gauge className="h-6 w-6" />
         </div>
-        <button
-          type="button"
-          disabled={Boolean(busy)}
-          onClick={capacityGap}
-          className="mt-5 border border-white/25 px-4 py-3 text-sm font-bold disabled:opacity-40"
-        >
-          {busy === 'capacity' ? t.analyzing : t.analyze}
-        </button>
+        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="text-sm">
+            <span className="block text-white/55">{t.target}</span>
+            <select
+              value={targetCoverage}
+              onChange={(event) => {
+                setTargetCoverage(Number(event.target.value))
+                setCapacity(null)
+              }}
+              className="mt-2 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+            >
+              {[0.8, 0.9, 0.95, 1].map((value) => (
+                <option key={value} value={value}>
+                  {Math.round(value * 100)}%
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={capacityGap}
+            className="border border-white/25 px-4 py-3 text-sm font-bold disabled:opacity-40"
+          >
+            {busy === 'capacity' ? t.analyzing : t.analyze}
+          </button>
+        </div>
+        <div className="mt-3 text-xs text-white/45">
+          {t.currentCoverage}: <b className="text-white">{Math.round(priorityCoverage * 100)}%</b>
+        </div>
         {capacity && (
           <div className="mt-5 space-y-4 text-sm">
             {capacity.status === 'infeasible' ? (
@@ -428,7 +464,13 @@ export function ResourceAllocationDecisionPanel({
                   </div>
                 </div>
                 {capacity.target_status === 'already_met' && (
-                  <div className="border-l-2 border-emerald-400 pl-3">{t.already}</div>
+                  <div className="border-l-2 border-emerald-400 pl-3">
+                    {locale === 'uk'
+                      ? `Поточне покриття вже досягає ${Math.round(targetCoverage * 100)}%. Додаткові ресурси не потрібні.`
+                      : locale === 'pl'
+                        ? `Bieżące pokrycie już osiąga ${Math.round(targetCoverage * 100)}%. Dodatkowe zasoby nie są potrzebne.`
+                        : `Current coverage already reaches ${Math.round(targetCoverage * 100)}%. No additional resources are required.`}
+                  </div>
                 )}
                 {capacity.target_status === 'gap' && recommendations.length === 0 && (
                   <div className="border-l-2 border-amber-300 pl-3">{t.notEnough}</div>
@@ -486,7 +528,7 @@ export function ResourceAllocationDecisionPanel({
         )}
       </section>
       <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
-        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">09 · {t.decision}</div>
+        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">07 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-black">{t.decisionTitle}</h3>
           {status && <span className="border border-white/10 px-3 py-1 text-xs font-bold uppercase">{status}</span>}
@@ -495,60 +537,67 @@ export function ResourceAllocationDecisionPanel({
           <div className="mt-4 border-l-2 border-rose-300/40 pl-3 text-sm">{t.staged}</div>
         )}
         {!lifecycle ? (
-          <button
-            type="button"
-            disabled={Boolean(busy)}
-            onClick={persist}
-            className="mt-5 flex items-center gap-2 bg-slate-950/70 px-4 py-3 text-sm font-bold text-white disabled:opacity-40"
-          >
-            <Save className="h-4 w-4" />
-            {busy === 'persist' ? t.snapshotBusy : t.snapshot}
-          </button>
+          <>
+            <p className="mt-4 max-w-2xl text-sm text-slate-400">{t.decisionHelp}</p>
+            {(manualSelected || selectionKind === 'alternative') && (
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder={t.reason}
+                className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
+              />
+            )}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {selectionKind === 'recommended' && !manualSelected && (
+                <button
+                  type="button"
+                  onClick={() => decide('accepted')}
+                  disabled={Boolean(busy)}
+                  className="flex items-center gap-2 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 disabled:opacity-40"
+                >
+                  <Check className="h-4 w-4" />
+                  {busy === 'accepted' ? t.snapshotBusy : t.accept}
+                </button>
+              )}
+              {(manualSelected || selectionKind === 'alternative') && (
+                <button
+                  type="button"
+                  onClick={() => decide('modified')}
+                  disabled={Boolean(busy)}
+                  className="border border-rose-300/40 bg-rose-300/10 px-4 py-3 text-sm font-bold text-rose-200 disabled:opacity-40"
+                >
+                  {busy === 'modified' ? t.snapshotBusy : manualSelected ? t.modify : t.alternative}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => decide('rejected')}
+                disabled={Boolean(busy)}
+                className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm font-bold text-slate-300 disabled:opacity-40"
+              >
+                <X className="h-4 w-4" />
+                {t.reject}
+              </button>
+            </div>
+            {!manualSelected && selectionKind === 'recommended' && (
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder={t.reason}
+                className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
+              />
+            )}
+          </>
         ) : (
           <>
-            <div className="mt-4 text-xs text-slate-500">
-              {t.decisionId} · {lifecycle.decisionId}
+            <div className="mt-4 border-l-2 border-emerald-400 pl-3 text-sm text-emerald-200">
+              <b>{status === 'rejected' ? t.reject : status === 'modified' ? (manualSelected ? t.modify : t.alternative) : t.accept}</b>
+              <div className="mt-1 text-xs text-slate-500">{t.decisionId} · {lifecycle.decisionId}</div>
             </div>
-            {status === 'proposed' && (
-              <>
-                <textarea
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                  placeholder={t.reason}
-                  className="mt-4 min-h-20 w-full border border-white/15 p-3 text-sm"
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => feedback('accepted')}
-                    disabled={Boolean(busy)}
-                    className="flex items-center gap-2 bg-slate-950/70 px-4 py-3 text-sm font-bold text-white"
-                  >
-                    <Check className="h-4 w-4" />
-                    {t.accept}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => feedback('modified')}
-                    disabled={Boolean(busy) || (!manualSelected && !selected)}
-                    className="border border-white/20 px-4 py-3 text-sm font-bold"
-                  >
-                    {manualSelected ? t.modify : t.alternative}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => feedback('rejected')}
-                    disabled={Boolean(busy)}
-                    className="flex items-center gap-2 border border-rose-300/35 px-4 py-3 text-sm font-bold text-rose-200"
-                  >
-                    <X className="h-4 w-4" />
-                    {t.reject}
-                  </button>
-                </div>
-              </>
-            )}
             {status && ['accepted', 'modified', 'rejected'].includes(status) && (
               <>
+                <div className="mt-6 text-xs font-bold uppercase tracking-wider text-rose-300">08 · {t.outcome}</div>
+                <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
