@@ -257,7 +257,17 @@ function Impact({
   const deltaText = `${delta > 0 ? '+' : ''}${format === 'pct' ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
   return (
     <div className="bg-white/[0.04] p-4">
-      <div className="text-xs leading-4 text-slate-500">{label}</div>
+      <div className="flex items-start gap-1 text-xs leading-4 text-slate-500">
+        <span>{label}</span>
+        {help && (
+          <span className="group relative inline-flex" tabIndex={0} aria-label={help}>
+            <CircleHelp className="h-3.5 w-3.5" />
+            <span className="pointer-events-none absolute left-0 top-5 z-20 hidden w-64 border border-white/10 bg-slate-950 p-2 text-[11px] leading-relaxed text-slate-300 shadow-xl group-hover:block group-focus:block">
+              {help}
+            </span>
+          </span>
+        )}
+      </div>
       <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
         <div>
           <div className="text-[10px] leading-tight text-slate-600">{currentLabel}</div>
