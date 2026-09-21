@@ -367,87 +367,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4">
-            <div className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <b>{t.whatIf}</b>
-                <button type="button" onClick={resetRunState} aria-label="Reset scenario">
-                  <RotateCcw className="h-4 w-4" />
-                </button>
-              </div>
-
-              <label className="mt-6 block text-sm">
-                <span>{t.profile}</span>
-                <select
-                  data-testid="resource-profile"
-                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                  value={profileId}
-                  onChange={(event) => {
-                    if (event.target.value === 'imported') return
-                    changeProfile(event.target.value as ResourceAllocationProfileId)
-                  }}
-                >
-                  {Object.entries(RESOURCE_ALLOCATION_PROFILES).map(([id, profile]) => (
-                    <option key={id} value={id} className="bg-slate-950 text-white">
-                      {profile.label}
-                    </option>
-                  ))}
-                  {profileId === 'imported' && (
-                    <option value="imported" className="bg-slate-950 text-white">
-                      {profileLabel(profileId, importedName, t.imported)}
-                    </option>
-                  )}
-                </select>
-              </label>
-
-              <label className="mt-5 block text-sm">
-                <span className="flex justify-between">
-                  <span>{t.capacity}</span>
-                  <b>{capacityFactor}%</b>
-                </span>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.baselineCapacityHint}</p>
-                <input
-                  className="mt-3 w-full accent-rose-400"
-                  type="range"
-                  min="70"
-                  max="130"
-                  step="5"
-                  value={capacityFactor}
-                  onChange={(event) => setCapacityFactor(Number(event.target.value))}
-                />
-              </label>
-
-              <label className="mt-5 block text-sm">
-                <span>{t.inaccessible}</span>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.unavailableHint}</p>
-                <select
-                  data-testid="blocked-community"
-                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                  value={blockedCommunity}
-                  onChange={(event) => setBlockedCommunity(event.target.value)}
-                >
-                  <option value="" className="bg-slate-950 text-white">
-                    {t.none}
-                  </option>
-                  {blockableCommunities.map((name) => (
-                    <option key={name} value={name} className="bg-slate-950 text-white">
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                type="button"
-                disabled={running}
-                onClick={run}
-                className="mt-6 flex w-full items-center justify-center gap-2 bg-rose-500 p-4 font-bold disabled:opacity-50"
-              >
-                <Play className="h-4 w-4" />
-                {running ? t.running : t.run}
-              </button>
-            </div>
-
-            <details className="order-3 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
+            <details className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t.tryOwnData}</summary>
               <div className="mt-3">
                 <ResourceAllocationImport locale={locale} onImported={useImportedData} />
@@ -491,14 +411,24 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
             {!result && (
               <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
-                <div className="max-w-xl px-8">
+                <div className="max-w-2xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
-                  <h2 data-testid="resource-active-summary" className="mt-5 text-3xl font-black">
-                    {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
-                    {stats.openingNeeds} {t.opening.toLowerCase()}. {stats.days} {t.days}.
-                  </h2>
-                  <p className="mt-3 text-slate-400">{t.emptyText}</p>
-                  <p className="mt-4 text-sm font-semibold text-rose-200">{t.startHint}</p>
+                  <h2 className="mt-5 text-3xl font-black md:text-4xl">{t.heroQuestion}</h2>
+                  <div data-testid="resource-active-summary" className="mt-5 text-lg font-bold text-slate-200">
+                    {stats.teams} {t.teams.toLowerCase()} · {stats.communities} {t.communities.toLowerCase()} ·{' '}
+                    {stats.openingNeeds} {t.opening.toLowerCase()} · {stats.days} {t.days}
+                  </div>
+                  <p className="mx-auto mt-4 max-w-xl text-slate-400">{t.emptyText}</p>
+                  <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500">{t.differentiation}</p>
+                  <button
+                    type="button"
+                    disabled={running}
+                    onClick={run}
+                    className="mt-7 inline-flex items-center justify-center gap-2 bg-rose-500 px-6 py-4 font-bold disabled:opacity-50"
+                  >
+                    <Play className="h-4 w-4" />
+                    {running ? t.running : t.run}
+                  </button>
                 </div>
               </div>
             )}
@@ -509,8 +439,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   metrics={activePlan.aggregate_metrics}
                   summary={activePlan.demand_summary}
                   baseline={result.baseline}
-                  moved={moved}
-                  totalTeams={inputData.teams.length}
+                  teamsMoved={movementSummary.teamsMoved}
+                  totalTeams={movementSummary.totalTeams}
+                  moveEvents={movementSummary.moveEvents}
                   planningDays={stats.days}
                   locale={locale}
                 />
@@ -524,7 +455,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       </h2>
                     </div>
                     <details className="min-w-0 max-w-full text-left text-xs text-slate-500 sm:text-right">
-                      <summary className="cursor-pointer font-semibold text-slate-500">Technical details</summary>
+                      <summary className="cursor-pointer font-semibold text-slate-500">{t.technicalDetails}</summary>
                       <div className="mt-2 break-words [overflow-wrap:anywhere]">{result.engine_version}</div>
                       <div className="break-words [overflow-wrap:anywhere]">
                         {result.solver} · evaluated {result.evaluated_plans}
@@ -537,12 +468,15 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <button
                         type="button"
                         key={item.day}
-                        onClick={() => setSelectedDay(index)}
+                        onClick={() => {
+                          setSelectedDay(index)
+                          setSelectedExplanationTeam(null)
+                        }}
                         className={`min-w-0 border px-3 py-3 text-left sm:px-4 ${
                           selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'
                         }`}
                       >
-                        <b>{item.day}</b>
+                        <b>{localizePlanningDay(item.day, locale)}</b>
                         <div className="mt-1 text-xs text-slate-500">
                           {t.served}: {item.demand.served.toFixed(0)}
                         </div>
@@ -561,19 +495,42 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                           {Object.entries(day.recommended.assignments)
                             .filter(([, target]) => target === community)
                             .map(([team]) => (
-                              <div key={team} className="break-words bg-slate-950/70 px-2 py-1 text-xs font-semibold text-white [overflow-wrap:anywhere]">
+                              <button
+                                type="button"
+                                key={team}
+                                onClick={() => setSelectedExplanationTeam(team)}
+                                className={`w-full break-words px-2 py-1 text-left text-xs font-semibold [overflow-wrap:anywhere] ${
+                                  selectedExplanationTeam === team
+                                    ? 'bg-rose-300/15 text-rose-100'
+                                    : 'bg-slate-950/70 text-white'
+                                }`}
+                              >
                                 {team}
-                              </div>
+                              </button>
                             ))}
                         </div>
                       </div>
                     ))}
                   </div>
 
+                  {selectedExplanation && (
+                    <ResourceAllocationAssignmentExplanation
+                      explanation={selectedExplanation}
+                      locale={locale}
+                    />
+                  )}
+
                   <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-sm">
                     <span>
                       <Users className="mr-1 inline h-4 w-4" />
-                      {t.moved}: <b>{moved}</b>
+                      {locale === 'uk' ? 'Переміщень цього дня' : locale === 'pl' ? 'Przemieszczenia tego dnia' : 'Moves today'}:{' '}
+                      <b>
+                        {
+                          day.recommended.assignment_explanations?.filter(
+                            (item) => item.from !== item.to && item.to !== null
+                          ).length ?? 0
+                        }
+                      </b>
                     </span>
                     <span>
                       {t.needsStart}: <b>{day.demand.opening.toFixed(0)}</b>
@@ -587,7 +544,84 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 </div>
 
-                <details className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]">
+                <details
+                  data-testid="resource-scenario-details"
+                  className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) trackResourceAllocation('ra_scenario_opened', locale)
+                  }}
+                >
+                  <summary className="cursor-pointer p-6 text-lg font-black">{t.simulate}</summary>
+                  <div className="border-t border-white/10 p-6">
+                    {(capacityFactor !== 100 || blockedCommunity) && (
+                      <div className="mb-5 border-l-2 border-amber-300 bg-amber-300/[0.06] px-4 py-3 text-sm">
+                        <b className="text-amber-200">{t.scenarioChanged}</b>
+                        <div className="mt-1 text-slate-400">
+                          {t.capacity}: {capacityFactor}%{blockedCommunity ? ` · ${t.inaccessible}: ${blockedCommunity}` : ''}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <label className="text-sm">
+                        <span className="flex justify-between gap-3">
+                          <span>{t.capacity}</span>
+                          <b>{capacityFactor}%</b>
+                        </span>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.baselineCapacityHint}</p>
+                        <input
+                          className="mt-3 w-full accent-rose-400"
+                          type="range"
+                          min="70"
+                          max="130"
+                          step="5"
+                          value={capacityFactor}
+                          onChange={(event) => setCapacityFactor(Number(event.target.value))}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        <span>{t.inaccessible}</span>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.unavailableHint}</p>
+                        <select
+                          data-testid="blocked-community"
+                          className="mt-3 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+                          value={blockedCommunity}
+                          onChange={(event) => setBlockedCommunity(event.target.value)}
+                        >
+                          <option value="">{t.none}</option>
+                          {blockableCommunities.map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={running}
+                        onClick={run}
+                        className="inline-flex items-center gap-2 bg-rose-500 px-5 py-3 font-bold disabled:opacity-50"
+                      >
+                        <Play className="h-4 w-4" />
+                        {running ? t.running : t.recalculate}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetRunState}
+                        className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 text-sm font-bold"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        {locale === 'uk' ? 'Повернути базовий сценарій' : locale === 'pl' ? 'Przywróć scenariusz bazowy' : 'Restore baseline scenario'}
+                      </button>
+                    </div>
+                  </div>
+                </details>
+
+                <details
+                  className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) trackResourceAllocation('ra_explanation_opened', locale)
+                  }}
+                >
                   <summary className="cursor-pointer p-6 text-lg font-black">{t.reviewRecommendation}</summary>
                   <div className="grid gap-5 border-t border-white/10 p-6 lg:grid-cols-[.8fr_1.2fr]">
                     <div>
