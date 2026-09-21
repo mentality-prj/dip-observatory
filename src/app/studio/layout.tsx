@@ -46,6 +46,10 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
       </aside>
       <div className="studio-workspace">
         <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
+        <footer className="studio-footer">
+          <span><strong>QDIP</strong> <b>Studio</b></span>
+          <small>Decision intelligence workspace</small>
+        </footer>
       </div>
     </DesignSystemProvider>
   )
