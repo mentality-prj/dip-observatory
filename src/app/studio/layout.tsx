@@ -17,7 +17,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         href={studioHref()}
         brandHref={marketingHref('en')}
         product="Studio"
-        productSwitch={{ href: observatoryHref('en'), label: 'Open Observatory' }}
+        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
         status={
           <StatusBadge>
             <i /> Core connected
