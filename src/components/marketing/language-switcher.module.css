@@ -10,8 +10,8 @@
 
 .root a {
   display: grid;
-  min-width: 30px;
-  height: 30px;
+  min-width: 32px;
+  height: 32px;
   place-items: center;
   border-radius: var(--ds-radius-action);
   color: var(--ds-text-muted) !important;
