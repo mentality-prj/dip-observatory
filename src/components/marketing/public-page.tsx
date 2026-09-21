@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { marketingCopy, marketingLocales, type MarketingLocale } from './qdip-copy'
 import { DecisionInquiryForm } from './decision-inquiry-form'
@@ -313,7 +314,8 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
     { href: `${href(locale, 'use-cases')}#demos`, label: c.nav[4] },
   ]
   return (
-    <main className={styles.site} lang={locale}>
+    <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
+      <main lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link className={styles.brand} href={marketingLocaleHref(locale)}>
@@ -349,7 +351,8 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
         </nav>
         <span>© {new Date().getFullYear()} QDIP</span>
       </footer>
-    </main>
+      </main>
+    </DesignSystemProvider>
   )
 }
 function PageHero({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
