@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
-import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
 import type { ResourceAllocationInput, ResourceAllocationResult } from '../contracts'
@@ -25,100 +24,109 @@ const pct = (value: number) => `${Math.round(value * 100)}%`
 const copy = {
   uk: {
     title: 'План розподілу мобільних команд',
-    run: 'Розрахувати план на тиждень',
+    run: 'Знайти найкращий розподіл команд',
     running: 'Розрахунок…',
-    whatIf: 'СЦЕНАРІЙ',
+    whatIf: 'ЩО ЗМІНИЛОСЯ СЬОГОДНІ',
     profile: 'Профіль даних',
     imported: 'Імпортовані дані',
     capacity: 'Доступна потужність команд',
     inaccessible: 'Тимчасово недоступна громада',
     none: 'Немає',
-    state: 'ОПЕРАЦІЙНА СИТУАЦІЯ',
+    state: 'ДАНІ ТА ПОТОЧНА СИТУАЦІЯ',
     communities: 'Громади',
     teams: 'Команди',
     opening: 'Початкові потреби',
     services: 'Види послуг',
     days: 'днів',
     emptyText:
-      'Розташування команди сьогодні впливає на те, які громади вона зможе обслуговувати далі протягом тижня. QDIP розрахує узгоджений план на весь горизонт.',
-    weekly: 'ПЛАН НА ТИЖДЕНЬ',
-    weeklyTitle: 'Куди направити команди кожного дня',
+      'QDIP врахує потреби, спеціалізації команд, їх поточне розташування, доступність локацій і переміщення на весь плановий період.',
+    valueProp:
+      'QDIP допомагає визначити, куди направити мобільні команди, щоб покрити більше пріоритетних потреб наявними ресурсами.',
+    startHint: 'Перевірте дані та умови зліва, після чого запустіть розрахунок.',
+    weekly: 'РЕКОМЕНДОВАНИЙ ПЛАН',
+    weeklyTitle: 'Куди направити команди протягом 5 днів',
     served: 'покрито',
     moved: 'Змінять локацію',
     needsStart: 'Потреб на початку дня',
     needsServed: 'Буде покрито',
     needsUnmet: 'Залишиться без покриття',
-    alternatives: 'ВАРІАНТИ РІШЕННЯ',
+    alternatives: 'ІНШІ ДОПУСТИМІ ВАРІАНТИ',
     recommended: 'Рекомендований план',
     alternative: 'Альтернатива',
-    why: 'ОБҐРУНТУВАННЯ РІШЕННЯ',
-    whyTitle: 'Чому рекомендовано саме цей план?',
+    why: 'ЧОМУ QDIP РЕКОМЕНДУЄ ЦЕЙ ПЛАН',
+    whyTitle: 'Перевірте логіку рекомендації перед рішенням',
     heuristic:
       'Для великих просторів рішень використовується детермінований branch-aware beam search; інтерфейс не називає евристичний результат математично гарантованим глобальним оптимумом.',
   },
   en: {
     title: 'Mobile team allocation plan',
-    run: 'Calculate weekly plan',
+    run: 'Find the best team allocation',
     running: 'Calculating…',
-    whatIf: 'SCENARIO',
+    whatIf: 'WHAT CHANGED TODAY',
     profile: 'Data profile',
     imported: 'Imported data',
     capacity: 'Available team capacity',
     inaccessible: 'Temporarily inaccessible community',
     none: 'None',
-    state: 'OPERATIONAL STATE',
+    state: 'DATA AND CURRENT SITUATION',
     communities: 'Communities',
     teams: 'Teams',
     opening: 'Opening needs',
     services: 'Service types',
     days: 'days',
     emptyText:
-      'A team location today changes which communities remain reachable later in the week. QDIP calculates one coherent plan across the full horizon.',
-    weekly: 'WEEKLY PLAN',
-    weeklyTitle: 'Where to send teams each day',
+      'QDIP accounts for needs, team skills, current locations, location availability and movement across the full planning horizon.',
+    valueProp:
+      'QDIP helps decide where to send mobile teams so more priority needs are covered with the resources already available.',
+    startHint: 'Review the data and conditions on the left, then run the calculation.',
+    weekly: 'RECOMMENDED PLAN',
+    weeklyTitle: 'Where to send teams across the 5-day horizon',
     served: 'covered',
     moved: 'Teams changing location',
     needsStart: 'Needs at start of day',
     needsServed: 'Expected covered',
     needsUnmet: 'Expected uncovered',
-    alternatives: 'DECISION OPTIONS',
+    alternatives: 'OTHER FEASIBLE OPTIONS',
     recommended: 'Recommended plan',
     alternative: 'Alternative',
-    why: 'DECISION RATIONALE',
-    whyTitle: 'Why is this plan recommended?',
+    why: 'WHY QDIP RECOMMENDS THIS PLAN',
+    whyTitle: 'Review the recommendation logic before deciding',
     heuristic:
       'Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum.',
   },
   pl: {
     title: 'Plan alokacji zespołów mobilnych',
-    run: 'Oblicz plan tygodniowy',
+    run: 'Znajdź najlepszy przydział zespołów',
     running: 'Obliczanie…',
-    whatIf: 'SCENARIUSZ',
+    whatIf: 'CO ZMIENIŁO SIĘ DZISIAJ',
     profile: 'Profil danych',
     imported: 'Dane importowane',
     capacity: 'Dostępna zdolność zespołów',
     inaccessible: 'Tymczasowo niedostępna społeczność',
     none: 'Brak',
-    state: 'SYTUACJA OPERACYJNA',
+    state: 'DANE I BIEŻĄCA SYTUACJA',
     communities: 'Społeczności',
     teams: 'Zespoły',
     opening: 'Potrzeby początkowe',
     services: 'Rodzaje usług',
     days: 'dni',
     emptyText:
-      'Lokalizacja zespołu dzisiaj wpływa na to, które społeczności pozostają dostępne w kolejnych dniach. QDIP oblicza spójny plan dla całego horyzontu.',
-    weekly: 'PLAN TYGODNIOWY',
-    weeklyTitle: 'Dokąd skierować zespoły każdego dnia',
+      'QDIP uwzględnia potrzeby, kompetencje zespołów, bieżące lokalizacje, dostępność i przemieszczenia w całym horyzoncie planowania.',
+    valueProp:
+      'QDIP pomaga zdecydować, dokąd skierować zespoły mobilne, aby pokryć więcej priorytetowych potrzeb przy dostępnych zasobach.',
+    startHint: 'Sprawdź dane i warunki po lewej stronie, a następnie uruchom obliczenie.',
+    weekly: 'REKOMENDOWANY PLAN',
+    weeklyTitle: 'Dokąd skierować zespoły w horyzoncie 5 dni',
     served: 'pokryto',
     moved: 'Zespoły zmieniające lokalizację',
     needsStart: 'Potrzeby na początku dnia',
     needsServed: 'Zostanie pokryte',
     needsUnmet: 'Pozostanie bez pokrycia',
-    alternatives: 'WARIANTY DECYZJI',
+    alternatives: 'INNE DOPUSZCZALNE WARIANTY',
     recommended: 'Rekomendowany plan',
     alternative: 'Alternatywa',
-    why: 'UZASADNIENIE DECYZJI',
-    whyTitle: 'Dlaczego rekomendowany jest ten plan?',
+    why: 'DLACZEGO QDIP REKOMENDUJE TEN PLAN',
+    whyTitle: 'Sprawdź logikę rekomendacji przed decyzją',
     heuristic:
       'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
   },
@@ -242,19 +250,19 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
             </span>
           </div>
           <h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">{t.title}</h1>
+          <p className="mt-4 max-w-4xl text-lg leading-relaxed text-slate-300">{t.valueProp}</p>
           <p className="mt-4 text-slate-400">{summary}</p>
           <p className="mt-2 text-xs text-slate-600">
             {profileLabel(profileId, importedName, t.imported)}
           </p>
         </header>
 
-        <DecisionWorkflow locale={locale} tone="dark" compact />
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="min-w-0 space-y-4">
             <div className="rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
               <div className="flex items-center justify-between">
-                <b>01 · {t.whatIf}</b>
+                <b>{t.whatIf}</b>
                 <button type="button" onClick={resetRunState} aria-label="Reset scenario">
                   <RotateCcw className="h-4 w-4" />
                 </button>
@@ -333,7 +341,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
             <ResourceAllocationImport locale={locale} onImported={useImportedData} />
 
             <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
-              <b>02 · {t.state}</b>
+              <b>01 · {t.state}</b>
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="block text-slate-500">{t.communities}</span>
@@ -375,7 +383,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
                     {stats.openingNeeds} {t.opening.toLowerCase()}. {stats.days} {t.days}.
                   </h2>
-                  <p className="mt-3 text-slate-500">{t.emptyText}</p>
+                  <p className="mt-3 text-slate-400">{t.emptyText}</p>
+                  <p className="mt-4 text-sm font-semibold text-rose-200">{t.startHint}</p>
                 </div>
               </div>
             )}
@@ -397,12 +406,13 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">03 · {t.weekly}</div>
                       <h2 className="mt-2 text-2xl font-black">{t.weeklyTitle}</h2>
                     </div>
-                    <div className="min-w-0 max-w-full break-words text-left text-xs text-slate-600 [overflow-wrap:anywhere] sm:text-right">
-                      <div>{result.engine_version}</div>
-                      <div>
+                    <details className="min-w-0 max-w-full text-left text-xs text-slate-500 sm:text-right">
+                      <summary className="cursor-pointer font-semibold text-slate-500">Technical details</summary>
+                      <div className="mt-2 break-words [overflow-wrap:anywhere]">{result.engine_version}</div>
+                      <div className="break-words [overflow-wrap:anywhere]">
                         {result.solver} · evaluated {result.evaluated_plans}
                       </div>
-                    </div>
+                    </details>
                   </div>
 
                   <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -460,7 +470,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
                   <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
-                      05 · {t.alternatives}
+                      04 · {t.alternatives}
                     </div>
                     <div className="mt-4 space-y-2">
                       {result.alternatives.map((alternative, index) => (
@@ -492,7 +502,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
 
                   <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
-                    <div className="text-xs font-bold uppercase tracking-wider text-rose-300">06 · {t.why}</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-rose-300">04 · {t.why}</div>
                     <h3 className="mt-2 text-xl font-black">{t.whyTitle}</h3>
                     <div className="mt-5 grid gap-3 md:grid-cols-2">
                       {result.evidence.slice(0, 8).map((item, index) => (
@@ -504,7 +514,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         </div>
                       ))}
                     </div>
-                    <div className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">{t.heuristic}</div>
+                    <details className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">
+                      <summary className="cursor-pointer font-semibold text-slate-400">Technical method</summary>
+                      <div className="mt-2">{t.heuristic}</div>
+                    </details>
                   </div>
                 </div>
 
