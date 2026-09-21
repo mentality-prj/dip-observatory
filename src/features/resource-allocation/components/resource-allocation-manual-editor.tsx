@@ -203,7 +203,7 @@ export function ResourceAllocationManualEditor({
                 type="button"
                 key={day.day}
                 onClick={() => setVisualDay(day.day)}
-                className={`min-w-0 border px-3 py-2 text-left text-xs font-bold ${visualDay === day.day ? 'border-rose-300/40 bg-rose-300/10 text-rose-300' : 'border-white/10 text-slate-500'}`}
+                className={`min-w-0 border px-3 py-2 text-left text-xs font-bold ${visualDay === day.day ? 'ds-selection-surface text-white' : 'border-white/10 text-slate-500'}`}
               >
                 {day.day}
               </button>
@@ -221,11 +221,11 @@ export function ResourceAllocationManualEditor({
           />
         </>
       )}
-      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
+      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 basis-[16rem]">
             <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
-            <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
+            <h3 className="mt-2 break-words text-2xl font-medium [overflow-wrap:anywhere]">{t.title}</h3>
             <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
               {t.description}
             </p>
@@ -393,7 +393,7 @@ export function ResourceAllocationManualEditor({
         )}
         {evaluation && (
           <div
-            className={`mt-4 break-words border p-4 text-sm [overflow-wrap:anywhere] ${!feasible ? 'border-rose-300/35 bg-rose-300/10 text-rose-200' : 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200'}`}
+            className={`mt-4 break-words border p-4 text-sm [overflow-wrap:anywhere] ${!feasible ? 'ds-blocked-surface text-rose-200' : 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200'}`}
           >
             {!feasible ? (
               <>
