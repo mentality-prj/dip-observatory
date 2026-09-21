@@ -99,10 +99,16 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
           <div className="space-y-1 text-sm text-slate-300"><p><span className="text-slate-500">HTTP:</span> {result.httpStatus ?? '—'}</p><p><span className="text-slate-500">Response time:</span> {result.responseTimeMs !== null ? `${result.responseTimeMs} ms` : '—'}</p><p><span className="text-slate-500">Executed at:</span> {result.executedAt}</p></div>
         </CardHeader><CardContent className="space-y-4">
           {result.message ? <div className="rounded-xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">{result.message}</div> : null}
-          <div className="space-y-2"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Raw backend payload</p><div className="flex items-center gap-1">
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Copy raw backend payload" title="Copy raw backend payload" onClick={copyRawPayload}>{isPayloadCopied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}</Button>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Export raw backend payload as TXT" title="Export raw backend payload as TXT" onClick={exportRawPayload}><Download className="h-4 w-4" aria-hidden="true" /></Button>
-          </div></div><pre aria-label="Raw backend payload" className="overflow-x-auto rounded-xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200">{JSON.stringify(result.payload, null, 2)}</pre></div>
+          <details className="border-t border-white/10 pt-3">
+            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+              Raw backend payload
+            </summary>
+            <div className="mt-3 flex items-center justify-end gap-1">
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Copy raw backend payload" title="Copy raw backend payload" onClick={copyRawPayload}>{isPayloadCopied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}</Button>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Export raw backend payload as TXT" title="Export raw backend payload as TXT" onClick={exportRawPayload}><Download className="h-4 w-4" aria-hidden="true" /></Button>
+            </div>
+            <pre aria-label="Raw backend payload" className="mt-2 overflow-x-auto rounded-[var(--ds-radius-panel)] border border-white/8 bg-black/20 p-3 text-xs text-slate-200">{JSON.stringify(result.payload, null, 2)}</pre>
+          </details>
         </CardContent></Card> : null}
       </div>
     </main>
