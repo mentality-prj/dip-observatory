@@ -1,0 +1,23 @@
+/* Marketing typography follows the shared semantic scale instead of display-heavy local overrides. */
+[data-ds-theme='burgundy'][data-ds-mode='light'] h1 {
+  font-weight: var(--ds-weight-heading);
+}
+
+[data-ds-theme='burgundy'][data-ds-mode='light'] h2,
+[data-ds-theme='burgundy'][data-ds-mode='light'] h3 {
+  font-weight: var(--ds-weight-subheading);
+}
+
+[class*='hero'] h1 {
+  font-size: var(--ds-text-display);
+  font-weight: var(--ds-weight-heading);
+  line-height: 1;
+  letter-spacing: var(--ds-tracking-h1);
+}
+
+[class*='sectionIntro'] h2,
+[class*='finalCta'] h2 {
+  font-weight: var(--ds-weight-subheading);
+  line-height: 1.08;
+  letter-spacing: var(--ds-tracking-h2);
+}
