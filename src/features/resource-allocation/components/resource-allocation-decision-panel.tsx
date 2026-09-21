@@ -204,7 +204,7 @@ const copy = {
   },
 } as const
 
-async function requestJson(path: string, init?: RequestInit) {
+async function requestJson<T extends Record<string, unknown>>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
@@ -248,10 +248,10 @@ async function requestJson(path: string, init?: RequestInit) {
     )
   }
 
-  return payload
+  return payload as T
 }
-async function post(path: string, body: Record<string, unknown>) {
-  return requestJson(path, { method: 'POST', body: JSON.stringify(body) })
+async function post<T extends Record<string, unknown>>(path: string, body: Record<string, unknown>): Promise<T> {
+  return requestJson<T>(path, { method: 'POST', body: JSON.stringify(body) })
 }
 function formatTimestamp(value: string, locale: Locale) {
   const language = locale === 'uk' ? 'uk-UA' : locale === 'pl' ? 'pl-PL' : 'en-GB'
@@ -292,9 +292,9 @@ export function ResourceAllocationDecisionPanel({
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   async function loadDecision(decisionId: string) {
-    const payload = (await requestJson(
+    const payload = await requestJson<DecisionRecord>(
       `/api/resource-allocation/decisions/${encodeURIComponent(decisionId)}`
-    )) as DecisionRecord
+    )
     setRecord(payload)
     setLifecycle({ decisionId: payload.decision_id, status: payload.status })
     return payload
@@ -303,7 +303,7 @@ export function ResourceAllocationDecisionPanel({
     setBusy('capacity')
     setError(null)
     try {
-      setCapacity(await post('/api/resource-allocation/capacity-gap', { ...input, target_priority_coverage: 0.9 }))
+      setCapacity(await post<CapacityGap>('/api/resource-allocation/capacity-gap', { ...input, target_priority_coverage: 0.9 }))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Capacity analysis failed')
     } finally {
@@ -314,7 +314,7 @@ export function ResourceAllocationDecisionPanel({
     setBusy('persist')
     setError(null)
     try {
-      const payload = await post('/api/resource-allocation/decisions', input)
+      const payload = await post<{ decision_id: string; status: string }>('/api/resource-allocation/decisions', input)
       await loadDecision(payload.decision_id)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision persistence failed')
