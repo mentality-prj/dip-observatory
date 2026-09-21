@@ -171,7 +171,7 @@ export function ProfileDashboard({
                         <td>{profileDomain(profile, plugins)}</td>
                         <td>{profile.version}</td>
                         <td>
-                          <Badge variant={currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'danger' : 'neutral'}>
+                          <Badge variant={currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'rose' : 'neutral'}>
                             {currentStatus}
                           </Badge>
                         </td>
@@ -208,7 +208,7 @@ export function ProfileDashboard({
                   <span className="studio-overview-eyebrow">Profile overview</span>
                   <h2>{selected.name}</h2>
                 </div>
-                <Badge variant={profileStatus(selected) === 'ACTIVE' ? 'emerald' : profileStatus(selected) === 'INVALID' ? 'danger' : 'neutral'}>
+                <Badge variant={profileStatus(selected) === 'ACTIVE' ? 'emerald' : profileStatus(selected) === 'INVALID' ? 'rose' : 'neutral'}>
                   {profileStatus(selected)}
                 </Badge>
               </div>
