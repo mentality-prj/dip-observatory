@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { normalizeResourceAllocationBusinessMetrics } from '@/features/resource-allocation/server/normalize-business-metrics'
 import {
   resourceAllocationRequestSchema,
   runResourceAllocation,
@@ -18,7 +19,8 @@ function requestLocale(request: Request): UiLocale {
 export async function POST(request: Request) {
   try {
     const input = resourceAllocationRequestSchema.parse(await request.json())
-    return NextResponse.json(await runResourceAllocation(input, requestLocale(request)))
+    const result = await runResourceAllocation(input, requestLocale(request))
+    return NextResponse.json(normalizeResourceAllocationBusinessMetrics(result))
   } catch (error) {
     if (error instanceof z.ZodError)
       return NextResponse.json({ error: 'Invalid resource-allocation state.', issues: error.issues }, { status: 422 })
