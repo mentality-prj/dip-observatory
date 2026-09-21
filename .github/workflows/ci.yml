@@ -36,11 +36,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Vitest + RTL
-        run: pnpm test:unit
-
-      - name: Legacy unit tests
-        run: pnpm test:legacy
+      - name: Unit and component tests
+        run: pnpm test
 
       - name: Production build
         run: pnpm build
