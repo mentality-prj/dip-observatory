@@ -479,6 +479,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   baseline={result.baseline}
                   moved={moved}
                   totalTeams={inputData.teams.length}
+                  planningDays={stats.days}
                   locale={locale}
                 />
 
