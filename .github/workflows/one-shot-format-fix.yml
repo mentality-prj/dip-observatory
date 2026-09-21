@@ -25,16 +25,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format
-      - run: pnpm exec eslint . --max-warnings=0
-      - run: pnpm prettier
       - name: Commit formatting changes
         run: |
           if git diff --quiet; then
             echo "No formatting changes needed"
-            exit 0
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "chore: apply prettier formatting"
+            git push
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: apply prettier formatting"
-          git push
+      - run: pnpm exec eslint . --max-warnings=0
+      - run: pnpm prettier
