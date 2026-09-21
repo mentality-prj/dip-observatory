@@ -397,7 +397,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">03 · {t.weekly}</div>
                       <h2 className="mt-2 text-2xl font-black">{t.weeklyTitle}</h2>
                     </div>
-                    <div className="text-right text-xs text-slate-600">
+                    <div className="min-w-0 max-w-full break-words text-left text-xs text-slate-600 [overflow-wrap:anywhere] sm:text-right">
                       <div>{result.engine_version}</div>
                       <div>
                         {result.solver} · evaluated {result.evaluated_plans}
