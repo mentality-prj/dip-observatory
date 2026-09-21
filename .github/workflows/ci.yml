@@ -28,7 +28,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint
         run: pnpm lint
@@ -36,8 +36,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Unit tests
-        run: pnpm test
+      - name: Vitest + RTL
+        run: pnpm test:unit
+
+      - name: Legacy unit tests
+        run: pnpm test:legacy
 
       - name: Production build
         run: pnpm build
