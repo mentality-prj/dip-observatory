@@ -14,11 +14,6 @@ export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
 const LOCALES: Locale[] = ['en', 'uk', 'pl']
 const LABEL: Record<Locale, string> = { en: 'EN', pl: 'PL', uk: 'UA' }
-const HOME_LABEL: Record<Locale, string> = {
-  en: 'QDIP Home',
-  uk: 'Головна QDIP',
-  pl: 'Strona główna QDIP',
-}
 const STUDIO_LABEL: Record<Locale, string> = {
   en: 'Configure in Studio',
   uk: 'Налаштувати в Studio',
@@ -76,16 +71,18 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       theme={theme as DesignTheme}
       className={styles.shell}
       href={buildLocalePath('/', locale)}
+      brandHref={marketingHref(locale)}
       product="Observatory"
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={<div className={styles.mobileNavigation}>{nav}</div>}
-      siteLink={{ href: marketingHref(locale), label: HOME_LABEL[locale] }}
       productSwitch={{ href: studioHref(), label: STUDIO_LABEL[locale] }}
       utilities={utilities}
     >
       <div className={styles.stage}>
         <div className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Home />
+          <Link className={styles.breadcrumbHome} href={marketingHref(locale)} aria-label="QDIP home">
+            <Home />
+          </Link>
           <ChevronRight />
           <span>{activeItem?.title[locale] ?? 'Observatory'}</span>
         </div>
