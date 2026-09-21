@@ -49,7 +49,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
       <div className="relative z-10 mx-auto max-w-[1500px]">
         <header className="max-w-5xl">
           <div className="observatory-eyebrow">{t.eyebrow}</div>
-          <h1 className="mt-5 max-w-4xl text-4xl font-normal tracking-[-.03em] md:text-6xl lg:text-7xl">{t.title}</h1>
+          <h1 className="mt-5 max-w-4xl text-3xl font-normal tracking-[-.025em] md:text-5xl lg:text-[3.5rem]">{t.title}</h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-slate-400 md:text-lg">{t.subtitle}</p>
         </header>
 
@@ -82,12 +82,12 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
 
         <section className="mt-14" aria-labelledby="observatory-demos">
           <div className="mb-7 max-w-3xl"><h2 id="observatory-demos" className="text-xs font-semibold uppercase tracking-[.2em] text-cyan-300">{t.demos}</h2><p className="mt-3 text-sm leading-6 text-slate-500">{t.demosBody}</p></div>
-          <div className="grid gap-5 lg:grid-cols-2">{useCases.map((useCase) => { const Icon = demoIcons[useCase.id as keyof typeof demoIcons] ?? BrainCircuit; return <Link key={useCase.id} href={buildLocalePath(useCase.route, locale)} data-use-case={useCase.id} data-theme={useCase.presentation.theme} className="observatory-demo-card group flex min-h-64 flex-col p-6 md:p-8"><div className="flex items-center justify-between gap-4"><span className="observatory-icon-frame"><Icon className="h-5 w-5 text-cyan-200" /></span><span className="flex items-center gap-2 text-[10px] font-semibold tracking-[.14em] text-slate-500"><b className="text-cyan-300">{useCase.decisionPattern.toUpperCase()}</b><span>·</span>{useCase.tag[locale]}</span></div><h3 className="mt-8 text-2xl font-medium tracking-[-.025em] md:text-3xl">{useCase.title[locale]}</h3><p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{useCase.description[locale]}</p><div className="mt-auto flex items-center gap-2 pt-7 text-sm font-semibold text-cyan-200">{t.open}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></div></Link> })}</div>
+          <div className="grid gap-5 lg:grid-cols-2">{useCases.map((useCase) => { const Icon = demoIcons[useCase.id as keyof typeof demoIcons] ?? BrainCircuit; return <Link key={useCase.id} href={buildLocalePath(useCase.route, locale)} data-use-case={useCase.id} data-theme={useCase.presentation.theme} className="observatory-demo-card group flex min-h-64 flex-col p-6 md:p-8"><div className="flex items-center justify-between gap-4"><span className="observatory-icon-frame"><Icon className="h-5 w-5 text-cyan-200" /></span><span className="flex items-center gap-2 text-[10px] font-semibold tracking-[.14em] text-slate-500"><b className="text-cyan-300">{useCase.decisionPattern.toUpperCase()}</b><span>·</span>{useCase.tag[locale]}</span></div><h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">{useCase.title[locale]}</h3><p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{useCase.description[locale]}</p><div className="mt-auto flex items-center gap-2 pt-7 text-sm font-semibold text-cyan-200">{t.open}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></div></Link> })}</div>
         </section>
 
         <section className="mt-16 border-t border-white/10 pt-10" aria-labelledby="observatory-inspect">
           <h2 id="observatory-inspect" className="text-xs font-semibold uppercase tracking-[.2em] text-slate-500">{t.inspect}</h2>
-          <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2 xl:grid-cols-4">{t.questions.map(([title, body], index) => <div key={title} className="bg-slate-950/80 p-6"><div className="text-xs font-semibold text-cyan-300">0{index + 1}</div><h3 className="mt-4 text-lg font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{body}</p></div>)}</div>
+          <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2 xl:grid-cols-4">{t.questions.map(([title, body], index) => <div key={title} className="bg-slate-950/80 p-6"><div className="text-xs font-semibold text-cyan-300">0{index + 1}</div><h3 className="mt-4 text-base font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{body}</p></div>)}</div>
           <p className="mt-6 max-w-4xl text-sm leading-6 text-slate-500">{t.note}</p>
         </section>
       </div>
