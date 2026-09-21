@@ -38,9 +38,9 @@ export function useResourceAllocationWorkspace() {
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
     }
     try {
-      const nextResult = await runResourceAllocationScenario(scenario)
+      const nextResult = await runResourceAllocationScenario(RESPONSIBLE_CITIZENS_PROFILE, scenario)
       setResult(nextResult)
-      setLastInput(buildResourceAllocationInput(scenario))
+      setLastInput(buildResourceAllocationInput(RESPONSIBLE_CITIZENS_PROFILE, scenario))
       setSelectedAlternative(0)
       setSelectedDay(0)
       setRunRevision((revision) => revision + 1)
