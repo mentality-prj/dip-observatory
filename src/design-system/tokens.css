@@ -8,9 +8,14 @@
   --ds-text-h3: clamp(1.25rem, 2vw, 1.5rem);
   --ds-text-h2: clamp(2rem, 4vw, 3rem);
   --ds-text-h1: clamp(2.5rem, 5vw, 4rem);
-  --ds-text-display: clamp(3.5rem, 7vw, 5.5rem);
+  --ds-text-display: clamp(3.25rem, 6.25vw, 5rem);
   --ds-leading-body: 1.65;
-  --ds-leading-heading: 1.05;
+  --ds-leading-heading: 1.04;
+  --ds-weight-body: 400;
+  --ds-weight-heading: 480;
+  --ds-weight-subheading: 520;
+  --ds-tracking-h1: -0.03em;
+  --ds-tracking-h2: -0.025em;
   --ds-space-1: 0.25rem;
   --ds-space-2: 0.5rem;
   --ds-space-3: 0.75rem;
@@ -32,38 +37,41 @@
 
 .ds-display {
   font-size: var(--ds-text-display);
-  line-height: 0.96;
-  letter-spacing: -0.045em;
-  font-weight: 400;
+  line-height: 1;
+  letter-spacing: var(--ds-tracking-h1);
+  font-weight: var(--ds-weight-heading);
 }
 .ds-h1 {
   font-size: var(--ds-text-h1);
   line-height: var(--ds-leading-heading);
-  letter-spacing: -0.035em;
-  font-weight: 400;
+  letter-spacing: var(--ds-tracking-h1);
+  font-weight: var(--ds-weight-heading);
 }
 .ds-h2 {
   font-size: var(--ds-text-h2);
   line-height: 1.08;
-  letter-spacing: -0.025em;
-  font-weight: 450;
+  letter-spacing: var(--ds-tracking-h2);
+  font-weight: var(--ds-weight-subheading);
 }
 .ds-h3 {
   font-size: var(--ds-text-h3);
   line-height: 1.2;
-  font-weight: 500;
+  font-weight: var(--ds-weight-subheading);
 }
 .ds-lead {
   font-size: var(--ds-text-lead);
   line-height: 1.55;
+  font-weight: var(--ds-weight-body);
 }
 .ds-body {
   font-size: var(--ds-text-body);
   line-height: var(--ds-leading-body);
+  font-weight: var(--ds-weight-body);
 }
 .ds-web-body {
   font-size: var(--ds-text-web);
   line-height: var(--ds-leading-body);
+  font-weight: var(--ds-weight-body);
 }
 .ds-label {
   font-size: var(--ds-text-sm);
