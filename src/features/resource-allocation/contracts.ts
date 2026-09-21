@@ -23,6 +23,7 @@ export type ResourceAllocationDemandSummary = {
 export type ResourceAllocationBaseline = {
   metrics: ResourceAllocationMetrics
   summary: ResourceAllocationDemandSummary
+  kind?: 'canonical-plan' | 'keep-current'
 }
 
 export type ResourceAllocationAssignmentExplanation = {
