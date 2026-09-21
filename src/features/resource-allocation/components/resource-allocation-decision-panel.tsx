@@ -210,11 +210,44 @@ async function requestJson(path: string, init?: RequestInit) {
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     cache: 'no-store',
   })
-  const payload = await response.json()
-  if (!response.ok) {
-    const detail = typeof payload.detail === 'string' ? payload.detail : payload.detail?.message
-    throw new Error(payload.error ?? detail ?? `Request failed (${response.status})`)
+
+  const raw = await response.text()
+  let payload: Record<string, unknown> | null = null
+
+  if (raw.trim()) {
+    try {
+      const parsed: unknown = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        payload = parsed as Record<string, unknown>
+      }
+    } catch {
+      payload = null
+    }
   }
+
+  if (!response.ok) {
+    const detail =
+      typeof payload?.detail === 'string'
+        ? payload.detail
+        : payload?.detail && typeof payload.detail === 'object' && 'message' in payload.detail
+          ? String((payload.detail as { message?: unknown }).message ?? '')
+          : null
+    const message =
+      (typeof payload?.error === 'string' ? payload.error : null) ||
+      detail ||
+      raw.trim() ||
+      `Request failed (${response.status})`
+    throw new Error(message)
+  }
+
+  if (!payload) {
+    throw new Error(
+      raw.trim()
+        ? `Unexpected non-JSON response from Resource Allocation API: ${raw.trim().slice(0, 180)}`
+        : 'Resource Allocation API returned an empty response.'
+    )
+  }
+
   return payload
 }
 async function post(path: string, body: Record<string, unknown>) {
