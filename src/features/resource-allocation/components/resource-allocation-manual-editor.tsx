@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Pencil, RefreshCw } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { ResourceAllocationNetwork } from './resource-allocation-network'
+import { localizePlanningDay, trackResourceAllocation } from '../presentation'
 
 type DayPlan = { day: string; recommended: { assignments: Record<string, string | null> } }
 type ManualMetrics = {
@@ -47,7 +48,11 @@ const copy = {
     total: 'Усі потреби',
     served: 'Буде покрито',
     unmet: 'Не буде покрито',
-    travel: 'Вартість переміщень',
+    travel: 'Індекс переміщень',
+    day: 'День',
+    destination: 'Ваш варіант',
+    qdipRecommends: 'QDIP рекомендує',
+    advanced: 'Розширене редагування',
     violations: 'порушень обмежень',
     feasible: 'Ручний план допустимий за поточних обмежень.',
     qdip: 'План QDIP',
@@ -69,7 +74,11 @@ const copy = {
     total: 'All needs',
     served: 'Expected covered',
     unmet: 'Expected uncovered',
-    travel: 'Movement cost',
+    travel: 'Movement cost index',
+    day: 'Day',
+    destination: 'Your choice',
+    qdipRecommends: 'QDIP recommends',
+    advanced: 'Advanced editing',
     violations: 'constraint violations',
     feasible: 'The manual plan is feasible under current constraints.',
     qdip: 'QDIP plan',
@@ -91,7 +100,11 @@ const copy = {
     total: 'Wszystkie potrzeby',
     served: 'Zostanie pokryte',
     unmet: 'Pozostanie bez pokrycia',
-    travel: 'Koszt przemieszczeń',
+    travel: 'Indeks kosztu przemieszczeń',
+    day: 'Dzień',
+    destination: 'Twój wariant',
+    qdipRecommends: 'QDIP rekomenduje',
+    advanced: 'Edycja zaawansowana',
     violations: 'naruszeń ograniczeń',
     feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
     qdip: 'Plan QDIP',
@@ -129,6 +142,8 @@ export function ResourceAllocationManualEditor({
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [visualDay, setVisualDay] = useState(plan.daily[0]?.day ?? 'Mon')
+  const [quickTeam, setQuickTeam] = useState(teams[0] ?? '')
+  const [quickDay, setQuickDay] = useState(plan.daily[0]?.day ?? '')
   const inputTeams = useMemo(
     () =>
       Array.isArray(input.teams)
@@ -165,6 +180,7 @@ export function ResourceAllocationManualEditor({
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error ?? 'Manual plan evaluation failed')
       setEvaluation(payload as Evaluation)
+      trackResourceAllocation('ra_manual_plan_evaluated', locale)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Manual plan evaluation failed')
     } finally {
@@ -195,6 +211,51 @@ export function ResourceAllocationManualEditor({
   }
   return (
     <div className="min-w-0 max-w-full space-y-5 overflow-hidden">
+      <div className="grid gap-4 border-t border-white/10 pt-5 md:grid-cols-3">
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.team}</span>
+          <select
+            value={quickTeam}
+            onChange={(event) => setQuickTeam(event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            {teams.map((team) => <option key={team} value={team}>{team}</option>)}
+          </select>
+        </label>
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.day}</span>
+          <select
+            value={quickDay}
+            onChange={(event) => setQuickDay(event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            {plan.daily.map((day) => (
+              <option key={day.day} value={day.day}>{localizePlanningDay(day.day, locale)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.destination}</span>
+          <select
+            value={allocation[quickDay]?.[quickTeam] ?? ''}
+            onChange={(event) => change(quickDay, quickTeam, event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            <option value="">{t.unassigned}</option>
+            {communities.map((community) => <option key={community} value={community}>{community}</option>)}
+          </select>
+          <span className="mt-2 block text-xs text-slate-600">
+            {t.qdipRecommends}:{' '}
+            <b className="text-slate-400">
+              {plan.daily.find((day) => day.day === quickDay)?.recommended.assignments[quickTeam] ?? t.unassigned}
+            </b>
+          </span>
+        </label>
+      </div>
+
+      <details className="mt-6 border border-white/10 bg-white/[0.02]">
+        <summary className="cursor-pointer p-4 text-sm font-bold">{t.advanced}</summary>
+        <div className="border-t border-white/10 pb-4">
       {visualPlan && inputTeams.length > 0 && (
         <>
           <div className="grid max-w-full grid-cols-2 gap-2 bg-white/[0.04] px-4 pt-5 sm:grid-cols-3 sm:px-6 md:grid-cols-5">
@@ -249,7 +310,7 @@ export function ResourceAllocationManualEditor({
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {plan.daily.map((day) => (
                   <label key={day.day} className="min-w-0 text-xs text-slate-500">
-                    <span className="mb-1 block font-bold text-slate-400">{day.day}</span>
+                    <span className="mb-1 block font-bold text-slate-400">{localizePlanningDay(day.day, locale)}</span>
                     <select
                       aria-label={`${team} ${day.day}`}
                       className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
@@ -277,7 +338,7 @@ export function ResourceAllocationManualEditor({
                 <th className="border-b border-white/15 p-2 text-left">{t.team}</th>
                 {plan.daily.map((day) => (
                   <th key={day.day} className="border-b border-white/15 p-2 text-left">
-                    {day.day}
+                    {localizePlanningDay(day.day, locale)}
                   </th>
                 ))}
               </tr>
@@ -308,6 +369,9 @@ export function ResourceAllocationManualEditor({
             </tbody>
           </table>
         </div>
+        </div>
+      </details>
+
         <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
           <button
             type="button"
