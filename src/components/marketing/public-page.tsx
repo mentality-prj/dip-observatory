@@ -331,9 +331,9 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
           <div className={styles.headerTools}>
             <nav className={styles.languageNav} aria-label="Language">
               {marketingLocales.map((l) => (
-                <a key={l} aria-current={l === locale ? 'page' : undefined} href={href(l, slug)}>
+                <Link key={l} aria-current={l === locale ? 'page' : undefined} href={href(l, slug)}>
                   {l === 'uk' ? 'UA' : l.toUpperCase()}
-                </a>
+                </Link>
               ))}
             </nav>
             <MobileMenu items={items} />
@@ -360,7 +360,7 @@ function PageHero({ eyebrow, title, body }: { eyebrow: string; title: string; bo
     <section className={styles.section}>
       <div className={styles.sectionIntro}>
         <div className={styles.eyebrow}>{eyebrow}</div>
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         <p className={styles.centerCopy}>{body}</p>
       </div>
     </section>
