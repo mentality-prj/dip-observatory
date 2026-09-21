@@ -144,7 +144,8 @@ function findEndOfCentralDirectory(bytes: Uint8Array): number {
 }
 
 async function inflateRaw(bytes: Uint8Array): Promise<Uint8Array> {
-  const source = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer\n  const stream = new Blob([source]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+  const source = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+  const stream = new Blob([source]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
   return new Uint8Array(await new Response(stream).arrayBuffer())
 }
 
