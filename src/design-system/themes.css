@@ -54,6 +54,15 @@
   --ds-accent-contrast: #fff;
   --ds-focus: rgba(122, 24, 56, 0.5);
 }
+[data-ds-theme='burgundy'][data-ds-mode='light'] h1 {
+  color: var(--ds-accent);
+  font-weight: 400;
+}
+[data-ds-theme='burgundy'][data-ds-mode='light'] h2,
+[data-ds-theme='burgundy'][data-ds-mode='light'] h3 {
+  color: var(--ds-accent);
+  font-weight: 500;
+}
 [data-ds-theme='rose'] {
   --ds-accent: #fda4af;
   --ds-accent-rgb: 253 164 175;
