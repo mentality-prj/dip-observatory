@@ -2,6 +2,10 @@
   color: var(--ds-text);
   background: var(--ds-bg);
 }
+.shell :global(.ds-product-header-inner) {
+  max-width: var(--ds-content-max);
+  padding-inline: clamp(var(--ds-space-4), 3vw, var(--ds-space-10));
+}
 .navigation {
   display: flex;
   min-width: 0;
