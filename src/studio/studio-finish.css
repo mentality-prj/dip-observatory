@@ -1,21 +1,42 @@
 .studio-shell > .ds-product-header { grid-area: header; }
 .studio-shell {
-  background:
-    radial-gradient(circle at 82% 10%, rgb(var(--ds-accent-rgb) / 0.08), transparent 28%),
-    linear-gradient(135deg, rgb(var(--ds-accent-rgb) / 0.035), var(--ds-bg) 44%, rgb(var(--ds-accent-rgb) / 0.02));
+  grid-template-columns: 236px minmax(0, 1fr);
+  background: #edf2ee;
 }
 .studio-sidebar {
-  background: color-mix(in srgb, var(--ds-surface) 90%, rgb(var(--ds-accent-rgb) / 0.06));
-  scrollbar-color: rgb(var(--ds-accent-rgb) / 0.28) transparent;
+  padding: var(--ds-space-5) var(--ds-space-3);
+  border-right-color: #d7dfda;
+  background: #e7ede9;
+  scrollbar-color: rgb(var(--ds-accent-rgb) / 0.24) transparent;
   scrollbar-width: thin;
 }
 .studio-sidebar::-webkit-scrollbar { width: 8px; }
 .studio-sidebar::-webkit-scrollbar-track { background: transparent; }
-.studio-sidebar::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgb(var(--ds-accent-rgb) / 0.28); background-clip: padding-box; }
-.studio-workspace { background: linear-gradient(180deg, rgb(var(--ds-accent-rgb) / 0.018), transparent 38%); }
+.studio-sidebar::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgb(var(--ds-accent-rgb) / 0.24); background-clip: padding-box; }
+.studio-sidebar-intro { padding: var(--ds-space-2) var(--ds-space-2) var(--ds-space-5); margin-bottom: var(--ds-space-3); }
+.studio-sidebar-intro h2 { margin-block: var(--ds-space-2); font-size: var(--ds-text-body); font-weight: 600; }
+.studio-sidebar-intro p { font-size: var(--ds-text-xs); line-height: 1.5; }
+.studio-sidebar nav { gap: var(--ds-space-1); }
+.studio-nav-label { padding: var(--ds-space-2); }
+.studio-sidebar nav a { grid-template-columns: 28px minmax(0, 1fr); min-height: 48px; gap: var(--ds-space-2); padding: var(--ds-space-2); border-radius: 9px; }
+.studio-sidebar nav a > i { display: none; }
+.studio-nav-icon { width: 28px; height: 28px; border: 0; border-radius: 7px; background: transparent; }
+.studio-nav-copy { gap: 0; }
+.studio-nav-copy strong { font-size: 0.8125rem; font-weight: 600; }
+.studio-nav-copy small { font-size: 0.6875rem; }
+.studio-sidebar nav a[aria-current='page'] { border-color: #cbd7d0; background: #f4f7f5; box-shadow: inset 2px 0 0 var(--ds-accent); }
+.studio-sidebar-footer { padding: var(--ds-space-4) var(--ds-space-2) 0; }
+.studio-sidebar-footer span { font-size: var(--ds-text-xs); }
+.studio-sidebar-footer small { font-size: 0.6875rem; }
+.studio-workspace { background: #f3f6f4; }
+.studio-workspace:before { inset: var(--ds-header-height) 0 0 236px; background: linear-gradient(90deg, rgb(var(--ds-accent-rgb) / 0.018), transparent 32%); }
+.studio-main { width: min(100%, 1520px); padding-top: var(--ds-space-10); }
 .studio-main > h1 { font-weight: 400; letter-spacing: -0.03em; }
 .studio-main h2 { font-weight: 500; }
 .studio-main h3 { font-weight: 500; }
+.studio-main .ds-card { border-color: #d9e1dc; background: #fbfcfb; box-shadow: 0 1px 2px rgb(20 44 32 / 0.025); }
+.studio-main .ds-card:hover { transform: none; border-color: #cbd7d0; box-shadow: 0 4px 14px rgb(20 44 32 / 0.045); }
+.studio-profile-nav, .studio-flow, .studio-schema, .studio-main pre, .gas-metric-grid > div, .gas-range { background: #edf2ef; }
 .studio-language-switcher { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-pill); background: var(--ds-surface-raised); }
 .studio-language-switcher a { display: grid; min-width: 34px; min-height: 32px; place-items: center; border-radius: var(--ds-radius-pill); color: var(--ds-text-muted); font-size: var(--ds-text-xs); font-weight: 600; text-decoration: none; }
 .studio-language-switcher a:hover, .studio-language-switcher a[aria-current='page'] { color: var(--ds-accent); background: rgb(var(--ds-accent-rgb) / 0.09); }
@@ -25,4 +46,5 @@
 .studio-success { border-color: rgb(var(--ds-semantic-success-rgb) / 0.28); color: var(--ds-semantic-success); background: rgb(var(--ds-semantic-success-rgb) / 0.07); }
 .studio-error, .gas-blocked { color: var(--ds-semantic-danger); }
 .studio-error { border-color: rgb(var(--ds-semantic-danger-rgb) / 0.25); background: rgb(var(--ds-semantic-danger-rgb) / 0.06); }
+@media (max-width: 900px) { .studio-shell { grid-template-columns: 1fr; } .studio-workspace:before { inset: var(--ds-header-height) 0 0; } }
 @media (max-width: 760px) { .studio-shell .ds-status-badge { display: none; } .studio-language-switcher a { min-width: 30px; } }
