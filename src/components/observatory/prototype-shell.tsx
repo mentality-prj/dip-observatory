@@ -6,7 +6,7 @@ import { useEffect, useRef, useTransition } from 'react'
 import { ChevronRight, Home } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
-import { studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
 import styles from './prototype-shell.module.css'
 
@@ -14,6 +14,11 @@ export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
 const LOCALES: Locale[] = ['en', 'uk', 'pl']
 const LABEL: Record<Locale, string> = { en: 'EN', pl: 'PL', uk: 'UA' }
+const HOME_LABEL: Record<Locale, string> = {
+  en: 'QDIP Home',
+  uk: 'Головна QDIP',
+  pl: 'Strona główna QDIP',
+}
 const STUDIO_LABEL: Record<Locale, string> = {
   en: 'Configure in Studio',
   uk: 'Налаштувати в Studio',
@@ -74,6 +79,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       product="Observatory"
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={<div className={styles.mobileNavigation}>{nav}</div>}
+      siteLink={{ href: marketingHref(locale), label: HOME_LABEL[locale] }}
       productSwitch={{ href: studioHref(), label: STUDIO_LABEL[locale] }}
       utilities={utilities}
     >
