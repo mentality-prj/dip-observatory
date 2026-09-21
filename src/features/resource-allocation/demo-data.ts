@@ -1,4 +1,4 @@
-import type { ResourceAllocationCommunityInput, ResourceAllocationInput, ResourceAllocationTeamInput } from './contracts'
+import type {\n  ResourceAllocationCommunityInput,\n  ResourceAllocationDemandInput,\n  ResourceAllocationInput,\n  ResourceAllocationTeamInput,\n} from './contracts'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -16,47 +16,55 @@ const genericCommunityNames = Array.from(
   (_, index) => `Громада ${String.fromCharCode(65 + index)}`
 )
 
-const genericCommunities: ResourceAllocationCommunityInput[] = genericCommunityNames.map((id, index) => ({
-  id,
-  accessible: ![7, 14].includes(index),
-  max_teams: index % 4 === 0 ? 2 : 3,
-  demand: [0, 1, 2].map((offset) => ({
-    service: GENERIC_SERVICES[(index + offset) % GENERIC_SERVICES.length],
-    units: 9,
-    priority: (offset === 0 && index % 3 === 0 ? 'critical' : offset < 2 ? 'high' : 'normal') as
-      | 'critical'
-      | 'high'
-      | 'normal',
-  })),
-  accessibility: index === 5 ? { Wed: false, Thu: false } : {},
-  daily_demand:
+const genericCommunities = genericCommunityNames.map<ResourceAllocationCommunityInput>((id, index) => {
+  const accessibility: Record<string, boolean> = index === 5 ? { Wed: false, Thu: false } : {}
+  const dailyDemand: Record<string, ResourceAllocationDemandInput[]> =
     index % 5 === 0
       ? {
           Wed: [
             {
               service: GENERIC_SERVICES[index % GENERIC_SERVICES.length],
               units: 3,
-              priority: 'high' as const,
+              priority: 'high',
             },
           ],
         }
-      : {},
-}))
+      : {}
+  return {
+    id,
+    accessible: ![7, 14].includes(index),
+    max_teams: index % 4 === 0 ? 2 : 3,
+    demand: [0, 1, 2].map((offset) => ({
+      service: GENERIC_SERVICES[(index + offset) % GENERIC_SERVICES.length],
+      units: 9,
+      priority: (offset === 0 && index % 3 === 0 ? 'critical' : offset < 2 ? 'high' : 'normal') as
+        | 'critical'
+        | 'high'
+        | 'normal',
+    })),
+    accessibility,
+    daily_demand: dailyDemand,
+  }
+})
 
-const genericTeams: ResourceAllocationTeamInput[] = Array.from({ length: 10 }, (_, index) => ({
-  id: `Команда ${index + 1}`,
-  current_community: genericCommunityNames[(index * 2) % genericCommunityNames.length],
-  skills: [
-    GENERIC_SERVICES[index % GENERIC_SERVICES.length],
-    GENERIC_SERVICES[(index + 1) % GENERIC_SERVICES.length],
-  ],
-  capacity: 12 + (index % 3) * 2,
-  availability: index === 8 ? { Fri: false } : {},
-  daily_capacity: index === 3 ? { Thu: 8 } : {},
-  max_travel_cost: 18,
-  cost_per_capacity: 0.4 + (index % 3) * 0.1,
-  programs: [],
-}))
+const genericTeams = Array.from({ length: 10 }, (_, index): ResourceAllocationTeamInput => {
+  const availability: Record<string, boolean> = index === 8 ? { Fri: false } : {}
+  const dailyCapacity: Record<string, number> = index === 3 ? { Thu: 8 } : {}
+  return {
+    id: `Команда ${index + 1}`,
+    current_community: genericCommunityNames[(index * 2) % genericCommunityNames.length],
+    skills: [
+      GENERIC_SERVICES[index % GENERIC_SERVICES.length],
+      GENERIC_SERVICES[(index + 1) % GENERIC_SERVICES.length],
+    ],
+    capacity: 12 + (index % 3) * 2,
+    availability,
+    daily_capacity: dailyCapacity,
+    max_travel_cost: 18,
+    cost_per_capacity: 0.4 + (index % 3) * 0.1,
+    programs: [],
+  }
+})
 
 const genericTravelEdges = genericCommunityNames.flatMap((from, index) =>
   [1, 2, 3].flatMap((step) => {
@@ -73,7 +81,7 @@ const genericTravelEdges = genericCommunityNames.flatMap((from, index) =>
 )
 
 const genericCurrent = Object.fromEntries(
-  genericTeams.map((team) => [team.id, team.current_community])
+  genericTeams.map((team) => [team.id, team.current_community ?? null])
 )
 
 export const GENERIC_RESOURCE_ALLOCATION_PROFILE: ResourceAllocationInput = {
