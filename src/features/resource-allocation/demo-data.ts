@@ -1,4 +1,4 @@
-import type { ResourceAllocationInput } from './contracts'
+import type { ResourceAllocationCommunityInput, ResourceAllocationInput, ResourceAllocationTeamInput } from './contracts'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -16,7 +16,7 @@ const genericCommunityNames = Array.from(
   (_, index) => `Громада ${String.fromCharCode(65 + index)}`
 )
 
-const genericCommunities = genericCommunityNames.map((id, index) => ({
+const genericCommunities: ResourceAllocationCommunityInput[] = genericCommunityNames.map((id, index) => ({
   id,
   accessible: ![7, 14].includes(index),
   max_teams: index % 4 === 0 ? 2 : 3,
@@ -43,7 +43,7 @@ const genericCommunities = genericCommunityNames.map((id, index) => ({
       : {},
 }))
 
-const genericTeams = Array.from({ length: 10 }, (_, index) => ({
+const genericTeams: ResourceAllocationTeamInput[] = Array.from({ length: 10 }, (_, index) => ({
   id: `Команда ${index + 1}`,
   current_community: genericCommunityNames[(index * 2) % genericCommunityNames.length],
   skills: [
