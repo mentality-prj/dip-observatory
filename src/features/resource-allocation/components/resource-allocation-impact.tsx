@@ -107,6 +107,12 @@ export function ResourceAllocationImpact({
   const currentPriority =
     baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
   const recommendedPriority = summary.priority_coverage ?? metrics.priority_coverage
+  const currentTotalCoverage =
+    baseline && baseline.summary.total_available > 0
+      ? baseline.summary.served / baseline.summary.total_available
+      : baseline?.metrics.total_coverage
+  const recommendedTotalCoverage =
+    summary.total_available > 0 ? summary.served / summary.total_available : metrics.total_coverage
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
@@ -172,8 +178,8 @@ export function ResourceAllocationImpact({
         />
         <Impact
           label={t.total}
-          current={baseline?.metrics.total_coverage}
-          recommended={metrics.total_coverage}
+          current={currentTotalCoverage}
+          recommended={recommendedTotalCoverage}
           format="pct"
           unavailable={t.unavailable}
           currentLabel={baselineLabel}
