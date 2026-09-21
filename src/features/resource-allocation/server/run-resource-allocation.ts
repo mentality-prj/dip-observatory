@@ -63,6 +63,10 @@ export const resourceAllocationRequestSchema = z
     current_allocation: z.record(z.string(), z.string().nullable()).nullable().optional(),
     manual_allocation: z.record(z.string(), z.unknown()).nullable().optional(),
     baseline_allocation: z.record(z.string(), z.string().nullable()).nullable().optional(),
+    baseline_plan: z
+      .record(z.string(), z.record(z.string(), z.string().nullable()))
+      .nullable()
+      .optional(),
     planning_period: z
       .object({ days: z.array(z.string().min(1)).min(1).max(31) })
       .strict()
@@ -76,6 +80,8 @@ export const resourceAllocationRequestSchema = z
         source: z.string().min(1),
         imported_at: z.string().nullable().optional(),
         mapping_version: z.string().nullable().optional(),
+        case_id: z.string().nullable().optional(),
+        planning_unit: z.string().nullable().optional(),
       })
       .strict()
       .nullable()
@@ -87,7 +93,11 @@ export const resourceAllocationRequestSchema = z
 
 type Input = z.infer<typeof resourceAllocationRequestSchema>
 export type UiLocale = 'uk' | 'en' | 'pl'
-type Baseline = { metrics: Record<string, number>; summary: Record<string, number> }
+type Baseline = {
+  metrics: Record<string, number>
+  summary: Record<string, number>
+  kind: 'canonical-plan' | 'keep-current'
+}
 const metricLabels: Record<UiLocale, Record<string, string>> = {
   uk: {
     priority_coverage: 'покриття пріоритетних потреб',
@@ -192,25 +202,58 @@ function baselineFromEvaluation(value: unknown): Baseline | null {
   const metrics = candidate.aggregate_metrics,
     summary = candidate.demand_summary
   if (!metrics || typeof metrics !== 'object' || !summary || typeof summary !== 'object') return null
-  return { metrics: metrics as Record<string, number>, summary: summary as Record<string, number> }
+  return {
+    metrics: metrics as Record<string, number>,
+    summary: summary as Record<string, number>,
+    kind: 'keep-current',
+  }
 }
 function attachBaseline(output: Record<string, unknown>, baseline: Baseline | null): Record<string, unknown> {
   if (output.operation !== 'simulate' || !output.result || typeof output.result !== 'object') return output
   return { ...output, result: { ...(output.result as Record<string, unknown>), baseline } }
 }
 
-async function evaluateCurrentAllocation(input: Input): Promise<Baseline | null> {
-  if (input.operation !== 'simulate' || !input.current_allocation) return null
+function coreInput(input: Input): Record<string, unknown> {
+  const { baseline_plan: _baselinePlan, provenance, ...rest } = input
+  return {
+    ...rest,
+    provenance: provenance
+      ? {
+          source: provenance.source,
+          imported_at: provenance.imported_at,
+          mapping_version: provenance.mapping_version,
+        }
+      : provenance,
+  }
+}
+
+async function evaluateComparisonPlan(input: Input): Promise<Baseline | null> {
+  if (input.operation !== 'simulate') return null
   const days = input.planning_period?.days ?? []
   if (days.length === 0) return null
-  const manual_allocation = Object.fromEntries(days.map((day) => [day, input.current_allocation]))
+
+  const canonicalPlan = input.baseline_plan ?? null
+  const fallbackPlan =
+    !canonicalPlan && input.current_allocation
+      ? Object.fromEntries(days.map((day) => [day, input.current_allocation]))
+      : null
+  const manual_allocation = canonicalPlan ?? fallbackPlan
+  if (!manual_allocation) return null
+
   try {
-    const evaluation = await runDipPlugin('resource-allocation', 'humanitarian.resource-allocation.optimize', {
-      ...input,
-      operation: 'evaluate_manual',
-      manual_allocation,
-    })
-    return baselineFromEvaluation(evaluation)
+    const evaluation = await runDipPlugin(
+      'resource-allocation',
+      'humanitarian.resource-allocation.optimize',
+      {
+        ...coreInput(input),
+        operation: 'evaluate_manual',
+        manual_allocation,
+      }
+    )
+    const baseline = baselineFromEvaluation(evaluation)
+    return baseline
+      ? { ...baseline, kind: canonicalPlan ? 'canonical-plan' : 'keep-current' }
+      : null
   } catch (error) {
     if (error instanceof DipApiError) return null
     throw error
@@ -221,8 +264,8 @@ export async function runResourceAllocation(input: Input, locale: UiLocale): Pro
   const output = (await runDipPlugin(
     'resource-allocation',
     'humanitarian.resource-allocation.optimize',
-    input
+    coreInput(input)
   )) as Record<string, unknown>
-  const baseline = await evaluateCurrentAllocation(input)
+  const baseline = await evaluateComparisonPlan(input)
   return normalizeEvidence(attachBaseline(output, baseline), locale)
 }
