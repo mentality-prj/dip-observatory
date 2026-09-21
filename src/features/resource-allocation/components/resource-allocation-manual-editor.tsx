@@ -49,8 +49,10 @@ const copy = {
     unmet: 'Не буде покрито',
     travel: 'Вартість переміщень',
     violations: 'порушень обмежень',
-    feasible:
-      'Ручний план допустимий за поточних обмежень. Тепер його можна порівняти з рекомендацією DIP на схемі вище.',
+    feasible: 'Ручний план допустимий за поточних обмежень.',
+    qdip: 'План QDIP',
+    yours: 'Ваш план',
+    difference: 'Різниця',
   },
   en: {
     section: 'TEST YOUR OWN DECISION',
@@ -69,8 +71,10 @@ const copy = {
     unmet: 'Expected uncovered',
     travel: 'Movement cost',
     violations: 'constraint violations',
-    feasible:
-      'The manual plan is feasible under current constraints. It can now be compared with the DIP recommendation in the network above.',
+    feasible: 'The manual plan is feasible under current constraints.',
+    qdip: 'QDIP plan',
+    yours: 'Your plan',
+    difference: 'Difference',
   },
   pl: {
     section: 'SPRAWDŹ WŁASNĄ DECYZJĘ',
@@ -89,14 +93,18 @@ const copy = {
     unmet: 'Pozostanie bez pokrycia',
     travel: 'Koszt przemieszczeń',
     violations: 'naruszeń ograniczeń',
-    feasible:
-      'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach. Można go teraz porównać z rekomendacją DIP na schemacie powyżej.',
+    feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
+    qdip: 'Plan QDIP',
+    yours: 'Twój plan',
+    difference: 'Różnica',
   },
 } as const
 
 export function ResourceAllocationManualEditor({
   input,
   plan,
+  referenceMetrics,
+  referenceSummary,
   communities,
   teams,
   onUseModified,
@@ -104,6 +112,8 @@ export function ResourceAllocationManualEditor({
 }: {
   input: Record<string, unknown>
   plan: { daily: DayPlan[] }
+  referenceMetrics: ManualMetrics
+  referenceSummary: { served: number; closing_unmet: number }
   communities: string[]
   teams: string[]
   onUseModified: (selected: EvaluatedManualAllocation) => void
@@ -328,18 +338,57 @@ export function ResourceAllocationManualEditor({
           </div>
         )}
         {evaluation && (
-          <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-5">
-            <Kpi
-              label={t.priority}
-              value={metrics?.priority_coverage == null ? '—' : `${Math.round(metrics.priority_coverage * 100)}%`}
-            />
-            <Kpi
-              label={t.total}
-              value={metrics?.total_coverage == null ? '—' : `${Math.round(metrics.total_coverage * 100)}%`}
-            />
-            <Kpi label={t.served} value={demand?.served?.toFixed(0) ?? '—'} />
-            <Kpi label={t.unmet} value={demand?.closing_unmet?.toFixed(0) ?? '—'} />
-            <Kpi label={t.travel} value={metrics?.travel_cost?.toFixed(1) ?? '—'} />
+          <div className="mt-5 overflow-hidden border border-white/10">
+            <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-px bg-white/10 text-xs">
+              <div className="bg-slate-950/70 p-3" />
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.qdip}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.yours}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.difference}</div>
+              <ComparisonRow
+                label={t.priority}
+                reference={referenceMetrics.priority_coverage}
+                actual={metrics?.priority_coverage}
+                percentage
+              />
+              <ComparisonRow
+                label={t.served}
+                reference={referenceSummary.served}
+                actual={demand?.served}
+              />
+              <ComparisonRow
+                label={t.unmet}
+                reference={referenceSummary.closing_unmet}
+                actual={demand?.closing_unmet}
+                inverse
+              />
+              <ComparisonRow
+                label={t.travel}
+                reference={referenceMetrics.travel_cost}
+                actual={metrics?.travel_cost}
+                inverse
+              />
+            </div>
+            {typeof demand?.served === 'number' && (
+              <div className="border-t border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+                {locale === 'uk'
+                  ? demand.served === referenceSummary.served
+                    ? 'Ваш план покриває стільки ж одиниць потреб, як план QDIP.'
+                    : demand.served > referenceSummary.served
+                      ? `Ваш план покриває на ${Math.round(demand.served - referenceSummary.served)} одиниць потреб більше.`
+                      : `Ваш план покриває на ${Math.round(referenceSummary.served - demand.served)} одиниць потреб менше.`
+                  : locale === 'pl'
+                    ? demand.served === referenceSummary.served
+                      ? 'Twój plan pokrywa tyle samo jednostek potrzeb co plan QDIP.'
+                      : demand.served > referenceSummary.served
+                        ? `Twój plan pokrywa o ${Math.round(demand.served - referenceSummary.served)} jednostek potrzeb więcej.`
+                        : `Twój plan pokrywa o ${Math.round(referenceSummary.served - demand.served)} jednostek potrzeb mniej.`
+                    : demand.served === referenceSummary.served
+                      ? 'Your plan covers the same number of demand units as the QDIP plan.'
+                      : demand.served > referenceSummary.served
+                        ? `Your plan covers ${Math.round(demand.served - referenceSummary.served)} more demand units.`
+                        : `Your plan covers ${Math.round(referenceSummary.served - demand.served)} fewer demand units.`}
+              </div>
+            )}
           </div>
         )}
         {evaluation && (
@@ -371,11 +420,40 @@ export function ResourceAllocationManualEditor({
     </div>
   )
 }
-function Kpi({ label, value }: { label: string; value: string }) {
+function ComparisonRow({
+  label,
+  reference,
+  actual,
+  percentage = false,
+  inverse = false,
+}: {
+  label: string
+  reference?: number
+  actual?: number
+  percentage?: boolean
+  inverse?: boolean
+}) {
+  const render = (value?: number) =>
+    value == null ? '—' : percentage ? `${Math.round(value * 100)}%` : value.toFixed(0)
+  const delta = reference == null || actual == null ? null : actual - reference
+  const favorable = delta == null || Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
+  const deltaText =
+    delta == null
+      ? '—'
+      : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
+
   return (
-    <div className="min-w-0 border border-white/10 p-3">
-      <div className="break-words text-xs text-slate-500 [overflow-wrap:anywhere]">{label}</div>
-      <div className="mt-1 break-words text-xl font-black">{value}</div>
-    </div>
+    <>
+      <div className="bg-white/[0.03] p-3 text-slate-500">{label}</div>
+      <div className="bg-white/[0.03] p-3 font-bold">{render(reference)}</div>
+      <div className="bg-white/[0.03] p-3 font-bold">{render(actual)}</div>
+      <div
+        className={`bg-white/[0.03] p-3 font-bold ${
+          favorable === true ? 'text-emerald-300' : favorable === false ? 'text-rose-200' : 'text-slate-500'
+        }`}
+      >
+        {deltaText}
+      </div>
+    </>
   )
 }
