@@ -1,9 +1,9 @@
-import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
 import { StudioNav } from '@/features/studio'
+import { StudioLanguageSwitcher } from '@/studio/studio-language-switcher'
 import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {
@@ -18,34 +18,38 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         href={studioHref()}
         brandHref={marketingHref('en')}
         product="Studio"
-        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
-        status={
+        navigation={
           <StatusBadge>
             <i /> Core connected
           </StatusBadge>
         }
+        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
         utilities={
-          <nav className="studio-language-switcher" aria-label="Language">
-            <Link href="/en" aria-current="page">EN</Link>
-            <Link href="/uk">UA</Link>
-            <Link href="/pl">PL</Link>
-          </nav>
+          <Suspense fallback={<div className="studio-language-switcher" aria-hidden><span>EN</span><span>UA</span><span>PL</span></div>}>
+            <StudioLanguageSwitcher />
+          </Suspense>
         }
       />
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
         <div className="studio-sidebar-intro">
           <small>DECISION WORKSPACE</small>
-          <h2>Build decision systems</h2>
-          <p>Configure reusable decision profiles, connect evidence sources and validate contracts before evaluation.</p>
+          <h2>Model · connect · validate</h2>
+          <p>Configure the decision model and its evidence contracts.</p>
         </div>
-        <StudioNav />
+        <Suspense fallback={null}>
+          <StudioNav />
+        </Suspense>
         <div className="studio-sidebar-footer">
           <span>QDIP Studio</span>
-          <small>Configuration · validation · evaluation</small>
+          <small>Decision system workspace</small>
         </div>
       </aside>
       <div className="studio-workspace">
         <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
+        <footer className="studio-footer">
+          <span><strong>QDIP</strong> <b>Studio</b></span>
+          <small>Decision intelligence workspace</small>
+        </footer>
       </div>
     </DesignSystemProvider>
   )

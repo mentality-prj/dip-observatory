@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { marketingCopy, marketingLocales, type MarketingLocale } from './qdip-copy'
 import { DecisionInquiryForm } from './decision-inquiry-form'
@@ -313,7 +314,8 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
     { href: `${href(locale, 'use-cases')}#demos`, label: c.nav[4] },
   ]
   return (
-    <main className={styles.site} lang={locale}>
+    <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
+      <main lang={locale}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link className={styles.brand} href={marketingLocaleHref(locale)}>
@@ -329,9 +331,9 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
           <div className={styles.headerTools}>
             <nav className={styles.languageNav} aria-label="Language">
               {marketingLocales.map((l) => (
-                <a key={l} aria-current={l === locale ? 'page' : undefined} href={href(l, slug)}>
+                <Link key={l} aria-current={l === locale ? 'page' : undefined} href={href(l, slug)}>
                   {l === 'uk' ? 'UA' : l.toUpperCase()}
-                </a>
+                </Link>
               ))}
             </nav>
             <MobileMenu items={items} />
@@ -349,7 +351,8 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
         </nav>
         <span>© {new Date().getFullYear()} QDIP</span>
       </footer>
-    </main>
+      </main>
+    </DesignSystemProvider>
   )
 }
 function PageHero({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
@@ -357,7 +360,7 @@ function PageHero({ eyebrow, title, body }: { eyebrow: string; title: string; bo
     <section className={styles.section}>
       <div className={styles.sectionIntro}>
         <div className={styles.eyebrow}>{eyebrow}</div>
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         <p className={styles.centerCopy}>{body}</p>
       </div>
     </section>

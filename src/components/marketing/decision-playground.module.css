@@ -4,6 +4,7 @@
   gap: clamp(var(--ds-space-10), 7vw, 6rem);
   padding: var(--ds-space-24) max(var(--ds-space-6), calc((100vw - 1180px) / 2));
   align-items: center;
+  --ds-heading: #fff;
   background: #180b11;
   color: #fff;
 }
@@ -17,7 +18,8 @@
   max-width: 520px;
   margin: var(--ds-space-4) 0 var(--ds-space-5);
   font-size: var(--ds-text-h2);
-  font-weight: 600;
+  color: var(--ds-heading);
+  font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.025em;
 }
@@ -37,12 +39,17 @@
   font-weight: 650;
 }
 .stage {
+  display: grid;
+  gap: var(--ds-space-6);
   padding: var(--ds-space-8);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: var(--ds-radius-card);
   background:
     radial-gradient(circle at 70% 20%, rgb(var(--ds-accent-rgb) / 0.18), transparent 34%), rgba(255, 255, 255, 0.045);
   box-shadow: var(--ds-shadow-card);
+}
+.stage :global(.ds-workflow-compact) {
+  margin: 0;
 }
 .controls {
   display: flex;
@@ -52,7 +59,7 @@
 }
 .controls > div {
   display: grid;
-  gap: var(--ds-space-1);
+  gap: var(--ds-space-2);
 }
 .controls small,
 .flow small {
@@ -63,7 +70,9 @@
   text-transform: uppercase;
 }
 .controls strong {
+  display: block;
   font-size: var(--ds-text-h3);
+  line-height: 1.1;
 }
 .controls button {
   position: relative;
@@ -117,7 +126,7 @@
 .context {
   display: flex;
   gap: var(--ds-space-2);
-  margin: var(--ds-space-5) 0;
+  margin: 0;
 }
 .context span {
   padding: var(--ds-space-2) var(--ds-space-3);
@@ -126,6 +135,17 @@
   color: #d9cdd1;
   font-size: var(--ds-text-xs);
   font-weight: 650;
+}
+.result {
+  display: grid;
+  gap: var(--ds-space-2);
+}
+.result > small {
+  color: #bdaeb4;
+  font-size: var(--ds-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .result strong {
   display: flex;
@@ -140,7 +160,7 @@
   color: #f0b5c8;
 }
 .reason {
-  margin-top: var(--ds-space-4);
+  margin-top: 0;
   padding: var(--ds-space-4);
   border-left: 2px solid #b74c70;
   background: rgba(255, 255, 255, 0.045);
@@ -193,6 +213,7 @@
     justify-content: flex-start;
   }
   .stage {
+    gap: var(--ds-space-5);
     padding: var(--ds-space-5);
   }
   .controls {

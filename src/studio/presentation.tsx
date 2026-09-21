@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Home } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 import type { ProfileDimension } from './contracts'
@@ -28,7 +29,9 @@ export function dimensionSource(item: ProfileDimension): string {
 export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
   return (
     <nav aria-label="Breadcrumb" className="studio-breadcrumbs">
-      <Link href={marketingHref('en')} aria-label="QDIP home" title="QDIP home">⌂</Link>
+      <Link className="studio-breadcrumb-home" href={marketingHref('en')} aria-label="QDIP home" title="QDIP home">
+        <Home size={14} aria-hidden />
+      </Link>
       <span aria-hidden="true"> / </span>
       <Link href={studioHref()}>Decision Studio</Link>
       {items.map((item, index) => (
