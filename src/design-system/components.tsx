@@ -41,20 +41,19 @@ export function ProductLockup({
 }) {
   return (
     <div className={cn('ds-product-lockup', className)}>
+      <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
+        {product}.
+      </Link>
       <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick}>
         <Image
           alt="QDIP"
           className="ds-product-lockup-wordmark"
           height={157}
           priority
-          sizes="92px"
+          sizes="116px"
           src="/qdip-logo.png"
-          style={{ clipPath: 'inset(0 10%)', height: 'auto', marginInline: '-9px', width: '92px' }}
           width={300}
         />
-      </Link>
-      <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
-        .{product}
       </Link>
     </div>
   )
@@ -118,84 +117,78 @@ export function ProductShell({
   theme,
   mode = 'dark',
   className,
-  href,
-  brandHref,
-  product,
-  navigation,
+  header,
   mobileNavigation,
-  siteLink,
-  productSwitch,
-  status,
-  utilities,
   children,
 }: {
   theme: DesignTheme
   mode?: DesignMode
   className?: string
-  href: string
-  brandHref?: string
-  product: ProductName
-  navigation?: ReactNode
+  header: ReactNode
   mobileNavigation?: ReactNode
-  siteLink?: ProductSwitch
-  productSwitch: ProductSwitch
-  status?: ReactNode
-  utilities?: ReactNode
   children: ReactNode
 }) {
   return (
-    <DesignSystemProvider theme={theme} mode={mode} className={className}>
-      <ProductHeader
-        href={href}
-        brandHref={brandHref}
-        product={product}
-        navigation={navigation}
-        siteLink={siteLink}
-        productSwitch={productSwitch}
-        status={status}
-        utilities={utilities}
-      />
+    <DesignSystemProvider theme={theme} mode={mode} className={cn('ds-app-shell', className)}>
+      {header}
       {mobileNavigation ? <div className="ds-product-mobile-navigation">{mobileNavigation}</div> : null}
       {children}
     </DesignSystemProvider>
   )
 }
 
-export function Surface({
-  as: Tag = 'section',
-  className,
-  children,
-}: {
-  as?: 'section' | 'article' | 'div'
-  className?: string
-  children: ReactNode
-}) {
-  return <Tag className={cn('ds-surface', className)}>{children}</Tag>
+export function Container({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn('ds-container', className)}>{children}</div>
 }
 
-export function PageHeader({
-  eyebrow,
-  title,
-  description,
-  actions,
-}: {
-  eyebrow?: ReactNode
-  title: ReactNode
-  description?: ReactNode
-  actions?: ReactNode
-}) {
+export function Page({ children, className }: { children: ReactNode; className?: string }) {
+  return <main className={cn('ds-page', className)}>{children}</main>
+}
+
+export function Section({ children, className }: { children: ReactNode; className?: string }) {
+  return <section className={cn('ds-section', className)}>{children}</section>
+}
+
+export function Button({
+  children,
+  className,
+  variant = 'primary',
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'ghost' }) {
   return (
-    <div className="ds-page-header">
-      <div>
-        {eyebrow ? <div className="ds-page-eyebrow">{eyebrow}</div> : null}
-        <h1 className="ds-h1">{title}</h1>
-        {description ? <p className="ds-page-description">{description}</p> : null}
-      </div>
-      {actions ? <div className="ds-page-actions">{actions}</div> : null}
+    <button className={cn('ds-button', `ds-button-${variant}`, className)} {...props}>
+      {children}
+    </button>
+  )
+}
+
+export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input className="ds-input" {...props} />
+}
+
+export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select className="ds-select" {...props} />
+}
+
+export function Badge({
+  children,
+  variant = 'neutral',
+}: {
+  children: ReactNode
+  variant?: 'neutral' | 'emerald' | 'amber' | 'rose' | 'cyan'
+}) {
+  return <span className={cn('ds-badge', `ds-badge-${variant}`)}>{children}</span>
+}
+
+export function Metric({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="ds-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   )
 }
 
-export function StatusBadge({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn('ds-status-badge', className)}>{children}</span>
+export function Divider() {
+  return <hr className="ds-divider" />
 }
