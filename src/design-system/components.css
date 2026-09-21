@@ -398,7 +398,7 @@
   background: var(--ds-border);
 }
 .ds-workflow-compact {
-  margin-top: var(--ds-space-4);
+  margin-block: 0;
 }
 .ds-workflow-step {
   min-width: 0;
