@@ -1,0 +1,66 @@
+/* Final Studio shell alignment overrides. Keep these tied to the shared product grid. */
+.studio-shell {
+  grid-template-rows: var(--ds-header-height) 1fr auto;
+  grid-template-areas:
+    'header header'
+    'sidebar workspace'
+    'footer footer';
+}
+
+/* The product lockup follows the same left rail as sidebar navigation. */
+.studio-shell .ds-product-header-inner {
+  max-width: none;
+  padding-inline: var(--ds-space-4);
+}
+
+.studio-core-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid rgb(22 131 74 / 0.22);
+  border-radius: var(--ds-radius-pill);
+  color: #16834a;
+  background: rgb(22 131 74 / 0.07);
+  font-size: var(--ds-text-xs);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.studio-core-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #16834a;
+  box-shadow: 0 0 0 3px rgb(22 131 74 / 0.12);
+}
+
+.studio-site-footer {
+  grid-area: footer;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .studio-shell {
+    grid-template-rows: var(--ds-header-height) auto 1fr auto;
+    grid-template-areas:
+      'header'
+      'sidebar'
+      'workspace'
+      'footer';
+  }
+}
+
+@media (max-width: 620px) {
+  .studio-shell .ds-product-header-inner {
+    padding-inline: var(--ds-space-3);
+  }
+  .studio-core-status {
+    display: none;
+  }
+}
