@@ -5,7 +5,7 @@ import '@/studio/studio-polish.css'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
 import { StudioNav } from '@/features/studio'
 import { StudioFooter } from '@/studio/studio-footer'
-import { StudioProductHeader } from '@/studio/studio-product-header'
+import { StudioCoreStatus, StudioProductHeader } from '@/studio/studio-product-header'
 import { StudioMobileNavigation } from '@/studio/studio-mobile-navigation'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 
@@ -14,12 +14,7 @@ export const metadata = {
   description: 'Configure, validate and evaluate decision systems with QDIP.',
 }
 
-const coreStatus = (
-  <span className="studio-core-status" role="status" aria-label="QDIP Core connected">
-    <span className="studio-core-status-dot" aria-hidden />
-    Core connected
-  </span>
-)
+const coreStatus = <StudioCoreStatus />
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return (
