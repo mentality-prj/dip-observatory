@@ -308,7 +308,7 @@
 }
 .editorialSection {
   display: grid;
-  grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
   gap: clamp(var(--ds-space-10), 7vw, var(--ds-space-20));
   align-items: start;
 }

@@ -5,7 +5,13 @@ import { studioHref } from '@/lib/platform-urls'
 import { useTransition } from 'react'
 import { Globe2 } from 'lucide-react'
 
-import { STUDIO_LOCALES, STUDIO_LOCALE_LABEL, studioLocaleFromPath, studioSectionFromPath, type StudioLocale } from './studio-locale'
+import {
+  STUDIO_LOCALES,
+  STUDIO_LOCALE_LABEL,
+  studioLocaleFromPath,
+  studioSectionFromPath,
+  type StudioLocale,
+} from './studio-locale'
 
 export function StudioLanguageSwitcher() {
   const pathname = usePathname()
@@ -39,9 +45,15 @@ export function StudioLanguageSwitcher() {
       <label className="studio-language-select">
         <Globe2 size={14} aria-hidden />
         <span className="sr-only">Language</span>
-        <select value={active} disabled={pending} onChange={(event) => changeLocale(event.target.value as StudioLocale)}>
+        <select
+          value={active}
+          disabled={pending}
+          onChange={(event) => changeLocale(event.target.value as StudioLocale)}
+        >
           {STUDIO_LOCALES.map((locale) => (
-            <option key={locale} value={locale}>{STUDIO_LOCALE_LABEL[locale]}</option>
+            <option key={locale} value={locale}>
+              {STUDIO_LOCALE_LABEL[locale]}
+            </option>
           ))}
         </select>
       </label>

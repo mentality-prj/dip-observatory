@@ -11,13 +11,7 @@ function marketingPath(locale: MarketingLocale, slug: string) {
   return `${marketingLocaleHref(locale)}/${slug}`
 }
 
-export function MarketingHeader({
-  locale,
-  currentPath,
-}: {
-  locale: MarketingLocale
-  currentPath?: string
-}) {
+export function MarketingHeader({ locale, currentPath }: { locale: MarketingLocale; currentPath?: string }) {
   const c = marketingCopy[locale]
   const items = [
     { href: marketingPath(locale, 'how-it-works'), label: c.nav[0] },

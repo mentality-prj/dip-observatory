@@ -104,10 +104,8 @@ export function ResourceAllocationImpact({
 }: Props) {
   const t = labels[locale]
   const compared = Boolean(baseline)
-  const baselineLabel =
-    baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
-  const currentPriority =
-    baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
+  const baselineLabel = baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
+  const currentPriority = baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
   const recommendedPriority = summary.priority_coverage ?? metrics.priority_coverage
   const currentTotalCoverage =
     baseline && baseline.summary.total_available > 0

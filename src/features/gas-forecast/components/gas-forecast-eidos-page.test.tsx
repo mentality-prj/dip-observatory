@@ -19,7 +19,16 @@ test('renders customer decision before research controls', () => {
 
 test('renders success technical execution state when result is present', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage initialResult={{ status: 'succeeded', httpStatus: 200, responseTimeMs: 123, message: null, payload: { execution_id: 'exp-1' }, executedAt: '2026-01-01T00:00:00.000Z' }} />,
+    <GasForecastEidosPage
+      initialResult={{
+        status: 'succeeded',
+        httpStatus: 200,
+        responseTimeMs: 123,
+        message: null,
+        payload: { execution_id: 'exp-1' },
+        executedAt: '2026-01-01T00:00:00.000Z',
+      }}
+    />
   )
   assert.equal(html.includes('Technical execution'), true)
   assert.equal(html.includes('SUCCEEDED'), true)
@@ -28,7 +37,16 @@ test('renders success technical execution state when result is present', () => {
 
 test('renders failure message when execution fails', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage initialResult={{ status: 'failed', httpStatus: 500, responseTimeMs: 321, message: 'Provider timeout', payload: { detail: 'Provider timeout' }, executedAt: '2026-01-01T00:00:00.000Z' }} />,
+    <GasForecastEidosPage
+      initialResult={{
+        status: 'failed',
+        httpStatus: 500,
+        responseTimeMs: 321,
+        message: 'Provider timeout',
+        payload: { detail: 'Provider timeout' },
+        executedAt: '2026-01-01T00:00:00.000Z',
+      }}
+    />
   )
   assert.equal(html.includes('FAILED'), true)
   assert.equal(html.includes('Provider timeout'), true)
@@ -36,7 +54,16 @@ test('renders failure message when execution fails', () => {
 
 test('renders null payload safely for failure responses', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage initialResult={{ status: 'failed', httpStatus: 503, responseTimeMs: null, message: 'Not configured', payload: null, executedAt: '2026-01-01T00:00:00.000Z' }} />,
+    <GasForecastEidosPage
+      initialResult={{
+        status: 'failed',
+        httpStatus: 503,
+        responseTimeMs: null,
+        message: 'Not configured',
+        payload: null,
+        executedAt: '2026-01-01T00:00:00.000Z',
+      }}
+    />
   )
   assert.equal(html.includes('>null<'), true)
 })

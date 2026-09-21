@@ -89,7 +89,6 @@ export type ResourceAllocationSimulationResponse = {
   result: ResourceAllocationResult
 }
 
-
 export type ResourceAllocationPriority = 'critical' | 'high' | 'normal'
 
 export type ResourceAllocationDemandInput = {

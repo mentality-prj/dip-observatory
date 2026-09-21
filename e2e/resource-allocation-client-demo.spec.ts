@@ -82,13 +82,7 @@ function dayPlan(day: string) {
                   { code: 'PROGRAM_COMPATIBLE', passed: true },
                   { code: 'TRAVEL_FEASIBLE', passed: true, value: 155 },
                 ],
-                rationale_codes: [
-                  'HIGH_PRIORITY_DEMAND',
-                  'SKILL_MATCH',
-                  'REACHABLE',
-                  'RELOCATION',
-                  'HORIZON_FEASIBLE',
-                ],
+                rationale_codes: ['HIGH_PRIORITY_DEMAND', 'SKILL_MATCH', 'REACHABLE', 'RELOCATION', 'HORIZON_FEASIBLE'],
               },
             ]
           : [],
@@ -170,9 +164,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
     const communities = Array.isArray(body.communities) ? body.communities : []
     sawResponsibleCitizensInput = communities.some(
       (item) =>
-        typeof item === 'object' &&
-        item !== null &&
-        (item as Record<string, unknown>).id === 'Краматорський напрямок'
+        typeof item === 'object' && item !== null && (item as Record<string, unknown>).id === 'Краматорський напрямок'
     )
     await route.fulfill({
       status: 200,
@@ -248,7 +240,9 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(page.getByText('Manual baseline plan').first()).toBeVisible()
   await expect(page.getByText(/20 more demand units/)).toBeVisible()
   await expect(
-    page.getByLabel('Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.')
+    page.getByLabel(
+      'Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.'
+    )
   ).toBeVisible()
   expect(sawResponsibleCitizensInput).toBe(true)
 
@@ -284,7 +278,6 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   expect(recordedMetrics.closing_unmet).toBe(32)
 })
 
-
 test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
 
@@ -303,9 +296,7 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
   await page.goto('/en/resource-allocation')
   await expect(page.getByTestId('community-count')).toHaveText('5')
   await expect
-    .poll(() =>
-      page.getByTestId('resource-primary-cta').evaluate((element) => getComputedStyle(element).marginBottom)
-    )
+    .poll(() => page.getByTestId('resource-primary-cta').evaluate((element) => getComputedStyle(element).marginBottom))
     .toBe('32px')
   await expect
     .poll(() =>
@@ -333,7 +324,6 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
     )
     .toEqual({ scrollWidth: 390, clientWidth: 390 })
 })
-
 
 test('client data importer gives feedback and supports drag and drop', async ({ page }) => {
   await page.goto('/en/resource-allocation')
@@ -408,8 +398,6 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     '2 teams · 2 communities · 20 demand units · 5 days'
   )
 })
-
-
 
 test('client can simulate an operational disruption after seeing value', async ({ page }) => {
   const requestBodies: Array<Record<string, unknown>> = []
@@ -515,8 +503,6 @@ test('capacity gap handles success and non-JSON backend errors', async ({ page }
   await expect(page.getByText('Psychosocial support')).toBeVisible()
 
   await analyze.click()
-  await expect(
-    page.getByText('An error occurred while executing capacity analysis')
-  ).toBeVisible()
+  await expect(page.getByText('An error occurred while executing capacity analysis')).toBeVisible()
   await expect(page.getByText(/Unexpected token/)).toHaveCount(0)
 })

@@ -4,10 +4,7 @@ import { buildAllocationCsv, localizePlanningDay, summarizeMovements } from './p
 describe('resource allocation presentation helpers', () => {
   it('distinguishes unique moved teams from move events', () => {
     const summary = summarizeMovements(
-      [
-        { recommended: { assignments: { t1: 'b', t2: 'a' } } },
-        { recommended: { assignments: { t1: 'c', t2: 'a' } } },
-      ],
+      [{ recommended: { assignments: { t1: 'b', t2: 'a' } } }, { recommended: { assignments: { t1: 'c', t2: 'a' } } }],
       { t1: 'a', t2: 'a' },
       2
     )

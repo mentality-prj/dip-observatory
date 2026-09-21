@@ -35,7 +35,9 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
             }}
             utilities={
               <div className="studio-language-switcher" aria-hidden>
-                <span>EN</span><span>UA</span><span>PL</span>
+                <span>EN</span>
+                <span>UA</span>
+                <span>PL</span>
               </div>
             }
           />
@@ -70,7 +72,9 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <footer className="studio-footer">
-          <span><strong>QDIP</strong> <b>Studio</b></span>
+          <span>
+            <strong>QDIP</strong> <b>Studio</b>
+          </span>
           <small>Decision intelligence workspace</small>
         </footer>
       </div>

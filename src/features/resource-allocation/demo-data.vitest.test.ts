@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  RESPONSIBLE_CITIZENS_PROFILE,
-  resourceAllocationStats,
-} from './demo-data'
+import { RESPONSIBLE_CITIZENS_PROFILE, resourceAllocationStats } from './demo-data'
 
 describe('Responsible Citizens canonical demo case', () => {
   it('keeps the canonical demand arithmetic stable', () => {

@@ -1,20 +1,11 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import {
-  CheckCircle2,
-  FileCheck2,
-  FileSpreadsheet,
-  LoaderCircle,
-  Upload,
-} from 'lucide-react'
+import { CheckCircle2, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { ResourceAllocationInput } from '../contracts'
 import { resourceAllocationStats } from '../demo-data'
-import {
-  importResourceAllocationFile,
-  RESOURCE_ALLOCATION_IMPORT_COLUMNS,
-} from '../importer'
+import { importResourceAllocationFile, RESOURCE_ALLOCATION_IMPORT_COLUMNS } from '../importer'
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
 
@@ -186,9 +177,7 @@ export function ResourceAllocationImport({
         ) : busy ? (
           <div aria-live="polite">
             <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
-            <div className="mt-3 text-sm font-bold">
-              {stage === 'reading' ? t.reading : t.validating}
-            </div>
+            <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t.reading : t.validating}</div>
             {fileMeta && (
               <div className="mt-1 break-words text-xs text-slate-500">
                 {fileMeta.name} · {formatBytes(fileMeta.size)}
@@ -241,9 +230,7 @@ export function ResourceAllocationImport({
               <Upload className="h-4 w-4" />
               {t.choose}
             </button>
-            <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">
-              CSV · XML · XLSX
-            </div>
+            <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
           </>
         )}
       </div>

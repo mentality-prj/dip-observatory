@@ -76,9 +76,9 @@ function parseCsv(text: string): Row[] {
   if (row.some((value) => value.trim())) rows.push(row)
   if (rows.length < 2) return []
   const headers = rows[0].map((value) => value.trim().toLowerCase())
-  return rows.slice(1).map((values) =>
-    Object.fromEntries(headers.map((header, index) => [header, clean(values[index])]))
-  )
+  return rows
+    .slice(1)
+    .map((values) => Object.fromEntries(headers.map((header, index) => [header, clean(values[index])])))
 }
 
 function rowsFromGenericXml(doc: Document): SheetRows[] {
@@ -90,9 +90,7 @@ function rowsFromGenericXml(doc: Document): SheetRows[] {
       const element = node as Element
       const cells = [...element.children]
       if (cells.some((child) => child.tagName.toLowerCase() === 'cell')) return null
-      return Object.fromEntries(
-        cells.map((child) => [child.tagName.toLowerCase(), clean(child.textContent)])
-      )
+      return Object.fromEntries(cells.map((child) => [child.tagName.toLowerCase(), clean(child.textContent)]))
     })
     .filter((row): row is Row => row !== null)
 
@@ -103,10 +101,7 @@ function spreadsheetXmlSheets(doc: Document): SheetRows[] {
   const worksheets = [...doc.getElementsByTagNameNS('*', 'Worksheet')]
   return worksheets.map((worksheet, index) => {
     const name =
-      worksheet.getAttributeNS(
-        'urn:schemas-microsoft-com:office:spreadsheet',
-        'Name'
-      ) ??
+      worksheet.getAttributeNS('urn:schemas-microsoft-com:office:spreadsheet', 'Name') ??
       worksheet.getAttribute('ss:Name') ??
       `Sheet${index + 1}`
     const tableRows = [...worksheet.getElementsByTagNameNS('*', 'Row')]
@@ -120,9 +115,9 @@ function spreadsheetXmlSheets(doc: Document): SheetRows[] {
     const headers = matrix[0].map((value) => value.toLowerCase())
     return {
       sheet: name,
-      rows: matrix.slice(1).map((values) =>
-        Object.fromEntries(headers.map((header, cellIndex) => [header, clean(values[cellIndex])]))
-      ),
+      rows: matrix
+        .slice(1)
+        .map((values) => Object.fromEntries(headers.map((header, cellIndex) => [header, clean(values[cellIndex])]))),
     }
   })
 }
@@ -220,9 +215,9 @@ function xlsxRows(doc: Document, strings: string[]): Row[] {
   })
   if (matrix.length < 2) return []
   const headers = matrix[0].map((value) => clean(value).toLowerCase())
-  return matrix.slice(1).map((values) =>
-    Object.fromEntries(headers.map((header, index) => [header, clean(values[index])]))
-  )
+  return matrix
+    .slice(1)
+    .map((values) => Object.fromEntries(headers.map((header, index) => [header, clean(values[index])])))
 }
 
 async function parseXlsx(buffer: ArrayBuffer): Promise<SheetRows[]> {
@@ -243,10 +238,9 @@ async function parseXlsx(buffer: ArrayBuffer): Promise<SheetRows[]> {
     .map((sheet) => {
       const name = sheet.getAttribute('name') ?? 'Sheet'
       const relationId =
-        sheet.getAttributeNS(
-          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-          'id'
-        ) ?? sheet.getAttribute('r:id') ?? ''
+        sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') ??
+        sheet.getAttribute('r:id') ??
+        ''
       const target = targets.get(relationId)
       if (!target) return { sheet: name, rows: [] }
       const normalized = target.startsWith('/') ? target.slice(1) : `xl/${target.replace(/^\.\//, '')}`
@@ -350,9 +344,7 @@ function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationIn
       throw new Error(`Travel edge references unknown community: ${edge.from} → ${edge.to}`)
   }
 
-  const currentAllocation = Object.fromEntries(
-    teams.map((team) => [team.id, team.current_community ?? null])
-  )
+  const currentAllocation = Object.fromEntries(teams.map((team) => [team.id, team.current_community ?? null]))
 
   return {
     operation: 'optimize',

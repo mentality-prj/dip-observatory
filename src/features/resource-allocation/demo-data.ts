@@ -16,10 +16,7 @@ const GENERIC_SERVICES = [
   'child-support',
 ] as const
 
-const genericCommunityNames = Array.from(
-  { length: 18 },
-  (_, index) => `Громада ${String.fromCharCode(65 + index)}`
-)
+const genericCommunityNames = Array.from({ length: 18 }, (_, index) => `Громада ${String.fromCharCode(65 + index)}`)
 
 const genericCommunities = genericCommunityNames.map<ResourceAllocationCommunityInput>((id, index) => {
   const accessibility: Record<string, boolean> = index === 5 ? { Wed: false, Thu: false } : {}
@@ -43,9 +40,7 @@ const genericCommunities = genericCommunityNames.map<ResourceAllocationCommunity
       service: GENERIC_SERVICES[(index + offset) % GENERIC_SERVICES.length],
       units: 9,
       priority: (offset === 0 && index % 3 === 0 ? 'critical' : offset < 2 ? 'high' : 'normal') as
-        | 'critical'
-        | 'high'
-        | 'normal',
+        'critical' | 'high' | 'normal',
     })),
     accessibility,
     daily_demand: dailyDemand,
@@ -74,10 +69,7 @@ const genericTeams = Array.from({ length: 10 }, (_, index): ResourceAllocationTe
 const genericTravelEdges = genericCommunityNames.flatMap((from, index) =>
   [1, 2, 3].flatMap((step) => {
     const to = genericCommunityNames[(index + step) % genericCommunityNames.length]
-    const back =
-      genericCommunityNames[
-        (index - step + genericCommunityNames.length) % genericCommunityNames.length
-      ]
+    const back = genericCommunityNames[(index - step + genericCommunityNames.length) % genericCommunityNames.length]
     return [
       { from, to, cost: step * 4, minutes: step * 18 },
       { from, to: back, cost: step * 4, minutes: step * 18 },
@@ -85,9 +77,7 @@ const genericTravelEdges = genericCommunityNames.flatMap((from, index) =>
   })
 )
 
-const genericCurrent = Object.fromEntries(
-  genericTeams.map((team) => [team.id, team.current_community ?? null])
-)
+const genericCurrent = Object.fromEntries(genericTeams.map((team) => [team.id, team.current_community ?? null]))
 
 export const GENERIC_RESOURCE_ALLOCATION_PROFILE: ResourceAllocationInput = {
   operation: 'optimize',

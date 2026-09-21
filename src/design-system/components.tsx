@@ -53,7 +53,11 @@ export function ProductLockup({
 export function ProductSwitchLink({ href, label, icon }: ProductSwitch) {
   return (
     <Link className="ds-product-switch-link" href={href}>
-      {icon ? <span className="ds-product-switch-icon" aria-hidden>{icon}</span> : null}
+      {icon ? (
+        <span className="ds-product-switch-icon" aria-hidden>
+          {icon}
+        </span>
+      ) : null}
       <span>{label}</span>
     </Link>
   )

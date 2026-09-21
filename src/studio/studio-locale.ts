@@ -13,7 +13,6 @@ export function parseStudioLocale(value: string | null | undefined): StudioLocal
   return STUDIO_LOCALES.includes(value as StudioLocale) ? (value as StudioLocale) : 'en'
 }
 
-
 export function studioLocaleFromPath(pathname: string, searchLocale?: string | null): StudioLocale {
   const first = pathname.split('/').filter(Boolean)[0]
   return parseStudioLocale(STUDIO_LOCALES.includes(first as StudioLocale) ? first : searchLocale)

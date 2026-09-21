@@ -6,7 +6,7 @@ import { GasProcurementDecisionDemo } from './gas-procurement-decision-demo'
 
 test('shows customer decision context before any unvalidated value claim', () => {
   const html = renderToStaticMarkup(
-    <GasProcurementDecisionDemo volumeMwh={10_000} deadline="2026-10-01" horizonDays={7} />,
+    <GasProcurementDecisionDemo volumeMwh={10_000} deadline="2026-10-01" horizonDays={7} />
   )
 
   assert.equal(html.includes('10,000 MWh'), true)

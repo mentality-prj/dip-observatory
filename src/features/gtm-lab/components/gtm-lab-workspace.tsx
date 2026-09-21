@@ -145,7 +145,9 @@ function CompanyAnalysis({
       <div className="border-b border-white/10 pb-5">
         <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">{t.recommendation}</div>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-          <strong className={`text-3xl font-medium tracking-[-.03em] ${decisionText[item.decision]}`}>{item.decision}</strong>
+          <strong className={`text-3xl font-medium tracking-[-.03em] ${decisionText[item.decision]}`}>
+            {item.decision}
+          </strong>
           <span className="text-xs text-slate-500">{item.domain ?? '—'}</span>
         </div>
         <h2 className="mt-2 text-xl font-medium text-slate-200">{item.name}</h2>

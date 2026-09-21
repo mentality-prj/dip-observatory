@@ -13,7 +13,11 @@ export function StudioBreadcrumbs({ items }: { items: { label: string; href?: st
   const localizeHref = (href: string) => {
     if (href.startsWith('https://studio.qdip.ai')) {
       const target = new URL(href)
-      const section = target.pathname.split('/').filter(Boolean).filter((part) => !['en', 'uk', 'pl'].includes(part)).join('/')
+      const section = target.pathname
+        .split('/')
+        .filter(Boolean)
+        .filter((part) => !['en', 'uk', 'pl'].includes(part))
+        .join('/')
       return studioHref(section, locale)
     }
     if (href.startsWith('/studio')) {
@@ -32,7 +36,11 @@ export function StudioBreadcrumbs({ items }: { items: { label: string; href?: st
       {items.map((item, index) => (
         <span key={index}>
           <span aria-hidden="true"> / </span>
-          {item.href ? <Link href={localizeHref(item.href)}>{item.label}</Link> : <span aria-current="page">{item.label}</span>}
+          {item.href ? (
+            <Link href={localizeHref(item.href)}>{item.label}</Link>
+          ) : (
+            <span aria-current="page">{item.label}</span>
+          )}
         </span>
       ))}
     </nav>
