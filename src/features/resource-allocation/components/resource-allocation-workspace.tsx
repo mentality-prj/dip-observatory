@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
@@ -19,6 +19,7 @@ import {
   type EvaluatedManualAllocation,
 } from './resource-allocation-manual-editor'
 import {
+  buildAllocationCsv,
   localizePlanningDay,
   summarizeMovements,
   trackResourceAllocation,
@@ -72,12 +73,12 @@ const copy = {
     why: 'ЧОМУ QDIP РЕКОМЕНДУЄ ЦЕЙ ПЛАН',
     whyTitle: 'Перевірте логіку рекомендації перед рішенням',
     tryOwnData: 'Спробувати на своїх даних',
-    baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — what-if сценарій.',
+    baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — сценарій зміни умов.',
     unavailableHint: 'Симуляція ситуації, коли мобільні команди тимчасово не можуть працювати в обраній локації.',
     reviewRecommendation: 'Перевірити рекомендацію',
     testOwnPlan: 'Перевірити свій варіант',
     moves: 'переміщень',
-    travel: 'вартість переміщень',
+    travel: 'індекс переміщень',
     rawEvidence: 'Детальні показники моделі',
     rationalePriority: 'Пріоритетні потреби',
     rationaleHorizon: 'Планування всього горизонту',
@@ -130,7 +131,7 @@ const copy = {
     why: 'WHY QDIP RECOMMENDS THIS PLAN',
     whyTitle: 'Review the recommendation logic before deciding',
     tryOwnData: 'Try your own data',
-    baselineCapacityHint: '100% is the currently planned availability; lower or higher values are what-if scenarios.',
+    baselineCapacityHint: '100% is the currently planned availability; lower or higher values simulate changed conditions.',
     unavailableHint: 'Simulate a location that mobile teams temporarily cannot serve.',
     reviewRecommendation: 'Review the recommendation',
     testOwnPlan: 'Test your own plan',
@@ -188,12 +189,12 @@ const copy = {
     why: 'DLACZEGO QDIP REKOMENDUJE TEN PLAN',
     whyTitle: 'Sprawdź logikę rekomendacji przed decyzją',
     tryOwnData: 'Wypróbuj własne dane',
-    baselineCapacityHint: '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości to scenariusz what-if.',
+    baselineCapacityHint: '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości symulują zmianę warunków.',
     unavailableHint: 'Symulacja sytuacji, w której zespoły mobilne tymczasowo nie mogą obsługiwać wybranej lokalizacji.',
     reviewRecommendation: 'Sprawdź rekomendację',
     testOwnPlan: 'Sprawdź własny wariant',
     moves: 'przemieszczeń',
-    travel: 'koszt przemieszczeń',
+    travel: 'indeks kosztu przemieszczeń',
     rawEvidence: 'Szczegółowe wskaźniki modelu',
     rationalePriority: 'Potrzeby priorytetowe',
     rationaleHorizon: 'Planowanie całego horyzontu',
@@ -227,6 +228,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null)
   const [runRevision, setRunRevision] = useState(0)
   const [selectedExplanationTeam, setSelectedExplanationTeam] = useState<string | null>(null)
+  const openedTracked = useRef(false)
 
   const stats = useMemo(() => resourceAllocationStats(inputData), [inputData])
   const communityNames = useMemo(() => inputData.communities.map((community) => community.id), [inputData])
@@ -252,13 +254,15 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
           : 'Demo dataset · synthetic aggregate data · no beneficiary PII'
 
   useEffect(() => {
+    if (openedTracked.current) return
+    openedTracked.current = true
     trackResourceAllocation('ra_demo_opened', locale, {
       profile_type: profileId === 'imported' ? 'imported' : 'demo',
       communities_count: stats.communities,
       teams_count: stats.teams,
       planning_days: stats.days,
     })
-  }, [locale])
+  }, [locale, profileId, stats.communities, stats.days, stats.teams])
 
   function resetRunState() {
     setCapacityFactor(100)
@@ -269,13 +273,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setSelectedAlternative(0)
     setSelectedDay(0)
     setSelectedExplanationTeam(null)
-  }
-
-  function changeProfile(nextProfileId: ResourceAllocationProfileId) {
-    setProfileId(nextProfileId)
-    setImportedName(null)
-    setInputData(cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES[nextProfileId].input))
-    resetRunState()
   }
 
   function useImportedData(input: ResourceAllocationInput, fileName: string) {
@@ -343,6 +340,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     day?.recommended.assignment_explanations?.find(
       (item) => item.team_id === selectedExplanationTeam
     ) ?? null
+  const planCsv = useMemo(
+    () => (activePlan ? buildAllocationCsv(activePlan.daily, inputData.teams) : undefined),
+    [activePlan, inputData.teams]
+  )
+  const exportFileName = `qdip-resource-allocation-${new Date().toISOString().slice(0, 10)}.csv`
 
   return (
     <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
@@ -694,7 +696,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
                           {locale === 'uk'
-                            ? 'Конкретні призначення пріоритезують critical/high demand лише там, де відповідна команда має потрібні компетенції.'
+                            ? 'Конкретні призначення пріоритезують critical/high-priority demand лише там, де відповідна команда має потрібні компетенції.'
                             : locale === 'pl'
                               ? 'Konkretne przydziały priorytetyzują critical/high demand tam, gdzie zespół ma odpowiednie kompetencje.'
                               : 'Concrete assignments prioritize critical/high demand only where the assigned team has matching skills.'}
@@ -710,7 +712,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleConstraints}</b>
                           {locale === 'uk'
-                            ? 'Для кожного призначення Core повертає перевірки доступності локації, допустимої громади, програмної сумісності, travel-обмежень і ліміту команд.'
+                            ? 'Для кожного призначення Core повертає перевірки доступності локації, допустимої громади, програмної сумісності, обмежень переміщення і ліміту команд.'
                             : locale === 'pl'
                               ? 'Dla każdego przydziału Core zwraca sprawdzenia dostępności, dopuszczalnej lokalizacji, zgodności programu, ograniczeń podróży i limitu zespołów.'
                               : 'For every assignment Core returns checks for accessibility, allowed location, program compatibility, travel feasibility and team limits.'}
@@ -767,9 +769,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     priorityCoverage={activePlan.aggregate_metrics.priority_coverage}
                     served={activePlan.demand_summary.served}
                     unmet={activePlan.demand_summary.closing_unmet}
-                    moved={countPlanMoves(activePlan.daily, currentAllocation)}
-                    totalTeams={inputData.teams.length}
+                    teamsMoved={movementSummary.teamsMoved}
+                    totalTeams={movementSummary.totalTeams}
+                    moveEvents={movementSummary.moveEvents}
                     planningDays={stats.days}
+                    planCsv={planCsv}
+                    exportFileName={exportFileName}
                     selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
                     locale={locale}
                   />
