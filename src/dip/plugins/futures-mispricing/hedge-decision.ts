@@ -24,16 +24,13 @@ import type {
   MinimaxResult,
   MispricingSignal,
   CurveMetrics,
-} from "@/dip/plugins/futures-mispricing/domain";
-import { FuturesMispricingInputError } from "./types";
-import { computeCurveMetrics, computeStructuralValuation } from "./curve-analysis";
-import {
-  buildUncertaintyRange,
-  computeHistoricalDispersion,
-} from "./uncertainty";
-import { filterHistoricalObservations } from "./historical-dynamics";
-import { runMinimax } from "./minimax";
-import { computeMispricingSignal } from "./mispricing";
+} from '@/dip/plugins/futures-mispricing/domain'
+import { FuturesMispricingInputError } from './types'
+import { computeCurveMetrics, computeStructuralValuation } from './curve-analysis'
+import { buildUncertaintyRange, computeHistoricalDispersion } from './uncertainty'
+import { filterHistoricalObservations } from './historical-dynamics'
+import { runMinimax } from './minimax'
+import { computeMispricingSignal } from './mispricing'
 
 // ---------------------------------------------------------------------------
 // Decision computation
@@ -54,62 +51,48 @@ export function computeHedgeDecision(
   snapshot: MarketSnapshot,
   targetContract: string,
   historicalObs: Array<{ date: string; price: number }>,
-  decisionDate: string,
+  decisionDate: string
 ): HedgeDecision {
-  const filteredHistoricalObs = filterHistoricalObservations(
-    historicalObs,
-    decisionDate,
-  );
+  const filteredHistoricalObs = filterHistoricalObservations(historicalObs, decisionDate)
 
   // 1. Forward curve structural analysis
-  const curveMetrics = computeCurveMetrics(snapshot, targetContract);
+  const curveMetrics = computeCurveMetrics(snapshot, targetContract)
 
   // 2. Structural valuation from curve shape
-  const structuralValuation = computeStructuralValuation(snapshot, targetContract);
+  const structuralValuation = computeStructuralValuation(snapshot, targetContract)
 
   // 3. Uncertainty-adjusted valuation range
   const valuation: ValuationRange = buildUncertaintyRange(
     structuralValuation.central,
     filteredHistoricalObs,
     snapshot,
-    targetContract,
-  );
+    targetContract
+  )
 
   // 5. Current price from snapshot
-  const targetPoint = snapshot.points.find((p) => p.contract === targetContract);
+  const targetPoint = snapshot.points.find((p) => p.contract === targetContract)
   if (!targetPoint) {
-    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`);
+    throw new FuturesMispricingInputError(`Contract ${targetContract} not found in snapshot`)
   }
-  const currentPrice = targetPoint.price;
+  const currentPrice = targetPoint.price
 
   // 4. Minimax robust valuation
-  const minimax = runMinimax(currentPrice, valuation);
+  const minimax = runMinimax(currentPrice, valuation)
 
   // 6. Mispricing signal
-  const signal = computeMispricingSignal(
-    targetContract,
-    currentPrice,
-    valuation,
-    minimax,
-  );
+  const signal = computeMispricingSignal(targetContract, currentPrice, valuation, minimax)
 
   // 7. Downside / upside
   // downside = distance from current price to worst-case lower bound (clamped to >= 0)
   // upside = how much price could rise to reach central estimate
-  const downside = Math.max(0, currentPrice - minimax.worstCaseLow);
-  const upside = valuation.central - currentPrice;
+  const downside = Math.max(0, currentPrice - minimax.worstCaseLow)
+  const upside = valuation.central - currentPrice
 
   // 8. Robustness
-  const robustness: Robustness = signal.robustness;
+  const robustness: Robustness = signal.robustness
 
   // 9. Rationale
-  const rationale = buildRationale(
-    targetContract,
-    valuation,
-    minimax,
-    signal.signal,
-    curveMetrics,
-  );
+  const rationale = buildRationale(targetContract, valuation, minimax, signal.signal, curveMetrics)
 
   return {
     action: signal.signal,
@@ -123,7 +106,7 @@ export function computeHedgeDecision(
     decisionDate,
     rationale,
     curveMetrics,
-  };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -137,25 +120,19 @@ export function computeHedgeDecision(
  * the decision trace (no double-computation).
  */
 export function assembleHedgeDecision(params: {
-  targetContract: string;
-  currentPrice: number;
-  valuation: ValuationRange;
-  minimax: MinimaxResult;
-  signal: MispricingSignal;
-  curveMetrics: CurveMetrics;
-  decisionDate: string;
+  targetContract: string
+  currentPrice: number
+  valuation: ValuationRange
+  minimax: MinimaxResult
+  signal: MispricingSignal
+  curveMetrics: CurveMetrics
+  decisionDate: string
 }): HedgeDecision {
-  const { targetContract, currentPrice, valuation, minimax, signal, curveMetrics, decisionDate } = params;
-  const downside = Math.max(0, currentPrice - minimax.worstCaseLow);
-  const upside = valuation.central - currentPrice;
-  const robustness: Robustness = signal.robustness;
-  const rationale = buildRationale(
-    targetContract,
-    valuation,
-    minimax,
-    signal.signal,
-    curveMetrics,
-  );
+  const { targetContract, currentPrice, valuation, minimax, signal, curveMetrics, decisionDate } = params
+  const downside = Math.max(0, currentPrice - minimax.worstCaseLow)
+  const upside = valuation.central - currentPrice
+  const robustness: Robustness = signal.robustness
+  const rationale = buildRationale(targetContract, valuation, minimax, signal.signal, curveMetrics)
   return {
     action: signal.signal,
     contract: targetContract,
@@ -168,7 +145,7 @@ export function assembleHedgeDecision(params: {
     decisionDate,
     rationale,
     curveMetrics,
-  };
+  }
 }
 
 function buildRationale(
@@ -176,50 +153,48 @@ function buildRationale(
   valuation: ValuationRange,
   minimax: { worstCaseLow: number; robustDiscount: number },
   signal: string,
-  metrics: { normalisedDeviation: number; spreadToAnnual: number; localSlope: number },
+  metrics: { normalisedDeviation: number; spreadToAnnual: number; localSlope: number }
 ): string {
-  const parts: string[] = [];
+  const parts: string[] = []
 
   parts.push(
     `Forward curve analysis for ${contract}: ` +
       `local curve slope ${metrics.localSlope.toFixed(2)} PLN/ordinal unit, ` +
-      `normalised deviation ${metrics.normalisedDeviation.toFixed(2)} σ from local curve.`,
-  );
+      `normalised deviation ${metrics.normalisedDeviation.toFixed(2)} σ from local curve.`
+  )
 
   if (metrics.spreadToAnnual < -5) {
     parts.push(
       `The contract trades ${Math.abs(metrics.spreadToAnnual).toFixed(0)} PLN/MWh ` +
-        `below the nearest annual (Cal) contract — a structural discount.`,
-    );
+        `below the nearest annual (Cal) contract — a structural discount.`
+    )
   }
 
   parts.push(
     `Structural valuation range: ${valuation.lower.toFixed(0)} – ${valuation.upper.toFixed(0)} PLN/MWh ` +
-      `(central ${valuation.central.toFixed(0)}, uncertainty ±${(valuation.uncertaintyWidth / 2).toFixed(0)} PLN/MWh).`,
-  );
+      `(central ${valuation.central.toFixed(0)}, uncertainty ±${(valuation.uncertaintyWidth / 2).toFixed(0)} PLN/MWh).`
+  )
 
   parts.push(
     `Minimax worst-case lower bound: ${minimax.worstCaseLow.toFixed(0)} PLN/MWh. ` +
-      `Current price vs. worst-case lower: ${minimax.robustDiscount > 0 ? "+" : ""}${minimax.robustDiscount.toFixed(0)} PLN/MWh.`,
-  );
+      `Current price vs. worst-case lower: ${minimax.robustDiscount > 0 ? '+' : ''}${minimax.robustDiscount.toFixed(0)} PLN/MWh.`
+  )
 
-  if (signal === "BUY") {
+  if (signal === 'BUY') {
     parts.push(
       `Recommendation: BUY — current price is below even the adversarial worst-case ` +
-        `lower bound. The structural discount is robust to uncertainty.`,
-    );
-  } else if (signal === "WATCH") {
+        `lower bound. The structural discount is robust to uncertainty.`
+    )
+  } else if (signal === 'WATCH') {
     parts.push(
       `Recommendation: WATCH — current price is below central valuation but ` +
-        `the discount is within the uncertainty range. Further confirmation needed.`,
-    );
+        `the discount is within the uncertainty range. Further confirmation needed.`
+    )
   } else {
-    parts.push(
-      `Recommendation: NO_ACTION — current price is at or above central valuation.`,
-    );
+    parts.push(`Recommendation: NO_ACTION — current price is at or above central valuation.`)
   }
 
-  return parts.join(" ");
+  return parts.join(' ')
 }
 
 // ---------------------------------------------------------------------------
@@ -239,31 +214,30 @@ function buildRationale(
  */
 export function computeOutcome(
   decisionPrice: number,
-  referencePrice: number,
+  referencePrice: number
 ): {
-  absoluteChange: number;
-  percentageChange: number;
-  outcomeStatus: "FAVOURABLE" | "NEUTRAL" | "UNFAVOURABLE";
+  absoluteChange: number
+  percentageChange: number
+  outcomeStatus: 'FAVOURABLE' | 'NEUTRAL' | 'UNFAVOURABLE'
 } {
-  const absoluteChange = referencePrice - decisionPrice;
-  const percentageChange =
-    decisionPrice > 0 ? absoluteChange / decisionPrice : 0;
+  const absoluteChange = referencePrice - decisionPrice
+  const percentageChange = decisionPrice > 0 ? absoluteChange / decisionPrice : 0
 
-  let outcomeStatus: "FAVOURABLE" | "NEUTRAL" | "UNFAVOURABLE";
+  let outcomeStatus: 'FAVOURABLE' | 'NEUTRAL' | 'UNFAVOURABLE'
   if (percentageChange > 0.02) {
     // > +2% — the hedge was entered at a good price
-    outcomeStatus = "FAVOURABLE";
+    outcomeStatus = 'FAVOURABLE'
   } else if (percentageChange < -0.02) {
     // < -2% — the hedge was expensive ex-post
-    outcomeStatus = "UNFAVOURABLE";
+    outcomeStatus = 'UNFAVOURABLE'
   } else {
-    outcomeStatus = "NEUTRAL";
+    outcomeStatus = 'NEUTRAL'
   }
 
-  return { absoluteChange, percentageChange, outcomeStatus };
+  return { absoluteChange, percentageChange, outcomeStatus }
 }
 
 // ---------------------------------------------------------------------------
 // Historical dispersion re-export for convenience
 // ---------------------------------------------------------------------------
-export { computeHistoricalDispersion };
+export { computeHistoricalDispersion }

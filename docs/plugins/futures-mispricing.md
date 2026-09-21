@@ -12,7 +12,7 @@ HTTP via the Next.js API route `POST /api/dip/futures-mispricing`.
 ## Business problem
 
 Given a forward curve snapshot and the pre-decision price history for a target
-contract, decide whether *now* is a good time and price to buy a hedge:
+contract, decide whether _now_ is a good time and price to buy a hedge:
 
 - **BUY** — the price is robustly below a defensible valuation range.
 - **WATCH** — the price is below the central valuation, but not robustly.
@@ -25,24 +25,24 @@ contract, decide whether *now* is a good time and price to buy a hedge:
 Contains **only pre-decision information**. It has no field for outcome, future
 price, or realized return.
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `decisionDate` | `string` (ISO 8601) | Hard information cutoff. |
-| `targetContract` | `string` | e.g. `"Q1-2027"`. |
-| `marketSnapshot` | `MarketSnapshot` | Forward curve at the decision date. |
-| `historicalObservations` | `Array<{ date; price }>` | Pre-decision prices. |
-| `configuration` | `Partial<FuturesMispricingConfigV1>` | Optional overrides. |
+| Field                    | Type                                 | Notes                               |
+| ------------------------ | ------------------------------------ | ----------------------------------- |
+| `decisionDate`           | `string` (ISO 8601)                  | Hard information cutoff.            |
+| `targetContract`         | `string`                             | e.g. `"Q1-2027"`.                   |
+| `marketSnapshot`         | `MarketSnapshot`                     | Forward curve at the decision date. |
+| `historicalObservations` | `Array<{ date; price }>`             | Pre-decision prices.                |
+| `configuration`          | `Partial<FuturesMispricingConfigV1>` | Optional overrides.                 |
 
 ### Response — `FuturesMispricingResponse`
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `decision` | `HedgeDecision` | Canonical decision output. |
-| `pluginVersion` | `string` | `0.1.0`. |
-| `modelVersion` | `string` | `1.0`. |
-| `configurationVersion` | `string` | `1.0`. |
-| `computedAt` | `string` | Metadata timestamp only. |
-| `decisionTrace` | `DecisionTrace` | Full auditable trace. |
+| Field                  | Type            | Notes                      |
+| ---------------------- | --------------- | -------------------------- |
+| `decision`             | `HedgeDecision` | Canonical decision output. |
+| `pluginVersion`        | `string`        | `0.1.0`.                   |
+| `modelVersion`         | `string`        | `1.0`.                     |
+| `configurationVersion` | `string`        | `1.0`.                     |
+| `computedAt`           | `string`        | Metadata timestamp only.   |
+| `decisionTrace`        | `DecisionTrace` | Full auditable trace.      |
 
 ## Mathematical components
 
@@ -67,20 +67,20 @@ The pipeline is deterministic (no random sampling, no Monte Carlo):
 
 ## Configuration values (`FuturesMispricingConfigV1`)
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `valuationWeights.localInterpolation` | `0.7` | Weight on local interpolation. |
-| `valuationWeights.annualProxy` | `0.3` | Weight on annual proxy. |
-| `uncertaintyCoverageFactor` | `1.5` | Half-width coverage factor `k`. |
-| `minimumHalfWidth` | `10.0` | Minimum uncertainty half-width (PLN/MWh). |
-| `minimaxGridSize` | `100` | Deterministic minimax grid points. |
-| `minimumBuyDiscountPercent` | `0.03` | Minimum discount for a BUY. |
-| `minimumDiscountUncertaintyRatio` | `0.5` | Discount / uncertainty ratio for BUY. |
-| `minimumAbsoluteDiscountPln` | `5.0` | Minimum absolute discount (PLN/MWh). |
-| `historicalWindowDays` | `180` | Historical window length (days). |
-| `robustnessHighThreshold` | `1.5` | Robustness HIGH threshold. |
-| `robustnessMediumThreshold` | `0.5` | Robustness MEDIUM threshold. |
-| `configVersion` | `"1.0"` | Configuration schema version. |
+| Key                                   | Default | Meaning                                   |
+| ------------------------------------- | ------- | ----------------------------------------- |
+| `valuationWeights.localInterpolation` | `0.7`   | Weight on local interpolation.            |
+| `valuationWeights.annualProxy`        | `0.3`   | Weight on annual proxy.                   |
+| `uncertaintyCoverageFactor`           | `1.5`   | Half-width coverage factor `k`.           |
+| `minimumHalfWidth`                    | `10.0`  | Minimum uncertainty half-width (PLN/MWh). |
+| `minimaxGridSize`                     | `100`   | Deterministic minimax grid points.        |
+| `minimumBuyDiscountPercent`           | `0.03`  | Minimum discount for a BUY.               |
+| `minimumDiscountUncertaintyRatio`     | `0.5`   | Discount / uncertainty ratio for BUY.     |
+| `minimumAbsoluteDiscountPln`          | `5.0`   | Minimum absolute discount (PLN/MWh).      |
+| `historicalWindowDays`                | `180`   | Historical window length (days).          |
+| `robustnessHighThreshold`             | `1.5`   | Robustness HIGH threshold.                |
+| `robustnessMediumThreshold`           | `0.5`   | Robustness MEDIUM threshold.              |
+| `configVersion`                       | `"1.0"` | Configuration schema version.             |
 
 These values are explicit **structural assumptions**, not parameters fitted to
 any observed outcome.

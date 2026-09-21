@@ -1,14 +1,14 @@
-import { notFound } from "next/navigation";
+import { notFound } from 'next/navigation'
 
-import { ObservatoryHome, PrototypeShell } from "@/features/observatory";
-import { isSupportedLocale, type Locale } from "@/lib/observatory-i18n";
+import { ObservatoryHome, PrototypeShell } from '@/features/observatory'
+import { isSupportedLocale, type Locale } from '@/lib/observatory-i18n'
 
 export default async function LocalizedHome({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  if (!isSupportedLocale(locale)) notFound();
+  const { locale } = await params
+  if (!isSupportedLocale(locale)) notFound()
   return (
     <PrototypeShell locale={locale as Locale}>
       <ObservatoryHome locale={locale as Locale} />
     </PrototypeShell>
-  );
+  )
 }

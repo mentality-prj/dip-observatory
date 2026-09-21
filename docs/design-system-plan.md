@@ -8,17 +8,17 @@ QDIP Site, Studio, Observatory, and plugin applications use one visual language 
 
 The scale follows the proportions used by ConverSight's current public site: large display headlines, clearly readable 18–20px body copy, 16px application copy, and compact 12–14px metadata only where hierarchy requires it.
 
-| Token | Desktop | Mobile | Usage |
-| --- | --- | --- | --- |
-| `display` | `clamp(3.5rem, 6vw, 5.5rem)` | fluid | marketing hero |
-| `h1` | `clamp(2.5rem, 4vw, 4rem)` | fluid | page title |
-| `h2` | `clamp(2rem, 3vw, 3rem)` | fluid | section title |
-| `h3` | `1.5rem` | `1.375rem` | cards / panels |
-| `body-lg` | `1.25rem` | `1.125rem` | lead text |
-| `body` | `1.125rem` | `1rem` | primary web copy |
-| `app` | `1rem` | `1rem` | Studio / Observatory / plugins |
-| `label` | `0.875rem` | `0.875rem` | labels / controls |
-| `meta` | `0.75rem` | `0.75rem` | metadata only |
+| Token     | Desktop                      | Mobile     | Usage                          |
+| --------- | ---------------------------- | ---------- | ------------------------------ |
+| `display` | `clamp(3.5rem, 6vw, 5.5rem)` | fluid      | marketing hero                 |
+| `h1`      | `clamp(2.5rem, 4vw, 4rem)`   | fluid      | page title                     |
+| `h2`      | `clamp(2rem, 3vw, 3rem)`     | fluid      | section title                  |
+| `h3`      | `1.5rem`                     | `1.375rem` | cards / panels                 |
+| `body-lg` | `1.25rem`                    | `1.125rem` | lead text                      |
+| `body`    | `1.125rem`                   | `1rem`     | primary web copy               |
+| `app`     | `1rem`                       | `1rem`     | Studio / Observatory / plugins |
+| `label`   | `0.875rem`                   | `0.875rem` | labels / controls              |
+| `meta`    | `0.75rem`                    | `0.75rem`  | metadata only                  |
 
 No primary explanatory text may use `meta` sizing.
 

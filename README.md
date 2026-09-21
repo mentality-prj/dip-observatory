@@ -2,10 +2,10 @@
 
 One Next.js application serving the QDIP product family:
 
-| Host | Surface | Internal route |
-| --- | --- | --- |
-| `qdip.ai` | Product and platform site | `/` |
-| `studio.qdip.ai` | Decision configuration | `/studio` |
+| Host                  | Surface                          | Internal route                         |
+| --------------------- | -------------------------------- | -------------------------------------- |
+| `qdip.ai`             | Product and platform site        | `/`                                    |
+| `studio.qdip.ai`      | Decision configuration           | `/studio`                              |
 | `observatory.qdip.ai` | Demonstrators and decision audit | `/en`, `/pl`, `/observatory/decisions` |
 
 Host-based rewrites live in `src/proxy.ts`. During local development, Studio remains available at `/studio` and Observatory at `/en`.

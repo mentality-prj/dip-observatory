@@ -6,10 +6,7 @@
  * domain reasoning for energy futures hedge timing.
  */
 
-import type {
-  FuturesMispricingConfigOverride,
-  FuturesMispricingConfigV1,
-} from "./types";
+import type { FuturesMispricingConfigOverride, FuturesMispricingConfigV1 } from './types'
 
 export const DEFAULT_CONFIG: FuturesMispricingConfigV1 = {
   valuationWeights: { localInterpolation: 0.7, annualProxy: 0.3 },
@@ -22,12 +19,10 @@ export const DEFAULT_CONFIG: FuturesMispricingConfigV1 = {
   historicalWindowDays: 180,
   robustnessHighThreshold: 1.5,
   robustnessMediumThreshold: 0.5,
-  configVersion: "1.0",
-};
+  configVersion: '1.0',
+}
 
-export function mergeFuturesMispricingConfig(
-  overrides?: FuturesMispricingConfigOverride,
-): FuturesMispricingConfigV1 {
+export function mergeFuturesMispricingConfig(overrides?: FuturesMispricingConfigOverride): FuturesMispricingConfigV1 {
   return {
     ...DEFAULT_CONFIG,
     ...overrides,
@@ -35,5 +30,5 @@ export function mergeFuturesMispricingConfig(
       ...DEFAULT_CONFIG.valuationWeights,
       ...overrides?.valuationWeights,
     },
-  };
+  }
 }

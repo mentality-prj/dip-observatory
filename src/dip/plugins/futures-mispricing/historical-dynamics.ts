@@ -7,35 +7,35 @@
  * calculation. No look-ahead is possible through this function.
  */
 
-import { FuturesMispricingInputError } from "./types";
+import { FuturesMispricingInputError } from './types'
 
 export interface HistoricalDynamics {
   /** Linear regression slope (PLN/MWh per day). */
-  trend: number;
+  trend: number
   /** Sample standard deviation of prices (PLN/MWh). */
-  volatility: number;
+  volatility: number
   /** Price change over the window (latest - oldest, PLN/MWh). */
-  momentum: number;
+  momentum: number
   /** Number of observations used (after the decisionDate cutoff). */
-  observationCount: number;
+  observationCount: number
   /** Span of the observation window in days. */
-  windowDays: number;
+  windowDays: number
 }
 
 /** Convert an ISO date string to whole days since the Unix epoch. */
 function toEpochDays(isoDate: string): number {
-  const timestamp = new Date(isoDate).getTime();
+  const timestamp = new Date(isoDate).getTime()
   if (Number.isNaN(timestamp)) {
-    throw new FuturesMispricingInputError(`Invalid ISO date: ${isoDate}`);
+    throw new FuturesMispricingInputError(`Invalid ISO date: ${isoDate}`)
   }
-  return Math.floor(timestamp / 86_400_000);
+  return Math.floor(timestamp / 86_400_000)
 }
 
 export function filterHistoricalObservations(
   observations: Array<{ date: string; price: number }>,
-  decisionDate: string,
+  decisionDate: string
 ): Array<{ date: string; price: number }> {
-  const cutoff = toEpochDays(decisionDate);
+  const cutoff = toEpochDays(decisionDate)
 
   return observations
     .map((observation) => ({
@@ -44,7 +44,7 @@ export function filterHistoricalObservations(
     }))
     .filter(({ epochDays }) => epochDays <= cutoff)
     .sort((a, b) => a.epochDays - b.epochDays)
-    .map(({ observation }) => observation);
+    .map(({ observation }) => observation)
 }
 
 /**
@@ -62,45 +62,45 @@ export function filterHistoricalObservations(
  */
 export function computeHistoricalDynamics(
   observations: Array<{ date: string; price: number }>,
-  decisionDate: string,
+  decisionDate: string
 ): HistoricalDynamics {
-  const filtered = filterHistoricalObservations(observations, decisionDate);
+  const filtered = filterHistoricalObservations(observations, decisionDate)
 
-  const observationCount = filtered.length;
+  const observationCount = filtered.length
 
   if (observationCount === 0) {
-    return { trend: 0, volatility: 0, momentum: 0, observationCount: 0, windowDays: 0 };
+    return { trend: 0, volatility: 0, momentum: 0, observationCount: 0, windowDays: 0 }
   }
 
-  const firstDay = toEpochDays(filtered[0].date);
-  const lastDay = toEpochDays(filtered[filtered.length - 1].date);
-  const windowDays = lastDay - firstDay;
+  const firstDay = toEpochDays(filtered[0].date)
+  const lastDay = toEpochDays(filtered[filtered.length - 1].date)
+  const windowDays = lastDay - firstDay
 
-  const momentum = filtered[filtered.length - 1].price - filtered[0].price;
+  const momentum = filtered[filtered.length - 1].price - filtered[0].price
 
   if (observationCount < 2) {
-    return { trend: 0, volatility: 0, momentum, observationCount, windowDays };
+    return { trend: 0, volatility: 0, momentum, observationCount, windowDays }
   }
 
   // --- Trend: OLS slope of price against day offset ---
-  const xs = filtered.map((o) => toEpochDays(o.date) - firstDay);
-  const ys = filtered.map((o) => o.price);
-  const n = observationCount;
-  const xBar = xs.reduce((s, x) => s + x, 0) / n;
-  const yBar = ys.reduce((s, y) => s + y, 0) / n;
+  const xs = filtered.map((o) => toEpochDays(o.date) - firstDay)
+  const ys = filtered.map((o) => o.price)
+  const n = observationCount
+  const xBar = xs.reduce((s, x) => s + x, 0) / n
+  const yBar = ys.reduce((s, y) => s + y, 0) / n
 
-  let num = 0;
-  let den = 0;
+  let num = 0
+  let den = 0
   for (let i = 0; i < n; i++) {
-    const dx = xs[i] - xBar;
-    num += dx * (ys[i] - yBar);
-    den += dx * dx;
+    const dx = xs[i] - xBar
+    num += dx * (ys[i] - yBar)
+    den += dx * dx
   }
-  const trend = den === 0 ? 0 : num / den;
+  const trend = den === 0 ? 0 : num / den
 
   // --- Volatility: sample standard deviation (n-1) ---
-  const variance = ys.reduce((s, y) => s + (y - yBar) ** 2, 0) / (n - 1);
-  const volatility = Math.sqrt(variance);
+  const variance = ys.reduce((s, y) => s + (y - yBar) ** 2, 0) / (n - 1)
+  const volatility = Math.sqrt(variance)
 
-  return { trend, volatility, momentum, observationCount, windowDays };
+  return { trend, volatility, momentum, observationCount, windowDays }
 }

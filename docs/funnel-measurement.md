@@ -9,6 +9,7 @@ Measure behavior needed to validate the buyer journey, not vanity traffic.
 5. Decision intake successfully submitted.
 
 Primary diagnostic ratios:
+
 - demo opens / homepage sessions
 - decision-intake opens / demo explorers
 - successful submissions / decision-intake opens

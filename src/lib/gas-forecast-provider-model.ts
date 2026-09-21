@@ -1,64 +1,57 @@
-export const GAS_FORECAST_PROVIDER_IDS = [
-  "ttf",
-  "agsi",
-  "entsog",
-  "weather",
-] as const;
+export const GAS_FORECAST_PROVIDER_IDS = ['ttf', 'agsi', 'entsog', 'weather'] as const
 
-export const GAS_FORECAST_PLUGIN_ID = "gas-forecast" as const;
-export const GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID =
-  "gas.provider.check" as const;
+export const GAS_FORECAST_PLUGIN_ID = 'gas-forecast' as const
+export const GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID = 'gas.provider.check' as const
 
-export type GasForecastProviderId =
-  (typeof GAS_FORECAST_PROVIDER_IDS)[number];
+export type GasForecastProviderId = (typeof GAS_FORECAST_PROVIDER_IDS)[number]
 
 export type GasForecastEntsogCheckInput = {
-  pointDirection: string;
-  from: string;
-  to: string;
-  indicator: "Physical Flow";
-  periodType: "day";
-};
+  pointDirection: string
+  from: string
+  to: string
+  indicator: 'Physical Flow'
+  periodType: 'day'
+}
 
 export type GasForecastTtfCheckInput = {
-  start_date: string;
-  end_date: string;
-};
+  start_date: string
+  end_date: string
+}
 
 export type GasForecastWeatherCheckInput = {
-  start_date: string;
-  end_date: string;
-  regions: string[];
-  metric: "temperature_c";
-};
+  start_date: string
+  end_date: string
+  regions: string[]
+  metric: 'temperature_c'
+}
 
 export type GasForecastProviderCheckInput = {
-  entsog?: GasForecastEntsogCheckInput;
-  ttf?: GasForecastTtfCheckInput;
-  weather?: GasForecastWeatherCheckInput;
-};
+  entsog?: GasForecastEntsogCheckInput
+  ttf?: GasForecastTtfCheckInput
+  weather?: GasForecastWeatherCheckInput
+}
 
 export type GasForecastProviderCard = {
-  id: GasForecastProviderId;
-  title: string;
-  api: string | null;
-  description?: string;
-  target?: string;
-  unit?: string;
-  frequency?: string;
-  initialStatus: "not_configured" | "not_tested";
-};
+  id: GasForecastProviderId
+  title: string
+  api: string | null
+  description?: string
+  target?: string
+  unit?: string
+  frequency?: string
+  initialStatus: 'not_configured' | 'not_tested'
+}
 
 export type GasForecastFailureKind =
-  | "configuration"
-  | "network"
-  | "dip_auth"
-  | "dip_http"
-  | "plugin_execution"
-  | "upstream_provider"
-  | "timeout"
-  | "parse"
-  | "unknown";
+  | 'configuration'
+  | 'network'
+  | 'dip_auth'
+  | 'dip_http'
+  | 'plugin_execution'
+  | 'upstream_provider'
+  | 'timeout'
+  | 'parse'
+  | 'unknown'
 
 /**
  * Structured DIP error detail preserved from a non-2xx DIP response so the UI
@@ -68,74 +61,74 @@ export type GasForecastFailureKind =
  * parsed from the DIP response body.
  */
 export type GasForecastStructuredError = {
-  code: string | null;
-  provider: string | null;
-  plugin: string | null;
-  upstreamStatus: number | null;
-  executionId: string | null;
-  rawBody: string | null;
-};
+  code: string | null
+  provider: string | null
+  plugin: string | null
+  upstreamStatus: number | null
+  executionId: string | null
+  rawBody: string | null
+}
 
 export type GasForecastSampleRecord = {
-  date: string | null;
-  gasInStorage: string | number | null;
-  injection: string | number | null;
-  withdrawal: string | number | null;
-  workingGasVolume: string | null;
-  [key: string]: unknown;
-};
+  date: string | null
+  gasInStorage: string | number | null
+  injection: string | number | null
+  withdrawal: string | number | null
+  workingGasVolume: string | null
+  [key: string]: unknown
+}
 
 export type GasForecastConnectionResult = {
-  providerId: GasForecastProviderId;
-  status: "connected" | "failed";
-  connection: "OK" | "FAILED";
-  kind?: GasForecastFailureKind;
-  httpStatus: number | null;
-  provider: string;
-  api: string | null;
-  responseTimeMs: number | null;
-  testedAt: string;
-  message: string | null;
-  errorDetail?: GasForecastStructuredError | null;
+  providerId: GasForecastProviderId
+  status: 'connected' | 'failed'
+  connection: 'OK' | 'FAILED'
+  kind?: GasForecastFailureKind
+  httpStatus: number | null
+  provider: string
+  api: string | null
+  responseTimeMs: number | null
+  testedAt: string
+  message: string | null
+  errorDetail?: GasForecastStructuredError | null
   dataset: {
-    records: number | null;
-    firstDate: string | null;
-    lastDate: string | null;
-    countryOrFacility: string | null;
-  } | null;
-  sample: GasForecastSampleRecord[];
-};
+    records: number | null
+    firstDate: string | null
+    lastDate: string | null
+    countryOrFacility: string | null
+  } | null
+  sample: GasForecastSampleRecord[]
+}
 
 export const GAS_FORECAST_PROVIDER_CARDS: GasForecastProviderCard[] = [
   {
-    id: "ttf",
-    title: "TTF",
+    id: 'ttf',
+    title: 'TTF',
     api: null,
-    description: "European TTF Front-Month gas price",
-    target: "Front-Month Settlement",
-    unit: "EUR/MWh",
-    frequency: "Daily",
-    initialStatus: "not_configured",
+    description: 'European TTF Front-Month gas price',
+    target: 'Front-Month Settlement',
+    unit: 'EUR/MWh',
+    frequency: 'Daily',
+    initialStatus: 'not_configured',
   },
   {
-    id: "agsi",
-    title: "AGSI",
-    api: "GIE AGSI+",
-    initialStatus: "not_tested",
+    id: 'agsi',
+    title: 'AGSI',
+    api: 'GIE AGSI+',
+    initialStatus: 'not_tested',
   },
   {
-    id: "entsog",
-    title: "ENTSOG",
+    id: 'entsog',
+    title: 'ENTSOG',
     api: null,
-    initialStatus: "not_tested",
+    initialStatus: 'not_tested',
   },
   {
-    id: "weather",
-    title: "WEATHER",
+    id: 'weather',
+    title: 'WEATHER',
     api: null,
-    initialStatus: "not_configured",
+    initialStatus: 'not_configured',
   },
-];
+]
 
 export const DEFAULT_GAS_FORECAST_CAPABILITY_PATHS = [
   `/api/v1/plugin-runtime/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
@@ -143,35 +136,35 @@ export const DEFAULT_GAS_FORECAST_CAPABILITY_PATHS = [
   `/api/v1/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
   `/api/v1/plugin-runtime/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}`,
   `/api/v1/plugin-runtime/capabilities/${GAS_FORECAST_PROVIDER_CHECK_CAPABILITY_ID}?plugin=${GAS_FORECAST_PLUGIN_ID}`,
-] as const;
+] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function getPathValue(source: unknown, path: readonly string[]) {
-  let current: unknown = source;
+  let current: unknown = source
 
   for (const key of path) {
     if (!isRecord(current)) {
-      return undefined;
+      return undefined
     }
 
-    current = current[key];
+    current = current[key]
   }
 
-  return current;
+  return current
 }
 
 function pickValue(source: unknown, paths: ReadonlyArray<readonly string[]>) {
   for (const path of paths) {
-    const value = getPathValue(source, path);
-    if (value !== undefined && value !== null && value !== "") {
-      return value;
+    const value = getPathValue(source, path)
+    if (value !== undefined && value !== null && value !== '') {
+      return value
     }
   }
 
-  return undefined;
+  return undefined
 }
 
 /**
@@ -182,64 +175,52 @@ function pickValue(source: unknown, paths: ReadonlyArray<readonly string[]>) {
  * structured wrapper never silently swallows a usable string found deeper
  * in the candidate list.
  */
-function pickString(
-  source: unknown,
-  paths: ReadonlyArray<readonly string[]>,
-): string | null {
+function pickString(source: unknown, paths: ReadonlyArray<readonly string[]>): string | null {
   for (const path of paths) {
-    const value = getPathValue(source, path);
+    const value = getPathValue(source, path)
 
-    if (typeof value === "string") {
-      const trimmed = value.trim();
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
       if (trimmed) {
-        return trimmed;
+        return trimmed
       }
-    } else if (typeof value === "number" || typeof value === "boolean") {
-      return String(value);
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value)
     }
   }
 
-  return null;
+  return null
 }
 
-function pickNumber(
-  source: unknown,
-  paths: ReadonlyArray<readonly string[]>,
-): number | null {
+function pickNumber(source: unknown, paths: ReadonlyArray<readonly string[]>): number | null {
   for (const path of paths) {
-    const value = getPathValue(source, path);
+    const value = getPathValue(source, path)
 
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value
     }
 
-    if (typeof value === "string" && value.trim() !== "") {
-      const parsed = Number(value);
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value)
       if (Number.isFinite(parsed)) {
-        return parsed;
+        return parsed
       }
     }
   }
 
-  return null;
+  return null
 }
 
-function pickArray(
-  source: unknown,
-  paths: ReadonlyArray<readonly string[]>,
-): unknown[] {
-  const value = pickValue(source, paths);
-  return Array.isArray(value) ? value : [];
+function pickArray(source: unknown, paths: ReadonlyArray<readonly string[]>): unknown[] {
+  const value = pickValue(source, paths)
+  return Array.isArray(value) ? value : []
 }
 
 function pickProviderCard(providerId: GasForecastProviderId) {
-  return (
-    GAS_FORECAST_PROVIDER_CARDS.find((card) => card.id === providerId) ??
-    GAS_FORECAST_PROVIDER_CARDS[0]
-  );
+  return GAS_FORECAST_PROVIDER_CARDS.find((card) => card.id === providerId) ?? GAS_FORECAST_PROVIDER_CARDS[0]
 }
 
-const MAX_SAFE_TEXT_LENGTH = 2000;
+const MAX_SAFE_TEXT_LENGTH = 2000
 
 /**
  * Masks credential-shaped values (API keys, `x-api-key`/`Authorization`
@@ -251,16 +232,10 @@ const MAX_SAFE_TEXT_LENGTH = 2000;
  */
 export function redactSecrets(text: string): string {
   return text
-    .replace(
-      /((?:x-)?api[-_]?key\s*[:=]\s*)("?)([^\s,"'&]+)("?)/gi,
-      "$1$2[REDACTED]$4",
-    )
-    .replace(/(authorization\s*:\s*)(\S+)/gi, "$1[REDACTED]")
-    .replace(/(bearer\s+)(\S+)/gi, "$1[REDACTED]")
-    .replace(
-      /("(?:api[_-]?key|token|secret)"\s*:\s*")([^"]*)(")/gi,
-      "$1[REDACTED]$3",
-    );
+    .replace(/((?:x-)?api[-_]?key\s*[:=]\s*)("?)([^\s,"'&]+)("?)/gi, '$1$2[REDACTED]$4')
+    .replace(/(authorization\s*:\s*)(\S+)/gi, '$1[REDACTED]')
+    .replace(/(bearer\s+)(\S+)/gi, '$1[REDACTED]')
+    .replace(/("(?:api[_-]?key|token|secret)"\s*:\s*")([^"]*)(")/gi, '$1[REDACTED]$3')
 }
 
 /**
@@ -268,214 +243,165 @@ export function redactSecrets(text: string): string {
  * and logging, after redacting any credential-shaped substrings.
  */
 export function toSafeRawBody(text: string): string {
-  const redacted = redactSecrets(text);
+  const redacted = redactSecrets(text)
 
   if (redacted.length <= MAX_SAFE_TEXT_LENGTH) {
-    return redacted;
+    return redacted
   }
 
-  return `${redacted.slice(0, MAX_SAFE_TEXT_LENGTH)}… [truncated]`;
+  return `${redacted.slice(0, MAX_SAFE_TEXT_LENGTH)}… [truncated]`
 }
 
 function toDisplayValue(value: unknown): string | null {
-  if (value === undefined || value === null || value === "") {
-    return null;
+  if (value === undefined || value === null || value === '') {
+    return null
   }
 
-  if (typeof value === "string") {
-    return value;
+  if (typeof value === 'string') {
+    return value
   }
 
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
   }
 
-  return null;
+  return null
 }
 
 function findDatasetRows(payload: unknown) {
   return pickArray(payload, [
-    ["result", "observations"],
-    ["observations"],
-    ["sample"],
-    ["dataset", "sample"],
-    ["payload", "sample"],
-    ["items"],
-    ["data"],
-    ["records"],
-    ["dataset", "items"],
-    ["dataset", "data"],
-    ["dataset", "records"],
-    ["payload", "items"],
-    ["payload", "data"],
-    ["payload", "records"],
-    ["result", "items"],
-    ["result", "data"],
-    ["result", "records"],
-  ]).filter(isRecord);
+    ['result', 'observations'],
+    ['observations'],
+    ['sample'],
+    ['dataset', 'sample'],
+    ['payload', 'sample'],
+    ['items'],
+    ['data'],
+    ['records'],
+    ['dataset', 'items'],
+    ['dataset', 'data'],
+    ['dataset', 'records'],
+    ['payload', 'items'],
+    ['payload', 'data'],
+    ['payload', 'records'],
+    ['result', 'items'],
+    ['result', 'data'],
+    ['result', 'records'],
+  ]).filter(isRecord)
 }
 
-function readRecordField(
-  row: Record<string, unknown>,
-  keys: readonly string[],
-): string | null {
+function readRecordField(row: Record<string, unknown>, keys: readonly string[]): string | null {
   for (const key of keys) {
-    const value = toDisplayValue(row[key]);
+    const value = toDisplayValue(row[key])
     if (value !== null) {
-      return value;
+      return value
     }
   }
 
-  return null;
+  return null
 }
 
 function extractDate(row: Record<string, unknown>) {
-  return readRecordField(row, [
-    "observation_date",
-    "date",
-    "gasDay",
-    "gas_day",
-    "gasDayStart",
-    "gas_day_start",
-    "day",
-  ]);
+  return readRecordField(row, ['observation_date', 'date', 'gasDay', 'gas_day', 'gasDayStart', 'gas_day_start', 'day'])
 }
 
-function readRecordPathField(
-  row: Record<string, unknown>,
-  paths: ReadonlyArray<readonly string[]>,
-): string | null {
+function readRecordPathField(row: Record<string, unknown>, paths: ReadonlyArray<readonly string[]>): string | null {
   for (const path of paths) {
-    const value = toDisplayValue(getPathValue(row, path));
+    const value = toDisplayValue(getPathValue(row, path))
     if (value !== null) {
-      return value;
+      return value
     }
   }
 
-  return null;
+  return null
 }
 
 function isNormalizedObservationsPayload(payload: unknown) {
-  if (Array.isArray(getPathValue(payload, ["result", "observations"]))) {
-    return true;
+  if (Array.isArray(getPathValue(payload, ['result', 'observations']))) {
+    return true
   }
 
   return (
-    Array.isArray(getPathValue(payload, ["observations"])) &&
-    getPathValue(payload, ["observation_count"]) !== undefined
-  );
+    Array.isArray(getPathValue(payload, ['observations'])) && getPathValue(payload, ['observation_count']) !== undefined
+  )
 }
 
-function getDateRangeFromRows(
-  rows: Array<Record<string, unknown>>,
-  isNormalizedObservations: boolean,
-) {
+function getDateRangeFromRows(rows: Array<Record<string, unknown>>, isNormalizedObservations: boolean) {
   const dates = rows
-    .map((row) =>
-      isNormalizedObservations
-        ? readRecordField(row, ["observation_date"])
-        : extractDate(row),
-    )
-    .filter((value): value is string => value !== null);
+    .map((row) => (isNormalizedObservations ? readRecordField(row, ['observation_date']) : extractDate(row)))
+    .filter((value): value is string => value !== null)
 
   if (dates.length === 0) {
-    return { firstDate: null, lastDate: null };
+    return { firstDate: null, lastDate: null }
   }
 
   if (!isNormalizedObservations) {
-    return { firstDate: dates[0] ?? null, lastDate: dates[dates.length - 1] ?? null };
+    return { firstDate: dates[0] ?? null, lastDate: dates[dates.length - 1] ?? null }
   }
 
-  let firstDate = dates[0];
-  let lastDate = dates[0];
+  let firstDate = dates[0]
+  let lastDate = dates[0]
 
   for (const date of dates) {
     if (date < firstDate) {
-      firstDate = date;
+      firstDate = date
     }
 
     if (date > lastDate) {
-      lastDate = date;
+      lastDate = date
     }
   }
 
-  return { firstDate, lastDate };
+  return { firstDate, lastDate }
 }
 
-function extractCountryOrFacility(
-  payload: unknown,
-  firstRow: Record<string, unknown> | undefined,
-) {
+function extractCountryOrFacility(payload: unknown, firstRow: Record<string, unknown> | undefined) {
   const explicit = pickString(payload, [
-    ["dataset", "countryOrFacility"],
-    ["countryOrFacility"],
-    ["dataset", "country"],
-    ["country"],
-    ["dataset", "facility"],
-    ["facility"],
-    ["meta", "country"],
-    ["meta", "facility"],
-    ["metadata", "country"],
-    ["metadata", "facility"],
-    ["scope"],
-    ["dataset", "scope"],
-    ["metadata", "scope"],
-    ["result", "scope"],
-  ]);
+    ['dataset', 'countryOrFacility'],
+    ['countryOrFacility'],
+    ['dataset', 'country'],
+    ['country'],
+    ['dataset', 'facility'],
+    ['facility'],
+    ['meta', 'country'],
+    ['meta', 'facility'],
+    ['metadata', 'country'],
+    ['metadata', 'facility'],
+    ['scope'],
+    ['dataset', 'scope'],
+    ['metadata', 'scope'],
+    ['result', 'scope'],
+  ])
 
   if (explicit) {
-    return explicit;
+    return explicit
   }
 
   if (!firstRow) {
-    return null;
+    return null
   }
 
-  const country = readRecordField(firstRow, [
-    "country",
-    "countryCode",
-    "country_code",
-  ]);
-  const facility = readRecordField(firstRow, [
-    "facility",
-    "facilityName",
-    "facility_code",
-    "name",
-  ]);
-  const scope = readRecordField(firstRow, ["scope"]);
+  const country = readRecordField(firstRow, ['country', 'countryCode', 'country_code'])
+  const facility = readRecordField(firstRow, ['facility', 'facilityName', 'facility_code', 'name'])
+  const scope = readRecordField(firstRow, ['scope'])
 
   if (country && facility) {
-    return `${country} / ${facility}`;
+    return `${country} / ${facility}`
   }
 
-  return facility ?? country ?? scope;
+  return facility ?? country ?? scope
 }
 
 function buildSample(rows: Array<Record<string, unknown>>) {
   return rows.slice(0, 5).map((row) => ({
     ...row,
     date: extractDate(row),
-    gasInStorage: readRecordField(row, [
-      "gasInStorage",
-      "gas_in_storage",
-      "gasInStorageValue",
-      "storage_level",
-    ]),
-    injection: readRecordField(row, [
-      "injection",
-      "injectionValue",
-      "injection_volume",
-    ]),
-    withdrawal: readRecordField(row, [
-      "withdrawal",
-      "withdrawalValue",
-      "withdrawal_volume",
-    ]),
-    workingGasVolume: readRecordField(row, [
-      "workingGasVolume",
-      "working_gas_volume",
-      "workingGas",
-    ]) ?? readRecordPathField(row, [["metadata", "working_gas_volume"]]),
+    gasInStorage: readRecordField(row, ['gasInStorage', 'gas_in_storage', 'gasInStorageValue', 'storage_level']),
+    injection: readRecordField(row, ['injection', 'injectionValue', 'injection_volume']),
+    withdrawal: readRecordField(row, ['withdrawal', 'withdrawalValue', 'withdrawal_volume']),
+    workingGasVolume:
+      readRecordField(row, ['workingGasVolume', 'working_gas_volume', 'workingGas']) ??
+      readRecordPathField(row, [['metadata', 'working_gas_volume']]),
     storage_level: row.storage_level,
     storage_fullness_pct: row.storage_fullness_pct,
     observation_date: row.observation_date,
@@ -489,14 +415,10 @@ function buildSample(rows: Array<Record<string, unknown>>) {
     retrieved_at: row.retrieved_at,
     country_code: row.country_code,
     facility_code: row.facility_code,
-  }));
+  }))
 }
 
-const ERROR_CONTAINER_PATHS: ReadonlyArray<readonly string[]> = [
-  ["error"],
-  ["detail"],
-  [],
-];
+const ERROR_CONTAINER_PATHS: ReadonlyArray<readonly string[]> = [['error'], ['detail'], []]
 
 /**
  * Parses a DIP error response body into structured fields (error code,
@@ -507,56 +429,53 @@ const ERROR_CONTAINER_PATHS: ReadonlyArray<readonly string[]> = [
  * returns request headers or credentials — only fields already present in
  * the DIP response body.
  */
-export function extractStructuredError(
-  payload: unknown,
-): GasForecastStructuredError | null {
+export function extractStructuredError(payload: unknown): GasForecastStructuredError | null {
   if (!isRecord(payload)) {
-    return null;
+    return null
   }
 
-  const withContainer = (keys: readonly string[]) =>
-    ERROR_CONTAINER_PATHS.map((prefix) => [...prefix, ...keys]);
+  const withContainer = (keys: readonly string[]) => ERROR_CONTAINER_PATHS.map((prefix) => [...prefix, ...keys])
 
   const code = pickString(payload, [
-    ...withContainer(["code"]),
-    ...withContainer(["errorCode"]),
-    ...withContainer(["error_code"]),
-  ]);
+    ...withContainer(['code']),
+    ...withContainer(['errorCode']),
+    ...withContainer(['error_code']),
+  ])
 
   const provider = pickString(payload, [
-    ...withContainer(["provider", "name"]),
-    ...withContainer(["provider"]),
-    ...withContainer(["providerName"]),
-    ...withContainer(["provider_name"]),
-  ]);
+    ...withContainer(['provider', 'name']),
+    ...withContainer(['provider']),
+    ...withContainer(['providerName']),
+    ...withContainer(['provider_name']),
+  ])
 
   const plugin = pickString(payload, [
-    ...withContainer(["plugin", "name"]),
-    ...withContainer(["plugin"]),
-    ...withContainer(["pluginId"]),
-    ...withContainer(["plugin_id"]),
-  ]);
+    ...withContainer(['plugin', 'name']),
+    ...withContainer(['plugin']),
+    ...withContainer(['pluginId']),
+    ...withContainer(['plugin_id']),
+  ])
 
   const upstreamStatus = pickNumber(payload, [
-    ...withContainer(["upstreamStatus"]),
-    ...withContainer(["upstream_status"]),
-    ...withContainer(["providerStatus"]),
-    ...withContainer(["provider_status"]),
-  ]);
+    ...withContainer(['upstreamStatus']),
+    ...withContainer(['upstream_status']),
+    ...withContainer(['providerStatus']),
+    ...withContainer(['provider_status']),
+  ])
 
   const executionId = pickString(payload, [
-    ...withContainer(["executionId"]),
-    ...withContainer(["execution_id"]),
-    ...withContainer(["correlationId"]),
-    ...withContainer(["correlation_id"]),
-    ...withContainer(["traceId"]),
-    ...withContainer(["trace_id"]),
-    ...withContainer(["requestId"]),
-    ...withContainer(["request_id"]),
-  ]);
+    ...withContainer(['executionId']),
+    ...withContainer(['execution_id']),
+    ...withContainer(['correlationId']),
+    ...withContainer(['correlation_id']),
+    ...withContainer(['traceId']),
+    ...withContainer(['trace_id']),
+    ...withContainer(['requestId']),
+    ...withContainer(['request_id']),
+  ])
 
-  const rawBodyValue = pickString(payload, [["rawBody"]]);
-  const rawBody = rawBodyValue ? toSafeRawBody(rawBodyValue) : null;
+  const rawBodyValue = pickString(payload, [['rawBody']])
+  const rawBody = rawBodyValue ? toSafeRawBody(rawBodyValue) : null
 
   if (
     code === null &&
@@ -566,58 +485,55 @@ export function extractStructuredError(
     executionId === null &&
     rawBody === null
   ) {
-    return null;
+    return null
   }
 
-  return { code, provider, plugin, upstreamStatus, executionId, rawBody };
+  return { code, provider, plugin, upstreamStatus, executionId, rawBody }
 }
 
-export function getGasForecastErrorMessage(
-  payload: unknown,
-  httpStatus: number | null,
-) {
+export function getGasForecastErrorMessage(payload: unknown, httpStatus: number | null) {
   // Prefer the most specific/deepest cause message (e.g. the actual AGSI
   // upstream error) over a generic top-level wrapper message such as
   // "Plugin execution failed", so the real underlying error is never
   // discarded.
   const explicit = pickString(payload, [
-    ["error", "cause", "message"],
-    ["error", "upstreamError", "message"],
-    ["error", "providerError", "message"],
-    ["error", "originalError", "message"],
-    ["cause", "message"],
-    ["upstreamError", "message"],
-    ["providerError", "message"],
-    ["detail", "message"],
-    ["detail"],
-    ["message"],
-    ["error", "message"],
-    ["error"],
-    ["title"],
-    ["rawBody"],
-  ]);
+    ['error', 'cause', 'message'],
+    ['error', 'upstreamError', 'message'],
+    ['error', 'providerError', 'message'],
+    ['error', 'originalError', 'message'],
+    ['cause', 'message'],
+    ['upstreamError', 'message'],
+    ['providerError', 'message'],
+    ['detail', 'message'],
+    ['detail'],
+    ['message'],
+    ['error', 'message'],
+    ['error'],
+    ['title'],
+    ['rawBody'],
+  ])
 
-  if (httpStatus === 404 && explicit?.toLowerCase() === "not found") {
-    return "Invalid API endpoint";
+  if (httpStatus === 404 && explicit?.toLowerCase() === 'not found') {
+    return 'Invalid API endpoint'
   }
 
   if (explicit) {
-    return redactSecrets(explicit);
+    return redactSecrets(explicit)
   }
 
   if (httpStatus === 401) {
-    return "Invalid or missing API key";
+    return 'Invalid or missing API key'
   }
 
   if (httpStatus === 404) {
-    return "Invalid API endpoint";
+    return 'Invalid API endpoint'
   }
 
   if (httpStatus === 503) {
-    return "DIP gas forecast connectivity is not configured. Set DIP_API_KEY and either DIP_API_BASE_URL or an absolute DIP_GAS_FORECAST_CAPABILITY_PATH.";
+    return 'DIP gas forecast connectivity is not configured. Set DIP_API_KEY and either DIP_API_BASE_URL or an absolute DIP_GAS_FORECAST_CAPABILITY_PATH.'
   }
 
-  return "Provider request failed";
+  return 'Provider request failed'
 }
 
 /**
@@ -632,75 +548,67 @@ export function getGasForecastErrorMessage(
  * before falling back to status-code heuristics.
  */
 export function classifyGasForecastFailureKind(params: {
-  httpStatus: number | null;
-  payload: unknown;
-  stage?: "configuration" | "network" | "dip_http" | "parse" | null;
+  httpStatus: number | null
+  payload: unknown
+  stage?: 'configuration' | 'network' | 'dip_http' | 'parse' | null
 }): GasForecastFailureKind {
-  const { httpStatus, payload, stage } = params;
+  const { httpStatus, payload, stage } = params
 
-  if (stage === "configuration") {
-    return "configuration";
+  if (stage === 'configuration') {
+    return 'configuration'
   }
 
-  if (stage === "network") {
-    return "network";
+  if (stage === 'network') {
+    return 'network'
   }
 
-  if (stage === "parse") {
-    return "parse";
+  if (stage === 'parse') {
+    return 'parse'
   }
 
   const hinted = pickString(payload, [
-    ["kind"],
-    ["errorKind"],
-    ["error", "kind"],
-    ["stage"],
-    ["source"],
-    ["error", "source"],
-  ]);
+    ['kind'],
+    ['errorKind'],
+    ['error', 'kind'],
+    ['stage'],
+    ['source'],
+    ['error', 'source'],
+  ])
 
   const validKinds: GasForecastFailureKind[] = [
-    "configuration",
-    "network",
-    "dip_auth",
-    "dip_http",
-    "plugin_execution",
-    "upstream_provider",
-    "timeout",
-    "parse",
-    "unknown",
-  ];
+    'configuration',
+    'network',
+    'dip_auth',
+    'dip_http',
+    'plugin_execution',
+    'upstream_provider',
+    'timeout',
+    'parse',
+    'unknown',
+  ]
 
   if (hinted && (validKinds as string[]).includes(hinted)) {
-    return hinted as GasForecastFailureKind;
+    return hinted as GasForecastFailureKind
   }
 
   if (httpStatus === null) {
-    return "unknown";
+    return 'unknown'
   }
 
   // 401/403 responses mean DIP rejected the request credentials. Keep this
   // distinct from generic "dip_http" so the UI never masks an authentication
   // failure as an unrelated HTTP error.
   if (httpStatus === 401 || httpStatus === 403) {
-    return "dip_auth";
+    return 'dip_auth'
   }
 
-  const structuredError = extractStructuredError(payload);
-  const structuredCode = structuredError?.code?.toLowerCase() ?? "";
-  const errorText = pickString(payload, [
-    ["error", "message"],
-    ["message"],
-    ["detail", "message"],
-  ])?.toLowerCase();
+  const structuredError = extractStructuredError(payload)
+  const structuredCode = structuredError?.code?.toLowerCase() ?? ''
+  const errorText = pickString(payload, [['error', 'message'], ['message'], ['detail', 'message']])?.toLowerCase()
 
   if (structuredError) {
-    if (
-      structuredCode.includes("timeout") ||
-      errorText?.includes("timed out") ||
-      errorText?.includes("timeout")
-    ) {
-      return "timeout";
+    if (structuredCode.includes('timeout') || errorText?.includes('timed out') || errorText?.includes('timeout')) {
+      return 'timeout'
     }
 
     // A structured error naming the upstream provider (or carrying its HTTP
@@ -708,86 +616,82 @@ export function classifyGasForecastFailureKind(params: {
     // this must be surfaced as "upstream_provider", not folded into the
     // generic "dip_http" or "plugin_execution" buckets.
     if (structuredError.upstreamStatus !== null || structuredError.provider) {
-      return "upstream_provider";
+      return 'upstream_provider'
     }
 
-    if (structuredError.plugin || structuredCode.includes("plugin")) {
-      return "plugin_execution";
+    if (structuredError.plugin || structuredCode.includes('plugin')) {
+      return 'plugin_execution'
     }
   }
 
   if (httpStatus === 502 || httpStatus === 504) {
-    return "upstream_provider";
+    return 'upstream_provider'
   }
 
   if (httpStatus === 422) {
-    return "plugin_execution";
+    return 'plugin_execution'
   }
 
   if (httpStatus >= 400 && httpStatus < 600) {
-    return "dip_http";
+    return 'dip_http'
   }
 
-  return "unknown";
+  return 'unknown'
 }
 
 export function mapGasForecastSuccess(params: {
-  providerId: GasForecastProviderId;
-  httpStatus: number;
-  responseTimeMs: number | null;
-  payload: unknown;
+  providerId: GasForecastProviderId
+  httpStatus: number
+  responseTimeMs: number | null
+  payload: unknown
 }) {
-  const { providerId, httpStatus, payload, responseTimeMs } = params;
-  const providerCard = pickProviderCard(providerId);
-  const datasetRows = findDatasetRows(payload);
-  const normalizedObservations = isNormalizedObservationsPayload(payload);
-  const firstRow = datasetRows[0];
-  const dateRange = getDateRangeFromRows(datasetRows, normalizedObservations);
+  const { providerId, httpStatus, payload, responseTimeMs } = params
+  const providerCard = pickProviderCard(providerId)
+  const datasetRows = findDatasetRows(payload)
+  const normalizedObservations = isNormalizedObservationsPayload(payload)
+  const firstRow = datasetRows[0]
+  const dateRange = getDateRangeFromRows(datasetRows, normalizedObservations)
   const providerName = pickString(payload, [
-    ["result", "provider", "name"],
-    ["result", "providerName"],
-    ["result", "provider"],
-    ["provider", "name"],
-    ["providerName"],
-    ["provider"],
-    ["meta", "provider"],
-    ["metadata", "provider"],
-  ]);
+    ['result', 'provider', 'name'],
+    ['result', 'providerName'],
+    ['result', 'provider'],
+    ['provider', 'name'],
+    ['providerName'],
+    ['provider'],
+    ['meta', 'provider'],
+    ['metadata', 'provider'],
+  ])
   const provider =
     providerName === providerId
       ? (providerCard.api ?? providerCard.title)
-      : (providerName ??
-        providerCard.api ??
-        providerCard.title);
+      : (providerName ?? providerCard.api ?? providerCard.title)
   const api =
     pickString(payload, [
-      ["result", "api"],
-      ["result", "provider", "api"],
-      ["api"],
-      ["provider", "api"],
-      ["meta", "api"],
-      ["metadata", "api"],
-    ]) ?? providerCard.api;
+      ['result', 'api'],
+      ['result', 'provider', 'api'],
+      ['api'],
+      ['provider', 'api'],
+      ['meta', 'api'],
+      ['metadata', 'api'],
+    ]) ?? providerCard.api
   const records = normalizedObservations
-    ? (pickNumber(payload, [
-        ["result", "observation_count"],
-        ["observation_count"],
-      ]) ?? (datasetRows.length > 0 ? datasetRows.length : null))
+    ? (pickNumber(payload, [['result', 'observation_count'], ['observation_count']]) ??
+      (datasetRows.length > 0 ? datasetRows.length : null))
     : (pickNumber(payload, [
-        ["dataset", "recordCount"],
-        ["dataset", "recordsCount"],
-        ["dataset", "records"],
-        ["recordCount"],
-        ["recordsCount"],
-        ["records"],
-        ["count"],
-        ["total"],
-      ]) ?? (datasetRows.length > 0 ? datasetRows.length : null));
+        ['dataset', 'recordCount'],
+        ['dataset', 'recordsCount'],
+        ['dataset', 'records'],
+        ['recordCount'],
+        ['recordsCount'],
+        ['records'],
+        ['count'],
+        ['total'],
+      ]) ?? (datasetRows.length > 0 ? datasetRows.length : null))
 
   return {
     providerId,
-    status: "connected",
-    connection: "OK",
+    status: 'connected',
+    connection: 'OK',
     httpStatus,
     provider,
     api,
@@ -798,49 +702,37 @@ export function mapGasForecastSuccess(params: {
       records,
       firstDate:
         pickString(payload, [
-          ["dataset", "firstDate"],
-          ["firstDate"],
-          ["meta", "firstDate"],
-          ["metadata", "firstDate"],
+          ['dataset', 'firstDate'],
+          ['firstDate'],
+          ['meta', 'firstDate'],
+          ['metadata', 'firstDate'],
         ]) ?? dateRange.firstDate,
       lastDate:
-        pickString(payload, [
-          ["dataset", "lastDate"],
-          ["lastDate"],
-          ["meta", "lastDate"],
-          ["metadata", "lastDate"],
-        ]) ?? dateRange.lastDate,
+        pickString(payload, [['dataset', 'lastDate'], ['lastDate'], ['meta', 'lastDate'], ['metadata', 'lastDate']]) ??
+        dateRange.lastDate,
       countryOrFacility: extractCountryOrFacility(payload, firstRow),
     },
     sample: buildSample(datasetRows),
-  } satisfies GasForecastConnectionResult;
+  } satisfies GasForecastConnectionResult
 }
 
 export function mapGasForecastFailure(params: {
-  providerId: GasForecastProviderId;
-  httpStatus: number | null;
-  responseTimeMs: number | null;
-  payload: unknown;
-  fallbackMessage?: string;
-  kind?: GasForecastFailureKind;
-  stage?: "configuration" | "network" | "dip_http" | "parse" | null;
+  providerId: GasForecastProviderId
+  httpStatus: number | null
+  responseTimeMs: number | null
+  payload: unknown
+  fallbackMessage?: string
+  kind?: GasForecastFailureKind
+  stage?: 'configuration' | 'network' | 'dip_http' | 'parse' | null
 }) {
-  const {
-    providerId,
-    httpStatus,
-    payload,
-    responseTimeMs,
-    fallbackMessage,
-    kind,
-    stage,
-  } = params;
-  const providerCard = pickProviderCard(providerId);
-  const structuredError = extractStructuredError(payload);
+  const { providerId, httpStatus, payload, responseTimeMs, fallbackMessage, kind, stage } = params
+  const providerCard = pickProviderCard(providerId)
+  const structuredError = extractStructuredError(payload)
 
   return {
     providerId,
-    status: "failed",
-    connection: "FAILED",
+    status: 'failed',
+    connection: 'FAILED',
     kind: kind ?? classifyGasForecastFailureKind({ httpStatus, payload, stage }),
     httpStatus,
     provider: structuredError?.provider ?? providerCard.api ?? providerCard.title,
@@ -851,5 +743,5 @@ export function mapGasForecastFailure(params: {
     errorDetail: structuredError,
     dataset: null,
     sample: [],
-  } satisfies GasForecastConnectionResult;
+  } satisfies GasForecastConnectionResult
 }

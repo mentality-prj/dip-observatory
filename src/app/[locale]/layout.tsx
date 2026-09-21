@@ -1,38 +1,30 @@
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
+import { notFound } from 'next/navigation'
 
-import {
-  getLocaleMetadata,
-  isSupportedLocale,
-  SUPPORTED_LOCALES,
-} from "@/lib/observatory-i18n";
+import { getLocaleMetadata, isSupportedLocale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 
 type LayoutProps = {
-  children: ReactNode;
-  params: Promise<{ locale: string }>;
-};
-
-export function generateStaticParams() {
-  return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+  children: ReactNode
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const resolvedLocale = isSupportedLocale(locale) ? locale : "en";
+export function generateStaticParams() {
+  return SUPPORTED_LOCALES.map((locale) => ({ locale }))
+}
 
-  return getLocaleMetadata(resolvedLocale);
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params
+  const resolvedLocale = isSupportedLocale(locale) ? locale : 'en'
+
+  return getLocaleMetadata(resolvedLocale)
 }
 
 export default async function LocaleLayout({ children, params }: LayoutProps) {
-  const { locale } = await params;
+  const { locale } = await params
 
   if (!isSupportedLocale(locale)) {
-    notFound();
+    notFound()
   }
 
   return (
@@ -44,5 +36,5 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       />
       {children}
     </>
-  );
+  )
 }

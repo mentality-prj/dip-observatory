@@ -19,8 +19,8 @@
   line-height: 1.45;
 }
 
-:global(main[lang="en"] footer) .tagline[data-locale="en"],
-:global(main[lang="uk"] footer) .tagline[data-locale="uk"],
-:global(main[lang="pl"] footer) .tagline[data-locale="pl"] {
+:global(main[lang='en'] footer) .tagline[data-locale='en'],
+:global(main[lang='uk'] footer) .tagline[data-locale='uk'],
+:global(main[lang='pl'] footer) .tagline[data-locale='pl'] {
   display: block;
 }

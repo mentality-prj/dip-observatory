@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export const prospectSeedSchema = z.object({
   name: z.string().min(1),
@@ -9,23 +9,23 @@ export const prospectSeedSchema = z.object({
   revenue_eur: z.number().nullable().optional(),
   description: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).default({}),
-});
+})
 
 export const importTemplateSchema = z.object({
-  format: z.literal("csv"),
+  format: z.literal('csv'),
   columns: z.array(z.string()),
   required_columns: z.array(z.string()),
   connector_id: z.string(),
   max_rows: z.number().int().positive(),
   evaluation_endpoint: z.string(),
   evaluation_request: z.record(z.string(), z.unknown()),
-});
+})
 
 export const importValidationIssueSchema = z.object({
   row: z.number().int().positive(),
   field: z.string().nullable().optional(),
   message: z.string(),
-});
+})
 
 export const importValidationSchema = z.object({
   valid: z.boolean(),
@@ -34,11 +34,11 @@ export const importValidationSchema = z.object({
   invalid_rows: z.number().int().nonnegative(),
   rows: z.array(prospectSeedSchema),
   issues: z.array(importValidationIssueSchema),
-});
+})
 
-export const pipelineDecisionSchema = z.enum(["PURSUE", "RESEARCH", "WATCH", "SKIP"]);
-export const evidenceKindSchema = z.enum(["FACT", "SIGNAL", "HYPOTHESIS", "UNKNOWN"]);
-export const nextActionTypeSchema = z.enum(["CONTACT", "RESEARCH", "WATCH", "NONE"]);
+export const pipelineDecisionSchema = z.enum(['PURSUE', 'RESEARCH', 'WATCH', 'SKIP'])
+export const evidenceKindSchema = z.enum(['FACT', 'SIGNAL', 'HYPOTHESIS', 'UNKNOWN'])
+export const nextActionTypeSchema = z.enum(['CONTACT', 'RESEARCH', 'WATCH', 'NONE'])
 
 const capabilityFitSchema = z.object({
   capability_id: z.string(),
@@ -46,7 +46,7 @@ const capabilityFitSchema = z.object({
   fit: z.number().min(0).max(1),
   problem_statement: z.string().nullable().optional(),
   rationale: z.array(z.string()).default([]),
-});
+})
 
 const problemSchema = z.object({
   id: z.string(),
@@ -64,8 +64,8 @@ const problemSchema = z.object({
   evidence_ids: z.array(z.string()).default([]),
   confidence: z.number().min(0).max(1),
   uncertainty: z.number().min(0).max(1),
-  status: z.enum(["HYPOTHESIS", "EVIDENCED", "VALIDATED", "REJECTED"]),
-});
+  status: z.enum(['HYPOTHESIS', 'EVIDENCED', 'VALIDATED', 'REJECTED']),
+})
 
 const opportunitySchema = z.object({
   id: z.string(),
@@ -83,7 +83,7 @@ const opportunitySchema = z.object({
   uncertainty: z.number().min(0).max(1),
   evidence_ids: z.array(z.string()).default([]),
   state: z.string(),
-});
+})
 
 const decisionSchema = z.object({
   opportunity_id: z.string(),
@@ -95,37 +95,46 @@ const decisionSchema = z.object({
   missing_information: z.array(z.string()),
   research_objectives: z.array(z.string()),
   explanation: z.array(z.string()),
-  explanation_details: z.object({
-    reasons: z.array(z.string()).default([]),
-    risks: z.array(z.string()).default([]),
-    missing_information: z.array(z.string()).default([]),
-    research_objectives: z.array(z.string()).default([]),
-  }).nullable().optional(),
+  explanation_details: z
+    .object({
+      reasons: z.array(z.string()).default([]),
+      risks: z.array(z.string()).default([]),
+      missing_information: z.array(z.string()).default([]),
+      research_objectives: z.array(z.string()).default([]),
+    })
+    .nullable()
+    .optional(),
   qdip_capability_fit: capabilityFitSchema.nullable().optional(),
-  next_action: z.object({
-    type: nextActionTypeSchema,
-    title: z.string(),
-    description: z.string().nullable().optional(),
-    target_role: z.string().nullable().optional(),
-    reason: z.string().nullable().optional(),
-  }).nullable().optional(),
-  provenance: z.object({
-    decision_id: z.string(),
-    executed_at: z.string(),
-    execution_id: z.string().nullable().optional(),
-    plugin_id: z.string(),
-    plugin_version: z.string().nullable().optional(),
-    model_version: z.string().nullable().optional(),
-    policy_version: z.string().nullable().optional(),
-    evidence_ids: z.array(z.string()).default([]),
-    evidence_version: z.string().nullable().optional(),
-    input_version: z.string().nullable().optional(),
-    dataset_id: z.string().nullable().optional(),
-    trace_id: z.string().nullable().optional(),
-  }).nullable().optional(),
+  next_action: z
+    .object({
+      type: nextActionTypeSchema,
+      title: z.string(),
+      description: z.string().nullable().optional(),
+      target_role: z.string().nullable().optional(),
+      reason: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  provenance: z
+    .object({
+      decision_id: z.string(),
+      executed_at: z.string(),
+      execution_id: z.string().nullable().optional(),
+      plugin_id: z.string(),
+      plugin_version: z.string().nullable().optional(),
+      model_version: z.string().nullable().optional(),
+      policy_version: z.string().nullable().optional(),
+      evidence_ids: z.array(z.string()).default([]),
+      evidence_version: z.string().nullable().optional(),
+      input_version: z.string().nullable().optional(),
+      dataset_id: z.string().nullable().optional(),
+      trace_id: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
   rejected_alternatives: z.array(pipelineDecisionSchema),
   model_version: z.string(),
-});
+})
 
 export const pipelineProspectSchema = z.object({
   company: z.object({
@@ -148,7 +157,7 @@ export const pipelineProspectSchema = z.object({
   decisions: z.array(decisionSchema),
   evidence_count: z.number().int().nonnegative(),
   error: z.string().nullable().optional(),
-});
+})
 
 export const pipelineRunSchema = z.object({
   run_id: z.string(),
@@ -164,9 +173,9 @@ export const pipelineRunSchema = z.object({
     decisions: z.record(pipelineDecisionSchema, z.number().int().nonnegative()),
   }),
   prospects: z.array(pipelineProspectSchema),
-});
+})
 
-export type ProspectSeed = z.infer<typeof prospectSeedSchema>;
-export type ImportValidation = z.infer<typeof importValidationSchema>;
-export type PipelineProspect = z.infer<typeof pipelineProspectSchema>;
-export type PipelineRun = z.infer<typeof pipelineRunSchema>;
+export type ProspectSeed = z.infer<typeof prospectSeedSchema>
+export type ImportValidation = z.infer<typeof importValidationSchema>
+export type PipelineProspect = z.infer<typeof pipelineProspectSchema>
+export type PipelineRun = z.infer<typeof pipelineRunSchema>

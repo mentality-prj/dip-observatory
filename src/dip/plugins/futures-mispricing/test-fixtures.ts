@@ -10,17 +10,13 @@
  * synthetic prototype. All values are approximate/illustrative.
  */
 
-import type {
-  FuturesContract,
-  MarketSnapshot,
-  OutcomeData,
-} from "@/dip/plugins/futures-mispricing/domain";
+import type { FuturesContract, MarketSnapshot, OutcomeData } from '@/dip/plugins/futures-mispricing/domain'
 
 /** The decision date for the historical EIDOS case study. */
-export const EIDOS_DECISION_DATE = "2026-05-26";
+export const EIDOS_DECISION_DATE = '2026-05-26'
 
 /** The target contract for the historical EIDOS case study. */
-export const EIDOS_TARGET_CONTRACT = "Q1-2027";
+export const EIDOS_TARGET_CONTRACT = 'Q1-2027'
 
 /**
  * Polish electricity forward curve snapshot as of 2026-05-26.
@@ -31,9 +27,9 @@ export const EIDOS_TARGET_CONTRACT = "Q1-2027";
  */
 export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
   {
-    id: "Q3-2025",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q3 2025",
+    id: 'Q3-2025',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q3 2025',
     deliveryOrdinal: 1,
     decisionDate: EIDOS_DECISION_DATE,
     price: 388.0,
@@ -42,9 +38,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 388.0,
   },
   {
-    id: "Q4-2025",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q4 2025",
+    id: 'Q4-2025',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q4 2025',
     deliveryOrdinal: 2,
     decisionDate: EIDOS_DECISION_DATE,
     price: 405.0,
@@ -53,9 +49,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 405.0,
   },
   {
-    id: "Q1-2026",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q1 2026",
+    id: 'Q1-2026',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q1 2026',
     deliveryOrdinal: 3,
     decisionDate: EIDOS_DECISION_DATE,
     price: 430.0,
@@ -64,9 +60,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 430.0,
   },
   {
-    id: "Q2-2026",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q2 2026",
+    id: 'Q2-2026',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q2 2026',
     deliveryOrdinal: 4,
     decisionDate: EIDOS_DECISION_DATE,
     price: 418.0,
@@ -75,9 +71,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 418.0,
   },
   {
-    id: "Q3-2026",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q3 2026",
+    id: 'Q3-2026',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q3 2026',
     deliveryOrdinal: 5,
     decisionDate: EIDOS_DECISION_DATE,
     price: 445.0,
@@ -86,9 +82,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 445.0,
   },
   {
-    id: "Q4-2026",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q4 2026",
+    id: 'Q4-2026',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q4 2026',
     deliveryOrdinal: 6,
     decisionDate: EIDOS_DECISION_DATE,
     price: 508.0,
@@ -97,9 +93,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 508.0,
   },
   {
-    id: "Q1-2027",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q1 2027",
+    id: 'Q1-2027',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q1 2027',
     deliveryOrdinal: 7,
     decisionDate: EIDOS_DECISION_DATE,
     // TARGET CONTRACT — this is the price at decision time
@@ -110,9 +106,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 479.0,
   },
   {
-    id: "Q2-2027",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q2 2027",
+    id: 'Q2-2027',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q2 2027',
     deliveryOrdinal: 8,
     decisionDate: EIDOS_DECISION_DATE,
     price: 498.0,
@@ -121,9 +117,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 498.0,
   },
   {
-    id: "Q3-2027",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q3 2027",
+    id: 'Q3-2027',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q3 2027',
     deliveryOrdinal: 9,
     decisionDate: EIDOS_DECISION_DATE,
     price: 512.0,
@@ -132,9 +128,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 512.0,
   },
   {
-    id: "Q4-2027",
-    product: "Polish Electricity",
-    deliveryPeriod: "Q4 2027",
+    id: 'Q4-2027',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Q4 2027',
     deliveryOrdinal: 10,
     decisionDate: EIDOS_DECISION_DATE,
     price: 525.0,
@@ -143,9 +139,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 525.0,
   },
   {
-    id: "Cal-2026",
-    product: "Polish Electricity",
-    deliveryPeriod: "Calendar 2026",
+    id: 'Cal-2026',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Calendar 2026',
     deliveryOrdinal: 3.5,
     decisionDate: EIDOS_DECISION_DATE,
     price: 432.0,
@@ -154,9 +150,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 432.0,
   },
   {
-    id: "Cal-2027",
-    product: "Polish Electricity",
-    deliveryPeriod: "Calendar 2027",
+    id: 'Cal-2027',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Calendar 2027',
     deliveryOrdinal: 7.5,
     decisionDate: EIDOS_DECISION_DATE,
     // Cal-2027 reflects weighted average of Q1-Q4 2027.
@@ -167,9 +163,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 506.0,
   },
   {
-    id: "Cal-2028",
-    product: "Polish Electricity",
-    deliveryPeriod: "Calendar 2028",
+    id: 'Cal-2028',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Calendar 2028',
     deliveryOrdinal: 11.5,
     decisionDate: EIDOS_DECISION_DATE,
     price: 520.0,
@@ -178,9 +174,9 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     settlementPrice: 520.0,
   },
   {
-    id: "Cal-2029",
-    product: "Polish Electricity",
-    deliveryPeriod: "Calendar 2029",
+    id: 'Cal-2029',
+    product: 'Polish Electricity',
+    deliveryPeriod: 'Calendar 2029',
     deliveryOrdinal: 15.5,
     decisionDate: EIDOS_DECISION_DATE,
     price: 534.0,
@@ -188,7 +184,7 @@ export const EIDOS_FUTURES_SNAPSHOT: FuturesContract[] = [
     ask: 539.0,
     settlementPrice: 534.0,
   },
-];
+]
 
 /**
  * Market snapshot for the decision date.
@@ -204,7 +200,7 @@ export const EIDOS_MARKET_SNAPSHOT: MarketSnapshot = {
     timestamp: `${EIDOS_DECISION_DATE}T09:00:00Z`,
     isTarget: contract.id === EIDOS_TARGET_CONTRACT,
   })),
-};
+}
 
 /**
  * Historical price observations for Q1-2027 available before 2026-05-26.
@@ -212,14 +208,14 @@ export const EIDOS_MARKET_SNAPSHOT: MarketSnapshot = {
  * All observations are at or before the decision date.
  */
 export const EIDOS_Q1_2027_HISTORY: Array<{ date: string; price: number }> = [
-  { date: "2025-11-26", price: 461.0 },
-  { date: "2025-12-26", price: 468.0 },
-  { date: "2026-01-26", price: 455.0 },
-  { date: "2026-02-26", price: 472.0 },
-  { date: "2026-03-26", price: 465.0 },
-  { date: "2026-04-26", price: 471.0 },
-  { date: "2026-05-26", price: 479.0 },
-];
+  { date: '2025-11-26', price: 461.0 },
+  { date: '2025-12-26', price: 468.0 },
+  { date: '2026-01-26', price: 455.0 },
+  { date: '2026-02-26', price: 472.0 },
+  { date: '2026-03-26', price: 465.0 },
+  { date: '2026-04-26', price: 471.0 },
+  { date: '2026-05-26', price: 479.0 },
+]
 
 /**
  * SUBSEQUENT OUTCOME — MUST NOT be imported into valuation calculations.
@@ -231,31 +227,31 @@ export const EIDOS_Q1_2027_HISTORY: Array<{ date: string; price: number }> = [
  * A single successful case does not prove the methodology works generally.
  */
 export const EIDOS_Q1_2027_OUTCOME: OutcomeData = {
-  _label: "SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME",
+  _label: 'SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME',
   outcome: {
     decisionPrice: 479.0,
     referencePrice: 558.0,
     absoluteChange: 79.0,
     percentageChange: 0.16492,
-    outcomeStatus: "FAVOURABLE",
+    outcomeStatus: 'FAVOURABLE',
   },
-};
+}
 
 /** Convenience: get a futures contract from the snapshot by id. */
 export function getFuturesContract(id: string): FuturesContract | undefined {
-  return EIDOS_FUTURES_SNAPSHOT.find((c) => c.id === id);
+  return EIDOS_FUTURES_SNAPSHOT.find((c) => c.id === id)
 }
 
 /** Return only quarterly contracts (Q-prefixed) sorted by ordinal. */
 export function getQuarterlyContracts(): FuturesContract[] {
-  return EIDOS_FUTURES_SNAPSHOT.filter((c) => c.id.startsWith("Q")).sort(
-    (a, b) => a.deliveryOrdinal - b.deliveryOrdinal,
-  );
+  return EIDOS_FUTURES_SNAPSHOT.filter((c) => c.id.startsWith('Q')).sort(
+    (a, b) => a.deliveryOrdinal - b.deliveryOrdinal
+  )
 }
 
 /** Return only annual (Cal) contracts sorted by ordinal. */
 export function getAnnualContracts(): FuturesContract[] {
-  return EIDOS_FUTURES_SNAPSHOT.filter((c) => c.id.startsWith("Cal")).sort(
-    (a, b) => a.deliveryOrdinal - b.deliveryOrdinal,
-  );
+  return EIDOS_FUTURES_SNAPSHOT.filter((c) => c.id.startsWith('Cal')).sort(
+    (a, b) => a.deliveryOrdinal - b.deliveryOrdinal
+  )
 }

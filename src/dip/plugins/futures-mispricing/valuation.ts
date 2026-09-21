@@ -5,16 +5,16 @@
  * implementation, {@link StructuralCurveValuationV1}.
  */
 
-import type { MarketSnapshot, ValuationRange } from "@/dip/plugins/futures-mispricing/domain";
-import type { FuturesMispricingConfigV1 } from "./types";
-import { computeStructuralValuation } from "./curve-analysis";
+import type { MarketSnapshot, ValuationRange } from '@/dip/plugins/futures-mispricing/domain'
+import type { FuturesMispricingConfigV1 } from './types'
+import { computeStructuralValuation } from './curve-analysis'
 
 /** A valuation model estimates a defensible price range for a contract. */
 export interface ValuationModel {
   /** Estimate a valuation range for the target contract from the snapshot. */
-  estimate(snapshot: MarketSnapshot, targetContract: string): ValuationRange;
+  estimate(snapshot: MarketSnapshot, targetContract: string): ValuationRange
   /** Human-readable description of the model. */
-  description: string;
+  description: string
 }
 
 /**
@@ -31,14 +31,13 @@ export class StructuralCurveValuationV1 implements ValuationModel {
   constructor(private readonly config: FuturesMispricingConfigV1) {}
 
   estimate(snapshot: MarketSnapshot, targetContract: string): ValuationRange {
-    const { localInterpolation, annualProxy } = this.config.valuationWeights;
+    const { localInterpolation, annualProxy } = this.config.valuationWeights
     return computeStructuralValuation(snapshot, targetContract, {
       localInterpolationWeight: localInterpolation,
       annualProxyWeight: annualProxy,
       minimumHalfWidth: this.config.minimumHalfWidth,
-    });
+    })
   }
 
-  description =
-    "Structural curve valuation: weighted average of local interpolation and annual proxy.";
+  description = 'Structural curve valuation: weighted average of local interpolation and annual proxy.'
 }

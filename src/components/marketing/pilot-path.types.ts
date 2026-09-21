@@ -1,1 +1,1 @@
-export type PilotStage="choose"|"model"|"test"|"evaluate";
+export type PilotStage = 'choose' | 'model' | 'test' | 'evaluate'

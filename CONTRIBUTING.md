@@ -33,13 +33,13 @@ Every new feature must be developed in a dedicated **feature branch** — never 
 
 ### Branch naming conventions
 
-| Type          | Prefix      | Example                        |
-| ------------- | ----------- | ------------------------------ |
-| New feature   | `feature/`  | `feature/user-authentication`  |
-| Bug fix       | `fix/`      | `fix/broken-login-redirect`    |
-| Documentation | `docs/`     | `docs/update-readme`           |
-| Refactor      | `refactor/` | `refactor/data-layer`          |
-| Chore / infra | `chore/`    | `chore/upgrade-dependencies`   |
+| Type          | Prefix      | Example                       |
+| ------------- | ----------- | ----------------------------- |
+| New feature   | `feature/`  | `feature/user-authentication` |
+| Bug fix       | `fix/`      | `fix/broken-login-redirect`   |
+| Documentation | `docs/`     | `docs/update-readme`          |
+| Refactor      | `refactor/` | `refactor/data-layer`         |
+| Chore / infra | `chore/`    | `chore/upgrade-dependencies`  |
 
 ### Rules
 

@@ -19,13 +19,13 @@
  *   6. Half-width = k × σ_combined where k = 1.5 (conservative coverage factor).
  */
 
-import type { MarketSnapshot, ValuationRange } from "@/dip/plugins/futures-mispricing/domain";
-import { DEFAULT_CONFIG } from "./config";
-import type { FuturesMispricingConfigV1 } from "./types";
-import { FuturesMispricingInputError } from "./types";
+import type { MarketSnapshot, ValuationRange } from '@/dip/plugins/futures-mispricing/domain'
+import { DEFAULT_CONFIG } from './config'
+import type { FuturesMispricingConfigV1 } from './types'
+import { FuturesMispricingInputError } from './types'
 
 /** Maximum normalised distance factor (caps uncertainty scaling for sparse data). */
-const MAX_DISTANCE_FACTOR = 2.5;
+const MAX_DISTANCE_FACTOR = 2.5
 
 // ---------------------------------------------------------------------------
 // Historical dispersion
@@ -37,16 +37,13 @@ const MAX_DISTANCE_FACTOR = 2.5;
  *
  * σ = √( Σ(xᵢ - x̄)² / (n-1) )
  */
-export function computeHistoricalDispersion(
-  observations: Array<{ price: number }>,
-): number {
-  const n = observations.length;
-  if (n < 2) return 0;
+export function computeHistoricalDispersion(observations: Array<{ price: number }>): number {
+  const n = observations.length
+  if (n < 2) return 0
 
-  const mean = observations.reduce((s, o) => s + o.price, 0) / n;
-  const variance =
-    observations.reduce((s, o) => s + (o.price - mean) ** 2, 0) / (n - 1);
-  return Math.sqrt(variance);
+  const mean = observations.reduce((s, o) => s + o.price, 0) / n
+  const variance = observations.reduce((s, o) => s + (o.price - mean) ** 2, 0) / (n - 1)
+  return Math.sqrt(variance)
 }
 
 // ---------------------------------------------------------------------------
@@ -64,28 +61,25 @@ export function computeHistoricalDispersion(
 export function computeLocalCurveDispersion(
   snapshot: MarketSnapshot,
   targetContract: string,
-  windowSize: number = 3,
+  windowSize: number = 3
 ): number {
   const quarterly = snapshot.points
-    .filter((p) => p.contract.startsWith("Q"))
-    .sort((a, b) => a.deliveryOrdinal - b.deliveryOrdinal);
+    .filter((p) => p.contract.startsWith('Q'))
+    .sort((a, b) => a.deliveryOrdinal - b.deliveryOrdinal)
 
-  const idx = quarterly.findIndex((p) => p.contract === targetContract);
-  if (idx < 0) return 0;
+  const idx = quarterly.findIndex((p) => p.contract === targetContract)
+  if (idx < 0) return 0
 
-  const start = Math.max(0, idx - windowSize);
-  const end = Math.min(quarterly.length - 1, idx + windowSize);
+  const start = Math.max(0, idx - windowSize)
+  const end = Math.min(quarterly.length - 1, idx + windowSize)
   // Exclude target contract — its deviation is the signal, not the uncertainty
-  const window = quarterly
-    .slice(start, end + 1)
-    .filter((p) => p.contract !== targetContract);
+  const window = quarterly.slice(start, end + 1).filter((p) => p.contract !== targetContract)
 
-  if (window.length < 2) return 0;
+  if (window.length < 2) return 0
 
-  const mean = window.reduce((s, p) => s + p.price, 0) / window.length;
-  const variance =
-    window.reduce((s, p) => s + (p.price - mean) ** 2, 0) / window.length;
-  return Math.sqrt(variance);
+  const mean = window.reduce((s, p) => s + p.price, 0) / window.length
+  const variance = window.reduce((s, p) => s + (p.price - mean) ** 2, 0) / window.length
+  return Math.sqrt(variance)
 }
 
 // ---------------------------------------------------------------------------
@@ -101,28 +95,21 @@ export function computeLocalCurveDispersion(
  *
  * Clamped to [1, MAX_DISTANCE_FACTOR].
  */
-export function computeDistanceFactor(
-  snapshot: MarketSnapshot,
-  targetContract: string,
-): number {
+export function computeDistanceFactor(snapshot: MarketSnapshot, targetContract: string): number {
   const quarterly = snapshot.points
-    .filter((p) => p.contract.startsWith("Q"))
-    .sort((a, b) => a.deliveryOrdinal - b.deliveryOrdinal);
+    .filter((p) => p.contract.startsWith('Q'))
+    .sort((a, b) => a.deliveryOrdinal - b.deliveryOrdinal)
 
-  const idx = quarterly.findIndex((p) => p.contract === targetContract);
-  if (idx < 0) return 1;
+  const idx = quarterly.findIndex((p) => p.contract === targetContract)
+  if (idx < 0) return 1
 
-  const target = quarterly[idx];
-  const prevGap =
-    idx > 0 ? target.deliveryOrdinal - quarterly[idx - 1].deliveryOrdinal : 1;
-  const nextGap =
-    idx < quarterly.length - 1
-      ? quarterly[idx + 1].deliveryOrdinal - target.deliveryOrdinal
-      : 1;
+  const target = quarterly[idx]
+  const prevGap = idx > 0 ? target.deliveryOrdinal - quarterly[idx - 1].deliveryOrdinal : 1
+  const nextGap = idx < quarterly.length - 1 ? quarterly[idx + 1].deliveryOrdinal - target.deliveryOrdinal : 1
 
-  const maxGap = Math.max(prevGap, nextGap);
-  const factor = 1 + (maxGap - 1) * 0.5;
-  return Math.min(factor, MAX_DISTANCE_FACTOR);
+  const maxGap = Math.max(prevGap, nextGap)
+  const factor = 1 + (maxGap - 1) * 0.5
+  return Math.min(factor, MAX_DISTANCE_FACTOR)
 }
 
 // ---------------------------------------------------------------------------
@@ -137,11 +124,12 @@ export function computeDistanceFactor(
  *   where referencePoints = 10 (full quarterly curve)
  */
 export function computeDataDensityFactor(snapshot: MarketSnapshot): number {
-  const REFERENCE_POINTS = 10;
-  const n = snapshot.points.length;
-  if (n <= 0) throw new FuturesMispricingInputError("computeDataDensityFactor: snapshot must contain at least one point");
-  if (n >= REFERENCE_POINTS) return 1;
-  return Math.sqrt(REFERENCE_POINTS / n);
+  const REFERENCE_POINTS = 10
+  const n = snapshot.points.length
+  if (n <= 0)
+    throw new FuturesMispricingInputError('computeDataDensityFactor: snapshot must contain at least one point')
+  if (n >= REFERENCE_POINTS) return 1
+  return Math.sqrt(REFERENCE_POINTS / n)
 }
 
 // ---------------------------------------------------------------------------
@@ -163,26 +151,17 @@ export function computeCombinedUncertainty(
   historicalDispersion: number,
   snapshot: MarketSnapshot,
   targetContract: string,
-  config: Pick<
-    FuturesMispricingConfigV1,
-    "minimumHalfWidth" | "uncertaintyCoverageFactor"
-  > = DEFAULT_CONFIG,
+  config: Pick<FuturesMispricingConfigV1, 'minimumHalfWidth' | 'uncertaintyCoverageFactor'> = DEFAULT_CONFIG
 ): { halfWidth: number; sigma: number; sigmaLocal: number; distanceFactor: number; densityFactor: number } {
-  const sigmaLocal = computeLocalCurveDispersion(snapshot, targetContract);
-  const distanceFactor = computeDistanceFactor(snapshot, targetContract);
-  const densityFactor = computeDataDensityFactor(snapshot);
+  const sigmaLocal = computeLocalCurveDispersion(snapshot, targetContract)
+  const distanceFactor = computeDistanceFactor(snapshot, targetContract)
+  const densityFactor = computeDataDensityFactor(snapshot)
 
-  const sigmaCombined =
-    Math.sqrt(historicalDispersion ** 2 + sigmaLocal ** 2) *
-    distanceFactor *
-    densityFactor;
+  const sigmaCombined = Math.sqrt(historicalDispersion ** 2 + sigmaLocal ** 2) * distanceFactor * densityFactor
 
-  const halfWidth = Math.max(
-    config.uncertaintyCoverageFactor * sigmaCombined,
-    config.minimumHalfWidth,
-  );
+  const halfWidth = Math.max(config.uncertaintyCoverageFactor * sigmaCombined, config.minimumHalfWidth)
 
-  return { halfWidth, sigma: sigmaCombined, sigmaLocal, distanceFactor, densityFactor };
+  return { halfWidth, sigma: sigmaCombined, sigmaLocal, distanceFactor, densityFactor }
 }
 
 // ---------------------------------------------------------------------------
@@ -206,18 +185,15 @@ export function buildUncertaintyRange(
   historicalObs: Array<{ price: number }>,
   snapshot: MarketSnapshot,
   targetContract: string,
-  config: Pick<
-    FuturesMispricingConfigV1,
-    "minimumHalfWidth" | "uncertaintyCoverageFactor"
-  > = DEFAULT_CONFIG,
+  config: Pick<FuturesMispricingConfigV1, 'minimumHalfWidth' | 'uncertaintyCoverageFactor'> = DEFAULT_CONFIG
 ): ValuationRange {
-  const sigmaHist = computeHistoricalDispersion(historicalObs);
+  const sigmaHist = computeHistoricalDispersion(historicalObs)
   const { halfWidth, sigma, sigmaLocal, distanceFactor, densityFactor } = computeCombinedUncertainty(
     sigmaHist,
     snapshot,
     targetContract,
-    config,
-  );
+    config
+  )
 
   return {
     lower: centralEstimate - halfWidth,
@@ -230,5 +206,5 @@ export function buildUncertaintyRange(
       `distanceFactor=${distanceFactor.toFixed(2)}, densityFactor=${densityFactor.toFixed(2)}, ` +
       `σ_combined=${sigma.toFixed(2)}, halfWidth=${halfWidth.toFixed(2)} PLN/MWh. ` +
       `Coverage factor k=${config.uncertaintyCoverageFactor} (deterministic interval, not probabilistic).`,
-  };
+  }
 }

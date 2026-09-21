@@ -1,5 +1,5 @@
-import { normalizeDipBaseUrl } from "@/lib/dip-url";
-import { validateEntsogHistoricalDateRange } from "@/lib/entsog-date-range";
+import { normalizeDipBaseUrl } from '@/lib/dip-url'
+import { validateEntsogHistoricalDateRange } from '@/lib/entsog-date-range'
 import {
   DEFAULT_GAS_FORECAST_CAPABILITY_PATHS,
   type GasForecastProviderCheckInput,
@@ -8,18 +8,16 @@ import {
   toSafeRawBody,
   type GasForecastConnectionResult,
   type GasForecastProviderId,
-} from "@/lib/gas-forecast-provider-model";
+} from '@/lib/gas-forecast-provider-model'
 
-const DEFAULT_DIP_REQUEST_TIMEOUT_MS = 15_000;
-const ENABLED_DIAGNOSTIC_VALUES = new Set(["1", "true", "yes", "on"]);
+const DEFAULT_DIP_REQUEST_TIMEOUT_MS = 15_000
+const ENABLED_DIAGNOSTIC_VALUES = new Set(['1', 'true', 'yes', 'on'])
 
 function getDipRequestTimeoutMs() {
-  const raw = process.env.DIP_GAS_FORECAST_TIMEOUT_MS?.trim();
-  const parsed = raw ? Number(raw) : NaN;
+  const raw = process.env.DIP_GAS_FORECAST_TIMEOUT_MS?.trim()
+  const parsed = raw ? Number(raw) : NaN
 
-  return Number.isFinite(parsed) && parsed > 0
-    ? parsed
-    : DEFAULT_DIP_REQUEST_TIMEOUT_MS;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_DIP_REQUEST_TIMEOUT_MS
 }
 
 /**
@@ -30,189 +28,171 @@ function getDipRequestTimeoutMs() {
  * investigation.
  */
 function isGasForecastDiagnosticsEnabled() {
-  const raw = process.env.DIP_GAS_FORECAST_DIAGNOSTICS?.trim().toLowerCase();
-  return raw ? ENABLED_DIAGNOSTIC_VALUES.has(raw) : false;
+  const raw = process.env.DIP_GAS_FORECAST_DIAGNOSTICS?.trim().toLowerCase()
+  return raw ? ENABLED_DIAGNOSTIC_VALUES.has(raw) : false
 }
 
-export function logGasForecastDiagnostic(
-  level: "info" | "error",
-  event: string,
-  fields: Record<string, unknown>,
-) {
+export function logGasForecastDiagnostic(level: 'info' | 'error', event: string, fields: Record<string, unknown>) {
   if (!isGasForecastDiagnosticsEnabled()) {
-    return;
+    return
   }
 
-  console[level]("[gas-forecast-provider]", {
+  console[level]('[gas-forecast-provider]', {
     event,
     timestamp: new Date().toISOString(),
     ...fields,
-  });
+  })
 }
 
 function getDipBaseUrl() {
-  const raw =
-    process.env.DIP_API_BASE_URL ??
-    process.env.DIP_URL ??
-    process.env.NEXT_PUBLIC_DIP_API_BASE_URL ??
-    "";
+  const raw = process.env.DIP_API_BASE_URL ?? process.env.DIP_URL ?? process.env.NEXT_PUBLIC_DIP_API_BASE_URL ?? ''
 
-  return normalizeDipBaseUrl(raw);
+  return normalizeDipBaseUrl(raw)
 }
 
 function getDipApiKey() {
-  const raw = process.env.DIP_API_KEY ?? process.env.DIP_ADMIN_API_KEY ?? "";
-  return raw.trim();
+  const raw = process.env.DIP_API_KEY ?? process.env.DIP_ADMIN_API_KEY ?? ''
+  return raw.trim()
 }
 
 function getGasForecastCapabilityPath() {
-  return (
-    process.env.DIP_GAS_FORECAST_CAPABILITY_PATH?.trim() ??
-    process.env.GAS_FORECAST_CAPABILITY_PATH?.trim() ??
-    ""
-  );
+  return process.env.DIP_GAS_FORECAST_CAPABILITY_PATH?.trim() ?? process.env.GAS_FORECAST_CAPABILITY_PATH?.trim() ?? ''
 }
 
 function isAbsoluteUrl(value: string) {
-  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value);
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value)
 }
 
 function hasAbsoluteCapabilityUrl() {
-  const path = getGasForecastCapabilityPath();
-  return Boolean(path) && isAbsoluteUrl(path);
+  const path = getGasForecastCapabilityPath()
+  return Boolean(path) && isAbsoluteUrl(path)
 }
 
 export function getGasForecastCapabilityPaths() {
-  const configuredPath = getGasForecastCapabilityPath();
+  const configuredPath = getGasForecastCapabilityPath()
 
   if (!configuredPath) {
-    return [...DEFAULT_GAS_FORECAST_CAPABILITY_PATHS];
+    return [...DEFAULT_GAS_FORECAST_CAPABILITY_PATHS]
   }
 
-  return [configuredPath];
+  return [configuredPath]
 }
 
 function buildGasForecastCapabilityUrls() {
-  const baseUrl = getDipBaseUrl();
+  const baseUrl = getDipBaseUrl()
 
   return getGasForecastCapabilityPaths().map((path) =>
-    isAbsoluteUrl(path)
-      ? path.replace(/\/+$/, "")
-      : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`,
-  );
+    isAbsoluteUrl(path) ? path.replace(/\/+$/, '') : `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
+  )
 }
 
 function buildInvalidEndpointMessage(urls: string[]) {
-  return `Invalid API endpoint. Tried: ${urls.join(", ")}`;
+  return `Invalid API endpoint. Tried: ${urls.join(', ')}`
 }
 
 const AGSI_CONNECTIVITY_CHECK_INPUT = {
-  start_date: "2025-01-01",
-  end_date: "2025-01-07",
-  type: "eu",
-} as const;
+  start_date: '2025-01-01',
+  end_date: '2025-01-07',
+  type: 'eu',
+} as const
 
-function buildGasForecastCapabilityRequest(
-  providerId: GasForecastProviderId,
-  input?: GasForecastProviderCheckInput,
-) {
-  if (providerId === "agsi") {
+function buildGasForecastCapabilityRequest(providerId: GasForecastProviderId, input?: GasForecastProviderCheckInput) {
+  if (providerId === 'agsi') {
     return {
-      provider: "agsi" as const,
+      provider: 'agsi' as const,
       agsi: AGSI_CONNECTIVITY_CHECK_INPUT,
-    };
+    }
   }
 
-  if (providerId === "entsog") {
+  if (providerId === 'entsog') {
     return {
-      provider: "entsog" as const,
+      provider: 'entsog' as const,
       entsog: input?.entsog ?? {},
-    };
+    }
   }
 
-  if (providerId === "weather") {
+  if (providerId === 'weather') {
     return {
-      provider: "weather" as const,
+      provider: 'weather' as const,
       weather: input?.weather ?? {},
-    };
+    }
   }
 
-  if (providerId === "ttf") {
+  if (providerId === 'ttf') {
     return {
-      provider: "ttf" as const,
+      provider: 'ttf' as const,
       ttf: input?.ttf ?? {},
-    };
+    }
   }
 
   return {
     provider: providerId,
     [providerId]: {},
-  };
+  }
 }
 
 async function readJsonOrText(response: Response) {
-  const body = await response.text();
+  const body = await response.text()
 
   if (!body) {
-    return null;
+    return null
   }
 
   try {
-    return JSON.parse(body) as unknown;
+    return JSON.parse(body) as unknown
   } catch {
     // Not JSON: never surface the raw DIP body verbatim — redact anything
     // credential-shaped and truncate it to a safe length before it can ever
     // reach the UI or a diagnostics log.
-    const safeBody = toSafeRawBody(body);
-    return { message: safeBody, rawBody: safeBody };
+    const safeBody = toSafeRawBody(body)
+    return { message: safeBody, rawBody: safeBody }
   }
 }
 
 export async function testGasForecastProviderConnection(
   providerId: GasForecastProviderId,
-  input?: GasForecastProviderCheckInput,
+  input?: GasForecastProviderCheckInput
 ): Promise<GasForecastConnectionResult> {
-  const baseUrl = getDipBaseUrl();
-  const apiKey = getDipApiKey();
-  const hasApiKey = Boolean(apiKey);
-  const capabilityUrls = buildGasForecastCapabilityUrls();
-  const timeoutMs = getDipRequestTimeoutMs();
-  logGasForecastDiagnostic("info", "server_action_entered", {
+  const baseUrl = getDipBaseUrl()
+  const apiKey = getDipApiKey()
+  const hasApiKey = Boolean(apiKey)
+  const capabilityUrls = buildGasForecastCapabilityUrls()
+  const timeoutMs = getDipRequestTimeoutMs()
+  logGasForecastDiagnostic('info', 'server_action_entered', {
     providerId,
     dipApiBaseUrlPresent: Boolean(process.env.DIP_API_BASE_URL),
     dipApiBaseUrlNormalized: baseUrl || null,
     dipApiKeyPresent: hasApiKey,
     requestUrls: capabilityUrls,
-    httpMethod: "POST",
+    httpMethod: 'POST',
     requestTimeoutMs: timeoutMs,
-  });
+  })
 
   if ((!baseUrl && !hasAbsoluteCapabilityUrl()) || !apiKey) {
-    logGasForecastDiagnostic("error", "failure", {
+    logGasForecastDiagnostic('error', 'failure', {
       providerId,
-      failureStage: "before_fetch",
+      failureStage: 'before_fetch',
       exceptionName: null,
       exceptionMessage: null,
       httpStatus: 503,
-    });
+    })
 
     return mapGasForecastFailure({
       providerId,
       httpStatus: 503,
       responseTimeMs: null,
       payload: null,
-      stage: "configuration",
-    });
+      stage: 'configuration',
+    })
   }
 
-  if (providerId === "entsog") {
-    const missing: string[] = [];
-    if (!input?.entsog?.pointDirection?.trim()) missing.push("pointDirection");
-    if (!input?.entsog?.from?.trim()) missing.push("from");
-    if (!input?.entsog?.to?.trim()) missing.push("to");
-    if (input?.entsog?.indicator !== "Physical Flow")
-      missing.push('indicator="Physical Flow"');
-    if (input?.entsog?.periodType !== "day") missing.push('periodType="day"');
+  if (providerId === 'entsog') {
+    const missing: string[] = []
+    if (!input?.entsog?.pointDirection?.trim()) missing.push('pointDirection')
+    if (!input?.entsog?.from?.trim()) missing.push('from')
+    if (!input?.entsog?.to?.trim()) missing.push('to')
+    if (input?.entsog?.indicator !== 'Physical Flow') missing.push('indicator="Physical Flow"')
+    if (input?.entsog?.periodType !== 'day') missing.push('periodType="day"')
 
     if (missing.length > 0) {
       return mapGasForecastFailure({
@@ -220,28 +200,28 @@ export async function testGasForecastProviderConnection(
         httpStatus: 503,
         responseTimeMs: null,
         payload: null,
-        stage: "configuration",
-        fallbackMessage: `ENTSOG provider check is not configured. Missing: ${missing.join(", ")}.`,
-      });
+        stage: 'configuration',
+        fallbackMessage: `ENTSOG provider check is not configured. Missing: ${missing.join(', ')}.`,
+      })
     }
 
-    const entsogInput = input?.entsog;
+    const entsogInput = input?.entsog
     if (!entsogInput) {
       return mapGasForecastFailure({
         providerId,
         httpStatus: 503,
         responseTimeMs: null,
         payload: null,
-        stage: "configuration",
+        stage: 'configuration',
         fallbackMessage:
           'ENTSOG provider check is not configured. Missing: pointDirection, from, to, indicator="Physical Flow", periodType="day".',
-      });
+      })
     }
 
     const dateError = validateEntsogHistoricalDateRange({
       from: entsogInput.from,
       to: entsogInput.to,
-    });
+    })
 
     if (dateError) {
       return mapGasForecastFailure({
@@ -249,22 +229,22 @@ export async function testGasForecastProviderConnection(
         httpStatus: 400,
         responseTimeMs: null,
         payload: null,
-        kind: "configuration",
-        stage: "configuration",
+        kind: 'configuration',
+        stage: 'configuration',
         fallbackMessage: dateError,
-      });
+      })
     }
   }
 
-  if (providerId === "weather") {
-    const missing: string[] = [];
-    if (!input?.weather?.start_date?.trim()) missing.push("start_date");
-    if (!input?.weather?.end_date?.trim()) missing.push("end_date");
+  if (providerId === 'weather') {
+    const missing: string[] = []
+    if (!input?.weather?.start_date?.trim()) missing.push('start_date')
+    if (!input?.weather?.end_date?.trim()) missing.push('end_date')
     if (!input?.weather?.regions?.some((region) => region.trim())) {
-      missing.push("regions");
+      missing.push('regions')
     }
-    if (input?.weather?.metric !== "temperature_c") {
-      missing.push('metric="temperature_c"');
+    if (input?.weather?.metric !== 'temperature_c') {
+      missing.push('metric="temperature_c"')
     }
 
     if (missing.length > 0) {
@@ -273,28 +253,28 @@ export async function testGasForecastProviderConnection(
         httpStatus: 503,
         responseTimeMs: null,
         payload: null,
-        stage: "configuration",
-        fallbackMessage: `Weather provider check is not configured. Missing: ${missing.join(", ")}.`,
-      });
+        stage: 'configuration',
+        fallbackMessage: `Weather provider check is not configured. Missing: ${missing.join(', ')}.`,
+      })
     }
 
-    const weatherInput = input?.weather;
+    const weatherInput = input?.weather
     if (!weatherInput) {
       return mapGasForecastFailure({
         providerId,
         httpStatus: 503,
         responseTimeMs: null,
         payload: null,
-        stage: "configuration",
+        stage: 'configuration',
         fallbackMessage:
           'Weather provider check is not configured. Missing: start_date, end_date, regions, metric="temperature_c".',
-      });
+      })
     }
 
     const dateError = validateEntsogHistoricalDateRange({
       from: weatherInput.start_date,
       to: weatherInput.end_date,
-    });
+    })
 
     if (dateError) {
       return mapGasForecastFailure({
@@ -302,18 +282,18 @@ export async function testGasForecastProviderConnection(
         httpStatus: 400,
         responseTimeMs: null,
         payload: null,
-        kind: "configuration",
-        stage: "configuration",
+        kind: 'configuration',
+        stage: 'configuration',
         fallbackMessage: dateError,
-      });
+      })
     }
   }
 
-  if (providerId === "ttf") {
-    const ttfInput = input?.ttf;
-    const missing: string[] = [];
-    if (!ttfInput?.start_date?.trim()) missing.push("start_date");
-    if (!ttfInput?.end_date?.trim()) missing.push("end_date");
+  if (providerId === 'ttf') {
+    const ttfInput = input?.ttf
+    const missing: string[] = []
+    if (!ttfInput?.start_date?.trim()) missing.push('start_date')
+    if (!ttfInput?.end_date?.trim()) missing.push('end_date')
 
     if (missing.length > 0) {
       return mapGasForecastFailure({
@@ -321,15 +301,15 @@ export async function testGasForecastProviderConnection(
         httpStatus: 503,
         responseTimeMs: null,
         payload: null,
-        stage: "configuration",
-        fallbackMessage: `TTF provider check is not configured. Missing: ${missing.join(", ")}.`,
-      });
+        stage: 'configuration',
+        fallbackMessage: `TTF provider check is not configured. Missing: ${missing.join(', ')}.`,
+      })
     }
 
     const dateError = validateEntsogHistoricalDateRange({
-      from: ttfInput?.start_date ?? "",
-      to: ttfInput?.end_date ?? "",
-    });
+      from: ttfInput?.start_date ?? '',
+      to: ttfInput?.end_date ?? '',
+    })
 
     if (dateError) {
       return mapGasForecastFailure({
@@ -337,114 +317,99 @@ export async function testGasForecastProviderConnection(
         httpStatus: 400,
         responseTimeMs: null,
         payload: null,
-        kind: "configuration",
-        stage: "configuration",
+        kind: 'configuration',
+        stage: 'configuration',
         fallbackMessage: dateError,
-      });
+      })
     }
   }
 
-  const requestPayload = buildGasForecastCapabilityRequest(
-    providerId,
-    input,
-  );
+  const requestPayload = buildGasForecastCapabilityRequest(providerId, input)
 
-  const startedAt = performance.now();
+  const startedAt = performance.now()
 
   try {
     for (const capabilityUrl of capabilityUrls) {
-      const controller = new AbortController();
-      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+      const controller = new AbortController()
+      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs)
 
-      let response: Response;
+      let response: Response
 
       try {
         response = await fetch(capabilityUrl, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
           },
           body: JSON.stringify(requestPayload),
-          cache: "no-store",
+          cache: 'no-store',
           signal: controller.signal,
-        });
+        })
       } catch (fetchError) {
-        const responseTimeMs = Math.round(performance.now() - startedAt);
-        const isAbort =
-          fetchError instanceof Error && fetchError.name === "AbortError";
+        const responseTimeMs = Math.round(performance.now() - startedAt)
+        const isAbort = fetchError instanceof Error && fetchError.name === 'AbortError'
 
-        logGasForecastDiagnostic("error", "failure", {
+        logGasForecastDiagnostic('error', 'failure', {
           providerId,
           requestUrl: capabilityUrl,
-          failureStage: "during_fetch",
-          exceptionName:
-            fetchError instanceof Error ? fetchError.name : typeof fetchError,
-          exceptionMessage:
-            fetchError instanceof Error
-              ? fetchError.message
-              : String(fetchError),
+          failureStage: 'during_fetch',
+          exceptionName: fetchError instanceof Error ? fetchError.name : typeof fetchError,
+          exceptionMessage: fetchError instanceof Error ? fetchError.message : String(fetchError),
           httpStatus: null,
           responseTimeMs,
-        });
+        })
 
         return mapGasForecastFailure({
           providerId,
           httpStatus: null,
           responseTimeMs,
           payload: null,
-          stage: "network",
+          stage: 'network',
           fallbackMessage: isAbort
             ? `DIP request timed out after ${timeoutMs}ms (${capabilityUrl})`
             : fetchError instanceof Error
               ? fetchError.message
-              : "Network request to DIP failed",
-        });
+              : 'Network request to DIP failed',
+        })
       } finally {
-        clearTimeout(timeoutHandle);
+        clearTimeout(timeoutHandle)
       }
 
-      const responseTimeMs = Math.round(performance.now() - startedAt);
+      const responseTimeMs = Math.round(performance.now() - startedAt)
 
-      let payload: unknown;
+      let payload: unknown
 
       try {
-        payload = await readJsonOrText(response);
+        payload = await readJsonOrText(response)
       } catch (parseError) {
-        logGasForecastDiagnostic("error", "failure", {
+        logGasForecastDiagnostic('error', 'failure', {
           providerId,
           requestUrl: capabilityUrl,
-          failureStage: "during_response_parsing",
-          exceptionName:
-            parseError instanceof Error ? parseError.name : typeof parseError,
-          exceptionMessage:
-            parseError instanceof Error
-              ? parseError.message
-              : String(parseError),
+          failureStage: 'during_response_parsing',
+          exceptionName: parseError instanceof Error ? parseError.name : typeof parseError,
+          exceptionMessage: parseError instanceof Error ? parseError.message : String(parseError),
           httpStatus: response.status,
           responseTimeMs,
-        });
+        })
 
         return mapGasForecastFailure({
           providerId,
           httpStatus: response.status,
           responseTimeMs,
           payload: null,
-          stage: "parse",
-          fallbackMessage:
-            parseError instanceof Error
-              ? parseError.message
-              : "Failed to parse DIP response body",
-        });
+          stage: 'parse',
+          fallbackMessage: parseError instanceof Error ? parseError.message : 'Failed to parse DIP response body',
+        })
       }
 
-      logGasForecastDiagnostic("info", "response_received", {
+      logGasForecastDiagnostic('info', 'response_received', {
         providerId,
         requestUrl: capabilityUrl,
         httpStatus: response.status,
         responseTimeMs,
         responseBody: payload,
-      });
+      })
 
       if (response.ok) {
         return mapGasForecastSuccess({
@@ -452,7 +417,7 @@ export async function testGasForecastProviderConnection(
           httpStatus: response.status,
           responseTimeMs,
           payload,
-        });
+        })
       }
 
       if (response.status !== 404) {
@@ -461,11 +426,11 @@ export async function testGasForecastProviderConnection(
           httpStatus: response.status,
           responseTimeMs,
           payload,
-        });
+        })
 
         // Safe structured-error logging: only the parsed/classified fields,
         // never the request headers, DIP_API_KEY, or any other credential.
-        logGasForecastDiagnostic("error", "dip_error_response", {
+        logGasForecastDiagnostic('error', 'dip_error_response', {
           providerId,
           requestUrl: capabilityUrl,
           httpStatus: response.status,
@@ -473,9 +438,9 @@ export async function testGasForecastProviderConnection(
           kind: failure.kind,
           message: failure.message,
           errorDetail: failure.errorDetail ?? null,
-        });
+        })
 
-        return failure;
+        return failure
       }
     }
 
@@ -485,27 +450,25 @@ export async function testGasForecastProviderConnection(
       responseTimeMs: Math.round(performance.now() - startedAt),
       payload: null,
       fallbackMessage: buildInvalidEndpointMessage(capabilityUrls),
-    });
+    })
   } catch (error) {
-    const responseTimeMs = Math.round(performance.now() - startedAt);
+    const responseTimeMs = Math.round(performance.now() - startedAt)
 
-    logGasForecastDiagnostic("error", "failure", {
+    logGasForecastDiagnostic('error', 'failure', {
       providerId,
-      failureStage: "unknown",
+      failureStage: 'unknown',
       exceptionName: error instanceof Error ? error.name : typeof error,
-      exceptionMessage:
-        error instanceof Error ? error.message : String(error),
+      exceptionMessage: error instanceof Error ? error.message : String(error),
       httpStatus: null,
       responseTimeMs,
-    });
+    })
 
     return mapGasForecastFailure({
       providerId,
       httpStatus: null,
       responseTimeMs,
       payload: null,
-      fallbackMessage:
-        error instanceof Error ? error.message : "Unexpected provider error",
-    });
+      fallbackMessage: error instanceof Error ? error.message : 'Unexpected provider error',
+    })
   }
 }
