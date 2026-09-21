@@ -10,7 +10,7 @@ const copy = {
     eyebrow: 'QDIP OBSERVATORY · UNDERSTAND',
     title: 'Understand the recommendation, not just the output.',
     subtitle: 'Observatory is the inspection surface for QDIP decisions. Every application follows the same narrative: recommendation first, then alternatives, evidence and trace.',
-    inspectLabel: 'Decision inspection model', recommendation: 'Recommendation', recommended: 'Option B', confidence: 'Supported by current evidence',
+    inspectLabel: 'Decision inspection model', recommendation: 'Recommendation', recommended: 'Option B', confidence: 'Supported by current evidence', recommendedLabel: 'Recommended',
     evidence: 'Evidence', evidenceItems: ['Constraints satisfied', 'Priority fit is strongest', 'Trade-offs remain visible'],
     alternatives: 'Alternatives', alternativeItems: [['Option A', 'Higher cost'], ['Option C', 'Constraint conflict']], trace: 'Open decision trace', traceBody: 'Context → alternatives → evaluation → recommendation. The trace remains secondary until deeper inspection is needed.',
     demos: 'Live decision applications', demosBody: 'Different domains, the same inspection grammar. Open an application to examine a real recommendation and the evidence behind it.', open: 'Inspect decision',
@@ -20,7 +20,7 @@ const copy = {
   uk: {
     eyebrow: 'QDIP OBSERVATORY · РОЗУМІТИ', title: 'Розумійте рекомендацію, а не лише результат.',
     subtitle: 'Observatory — простір перевірки рішень QDIP. Кожен застосунок має однакову логіку: спочатку рекомендація, потім альтернативи, докази та trace.',
-    inspectLabel: 'Модель перевірки рішення', recommendation: 'Рекомендація', recommended: 'Варіант B', confidence: 'Підтверджено поточними доказами',
+    inspectLabel: 'Модель перевірки рішення', recommendation: 'Рекомендація', recommended: 'Варіант B', confidence: 'Підтверджено поточними доказами', recommendedLabel: 'Рекомендовано',
     evidence: 'Докази', evidenceItems: ['Обмеження виконані', 'Найкраща відповідність пріоритетам', 'Компроміси залишаються видимими'],
     alternatives: 'Альтернативи', alternativeItems: [['Варіант A', 'Вищі витрати'], ['Варіант C', 'Конфлікт з обмеженням']], trace: 'Відкрити trace рішення', traceBody: 'Контекст → альтернативи → оцінювання → рекомендація. Trace залишається другим рівнем, доки не потрібна глибша перевірка.',
     demos: 'Робочі decision applications', demosBody: 'Різні домени, однакова логіка перевірки. Відкрийте застосунок, щоб дослідити реальну рекомендацію та докази.', open: 'Дослідити рішення',
@@ -30,7 +30,7 @@ const copy = {
   pl: {
     eyebrow: 'QDIP OBSERVATORY · ZROZUMIEĆ', title: 'Zrozum rekomendację, nie tylko wynik.',
     subtitle: 'Observatory to warstwa inspekcji decyzji QDIP. Każda aplikacja ma tę samą narrację: najpierw rekomendacja, potem alternatywy, dowody i trace.',
-    inspectLabel: 'Model inspekcji decyzji', recommendation: 'Rekomendacja', recommended: 'Opcja B', confidence: 'Potwierdzone aktualnymi dowodami',
+    inspectLabel: 'Model inspekcji decyzji', recommendation: 'Rekomendacja', recommended: 'Opcja B', confidence: 'Potwierdzone aktualnymi dowodami', recommendedLabel: 'Rekomendowane',
     evidence: 'Dowody', evidenceItems: ['Ograniczenia spełnione', 'Najlepsze dopasowanie priorytetów', 'Kompromisy pozostają widoczne'],
     alternatives: 'Alternatywy', alternativeItems: [['Opcja A', 'Wyższy koszt'], ['Opcja C', 'Konflikt z ograniczeniem']], trace: 'Otwórz trace decyzji', traceBody: 'Kontekst → alternatywy → ocena → rekomendacja. Trace pozostaje drugim poziomem, dopóki nie jest potrzebna głębsza inspekcja.',
     demos: 'Działające aplikacje decyzyjne', demosBody: 'Różne domeny, ta sama logika inspekcji. Otwórz aplikację, aby zbadać rzeczywistą rekomendację i stojące za nią dowody.', open: 'Przeanalizuj decyzję',
@@ -62,7 +62,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
               <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-cyan-300">{t.recommendation}</span>
               <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
                 <div><strong className="text-3xl font-medium tracking-[-.035em] md:text-4xl">{t.recommended}</strong><p className="mt-2 text-sm text-slate-400">{t.confidence}</p></div>
-                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-xs text-emerald-300">Recommended</span>
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-xs text-emerald-300">{t.recommendedLabel}</span>
               </div>
               <div className="mt-8 border-t border-white/10 pt-5">
                 <span className="text-xs font-semibold uppercase tracking-[.16em] text-slate-500">{t.alternatives}</span>
