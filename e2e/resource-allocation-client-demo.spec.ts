@@ -237,11 +237,13 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
 
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
   await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
-  await expect(page.getByText('Manual baseline plan').first()).toBeVisible()
-  await expect(page.getByText(/20 more demand units/)).toBeVisible()
+  await expect(page.getByText('Reference manual plan').first()).toBeVisible()
+  await expect(page.getByText('+20', { exact: true })).toBeVisible()
+  await expect(page.getByText('more demand units', { exact: true })).toBeVisible()
+  await expect(page.getByText('without adding teams', { exact: true })).toBeVisible()
   await expect(
     page.getByLabel(
-      'Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.'
+      'Share of priority demand units the modelled plan can serve across the full planning horizon.'
     )
   ).toBeVisible()
   expect(sawResponsibleCitizensInput).toBe(true)
