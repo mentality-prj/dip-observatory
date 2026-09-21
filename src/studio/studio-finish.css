@@ -146,9 +146,7 @@
 }
 
 .studio-sidebar-intro {
-  padding: 8px 10px 16px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #d1e1d6;
+  display: none;
 }
 
 .studio-sidebar-intro > small {
@@ -177,10 +175,7 @@
 }
 
 .studio-nav-label {
-  padding: 8px 10px 6px;
-  color: #72827a;
-  font-size: 0.65rem;
-  letter-spacing: 0.11em;
+  display: none;
 }
 
 .studio-sidebar nav a {
@@ -347,7 +342,15 @@
 }
 
 .studio-main > .ds-workflow .ds-workflow-index {
-  color: #058242;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #05763b;
+  background: #e0f5e6;
+  font-size: 0.66rem;
+  letter-spacing: 0;
 }
 
 .studio-main > .ds-workflow .ds-workflow-step strong {
@@ -1002,4 +1005,13 @@ body:has(.studio-shell)::-webkit-scrollbar-thumb {
     padding-left: 0;
     border-left: 0;
   }
+}
+
+.studio-editor-workspace {
+  display: grid;
+  gap: 14px;
+}
+.studio-editor-toolbar {
+  display: flex;
+  justify-content: flex-start;
 }
