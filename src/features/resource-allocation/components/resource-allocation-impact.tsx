@@ -27,6 +27,7 @@ const labels = {
     recommendationSubtitle:
       'Поточний розподіл не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
     current: 'Якщо на весь період залишити поточний розподіл без змін',
+    canonicalBaseline: 'Ручний базовий план',
     recommended: 'Рекомендований план QDIP',
     priorityHelp:
       'Частка critical/high-priority одиниць потреб, які модельований план дозволяє обслужити протягом обраного періоду.',
@@ -50,6 +51,7 @@ const labels = {
     recommendationSubtitle:
       'The current allocation could not be evaluated under the same scenario, so only the recommended plan is shown.',
     current: 'Keep the current allocation unchanged for the full horizon',
+    canonicalBaseline: 'Manual baseline plan',
     recommended: 'Recommended QDIP plan',
     priorityHelp: 'Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.',
     moveEvents: 'Move events over the horizon',
@@ -72,6 +74,7 @@ const labels = {
     recommendationSubtitle:
       'Bieżącej alokacji nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
     current: 'Pozostaw bieżący przydział bez zmian przez cały horyzont',
+    canonicalBaseline: 'Ręczny plan bazowy',
     recommended: 'Rekomendowany plan QDIP',
     priorityHelp:
       'Udział jednostek potrzeb krytycznych i wysokiego priorytetu, które modelowany plan może obsłużyć w wybranym horyzoncie.',
@@ -101,6 +104,17 @@ export function ResourceAllocationImpact({
 }: Props) {
   const t = labels[locale]
   const compared = Boolean(baseline)
+  const baselineLabel =
+    baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
+  const currentPriority =
+    baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
+  const recommendedPriority = summary.priority_coverage ?? metrics.priority_coverage
+  const currentTotalCoverage =
+    baseline && baseline.summary.total_available > 0
+      ? baseline.summary.served / baseline.summary.total_available
+      : baseline?.metrics.total_coverage
+  const recommendedTotalCoverage =
+    summary.total_available > 0 ? summary.served / summary.total_available : metrics.total_coverage
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
@@ -128,7 +142,7 @@ export function ResourceAllocationImpact({
         <>
           <div className="mt-5 grid gap-2 text-xs sm:grid-cols-2">
             <div className="border border-white/10 bg-white/[0.03] p-3">
-              <span className="text-slate-500">{t.current}</span>
+              <span className="text-slate-500">{baselineLabel}</span>
             </div>
             <div className="border border-rose-300/20 bg-rose-300/[0.06] p-3">
               <span className="font-bold text-rose-200">{t.recommended}</span>
@@ -155,20 +169,20 @@ export function ResourceAllocationImpact({
         <Impact
           label={t.priority}
           help={t.priorityHelp}
-          current={baseline?.metrics.priority_coverage}
-          recommended={metrics.priority_coverage}
+          current={currentPriority}
+          recommended={recommendedPriority}
           format="pct"
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
         <Impact
           label={t.total}
-          current={baseline?.metrics.total_coverage}
-          recommended={metrics.total_coverage}
+          current={currentTotalCoverage}
+          recommended={recommendedTotalCoverage}
           format="pct"
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
         <Impact
@@ -176,7 +190,7 @@ export function ResourceAllocationImpact({
           current={baseline?.summary.served}
           recommended={summary.served}
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
         <Impact
@@ -185,7 +199,7 @@ export function ResourceAllocationImpact({
           recommended={summary.closing_unmet}
           inverse
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
         <Impact
@@ -194,7 +208,7 @@ export function ResourceAllocationImpact({
           recommended={metrics.capacity_utilization}
           format="pct"
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
         <Impact
@@ -203,7 +217,7 @@ export function ResourceAllocationImpact({
           recommended={metrics.travel_cost}
           inverse
           unavailable={t.unavailable}
-          currentLabel={t.current}
+          currentLabel={baselineLabel}
           recommendedLabel={t.recommended}
         />
       </div>

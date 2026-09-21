@@ -110,43 +110,43 @@ export const RESPONSIBLE_CITIZENS_PROFILE: ResourceAllocationInput = {
       id: 'Краматорський напрямок',
       max_teams: 2,
       demand: [
-        { service: 'psychosocial', units: 22, priority: 'critical' },
-        { service: 'legal', units: 12, priority: 'high' },
+        { service: 'psychosocial', units: 48, priority: 'critical' },
+        { service: 'legal', units: 26, priority: 'high' },
       ],
       daily_demand: {
-        Wed: [{ service: 'psychosocial', units: 6, priority: 'critical' }],
+        Wed: [{ service: 'psychosocial', units: 13, priority: 'critical' }],
       },
     },
     {
       id: 'Покровський напрямок',
       max_teams: 2,
       demand: [
-        { service: 'case-management', units: 18, priority: 'critical' },
-        { service: 'legal', units: 14, priority: 'high' },
+        { service: 'case-management', units: 40, priority: 'critical' },
+        { service: 'legal', units: 31, priority: 'high' },
       ],
     },
     {
       id: 'Слов’янський напрямок',
       max_teams: 2,
       demand: [
-        { service: 'psychosocial', units: 14, priority: 'high' },
-        { service: 'child-support', units: 16, priority: 'high' },
+        { service: 'psychosocial', units: 31, priority: 'high' },
+        { service: 'child-support', units: 35, priority: 'high' },
       ],
     },
     {
       id: 'Дніпровський хаб',
       max_teams: 3,
       demand: [
-        { service: 'case-management', units: 12, priority: 'normal' },
-        { service: 'child-support', units: 10, priority: 'normal' },
+        { service: 'case-management', units: 26, priority: 'normal' },
+        { service: 'child-support', units: 22, priority: 'normal' },
       ],
     },
     {
       id: 'Запорізький хаб',
       max_teams: 2,
       demand: [
-        { service: 'legal', units: 10, priority: 'high' },
-        { service: 'psychosocial', units: 12, priority: 'high' },
+        { service: 'legal', units: 22, priority: 'high' },
+        { service: 'psychosocial', units: 26, priority: 'high' },
       ],
       accessibility: { Thu: false },
     },
@@ -218,11 +218,50 @@ export const RESPONSIBLE_CITIZENS_PROFILE: ResourceAllocationInput = {
     'Мобільна команда 4': 'Запорізький хаб',
     'Мобільна команда 5': 'Дніпровський хаб',
   },
+  baseline_plan: {
+    Mon: {
+      'Мобільна команда 1': 'Дніпровський хаб',
+      'Мобільна команда 2': 'Краматорський напрямок',
+      'Мобільна команда 3': 'Слов’янський напрямок',
+      'Мобільна команда 4': 'Запорізький хаб',
+      'Мобільна команда 5': 'Дніпровський хаб',
+    },
+    Tue: {
+      'Мобільна команда 1': 'Дніпровський хаб',
+      'Мобільна команда 2': 'Покровський напрямок',
+      'Мобільна команда 3': 'Слов’янський напрямок',
+      'Мобільна команда 4': 'Запорізький хаб',
+      'Мобільна команда 5': 'Дніпровський хаб',
+    },
+    Wed: {
+      'Мобільна команда 1': 'Дніпровський хаб',
+      'Мобільна команда 2': 'Покровський напрямок',
+      'Мобільна команда 3': 'Слов’янський напрямок',
+      'Мобільна команда 4': 'Запорізький хаб',
+      'Мобільна команда 5': 'Дніпровський хаб',
+    },
+    Thu: {
+      'Мобільна команда 1': 'Дніпровський хаб',
+      'Мобільна команда 2': 'Покровський напрямок',
+      'Мобільна команда 3': 'Слов’янський напрямок',
+      'Мобільна команда 4': 'Дніпровський хаб',
+      'Мобільна команда 5': 'Дніпровський хаб',
+    },
+    Fri: {
+      'Мобільна команда 1': 'Дніпровський хаб',
+      'Мобільна команда 2': 'Покровський напрямок',
+      'Мобільна команда 3': 'Слов’янський напрямок',
+      'Мобільна команда 4': 'Дніпровський хаб',
+      'Мобільна команда 5': 'Дніпровський хаб',
+    },
+  },
   budget: 240,
   target_priority_coverage: 0.9,
   provenance: {
-    source: 'responsible-citizens-synthetic-v1',
-    mapping_version: '1',
+    source: 'responsible-citizens-canonical-v1',
+    mapping_version: '2',
+    case_id: 'responsible-citizens-canonical-v1',
+    planning_unit: 'synthetic-service-demand-unit',
   },
 }
 
@@ -249,17 +288,29 @@ export function cloneResourceAllocationInput(input: ResourceAllocationInput): Re
 export function resourceAllocationStats(input: ResourceAllocationInput) {
   const services = new Set<string>()
   let openingNeeds = 0
+  let incomingNeeds = 0
+  const days = input.planning_period?.days ?? []
+
   for (const community of input.communities) {
     for (const demand of community.demand) {
       services.add(demand.service)
       openingNeeds += demand.units
     }
+    for (const day of days) {
+      for (const demand of community.daily_demand?.[day] ?? []) {
+        services.add(demand.service)
+        incomingNeeds += demand.units
+      }
+    }
   }
+
   return {
     communities: input.communities.length,
     teams: input.teams.length,
     openingNeeds,
+    incomingNeeds,
+    horizonNeeds: openingNeeds + incomingNeeds,
     services: services.size,
-    days: input.planning_period?.days.length ?? 1,
+    days: days.length || 1,
   }
 }

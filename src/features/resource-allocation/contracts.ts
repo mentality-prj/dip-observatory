@@ -7,10 +7,23 @@ export type ResourceAllocationMetrics = {
   operating_cost?: number
 }
 
-export type ResourceAllocationDemandSummary = { total_available: number; served: number; closing_unmet: number }
+export type ResourceAllocationDemandSummary = {
+  initial_stock?: number
+  new_demand?: number
+  total_available: number
+  served: number
+  closing_unmet: number
+  initial_priority_stock?: number
+  new_priority_demand?: number
+  total_priority_available?: number
+  priority_served?: number
+  closing_priority_unmet?: number
+  priority_coverage?: number
+}
 export type ResourceAllocationBaseline = {
   metrics: ResourceAllocationMetrics
   summary: ResourceAllocationDemandSummary
+  kind?: 'canonical-plan' | 'keep-current'
 }
 
 export type ResourceAllocationAssignmentExplanation = {
@@ -126,6 +139,7 @@ export type ResourceAllocationInput = {
   current_allocation?: Record<string, string | null>
   manual_allocation?: Record<string, unknown> | null
   baseline_allocation?: Record<string, string | null> | null
+  baseline_plan?: Record<string, Record<string, string | null>> | null
   planning_period?: { days: string[] } | null
   scenario?: ResourceAllocationScenario | null
   budget?: number | null
@@ -134,6 +148,8 @@ export type ResourceAllocationInput = {
     source: string
     imported_at?: string | null
     mapping_version?: string | null
+    case_id?: string | null
+    planning_unit?: string | null
   } | null
   marginal_team_capacity?: number
   target_priority_coverage?: number
