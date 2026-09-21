@@ -27,25 +27,26 @@ export function DesignSystemProvider({
 
 export function ProductLockup({
   href,
+  brandHref,
   product,
   className,
   onClick,
 }: {
   href: string
+  brandHref?: string
   product: ProductName
   className?: string
   onClick?: () => void
 }) {
   return (
-    <Link
-      aria-label={`QDIP ${product} home`}
-      className={cn('ds-product-lockup', className)}
-      href={href}
-      onClick={onClick}
-    >
-      <span className="ds-product-lockup-brand">QDIP</span>
-      <span className="ds-product-lockup-product">.{product}</span>
-    </Link>
+    <div className={cn('ds-product-lockup', className)}>
+      <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick}>
+        QDIP
+      </Link>
+      <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
+        .{product}
+      </Link>
+    </div>
   )
 }
 
@@ -59,6 +60,7 @@ export function ProductSwitchLink({ href, label }: ProductSwitch) {
 
 export function ProductHeader({
   href,
+  brandHref,
   product,
   navigation,
   siteLink,
@@ -68,6 +70,7 @@ export function ProductHeader({
   className,
 }: {
   href: string
+  brandHref?: string
   product: ProductName
   navigation?: ReactNode
   siteLink?: ProductSwitch
@@ -79,7 +82,7 @@ export function ProductHeader({
   return (
     <header className={cn('ds-product-header', className)}>
       <div className="ds-product-header-inner">
-        <ProductLockup href={href} product={product} />
+        <ProductLockup href={href} brandHref={brandHref} product={product} />
         {navigation ? (
           <div className="ds-product-header-center">{navigation}</div>
         ) : (
@@ -88,8 +91,8 @@ export function ProductHeader({
         <div className="ds-product-header-actions">
           {status}
           {siteLink ? <ProductSwitchLink {...siteLink} /> : null}
-          <ProductSwitchLink {...productSwitch} />
           {utilities}
+          <ProductSwitchLink {...productSwitch} />
         </div>
       </div>
     </header>
@@ -101,6 +104,7 @@ export function ProductShell({
   mode = 'dark',
   className,
   href,
+  brandHref,
   product,
   navigation,
   mobileNavigation,
@@ -114,6 +118,7 @@ export function ProductShell({
   mode?: DesignMode
   className?: string
   href: string
+  brandHref?: string
   product: ProductName
   navigation?: ReactNode
   mobileNavigation?: ReactNode
@@ -127,6 +132,7 @@ export function ProductShell({
     <DesignSystemProvider theme={theme} mode={mode} className={className}>
       <ProductHeader
         href={href}
+        brandHref={brandHref}
         product={product}
         navigation={navigation}
         siteLink={siteLink}

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system'
-import { studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioHref } from '@/lib/platform-urls'
 import type { ProfileDimension } from './contracts'
 
 export const profileSections = [
@@ -28,6 +28,8 @@ export function dimensionSource(item: ProfileDimension): string {
 export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
   return (
     <nav aria-label="Breadcrumb" className="studio-breadcrumbs">
+      <Link href={marketingHref('en')} aria-label="QDIP home" title="QDIP home">⌂</Link>
+      <span aria-hidden="true"> / </span>
       <Link href={studioHref()}>Decision Studio</Link>
       {items.map((item, index) => (
         <span key={index}>

@@ -34,24 +34,24 @@
   font-size: var(--ds-text-display);
   line-height: 0.96;
   letter-spacing: -0.045em;
-  font-weight: 600;
+  font-weight: 400;
 }
 .ds-h1 {
   font-size: var(--ds-text-h1);
   line-height: var(--ds-leading-heading);
   letter-spacing: -0.035em;
-  font-weight: 600;
+  font-weight: 400;
 }
 .ds-h2 {
   font-size: var(--ds-text-h2);
   line-height: 1.08;
   letter-spacing: -0.025em;
-  font-weight: 600;
+  font-weight: 450;
 }
 .ds-h3 {
   font-size: var(--ds-text-h3);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 500;
 }
 .ds-lead {
   font-size: var(--ds-text-lead);
