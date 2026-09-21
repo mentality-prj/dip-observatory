@@ -13,13 +13,33 @@ export type ResourceAllocationBaseline = {
   summary: ResourceAllocationDemandSummary
 }
 
+export type ResourceAllocationAssignmentExplanation = {
+  day?: string
+  team_id: string
+  from: string | null
+  to: string | null
+  matched_services: string[]
+  priority_demand_units: number
+  served_units: number
+  priority_served_units: number
+  travel_cost: number
+  travel_time_minutes: number
+  constraint_checks: Array<{
+    code: string
+    passed: boolean
+    value?: number | string
+  }>
+  rationale_codes: string[]
+}
+
 export type ResourceAllocationDayPlan = {
   day: string
   status: string
   recommended: {
     assignments: Record<string, string | null>
     metrics: ResourceAllocationMetrics
-    evidence?: string[]
+    evidence?: Array<string | Record<string, unknown>>
+    assignment_explanations?: ResourceAllocationAssignmentExplanation[]
   }
   demand: { opening: number; served: number; closing_unmet: number }
 }
