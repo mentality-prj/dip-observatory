@@ -10,7 +10,8 @@
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "test": "node --import tsx --test src/features/gtm-lab/contracts.test.ts src/features/gtm-lab/import-contracts.test.ts src/features/gtm-lab/components/gtm-production-import.test.ts src/lib/decision-lead.test.ts src/app/admin/plugins/gas-forecast/eidos/actions.test.ts src/features/gas-forecast/components/gas-forecast-eidos-page.test.tsx src/features/gas-forecast/components/gas-forecast-providers-page.test.tsx src/dip/plugins/futures-mispricing/futures-mispricing.test.ts src/lib/entsog-date-range.test.ts src/lib/entsog-point-directory.test.ts src/lib/gas-forecast-experiment-client.test.ts src/lib/gas-forecast-provider-client.test.ts src/lib/gas-forecast-provider-model.test.ts src/lib/observatory-contract.test.ts src/production-replanning/production-replanning.test.ts src/production-replanning/scenario-lab.test.ts src/production-replanning/what-if-controls.test.ts src/proxy.test.ts src/studio/proxy.test.ts src/supplier/supplier-decision.test.ts src/components/marketing/conversion-funnel.node.test.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "all": "pnpm check && pnpm test:e2e"
   },
@@ -31,15 +32,21 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/d3": "^7.4.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "jsdom": "^27.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.22.0"
 }
