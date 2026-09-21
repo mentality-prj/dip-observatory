@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Suspense, type ReactNode } from 'react'
 import { Cable, Telescope } from 'lucide-react'
 import '@/studio/studio.css'
@@ -28,17 +29,18 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
                 Core connected
               </StatusBadge>
             }
-            productSwitch={{
-              href: observatoryHref('', 'en'),
-              label: 'Open Observatory',
-              icon: <Telescope size={15} />,
-            }}
             utilities={
-              <div className="studio-language-switcher" aria-hidden>
-                <span>EN</span>
-                <span>UA</span>
-                <span>PL</span>
-              </div>
+              <>
+                <Link className="ds-button ds-button-secondary ds-button-sm" href={observatoryHref('', 'en')}>
+                  <Telescope size={15} aria-hidden />
+                  <span>Open Observatory</span>
+                </Link>
+                <div className="studio-language-switcher" aria-hidden>
+                  <span>EN</span>
+                  <span>UA</span>
+                  <span>PL</span>
+                </div>
+              </>
             }
           />
         }
@@ -72,9 +74,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <footer className="studio-footer">
-          <span>
-            <strong>QDIP</strong> <b>Studio</b>
-          </span>
+          <span><strong>QDIP</strong> <b>Studio</b></span>
           <small>Decision intelligence workspace</small>
         </footer>
       </div>
