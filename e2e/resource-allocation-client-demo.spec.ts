@@ -264,4 +264,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   await expect(page.getByTestId('resource-import-file')).toContainText('drop-test.csv')
   await expect(page.getByTestId('community-count')).toHaveText('2')
   await expect(page.getByTestId('team-count')).toHaveText('2')
+  await expect(page.getByTestId('resource-active-summary')).toContainText(
+    '2 teams. 2 communities. 20 opening needs. 5 days.'
+  )
 })
