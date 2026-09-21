@@ -29,8 +29,5 @@
 [data-ds-theme='amber'] { --ds-accent: #fcd34d; --ds-accent-rgb: 252 211 77; --ds-accent-contrast: #1c1402; --ds-focus: rgba(252, 211, 77, 0.58); }
 [data-ds-theme='burgundy'] { --ds-accent: #7a1838; --ds-accent-rgb: 122 24 56; --ds-accent-contrast: #fff; --ds-focus: rgba(122, 24, 56, 0.42); }
 [data-ds-theme='burgundy'][data-ds-mode='light'] { --ds-bg: #fbf8f8; --ds-surface: #f7f0f2; --ds-surface-raised: #fffdfd; --ds-border: #e8dadd; --ds-text: #171215; --ds-text-muted: #71656a; }
-[data-ds-theme='burgundy'][data-ds-mode='light'] h1 { color: var(--ds-accent); font-weight: 400; }
-[data-ds-theme='burgundy'][data-ds-mode='light'] h2,
-[data-ds-theme='burgundy'][data-ds-mode='light'] h3 { color: var(--ds-accent); font-weight: 500; }
 [data-ds-theme='rose'] { --ds-accent: #fda4af; --ds-accent-rgb: 253 164 175; --ds-accent-contrast: #26070c; --ds-focus: rgba(253, 164, 175, 0.58); }
 [data-ds-theme='violet'] { --ds-accent: #c4b5fd; --ds-accent-rgb: 196 181 253; --ds-accent-contrast: #170b2e; --ds-focus: rgba(196, 181, 253, 0.58); }
