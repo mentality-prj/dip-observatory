@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
@@ -18,6 +18,12 @@ import {
   ResourceAllocationManualEditor,
   type EvaluatedManualAllocation,
 } from './resource-allocation-manual-editor'
+import {
+  localizePlanningDay,
+  summarizeMovements,
+  trackResourceAllocation,
+} from '../presentation'
+import { ResourceAllocationAssignmentExplanation } from './resource-allocation-assignment-explanation'
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
 
@@ -42,6 +48,16 @@ const copy = {
       'QDIP врахує потреби, спеціалізації команд, їх поточне розташування, доступність локацій і переміщення на весь плановий період.',
     valueProp:
       'QDIP допомагає визначити, куди направити мобільні команди, щоб покрити більше пріоритетних потреб наявними ресурсами.',
+    heroQuestion: 'Чи можна покрити більше пріоритетних потреб тими самими командами?',
+    differentiation: 'На відміну від таблиці, QDIP оцінює наслідки розподілу на весь горизонт: де команда опиниться сьогодні впливає на доступні рішення завтра.',
+    simulate: 'Симулювати зміну ситуації',
+    recalculate: 'Перерахувати план',
+    scenarioChanged: 'СЦЕНАРІЙ ЗМІНЕНО',
+    technicalDetails: 'Технічні деталі',
+    technicalMethod: 'Метод розрахунку',
+    fewerMoves: 'Менше переміщень',
+    lowerMovement: 'Нижчий індекс переміщень',
+    balanced: 'Збалансований варіант',
     startHint: 'Перевірте дані та умови зліва, після чого запустіть розрахунок.',
     weekly: 'РЕКОМЕНДОВАНИЙ ПЛАН',
     weeklyTitle: 'Куди направити команди',
@@ -90,6 +106,16 @@ const copy = {
       'QDIP accounts for needs, team skills, current locations, location availability and movement across the full planning horizon.',
     valueProp:
       'QDIP helps decide where to send mobile teams so more priority needs are covered with the resources already available.',
+    heroQuestion: 'Can the same teams cover more priority demand?',
+    differentiation: 'Unlike a spreadsheet, QDIP evaluates consequences across the full horizon: where a team ends today changes what is feasible tomorrow.',
+    simulate: 'Simulate a change',
+    recalculate: 'Recalculate plan',
+    scenarioChanged: 'SCENARIO CHANGED',
+    technicalDetails: 'Technical details',
+    technicalMethod: 'Calculation method',
+    fewerMoves: 'Fewer moves',
+    lowerMovement: 'Lower movement index',
+    balanced: 'Balanced option',
     startHint: 'Review the data and conditions on the left, then run the calculation.',
     weekly: 'RECOMMENDED PLAN',
     weeklyTitle: 'Where to send teams',
@@ -138,6 +164,16 @@ const copy = {
       'QDIP uwzględnia potrzeby, kompetencje zespołów, bieżące lokalizacje, dostępność i przemieszczenia w całym horyzoncie planowania.',
     valueProp:
       'QDIP pomaga zdecydować, dokąd skierować zespoły mobilne, aby pokryć więcej priorytetowych potrzeb przy dostępnych zasobach.',
+    heroQuestion: 'Czy te same zespoły mogą pokryć więcej potrzeb priorytetowych?',
+    differentiation: 'W przeciwieństwie do arkusza QDIP ocenia skutki w całym horyzoncie: miejsce zakończenia pracy dziś wpływa na możliwości jutro.',
+    simulate: 'Symuluj zmianę sytuacji',
+    recalculate: 'Przelicz plan',
+    scenarioChanged: 'SCENARIUSZ ZMIENIONY',
+    technicalDetails: 'Szczegóły techniczne',
+    technicalMethod: 'Metoda obliczeń',
+    fewerMoves: 'Mniej przemieszczeń',
+    lowerMovement: 'Niższy indeks przemieszczeń',
+    balanced: 'Wariant zrównoważony',
     startHint: 'Sprawdź dane i warunki po lewej stronie, a następnie uruchom obliczenie.',
     weekly: 'REKOMENDOWANY PLAN',
     weeklyTitle: 'Dokąd skierować zespoły',
@@ -168,21 +204,6 @@ const copy = {
   },
 } satisfies Record<Locale, Record<string, string>>
 
-function countPlanMoves(
-  daily: Array<{ recommended: { assignments: Record<string, string | null> } }>,
-  initial: Record<string, string | null>
-) {
-  let previous = { ...initial }
-  let moves = 0
-  for (const day of daily) {
-    for (const [team, target] of Object.entries(day.recommended.assignments)) {
-      if (target !== null && previous[team] !== target) moves += 1
-    }
-    previous = { ...previous, ...day.recommended.assignments }
-  }
-  return moves
-}
-
 function profileLabel(profileId: string, importedName: string | null, importedLabel: string) {
   if (profileId === 'imported') return importedName ? `${importedLabel}: ${importedName}` : importedLabel
   return RESOURCE_ALLOCATION_PROFILES[profileId as ResourceAllocationProfileId]?.label ?? profileId
@@ -205,6 +226,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const [lastInput, setLastInput] = useState<Record<string, unknown> | null>(null)
   const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null)
   const [runRevision, setRunRevision] = useState(0)
+  const [selectedExplanationTeam, setSelectedExplanationTeam] = useState<string | null>(null)
 
   const stats = useMemo(() => resourceAllocationStats(inputData), [inputData])
   const communityNames = useMemo(() => inputData.communities.map((community) => community.id), [inputData])
@@ -220,22 +242,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     [inputData]
   )
   const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.openingNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
-  const topPriorityCommunities = useMemo(
-    () =>
-      inputData.communities
-        .map((community) => {
-          const base = community.demand ?? []
-          const daily = Object.values(community.daily_demand ?? {}).flat()
-          const priorityUnits = [...base, ...daily]
-            .filter((item) => item.priority === 'critical' || item.priority === 'high')
-            .reduce((sum, item) => sum + item.units, 0)
-          return { id: community.id, priorityUnits }
-        })
-        .filter((item) => item.priorityUnits > 0)
-        .sort((a, b) => b.priorityUnits - a.priorityUnits)
-        .slice(0, 2),
-    [inputData]
-  )
   const sourceBadge =
     profileId === 'imported'
       ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
@@ -245,6 +251,15 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
           ? 'Dane demo · syntetyczne i zagregowane · bez danych osobowych'
           : 'Demo dataset · synthetic aggregate data · no beneficiary PII'
 
+  useEffect(() => {
+    trackResourceAllocation('ra_demo_opened', locale, {
+      profile_type: profileId === 'imported' ? 'imported' : 'demo',
+      communities_count: stats.communities,
+      teams_count: stats.teams,
+      planning_days: stats.days,
+    })
+  }, [locale])
+
   function resetRunState() {
     setCapacityFactor(100)
     setBlockedCommunity('')
@@ -253,6 +268,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setManualSelected(null)
     setSelectedAlternative(0)
     setSelectedDay(0)
+    setSelectedExplanationTeam(null)
   }
 
   function changeProfile(nextProfileId: ResourceAllocationProfileId) {
@@ -270,9 +286,17 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   }
 
   async function run() {
+    const recalculating = Boolean(result)
+    trackResourceAllocation(recalculating ? 'ra_scenario_recalculated' : 'ra_calculation_started', locale, {
+      profile_type: profileId === 'imported' ? 'imported' : 'demo',
+      communities_count: stats.communities,
+      teams_count: stats.teams,
+      planning_days: stats.days,
+    })
     setRunning(true)
     setError(null)
     setManualSelected(null)
+    setSelectedExplanationTeam(null)
     const scenario = {
       capacity_factor: capacityFactor / 100,
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
@@ -284,6 +308,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       setSelectedAlternative(0)
       setSelectedDay(0)
       setRunRevision((revision) => revision + 1)
+      trackResourceAllocation('ra_calculation_completed', locale, {
+        profile_type: profileId === 'imported' ? 'imported' : 'demo',
+        communities_count: stats.communities,
+        teams_count: stats.teams,
+        planning_days: stats.days,
+      })
     } catch (reason) {
       setResult(null)
       setLastInput(null)
@@ -302,15 +332,17 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       })
     : null
   const day = activePlan?.daily[selectedDay] ?? null
-  const moved = useMemo(
+  const movementSummary = useMemo(
     () =>
-      day
-        ? Object.entries(day.recommended.assignments).filter(
-            ([team, target]) => currentAllocation[team] !== target
-          ).length
-        : 0,
-    [currentAllocation, day]
+      activePlan
+        ? summarizeMovements(activePlan.daily, currentAllocation, inputData.teams.length)
+        : { teamsMoved: 0, totalTeams: inputData.teams.length, moveEvents: 0 },
+    [activePlan, currentAllocation, inputData.teams.length]
   )
+  const selectedExplanation =
+    day?.recommended.assignment_explanations?.find(
+      (item) => item.team_id === selectedExplanationTeam
+    ) ?? null
 
   return (
     <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
