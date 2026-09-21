@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Check, Play } from "lucide-react";
+import { DesignSystemProvider } from "@/design-system";
 import { marketingLocaleHref } from "@/lib/platform-urls";
 import { marketingCopy, type MarketingLocale } from "./qdip-copy";
 import { QdipLogo } from "./qdip-logo";
@@ -23,7 +24,7 @@ function Header({ locale }: { locale: MarketingLocale }) {
 
 export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
   const c=marketingCopy[locale]; const valueIndexes=[1,3,11,5,7,9]; const decisionHref=path(locale,"decision");
-  return <main className={styles.site} id="main-content" lang={locale}><Header locale={locale}/>
+  return <DesignSystemProvider theme="rose" mode="light" className={styles.site}><main id="main-content" lang={locale}><Header locale={locale}/>
     <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link></div></div><DecisionSpace locale={locale}/></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div><div className={styles.questionGrid}>{c.problem.slice(1,5).map(x=><article key={x}>{x}</article>)}</div><p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p><p className={styles.businessBridge}>{c.bridge}</p></section>
     <DecisionPlayground locale={locale}/>
@@ -33,5 +34,5 @@ export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
     <PilotPath locale={locale} decisionHref={decisionHref}/>
     <section className={styles.finalCta}><h2>{c.conversion[0]}</h2><p>{c.conversion[1]}</p><Link className={styles.primaryButtonLarge} href={decisionHref}>{c.conversion[2]} <ArrowRight size={16}/></Link></section>
     <footer className={styles.footer}><QdipLogo/><nav><Link href={path(locale,"how-it-works")}>{c.nav[0]}</Link><Link href={path(locale,"use-cases")}>{c.nav[1]}</Link><Link href={path(locale,"core")}>QDIP Core</Link><Link href={path(locale,"core/research")}>Research</Link></nav><span>© {new Date().getFullYear()} QDIP</span></footer>
-  </main>;
+  </main></DesignSystemProvider>;
 }
