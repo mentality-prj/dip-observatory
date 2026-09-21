@@ -825,23 +825,24 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 )}
 
                 {lastInput && (
-                  <ResourceAllocationDecisionPanel
-                    key={`decision-${runRevision}`}
-                    input={lastInput}
-                    selected={activePlan as unknown as Record<string, unknown>}
-                    manualSelected={manualSelected}
-                    priorityCoverage={businessPriorityCoverage}
-                    served={activePlan.demand_summary.served}
-                    unmet={activePlan.demand_summary.closing_unmet}
-                    teamsMoved={movementSummary.teamsMoved}
-                    totalTeams={movementSummary.totalTeams}
-                    moveEvents={movementSummary.moveEvents}
-                    planningDays={stats.days}
-                    planCsv={planCsv}
-                    exportFileName={exportFileName}
-                    selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
-                    locale={locale}
-                  />
+                  <>
+                    <ResourceAllocationDecisionPanel
+                      key={`decision-${runRevision}`}
+                      input={lastInput}
+                      selected={activePlan as unknown as Record<string, unknown>}
+                      manualSelected={manualSelected}
+                      priorityCoverage={businessPriorityCoverage}
+                      served={activePlan.demand_summary.served}
+                      unmet={activePlan.demand_summary.closing_unmet}
+                      teamsMoved={movementSummary.teamsMoved}
+                      totalTeams={movementSummary.totalTeams}
+                      moveEvents={movementSummary.moveEvents}
+                      planningDays={stats.days}
+                      planCsv={planCsv}
+                      exportFileName={exportFileName}
+                      selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
+                      locale={locale}
+                    />
 
                   <section
                     data-testid="resource-pilot-cta"
@@ -879,6 +880,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                           : 'Upload aggregated data'}
                     </a>
                   </section>
+                  </>
                 )}
               </>
             )}
