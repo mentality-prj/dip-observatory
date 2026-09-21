@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import '@/studio/studio.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
 import { StudioNav } from '@/features/studio'
-import { marketingHref, observatoryHref } from '@/lib/platform-urls'
+import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {
   title: 'QDIP Studio',
@@ -13,14 +13,21 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
   return (
     <DesignSystemProvider theme="green" mode="light" className="studio-shell">
       <ProductHeader
-        href={marketingHref('en')}
+        href={studioHref()}
+        brandHref={marketingHref('en')}
         product="Studio"
-        siteLink={{ href: marketingHref('en'), label: 'QDIP Home' }}
-        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
+        productSwitch={{ href: observatoryHref('en'), label: 'Open Observatory' }}
         status={
           <StatusBadge>
             <i /> Core connected
           </StatusBadge>
+        }
+        utilities={
+          <nav className="studio-language-switcher" aria-label="Language">
+            <a href="/en" aria-current="page">EN</a>
+            <a href="/uk">UA</a>
+            <a href="/pl">PL</a>
+          </nav>
         }
       />
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
