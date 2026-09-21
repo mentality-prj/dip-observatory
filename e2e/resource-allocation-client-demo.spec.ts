@@ -195,3 +195,73 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
     )
     .toEqual({ scrollWidth: 390, clientWidth: 390 })
 })
+
+
+test('client data importer gives feedback and supports drag and drop', async ({ page }) => {
+  await page.goto('/en/resource-allocation')
+
+  const pickerCsv = [
+    'record_type,id,community,service,units,priority,current_community,skills,capacity,max_teams,from,to,cost,minutes,days,budget',
+    'community,Hub A,,,,,,,,2,,,,,,',
+    'demand,,Hub A,psychosocial,12,high,,,,,,,,,,',
+    'team,Team A,,,,,Hub A,psychosocial,10,,,,,,,',
+    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
+  ].join('\n')
+
+  const input = page.locator('input[type="file"]')
+  await input.setInputFiles({
+    name: 'picker-test.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(pickerCsv),
+  })
+
+  await expect(page.getByText('Dataset activated')).toBeVisible()
+  await expect(page.getByTestId('resource-import-file')).toContainText('picker-test.csv')
+  await expect(page.getByTestId('community-count')).toHaveText('1')
+  await expect(page.getByTestId('team-count')).toHaveText('1')
+
+  const dropCsv = [
+    'record_type,id,community,service,units,priority,current_community,skills,capacity,max_teams,from,to,cost,minutes,days,budget',
+    'community,Hub A,,,,,,,,2,,,,,,',
+    'community,Hub B,,,,,,,,2,,,,,,',
+    'demand,,Hub A,psychosocial,12,high,,,,,,,,,,',
+    'demand,,Hub B,legal,8,normal,,,,,,,,,,',
+    'team,Team A,,,,,Hub A,psychosocial|legal,10,,,,,,,',
+    'team,Team B,,,,,Hub B,legal,8,,,,,,,',
+    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
+  ].join('\n')
+
+  const dropzone = page.getByTestId('resource-import-dropzone')
+
+  await dropzone.evaluate((element, csv) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([csv], 'drop-test.csv', { type: 'text/csv' }))
+    element.dispatchEvent(
+      new DragEvent('dragenter', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      })
+    )
+  }, dropCsv)
+
+  await expect(dropzone).toHaveAttribute('data-dragging', 'true')
+  await expect(page.getByTestId('resource-import-drag-prompt')).toContainText('Drop the file to import')
+
+  await dropzone.evaluate((element, csv) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([csv], 'drop-test.csv', { type: 'text/csv' }))
+    element.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      })
+    )
+  }, dropCsv)
+
+  await expect(page.getByText('Dataset activated')).toBeVisible()
+  await expect(page.getByTestId('resource-import-file')).toContainText('drop-test.csv')
+  await expect(page.getByTestId('community-count')).toHaveText('2')
+  await expect(page.getByTestId('team-count')).toHaveText('2')
+})
