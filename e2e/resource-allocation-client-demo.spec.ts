@@ -335,8 +335,9 @@ test('capacity gap handles success and non-JSON backend errors', async ({ page }
 
   await page.goto('/en/resource-allocation')
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
 
-  await page.getByText('WHAT IS NEEDED FOR A BETTER RESULT', { exact: true }).click()
+  await page.getByTestId('capacity-gap-details').locator('summary').click()
 
   const analyze = page.getByRole('button', {
     name: 'Calculate required resources',
