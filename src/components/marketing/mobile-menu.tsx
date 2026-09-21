@@ -18,9 +18,18 @@ export function MobileMenu({ items }: { items: readonly Item[] }) {
       {open && (
         <nav aria-label="Mobile navigation" className={styles.mobileNav} id="mobile-navigation">
           {items.map((item) => (
-            <Link href={item.href} key={`${item.href}-${item.label}`} onClick={() => setOpen(false)}>
-              {item.icon ? <span aria-hidden>{item.icon}</span> : null}
-              {item.label}
+            <Link
+              href={item.href}
+              key={`${item.href}-${item.label}`}
+              onClick={() => setOpen(false)}
+              style={item.icon ? { alignItems: 'center', display: 'flex', gap: '10px' } : undefined}
+            >
+              {item.icon ? (
+                <span aria-hidden="true" style={{ display: 'inline-flex', flex: '0 0 18px', justifyContent: 'center' }}>
+                  {item.icon}
+                </span>
+              ) : null}
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
