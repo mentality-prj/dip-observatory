@@ -122,7 +122,10 @@ export function ResourceAllocationImpact({
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-600">
-            {t.scenario}{planningDays ? ` · ${planningDays}` : ''}
+            {t.scenario}
+            {planningDays
+              ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}`
+              : ''}
           </p>
         </>
       )}
