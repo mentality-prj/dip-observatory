@@ -1,13 +1,59 @@
 import { expect, test } from '@playwright/test'
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const metrics = {
-  priority_coverage: 0.86,
-  total_coverage: 0.74,
-  unmet_need: 28,
-  capacity_utilization: 0.82,
-  travel_cost: 24,
-  operating_cost: 128,
+
+const aggregateMetrics = {
+  priority_coverage: 0.455578,
+  total_coverage: 0.284163,
+  unmet_need: 121.6,
+  capacity_utilization: 0.644295,
+  travel_cost: 13.2,
+  operating_cost: 53.65,
+}
+
+const canonicalAssignments: Record<string, Record<string, string | null>> = {
+  Mon: {
+    'Мобільна команда 1': 'Краматорський напрямок',
+    'Мобільна команда 2': 'Покровський напрямок',
+    'Мобільна команда 3': 'Слов’янський напрямок',
+    'Мобільна команда 4': 'Запорізький хаб',
+    'Мобільна команда 5': 'Покровський напрямок',
+  },
+  Tue: {
+    'Мобільна команда 1': 'Краматорський напрямок',
+    'Мобільна команда 2': 'Покровський напрямок',
+    'Мобільна команда 3': 'Краматорський напрямок',
+    'Мобільна команда 4': 'Запорізький хаб',
+    'Мобільна команда 5': 'Слов’янський напрямок',
+  },
+  Wed: {
+    'Мобільна команда 1': 'Покровський напрямок',
+    'Мобільна команда 2': 'Покровський напрямок',
+    'Мобільна команда 3': 'Слов’янський напрямок',
+    'Мобільна команда 4': 'Запорізький хаб',
+    'Мобільна команда 5': 'Слов’янський напрямок',
+  },
+  Thu: {
+    'Мобільна команда 1': 'Покровський напрямок',
+    'Мобільна команда 2': 'Покровський напрямок',
+    'Мобільна команда 3': 'Краматорський напрямок',
+    'Мобільна команда 4': null,
+    'Мобільна команда 5': 'Слов’янський напрямок',
+  },
+  Fri: {
+    'Мобільна команда 1': 'Покровський напрямок',
+    'Мобільна команда 2': 'Краматорський напрямок',
+    'Мобільна команда 3': 'Краматорський напрямок',
+    'Мобільна команда 5': 'Покровський напрямок',
+  },
+}
+
+const demandByDay: Record<string, { opening: number; served: number; closing_unmet: number }> = {
+  Mon: { opening: 307, served: 82, closing_unmet: 225 },
+  Tue: { opening: 225, served: 77, closing_unmet: 148 },
+  Wed: { opening: 161, served: 64, closing_unmet: 97 },
+  Thu: { opening: 97, served: 20, closing_unmet: 77 },
+  Fri: { opening: 77, served: 16, closing_unmet: 61 },
 }
 
 function dayPlan(day: string) {
@@ -15,69 +61,101 @@ function dayPlan(day: string) {
     day,
     status: 'ok',
     recommended: {
-      assignments: {
-        'Мобільна команда 1': 'Краматорський напрямок',
-        'Мобільна команда 2': 'Покровський напрямок',
-        'Мобільна команда 3': 'Слов’янський напрямок',
-        'Мобільна команда 4': 'Запорізький хаб',
-        'Мобільна команда 5': 'Дніпровський хаб',
-      },
-      metrics,
-      assignment_explanations: [
-        {
-          day,
-          team_id: 'Мобільна команда 1',
-          from: 'Дніпровський хаб',
-          to: 'Краматорський напрямок',
-          matched_services: ['psychosocial'],
-          priority_demand_units: 22,
-          served_units: 10,
-          priority_served_units: 10,
-          travel_cost: 4,
-          travel_time_minutes: 45,
-          constraint_checks: [
-            { code: 'LOCATION_ACCESSIBLE', passed: true },
-            { code: 'SKILL_MATCH', passed: true },
-            { code: 'TRAVEL_FEASIBLE', passed: true, value: 45 },
-          ],
-          rationale_codes: ['HIGH_PRIORITY_DEMAND', 'SKILL_MATCH', 'REACHABLE', 'HORIZON_FEASIBLE'],
-        },
-      ],
+      assignments: canonicalAssignments[day],
+      metrics: aggregateMetrics,
+      assignment_explanations:
+        day === 'Mon'
+          ? [
+              {
+                day,
+                team_id: 'Мобільна команда 1',
+                from: 'Дніпровський хаб',
+                to: 'Краматорський напрямок',
+                matched_services: ['psychosocial'],
+                priority_demand_units: 48,
+                served_units: 18,
+                priority_served_units: 18,
+                travel_cost: 12,
+                travel_time_minutes: 155,
+                constraint_checks: [
+                  { code: 'LOCATION_ACCESSIBLE', passed: true },
+                  { code: 'PROGRAM_COMPATIBLE', passed: true },
+                  { code: 'TRAVEL_FEASIBLE', passed: true, value: 155 },
+                ],
+                rationale_codes: [
+                  'HIGH_PRIORITY_DEMAND',
+                  'SKILL_MATCH',
+                  'REACHABLE',
+                  'RELOCATION',
+                  'HORIZON_FEASIBLE',
+                ],
+              },
+            ]
+          : [],
       evidence: [],
     },
-    demand: { opening: 128, served: 100, closing_unmet: 28 },
+    demand: demandByDay[day],
   }
+}
+
+const recommendedSummary = {
+  initial_stock: 307,
+  new_demand: 13,
+  total_available: 320,
+  served: 259,
+  closing_unmet: 61,
+  initial_priority_stock: 259,
+  new_priority_demand: 13,
+  total_priority_available: 272,
+  priority_served: 259,
+  closing_priority_unmet: 13,
+  priority_coverage: 0.952206,
+}
+
+const baselineSummary = {
+  initial_stock: 307,
+  new_demand: 13,
+  total_available: 320,
+  served: 239,
+  closing_unmet: 81,
+  initial_priority_stock: 259,
+  new_priority_demand: 13,
+  total_priority_available: 272,
+  priority_served: 191,
+  closing_priority_unmet: 81,
+  priority_coverage: 0.702206,
 }
 
 const allocationResult = {
   status: 'ok',
   daily: days.map(dayPlan),
-  aggregate_metrics: metrics,
-  demand_summary: { total_available: 128, served: 100, closing_unmet: 28 },
+  aggregate_metrics: aggregateMetrics,
+  demand_summary: recommendedSummary,
   baseline: {
+    kind: 'canonical-plan',
     metrics: {
-      priority_coverage: 0.42,
-      total_coverage: 0.5,
-      unmet_need: 64,
-      capacity_utilization: 0.68,
-      travel_cost: 10,
-      operating_cost: 100,
+      priority_coverage: 0.218536,
+      total_coverage: 0.256,
+      unmet_need: 130,
+      capacity_utilization: 0.59,
+      travel_cost: 4,
+      operating_cost: 46,
     },
-    summary: { total_available: 128, served: 64, closing_unmet: 64 },
+    summary: baselineSummary,
   },
   alternatives: [
     {
       daily: days.map(dayPlan),
-      aggregate_metrics: metrics,
-      period_score: 1234,
-      demand_summary: { total_available: 128, served: 100, closing_unmet: 28 },
+      aggregate_metrics: aggregateMetrics,
+      period_score: 2321.74498,
+      demand_summary: recommendedSummary,
     },
   ],
-  solver: 'exact-branch-aware-period-search',
-  search_space: 120,
-  evaluated_plans: 24,
+  solver: 'deterministic-branch-aware-period-beam-search',
+  search_space: 1000000,
+  evaluated_plans: 164,
   engine_version: 'resource-allocation/0.7.0',
-  evidence: ['Priority coverage = 86%', 'Travel constraints respected'],
+  evidence: ['Canonical case: horizon priority coverage = 95%'],
 }
 
 test('Responsible Citizens demo is dynamic and completes decision lifecycle', async ({ page }) => {
@@ -167,7 +245,8 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
 
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
   await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
-  await expect(page.getByText('Keep the current allocation unchanged for the full horizon').first()).toBeVisible()
+  await expect(page.getByText('Manual baseline plan').first()).toBeVisible()
+  await expect(page.getByText(/20 more demand units/)).toBeVisible()
   await expect(
     page.getByLabel('Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.')
   ).toBeVisible()
@@ -176,7 +255,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await page.getByRole('button', { name: 'Мобільна команда 1' }).first().click()
   await expect(page.getByTestId('assignment-explanation')).toBeVisible()
   await expect(page.getByText('Psychosocial support')).toBeVisible()
-  await expect(page.getByText('22', { exact: true })).toBeVisible()
+  await expect(page.getByText('48', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Accept QDIP recommendation' }).click()
   await expect(page.getByText(/Decision ID · demo-decision-1/)).toBeVisible()
