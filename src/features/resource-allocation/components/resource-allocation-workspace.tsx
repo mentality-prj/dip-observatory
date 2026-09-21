@@ -412,7 +412,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
             )}
 
             {!result && (
-              <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
+              <div
+                data-testid="resource-empty-state"
+                className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center"
+              >
                 <div className="max-w-2xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
                   <h2 className="mt-5 text-3xl font-black md:text-4xl">{t.heroQuestion}</h2>
@@ -426,7 +429,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     type="button"
                     disabled={running}
                     onClick={run}
-                    className="mt-7 inline-flex items-center justify-center gap-2 bg-rose-500 px-6 py-4 font-bold disabled:opacity-50"
+                    data-testid="resource-primary-cta"
+                    className="mb-8 mt-7 inline-flex items-center justify-center gap-2 bg-rose-500 px-6 py-4 font-bold disabled:opacity-50 sm:mb-0"
                   >
                     <Play className="h-4 w-4" />
                     {running ? t.running : t.run}
