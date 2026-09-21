@@ -240,9 +240,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     profileId === 'imported'
       ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
       : locale === 'uk'
-        ? 'Demo dataset · synthetic aggregate data · без персональних даних'
+        ? 'Демо-дані · синтетичні агреговані · без персональних даних'
         : locale === 'pl'
-          ? 'Demo dataset · syntetyczne dane zagregowane · bez danych osobowych'
+          ? 'Dane demo · syntetyczne i zagregowane · bez danych osobowych'
           : 'Demo dataset · synthetic aggregate data · no beneficiary PII'
 
   function resetRunState() {
@@ -602,7 +602,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
                           {topPriorityCommunities.length > 0
-                            ? `${topPriorityCommunities.map((item) => item.id).join(', ')} · ${topPriorityCommunities.reduce((sum, item) => sum + item.priorityUnits, 0)}`
+                            ? `${topPriorityCommunities.map((item) => item.id).join(', ')} · ${topPriorityCommunities.reduce((sum, item) => sum + item.priorityUnits, 0)} ${locale === 'uk' ? 'од. пріоритетних потреб' : locale === 'pl' ? 'jedn. potrzeb priorytetowych' : 'priority demand units'}`
                             : t.emptyText}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
