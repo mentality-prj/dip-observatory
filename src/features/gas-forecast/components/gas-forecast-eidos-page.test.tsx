@@ -4,47 +4,31 @@ import { renderToStaticMarkup } from 'react-dom/server'
 
 import { GasForecastEidosPage } from './gas-forecast-eidos-page'
 
-test('renders gas procurement decision experiment request fields', () => {
+test('renders customer decision before research controls', () => {
   const html = renderToStaticMarkup(<GasForecastEidosPage />)
-  assert.equal(html.includes('Gas Procurement Decision Experiment'), true)
+  assert.equal(html.includes('Gas Procurement Decision'), true)
+  assert.equal(html.includes('No robust recommendation yet'), true)
+  assert.equal(html.includes('VALUE NOT YET VALIDATED'), true)
+  assert.equal(html.indexOf('Decision overview') < html.indexOf('Research scenario'), true)
   assert.equal(html.includes('id="start-date"'), true)
   assert.equal(html.includes('id="end-date"'), true)
   assert.equal(html.includes('id="forecast-horizon-days"'), true)
   assert.equal(html.includes('id="volume-mwh"'), true)
-  assert.equal(html.includes('id="procurement-threshold"'), true)
-  assert.equal(html.includes('Run experiment'), true)
+  assert.equal(html.includes('Run research evaluation'), true)
 })
 
-test('renders success execution state when result is present', () => {
+test('renders success technical execution state when result is present', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage
-      initialResult={{
-        status: 'succeeded',
-        httpStatus: 200,
-        responseTimeMs: 123,
-        message: null,
-        payload: { execution_id: 'exp-1' },
-        executedAt: '2026-01-01T00:00:00.000Z',
-      }}
-    />
+    <GasForecastEidosPage initialResult={{ status: 'succeeded', httpStatus: 200, responseTimeMs: 123, message: null, payload: { execution_id: 'exp-1' }, executedAt: '2026-01-01T00:00:00.000Z' }} />,
   )
-  assert.equal(html.includes('Execution result'), true)
+  assert.equal(html.includes('Technical execution'), true)
   assert.equal(html.includes('SUCCEEDED'), true)
   assert.equal(html.includes('aria-label="Raw backend payload"'), true)
 })
 
 test('renders failure message when execution fails', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage
-      initialResult={{
-        status: 'failed',
-        httpStatus: 500,
-        responseTimeMs: 321,
-        message: 'Provider timeout',
-        payload: { detail: 'Provider timeout' },
-        executedAt: '2026-01-01T00:00:00.000Z',
-      }}
-    />
+    <GasForecastEidosPage initialResult={{ status: 'failed', httpStatus: 500, responseTimeMs: 321, message: 'Provider timeout', payload: { detail: 'Provider timeout' }, executedAt: '2026-01-01T00:00:00.000Z' }} />,
   )
   assert.equal(html.includes('FAILED'), true)
   assert.equal(html.includes('Provider timeout'), true)
@@ -52,16 +36,7 @@ test('renders failure message when execution fails', () => {
 
 test('renders null payload safely for failure responses', () => {
   const html = renderToStaticMarkup(
-    <GasForecastEidosPage
-      initialResult={{
-        status: 'failed',
-        httpStatus: 503,
-        responseTimeMs: null,
-        message: 'Not configured',
-        payload: null,
-        executedAt: '2026-01-01T00:00:00.000Z',
-      }}
-    />
+    <GasForecastEidosPage initialResult={{ status: 'failed', httpStatus: 503, responseTimeMs: null, message: 'Not configured', payload: null, executedAt: '2026-01-01T00:00:00.000Z' }} />,
   )
   assert.equal(html.includes('>null<'), true)
 })
