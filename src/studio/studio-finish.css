@@ -39,7 +39,7 @@
 .studio-main .ds-card:hover { transform: none; border-color: #cbd7d0; box-shadow: 0 4px 14px rgb(20 44 32 / 0.045); }
 .studio-profile-nav, .studio-flow, .studio-schema, .studio-main pre, .gas-metric-grid > div, .gas-range { background: #edf2ef; }
 .studio-language-switcher { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-pill); background: var(--ds-surface-raised); }
-.studio-language-switcher button { display: grid; min-width: 34px; min-height: 32px; padding: 0; place-items: center; border: 0; border-radius: var(--ds-radius-pill); color: var(--ds-text-muted); background: transparent; font-size: var(--ds-text-xs); font-weight: 600; cursor: pointer; }
+.studio-language-switcher button, .studio-language-switcher span { display: grid; min-width: 34px; min-height: 32px; padding: 0; place-items: center; border: 0; border-radius: var(--ds-radius-pill); color: var(--ds-text-muted); background: transparent; font-size: var(--ds-text-xs); font-weight: 600; cursor: pointer; }
 .studio-language-switcher button:hover, .studio-language-switcher button[aria-current='page'] { color: #fff; background: var(--ds-accent); }
 .studio-language-switcher button:disabled { cursor: wait; opacity: 0.65; }
 .ds-product-lockup-brand, .ds-product-lockup-product { display: inline-flex; min-height: 44px; align-items: center; color: inherit; text-decoration: none; }
