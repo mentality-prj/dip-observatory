@@ -214,7 +214,9 @@ function attachBaseline(output: Record<string, unknown>, baseline: Baseline | nu
 }
 
 function coreInput(input: Input): Record<string, unknown> {
-  const { baseline_plan: _baselinePlan, provenance, ...rest } = input
+  const { provenance } = input
+  const rest = { ...input }
+  delete rest.baseline_plan
   return {
     ...rest,
     provenance: provenance
