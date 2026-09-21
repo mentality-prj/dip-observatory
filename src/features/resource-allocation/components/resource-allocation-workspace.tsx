@@ -2,27 +2,34 @@
 
 import { useMemo, useState } from 'react'
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
+import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
-import type { ResourceAllocationResult } from '../contracts'
+import type { ResourceAllocationInput, ResourceAllocationResult } from '../contracts'
 import {
-  RESOURCE_ALLOCATION_COMMUNITY_NAMES as NAMES,
-  RESOURCE_ALLOCATION_CURRENT as currentAllocation,
-  RESOURCE_ALLOCATION_TEAMS as teams,
+  cloneResourceAllocationInput,
+  RESOURCE_ALLOCATION_PROFILES,
+  resourceAllocationStats,
+  type ResourceAllocationProfileId,
 } from '../demo-data'
 import { ResourceAllocationDecisionPanel } from './resource-allocation-decision-panel'
 import { ResourceAllocationImpact } from './resource-allocation-impact'
-import { ResourceAllocationManualEditor, type EvaluatedManualAllocation } from './resource-allocation-manual-editor'
-import { DecisionWorkflow } from '@/components/product/decision-workflow'
+import { ResourceAllocationImport } from './resource-allocation-import'
+import {
+  ResourceAllocationManualEditor,
+  type EvaluatedManualAllocation,
+} from './resource-allocation-manual-editor'
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
+
 const copy = {
   uk: {
     title: 'План розподілу мобільних команд',
-    subtitle: '10 команд · 18 громад · 486 початкових потреб · горизонт 5 днів',
     run: 'Розрахувати план на тиждень',
     running: 'Розрахунок…',
     whatIf: 'СЦЕНАРІЙ',
+    profile: 'Профіль даних',
+    imported: 'Імпортовані дані',
     capacity: 'Доступна потужність команд',
     inaccessible: 'Тимчасово недоступна громада',
     none: 'Немає',
@@ -31,7 +38,7 @@ const copy = {
     teams: 'Команди',
     opening: 'Початкові потреби',
     services: 'Види послуг',
-    emptyTitle: '10 команд. 18 громад. 5 днів.',
+    days: 'днів',
     emptyText:
       'Розташування команди сьогодні впливає на те, які громади вона зможе обслуговувати далі протягом тижня. QDIP розрахує узгоджений план на весь горизонт.',
     weekly: 'ПЛАН НА ТИЖДЕНЬ',
@@ -51,10 +58,11 @@ const copy = {
   },
   en: {
     title: 'Mobile team allocation plan',
-    subtitle: '10 teams · 18 communities · 486 opening needs · 5-day horizon',
     run: 'Calculate weekly plan',
     running: 'Calculating…',
     whatIf: 'SCENARIO',
+    profile: 'Data profile',
+    imported: 'Imported data',
     capacity: 'Available team capacity',
     inaccessible: 'Temporarily inaccessible community',
     none: 'None',
@@ -63,7 +71,7 @@ const copy = {
     teams: 'Teams',
     opening: 'Opening needs',
     services: 'Service types',
-    emptyTitle: '10 teams. 18 communities. 5 days.',
+    days: 'days',
     emptyText:
       'A team location today changes which communities remain reachable later in the week. QDIP calculates one coherent plan across the full horizon.',
     weekly: 'WEEKLY PLAN',
@@ -83,10 +91,11 @@ const copy = {
   },
   pl: {
     title: 'Plan alokacji zespołów mobilnych',
-    subtitle: '10 zespołów · 18 społeczności · 486 potrzeb początkowych · 5 dni',
     run: 'Oblicz plan tygodniowy',
     running: 'Obliczanie…',
     whatIf: 'SCENARIUSZ',
+    profile: 'Profil danych',
+    imported: 'Dane importowane',
     capacity: 'Dostępna zdolność zespołów',
     inaccessible: 'Tymczasowo niedostępna społeczność',
     none: 'Brak',
@@ -95,7 +104,7 @@ const copy = {
     teams: 'Zespoły',
     opening: 'Potrzeby początkowe',
     services: 'Rodzaje usług',
-    emptyTitle: '10 zespołów. 18 społeczności. 5 dni.',
+    days: 'dni',
     emptyText:
       'Lokalizacja zespołu dzisiaj wpływa na to, które społeczności pozostają dostępne w kolejnych dniach. QDIP oblicza spójny plan dla całego horyzontu.',
     weekly: 'PLAN TYGODNIOWY',
@@ -111,12 +120,22 @@ const copy = {
     why: 'UZASADNIENIE DECYZJI',
     whyTitle: 'Dlaczego rekomendowany jest ten plan?',
     heuristic:
-      'Dla dużих просторів рішень używany jest deterministyczny branch-aware beam search; інтерфейс не представляє результат евристики як математично гарантований глобальний оптимум.',
+      'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
   },
 } satisfies Record<Locale, Record<string, string>>
 
+function profileLabel(profileId: string, importedName: string | null, importedLabel: string) {
+  if (profileId === 'imported') return importedName ? `${importedLabel}: ${importedName}` : importedLabel
+  return RESOURCE_ALLOCATION_PROFILES[profileId as ResourceAllocationProfileId]?.label ?? profileId
+}
+
 export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
+  const [profileId, setProfileId] = useState<string>('responsible-citizens')
+  const [importedName, setImportedName] = useState<string | null>(null)
+  const [inputData, setInputData] = useState<ResourceAllocationInput>(() =>
+    cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES['responsible-citizens'].input)
+  )
   const [result, setResult] = useState<ResourceAllocationResult | null>(null)
   const [selectedAlternative, setSelectedAlternative] = useState(0)
   const [selectedDay, setSelectedDay] = useState(0)
@@ -128,6 +147,45 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null)
   const [runRevision, setRunRevision] = useState(0)
 
+  const stats = useMemo(() => resourceAllocationStats(inputData), [inputData])
+  const communityNames = useMemo(() => inputData.communities.map((community) => community.id), [inputData])
+  const blockableCommunities = useMemo(
+    () => inputData.communities.filter((community) => community.accessible !== false).map((community) => community.id),
+    [inputData]
+  )
+  const teamIds = useMemo(() => inputData.teams.map((team) => team.id), [inputData])
+  const currentAllocation = useMemo(
+    () =>
+      inputData.current_allocation ??
+      Object.fromEntries(inputData.teams.map((team) => [team.id, team.current_community ?? null])),
+    [inputData]
+  )
+  const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.openingNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
+
+  function resetRunState() {
+    setCapacityFactor(100)
+    setBlockedCommunity('')
+    setResult(null)
+    setLastInput(null)
+    setManualSelected(null)
+    setSelectedAlternative(0)
+    setSelectedDay(0)
+  }
+
+  function changeProfile(nextProfileId: ResourceAllocationProfileId) {
+    setProfileId(nextProfileId)
+    setImportedName(null)
+    setInputData(cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES[nextProfileId].input))
+    resetRunState()
+  }
+
+  function useImportedData(input: ResourceAllocationInput, fileName: string) {
+    setProfileId('imported')
+    setImportedName(fileName)
+    setInputData(input)
+    resetRunState()
+  }
+
   async function run() {
     setRunning(true)
     setError(null)
@@ -137,9 +195,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
     }
     try {
-      const nextResult = await runResourceAllocationScenario(scenario)
+      const nextResult = await runResourceAllocationScenario(inputData, scenario)
       setResult(nextResult)
-      setLastInput(buildResourceAllocationInput(scenario))
+      setLastInput(buildResourceAllocationInput(inputData, scenario) as Record<string, unknown>)
       setSelectedAlternative(0)
       setSelectedDay(0)
       setRunRevision((revision) => revision + 1)
@@ -164,10 +222,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const moved = useMemo(
     () =>
       day
-        ? Object.entries(day.recommended.assignments).filter(([team, target]) => currentAllocation[team] !== target)
-            .length
+        ? Object.entries(day.recommended.assignments).filter(
+            ([team, target]) => currentAllocation[team] !== target
+          ).length
         : 0,
-    [day]
+    [currentAllocation, day]
   )
 
   return (
@@ -179,32 +238,53 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               QDIP · Resource Allocation · Decision Demo
             </div>
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
-              Synthetic operational data · no PII
+              Synthetic / aggregate operational data · no beneficiary PII
             </span>
           </div>
           <h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">{t.title}</h1>
-          <p className="mt-4 text-slate-400">{t.subtitle}</p>
+          <p className="mt-4 text-slate-400">{summary}</p>
+          <p className="mt-2 text-xs text-slate-600">
+            {profileLabel(profileId, importedName, t.imported)}
+          </p>
         </header>
+
         <DecisionWorkflow locale={locale} tone="dark" compact />
+
         <section className="grid gap-5 py-7 xl:grid-cols-[330px_1fr]">
           <aside className="space-y-4">
             <div className="rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
               <div className="flex items-center justify-between">
                 <b>01 · {t.whatIf}</b>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCapacityFactor(100)
-                    setBlockedCommunity('')
-                    setResult(null)
-                    setLastInput(null)
-                    setManualSelected(null)
-                  }}
-                >
+                <button type="button" onClick={resetRunState} aria-label="Reset scenario">
                   <RotateCcw className="h-4 w-4" />
                 </button>
               </div>
+
               <label className="mt-6 block text-sm">
+                <span>{t.profile}</span>
+                <select
+                  data-testid="resource-profile"
+                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
+                  value={profileId}
+                  onChange={(event) => {
+                    if (event.target.value === 'imported') return
+                    changeProfile(event.target.value as ResourceAllocationProfileId)
+                  }}
+                >
+                  {Object.entries(RESOURCE_ALLOCATION_PROFILES).map(([id, profile]) => (
+                    <option key={id} value={id} className="bg-slate-950 text-white">
+                      {profile.label}
+                    </option>
+                  ))}
+                  {profileId === 'imported' && (
+                    <option value="imported" className="bg-slate-950 text-white">
+                      {profileLabel(profileId, importedName, t.imported)}
+                    </option>
+                  )}
+                </select>
+              </label>
+
+              <label className="mt-5 block text-sm">
                 <span className="flex justify-between">
                   <span>{t.capacity}</span>
                   <b>{capacityFactor}%</b>
@@ -219,19 +299,26 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   onChange={(event) => setCapacityFactor(Number(event.target.value))}
                 />
               </label>
+
               <label className="mt-5 block text-sm">
                 <span>{t.inaccessible}</span>
                 <select
-                  className="mt-2 w-full bg-white/[0.04] p-2 text-white"
+                  data-testid="blocked-community"
+                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
                   value={blockedCommunity}
                   onChange={(event) => setBlockedCommunity(event.target.value)}
                 >
-                  <option value="">{t.none}</option>
-                  {NAMES.filter((_, index) => ![7, 14].includes(index)).map((name) => (
-                    <option key={name}>{name}</option>
+                  <option value="" className="bg-slate-950 text-white">
+                    {t.none}
+                  </option>
+                  {blockableCommunities.map((name) => (
+                    <option key={name} value={name} className="bg-slate-950 text-white">
+                      {name}
+                    </option>
                   ))}
                 </select>
               </label>
+
               <button
                 type="button"
                 disabled={running}
@@ -242,28 +329,36 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 {running ? t.running : t.run}
               </button>
             </div>
+
+            <ResourceAllocationImport locale={locale} onImported={useImportedData} />
+
             <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
               <b>02 · {t.state}</b>
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="block text-slate-500">{t.communities}</span>
-                  <b className="text-2xl">18</b>
+                  <b className="text-2xl" data-testid="community-count">
+                    {stats.communities}
+                  </b>
                 </div>
                 <div>
                   <span className="block text-slate-500">{t.teams}</span>
-                  <b className="text-2xl">10</b>
+                  <b className="text-2xl" data-testid="team-count">
+                    {stats.teams}
+                  </b>
                 </div>
                 <div>
                   <span className="block text-slate-500">{t.opening}</span>
-                  <b className="text-2xl">486</b>
+                  <b className="text-2xl">{stats.openingNeeds}</b>
                 </div>
                 <div>
                   <span className="block text-slate-500">{t.services}</span>
-                  <b className="text-2xl">6</b>
+                  <b className="text-2xl">{stats.services}</b>
                 </div>
               </div>
             </div>
           </aside>
+
           <div className="space-y-5">
             {error && (
               <div role="alert" className="border border-rose-300/25 bg-white/[0.04] p-4 text-rose-200">
@@ -271,15 +366,20 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 {error}
               </div>
             )}
+
             {!result && (
               <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
                 <div className="max-w-xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
-                  <h2 className="mt-5 text-3xl font-black">{t.emptyTitle}</h2>
+                  <h2 className="mt-5 text-3xl font-black">
+                    {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
+                    {stats.days} {t.days}.
+                  </h2>
                   <p className="mt-3 text-slate-500">{t.emptyText}</p>
                 </div>
               </div>
             )}
+
             {result && activePlan && day && (
               <>
                 <ResourceAllocationImpact
@@ -287,9 +387,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   summary={activePlan.demand_summary}
                   baseline={result.baseline}
                   moved={moved}
-                  totalTeams={teams.length}
+                  totalTeams={inputData.teams.length}
                   locale={locale}
                 />
+
                 <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -303,13 +404,16 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       </div>
                     </div>
                   </div>
+
                   <div className="mt-6 flex gap-2 overflow-x-auto">
                     {activePlan.daily.map((item, index) => (
                       <button
                         type="button"
                         key={item.day}
                         onClick={() => setSelectedDay(index)}
-                        className={`min-w-28 border px-4 py-3 text-left ${selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'}`}
+                        className={`min-w-28 border px-4 py-3 text-left ${
+                          selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'
+                        }`}
                       >
                         <b>{item.day}</b>
                         <div className="mt-1 text-xs text-slate-500">
@@ -318,8 +422,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       </button>
                     ))}
                   </div>
+
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                    {NAMES.map((community) => (
+                    {communityNames.map((community) => (
                       <div key={community} className="min-h-32 border border-white/10 p-3">
                         <b className="text-sm">{community}</b>
                         <div className="mt-3 space-y-1">
@@ -334,6 +439,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       </div>
                     ))}
                   </div>
+
                   <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-sm">
                     <span>
                       <Users className="mr-1 inline h-4 w-4" />
@@ -350,6 +456,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     </span>
                   </div>
                 </div>
+
                 <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
                   <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
@@ -365,7 +472,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                             setSelectedDay(0)
                             setManualSelected(null)
                           }}
-                          className={`w-full border p-4 text-left ${selectedAlternative === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'}`}
+                          className={`w-full border p-4 text-left ${
+                            selectedAlternative === index
+                              ? 'border-rose-300/40 bg-rose-300/10'
+                              : 'border-white/10'
+                          }`}
                         >
                           <div className="flex justify-between">
                             <b>{index === 0 ? t.recommended : `${t.alternative} ${index + 1}`}</b>
@@ -379,6 +490,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       ))}
                     </div>
                   </div>
+
                   <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-xs font-bold uppercase tracking-wider text-rose-300">06 · {t.why}</div>
                     <h3 className="mt-2 text-xl font-black">{t.whyTitle}</h3>
@@ -395,17 +507,19 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     <div className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">{t.heuristic}</div>
                   </div>
                 </div>
+
                 {lastInput && (
                   <ResourceAllocationManualEditor
                     key={`manual-${runRevision}`}
                     input={lastInput}
                     plan={activePlan}
-                    communities={NAMES}
-                    teams={teams.map((team) => team.id)}
+                    communities={communityNames}
+                    teams={teamIds}
                     onUseModified={setManualSelected}
                     locale={locale}
                   />
-                )}{' '}
+                )}
+
                 {lastInput && (
                   <ResourceAllocationDecisionPanel
                     key={`decision-${runRevision}`}

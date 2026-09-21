@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
 import type { ResourceAllocationPeriodPlan, ResourceAllocationResult } from '../contracts'
-import { RESOURCE_ALLOCATION_CURRENT as currentAllocation } from '../demo-data'
+import { RESPONSIBLE_CITIZENS_PROFILE } from '../demo-data'
 
 type ManualAllocationSelection = {
   actual_allocation: Record<string, Record<string, string>>
@@ -38,9 +38,9 @@ export function useResourceAllocationWorkspace() {
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
     }
     try {
-      const nextResult = await runResourceAllocationScenario(scenario)
+      const nextResult = await runResourceAllocationScenario(RESPONSIBLE_CITIZENS_PROFILE, scenario)
       setResult(nextResult)
-      setLastInput(buildResourceAllocationInput(scenario))
+      setLastInput(buildResourceAllocationInput(RESPONSIBLE_CITIZENS_PROFILE, scenario))
       setSelectedAlternative(0)
       setSelectedDay(0)
       setRunRevision((revision) => revision + 1)
@@ -75,8 +75,9 @@ export function useResourceAllocationWorkspace() {
   const moved = useMemo(
     () =>
       day
-        ? Object.entries(day.recommended.assignments).filter(([team, target]) => currentAllocation[team] !== target)
-            .length
+        ? Object.entries(day.recommended.assignments).filter(
+            ([team, target]) => RESPONSIBLE_CITIZENS_PROFILE.current_allocation?.[team] !== target
+          ).length
         : 0,
     [day]
   )
