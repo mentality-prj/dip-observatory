@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/design-system'
 import { studioHref } from '@/lib/platform-urls'
@@ -9,6 +8,7 @@ import { BindingEditor } from './binding-editor'
 import { emptyProfile, studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from './contracts'
 import { Breadcrumbs, outputLabel } from './presentation'
 import { ProfileEditor } from './profile-editor'
+import { ProfileDashboard } from './profile-dashboard'
 import { ProfileRunner } from './profile-runner'
 
 const titles: Record<string, string> = {
@@ -61,6 +61,17 @@ export function DecisionStudio({ section }: { section: string }) {
     const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== 'validation')) as Profile
     setEditor({ profile: clean, existing, key: Date.now() })
     setMessage('')
+  }
+  async function deleteProfile(profileId: string) {
+    try {
+      await studioRequest(`decision-profiles/${encodeURIComponent(profileId)}`, { method: 'DELETE' })
+      if (editor?.profile.id === profileId) setEditor(null)
+      setDeleting('')
+      await refreshProfiles()
+      setMessage('Profile deleted. Historical decisions are retained.')
+    } catch (reason) {
+      setError(String(reason))
+    }
   }
   return (
     <>
@@ -201,120 +212,21 @@ export function DecisionStudio({ section }: { section: string }) {
           )}
           {section === 'profiles' && (
             <>
-              <div className="studio-toolbar">
-                <Button
-                  type="button"
-                  onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}
-                >
-                  Create profile
-                </Button>
-                <label className="studio-field">
-                  Import profile JSON
-                  <input
-                    type="file"
-                    accept="application/json,.json"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0]
-                      if (!file) return
-                      try {
-                        const parsed = JSON.parse(await file.text())
-                        if (!parsed.id || !Array.isArray(parsed.dimensions) || !Array.isArray(parsed.alternatives))
-                          throw new Error('Select a DecisionProfile JSON file.')
-                        openProfile(parsed, false)
-                        setError('')
-                      } catch (reason) {
-                        setError(String(reason))
-                      }
-                      e.target.value = ''
-                    }}
-                  />
-                </label>
-              </div>
-              {!data.profiles.length && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>No profiles yet</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Create a profile or import an example to configure alternatives, dimensions, and rules.</p>
-                  </CardContent>
-                </Card>
-              )}
-              <div className="studio-grid">
-                {data.profiles.map((profile) => (
-                  <Card key={profile.id}>
-                    <CardHeader>
-                      <div className="studio-card-heading">
-                        <CardTitle>
-                          <Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>{profile.name}</Link>
-                        </CardTitle>
-                        <Badge variant={profile.validation.status === 'VALID' ? 'emerald' : 'neutral'}>
-                          {profile.validation.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p>
-                        {profile.plugin_id} · {profile.capability_id}
-                        <br />
-                        Version {profile.version} · {profile.active ? 'Active' : 'Draft'}
-                      </p>
-                      <p>{profile.dimensions.map((d) => d.dimension_id).join(' · ')}</p>
-                      {profile.validation.errors.map((validationError) => (
-                        <div key={validationError} className="studio-error">
-                          {validationError}
-                        </div>
-                      ))}
-                      {profile.validation.warnings.map((warning) => (
-                        <p key={warning}>{warning}</p>
-                      ))}
-                      <div className="studio-toolbar">
-                        <Button asChild variant="secondary">
-                          <Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>Open profile</Link>
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={!profile.active || profile.validation.status !== 'VALID'}
-                          onClick={() => setRunningProfile(profile)}
-                        >
-                          Evaluate
-                        </Button>
-                        {deleting !== profile.id ? (
-                          <Button type="button" variant="secondary" onClick={() => setDeleting(profile.id)}>
-                            Delete
-                          </Button>
-                        ) : (
-                          <>
-                            <Button
-                              type="button"
-                              variant="danger"
-                              onClick={async () => {
-                                try {
-                                  await studioRequest(`decision-profiles/${encodeURIComponent(profile.id)}`, {
-                                    method: 'DELETE',
-                                  })
-                                  if (editor?.profile.id === profile.id) setEditor(null)
-                                  setDeleting('')
-                                  await refreshProfiles()
-                                  setMessage('Profile deleted. Historical decisions are retained.')
-                                } catch (reason) {
-                                  setError(String(reason))
-                                }
-                              }}
-                            >
-                              Confirm delete
-                            </Button>
-                            <Button type="button" variant="secondary" onClick={() => setDeleting('')}>
-                              Cancel
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <ProfileDashboard
+                profiles={data.profiles}
+                plugins={data.plugins}
+                deleting={deleting}
+                onCreate={() => openProfile(emptyProfile(data.plugins.find((plugin) => plugin.enabled)), false)}
+                onImport={(profile) => {
+                  openProfile(profile, false)
+                  setError('')
+                }}
+                onError={setError}
+                onEvaluate={setRunningProfile}
+                onRequestDelete={setDeleting}
+                onCancelDelete={() => setDeleting('')}
+                onConfirmDelete={deleteProfile}
+              />
               {editor && (
                 <ProfileEditor
                   key={editor.key}
@@ -337,6 +249,7 @@ export function DecisionStudio({ section }: { section: string }) {
                 <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />
               )}
             </>
+
           )}
         </>
       )}
