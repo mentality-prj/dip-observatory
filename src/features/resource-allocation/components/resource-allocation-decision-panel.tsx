@@ -409,6 +409,9 @@ export function ResourceAllocationDecisionPanel({
     const servedActual = Number(actualServed)
     const unmetActual = Number(actualUnmet)
     if (
+      !actualCoverage.trim() ||
+      !actualServed.trim() ||
+      !actualUnmet.trim() ||
       !Number.isFinite(coverage) ||
       coverage < 0 ||
       coverage > 100 ||
