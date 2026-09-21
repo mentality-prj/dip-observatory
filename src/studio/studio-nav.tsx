@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Boxes, Braces, GitBranch, SlidersHorizontal } from 'lucide-react'
 import { studioHref } from '@/lib/platform-urls'
 
@@ -19,11 +19,14 @@ function isActive(pathname: string, section: string) {
 
 export function StudioNav() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const lang = searchParams.get('lang')
+  const localizedHref = (section: string) => `${studioHref(section)}${lang && lang !== 'en' ? `?lang=${lang}` : ''}`
   return (
     <nav aria-label="QDIP Studio">
       <span className="studio-nav-label">WORKSPACE</span>
       {items.map(({ section, label, description, icon: Icon }) => (
-        <Link key={section} aria-current={isActive(pathname, section) ? 'page' : undefined} href={studioHref(section)}>
+        <Link key={section} aria-current={isActive(pathname, section) ? 'page' : undefined} href={localizedHref(section)}>
           <span className="studio-nav-icon" aria-hidden>
             <Icon size={16} />
           </span>
