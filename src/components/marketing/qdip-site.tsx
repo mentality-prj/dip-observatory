@@ -12,7 +12,6 @@ import { DecisionPlayground } from './decision-playground'
 import { ProductJourney } from './product-journey'
 import { PilotPath } from './pilot-path'
 import { conversionBridgeCopy } from './conversion-copy'
-import './typography-overrides.css'
 import styles from './qdip-site.module.css'
 
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
