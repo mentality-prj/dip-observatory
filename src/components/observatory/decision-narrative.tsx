@@ -2,9 +2,9 @@ import type { Locale } from '@/lib/observatory-i18n'
 import type { DipUseCase } from '@/use-cases/registry'
 
 const labels = {
-  en: ['Situation', 'Alternatives', 'Evaluation', 'Risk / uncertainty', 'Recommendation', 'Evidence'],
-  uk: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази'],
-  pl: ['Sytuacja', 'Alternatywy', 'Ocena', 'Ryzyko / niepewność', 'Rekomendacja', 'Dowody'],
+  en: ['Situation', 'Alternatives', 'Evaluation', 'Risk / uncertainty', 'Recommendation', 'Evidence', 'Trace'],
+  uk: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази', 'Trace'],
+  pl: ['Sytuacja', 'Alternatywy', 'Ocena', 'Ryzyko / niepewność', 'Rekomendacja', 'Dowody', 'Trace'],
 } as const
 
 const helper = {
@@ -27,7 +27,7 @@ export function ObservatoryDecisionNarrative({ locale, useCase }: { locale: Loca
           <p className="mt-1 text-xs text-slate-500">{helper[locale]}</p>
         </div>
       </div>
-      <ol className="grid grid-cols-2 gap-x-4 gap-y-2 py-4 text-xs text-slate-500 sm:grid-cols-6">
+      <ol className="grid grid-cols-2 gap-x-4 gap-y-2 py-4 text-xs text-slate-500 sm:grid-cols-4 xl:grid-cols-7">
         {labels[locale].map((label, index) => (
           <li
             key={label}
