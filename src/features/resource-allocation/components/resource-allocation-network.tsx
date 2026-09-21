@@ -130,7 +130,7 @@ export function ResourceAllocationNetwork({
   return (
     <section
       style={{ contain: 'inline-size' }}
-      className="box-border w-full min-w-0 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/80 text-white sm:max-w-full"
+      className="box-border w-full min-w-0 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-slate-950/80 text-white sm:max-w-full"
     >
       <div className="flex min-w-0 flex-col items-stretch gap-4 border-b border-white/10 p-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:p-6">
         <div className="min-w-0 max-w-full">
@@ -138,7 +138,7 @@ export function ResourceAllocationNetwork({
             <Network className="h-4 w-4 shrink-0" />
             {t.network}
           </div>
-          <h3 className="mt-2 max-w-full break-words text-lg font-black [overflow-wrap:anywhere] sm:text-2xl">
+          <h3 className="mt-2 max-w-full break-words text-lg font-medium [overflow-wrap:anywhere] sm:text-2xl">
             {t.current} <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> DIP{' '}
             <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> {t.manager}
           </h3>
@@ -162,7 +162,7 @@ export function ResourceAllocationNetwork({
               type="button"
               key={item}
               onClick={() => setMode(item)}
-              className={`max-w-full whitespace-normal border px-3 py-2 text-left text-[10px] font-black uppercase tracking-normal sm:px-4 sm:text-xs sm:tracking-wider ${mode === item ? 'border-rose-400 bg-rose-400 text-white' : 'border-white/20 text-white/65'}`}
+              className={`max-w-full whitespace-normal border px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-normal sm:px-4 sm:text-xs sm:tracking-wider ${mode === item ? 'ds-selection-surface text-white' : 'border-white/20 text-white/65'}`}
             >
               {modeLabel(item)}
             </button>
@@ -183,7 +183,26 @@ export function ResourceAllocationNetwork({
           </span>
         </div>
       </div>
-      <div className="box-border w-full min-w-0 max-w-full overflow-hidden px-1 py-3 sm:px-0 sm:py-0">
+      <div className="grid gap-2 px-4 py-4 md:hidden" aria-label={`${t.network}: ${day} mobile summary`}>
+        {communities.map((community) => {
+          const assignedTeams = teams.filter((team) => allocation[team.id] === community)
+          const movedTeams = assignedTeams.filter((team) => start[team.id] !== community)
+          return (
+            <div key={community} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-white/10 py-3 last:border-b-0">
+              <div className="min-w-0">
+                <strong className="block truncate text-sm font-medium text-white">{community}</strong>
+                <span className="mt-1 block text-xs text-white/45">
+                  {assignedTeams.length} {t.assigned.toLowerCase()} · {movedTeams.length} {t.moved.toLowerCase()}
+                </span>
+              </div>
+              <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${movedTeams.length ? 'bg-rose-400/15 text-rose-300' : 'bg-white/5 text-white/45'}`}>
+                {assignedTeams.length}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      <div className="box-border hidden w-full min-w-0 max-w-full overflow-hidden px-1 py-3 md:block sm:px-0 sm:py-0">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           preserveAspectRatio="xMidYMid meet"
@@ -193,10 +212,10 @@ export function ResourceAllocationNetwork({
         >
           <defs>
             <marker id="allocation-arrow-dip" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L7,3 z" fill="#fb7185" />
+              <path d="M0,0 L0,6 L7,3 z" fill="var(--ds-semantic-selected)" />
             </marker>
             <marker id="allocation-arrow-manager" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L7,3 z" fill="#fbbf24" />
+              <path d="M0,0 L0,6 L7,3 z" fill="var(--ds-semantic-uncertainty)" />
             </marker>
           </defs>
           <g opacity="0.16">
@@ -230,7 +249,7 @@ export function ResourceAllocationNetwork({
                   key={team.id}
                   d={`M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`}
                   fill="none"
-                  stroke={mode === 'manager' ? '#fbbf24' : '#fb7185'}
+                  stroke={mode === 'manager' ? 'var(--ds-semantic-uncertainty)' : 'var(--ds-semantic-selected)'}
                   strokeWidth="2"
                   strokeOpacity="0.72"
                   markerEnd={mode === 'manager' ? 'url(#allocation-arrow-manager)' : 'url(#allocation-arrow-dip)'}
@@ -246,17 +265,17 @@ export function ResourceAllocationNetwork({
               <g key={community} transform={`translate(${point.x},${point.y})`}>
                 <circle
                   r={changed ? 25 : 21}
-                  fill={changed ? (mode === 'manager' ? '#fbbf24' : '#fb7185') : '#242424'}
+                  fill={changed ? (mode === 'manager' ? 'var(--ds-semantic-uncertainty)' : 'var(--ds-semantic-selected)') : '#242424'}
                   stroke="white"
                   strokeOpacity="0.25"
                 />
-                <text y="4" textAnchor="middle" fontSize="11" fontWeight="800" fill={changed ? '#111' : 'white'}>
+                <text y="4" textAnchor="middle" fontSize="11" fontWeight="650" fill={changed ? '#111' : 'white'}>
                   {community.replace('Громада ', '')}
                 </text>
                 {here.length > 0 && (
                   <>
                     <circle cx="17" cy="-17" r="10" fill="white" />
-                    <text x="17" y="-13" textAnchor="middle" fontSize="10" fontWeight="900" fill="#111">
+                    <text x="17" y="-13" textAnchor="middle" fontSize="10" fontWeight="700" fill="#111">
                       {here.length}
                     </text>
                   </>
@@ -272,7 +291,7 @@ export function ResourceAllocationNetwork({
             <text textAnchor="middle" y="-10" fontSize="11" fill="white" opacity="0.45">
               {mode === 'current' ? t.opening : mode === 'manager' ? t.managerPlan : t.dipPlan}
             </text>
-            <text textAnchor="middle" y="15" fontSize="28" fontWeight="900" fill="white">
+            <text textAnchor="middle" y="15" fontSize="28" fontWeight="600" fill="white">
               {moved}
             </text>
             <text textAnchor="middle" y="32" fontSize="10" fill="white" opacity="0.45">

@@ -62,7 +62,7 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
           <div className="studio-success" role="status">
             {result.status}: {result.selected_alternative ?? 'No feasible alternative'}.{' '}
             <Link href={observatoryHref(`decisions?decision=${encodeURIComponent(result.decision_id)}`)}>
-              Inspect decision and audit ↗
+              Inspect decision and audit
             </Link>
           </div>
         )}

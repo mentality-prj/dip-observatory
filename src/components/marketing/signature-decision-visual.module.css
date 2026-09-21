@@ -2,93 +2,110 @@
   position: relative;
   display: flex;
   min-width: 0;
+  min-height: 300px;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
   margin: 0;
-  padding: 24px 18px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: linear-gradient(145deg, #fff 0%, #fdf8fa 100%);
-  box-shadow: 0 28px 70px rgba(92, 28, 48, 0.12);
+  padding: var(--ds-space-8) var(--ds-space-6);
   overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--ds-radius-marketing);
+  background: #fffdfd;
+  box-shadow: 0 24px 64px rgba(92, 28, 48, 0.09);
 }
-.visual:before,
-.visual:after {
+.pathCanvas {
   position: absolute;
-  border: 1px solid rgba(142, 41, 73, 0.07);
-  border-radius: 50%;
-  content: '';
+  inset: 18% 2% 12%;
+  z-index: 0;
+  width: 96%;
+  height: 70%;
+  overflow: visible;
   pointer-events: none;
 }
-.visual:before {
-  width: 310px;
-  height: 310px;
-  right: -190px;
-  top: -190px;
+.pathCanvas path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 1.8;
 }
-.visual:after {
-  width: 180px;
-  height: 180px;
-  left: 32%;
-  bottom: -130px;
+.pathCanvas circle {
+  fill: #fffdfd;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.mainPath {
+  stroke: rgb(var(--ds-accent-rgb) / .28);
+  stroke-dasharray: 7 6;
+  stroke-dashoffset: 58;
+  animation: qdip-path-draw 900ms 120ms ease-out forwards;
+}
+.blockedPath {
+  stroke: rgb(var(--ds-semantic-blocked-rgb) / .24);
+  stroke-dasharray: 4 6;
+  opacity: .78;
+  animation: qdip-blocked-path 520ms 680ms ease-out both;
+}
+.inputs,
+.engine,
+.evaluation,
+.result,
+.human {
+  position: relative;
+  z-index: 1;
 }
 .inputs {
   display: grid;
-  gap: 7px;
+  gap: var(--ds-space-2);
+  animation: qdip-causal-reveal 320ms ease-out both;
 }
 .inputs span,
 .result,
 .human,
 .engine,
 .evaluation span {
-  position: relative;
-  z-index: 1;
   padding: 10px 11px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--ds-radius-action);
   background: #fff;
   font-size: 10px;
-  font-weight: 750;
+  font-weight: 600;
 }
 .inputs span {
-  animation: signal-in 0.5s ease both;
-  animation-delay: calc(var(--i) * 90ms);
+  animation: qdip-causal-reveal 360ms ease-out both;
+  animation-delay: calc(var(--i) * 70ms);
 }
 .engine {
   color: #fff;
   border: 0;
   background: var(--accent);
-  box-shadow: 0 10px 28px rgba(142, 41, 73, 0.22);
-  font-size: 20px;
+  box-shadow: 0 10px 26px rgb(var(--ds-accent-rgb) / .16);
+  font-size: 19px;
   text-align: center;
-  animation: engine-pulse 0.65s ease 0.4s both;
+  animation: qdip-causal-reveal 320ms 300ms ease-out both;
 }
 .engine small {
   display: block;
   margin-top: 4px;
   font-size: 7px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: .08em;
 }
 .evaluation {
-  position: relative;
-  z-index: 1;
   display: grid;
-  min-width: 118px;
+  min-width: 122px;
   gap: 5px;
-  padding: 8px;
-  border: 1px solid rgba(142, 41, 73, 0.12);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.75);
-  animation: signal-in 0.5s ease 0.62s both;
+  padding: var(--ds-space-2);
+  border: 1px solid rgb(var(--ds-accent-rgb) / .13);
+  border-radius: var(--ds-radius-panel);
+  background: rgb(255 255 255 / .82);
+  animation: qdip-causal-reveal 340ms 560ms ease-out both;
 }
 .evaluation > small {
   padding: 0 3px;
   color: var(--muted);
   font-size: 7px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 .evaluation span {
@@ -96,6 +113,18 @@
   align-items: center;
   gap: 3px;
   padding: 7px 8px;
+}
+.evaluation span::before,
+.result::before,
+.human::before {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: rgb(var(--ds-accent-rgb) / .38);
+  content: '';
+  vertical-align: middle;
 }
 .evaluation span em {
   margin-left: auto;
@@ -105,24 +134,30 @@
 }
 .evaluation .selected {
   color: #fff;
-  border-color: var(--accent);
-  background: var(--accent);
-  box-shadow: 0 6px 16px rgba(142, 41, 73, 0.18);
+  border-color: var(--ds-semantic-selected);
+  background: var(--ds-semantic-selected);
+  animation: qdip-causal-selected 360ms 760ms ease-out both;
+}
+.evaluation .selected::before {
+  background: #fff;
 }
 .evaluation .selected em {
-  color: #f8dfe7;
+  color: rgb(255 255 255 / .75);
 }
 .evaluation .rejected {
-  opacity: 0.52;
-  text-decoration: none;
+  border-style: dashed;
+  opacity: .64;
+  animation: qdip-causal-blocked 360ms 760ms ease-out both;
 }
+.evaluation .rejected::before,
 .evaluation .rejected svg {
-  color: #9d6678;
+  color: var(--ds-semantic-blocked);
+  background: var(--ds-semantic-blocked);
 }
 .result {
   display: grid;
   gap: 3px;
-  animation: signal-in 0.5s ease 0.82s both;
+  animation: qdip-causal-reveal 340ms 1020ms ease-out both;
 }
 .result span {
   color: var(--muted);
@@ -132,70 +167,43 @@
   color: var(--accent);
   font-size: 7px;
   font-style: normal;
-  font-weight: 850;
+  font-weight: 650;
 }
 .human {
   display: flex;
   align-items: center;
   gap: 5px;
-  animation: signal-in 0.5s ease 1s both;
+  animation: qdip-causal-reveal 340ms 1300ms ease-out both;
 }
 .arrow {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 15px;
-  color: var(--accent);
-  animation: arrow-in 0.4s ease both;
+  display: none;
 }
-.arrow:nth-of-type(1) {
-  animation-delay: 0.3s;
+
+@keyframes qdip-path-draw {
+  to { stroke-dashoffset: 0; }
 }
-.arrow:nth-of-type(2) {
-  animation-delay: 0.55s;
+@keyframes qdip-blocked-path {
+  from { opacity: 0; }
+  to { opacity: .78; }
 }
-.arrow:nth-of-type(3) {
-  animation-delay: 0.75s;
+@keyframes qdip-causal-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.arrow:nth-of-type(4) {
-  animation-delay: 0.94s;
+@keyframes qdip-causal-selected {
+  from { box-shadow: inset 0 0 0 0 rgb(var(--ds-semantic-selected-rgb) / 0); transform: scale(.985); }
+  to { box-shadow: inset 0 0 0 1px rgb(var(--ds-semantic-selected-rgb) / .16); transform: scale(1); }
 }
-@keyframes signal-in {
-  from {
-    opacity: 0;
-    transform: translateY(7px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+@keyframes qdip-causal-blocked {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: .64; transform: translateX(2px); }
 }
-@keyframes arrow-in {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes engine-pulse {
-  0% {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-  70% {
-    transform: scale(1.025);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+
 @media (max-width: 1100px) and (min-width: 601px) {
   .visual {
-    padding: 18px 12px;
-    gap: 5px;
+    min-height: 280px;
+    padding: var(--ds-space-6) var(--ds-space-4);
+    gap: var(--ds-space-2);
   }
   .inputs span,
   .result,
@@ -206,18 +214,18 @@
     font-size: 9px;
   }
   .evaluation {
-    min-width: 100px;
-  }
-  .arrow {
-    flex-basis: 12px;
-    width: 12px;
+    min-width: 104px;
   }
 }
 @media (max-width: 600px) {
   .visual {
-    padding: 18px;
+    min-height: auto;
+    padding: var(--ds-space-5);
     flex-direction: column;
     gap: 0;
+  }
+  .pathCanvas {
+    display: none;
   }
   .inputs {
     width: 100%;
@@ -238,24 +246,32 @@
     margin-left: 6px;
   }
   .arrow {
+    display: block;
     width: 28px;
     height: 28px;
     flex: 0 0 28px;
+    color: var(--accent);
+    stroke-width: 1.6;
     transform: rotate(90deg);
-    animation: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .visual * {
+  .visual *,
+  .mainPath,
+  .blockedPath {
     animation: none !important;
+    transform: none !important;
   }
+  .inputs,
   .inputs span,
   .engine,
   .evaluation,
+  .evaluation .selected,
+  .evaluation .rejected,
   .result,
   .human,
   .arrow {
     opacity: 1;
-    transform: none;
   }
+  .mainPath { stroke-dashoffset: 0; }
 }

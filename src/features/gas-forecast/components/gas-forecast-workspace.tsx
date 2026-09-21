@@ -3,7 +3,6 @@
 import { Activity, BrainCircuit, Database, FlaskConical } from 'lucide-react'
 import { useState } from 'react'
 
-import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import type { Locale } from '@/lib/observatory-i18n'
 import { cn } from '@/lib/utils'
 import { GasForecastEidosPage } from './gas-forecast-eidos-page'
@@ -62,7 +61,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
           </div>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{t.title}</h1>
+              <h1 className="text-2xl font-medium tracking-tight text-white md:text-3xl">{t.title}</h1>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">{t.body}</p>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-slate-400">
@@ -71,8 +70,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
             </div>
           </div>
         </header>
-        <DecisionWorkflow locale={locale} tone="dark" compact />
-        <div className="grid gap-2 rounded-[24px] border border-white/10 bg-white/4 p-2 md:grid-cols-2">
+        <div className="grid gap-2 border-y border-white/10 bg-transparent py-2 md:grid-cols-2">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const active = view === tab.id
@@ -82,9 +80,9 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
                 type="button"
                 onClick={() => setView(tab.id)}
                 className={cn(
-                  'flex items-start gap-3 rounded-[18px] px-4 py-3 text-left transition',
+                  'flex items-start gap-3 rounded-[var(--ds-radius-action)] px-4 py-3 text-left transition',
                   active
-                    ? 'border border-cyan-300/20 bg-cyan-300/10 text-white'
+                    ? 'ds-selection-surface border text-white'
                     : 'border border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'
                 )}
               >
@@ -97,7 +95,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
             )
           })}
         </div>
-        <section className="min-w-0 overflow-hidden rounded-[28px] border border-white/10 bg-black/10 [&>main]:min-h-0 [&>main]:px-0 [&>main]:py-0 [&>main>div]:max-w-none [&>main>div]:gap-5 [&>main>div>header]:hidden">
+        <section className="min-w-0 overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-black/10 [&>main]:min-h-0 [&>main]:px-0 [&>main]:py-0 [&>main>div]:max-w-none [&>main>div]:gap-5 [&>main>div>header]:hidden">
           {view === 'context' ? <GasForecastProvidersPage /> : <GasForecastEidosPage />}
         </section>
       </div>

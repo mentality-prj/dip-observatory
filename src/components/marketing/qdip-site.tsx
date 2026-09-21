@@ -4,48 +4,17 @@ import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref } from '@/lib/platform-urls'
 import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { QdipLogo } from './qdip-logo'
-import { MobileMenu } from './mobile-menu'
-import { LanguageSwitcher } from './language-switcher'
-import { DecisionSpace } from './decision-space'
+import { MarketingHeader } from './marketing-header'
+import { SignatureDecisionVisual } from './signature-decision-visual'
 import { DecisionPatterns } from './decision-patterns'
 import { DecisionPlayground } from './decision-playground'
 import { ProductJourney } from './product-journey'
 import { PilotPath } from './pilot-path'
+import { EvidenceStrip } from './evidence-strip'
 import { conversionBridgeCopy } from './conversion-copy'
 import styles from './qdip-site.module.css'
 
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
-
-function Header({ locale }: { locale: MarketingLocale }) {
-  const c = marketingCopy[locale]
-  const items = [
-    { href: path(locale, 'how-it-works'), label: c.nav[0] },
-    { href: path(locale, 'use-cases'), label: c.nav[1] },
-    { href: '#why', label: c.nav[2] },
-    { href: path(locale, 'core'), label: c.nav[3] },
-    { href: `${path(locale, 'use-cases')}#demos`, label: c.nav[4] },
-  ]
-  return (
-    <header className={styles.header}>
-      <div className={styles.headerInner}>
-        <Link className={styles.brand} href={marketingLocaleHref(locale)}>
-          <QdipLogo />
-        </Link>
-        <nav aria-label="Primary navigation" className={styles.nav}>
-          {items.map((item) => (
-            <Link href={item.href} key={`${item.href}-${item.label}`}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className={styles.headerTools}>
-          <LanguageSwitcher locale={locale} hrefForLocale={marketingLocaleHref} />
-          <MobileMenu items={items} />
-        </div>
-      </div>
-    </header>
-  )
-}
 
 export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   const c = marketingCopy[locale]
@@ -54,7 +23,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   return (
     <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
       <main id="main-content" lang={locale}>
-        <Header locale={locale} />
+        <MarketingHeader locale={locale} />
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <div className={styles.eyebrow}>{c.hero[0]}</div>
@@ -67,11 +36,15 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 <Play size={16} />
                 {c.hero[5]}
               </Link>
+              <Link className={styles.secondaryButton} href={path(locale, 'how-it-works')}>
+                {c.nav[0]} <ArrowRight size={15} />
+              </Link>
             </div>
           </div>
-          <DecisionSpace locale={locale} />
+          <SignatureDecisionVisual locale={locale} labels={c.diagram} />
         </section>
-        <section className={styles.section}>
+        <EvidenceStrip locale={locale} />
+        <section className={`${styles.section} ${styles.editorialSection}`}>
           <div className={styles.sectionIntro}>
             <h2>{c.problem[0]}</h2>
           </div>

@@ -2,10 +2,10 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
-import { marketingCopy, marketingLocales, type MarketingLocale } from './qdip-copy'
+import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { DecisionInquiryForm } from './decision-inquiry-form'
 import { QdipLogo } from './qdip-logo'
-import { MobileMenu } from './mobile-menu'
+import { MarketingHeader } from './marketing-header'
 import styles from './qdip-site.module.css'
 
 type Copy = {
@@ -307,41 +307,12 @@ const href = (l: MarketingLocale, s: string) => `${marketingLocaleHref(l)}/${s}`
 function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: string; children: React.ReactNode }) {
   const c = marketingCopy[locale],
     x = copy[locale]
-  const items = [
-    { href: href(locale, 'how-it-works'), label: c.nav[0] },
-    { href: href(locale, 'use-cases'), label: c.nav[1] },
-    { href: href(locale, 'core'), label: c.nav[3] },
-    { href: `${href(locale, 'use-cases')}#demos`, label: c.nav[4] },
-  ]
   return (
     <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
       <main lang={locale}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link className={styles.brand} href={marketingLocaleHref(locale)}>
-            <QdipLogo />
-          </Link>
-          <nav className={styles.nav} aria-label="Primary navigation">
-            {items.map((i) => (
-              <Link href={i.href} key={`${i.href}-${i.label}`}>
-                {i.label}
-              </Link>
-            ))}
-          </nav>
-          <div className={styles.headerTools}>
-            <nav className={styles.languageNav} aria-label="Language">
-              {marketingLocales.map((l) => (
-                <Link key={l} aria-current={l === locale ? 'page' : undefined} href={href(l, slug)}>
-                  {l === 'uk' ? 'UA' : l.toUpperCase()}
-                </Link>
-              ))}
-            </nav>
-            <MobileMenu items={items} />
-          </div>
-        </div>
-      </header>
-      {children}
-      <footer className={styles.footer}>
+        <MarketingHeader locale={locale} currentPath={slug} />
+        {children}
+        <footer className={styles.footer}>
         <QdipLogo />
         <nav>
           <Link href={href(locale, 'how-it-works')}>{c.nav[0]}</Link>
@@ -350,7 +321,7 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
           <Link href={href(locale, 'core/research')}>{x.research}</Link>
         </nav>
         <span>© {new Date().getFullYear()} QDIP</span>
-      </footer>
+        </footer>
       </main>
     </DesignSystemProvider>
   )
@@ -444,7 +415,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               <h3>{c.cases[2]}</h3>
               <strong>{c.cases[3]}</strong>
               <p>{c.cases[4]}</p>
-              <Link href={observatoryHref(`${locale === 'uk' ? 'en' : locale}/resource-allocation`)}>
+              <Link href={observatoryHref('resource-allocation', locale)}>
                 {c.cases[5]} <ArrowRight size={15} />
               </Link>
             </article>
@@ -453,7 +424,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               <h3>{c.cases[7]}</h3>
               <strong>{c.cases[8]}</strong>
               <p>{c.cases[9]}</p>
-              <Link href={observatoryHref(`${locale === 'uk' ? 'en' : locale}/gas-forecast`)}>
+              <Link href={observatoryHref('gas-forecast', locale)}>
                 {c.cases[10]} <ArrowRight size={15} />
               </Link>
             </article>

@@ -10,10 +10,10 @@
   --ds-text-h1: clamp(2.125rem, 4vw, 3.25rem);
   --ds-text-display: clamp(2.625rem, 5vw, 4rem);
   --ds-leading-body: 1.65;
-  --ds-leading-heading: 1.04;
-  --ds-weight-body: 400;
-  --ds-weight-heading: 480;
-  --ds-weight-subheading: 520;
+  --ds-leading-heading: 1.03;
+  --ds-weight-body: 420;
+  --ds-weight-heading: 460;
+  --ds-weight-subheading: 500;
   --ds-tracking-h1: -0.03em;
   --ds-tracking-h2: -0.025em;
   --ds-space-1: 0.25rem;
@@ -28,11 +28,32 @@
   --ds-space-16: 4rem;
   --ds-space-20: 5rem;
   --ds-space-24: 6rem;
-  --ds-radius-control: 0.75rem;
-  --ds-radius-card: 1.25rem;
+  --ds-radius-action: 0.5rem;
+  --ds-radius-input: 0.5rem;
+  --ds-radius-panel: 0.75rem;
+  --ds-radius-marketing: 1.5rem;
   --ds-radius-pill: 999px;
+  /* compatibility aliases: prefer semantic radius tokens in new code */
+  --ds-radius-control: var(--ds-radius-action);
+  --ds-radius-card: var(--ds-radius-panel);
   --ds-header-height: 4rem;
+  --ds-header-control-height: 2.25rem;
+  --ds-header-content-max: 90rem;
   --ds-content-max: 106.25rem;
+  --ds-semantic-success: #16834a;
+  --ds-semantic-success-rgb: 22 131 74;
+  --ds-semantic-selected: #3973a8;
+  --ds-semantic-selected-rgb: 57 115 168;
+  --ds-semantic-risk: #c65d2e;
+  --ds-semantic-risk-rgb: 198 93 46;
+  --ds-semantic-danger: #b4233f;
+  --ds-semantic-danger-rgb: 180 35 63;
+  --ds-semantic-blocked: #b4233f;
+  --ds-semantic-blocked-rgb: 180 35 63;
+  --ds-semantic-uncertainty: #6d5bd0;
+  --ds-semantic-uncertainty-rgb: 109 91 208;
+  --ds-semantic-info: #3973a8;
+  --ds-semantic-info-rgb: 57 115 168;
 }
 
 .ds-display {

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/design-system'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Badge, Button, Select } from '@/design-system'
 import { studioHref } from '@/lib/platform-urls'
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { BindingEditor } from './binding-editor'
@@ -10,6 +11,7 @@ import { Breadcrumbs, outputLabel } from './presentation'
 import { ProfileEditor } from './profile-editor'
 import { ProfileDashboard } from './profile-dashboard'
 import { ProfileRunner } from './profile-runner'
+import { studioLocaleFromPath } from './studio-locale'
 
 const titles: Record<string, string> = {
   profiles: 'Decision Profiles',
@@ -25,6 +27,9 @@ const descriptions: Record<string, string> = {
 }
 
 export function DecisionStudio({ section }: { section: string }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
   const [data, setData] = useState<{ dimensions: Dimension[]; plugins: Plugin[]; profiles: ProfileView[] } | null>(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -85,7 +90,7 @@ export function DecisionStudio({ section }: { section: string }) {
       />
       <h1>{titles[section]}</h1>
       <p>{descriptions[section]}</p>
-      {section === 'profiles' && <DecisionWorkflow locale="en" tone="light" compact />}
+      <DecisionWorkflow locale={locale} tone="light" compact />
       {error && (
         <div role="alert" className="studio-error">
           {error}{' '}
@@ -103,90 +108,92 @@ export function DecisionStudio({ section }: { section: string }) {
       {data && (
         <>
           {section === 'plugins' && (
-            <div className="studio-grid">
+            <section className="studio-registry-list" aria-label="Plugin registry">
               {data.plugins.map((plugin) => (
-                <Card key={plugin.name}>
-                  <CardHeader>
-                    <div className="studio-card-heading">
-                      <CardTitle>{plugin.ui?.label ?? plugin.name}</CardTitle>
-                      <Badge variant={plugin.enabled ? 'emerald' : 'neutral'}>
-                        {plugin.enabled ? 'Enabled' : 'Disabled'}
-                      </Badge>
+                <article className="studio-registry-row" key={plugin.name}>
+                  <header className="studio-registry-row-heading">
+                    <div>
+                      <h2>{plugin.ui?.label ?? plugin.name}</h2>
+                      <p>{plugin.description}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p>{plugin.description}</p>
-                    <dl>
-                      <dt>Plugin version</dt>
-                      <dd>{plugin.version}</dd>
-                      <dt>Category</dt>
-                      <dd>{plugin.ui?.category ?? 'General'}</dd>
-                    </dl>
-                    <h3>Capabilities</h3>
-                    <ul>
-                      {plugin.capabilities.map((c) => (
-                        <li key={c}>
-                          {c} <span className="studio-muted">@{plugin.capability_versions[c] ?? 'unversioned'}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <h3>Available outputs</h3>
-                    {plugin.dimension_outputs.length ? (
+                    <Badge variant={plugin.enabled ? 'emerald' : 'neutral'}>
+                      {plugin.enabled ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </header>
+                  <div className="studio-registry-meta">
+                    <span><small>Version</small>{plugin.version}</span>
+                    <span><small>Category</small>{plugin.ui?.category ?? 'General'}</span>
+                    <span><small>Capabilities</small>{plugin.capabilities.length}</span>
+                    <span><small>Outputs</small>{plugin.dimension_outputs.length}</span>
+                  </div>
+                  <div className="studio-registry-detail">
+                    <div>
+                      <h3>Capabilities</h3>
                       <ul>
-                        {plugin.dimension_outputs.map((o) => (
-                          <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>
-                            {outputLabel(o.capability_id, o.source_path)} →{' '}
-                            {data.dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}
+                        {plugin.capabilities.map((capability) => (
+                          <li key={capability}>
+                            {capability} <span className="studio-muted">@{plugin.capability_versions[capability] ?? 'unversioned'}</span>
                           </li>
                         ))}
                       </ul>
-                    ) : (
-                      <p>No dimension outputs declared.</p>
-                    )}
-                  </CardContent>
-                </Card>
+                    </div>
+                    <div>
+                      <h3>Available outputs</h3>
+                      {plugin.dimension_outputs.length ? (
+                        <ul>
+                          {plugin.dimension_outputs.map((output) => (
+                            <li key={`${output.capability_id}-${output.dimension_id}-${output.source_path}`}>
+                              {outputLabel(output.capability_id, output.source_path)} →{' '}
+                              {data.dimensions.find((dimension) => dimension.id === output.dimension_id)?.name ?? output.dimension_id}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No dimension outputs declared.</p>
+                      )}
+                    </div>
+                  </div>
+                </article>
               ))}
-            </div>
+            </section>
           )}
           {section === 'dimensions' && (
-            <div className="studio-grid">
+            <section className="studio-registry-list" aria-label="Dimension registry">
               {data.dimensions.map((dimension) => (
-                <Card key={`${dimension.id}-${dimension.version}`}>
-                  <CardHeader>
-                    <div className="studio-card-heading">
-                      <CardTitle>{dimension.name}</CardTitle>
-                      <Badge>{dimension.version}</Badge>
+                <article className="studio-registry-row studio-registry-row-compact" key={`${dimension.id}-${dimension.version}`}>
+                  <header className="studio-registry-row-heading">
+                    <div>
+                      <h2>{dimension.name}</h2>
+                      <p>{dimension.id}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <dl>
-                      <dt>ID</dt>
-                      <dd>{dimension.id}</dd>
-                      <dt>Type</dt>
-                      <dd>{dimension.type}</dd>
-                      <dt>Phase</dt>
-                      <dd>{dimension.phase ?? 'Unavailable'}</dd>
-                      <dt>Source</dt>
-                      <dd>{dimension.source}</dd>
-                      <dt>Evaluator</dt>
-                      <dd>
-                        {dimension.evaluator_id}@{dimension.evaluator_version}
-                      </dd>
-                      <dt>Blocking</dt>
-                      <dd>{dimension.blocking ? 'Yes' : 'No'}</dd>
-                    </dl>
-                    <details>
-                      <summary>Configuration schema</summary>
-                      <pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre>
-                    </details>
-                    <details>
-                      <summary>Value schema</summary>
-                      <pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre>
-                    </details>
-                  </CardContent>
-                </Card>
+                    <Badge>{dimension.version}</Badge>
+                  </header>
+                  <div className="studio-registry-meta">
+                    <span><small>Type</small>{dimension.type}</span>
+                    <span><small>Phase</small>{dimension.phase ?? 'Unavailable'}</span>
+                    <span><small>Source</small>{dimension.source}</span>
+                    <span><small>Blocking</small>{dimension.blocking ? 'Yes' : 'No'}</span>
+                  </div>
+                  <details className="studio-registry-disclosure">
+                    <summary>Contracts and evaluator</summary>
+                    <div className="studio-registry-contracts">
+                      <div>
+                        <h3>Evaluator</h3>
+                        <p>{dimension.evaluator_id}@{dimension.evaluator_version}</p>
+                      </div>
+                      <div>
+                        <h3>Configuration schema</h3>
+                        <pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre>
+                      </div>
+                      <div>
+                        <h3>Value schema</h3>
+                        <pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre>
+                      </div>
+                    </div>
+                  </details>
+                </article>
               ))}
-            </div>
+            </section>
           )}
           {section === 'bindings' && (
             <>
@@ -236,22 +243,37 @@ export function DecisionStudio({ section }: { section: string }) {
                       Back to profiles
                     </Button>
                   </div>
-                  <ProfileEditor
-                  key={editor.key}
-                  initial={editor.profile}
-                  existing={editor.existing}
-                  plugins={data.plugins}
-                  dimensions={data.dimensions}
-                  onSave={async (profile) => {
-                    await studioRequest(
-                      editor.existing ? `decision-profiles/${encodeURIComponent(profile.id)}` : 'decision-profiles',
-                      { method: editor.existing ? 'PATCH' : 'POST', body: JSON.stringify(profile) }
-                    )
-                    setEditor(null)
-                    await refreshProfiles()
-                    setMessage(`Profile ${profile.name} saved at version ${profile.version}.`)
-                  }}
-                  />
+                  <div className="studio-editor-layout">
+                    <ProfileEditor
+                      key={editor.key}
+                      initial={editor.profile}
+                      existing={editor.existing}
+                      plugins={data.plugins}
+                      dimensions={data.dimensions}
+                      onSave={async (profile) => {
+                        await studioRequest(
+                          editor.existing ? `decision-profiles/${encodeURIComponent(profile.id)}` : 'decision-profiles',
+                          { method: editor.existing ? 'PATCH' : 'POST', body: JSON.stringify(profile) }
+                        )
+                        setEditor(null)
+                        await refreshProfiles()
+                        setMessage(`Profile ${profile.name} saved at version ${profile.version}.`)
+                      }}
+                    />
+                    <aside className="studio-context-inspector" aria-label="Profile context">
+                      <h2>Decision model context</h2>
+                      <dl>
+                        <dt>Profile</dt><dd>{editor.profile.name || 'Untitled profile'}</dd>
+                        <dt>Version</dt><dd>{editor.profile.version}</dd>
+                        <dt>Mode</dt><dd>{editor.existing ? 'Editing' : 'New model'}</dd>
+                        <dt>Validation</dt><dd>Continuous</dd>
+                      </dl>
+                      <p>
+                        Build one decision model across alternatives, dimensions, constraints, policies and evidence bindings.
+                        Validation remains visible while the main canvas stays focused on the model.
+                      </p>
+                    </aside>
+                  </div>
                 </div>
               )}
               {runningProfile && (

@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { QdipLogo } from '../qdip-logo'
-import { LanguageSwitcher } from '../language-switcher'
+import { MarketingHeader } from '../marketing-header'
 import type { MarketingLocale } from '../qdip-copy'
 import { getDepthContent, type DepthPageKey } from './content'
 import styles from './depth-page.module.css'
@@ -16,28 +16,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
   return (
     <DesignSystemProvider theme="burgundy" mode="light" className={styles.page}>
       <main id="main-content">
-        <header className={styles.header}>
-          <Link href={marketingLocaleHref(locale)} aria-label="QDIP home">
-            <QdipLogo />
-          </Link>
-          <nav className={styles.primaryNav}>
-            {c.nav.map((x, i) => (
-              <Link
-                key={x}
-                className={paths[i] === page ? styles.active : undefined}
-                href={localeHref(locale, paths[i])}
-              >
-                {x}
-              </Link>
-            ))}
-          </nav>
-          <div className={styles.headerTools}>
-            <LanguageSwitcher locale={locale} hrefForLocale={(l) => localeHref(l, page)} />
-            <Link className={styles.demo} href={localeHref(locale, 'use-cases#demos')}>
-              Demos <ArrowRight size={14} />
-            </Link>
-          </div>
-        </header>
+        <MarketingHeader locale={locale} currentPath={page} />
         <section className={styles.hero}>
           <div className={styles.eyebrow}>{c.hero[0]}</div>
           <h1>{c.hero[1]}</h1>
@@ -73,7 +52,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
                     <dd>{x.output}</dd>
                   </div>
                 </dl>
-                <Link href={observatoryHref(x.href)}>
+                <Link href={observatoryHref(x.href, locale)}>
                   Open {x.title} <ArrowRight size={14} />
                 </Link>
               </article>

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { LanguageSwitcher } from './language-switcher'
@@ -7,10 +7,12 @@ describe('LanguageSwitcher', () => {
   it('renders every supported locale and marks the active locale', () => {
     render(<LanguageSwitcher locale="en" hrefForLocale={(locale) => `/${locale}`} />)
 
-    expect(screen.getByRole('navigation', { name: 'Language' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'EN' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: 'UA' })).toHaveAttribute('href', '/uk')
-    expect(screen.getByRole('link', { name: 'PL' })).toHaveAttribute('href', '/pl')
+    const desktop = screen.getByRole('navigation', { name: 'Language' })
+    expect(desktop).toBeInTheDocument()
+    expect(within(desktop).getByRole('link', { name: 'EN' })).toHaveAttribute('aria-current', 'page')
+    expect(within(desktop).getByRole('link', { name: 'UA' })).toHaveAttribute('href', '/uk')
+    expect(within(desktop).getByRole('link', { name: 'PL' })).toHaveAttribute('href', '/pl')
+    expect(screen.getByText('EN', { selector: 'summary' })).toHaveAttribute('aria-label', 'Language')
   })
 
   it('keeps locale URL generation behind the injected routing contract', async () => {
@@ -18,7 +20,11 @@ describe('LanguageSwitcher', () => {
     const user = userEvent.setup()
     render(<LanguageSwitcher locale="en" hrefForLocale={hrefForLocale} />)
 
-    await user.click(screen.getByRole('link', { name: 'UA' }))
+    const mobileSummary = screen.getByText('EN', { selector: 'summary' })
+    await user.click(mobileSummary)
+    const mobileMenu = mobileSummary.parentElement
+    expect(mobileMenu).not.toBeNull()
+    await user.click(within(mobileMenu as HTMLElement).getByRole('link', { name: 'UA' }))
     expect(hrefForLocale).toHaveBeenCalledWith('uk')
   })
 })

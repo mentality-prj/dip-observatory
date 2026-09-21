@@ -6,12 +6,23 @@ import { proxy } from './proxy'
 function request(host: string, pathname = '/') {
   return new NextRequest(`https://${host}${pathname}`, { headers: { host } })
 }
-test('routes clean Studio URLs to the Studio app', () => {
-  const home = proxy(request('studio.qdip.ai'))
-  const profiles = proxy(request('studio.qdip.ai', '/profiles'))
+test('routes localized Studio URLs to the Studio app', () => {
+  const home = proxy(request('studio.qdip.ai', '/en'))
+  const profiles = proxy(request('studio.qdip.ai', '/uk/profiles'))
   assert.equal(isRewrite(home), true)
   assert.equal(new URL(getRewrittenUrl(home)!).pathname, '/studio')
+  assert.equal(new URL(getRewrittenUrl(home)!).searchParams.get('lang'), 'en')
   assert.equal(new URL(getRewrittenUrl(profiles)!).pathname, '/studio/profiles')
+  assert.equal(new URL(getRewrittenUrl(profiles)!).searchParams.get('lang'), 'uk')
+})
+
+test('redirects legacy Studio URLs to the English canonical route', () => {
+  const root = proxy(request('studio.qdip.ai'))
+  const profiles = proxy(request('studio.qdip.ai', '/profiles'))
+  assert.equal(root.status, 308)
+  assert.equal(new URL(root.headers.get('location')!).pathname, '/en')
+  assert.equal(profiles.status, 308)
+  assert.equal(new URL(profiles.headers.get('location')!).pathname, '/en/profiles')
 })
 test('routes clean Observatory URLs to the localized app', () => {
   const home = proxy(request('observatory.qdip.ai'))

@@ -65,7 +65,7 @@
   gap: var(--ds-space-3);
   padding: var(--ds-space-3);
   border: 1px solid transparent;
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   text-decoration: none;
   transition:
     background 150ms ease,
@@ -200,12 +200,12 @@
   margin: var(--ds-space-8) 0;
   padding: var(--ds-space-2);
   border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   background: var(--ds-surface);
 }
 .studio-profile-nav a {
   padding: var(--ds-space-2) var(--ds-space-3);
-  border-radius: calc(var(--ds-radius-control) - 3px);
+  border-radius: calc(var(--ds-radius-action) - 3px);
   color: var(--ds-text-muted);
   font-size: var(--ds-text-sm);
   font-weight: 650;
@@ -218,7 +218,7 @@
 .studio-flow {
   padding: var(--ds-space-4);
   border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   background: var(--ds-surface);
   font-size: var(--ds-text-sm);
   line-height: 1.7;
@@ -246,14 +246,11 @@
 }
 .studio-main .ds-card {
   transition:
-    transform 150ms ease,
-    box-shadow 150ms ease,
-    border-color 150ms ease;
+    border-color 150ms ease,
+    background 150ms ease;
 }
 .studio-main .ds-card:hover {
-  transform: translateY(-1px);
   border-color: rgb(var(--ds-accent-rgb) / 0.2);
-  box-shadow: var(--ds-shadow-card);
 }
 .studio-main .ds-card dl {
   display: grid;
@@ -300,7 +297,7 @@
   padding: var(--ds-space-5);
   margin: var(--ds-space-4) 0;
   border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-card);
+  border-radius: var(--ds-radius-panel);
   background: var(--ds-surface);
 }
 .studio-schema legend {
@@ -320,7 +317,7 @@
 .studio-error {
   padding: var(--ds-space-3) var(--ds-space-4);
   margin: var(--ds-space-3) 0;
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   font-size: var(--ds-text-sm);
 }
 .studio-success {
@@ -343,7 +340,7 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   color: var(--ds-text);
   background: var(--ds-surface);
   font-size: var(--ds-text-xs);
@@ -391,7 +388,7 @@
 .gas-range {
   padding: var(--ds-space-4);
   border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-control);
+  border-radius: var(--ds-radius-action);
   background: var(--ds-surface);
 }
 .gas-metric-grid > div {

@@ -19,18 +19,18 @@ export function GasForecastResearchManifest({ manifest }: { manifest: ResearchMa
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hypothesis</p>
           <p className="mt-2 text-sm text-slate-300">{manifest.hypothesis}</p>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-white/8 p-3">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="border-t border-white/10 py-3">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Dataset</p>
             <p className="mt-2 text-sm text-white">{manifest.dataset.version}</p>
             <p className="mt-1 break-all font-mono text-[11px] text-slate-500">{manifest.dataset.hash}</p>
           </div>
-          <div className="rounded-xl border border-white/8 p-3">
+          <div className="border-t border-white/10 py-3">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Window</p>
             <p className="mt-2 text-sm text-white">{manifest.dataset.observation_window}</p>
             <p className="mt-1 text-xs text-slate-500">{manifest.dataset.sources.join(' · ')}</p>
           </div>
-          <div className="rounded-xl border border-white/8 p-3">
+          <div className="border-t border-white/10 py-3">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Alternatives</p>
             <p className="mt-2 text-sm text-white">{manifest.decision_alternatives.join(' · ')}</p>
             <p className="mt-1 text-xs text-slate-500">Horizons: {manifest.horizons.join(', ')}d</p>

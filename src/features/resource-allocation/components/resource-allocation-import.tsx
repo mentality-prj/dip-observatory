@@ -146,7 +146,7 @@ export function ResourceAllocationImport({
   }
 
   return (
-    <section className="min-w-0 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-5">
+    <section className="min-w-0 rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-5">
       <div className="flex items-start gap-3">
         <FileSpreadsheet className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
         <div className="min-w-0">

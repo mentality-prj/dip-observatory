@@ -32,6 +32,13 @@ export function SignatureDecisionVisual({ labels, locale }: { labels: readonly s
   const a = alternatives[locale]
   return (
     <figure className={styles.visual} aria-label={labels.join(' → ')}>
+      <svg className={styles.pathCanvas} viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
+        <path className={styles.mainPath} d="M76 132 C170 132 188 72 278 72 S365 132 435 132 S520 80 592 80 S690 132 754 132 S846 132 930 132" />
+        <path className={styles.blockedPath} d="M435 132 C525 132 548 202 640 202 C704 202 720 188 754 164" />
+        <circle cx="278" cy="72" r="5" />
+        <circle cx="592" cy="80" r="5" />
+        <circle cx="754" cy="132" r="5" />
+      </svg>
       <div className={styles.inputs}>
         {labels.slice(0, 4).map((label, index) => (
           <span style={{ '--i': index } as IndexedStyle} key={label}>

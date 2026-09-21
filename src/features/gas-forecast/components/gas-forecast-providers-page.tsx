@@ -101,7 +101,7 @@ function ResultBlock({
       ) : null}
 
       {result.message ? (
-        <div className="rounded-2xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">
+        <div className="rounded-xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">
           <p>
             <span className="text-rose-300/70">Error:</span> {result.message}
           </p>
@@ -126,7 +126,7 @@ function ResultBlock({
       {result.sample.length > 0 ? (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Sample</p>
-          <div className="overflow-x-auto rounded-2xl border border-white/8">
+          <div className="overflow-x-auto rounded-xl border border-white/8">
             {providerId === 'ttf' ? (
               <table className="min-w-full border-collapse text-left text-xs text-slate-200">
                 <thead className="bg-white/6 text-slate-400">
@@ -184,7 +184,7 @@ function ResultBlock({
       ) : null}
 
       {providerId === 'ttf' && result.connection === 'OK' ? (
-        <div className="space-y-1 rounded-2xl border border-emerald-300/20 bg-emerald-300/8 p-3 text-sm text-emerald-100">
+        <div className="space-y-1 rounded-xl border border-emerald-300/20 bg-emerald-300/8 p-3 text-sm text-emerald-100">
           <p className="font-medium">TTF Front-Month Settlement</p>
           <p>
             <span className="text-emerald-300/80">Status:</span> OK
@@ -239,7 +239,7 @@ export function FlowPointCombobox({
   onSelect: (value: string) => void
   initialOpen?: boolean
 }) {
-  const inputClassName = 'h-11 rounded-xl px-3 text-sm md:rounded-2xl md:px-4'
+  const inputClassName = 'h-11 rounded-xl px-3 text-sm md:rounded-xl md:px-4'
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(initialOpen)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
@@ -476,7 +476,7 @@ export function WeatherRegionsCombobox({
       <Label htmlFor={inputId}>Weather regions</Label>
       <div className="relative min-w-0 w-full">
         <div
-          className="box-border flex min-h-11 w-full min-w-0 max-w-full flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus-within:border-cyan-300/60 focus-within:bg-white/8 focus-within:ring-2 focus-within:ring-cyan-300/20"
+          className="box-border flex min-h-11 w-full min-w-0 max-w-full flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition focus-within:border-cyan-300/60 focus-within:bg-white/8 focus-within:ring-2 focus-within:ring-cyan-300/20"
           onClick={() => {
             setOpen(true)
             inputRef.current?.focus()
@@ -829,7 +829,7 @@ export function GasForecastProvidersPage() {
                     </div>
                     <div
                       className={cn(
-                        'rounded-2xl border p-3',
+                        'rounded-xl border p-3',
                         currentStatus === 'connected'
                           ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
                           : currentStatus === 'failed'
@@ -908,7 +908,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id="entsog-from"
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={entsogConfig.from}
                             max={entsogDateBounds.fromMax}
                             onChange={(event) => {
@@ -926,7 +926,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id="entsog-to"
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={entsogConfig.to}
                             max={entsogDateBounds.toMax}
                             min={entsogDateBounds.toMin}
@@ -975,7 +975,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id={weatherFromInputId}
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={weatherConfig.start_date}
                             max={weatherDateBounds.fromMax}
                             onChange={(event) => {
@@ -996,7 +996,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id={weatherToInputId}
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={weatherConfig.end_date}
                             max={weatherDateBounds.toMax}
                             min={weatherDateBounds.toMin}
@@ -1015,7 +1015,7 @@ export function GasForecastProvidersPage() {
                         <Input
                           id={weatherMetricInputId}
                           type="text"
-                          className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                          className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                           value="Temperature (°C)"
                           readOnly
                         />
@@ -1035,7 +1035,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id={ttfFromInputId}
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={ttfConfig.start_date}
                             max={ttfDateBounds.fromMax}
                             aria-invalid={ttfValidationError ? 'true' : undefined}
@@ -1058,7 +1058,7 @@ export function GasForecastProvidersPage() {
                           <Input
                             id={ttfToInputId}
                             type="date"
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-2xl md:px-4"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl px-3 text-sm md:rounded-xl md:px-4"
                             value={ttfConfig.end_date}
                             max={ttfDateBounds.toMax}
                             min={ttfDateBounds.toMin}

@@ -29,9 +29,9 @@ const heading = {
 export function ProductJourney({ locale, demoHref, coreHref }: { locale: Locale; demoHref: string; coreHref: string }) {
   const links: Record<ProductSurfaceId, string> = {
     demo: demoHref,
-    studio: studioHref(),
+    studio: studioHref('', locale),
     core: coreHref,
-    observatory: observatoryHref(locale),
+    observatory: observatoryHref('', locale),
   }
   const [eyebrow, title, body] = heading[locale]
 

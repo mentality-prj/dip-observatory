@@ -65,7 +65,7 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
             <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"><Home className="h-4 w-4" aria-hidden="true" />QDIP Observatory</Link>
           </div>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Gas Procurement Decision Experiment</h1>
+            <h1 className="text-2xl font-medium tracking-tight text-white md:text-3xl">Gas Procurement Decision Experiment</h1>
             <p className="max-w-3xl text-sm text-slate-400">Execute the backend research capability and inspect decision evidence. No forecasting or decision logic runs in the browser.</p>
           </div>
         </header>
@@ -91,18 +91,18 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
           </form>
         </CardContent></Card>
 
-        {manifest ? <GasForecastResearchManifest manifest={manifest} /> : null}
         {evidence ? <GasForecastResearchEvidence evidence={evidence} /> : null}
+        {manifest ? <GasForecastResearchManifest manifest={manifest} /> : null}
 
         {result ? <Card><CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Execution result</CardTitle><Badge variant={result.status === 'succeeded' ? 'emerald' : 'rose'}>{result.status === 'succeeded' ? 'SUCCEEDED' : 'FAILED'}</Badge></div>
           <div className="space-y-1 text-sm text-slate-300"><p><span className="text-slate-500">HTTP:</span> {result.httpStatus ?? '—'}</p><p><span className="text-slate-500">Response time:</span> {result.responseTimeMs !== null ? `${result.responseTimeMs} ms` : '—'}</p><p><span className="text-slate-500">Executed at:</span> {result.executedAt}</p></div>
         </CardHeader><CardContent className="space-y-4">
-          {result.message ? <div className="rounded-2xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">{result.message}</div> : null}
+          {result.message ? <div className="rounded-xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">{result.message}</div> : null}
           <div className="space-y-2"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Raw backend payload</p><div className="flex items-center gap-1">
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Copy raw backend payload" title="Copy raw backend payload" onClick={copyRawPayload}>{isPayloadCopied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}</Button>
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Export raw backend payload as TXT" title="Export raw backend payload as TXT" onClick={exportRawPayload}><Download className="h-4 w-4" aria-hidden="true" /></Button>
-          </div></div><pre aria-label="Raw backend payload" className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200">{JSON.stringify(result.payload, null, 2)}</pre></div>
+          </div></div><pre aria-label="Raw backend payload" className="overflow-x-auto rounded-xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200">{JSON.stringify(result.payload, null, 2)}</pre></div>
         </CardContent></Card> : null}
       </div>
     </main>

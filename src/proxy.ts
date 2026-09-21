@@ -14,10 +14,28 @@ function isMarketingHost(h: string) {
 export function proxy(request: NextRequest) {
   const host = requestHost(request),
     pathname = request.nextUrl.pathname
-  if (isSurfaceHost(host, 'studio') && !pathname.startsWith('/api/') && !pathname.startsWith('/studio')) {
+  if (isSurfaceHost(host, 'studio') && !pathname.startsWith('/api/')) {
+    if (pathname === '/') {
+      const u = request.nextUrl.clone()
+      u.pathname = '/en'
+      return NextResponse.redirect(u, 308)
+    }
+    const localizedStudio = pathname.match(/^\/(en|uk|pl)(\/.*)?$/)
+    if (localizedStudio && MARKETING_LOCALES.has(localizedStudio[1])) {
+      const u = request.nextUrl.clone()
+      u.pathname = localizedStudio[2] ? `/studio${localizedStudio[2]}` : '/studio'
+      u.searchParams.set('lang', localizedStudio[1])
+      return NextResponse.rewrite(u)
+    }
+    if (pathname.startsWith('/studio')) {
+      const suffix = pathname.slice('/studio'.length)
+      const u = request.nextUrl.clone()
+      u.pathname = `/en${suffix}`
+      return NextResponse.redirect(u, 308)
+    }
     const u = request.nextUrl.clone()
-    u.pathname = pathname === '/' ? '/studio' : `/studio${pathname}`
-    return NextResponse.rewrite(u)
+    u.pathname = `/en${pathname}`
+    return NextResponse.redirect(u, 308)
   }
   if (isSurfaceHost(host, 'observatory') && !pathname.startsWith('/api/')) {
     if (pathname === '/') {

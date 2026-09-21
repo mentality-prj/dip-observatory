@@ -63,7 +63,7 @@ export const marketingCopy = {
       'PRIORITIZE',
       'GTM Lab',
       'Which opportunities deserve attention first?',
-      'Coming soon',
+      'Explore GTM Lab',
     ],
     why: [
       'Why QDIP',
@@ -148,7 +148,7 @@ export const marketingCopy = {
       'ПРІОРИТЕЗУВАТИ',
       'GTM Lab',
       'Які можливості потребують уваги першими?',
-      'Незабаром',
+      'Відкрити GTM Lab',
     ],
     why: [
       'Чому QDIP',
@@ -233,7 +233,7 @@ export const marketingCopy = {
       'PRIORYTETYZUJ',
       'GTM Lab',
       'Które szanse wymagają uwagi w pierwszej kolejności?',
-      'Wkrótce',
+      'Poznaj GTM Lab',
     ],
     why: [
       'Dlaczego QDIP',

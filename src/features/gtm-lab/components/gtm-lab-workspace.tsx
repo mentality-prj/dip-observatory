@@ -10,10 +10,16 @@ import { GtmProductionImport } from './gtm-production-import'
 type Level = 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'
 const decisions: GtmDecision[] = ['PURSUE', 'RESEARCH', 'WATCH', 'SKIP']
 const tones: Record<GtmDecision, string> = {
-  PURSUE: 'border-emerald-400/40 text-emerald-300',
-  RESEARCH: 'border-amber-400/40 text-amber-300',
-  WATCH: 'border-sky-400/40 text-sky-300',
-  SKIP: 'border-slate-500/40 text-slate-300',
+  PURSUE: 'ds-state-chip-selected',
+  RESEARCH: 'ds-state-chip-uncertainty',
+  WATCH: 'ds-state-chip-risk',
+  SKIP: 'ds-state-chip-blocked',
+}
+const decisionText: Record<GtmDecision, string> = {
+  PURSUE: 'ds-state-selected',
+  RESEARCH: 'ds-state-uncertainty',
+  WATCH: 'ds-state-risk',
+  SKIP: 'ds-state-blocked',
 }
 const labels = {
   en: {
@@ -37,6 +43,7 @@ const labels = {
     quality: 'Evidence strength',
     confidence: 'Confidence',
     details: 'Decision details',
+    recommendation: 'Recommendation',
     empty: 'Run the bundled deterministic dataset or upload a CSV to open the decision portfolio.',
     industry: 'Industry',
     unavailable: 'Not provided by backend',
@@ -63,6 +70,7 @@ const labels = {
     quality: 'Сила доказів',
     confidence: 'Впевненість',
     details: 'Деталі рішення',
+    recommendation: 'Рекомендація',
     empty: 'Запустіть демо-набір або завантажте CSV, щоб відкрити портфель рішень.',
     industry: 'Галузь',
     unavailable: 'Backend не надає',
@@ -89,6 +97,7 @@ const labels = {
     quality: 'Siła dowodów',
     confidence: 'Pewność',
     details: 'Szczegóły decyzji',
+    recommendation: 'Rekomendacja',
     empty: 'Uruchom dane demo lub prześlij CSV, aby otworzyć portfel decyzji.',
     industry: 'Branża',
     unavailable: 'Brak danych z backendu',
@@ -100,9 +109,9 @@ const level = (value: number): Exclude<Level, 'ALL'> => (value >= 0.7 ? 'HIGH' :
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-white/10 p-3">
+    <div className="border-t border-white/10 py-3">
       <span className="text-xs text-slate-500">{label}</span>
-      <b className="block text-xl">{value}</b>
+      <b className="block text-xl font-medium">{value}</b>
     </div>
   )
 }
@@ -110,7 +119,7 @@ function List({ title, items, tone = 'text-slate-300' }: { title: string; items:
   if (!items.length) return null
   return (
     <section className="mt-7">
-      <h3 className={`text-xs font-black tracking-wider ${tone}`}>{title}</h3>
+      <h3 className={`text-xs font-semibold tracking-wider ${tone}`}>{title}</h3>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
           <li key={item}>• {item}</li>
@@ -133,12 +142,13 @@ function CompanyAnalysis({
 }) {
   return (
     <article className="min-w-0 border border-white/10 bg-white/[.04] p-6 md:p-8">
-      <div className="flex flex-wrap justify-between gap-4">
-        <div>
-          <div className="text-xs text-slate-500">{item.domain ?? '—'}</div>
-          <h2 className="text-3xl font-black">{item.name}</h2>
+      <div className="border-b border-white/10 pb-5">
+        <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">{t.recommendation}</div>
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
+          <strong className={`text-3xl font-medium tracking-[-.03em] ${decisionText[item.decision]}`}>{item.decision}</strong>
+          <span className="text-xs text-slate-500">{item.domain ?? '—'}</span>
         </div>
-        <span className={`h-fit border px-4 py-2 font-black ${tones[item.decision]}`}>{item.decision}</span>
+        <h2 className="mt-2 text-xl font-medium text-slate-200">{item.name}</h2>
       </div>
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Metric label={t.opportunity} value={pct(item.opportunity)} />
@@ -147,14 +157,14 @@ function CompanyAnalysis({
         <Metric label={t.fit} value={pct(item.qdipFit)} />
         <Metric label={t.confidence} value={item.confidence == null ? '—' : pct(item.confidence)} />
       </div>
-      <List title={t.why} items={item.reasons} tone="text-emerald-300" />
-      <List title={t.risks} items={item.risks} tone="text-rose-300" />
-      <List title={t.unknown} items={item.missingInformation} tone="text-amber-300" />
+      <List title={t.why} items={item.reasons} tone="ds-state-success" />
+      <List title={t.risks} items={item.risks} tone="ds-state-blocked" />
+      <List title={t.unknown} items={item.missingInformation} tone="ds-state-uncertainty" />
       {item.decision === 'RESEARCH' && (
         <List title={t.research} items={item.researchObjectives} tone="text-amber-300" />
       )}
       <section className="mt-7">
-        <h3 className="text-xs font-black tracking-wider text-slate-400">{t.evidence}</h3>
+        <h3 className="text-xs font-semibold tracking-wider text-slate-400">{t.evidence}</h3>
         {item.evidence.length ? (
           <div className="mt-3 space-y-3">
             {item.evidence.map((evidence) => (
@@ -163,8 +173,8 @@ function CompanyAnalysis({
                   <span
                     className={
                       evidence.kind === 'HYPOTHESIS' || evidence.kind === 'UNKNOWN'
-                        ? 'text-amber-300'
-                        : 'text-emerald-300'
+                        ? 'ds-state-uncertainty'
+                        : 'ds-state-success'
                     }
                   >
                     {evidence.kind ?? 'SOURCED'}
@@ -190,14 +200,14 @@ function CompanyAnalysis({
       </section>
       {item.capability && (
         <section className="mt-7 border border-sky-400/20 p-5">
-          <h3 className="text-xs font-black tracking-wider text-sky-300">{t.fit}</h3>
+          <h3 className="text-xs font-semibold tracking-wider text-sky-300">{t.fit}</h3>
           <p className="mt-2 text-lg font-bold">{item.capability.name}</p>
           {item.capability.problem && <p className="mt-2 text-sm text-slate-300">{item.capability.problem}</p>}
           <List title="Rationale" items={item.capability.rationale} />
         </section>
       )}
-      <section className="mt-7 border border-emerald-400/20 bg-emerald-400/[.04] p-5">
-        <h3 className="text-xs font-black tracking-wider text-emerald-300">{t.next}</h3>
+      <section className="mt-7 border-t border-white/10 pt-5">
+        <h3 className="text-xs font-semibold tracking-wider ds-state-selected">{t.next}</h3>
         {item.nextAction ? (
           <>
             <p className="mt-2 text-lg font-bold">{item.nextAction.title}</p>
@@ -293,14 +303,14 @@ export function GtmLabWorkspace({ locale }: { locale: Locale }) {
       <div className="mx-auto max-w-[1540px] px-5 py-8 md:px-10 lg:py-12">
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs font-black tracking-[.18em] text-emerald-300">QDIP · GTM LAB</span>
+            <span className="text-xs font-semibold tracking-[.18em] text-emerald-300">QDIP · GTM LAB</span>
             {model && (
               <span className="border border-amber-300/30 px-3 py-1 text-xs font-bold text-amber-200">
                 {model.source === 'DEMO' ? t.demo : t.imported}
               </span>
             )}
           </div>
-          <h1 className="mt-5 text-4xl font-black md:text-6xl">GTM Lab</h1>
+          <h1 className="mt-5 text-4xl font-medium md:text-6xl">GTM Lab</h1>
           <p className="mt-3 max-w-3xl text-slate-400">{t.subtitle}</p>
           <button
             onClick={() => void runDemo()}
@@ -397,7 +407,7 @@ export function GtmLabWorkspace({ locale }: { locale: Locale }) {
                       role="listitem"
                       key={item.id}
                       onClick={() => setSelected(item.id)}
-                      className={`w-full border p-4 text-left ${active?.id === item.id ? 'border-emerald-300/40 bg-white/[.07]' : 'border-white/10 bg-white/[.03]'}`}
+                      className={`w-full border p-4 text-left ${active?.id === item.id ? 'ds-selection-surface' : 'border-white/10 bg-white/[.03]'}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -406,7 +416,7 @@ export function GtmLabWorkspace({ locale }: { locale: Locale }) {
                             {item.industry ?? '—'} · {item.country ?? '—'}
                           </div>
                         </div>
-                        <span className={`border px-2 py-1 text-[10px] font-black ${tones[item.decision]}`}>
+                        <span className={`border px-2 py-1 text-[10px] font-semibold ${tones[item.decision]}`}>
                           {item.decision}
                         </span>
                       </div>

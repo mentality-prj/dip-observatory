@@ -3,7 +3,8 @@
 import dynamic from 'next/dynamic'
 import type { ComponentType } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
-import type { UseCaseId } from '@/use-cases/registry'
+import { ObservatoryDecisionNarrative } from '@/components/observatory/decision-narrative'
+import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
 export type ApplicationFrontendProps = { locale: Locale }
 
@@ -25,7 +26,13 @@ const frontends = {
 
 export function ApplicationFrontend({ id, locale }: { id: UseCaseId; locale: Locale }) {
   const Frontend = frontends[id]
-  return <Frontend locale={locale} />
+  const useCase = findUseCaseById(id)
+  return (
+    <>
+      {useCase ? <ObservatoryDecisionNarrative locale={locale} useCase={useCase} /> : null}
+      <Frontend locale={locale} />
+    </>
+  )
 }
 export function hasApplicationFrontend(id: string): id is UseCaseId {
   return id in frontends
