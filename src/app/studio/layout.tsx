@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import '@/studio/studio.css'
+import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
 import { StudioNav } from '@/features/studio'
 import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
@@ -34,9 +35,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         <div className="studio-sidebar-intro">
           <small>DECISION WORKSPACE</small>
           <h2>Build decision systems</h2>
-          <p>
-            Configure reusable decision profiles, connect evidence sources and validate contracts before evaluation.
-          </p>
+          <p>Configure reusable decision profiles, connect evidence sources and validate contracts before evaluation.</p>
         </div>
         <StudioNav />
         <div className="studio-sidebar-footer">
@@ -45,9 +44,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <div className="studio-workspace">
-        <main className="studio-main ds-page" id="main-content" tabIndex={-1}>
-          {children}
-        </main>
+        <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
       </div>
     </DesignSystemProvider>
   )
