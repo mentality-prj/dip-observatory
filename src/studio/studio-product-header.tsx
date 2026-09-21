@@ -1,18 +1,11 @@
 'use client'
 
-import Link from 'next/link'
-import { Cable, Telescope } from 'lucide-react'
+import { Cable } from 'lucide-react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ProductHeader, StatusBadge } from '@/design-system'
-import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { StudioLanguageSwitcher } from './studio-language-switcher'
 import { studioLocaleFromPath } from './studio-locale'
-
-const OBSERVATORY_LABEL = {
-  en: 'Open Observatory',
-  uk: 'Відкрити Observatory',
-  pl: 'Otwórz Observatory',
-} as const
 
 export function StudioProductHeader() {
   const pathname = usePathname()
@@ -30,15 +23,7 @@ export function StudioProductHeader() {
           Core connected
         </StatusBadge>
       }
-      utilities={
-        <>
-          <Link className="ds-button ds-button-secondary ds-button-sm" href={observatoryHref('', locale)}>
-            <Telescope size={15} aria-hidden />
-            <span>{OBSERVATORY_LABEL[locale]}</span>
-          </Link>
-          <StudioLanguageSwitcher />
-        </>
-      }
+      utilities={<StudioLanguageSwitcher />}
     />
   )
 }
