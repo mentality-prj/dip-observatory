@@ -11,9 +11,24 @@ const copy={
  pl:{inputs:["Kontekst","Priorytety","Ograniczenia","Niepewność"],options:["Opcja A","Opcja B","Opcja C"],states:["Wyższy koszt","Najlepsze dopasowanie","Konflikt z ograniczeniem"],recommended:"Rekomendowana",why:"Dlaczego B?",reasons:["spełnia aktywne ograniczenia","równoważy priorytety","kompromisy pozostają widoczne"],human:"Decyzja człowieka"}
 } as const;
 
+const FINAL_PHASE = 4;
+const PHASE_COUNT = 5;
+const PHASE_INTERVAL_MS = 1800;
+
+function prefersReducedMotion() {
+ return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export function DecisionSpace({locale}:{locale:MarketingLocale}){
- const c=copy[locale]; const [phase,setPhase]=useState(0);
- useEffect(()=>{if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){setPhase(4);return;} const id=window.setInterval(()=>setPhase(p=>(p+1)%5),1800);return()=>window.clearInterval(id)},[]);
+ const c=copy[locale];
+ const [phase,setPhase]=useState(prefersReducedMotion() ? FINAL_PHASE : 0);
+
+ useEffect(()=>{
+   if(prefersReducedMotion()) return;
+   const id=window.setInterval(()=>setPhase(p=>(p+1)%PHASE_COUNT),PHASE_INTERVAL_MS);
+   return()=>window.clearInterval(id);
+ },[]);
+
  return <div className={styles.space} data-phase={phase} aria-label={`${c.inputs.join(", ")} → QDIP → ${c.recommended} ${c.options[1]} → ${c.human}`}>
    <div className={styles.orbit} aria-hidden="true"/><div className={styles.inputs}>{c.inputs.map((x,i)=><span key={x} style={{"--i":i} as React.CSSProperties}>{x}</span>)}</div>
    <div className={styles.engine}><strong>QDIP</strong><small>Decision Engine</small><i/></div>
