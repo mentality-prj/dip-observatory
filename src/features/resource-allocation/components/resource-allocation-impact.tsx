@@ -180,7 +180,9 @@ function Impact({ label, current, recommended, help, format, inverse = false, un
   const delta = recommended - current
   const favorable = Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
   const Icon = delta >= 0 ? ArrowUp : ArrowDown
-  const deltaText = `${delta > 0 ? '+' : ''}${format === 'pct' ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
+  const deltaText = format === 'pct'
+    ? `${delta > 0 ? '+' : ''}${Math.round(delta * 100)} pp`
+    : `${delta > 0 ? '+' : ''}${delta.toFixed(0)} units`
   return (
     <div className="bg-white/[0.04] p-4">
       <MetricLabel label={label} help={help} />
