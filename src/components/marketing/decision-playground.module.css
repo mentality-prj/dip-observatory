@@ -4,6 +4,7 @@
   gap: clamp(var(--ds-space-10), 7vw, 6rem);
   padding: var(--ds-space-24) max(var(--ds-space-6), calc((100vw - 1180px) / 2));
   align-items: center;
+  --ds-heading: #fff;
   background: #180b11;
   color: #fff;
 }
@@ -17,7 +18,8 @@
   max-width: 520px;
   margin: var(--ds-space-4) 0 var(--ds-space-5);
   font-size: var(--ds-text-h2);
-  font-weight: 600;
+  color: var(--ds-heading);
+  font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.025em;
 }
