@@ -18,9 +18,9 @@ type Props = {
 
 const labels = {
   uk: {
-    compareKicker: '04 · ПОТОЧНИЙ → РЕКОМЕНДОВАНИЙ',
-    compareTitle: 'Поточний розподіл проти рекомендації QDIP',
-    recommendationKicker: '04 · РЕКОМЕНДАЦІЯ QDIP',
+    compareKicker: '02 · ЩО МОЖНА ПОКРАЩИТИ',
+    compareTitle: 'Що зміниться, якщо використати рекомендацію QDIP',
+    recommendationKicker: '02 · ОЧІКУВАНИЙ ЕФЕКТ',
     recommendationTitle: 'Очікуваний результат рекомендованого плану',
     recommendationSubtitle:
       'Поточний розподіл не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
@@ -37,9 +37,9 @@ const labels = {
     of: 'з',
   },
   en: {
-    compareKicker: '04 · CURRENT → RECOMMENDED',
-    compareTitle: 'Current allocation versus QDIP recommendation',
-    recommendationKicker: '04 · QDIP RECOMMENDATION',
+    compareKicker: '02 · WHAT CAN IMPROVE',
+    compareTitle: 'What changes if you use the QDIP recommendation',
+    recommendationKicker: '02 · EXPECTED IMPACT',
     recommendationTitle: 'Expected result of the recommended plan',
     recommendationSubtitle:
       'The current allocation could not be evaluated under the same scenario, so only the recommended plan is shown.',
@@ -56,9 +56,9 @@ const labels = {
     of: 'of',
   },
   pl: {
-    compareKicker: '04 · OBECNIE → REKOMENDACJA',
-    compareTitle: 'Bieżąca alokacja a rekomendacja QDIP',
-    recommendationKicker: '04 · REKOMENDACJA QDIP',
+    compareKicker: '02 · CO MOŻNA POPRAWIĆ',
+    compareTitle: 'Co zmieni się po zastosowaniu rekomendacji QDIP',
+    recommendationKicker: '02 · OCZEKIWANY EFEKT',
     recommendationTitle: 'Oczekiwany wynik rekomendowanego planu',
     recommendationSubtitle:
       'Bieżącej alokacji nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
@@ -99,6 +99,17 @@ export function ResourceAllocationImpact({ metrics, summary, baseline, moved, to
           </div>
         </div>
       </div>
+      {baseline && summary.served > baseline.summary.served && (
+        <div className="mt-5 border-l-2 border-emerald-400 bg-emerald-400/[0.06] px-4 py-3 text-sm text-emerald-100">
+          <b>
+            {locale === 'uk'
+              ? `QDIP знаходить можливість покрити ще ${Math.round(summary.served - baseline.summary.served)} потреб наявними командами.`
+              : locale === 'pl'
+                ? `QDIP znajduje możliwość pokrycia o ${Math.round(summary.served - baseline.summary.served)} więcej potrzeb przy obecnych zespołach.`
+                : `QDIP finds a way to cover ${Math.round(summary.served - baseline.summary.served)} more needs with the teams already available.`}
+          </b>
+        </div>
+      )}
       <div className="mt-6 grid gap-px bg-white/5 sm:grid-cols-2 xl:grid-cols-6">
         <Impact
           label={t.priority}
