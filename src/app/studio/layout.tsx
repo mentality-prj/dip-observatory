@@ -35,13 +35,13 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
         <div className="studio-sidebar-intro">
           <small>DECISION WORKSPACE</small>
-          <h2>Build decision systems</h2>
-          <p>Configure reusable decision profiles, connect evidence sources and validate contracts before evaluation.</p>
+          <h2>Model · connect · validate</h2>
+          <p>Configure the decision model and its evidence contracts.</p>
         </div>
         <StudioNav />
         <div className="studio-sidebar-footer">
           <span>QDIP Studio</span>
-          <small>Configuration · validation · evaluation</small>
+          <small>Decision system workspace</small>
         </div>
       </aside>
       <div className="studio-workspace">
