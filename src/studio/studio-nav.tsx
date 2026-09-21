@@ -22,9 +22,9 @@ function StudioLink({ index, label, section }: { index: string; label: string; s
 export function StudioNav() {
   return (
     <nav aria-label="Decision Studio">
-      <span className="studio-nav-label">DESIGN</span>
+      <span className="studio-nav-label">BUILD</span>
       <StudioLink index="01" label="Decision Profiles" section="profiles" />
-      <span className="studio-nav-label">REGISTRIES</span>
+      <span className="studio-nav-label">FOUNDATION</span>
       <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
         <strong>Plugin Registry</strong>
         <StudioLink index="02" label="Plugins & Capabilities" section="plugins" />

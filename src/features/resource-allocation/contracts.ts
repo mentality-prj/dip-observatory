@@ -7,6 +7,9 @@ export type ResourceAllocationMetrics = {
   operating_cost?: number;
 };
 
+export type ResourceAllocationDemandSummary = { total_available: number; served: number; closing_unmet: number };
+export type ResourceAllocationBaseline = { metrics: ResourceAllocationMetrics; summary: ResourceAllocationDemandSummary };
+
 export type ResourceAllocationDayPlan = {
   day: string;
   status: string;
@@ -22,14 +25,15 @@ export type ResourceAllocationPeriodPlan = {
   daily: ResourceAllocationDayPlan[];
   aggregate_metrics: ResourceAllocationMetrics;
   period_score: number;
-  demand_summary: { total_available: number; served: number; closing_unmet: number };
+  demand_summary: ResourceAllocationDemandSummary;
 };
 
 export type ResourceAllocationResult = {
   status: string;
   daily: ResourceAllocationDayPlan[];
   aggregate_metrics: ResourceAllocationMetrics;
-  demand_summary: ResourceAllocationPeriodPlan["demand_summary"];
+  demand_summary: ResourceAllocationDemandSummary;
+  baseline?: ResourceAllocationBaseline | null;
   alternatives: ResourceAllocationPeriodPlan[];
   solver: string;
   search_space: number;

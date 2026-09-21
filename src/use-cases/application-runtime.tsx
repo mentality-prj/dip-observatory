@@ -7,7 +7,7 @@ import type { UseCaseId } from "@/use-cases/registry";
 
 export type ApplicationFrontendProps = { locale: Locale };
 
-const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/gas-forecast").then((m) => ({ default: () => <m.GasForecastWorkspace /> })));
+const GasForecast = dynamic<ApplicationFrontendProps>(() => import("@/features/gas-forecast").then((m) => ({ default: m.GasForecastWorkspace })));
 const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import("@/features/resource-allocation").then((m) => ({ default: m.ResourceAllocationWorkspace })));
 const GtmLab = dynamic<ApplicationFrontendProps>(() => import("@/features/gtm-lab").then((m) => ({ default: m.GtmLabWorkspace })));
 

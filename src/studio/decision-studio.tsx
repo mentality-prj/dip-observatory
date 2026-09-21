@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select } from "@/design-system";
 import { studioHref } from "@/lib/platform-urls";
+import { DecisionWorkflow } from "@/components/product/decision-workflow";
 import { BindingEditor } from "./binding-editor";
 import { emptyProfile, studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from "./contracts";
 import { Breadcrumbs, outputLabel } from "./presentation";
@@ -11,6 +12,12 @@ import { ProfileEditor } from "./profile-editor";
 import { ProfileRunner } from "./profile-runner";
 
 const titles: Record<string, string> = { profiles: "Decision Profiles", plugins: "Plugins & Capabilities", dimensions: "Dimension Registry", bindings: "Output Bindings" };
+const descriptions: Record<string, string> = {
+  profiles: "Configure a repeatable decision: alternatives, dimensions, priorities, rules and constraints.",
+  plugins: "Inspect the domain capabilities that supply evidence and decision inputs.",
+  dimensions: "Define reusable evaluation dimensions and the contracts that govern them.",
+  bindings: "Map plugin outputs into the dimensions consumed by decision profiles.",
+};
 
 export function DecisionStudio({ section }: { section: string }) {
   const [data, setData] = useState<{ dimensions: Dimension[]; plugins: Plugin[]; profiles: ProfileView[] } | null>(null);
@@ -29,7 +36,7 @@ export function DecisionStudio({ section }: { section: string }) {
   function openProfile(profile: Profile, existing: boolean) { const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== "validation")) as Profile; setEditor({ profile: clean, existing, key: Date.now() }); setMessage(""); }
   return <>
     <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: studioHref("plugins") }] : []), { label: titles[section] }]} />
-    <h1>{titles[section]}</h1><p>Domain intelligence, reusable dimensions, and business configuration.</p>
+    <h1>{titles[section]}</h1><p>{descriptions[section]}</p>{section === "profiles" && <DecisionWorkflow locale="en" tone="light" compact />}
     {error && <div role="alert" className="studio-error">{error} <Button type="button" variant="secondary" onClick={() => setRetry(retry + 1)}>Retry</Button></div>}
     {message && <div role="status" className="studio-success">{message}</div>}{!data && !error && <p role="status">Loading Decision Studio…</p>}
     {data && <>{section === "plugins" && <div className="studio-grid">{data.plugins.map((plugin) => <Card key={plugin.name}><CardHeader><div className="studio-card-heading"><CardTitle>{plugin.ui?.label ?? plugin.name}</CardTitle><Badge variant={plugin.enabled ? "emerald" : "neutral"}>{plugin.enabled ? "Enabled" : "Disabled"}</Badge></div></CardHeader><CardContent><p>{plugin.description}</p><dl><dt>Plugin version</dt><dd>{plugin.version}</dd><dt>Category</dt><dd>{plugin.ui?.category ?? "General"}</dd></dl><h3>Capabilities</h3><ul>{plugin.capabilities.map((c) => <li key={c}>{c} <span className="studio-muted">@{plugin.capability_versions[c] ?? "unversioned"}</span></li>)}</ul><h3>Available outputs</h3>{plugin.dimension_outputs.length ? <ul>{plugin.dimension_outputs.map((o) => <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>{outputLabel(o.capability_id, o.source_path)} → {data.dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}</li>)}</ul> : <p>No dimension outputs declared.</p>}</CardContent></Card>)}</div>}
