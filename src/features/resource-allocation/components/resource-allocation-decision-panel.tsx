@@ -463,7 +463,7 @@ export function ResourceAllocationDecisionPanel({
       <details className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 text-white">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-6">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">OPTIONAL · {t.capacity}</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.capacity}</div>
             <h3 className="mt-2 text-xl font-black">{t.capacityTitle}</h3>
           </div>
           <Gauge className="h-6 w-6" />
@@ -589,7 +589,7 @@ export function ResourceAllocationDecisionPanel({
         </div>
       </details>
       <section className="order-1 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
-        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">07 · {t.decision}</div>
+        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">04 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-black">{t.decisionTitle}</h3>
           {status && <span className="border border-white/10 px-3 py-1 text-xs font-bold uppercase">{status}</span>}
@@ -676,7 +676,7 @@ export function ResourceAllocationDecisionPanel({
             </div>
             {status && ['accepted', 'modified'].includes(status) && (
               <>
-                <div className="mt-6 text-xs font-bold uppercase tracking-wider text-rose-300">08 · {t.outcome}</div>
+                <div className="mt-6 text-xs font-bold uppercase tracking-wider text-rose-300">{t.outcome}</div>
                 <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
                 <p className="mt-2 text-sm text-slate-500">{t.outcomeHelp}</p>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
