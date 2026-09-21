@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Check, Play } from "lucide-react";
 import { marketingLocaleHref } from "@/lib/platform-urls";
-import { marketingCopy, marketingLocales, type MarketingLocale } from "./qdip-copy";
+import { marketingCopy, type MarketingLocale } from "./qdip-copy";
 import { QdipLogo } from "./qdip-logo";
 import { MobileMenu } from "./mobile-menu";
+import { LanguageSwitcher } from "./language-switcher";
 import { DecisionSpace } from "./decision-space";
 import { DecisionPatterns } from "./decision-patterns";
 import { DecisionPlayground } from "./decision-playground";
@@ -12,13 +13,12 @@ import { PilotPath } from "./pilot-path";
 import { conversionBridgeCopy } from "./conversion-copy";
 import styles from "./qdip-site.module.css";
 
-const localeLabels: Record<MarketingLocale, string> = { en: "EN", uk: "UA", pl: "PL" };
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`;
 
 function Header({ locale }: { locale: MarketingLocale }) {
   const c=marketingCopy[locale];
   const items=[{href:path(locale,"how-it-works"),label:c.nav[0]},{href:path(locale,"use-cases"),label:c.nav[1]},{href:"#why",label:c.nav[2]},{href:path(locale,"core"),label:c.nav[3]},{href:`${path(locale,"use-cases")}#demos`,label:c.nav[4]}];
-  return <header className={styles.header}><div className={styles.headerInner}><Link className={styles.brand} href={marketingLocaleHref(locale)}><QdipLogo/></Link><nav aria-label="Primary navigation" className={styles.nav}>{items.map(item=><Link href={item.href} key={`${item.href}-${item.label}`}>{item.label}</Link>)}</nav><div className={styles.headerTools}><nav aria-label="Language" className={styles.languageNav}>{marketingLocales.map(l=><a aria-current={locale===l?"page":undefined} href={marketingLocaleHref(l)} key={l}>{localeLabels[l]}</a>)}</nav><MobileMenu items={items}/></div></div></header>;
+  return <header className={styles.header}><div className={styles.headerInner}><Link className={styles.brand} href={marketingLocaleHref(locale)}><QdipLogo/></Link><nav aria-label="Primary navigation" className={styles.nav}>{items.map(item=><Link href={item.href} key={`${item.href}-${item.label}`}>{item.label}</Link>)}</nav><div className={styles.headerTools}><LanguageSwitcher locale={locale} hrefForLocale={marketingLocaleHref}/><MobileMenu items={items}/></div></div></header>;
 }
 
 export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
