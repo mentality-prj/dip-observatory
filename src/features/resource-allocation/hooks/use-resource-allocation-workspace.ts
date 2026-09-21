@@ -75,8 +75,9 @@ export function useResourceAllocationWorkspace() {
   const moved = useMemo(
     () =>
       day
-        ? Object.entries(day.recommended.assignments).filter(([team, target]) => currentAllocation[team] !== target)
-            .length
+        ? Object.entries(day.recommended.assignments).filter(
+            ([team, target]) => RESPONSIBLE_CITIZENS_PROFILE.current_allocation?.[team] !== target
+          ).length
         : 0,
     [day]
   )
