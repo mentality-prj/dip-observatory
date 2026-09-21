@@ -460,7 +460,7 @@ export function ResourceAllocationDecisionPanel({
   const status = record?.status ?? lifecycle?.status
   return (
     <div className="grid min-w-0 max-w-full gap-5">
-      <details className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 text-white">
+      <details data-testid="capacity-gap-details" className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 text-white">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-6">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.capacity}</div>
