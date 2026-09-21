@@ -1,4 +1,9 @@
-import type {\n  ResourceAllocationCommunityInput,\n  ResourceAllocationDemandInput,\n  ResourceAllocationInput,\n  ResourceAllocationTeamInput,\n} from './contracts'
+import type {
+  ResourceAllocationCommunityInput,
+  ResourceAllocationDemandInput,
+  ResourceAllocationInput,
+  ResourceAllocationTeamInput,
+} from './contracts'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
