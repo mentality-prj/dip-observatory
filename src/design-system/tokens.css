@@ -5,10 +5,10 @@
   --ds-text-body: 1rem;
   --ds-text-web: 1.125rem;
   --ds-text-lead: clamp(1.125rem, 1.5vw, 1.25rem);
-  --ds-text-h3: clamp(1.25rem, 2vw, 1.5rem);
-  --ds-text-h2: clamp(2rem, 4vw, 3rem);
-  --ds-text-h1: clamp(2.5rem, 5vw, 4rem);
-  --ds-text-display: clamp(3.25rem, 6.25vw, 5rem);
+  --ds-text-h3: clamp(1.125rem, 1.5vw, 1.25rem);
+  --ds-text-h2: clamp(1.625rem, 3vw, 2.25rem);
+  --ds-text-h1: clamp(2.125rem, 4vw, 3.25rem);
+  --ds-text-display: clamp(2.625rem, 5vw, 4rem);
   --ds-leading-body: 1.65;
   --ds-leading-heading: 1.04;
   --ds-weight-body: 400;
