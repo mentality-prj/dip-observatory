@@ -628,7 +628,29 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.alternatives}</div>
                       <div className="mt-4 space-y-2">
                         {result.alternatives.map((alternative, index) => {
-                          const planMoves = countPlanMoves(alternative.daily, currentAllocation)
+                          const alternativeMovement = summarizeMovements(
+                            alternative.daily,
+                            currentAllocation,
+                            inputData.teams.length
+                          )
+                          const recommendedAlternative = result.alternatives[0]
+                          const recommendedMovement = recommendedAlternative
+                            ? summarizeMovements(
+                                recommendedAlternative.daily,
+                                currentAllocation,
+                                inputData.teams.length
+                              )
+                            : movementSummary
+                          const label =
+                            index === 0
+                              ? t.recommended
+                              : alternativeMovement.moveEvents < recommendedMovement.moveEvents
+                                ? t.fewerMoves
+                                : recommendedAlternative &&
+                                    alternative.aggregate_metrics.travel_cost <
+                                      recommendedAlternative.aggregate_metrics.travel_cost
+                                  ? t.lowerMovement
+                                  : t.balanced
                           return (
                             <button
                               type="button"
@@ -636,7 +658,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               onClick={() => {
                                 setSelectedAlternative(index)
                                 setSelectedDay(0)
+                                setSelectedExplanationTeam(null)
                                 setManualSelected(null)
+                                trackResourceAllocation('ra_alternative_selected', locale)
                               }}
                               className={`w-full border p-4 text-left ${
                                 selectedAlternative === index
@@ -645,7 +669,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               }`}
                             >
                               <div className="flex justify-between gap-3">
-                                <b>{index === 0 ? t.recommended : `${t.alternative} ${index + 1}`}</b>
+                                <b>{label}</b>
                                 <span>{pct(alternative.aggregate_metrics.priority_coverage)}</span>
                               </div>
                               <div className="mt-1 text-xs text-slate-500">
@@ -653,7 +677,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                                 {t.needsUnmet.toLowerCase()} {alternative.demand_summary.closing_unmet.toFixed(0)}
                               </div>
                               <div className="mt-1 text-xs text-slate-600">
-                                {planMoves} {t.moves} · {t.travel} {alternative.aggregate_metrics.travel_cost.toFixed(0)}
+                                {alternativeMovement.teamsMoved}/{alternativeMovement.totalTeams} {locale === 'uk' ? 'команд' : locale === 'pl' ? 'zespołów' : 'teams'} ·{' '}
+                                {alternativeMovement.moveEvents} {t.moves} · {t.travel}{' '}
+                                {alternative.aggregate_metrics.travel_cost.toFixed(0)}
                               </div>
                             </button>
                           )
@@ -667,43 +693,47 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
-                          {topPriorityCommunities.length > 0
-                            ? `${topPriorityCommunities.map((item) => item.id).join(', ')} · ${topPriorityCommunities.reduce((sum, item) => sum + item.priorityUnits, 0)} ${locale === 'uk' ? 'од. пріоритетних потреб' : locale === 'pl' ? 'jedn. potrzeb priorytetowych' : 'priority demand units'}`
-                            : t.emptyText}
+                          {locale === 'uk'
+                            ? 'Конкретні призначення пріоритезують critical/high demand лише там, де відповідна команда має потрібні компетенції.'
+                            : locale === 'pl'
+                              ? 'Konkretne przydziały priorytetyzują critical/high demand tam, gdzie zespół ma odpowiednie kompetencje.'
+                              : 'Concrete assignments prioritize critical/high demand only where the assigned team has matching skills.'}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleHorizon}</b>
                           {locale === 'uk'
-                            ? `QDIP оцінює всі ${stats.days} днів разом: місце завершення одного дня впливає на можливості наступного.`
+                            ? `QDIP оцінює всі ${stats.days} днів разом: локація завершення дня змінює допустимі рішення наступного дня.`
                             : locale === 'pl'
-                              ? `QDIP ocenia wszystkie ${stats.days} dni łącznie: lokalizacja na koniec dnia wpływa na możliwości kolejnego.`
-                              : `QDIP evaluates all ${stats.days} days together: where a team ends one day changes what is feasible next.`}
+                              ? `QDIP ocenia wszystkie ${stats.days} dni łącznie: lokalizacja na koniec dnia zmienia dopuszczalne decyzje dnia następnego.`
+                              : `QDIP evaluates all ${stats.days} days jointly: the end-of-day location changes what is feasible next.`}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleConstraints}</b>
                           {locale === 'uk'
-                            ? 'Розподіл враховує спеціалізації команд, доступність локацій та допустимі призначення.'
+                            ? 'Для кожного призначення Core повертає перевірки доступності локації, допустимої громади, програмної сумісності, travel-обмежень і ліміту команд.'
                             : locale === 'pl'
-                              ? 'Przydział uwzględnia kompetencje zespołów, dostępność lokalizacji i dopuszczalne przydziały.'
-                              : 'Allocation respects team skills, location availability and feasible assignments.'}
+                              ? 'Dla każdego przydziału Core zwraca sprawdzenia dostępności, dopuszczalnej lokalizacji, zgodności programu, ograniczeń podróży i limitu zespołów.'
+                              : 'For every assignment Core returns checks for accessibility, allowed location, program compatibility, travel feasibility and team limits.'}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleCost}</b>
                           {locale === 'uk'
-                            ? `План використовує ${countPlanMoves(activePlan.daily, currentAllocation)} переміщень; оцінена вартість переміщень — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
+                            ? `План: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} команд змінюють локацію, ${movementSummary.moveEvents} переміщень; індекс переміщень — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
                             : locale === 'pl'
-                              ? `Plan wykorzystuje ${countPlanMoves(activePlan.daily, currentAllocation)} przemieszczeń; szacowany koszt przemieszczeń to ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
-                              : `The plan uses ${countPlanMoves(activePlan.daily, currentAllocation)} moves; estimated movement cost is ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`}
+                              ? `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} zespołów zmienia lokalizację, ${movementSummary.moveEvents} przemieszczeń; indeks kosztu przemieszczeń — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
+                              : `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} teams change location, ${movementSummary.moveEvents} move events; movement cost index is ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`}
                         </div>
                       </div>
                       <details className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">
                         <summary className="cursor-pointer font-semibold text-slate-400">{t.rawEvidence}</summary>
                         <div className="mt-3 grid gap-2">
                           {result.evidence.slice(0, 8).map((item, index) => (
-                            <div key={`${item}-${index}`}>{item}</div>
+                            <div key={index}>
+                              {typeof item === 'string' ? item : JSON.stringify(item)}
+                            </div>
                           ))}
                         </div>
-                        <div className="mt-4">{t.heuristic}</div>
+                        <div className="mt-4"><b>{t.technicalMethod}:</b> {t.heuristic}</div>
                       </details>
                     </div>
                   </div>
