@@ -125,7 +125,9 @@ export function ProfileDashboard({
 
       {!profiles.length ? (
         <div className="studio-empty-panel">
-          <div className="studio-empty-icon"><Database size={22} aria-hidden /></div>
+          <div className="studio-empty-icon">
+            <Database size={22} aria-hidden />
+          </div>
           <h2>No profiles yet</h2>
           <p>Create a profile or import an example to configure alternatives, dimensions and rules.</p>
           <Button type="button" onClick={onCreate}>
@@ -139,7 +141,9 @@ export function ProfileDashboard({
             <div className="studio-panel-heading">
               <div>
                 <h2>Decision Profiles</h2>
-                <span>{filtered.length} of {profiles.length}</span>
+                <span>
+                  {filtered.length} of {profiles.length}
+                </span>
               </div>
             </div>
 
@@ -153,7 +157,9 @@ export function ProfileDashboard({
                     <th>Status</th>
                     <th>Alternatives</th>
                     <th>Dimensions</th>
-                    <th><span className="sr-only">Inspect</span></th>
+                    <th>
+                      <span className="sr-only">Inspect</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,7 +169,11 @@ export function ProfileDashboard({
                     return (
                       <tr key={profile.id} data-selected={active ? 'true' : undefined}>
                         <td>
-                          <button type="button" className="studio-profile-name" onClick={() => setSelectedId(profile.id)}>
+                          <button
+                            type="button"
+                            className="studio-profile-name"
+                            onClick={() => setSelectedId(profile.id)}
+                          >
                             {profile.name}
                           </button>
                           <small>{profile.capability_id}</small>
@@ -171,7 +181,11 @@ export function ProfileDashboard({
                         <td>{profileDomain(profile, plugins)}</td>
                         <td>{profile.version}</td>
                         <td>
-                          <Badge variant={currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'rose' : 'neutral'}>
+                          <Badge
+                            variant={
+                              currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'rose' : 'neutral'
+                            }
+                          >
                             {currentStatus}
                           </Badge>
                         </td>
@@ -194,9 +208,7 @@ export function ProfileDashboard({
               </table>
 
               {!filtered.length && (
-                <div className="studio-filter-empty">
-                  No profiles match the current search and status filter.
-                </div>
+                <div className="studio-filter-empty">No profiles match the current search and status filter.</div>
               )}
             </div>
           </div>
@@ -208,7 +220,15 @@ export function ProfileDashboard({
                   <span className="studio-overview-eyebrow">Profile overview</span>
                   <h2>{selected.name}</h2>
                 </div>
-                <Badge variant={profileStatus(selected) === 'ACTIVE' ? 'emerald' : profileStatus(selected) === 'INVALID' ? 'rose' : 'neutral'}>
+                <Badge
+                  variant={
+                    profileStatus(selected) === 'ACTIVE'
+                      ? 'emerald'
+                      : profileStatus(selected) === 'INVALID'
+                        ? 'rose'
+                        : 'neutral'
+                  }
+                >
                   {profileStatus(selected)}
                 </Badge>
               </div>
@@ -220,10 +240,22 @@ export function ProfileDashboard({
               </p>
 
               <div className="studio-overview-metrics">
-                <div><strong>{selected.alternatives.length}</strong><span>Alternatives</span></div>
-                <div><strong>{selected.dimensions.length}</strong><span>Dimensions</span></div>
-                <div><strong>{selected.dimensions.filter((dimension) => dimension.binding_id).length}</strong><span>Bound inputs</span></div>
-                <div><strong>{selected.validation.warnings.length}</strong><span>Warnings</span></div>
+                <div>
+                  <strong>{selected.alternatives.length}</strong>
+                  <span>Alternatives</span>
+                </div>
+                <div>
+                  <strong>{selected.dimensions.length}</strong>
+                  <span>Dimensions</span>
+                </div>
+                <div>
+                  <strong>{selected.dimensions.filter((dimension) => dimension.binding_id).length}</strong>
+                  <span>Bound inputs</span>
+                </div>
+                <div>
+                  <strong>{selected.validation.warnings.length}</strong>
+                  <span>Warnings</span>
+                </div>
               </div>
 
               {selected.validation.errors.length > 0 && (

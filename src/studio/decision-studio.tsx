@@ -121,10 +121,22 @@ export function DecisionStudio({ section }: { section: string }) {
                     </Badge>
                   </header>
                   <div className="studio-registry-meta">
-                    <span><small>Version</small>{plugin.version}</span>
-                    <span><small>Category</small>{plugin.ui?.category ?? 'General'}</span>
-                    <span><small>Capabilities</small>{plugin.capabilities.length}</span>
-                    <span><small>Outputs</small>{plugin.dimension_outputs.length}</span>
+                    <span>
+                      <small>Version</small>
+                      {plugin.version}
+                    </span>
+                    <span>
+                      <small>Category</small>
+                      {plugin.ui?.category ?? 'General'}
+                    </span>
+                    <span>
+                      <small>Capabilities</small>
+                      {plugin.capabilities.length}
+                    </span>
+                    <span>
+                      <small>Outputs</small>
+                      {plugin.dimension_outputs.length}
+                    </span>
                   </div>
                   <div className="studio-registry-detail">
                     <div>
@@ -132,7 +144,10 @@ export function DecisionStudio({ section }: { section: string }) {
                       <ul>
                         {plugin.capabilities.map((capability) => (
                           <li key={capability}>
-                            {capability} <span className="studio-muted">@{plugin.capability_versions[capability] ?? 'unversioned'}</span>
+                            {capability}{' '}
+                            <span className="studio-muted">
+                              @{plugin.capability_versions[capability] ?? 'unversioned'}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -144,7 +159,8 @@ export function DecisionStudio({ section }: { section: string }) {
                           {plugin.dimension_outputs.map((output) => (
                             <li key={`${output.capability_id}-${output.dimension_id}-${output.source_path}`}>
                               {outputLabel(output.capability_id, output.source_path)} →{' '}
-                              {data.dimensions.find((dimension) => dimension.id === output.dimension_id)?.name ?? output.dimension_id}
+                              {data.dimensions.find((dimension) => dimension.id === output.dimension_id)?.name ??
+                                output.dimension_id}
                             </li>
                           ))}
                         </ul>
@@ -160,7 +176,10 @@ export function DecisionStudio({ section }: { section: string }) {
           {section === 'dimensions' && (
             <section className="studio-registry-list" aria-label="Dimension registry">
               {data.dimensions.map((dimension) => (
-                <article className="studio-registry-row studio-registry-row-compact" key={`${dimension.id}-${dimension.version}`}>
+                <article
+                  className="studio-registry-row studio-registry-row-compact"
+                  key={`${dimension.id}-${dimension.version}`}
+                >
                   <header className="studio-registry-row-heading">
                     <div>
                       <h2>{dimension.name}</h2>
@@ -169,17 +188,31 @@ export function DecisionStudio({ section }: { section: string }) {
                     <Badge>{dimension.version}</Badge>
                   </header>
                   <div className="studio-registry-meta">
-                    <span><small>Type</small>{dimension.type}</span>
-                    <span><small>Phase</small>{dimension.phase ?? 'Unavailable'}</span>
-                    <span><small>Source</small>{dimension.source}</span>
-                    <span><small>Blocking</small>{dimension.blocking ? 'Yes' : 'No'}</span>
+                    <span>
+                      <small>Type</small>
+                      {dimension.type}
+                    </span>
+                    <span>
+                      <small>Phase</small>
+                      {dimension.phase ?? 'Unavailable'}
+                    </span>
+                    <span>
+                      <small>Source</small>
+                      {dimension.source}
+                    </span>
+                    <span>
+                      <small>Blocking</small>
+                      {dimension.blocking ? 'Yes' : 'No'}
+                    </span>
                   </div>
                   <details className="studio-registry-disclosure">
                     <summary>Contracts and evaluator</summary>
                     <div className="studio-registry-contracts">
                       <div>
                         <h3>Evaluator</h3>
-                        <p>{dimension.evaluator_id}@{dimension.evaluator_version}</p>
+                        <p>
+                          {dimension.evaluator_id}@{dimension.evaluator_version}
+                        </p>
                       </div>
                       <div>
                         <h3>Configuration schema</h3>
@@ -221,19 +254,19 @@ export function DecisionStudio({ section }: { section: string }) {
             <>
               {!editor && (
                 <ProfileDashboard
-                profiles={data.profiles}
-                plugins={data.plugins}
-                deleting={deleting}
-                onCreate={() => openProfile(emptyProfile(data.plugins.find((plugin) => plugin.enabled)), false)}
-                onImport={(profile) => {
-                  openProfile(profile, false)
-                  setError('')
-                }}
-                onError={setError}
-                onEvaluate={setRunningProfile}
-                onRequestDelete={setDeleting}
-                onCancelDelete={() => setDeleting('')}
-                onConfirmDelete={deleteProfile}
+                  profiles={data.profiles}
+                  plugins={data.plugins}
+                  deleting={deleting}
+                  onCreate={() => openProfile(emptyProfile(data.plugins.find((plugin) => plugin.enabled)), false)}
+                  onImport={(profile) => {
+                    openProfile(profile, false)
+                    setError('')
+                  }}
+                  onError={setError}
+                  onEvaluate={setRunningProfile}
+                  onRequestDelete={setDeleting}
+                  onCancelDelete={() => setDeleting('')}
+                  onConfirmDelete={deleteProfile}
                 />
               )}
               {editor && (
@@ -263,14 +296,18 @@ export function DecisionStudio({ section }: { section: string }) {
                     <aside className="studio-context-inspector" aria-label="Profile context">
                       <h2>Decision model context</h2>
                       <dl>
-                        <dt>Profile</dt><dd>{editor.profile.name || 'Untitled profile'}</dd>
-                        <dt>Version</dt><dd>{editor.profile.version}</dd>
-                        <dt>Mode</dt><dd>{editor.existing ? 'Editing' : 'New model'}</dd>
-                        <dt>Validation</dt><dd>Continuous</dd>
+                        <dt>Profile</dt>
+                        <dd>{editor.profile.name || 'Untitled profile'}</dd>
+                        <dt>Version</dt>
+                        <dd>{editor.profile.version}</dd>
+                        <dt>Mode</dt>
+                        <dd>{editor.existing ? 'Editing' : 'New model'}</dd>
+                        <dt>Validation</dt>
+                        <dd>Continuous</dd>
                       </dl>
                       <p>
-                        Build one decision model across alternatives, dimensions, constraints, policies and evidence bindings.
-                        Validation remains visible while the main canvas stays focused on the model.
+                        Build one decision model across alternatives, dimensions, constraints, policies and evidence
+                        bindings. Validation remains visible while the main canvas stays focused on the model.
                       </p>
                     </aside>
                   </div>
@@ -280,7 +317,6 @@ export function DecisionStudio({ section }: { section: string }) {
                 <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />
               )}
             </>
-
           )}
         </>
       )}

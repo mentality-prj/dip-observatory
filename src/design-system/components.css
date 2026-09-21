@@ -244,23 +244,23 @@
   color: var(--ds-accent);
 }
 .ds-badge-info {
-  border-color: rgb(var(--ds-semantic-info-rgb) / .3);
-  background: rgb(var(--ds-semantic-info-rgb) / .1);
+  border-color: rgb(var(--ds-semantic-info-rgb) / 0.3);
+  background: rgb(var(--ds-semantic-info-rgb) / 0.1);
   color: var(--ds-semantic-info);
 }
 .ds-badge-success {
-  border-color: rgb(var(--ds-semantic-success-rgb) / .3);
-  background: rgb(var(--ds-semantic-success-rgb) / .1);
+  border-color: rgb(var(--ds-semantic-success-rgb) / 0.3);
+  background: rgb(var(--ds-semantic-success-rgb) / 0.1);
   color: var(--ds-semantic-success);
 }
 .ds-badge-risk {
-  border-color: rgb(var(--ds-semantic-risk-rgb) / .3);
-  background: rgb(var(--ds-semantic-risk-rgb) / .1);
+  border-color: rgb(var(--ds-semantic-risk-rgb) / 0.3);
+  background: rgb(var(--ds-semantic-risk-rgb) / 0.1);
   color: var(--ds-semantic-risk);
 }
 .ds-badge-danger {
-  border-color: rgb(var(--ds-semantic-danger-rgb) / .3);
-  background: rgb(var(--ds-semantic-danger-rgb) / .1);
+  border-color: rgb(var(--ds-semantic-danger-rgb) / 0.3);
+  background: rgb(var(--ds-semantic-danger-rgb) / 0.1);
   color: var(--ds-semantic-danger);
 }
 .ds-input,
@@ -433,11 +433,11 @@
   height: 1.75rem;
   margin-top: -1.9rem;
   place-items: center;
-  border: 1px solid rgb(var(--ds-accent-rgb) / .25);
+  border: 1px solid rgb(var(--ds-accent-rgb) / 0.25);
   border-radius: var(--ds-radius-pill);
   color: var(--ds-accent);
   background: var(--ds-bg);
-  font-size: .66rem;
+  font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0;
 }

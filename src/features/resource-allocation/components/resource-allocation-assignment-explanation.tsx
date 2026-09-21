@@ -67,17 +67,17 @@ export function ResourceAllocationAssignmentExplanation({
 }) {
   const t = copy[locale]
   return (
-    <section
-      data-testid="assignment-explanation"
-      className="mt-5 border border-rose-300/20 bg-rose-300/[0.05] p-5"
-    >
+    <section data-testid="assignment-explanation" className="mt-5 border border-rose-300/20 bg-rose-300/[0.05] p-5">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.title}</div>
       <h3 className="mt-2 text-lg font-black">
         {explanation.team_id}: {explanation.from ?? '—'} → {explanation.to ?? '—'}
       </h3>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Fact label={t.services} value={explanation.matched_services.map((item) => localizeService(item, locale)).join(', ') || '—'} />
+        <Fact
+          label={t.services}
+          value={explanation.matched_services.map((item) => localizeService(item, locale)).join(', ') || '—'}
+        />
         <Fact label={t.priority} value={explanation.priority_demand_units.toFixed(0)} />
         <Fact label={t.served} value={explanation.served_units.toFixed(0)} />
         <Fact

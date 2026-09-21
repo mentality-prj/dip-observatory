@@ -63,10 +63,7 @@ export const resourceAllocationRequestSchema = z
     current_allocation: z.record(z.string(), z.string().nullable()).nullable().optional(),
     manual_allocation: z.record(z.string(), z.unknown()).nullable().optional(),
     baseline_allocation: z.record(z.string(), z.string().nullable()).nullable().optional(),
-    baseline_plan: z
-      .record(z.string(), z.record(z.string(), z.string().nullable()))
-      .nullable()
-      .optional(),
+    baseline_plan: z.record(z.string(), z.record(z.string(), z.string().nullable())).nullable().optional(),
     planning_period: z
       .object({ days: z.array(z.string().min(1)).min(1).max(31) })
       .strict()
@@ -243,19 +240,13 @@ async function evaluateComparisonPlan(input: Input): Promise<Baseline | null> {
   if (!manual_allocation) return null
 
   try {
-    const evaluation = await runDipPlugin(
-      'resource-allocation',
-      'humanitarian.resource-allocation.optimize',
-      {
-        ...coreInput(input),
-        operation: 'evaluate_manual',
-        manual_allocation,
-      }
-    )
+    const evaluation = await runDipPlugin('resource-allocation', 'humanitarian.resource-allocation.optimize', {
+      ...coreInput(input),
+      operation: 'evaluate_manual',
+      manual_allocation,
+    })
     const baseline = baselineFromEvaluation(evaluation)
-    return baseline
-      ? { ...baseline, kind: canonicalPlan ? 'canonical-plan' : 'keep-current' }
-      : null
+    return baseline ? { ...baseline, kind: canonicalPlan ? 'canonical-plan' : 'keep-current' } : null
   } catch (error) {
     if (error instanceof DipApiError) return null
     throw error

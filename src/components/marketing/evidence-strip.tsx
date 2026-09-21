@@ -9,15 +9,24 @@ const copy = {
     ['Reproducible', 'Experiments and decision runs keep their inputs and versions visible.'],
     ['Inspectable', 'Audit trace and evidence remain attached to the recommendation.'],
     ['Explainable', 'Review constraints, trade-offs and the factors behind a result.'],
-    ['Baseline-aware', 'Experiments compare against explicit baselines instead of presenting model output in isolation.'],
-    ['Deterministic demos', 'Bundled demo states can be replayed so the same inputs produce the same inspectable path.'],
+    [
+      'Baseline-aware',
+      'Experiments compare against explicit baselines instead of presenting model output in isolation.',
+    ],
+    [
+      'Deterministic demos',
+      'Bundled demo states can be replayed so the same inputs produce the same inspectable path.',
+    ],
     ['Research-backed', 'Architecture and research notes are available for technical review.'],
   ],
   uk: [
     ['Відтворюваність', 'Експерименти та decision runs зберігають видимими вхідні дані й версії.'],
     ['Перевірюваність', 'Audit trace і докази залишаються пов’язаними з рекомендацією.'],
     ['Пояснюваність', 'Перевіряйте обмеження, компроміси та фактори, що вплинули на результат.'],
-    ['Порівняння з baseline', 'Експерименти порівнюються з явними baseline, а не показують модельний результат ізольовано.'],
+    [
+      'Порівняння з baseline',
+      'Експерименти порівнюються з явними baseline, а не показують модельний результат ізольовано.',
+    ],
     ['Детерміновані демо', 'Вбудовані demo states можна повторити з тим самим відтворюваним шляхом рішення.'],
     ['Наукова основа', 'Архітектура та research notes доступні для технічного аналізу.'],
   ],

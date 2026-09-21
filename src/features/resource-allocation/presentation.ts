@@ -1,8 +1,5 @@
 import type { Locale } from '@/lib/observatory-i18n'
-import type {
-  ResourceAllocationDayPlan,
-  ResourceAllocationTeamInput,
-} from './contracts'
+import type { ResourceAllocationDayPlan, ResourceAllocationTeamInput } from './contracts'
 
 export type MovementSummary = {
   teamsMoved: number
@@ -78,10 +75,7 @@ function csvCell(value: string | number | null | undefined): string {
   return /[",\n\r]/.test(raw) ? `"${raw.replaceAll('"', '""')}"` : raw
 }
 
-export function buildAllocationCsv(
-  daily: ResourceAllocationDayPlan[],
-  teams: ResourceAllocationTeamInput[]
-): string {
+export function buildAllocationCsv(daily: ResourceAllocationDayPlan[], teams: ResourceAllocationTeamInput[]): string {
   const teamById = new Map(teams.map((team) => [team.id, team]))
   const rows: Array<Array<string | number | null | undefined>> = [
     ['day', 'team', 'from', 'to', 'skills', 'planned_capacity', 'travel_cost_index'],

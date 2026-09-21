@@ -3,9 +3,7 @@ import { observatoryHref, studioHref } from './platform-urls'
 
 describe('platform URLs', () => {
   it('localizes Observatory routes without duplicating locale segments', () => {
-    expect(observatoryHref('resource-allocation', 'uk')).toBe(
-      'https://observatory.qdip.ai/uk/resource-allocation'
-    )
+    expect(observatoryHref('resource-allocation', 'uk')).toBe('https://observatory.qdip.ai/uk/resource-allocation')
     expect(observatoryHref('pl/gtm-lab')).toBe('https://observatory.qdip.ai/pl/gtm-lab')
   })
 

@@ -71,7 +71,9 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
         <span className="sr-only">Language</span>
         <select value={locale} disabled={pending} onChange={(event) => changeLocale(event.target.value as Locale)}>
           {LOCALES.map((option) => (
-            <option key={option} value={option}>{LABEL[option]}</option>
+            <option key={option} value={option}>
+              {LABEL[option]}
+            </option>
           ))}
         </select>
       </label>
@@ -87,7 +89,9 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={
         <details className={styles.mobileMenu}>
-          <summary><Menu aria-hidden /> <span>Applications</span></summary>
+          <summary>
+            <Menu aria-hidden /> <span>Applications</span>
+          </summary>
           <div className={styles.mobileNavigation}>
             {nav}
             <Link className={styles.mobileProductLink} href={studioHref('', locale)}>
@@ -97,7 +101,11 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
           </div>
         </details>
       }
-      productSwitch={{ href: studioHref('', locale), label: STUDIO_LABEL[locale], icon: <SlidersHorizontal size={15} /> }}
+      productSwitch={{
+        href: studioHref('', locale),
+        label: STUDIO_LABEL[locale],
+        icon: <SlidersHorizontal size={15} />,
+      }}
       utilities={utilities}
     >
       <div className={styles.stage}>

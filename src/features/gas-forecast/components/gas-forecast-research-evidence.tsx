@@ -20,7 +20,9 @@ export function GasForecastResearchEvidence({ evidence }: { evidence: ResearchEv
       <CardContent className="space-y-4">
         <section className="border-b border-white/10 pb-5" aria-label="Research recommendation">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Recommendation</p>
-          <strong className={`mt-2 block text-2xl font-medium tracking-[-.025em] ${evidence.procurementEligible ? 'ds-state-success' : 'ds-state-blocked'}`}>
+          <strong
+            className={`mt-2 block text-2xl font-medium tracking-[-.025em] ${evidence.procurementEligible ? 'ds-state-success' : 'ds-state-blocked'}`}
+          >
             {evidence.procurementEligible ? 'PROCUREMENT ELIGIBLE' : 'PROCUREMENT NOT ELIGIBLE'}
           </strong>
           <p className="mt-2 text-sm text-slate-400">

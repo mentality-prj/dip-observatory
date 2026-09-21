@@ -313,14 +313,14 @@ function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: stri
         <MarketingHeader locale={locale} currentPath={slug} />
         {children}
         <footer className={styles.footer}>
-        <QdipLogo />
-        <nav>
-          <Link href={href(locale, 'how-it-works')}>{c.nav[0]}</Link>
-          <Link href={href(locale, 'use-cases')}>{c.nav[1]}</Link>
-          <Link href={href(locale, 'core')}>QDIP Core</Link>
-          <Link href={href(locale, 'core/research')}>{x.research}</Link>
-        </nav>
-        <span>© {new Date().getFullYear()} QDIP</span>
+          <QdipLogo />
+          <nav>
+            <Link href={href(locale, 'how-it-works')}>{c.nav[0]}</Link>
+            <Link href={href(locale, 'use-cases')}>{c.nav[1]}</Link>
+            <Link href={href(locale, 'core')}>QDIP Core</Link>
+            <Link href={href(locale, 'core/research')}>{x.research}</Link>
+          </nav>
+          <span>© {new Date().getFullYear()} QDIP</span>
         </footer>
       </main>
     </DesignSystemProvider>

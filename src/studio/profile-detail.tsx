@@ -232,11 +232,16 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         <aside className="studio-context-inspector" aria-label="Decision model context">
           <h2>Decision model context</h2>
           <dl>
-            <dt>Profile</dt><dd>{profile.name}</dd>
-            <dt>Version</dt><dd>{profile.version}</dd>
-            <dt>Section</dt><dd>{sectionLabel(section)}</dd>
-            <dt>Plugin</dt><dd>{pluginName}</dd>
-            <dt>Validation</dt><dd>{profile.validation.status}</dd>
+            <dt>Profile</dt>
+            <dd>{profile.name}</dd>
+            <dt>Version</dt>
+            <dd>{profile.version}</dd>
+            <dt>Section</dt>
+            <dd>{sectionLabel(section)}</dd>
+            <dt>Plugin</dt>
+            <dd>{pluginName}</dd>
+            <dt>Validation</dt>
+            <dd>{profile.validation.status}</dd>
           </dl>
           <p>
             This inspector stays secondary to the model canvas. Constraints, dimensions, policies and evidence bindings

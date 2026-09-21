@@ -27,7 +27,11 @@ export function StudioNav() {
     <nav aria-label="QDIP Studio">
       <span className="studio-nav-label">WORKSPACE</span>
       {items.map(({ section, label, description, icon: Icon }) => (
-        <Link key={section} aria-current={isActive(pathname, section) ? 'page' : undefined} href={localizedHref(section)}>
+        <Link
+          key={section}
+          aria-current={isActive(pathname, section) ? 'page' : undefined}
+          href={localizedHref(section)}
+        >
           <span className="studio-nav-icon" aria-hidden>
             <Icon size={16} />
           </span>
