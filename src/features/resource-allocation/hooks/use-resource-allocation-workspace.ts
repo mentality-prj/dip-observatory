@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
 import type { ResourceAllocationPeriodPlan, ResourceAllocationResult } from '../contracts'
-import { RESOURCE_ALLOCATION_CURRENT as currentAllocation } from '../demo-data'
+import { RESPONSIBLE_CITIZENS_PROFILE } from '../demo-data'
 
 type ManualAllocationSelection = {
   actual_allocation: Record<string, Record<string, string>>
