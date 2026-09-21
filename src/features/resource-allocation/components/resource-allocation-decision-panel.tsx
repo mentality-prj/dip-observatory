@@ -204,7 +204,7 @@ const copy = {
   },
 } as const
 
-async function requestJson<T extends Record<string, unknown>>(path: string, init?: RequestInit): Promise<T> {
+async function requestJson<T extends object>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
@@ -250,7 +250,7 @@ async function requestJson<T extends Record<string, unknown>>(path: string, init
 
   return payload as T
 }
-async function post<T extends Record<string, unknown>>(path: string, body: Record<string, unknown>): Promise<T> {
+async function post<T extends object>(path: string, body: Record<string, unknown>): Promise<T> {
   return requestJson<T>(path, { method: 'POST', body: JSON.stringify(body) })
 }
 function formatTimestamp(value: string, locale: Locale) {
