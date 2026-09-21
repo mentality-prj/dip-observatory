@@ -165,6 +165,7 @@ export function ResourceAllocationImport({
 
       <div
         data-testid="resource-import-dropzone"
+        data-dragging={dragging ? "true" : "false"}
         onDragEnter={dragEnter}
         onDragLeave={dragLeave}
         onDragOver={dragOver}
