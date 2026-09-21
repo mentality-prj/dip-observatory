@@ -259,8 +259,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-          <aside className="min-w-0 space-y-4">
-            <div className="rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
+          <aside className="flex min-w-0 flex-col gap-4">
+            <div className="order-3 rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
               <div className="flex items-center justify-between">
                 <b>{t.whatIf}</b>
                 <button type="button" onClick={resetRunState} aria-label="Reset scenario">
@@ -338,9 +338,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               </button>
             </div>
 
-            <ResourceAllocationImport locale={locale} onImported={useImportedData} />
+            <div className="order-1"><ResourceAllocationImport locale={locale} onImported={useImportedData} /></div>
 
-            <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+            <div className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
               <b>01 · {t.state}</b>
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -542,6 +542,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     priorityCoverage={activePlan.aggregate_metrics.priority_coverage}
                     served={activePlan.demand_summary.served}
                     unmet={activePlan.demand_summary.closing_unmet}
+                    selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
                     locale={locale}
                   />
                 )}
