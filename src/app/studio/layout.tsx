@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
 import { StudioNav } from '@/features/studio'
+import { StudioLanguageSwitcher } from '@/studio/studio-language-switcher'
 import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {
@@ -18,19 +18,13 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         href={studioHref()}
         brandHref={marketingHref('en')}
         product="Studio"
-        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
-        status={
+        navigation={
           <StatusBadge>
             <i /> Core connected
           </StatusBadge>
         }
-        utilities={
-          <nav className="studio-language-switcher" aria-label="Language">
-            <Link href="/en" aria-current="page">EN</Link>
-            <Link href="/uk">UA</Link>
-            <Link href="/pl">PL</Link>
-          </nav>
-        }
+        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
+        utilities={<StudioLanguageSwitcher />}
       />
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
         <div className="studio-sidebar-intro">
