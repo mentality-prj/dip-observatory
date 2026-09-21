@@ -15,10 +15,13 @@ export function studioHref(path = '') {
   return `${PLATFORM_URLS.studio}${suffix}`
 }
 
-export function observatoryHref(path = '', locale: PlatformLocale = 'en') {
-  const cleanPath = path.replace(/^\/+/, '').replace(/^(en|uk|pl)\//, '')
-  const suffix = cleanPath ? `/${cleanPath}` : ''
-  return `${PLATFORM_URLS.observatory}/${locale}${suffix}`
+export function observatoryHref(path = '', locale?: PlatformLocale) {
+  const cleanPath = path.replace(/^\/+/, '')
+  const explicitLocale = cleanPath.match(/^(en|uk|pl)(?:\/(.*))?$/)
+  const resolvedLocale = locale ?? (explicitLocale?.[1] as PlatformLocale | undefined) ?? 'en'
+  const localizedPath = explicitLocale ? (explicitLocale[2] ?? '') : cleanPath
+  const suffix = localizedPath ? `/${localizedPath}` : ''
+  return `${PLATFORM_URLS.observatory}/${resolvedLocale}${suffix}`
 }
 
 export function marketingHref(locale: PlatformLocale) {
