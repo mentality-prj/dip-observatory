@@ -54,7 +54,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   let status: 'proposed' | 'accepted' | 'completed' = 'proposed'
   const feedback: Array<Record<string, unknown>> = []
   const outcomes: Array<Record<string, unknown>> = []
-  let recordedOutcomeBody: Record<string, unknown> | null = null
+  let recordedOutcomeBody: Record<string, unknown> = {}
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>
@@ -153,10 +153,11 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await page.getByRole('button', { name: 'Record actual outcome' }).click()
   await expect(page.getByText('Decision completed.')).toBeVisible()
   await expect(page.getByText('Actual outcome recorded')).toBeVisible()
-  expect(recordedOutcomeBody).not.toBeNull()
-  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).priority_coverage).toBe(0.81)
-  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).served).toBe(96)
-  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).closing_unmet).toBe(32)
+  expect(recordedOutcomeBody.metrics).toBeDefined()
+  const recordedMetrics = recordedOutcomeBody.metrics as Record<string, unknown>
+  expect(recordedMetrics.priority_coverage).toBe(0.81)
+  expect(recordedMetrics.served).toBe(96)
+  expect(recordedMetrics.closing_unmet).toBe(32)
 })
 
 
