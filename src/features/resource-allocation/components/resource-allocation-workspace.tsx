@@ -243,7 +243,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       Object.fromEntries(inputData.teams.map((team) => [team.id, team.current_community ?? null])),
     [inputData]
   )
-  const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.openingNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
+  const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.horizonNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
   const sourceBadge =
     profileId === 'imported'
       ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
@@ -352,7 +352,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs font-bold uppercase tracking-[.18em] text-rose-300">
-              QDIP · Resource Allocation · Decision Demo
+              QDIP · Resource Allocation · Canonical Decision Demo
             </div>
             <span data-testid="resource-data-source" className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
               {sourceBadge}
@@ -392,8 +392,24 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </b>
                 </div>
                 <div>
-                  <span className="block text-slate-500">{t.opening}</span>
-                  <b className="text-2xl">{stats.openingNeeds}</b>
+                  <span className="block text-slate-500">
+                    {locale === 'uk'
+                      ? 'Потреби горизонту'
+                      : locale === 'pl'
+                        ? 'Potrzeby w horyzoncie'
+                        : 'Horizon demand'}
+                  </span>
+                  <b className="text-2xl">{stats.horizonNeeds}</b>
+                  {stats.incomingNeeds > 0 && (
+                    <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
+                      {stats.openingNeeds} + {stats.incomingNeeds}{' '}
+                      {locale === 'uk'
+                        ? 'очікуваних протягом періоду'
+                        : locale === 'pl'
+                          ? 'oczekiwanych w okresie'
+                          : 'expected during the horizon'}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <span className="block text-slate-500">{t.services}</span>
@@ -421,7 +437,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   <h2 className="mt-5 text-3xl font-black md:text-4xl">{t.heroQuestion}</h2>
                   <div data-testid="resource-active-summary" className="mt-5 text-lg font-bold text-slate-200">
                     {stats.teams} {t.teams.toLowerCase()} · {stats.communities} {t.communities.toLowerCase()} ·{' '}
-                    {stats.openingNeeds} {t.opening.toLowerCase()} · {stats.days} {t.days}
+                    {stats.horizonNeeds} {t.opening.toLowerCase()} · {stats.days} {t.days}
                   </div>
                   <p className="mx-auto mt-4 max-w-xl text-slate-400">{t.emptyText}</p>
                   <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500">{t.differentiation}</p>
