@@ -7,7 +7,9 @@ import { useRef, useState, useTransition } from 'react'
 import { runGasForecastExperimentAction } from '@/app/admin/plugins/gas-forecast/eidos/actions'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@/design-system'
 import { GasForecastResearchEvidence } from '@/features/gas-forecast/components/gas-forecast-research-evidence'
+import { GasForecastResearchManifest } from '@/features/gas-forecast/components/gas-forecast-research-manifest'
 import { deriveResearchEvidence } from '@/features/gas-forecast/model/research-evidence'
+import { parseResearchManifest } from '@/features/gas-forecast/model/research-manifest'
 import type { GasForecastExperimentRequest, GasForecastExperimentResult } from '@/lib/gas-forecast-experiment-client'
 
 const DEFAULT_FORM: GasForecastExperimentRequest = {
@@ -25,6 +27,7 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
   const [result, setResult] = useState<GasForecastExperimentResult | null>(initialResult)
   const [isPayloadCopied, setIsPayloadCopied] = useState(false)
   const evidence = result?.status === 'succeeded' ? deriveResearchEvidence(result.payload) : null
+  const manifest = result?.status === 'succeeded' ? parseResearchManifest(result.payload) : null
 
   function update<K extends keyof GasForecastExperimentRequest>(key: K, value: GasForecastExperimentRequest[K]) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -56,187 +59,51 @@ export function GasForecastEidosPage({ initialResult = null }: { initialResult?:
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-                QDIP Admin / Observatory
-              </span>
-              <Badge variant="amber" className="gap-1.5">
-                <FlaskConical className="h-3 w-3" aria-hidden="true" />
-                Research experiment
-              </Badge>
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">QDIP Admin / Observatory</span>
+              <Badge variant="amber" className="gap-1.5"><FlaskConical className="h-3 w-3" aria-hidden="true" />Research experiment</Badge>
             </div>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"
-            >
-              <Home className="h-4 w-4" aria-hidden="true" />
-              QDIP Observatory
-            </Link>
+            <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-sm text-slate-300 outline-none transition hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300/60"><Home className="h-4 w-4" aria-hidden="true" />QDIP Observatory</Link>
           </div>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-              Gas Procurement Decision Experiment
-            </h1>
-            <p className="max-w-3xl text-sm text-slate-400">
-              Execute the backend research capability and inspect decision evidence. No forecasting or decision logic
-              runs in the browser.
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">Gas Procurement Decision Experiment</h1>
+            <p className="max-w-3xl text-sm text-slate-400">Execute the backend research capability and inspect decision evidence. No forecasting or decision logic runs in the browser.</p>
           </div>
         </header>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Experiment request</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form
-              className="space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault()
-                if (isSubmittingRef.current || isPending) return
-                isSubmittingRef.current = true
-                startTransition(async () => {
-                  try {
-                    setResult(await runGasForecastExperimentAction(form))
-                    setIsPayloadCopied(false)
-                  } finally {
-                    isSubmittingRef.current = false
-                  }
-                })
-              }}
-            >
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="start-date">start_date</Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    className="h-11 min-h-11 max-h-11 appearance-none"
-                    value={form.start_date}
-                    onChange={(event) => update('start_date', event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end-date">end_date</Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    className="h-11 min-h-11 max-h-11 appearance-none"
-                    value={form.end_date}
-                    onChange={(event) => update('end_date', event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="forecast-horizon-days">forecast_horizon_days</Label>
-                  <Input
-                    id="forecast-horizon-days"
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={String(form.forecast_horizon_days)}
-                    onChange={(event) => update('forecast_horizon_days', Number(event.target.value || '0'))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="volume-mwh">volume_mwh</Label>
-                  <Input
-                    id="volume-mwh"
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={String(form.volume_mwh)}
-                    onChange={(event) => update('volume_mwh', Number(event.target.value || '0'))}
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="procurement-threshold">procurement_threshold_eur_per_mwh</Label>
-                  <Input
-                    id="procurement-threshold"
-                    type="number"
-                    step={0.01}
-                    value={String(form.procurement_threshold_eur_per_mwh)}
-                    onChange={(event) => update('procurement_threshold_eur_per_mwh', Number(event.target.value || '0'))}
-                  />
-                </div>
-              </div>
-              <Button type="submit" size="lg" className="w-full" disabled={isPending}>
-                {isPending ? 'Running experiment...' : 'Run experiment'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <Card><CardHeader><CardTitle>Experiment request</CardTitle></CardHeader><CardContent className="space-y-4">
+          <form className="space-y-4" onSubmit={(event) => {
+            event.preventDefault()
+            if (isSubmittingRef.current || isPending) return
+            isSubmittingRef.current = true
+            startTransition(async () => {
+              try { setResult(await runGasForecastExperimentAction(form)); setIsPayloadCopied(false) }
+              finally { isSubmittingRef.current = false }
+            })
+          }}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2"><Label htmlFor="start-date">start_date</Label><Input id="start-date" type="date" className="h-11 min-h-11 max-h-11 appearance-none" value={form.start_date} onChange={(event) => update('start_date', event.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="end-date">end_date</Label><Input id="end-date" type="date" className="h-11 min-h-11 max-h-11 appearance-none" value={form.end_date} onChange={(event) => update('end_date', event.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="forecast-horizon-days">forecast_horizon_days</Label><Input id="forecast-horizon-days" type="number" min={1} step={1} value={String(form.forecast_horizon_days)} onChange={(event) => update('forecast_horizon_days', Number(event.target.value || '0'))} /></div>
+              <div className="space-y-2"><Label htmlFor="volume-mwh">volume_mwh</Label><Input id="volume-mwh" type="number" min={1} step={1} value={String(form.volume_mwh)} onChange={(event) => update('volume_mwh', Number(event.target.value || '0'))} /></div>
+              <div className="space-y-2 md:col-span-2"><Label htmlFor="procurement-threshold">procurement_threshold_eur_per_mwh</Label><Input id="procurement-threshold" type="number" step={0.01} value={String(form.procurement_threshold_eur_per_mwh)} onChange={(event) => update('procurement_threshold_eur_per_mwh', Number(event.target.value || '0'))} /></div>
+            </div>
+            <Button type="submit" size="lg" className="w-full" disabled={isPending}>{isPending ? 'Running experiment...' : 'Run experiment'}</Button>
+          </form>
+        </CardContent></Card>
 
+        {manifest ? <GasForecastResearchManifest manifest={manifest} /> : null}
         {evidence ? <GasForecastResearchEvidence evidence={evidence} /> : null}
 
-        {result ? (
-          <Card>
-            <CardHeader className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle>Execution result</CardTitle>
-                <Badge variant={result.status === 'succeeded' ? 'emerald' : 'rose'}>
-                  {result.status === 'succeeded' ? 'SUCCEEDED' : 'FAILED'}
-                </Badge>
-              </div>
-              <div className="space-y-1 text-sm text-slate-300">
-                <p>
-                  <span className="text-slate-500">HTTP:</span> {result.httpStatus ?? '—'}
-                </p>
-                <p>
-                  <span className="text-slate-500">Response time:</span>{' '}
-                  {result.responseTimeMs !== null ? `${result.responseTimeMs} ms` : '—'}
-                </p>
-                <p>
-                  <span className="text-slate-500">Executed at:</span> {result.executedAt}
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {result.message ? (
-                <div className="rounded-2xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">
-                  {result.message}
-                </div>
-              ) : null}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Raw backend payload</p>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-white"
-                      aria-label="Copy raw backend payload"
-                      title="Copy raw backend payload"
-                      onClick={copyRawPayload}
-                    >
-                      {isPayloadCopied ? (
-                        <Check className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Copy className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-white"
-                      aria-label="Export raw backend payload as TXT"
-                      title="Export raw backend payload as TXT"
-                      onClick={exportRawPayload}
-                    >
-                      <Download className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-                <pre
-                  aria-label="Raw backend payload"
-                  className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200"
-                >
-                  {JSON.stringify(result.payload, null, 2)}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
+        {result ? <Card><CardHeader className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Execution result</CardTitle><Badge variant={result.status === 'succeeded' ? 'emerald' : 'rose'}>{result.status === 'succeeded' ? 'SUCCEEDED' : 'FAILED'}</Badge></div>
+          <div className="space-y-1 text-sm text-slate-300"><p><span className="text-slate-500">HTTP:</span> {result.httpStatus ?? '—'}</p><p><span className="text-slate-500">Response time:</span> {result.responseTimeMs !== null ? `${result.responseTimeMs} ms` : '—'}</p><p><span className="text-slate-500">Executed at:</span> {result.executedAt}</p></div>
+        </CardHeader><CardContent className="space-y-4">
+          {result.message ? <div className="rounded-2xl border border-rose-300/20 bg-rose-300/8 p-3 text-sm text-rose-100">{result.message}</div> : null}
+          <div className="space-y-2"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Raw backend payload</p><div className="flex items-center gap-1">
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Copy raw backend payload" title="Copy raw backend payload" onClick={copyRawPayload}>{isPayloadCopied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}</Button>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" aria-label="Export raw backend payload as TXT" title="Export raw backend payload as TXT" onClick={exportRawPayload}><Download className="h-4 w-4" aria-hidden="true" /></Button>
+          </div></div><pre aria-label="Raw backend payload" className="overflow-x-auto rounded-2xl border border-white/8 bg-black/20 p-3 text-xs text-slate-200">{JSON.stringify(result.payload, null, 2)}</pre></div>
+        </CardContent></Card> : null}
       </div>
     </main>
   )
