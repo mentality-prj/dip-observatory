@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
@@ -25,9 +26,9 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
         }
         utilities={
           <nav className="studio-language-switcher" aria-label="Language">
-            <a href="/en" aria-current="page">EN</a>
-            <a href="/uk">UA</a>
-            <a href="/pl">PL</a>
+            <Link href="/en" aria-current="page">EN</Link>
+            <Link href="/uk">UA</Link>
+            <Link href="/pl">PL</Link>
           </nav>
         }
       />
