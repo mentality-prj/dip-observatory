@@ -270,6 +270,7 @@
 .darkSection,
 .finalCta,
 .footer {
+  --ds-heading: #fff;
   color: #fff;
   background: #180b11;
 }
