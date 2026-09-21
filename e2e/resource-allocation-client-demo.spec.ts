@@ -225,6 +225,11 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
   await expect(page.getByTestId('community-count')).toHaveText('5')
   await expect
     .poll(() =>
+      page.getByTestId('resource-primary-cta').evaluate((element) => getComputedStyle(element).marginBottom)
+    )
+    .toBe('32px')
+  await expect
+    .poll(() =>
       page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
