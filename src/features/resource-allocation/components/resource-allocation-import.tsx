@@ -165,7 +165,7 @@ export function ResourceAllocationImport({
 
       <div
         data-testid="resource-import-dropzone"
-        data-dragging={dragging ? "true" : "false"}
+        data-dragging={dragging ? 'true' : 'false'}
         onDragEnter={dragEnter}
         onDragLeave={dragLeave}
         onDragOver={dragOver}
@@ -178,7 +178,12 @@ export function ResourceAllocationImport({
               : 'border-white/15 bg-slate-950/35'
         }`}
       >
-        {busy ? (
+        {dragging && !busy ? (
+          <div aria-live="polite" data-testid="resource-import-drag-prompt">
+            <Upload className="mx-auto h-7 w-7 text-rose-200" />
+            <div className="mt-3 text-sm font-bold">{t.dropActive}</div>
+          </div>
+        ) : busy ? (
           <div aria-live="polite">
             <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
             <div className="mt-3 text-sm font-bold">
