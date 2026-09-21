@@ -2,14 +2,8 @@ import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 const GAS_FORECAST_PLUGIN_ID = 'gas-forecast' as const
 const GAS_FORECAST_EXPERIMENT_CAPABILITY_ID = 'gas.forecast.experiment' as const
-
-const DEFAULT_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATHS = [
-  `/api/v1/plugin-runtime/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}`,
-  `/api/v1/plugin-runtime/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}/run`,
-  `/api/v1/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}`,
-  `/api/v1/plugin-runtime/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}`,
-  `/api/v1/plugin-runtime/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}?plugin=${GAS_FORECAST_PLUGIN_ID}`,
-] as const
+const GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH =
+  `/api/v1/plugins/${GAS_FORECAST_PLUGIN_ID}/capabilities/${GAS_FORECAST_EXPERIMENT_CAPABILITY_ID}` as const
 
 export type GasForecastExperimentRequest = {
   start_date: string
@@ -30,7 +24,6 @@ export type GasForecastExperimentResult = {
 
 function getDipBaseUrl() {
   const raw = process.env.DIP_API_BASE_URL ?? process.env.DIP_URL ?? process.env.NEXT_PUBLIC_DIP_API_BASE_URL ?? ''
-
   return normalizeDipBaseUrl(raw)
 }
 
@@ -39,11 +32,11 @@ function getDipApiKey() {
   return raw.trim()
 }
 
-function getGasForecastExperimentCapabilityPath() {
+export function getGasForecastExperimentCapabilityPath() {
   return (
-    process.env.DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH?.trim() ??
-    process.env.GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH?.trim() ??
-    ''
+    process.env.DIP_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH?.trim() ||
+    process.env.GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH?.trim() ||
+    GAS_FORECAST_EXPERIMENT_CAPABILITY_PATH
   )
 }
 
@@ -51,33 +44,16 @@ function isAbsoluteUrl(value: string) {
   return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value)
 }
 
-function hasAbsoluteCapabilityUrl() {
+function buildCapabilityUrl() {
   const path = getGasForecastExperimentCapabilityPath()
-  return Boolean(path) && isAbsoluteUrl(path)
-}
+  if (isAbsoluteUrl(path)) return path.replace(/\/+$/, '')
 
-export function getGasForecastExperimentCapabilityPaths() {
-  const configuredPath = getGasForecastExperimentCapabilityPath()
-
-  if (!configuredPath) {
-    return [...DEFAULT_GAS_FORECAST_EXPERIMENT_CAPABILITY_PATHS]
-  }
-
-  return [configuredPath]
-}
-
-function buildCapabilityUrls() {
   const baseUrl = getDipBaseUrl()
-
-  return getGasForecastExperimentCapabilityPaths().map((path) =>
-    isAbsoluteUrl(path) ? path.replace(/\/+$/, '') : `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
-  )
+  return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 function readMessage(payload: unknown, fallback: string) {
-  if (!payload || typeof payload !== 'object') {
-    return fallback
-  }
+  if (!payload || typeof payload !== 'object') return fallback
 
   const candidate =
     ('detail' in payload && typeof payload.detail === 'string' ? payload.detail : null) ??
@@ -95,10 +71,7 @@ function readMessage(payload: unknown, fallback: string) {
 
 async function readJsonOrText(response: Response) {
   const body = await response.text()
-
-  if (!body) {
-    return null
-  }
+  if (!body) return null
 
   try {
     return JSON.parse(body) as unknown
@@ -112,8 +85,9 @@ export async function runGasForecastExperiment(
 ): Promise<GasForecastExperimentResult> {
   const baseUrl = getDipBaseUrl()
   const apiKey = getDipApiKey()
+  const capabilityPath = getGasForecastExperimentCapabilityPath()
 
-  if ((!baseUrl && !hasAbsoluteCapabilityUrl()) || !apiKey) {
+  if ((!baseUrl && !isAbsoluteUrl(capabilityPath)) || !apiKey) {
     return {
       status: 'failed',
       httpStatus: 503,
@@ -125,87 +99,39 @@ export async function runGasForecastExperiment(
     }
   }
 
-  const capabilityUrls = buildCapabilityUrls()
+  const capabilityUrl = buildCapabilityUrl()
   const startedAt = performance.now()
-  let allResponsesWere404 = true
-  let lastFailure: GasForecastExperimentResult | null = null
 
   try {
-    for (const capabilityUrl of capabilityUrls) {
-      let response: Response
+    const response = await fetch(capabilityUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify(request),
+      cache: 'no-store',
+    })
+    const payload = await readJsonOrText(response)
+    const responseTimeMs = Math.round(performance.now() - startedAt)
 
-      try {
-        response = await fetch(capabilityUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-          },
-          body: JSON.stringify(request),
-          cache: 'no-store',
-        })
-      } catch (error) {
-        allResponsesWere404 = false
-        lastFailure = {
-          status: 'failed',
-          httpStatus: null,
-          responseTimeMs: Math.round(performance.now() - startedAt),
-          message: error instanceof Error ? error.message : 'Network request to DIP failed.',
-          payload: null,
-          executedAt: new Date().toISOString(),
-        }
-        continue
-      }
-
-      const payload = await readJsonOrText(response)
-      const responseTimeMs = Math.round(performance.now() - startedAt)
-
-      if (response.ok) {
-        return {
-          status: 'succeeded',
-          httpStatus: response.status,
-          responseTimeMs,
-          message: null,
-          payload,
-          executedAt: new Date().toISOString(),
-        }
-      }
-
-      if (response.status !== 404) {
-        allResponsesWere404 = false
-        lastFailure = {
-          status: 'failed',
-          httpStatus: response.status,
-          responseTimeMs,
-          message: readMessage(payload, `DIP request failed with status ${response.status}.`),
-          payload,
-          executedAt: new Date().toISOString(),
-        }
-        continue
-      }
-    }
-
-    if (allResponsesWere404) {
+    if (response.ok) {
       return {
-        status: 'failed',
-        httpStatus: 404,
-        responseTimeMs: Math.round(performance.now() - startedAt),
-        message: 'Invalid API endpoint for gas.forecast.experiment.',
-        payload: null,
+        status: 'succeeded',
+        httpStatus: response.status,
+        responseTimeMs,
+        message: null,
+        payload,
         executedAt: new Date().toISOString(),
       }
     }
 
-    if (lastFailure) {
-      return lastFailure
-    }
-
     return {
       status: 'failed',
-      httpStatus: null,
-      responseTimeMs: Math.round(performance.now() - startedAt),
-      message: 'DIP request failed before any response was received.',
-      payload: null,
+      httpStatus: response.status,
+      responseTimeMs,
+      message: readMessage(payload, `DIP request failed with status ${response.status}.`),
+      payload,
       executedAt: new Date().toISOString(),
     }
   } catch (error) {
@@ -213,7 +139,7 @@ export async function runGasForecastExperiment(
       status: 'failed',
       httpStatus: null,
       responseTimeMs: Math.round(performance.now() - startedAt),
-      message: error instanceof Error ? error.message : 'Unexpected DIP error.',
+      message: error instanceof Error ? error.message : 'Network request to DIP failed.',
       payload: null,
       executedAt: new Date().toISOString(),
     }
