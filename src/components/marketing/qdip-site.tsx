@@ -24,7 +24,7 @@ function Header({ locale }: { locale: MarketingLocale }) {
 
 export function QdipSite({locale="en"}:{locale?:MarketingLocale}){
   const c=marketingCopy[locale]; const valueIndexes=[1,3,11,5,7,9]; const decisionHref=path(locale,"decision");
-  return <DesignSystemProvider theme="rose" mode="light" className={styles.site}><main id="main-content" lang={locale}><Header locale={locale}/>
+  return <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}><main id="main-content" lang={locale}><Header locale={locale}/>
     <section className={styles.hero}><div className={styles.heroCopy}><div className={styles.eyebrow}>{c.hero[0]}</div><h1>{c.hero[1]}</h1><p className={styles.lead}>{c.hero[2]}</p><p>{c.hero[3]}</p><strong className={styles.human}>{c.hero[4]}</strong><div className={styles.heroActions}><Link className={styles.primaryButtonLarge} href={path(locale,"use-cases")}><Play size={16}/>{c.hero[5]}</Link></div></div><DecisionSpace locale={locale}/></section>
     <section className={styles.section}><div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div><div className={styles.questionGrid}>{c.problem.slice(1,5).map(x=><article key={x}>{x}</article>)}</div><p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p><p className={styles.businessBridge}>{c.bridge}</p></section>
     <DecisionPlayground locale={locale}/>
