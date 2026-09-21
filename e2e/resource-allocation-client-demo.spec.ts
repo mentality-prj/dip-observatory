@@ -146,7 +146,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(page.getByText('resource-allocation/0.6.0 · 0.6.0')).toBeVisible()
 
   await page.getByRole('button', { name: 'Accept DIP plan' }).click()
-  await expect(page.getByText('ACCEPTED')).toBeVisible()
+  await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible()
 
   await page.getByPlaceholder('What actually happened after the decision was executed').fill('Executed as planned')
   await page.getByRole('button', { name: 'Record actual outcome' }).click()
