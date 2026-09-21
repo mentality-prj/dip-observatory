@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, CircleAlert, Flag, Gauge, History, X } from 'lucide-react'
+import { Check, CircleAlert, Clipboard, Download, Flag, Gauge, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
+import { localizeService, trackResourceAllocation } from '../presentation'
 
 type CapacityRecommendation = {
   resource: string
@@ -59,9 +60,12 @@ type Props = {
   priorityCoverage: number
   served: number
   unmet: number
-  moved: number
+  teamsMoved: number
   totalTeams: number
+  moveEvents: number
   planningDays: number
+  planCsv?: string
+  exportFileName?: string
   selectionKind?: 'recommended' | 'alternative'
   locale?: Locale
 }
@@ -125,7 +129,21 @@ const copy = {
     decisionCoverage: 'Покриття пріоритетних потреб',
     decisionServed: 'Покрито за період',
     decisionUnmet: 'Залишиться непокрито',
-    decisionMoved: 'Переміщень команд',
+    decisionMoved: 'Команд змінять локацію',
+    decisionMoveEvents: 'Переміщень за період',
+    modifyReason: 'Чому ви змінили рекомендацію?',
+    rejectReason: 'Чому рекомендація не підходить?',
+    confirmModify: 'Підтвердити мій варіант',
+    confirmReject: 'Підтвердити відхилення',
+    approved: 'План затверджено',
+    nextStep: 'Наступний крок — передати план координаторам команд.',
+    exportCsv: 'Завантажити план CSV',
+    copyPlan: 'Скопіювати короткий план',
+    copied: 'План скопійовано',
+    afterExecution: 'Після виконання плану',
+    technicalHistory: 'Технічні деталі історії',
+    forecast: 'Прогноз QDIP',
+    actualValue: 'Факт',
   },
   en: {
     capacity: 'WHAT IS NEEDED FOR A BETTER RESULT',
@@ -185,7 +203,21 @@ const copy = {
     decisionCoverage: 'Priority-needs coverage',
     decisionServed: 'Covered over the horizon',
     decisionUnmet: 'Expected uncovered',
-    decisionMoved: 'Team moves',
+    decisionMoved: 'Teams changing location',
+    decisionMoveEvents: 'Move events over the horizon',
+    modifyReason: 'Why did you change the recommendation?',
+    rejectReason: 'Why is the recommendation not suitable?',
+    confirmModify: 'Confirm my plan',
+    confirmReject: 'Confirm rejection',
+    approved: 'Plan approved',
+    nextStep: 'Next step — share the approved plan with team coordinators.',
+    exportCsv: 'Download plan CSV',
+    copyPlan: 'Copy short plan',
+    copied: 'Plan copied',
+    afterExecution: 'After the plan is executed',
+    technicalHistory: 'Technical history details',
+    forecast: 'QDIP forecast',
+    actualValue: 'Actual',
   },
   pl: {
     capacity: 'CZEGO BRAKUJE DO LEPSZEGO WYNIKU',
@@ -246,7 +278,21 @@ const copy = {
     decisionCoverage: 'Pokrycie potrzeb priorytetowych',
     decisionServed: 'Pokryte w całym horyzoncie',
     decisionUnmet: 'Oczekiwane niepokryte',
-    decisionMoved: 'Przemieszczenia zespołów',
+    decisionMoved: 'Zespoły zmieniające lokalizację',
+    decisionMoveEvents: 'Przemieszczenia w całym horyzoncie',
+    modifyReason: 'Dlaczego zmieniasz rekomendację?',
+    rejectReason: 'Dlaczego rekomendacja nie pasuje?',
+    confirmModify: 'Potwierdź mój wariant',
+    confirmReject: 'Potwierdź odrzucenie',
+    approved: 'Plan zatwierdzony',
+    nextStep: 'Następny krok — przekaż zatwierdzony plan koordynatorom zespołów.',
+    exportCsv: 'Pobierz plan CSV',
+    copyPlan: 'Kopiuj krótki plan',
+    copied: 'Plan skopiowany',
+    afterExecution: 'Po wykonaniu planu',
+    technicalHistory: 'Techniczne szczegóły historii',
+    forecast: 'Prognoza QDIP',
+    actualValue: 'Fakt',
   },
 } as const
 
@@ -327,9 +373,12 @@ export function ResourceAllocationDecisionPanel({
   priorityCoverage,
   served,
   unmet,
-  moved,
+  teamsMoved,
   totalTeams,
+  moveEvents,
   planningDays,
+  planCsv,
+  exportFileName,
   selectionKind = 'recommended',
   locale = 'uk',
 }: Props) {
@@ -339,6 +388,8 @@ export function ResourceAllocationDecisionPanel({
   const [lifecycle, setLifecycle] = useState<Lifecycle>(null)
   const [record, setRecord] = useState<DecisionRecord | null>(null)
   const [reason, setReason] = useState('')
+  const [decisionIntent, setDecisionIntent] = useState<null | 'accept' | 'modify' | 'reject'>(null)
+  const [copied, setCopied] = useState(false)
   const [notes, setNotes] = useState('')
   const [actualCoverage, setActualCoverage] = useState('')
   const [actualServed, setActualServed] = useState('')
@@ -397,6 +448,15 @@ export function ResourceAllocationDecisionPanel({
         body
       )
       await loadDecision(created.decision_id)
+      trackResourceAllocation(
+        status === 'accepted'
+          ? 'ra_decision_accepted'
+          : status === 'modified'
+            ? 'ra_decision_modified'
+            : 'ra_decision_rejected',
+        locale
+      )
+      setDecisionIntent(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision update failed')
     } finally {
@@ -437,12 +497,35 @@ export function ResourceAllocationDecisionPanel({
         notes: notes || undefined,
       })
       await loadDecision(lifecycle.decisionId)
+      trackResourceAllocation('ra_actual_outcome_recorded', locale)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Outcome recording failed')
     } finally {
       setBusy(null)
     }
   }
+  function downloadPlan() {
+    if (!planCsv || typeof document === 'undefined') return
+    const blob = new Blob([planCsv], { type: 'text/csv;charset=utf-8' })
+    const href = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = href
+    anchor.download = exportFileName ?? 'qdip-resource-allocation.csv'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(href)
+    trackResourceAllocation('ra_plan_exported', locale)
+  }
+
+  async function copyPlan() {
+    if (!planCsv || !navigator.clipboard) return
+    await navigator.clipboard.writeText(planCsv.replace(/^\uFEFF/, ''))
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1800)
+    trackResourceAllocation('ra_plan_exported', locale)
+  }
+
   async function refresh() {
     if (!lifecycle) return
     setBusy('refresh')
@@ -542,7 +625,7 @@ export function ResourceAllocationDecisionPanel({
                       {recommendations.map((item) => (
                         <div key={`${item.resource}-${item.added_capacity}`} className="border border-white/15 p-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <b>{item.resource}</b>
+                            <b>{localizeService(item.resource, locale)}</b>
                             <span>
                               +{item.extra_team_equivalents} {t.teamEq} · +{item.added_capacity.toFixed(0)}{' '}
                               {t.capacityUnit}
@@ -566,7 +649,7 @@ export function ResourceAllocationDecisionPanel({
                         className="grid grid-cols-[1fr_auto] gap-3 border-t border-white/10 py-2"
                       >
                         <span>
-                          {item.resource}
+                          {localizeService(item.resource, locale)}
                           <span className="block text-xs text-white/45">
                             {t.demand} {item.priority_demand.toFixed(0)} · {t.available}{' '}
                             {item.available_capacity.toFixed(0)}
@@ -600,7 +683,7 @@ export function ResourceAllocationDecisionPanel({
         {!lifecycle ? (
           <>
             <p className="mt-4 max-w-2xl text-sm text-slate-400">{t.decisionHelp}</p>
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-testid="decision-summary">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5" data-testid="decision-summary">
               <div className="border border-white/10 p-3">
                 <div className="text-xs text-slate-500">{t.decisionCoverage}</div>
                 <b className="mt-1 block text-xl">{Math.round(priorityCoverage * 100)}%</b>
@@ -615,23 +698,22 @@ export function ResourceAllocationDecisionPanel({
               </div>
               <div className="border border-white/10 p-3">
                 <div className="text-xs text-slate-500">{t.decisionMoved}</div>
-                <b className="mt-1 block text-xl">{moved} / {totalTeams}</b>
+                <b className="mt-1 block text-xl">{teamsMoved} / {totalTeams}</b>
+              </div>
+              <div className="border border-white/10 p-3">
+                <div className="text-xs text-slate-500">{t.decisionMoveEvents}</div>
+                <b className="mt-1 block text-xl">{moveEvents}</b>
                 <div className="mt-1 text-[10px] text-slate-600">{planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}</div>
               </div>
             </div>
-            {(manualSelected || selectionKind === 'alternative') && (
-              <textarea
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder={t.reason}
-                className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
-              />
-            )}
             <div className="mt-5 flex flex-wrap gap-2">
               {selectionKind === 'recommended' && !manualSelected && (
                 <button
                   type="button"
-                  onClick={() => decide('accepted')}
+                  onClick={() => {
+                    setDecisionIntent('accept')
+                    void decide('accepted')
+                  }}
                   disabled={Boolean(busy)}
                   className="flex items-center gap-2 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 disabled:opacity-40"
                 >
@@ -642,16 +724,22 @@ export function ResourceAllocationDecisionPanel({
               {(manualSelected || selectionKind === 'alternative') && (
                 <button
                   type="button"
-                  onClick={() => decide('modified')}
+                  onClick={() => {
+                    setReason('')
+                    setDecisionIntent('modify')
+                  }}
                   disabled={Boolean(busy)}
                   className="border border-rose-300/40 bg-rose-300/10 px-4 py-3 text-sm font-bold text-rose-200 disabled:opacity-40"
                 >
-                  {busy === 'modified' ? t.snapshotBusy : manualSelected ? t.modify : t.alternative}
+                  {manualSelected ? t.modify : t.alternative}
                 </button>
               )}
               <button
                 type="button"
-                onClick={() => decide('rejected')}
+                onClick={() => {
+                  setReason('')
+                  setDecisionIntent('reject')
+                }}
                 disabled={Boolean(busy)}
                 className="flex items-center gap-2 border border-white/20 px-4 py-3 text-sm font-bold text-slate-300 disabled:opacity-40"
               >
@@ -659,13 +747,32 @@ export function ResourceAllocationDecisionPanel({
                 {t.reject}
               </button>
             </div>
-            {!manualSelected && selectionKind === 'recommended' && (
-              <textarea
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder={t.reason}
-                className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
-              />
+
+            {(decisionIntent === 'modify' || decisionIntent === 'reject') && (
+              <div className="mt-4 border border-white/10 bg-slate-950/30 p-4">
+                <label className="text-sm">
+                  <span className="block font-bold">
+                    {decisionIntent === 'modify' ? t.modifyReason : t.rejectReason}
+                  </span>
+                  <textarea
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    className="mt-3 min-h-24 w-full border border-white/15 bg-slate-950/50 p-3"
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={Boolean(busy) || !reason.trim()}
+                  onClick={() => void decide(decisionIntent === 'modify' ? 'modified' : 'rejected')}
+                  className="mt-3 bg-rose-500 px-4 py-3 text-sm font-bold text-white disabled:opacity-40"
+                >
+                  {busy
+                    ? t.snapshotBusy
+                    : decisionIntent === 'modify'
+                      ? t.confirmModify
+                      : t.confirmReject}
+                </button>
+              </div>
             )}
           </>
         ) : (
@@ -676,72 +783,112 @@ export function ResourceAllocationDecisionPanel({
             </div>
             {status && ['accepted', 'modified'].includes(status) && (
               <>
-                <div className="mt-6 text-xs font-bold uppercase tracking-wider text-rose-300">{t.outcome}</div>
-                <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
-                <p className="mt-2 text-sm text-slate-500">{t.outcomeHelp}</p>
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                  <label className="text-sm">
-                    <span className="block text-slate-500">{t.actualCoverage}</span>
-                    <input
-                      aria-label={t.actualCoverage}
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={actualCoverage}
-                      onChange={(event) => setActualCoverage(event.target.value)}
-                      placeholder={`${Math.round(priorityCoverage * 100)} · ${t.expected}`}
-                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
-                    />
-                  </label>
-                  <label className="text-sm">
-                    <span className="block text-slate-500">{t.actualServed}</span>
-                    <input
-                      aria-label={t.actualServed}
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={actualServed}
-                      onChange={(event) => setActualServed(event.target.value)}
-                      placeholder={`${served.toFixed(0)} · ${t.expected}`}
-                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
-                    />
-                  </label>
-                  <label className="text-sm">
-                    <span className="block text-slate-500">{t.actualUnmet}</span>
-                    <input
-                      aria-label={t.actualUnmet}
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={actualUnmet}
-                      onChange={(event) => setActualUnmet(event.target.value)}
-                      placeholder={`${unmet.toFixed(0)} · ${t.expected}`}
-                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
-                    />
-                  </label>
+                <div className="mt-5 border-l-2 border-emerald-400 bg-emerald-400/[0.05] px-4 py-3">
+                  <b className="text-emerald-200">✓ {t.approved}</b>
+                  <div className="mt-1 text-sm text-slate-400">{t.nextStep}</div>
+                  {planCsv && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={downloadPlan}
+                        className="inline-flex items-center gap-2 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950"
+                      >
+                        <Download className="h-4 w-4" />
+                        {t.exportCsv}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void copyPlan()}
+                        className="inline-flex items-center gap-2 border border-white/15 px-4 py-3 text-sm font-bold"
+                      >
+                        <Clipboard className="h-4 w-4" />
+                        {copied ? t.copied : t.copyPlan}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder={t.outcomeNotes}
-                  className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={outcome}
-                  disabled={Boolean(busy)}
-                  className="mt-3 flex items-center gap-2 bg-rose-500 px-4 py-3 text-sm font-bold text-white"
-                >
-                  <Flag className="h-4 w-4" />
-                  {busy === 'outcome' ? t.recording : t.record}
-                </button>
+
+                <details className="mt-6 border border-white/10 bg-white/[0.02]">
+                  <summary className="cursor-pointer p-4 font-bold">{t.afterExecution}</summary>
+                  <div className="border-t border-white/10 p-4">
+                    <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.outcome}</div>
+                    <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
+                    <p className="mt-2 text-sm text-slate-500">{t.outcomeHelp}</p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-3">
+                      <label className="text-sm">
+                        <span className="block text-slate-500">{t.actualCoverage}</span>
+                        <input
+                          aria-label={t.actualCoverage}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={actualCoverage}
+                          onChange={(event) => setActualCoverage(event.target.value)}
+                          placeholder={`${Math.round(priorityCoverage * 100)} · ${t.expected}`}
+                          className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                        />
+                      </label>
+                      <label className="text-sm">
+                        <span className="block text-slate-500">{t.actualServed}</span>
+                        <input
+                          aria-label={t.actualServed}
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={actualServed}
+                          onChange={(event) => setActualServed(event.target.value)}
+                          placeholder={`${served.toFixed(0)} · ${t.expected}`}
+                          className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                        />
+                      </label>
+                      <label className="text-sm">
+                        <span className="block text-slate-500">{t.actualUnmet}</span>
+                        <input
+                          aria-label={t.actualUnmet}
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={actualUnmet}
+                          onChange={(event) => setActualUnmet(event.target.value)}
+                          placeholder={`${unmet.toFixed(0)} · ${t.expected}`}
+                          className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                        />
+                      </label>
+                    </div>
+                    <textarea
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      placeholder={t.outcomeNotes}
+                      className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={outcome}
+                      disabled={Boolean(busy)}
+                      className="mt-3 flex items-center gap-2 bg-rose-500 px-4 py-3 text-sm font-bold text-white"
+                    >
+                      <Flag className="h-4 w-4" />
+                      {busy === 'outcome' ? t.recording : t.record}
+                    </button>
+                  </div>
+                </details>
               </>
             )}
             {status === 'completed' && (
-              <div className="mt-5 border-l-2 border-emerald-400 pl-3 text-sm">
-                <b>{t.completed}</b>
-                <div className="text-slate-500">{t.completedText}</div>
+              <div className="mt-5 border border-emerald-400/20 bg-emerald-400/[0.04] p-4 text-sm">
+                <b className="text-emerald-200">{t.completed}</b>
+                <div className="mt-1 text-slate-500">{t.completedText}</div>
+                {record?.outcomes.at(-1)?.metrics && (
+                  <div className="mt-4 grid grid-cols-[1.4fr_1fr_1fr] gap-px bg-white/10 text-xs">
+                    <div className="bg-slate-950/60 p-2" />
+                    <div className="bg-slate-950/60 p-2 font-bold">{t.forecast}</div>
+                    <div className="bg-slate-950/60 p-2 font-bold">{t.actualValue}</div>
+                    <MetricCompare label={t.decisionCoverage} forecast={priorityCoverage} actual={record.outcomes.at(-1)?.metrics?.priority_coverage} percentage />
+                    <MetricCompare label={t.decisionServed} forecast={served} actual={record.outcomes.at(-1)?.metrics?.served} />
+                    <MetricCompare label={t.decisionUnmet} forecast={unmet} actual={record.outcomes.at(-1)?.metrics?.closing_unmet} />
+                  </div>
+                )}
               </div>
             )}
             {record && (
@@ -764,7 +911,6 @@ export function ResourceAllocationDecisionPanel({
                   <TimelineItem
                     title={t.proposed}
                     time={formatTimestamp(record.created_at, locale)}
-                    meta={`${t.engine}: ${record.engine_version} · ${record.plugin_version} · ${record.state_hash.slice(0, 10)}`}
                   />
                   {record.feedback.map((item, index) => (
                     <TimelineItem
@@ -787,6 +933,12 @@ export function ResourceAllocationDecisionPanel({
                     />
                   ))}
                 </div>
+                <details className="mt-5 text-xs text-slate-500">
+                  <summary className="cursor-pointer font-semibold text-slate-400">{t.technicalHistory}</summary>
+                  <div className="mt-2 break-words">
+                    {t.engine}: {record.engine_version} · {record.plugin_version} · {record.state_hash.slice(0, 10)}
+                  </div>
+                </details>
               </div>
             )}
           </>
@@ -801,6 +953,28 @@ export function ResourceAllocationDecisionPanel({
     </div>
   )
 }
+function MetricCompare({
+  label,
+  forecast,
+  actual,
+  percentage = false,
+}: {
+  label: string
+  forecast: number
+  actual?: number
+  percentage?: boolean
+}) {
+  const render = (value: number | undefined) =>
+    value == null ? '—' : percentage ? `${Math.round(value * 100)}%` : value.toFixed(0)
+  return (
+    <>
+      <div className="bg-white/[0.03] p-2 text-slate-500">{label}</div>
+      <div className="bg-white/[0.03] p-2 font-bold">{render(forecast)}</div>
+      <div className="bg-white/[0.03] p-2 font-bold">{render(actual)}</div>
+    </>
+  )
+}
+
 function TimelineItem({ title, time, meta }: { title: string; time: string; meta?: string }) {
   return (
     <div className="relative">

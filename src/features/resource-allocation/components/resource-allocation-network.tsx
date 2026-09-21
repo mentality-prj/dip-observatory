@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, Network, Play, Pause } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
+import { localizePlanningDay } from '../presentation'
 
 type Team = { id: string; current_community: string }
 type Props = {
@@ -26,10 +27,10 @@ const copy = {
   uk: {
     network: 'Операційна мережа',
     current: 'Стан на початок дня',
-    dip: 'План DIP',
+    dip: 'План QDIP',
     manager: 'План менеджера',
     description:
-      'Порівняйте розташування команд на початок вибраного дня, рекомендацію DIP та перевірене ручне коригування. Для вівторка–п’ятниці кожен план показує рух від власного призначення попереднього дня.',
+      'Порівняйте розташування команд на початок вибраного дня, рекомендацію QDIP та перевірене ручне коригування. Для вівторка–п’ятниці кожен план показує рух від власного призначення попереднього дня.',
     pause: 'Зупинити рух',
     animate: 'Показати рух',
     assigned: 'Призначено',
@@ -39,28 +40,28 @@ const copy = {
     dipPlan: 'ПЛАН DIP',
     managerPlan: 'ПЛАН МЕНЕДЖЕРА',
     moves: 'ПЕРЕМІЩЕНЬ',
-    currentLegend: 'Де команди знаходяться на початок вибраного дня за планом DIP.',
-    dipLegend: 'Рекомендований DIP розподіл для вибраного дня.',
+    currentLegend: 'Де команди знаходяться на початок вибраного дня за планом QDIP.',
+    dipLegend: 'Рекомендований QDIP розподіл для вибраного дня.',
     managerReady: 'Перевірене ручне коригування порівнюється з попереднім днем цього ж ручного плану.',
     managerWait: 'З’явиться після перевірки допустимого ручного плану.',
   },
   en: {
     network: 'Operational network',
     current: 'Start-of-day state',
-    dip: 'DIP plan',
+    dip: 'QQDIP plan',
     manager: 'Manager plan',
     description:
-      "Compare start-of-day team locations, the DIP recommendation and an evaluated manager override. Tuesday–Friday movement for each plan starts from that plan's own previous-day assignment.",
+      "Compare start-of-day team locations, the QDIP recommendation and an evaluated manager override. Tuesday–Friday movement for each plan starts from that plan's own previous-day assignment.",
     pause: 'Pause motion',
     animate: 'Animate moves',
     assigned: 'Assigned',
     moved: 'Moved',
     day: 'Day',
     opening: 'START OF DAY',
-    dipPlan: 'DIP PLAN',
+    dipPlan: 'QDIP PLAN',
     managerPlan: 'MANAGER PLAN',
     moves: 'TEAM MOVES',
-    currentLegend: 'Team locations at the start of the selected day under the DIP plan.',
+    currentLegend: 'Team locations at the start of the selected day under the QQDIP plan.',
     dipLegend: 'Recommended DIP allocation for the selected day.',
     managerReady: 'The evaluated manager override is compared with the previous day of the same manual plan.',
     managerWait: 'Appears after a feasible manual override is evaluated.',
@@ -68,10 +69,10 @@ const copy = {
   pl: {
     network: 'Sieć operacyjna',
     current: 'Stan na początek dnia',
-    dip: 'Plan DIP',
+    dip: 'Plan QDIP',
     manager: 'Plan menedżera',
     description:
-      'Porównaj lokalizacje zespołów na początek dnia, rekomendację DIP i zweryfikowaną korektę menedżera. Od wtorku do piątku ruch każdego planu zaczyna się od własnego przydziału z poprzedniego dnia.',
+      'Porównaj lokalizacje zespołów na początek dnia, rekomendację QDIP i zweryfikowaną korektę menedżera. Od wtorku do piątku ruch każdego planu zaczyna się od własnego przydziału z poprzedniego dnia.',
     pause: 'Zatrzymaj ruch',
     animate: 'Pokaż ruch',
     assigned: 'Przydzielono',
@@ -81,8 +82,8 @@ const copy = {
     dipPlan: 'PLAN DIP',
     managerPlan: 'PLAN MENEDŻERA',
     moves: 'PRZEMIESZCZEŃ',
-    currentLegend: 'Lokalizacje zespołów na początku wybranego dnia według planu DIP.',
-    dipLegend: 'Rekomendowany przydział DIP dla wybranego dnia.',
+    currentLegend: 'Lokalizacje zespołów na początku wybranego dnia według planu QDIP.',
+    dipLegend: 'Rekomendowany przydział QDIP dla wybranego dnia.',
     managerReady: 'Zweryfikowana korekta menedżera jest porównywana z poprzednim dniem tego samego planu ręcznego.',
     managerWait: 'Pojawi się po ocenie dopuszczalnego planu ręcznego.',
   },
@@ -139,7 +140,7 @@ export function ResourceAllocationNetwork({
             {t.network}
           </div>
           <h3 className="mt-2 max-w-full break-words text-lg font-black [overflow-wrap:anywhere] sm:text-2xl">
-            {t.current} <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> DIP{' '}
+            {t.current} <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> QDIP{' '}
             <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> {t.manager}
           </h3>
           <p className="mt-2 max-w-full break-words text-sm text-white/50 [overflow-wrap:anywhere] sm:max-w-3xl">
@@ -179,7 +180,7 @@ export function ResourceAllocationNetwork({
             {t.moved} <b className="text-white">{moved}</b>
           </span>
           <span>
-            {t.day} <b className="text-white">{day}</b>
+            {t.day} <b className="text-white">{localizePlanningDay(day, locale)}</b>
           </span>
         </div>
       </div>
@@ -189,7 +190,7 @@ export function ResourceAllocationNetwork({
           preserveAspectRatio="xMidYMid meet"
           className="block h-auto min-w-0 w-full max-w-full"
           role="img"
-          aria-label={`${t.network}: ${day}`}
+          aria-label={`${t.network}: ${localizePlanningDay(day, locale)}`}
         >
           <defs>
             <marker id="allocation-arrow-dip" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -283,7 +284,7 @@ export function ResourceAllocationNetwork({
       </div>
       <div className="grid min-w-0 border-t border-white/10 md:grid-cols-3">
         <Legend title={t.current} text={t.currentLegend} />
-        <Legend title="DIP" text={t.dipLegend} />
+        <Legend title="QDIP" text={t.dipLegend} />
         <Legend title={t.manager} text={manual ? t.managerReady : t.managerWait} />
       </div>
     </section>

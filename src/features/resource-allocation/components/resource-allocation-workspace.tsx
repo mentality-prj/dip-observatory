@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildResourceAllocationInput, runResourceAllocationScenario } from '../api'
@@ -18,6 +18,13 @@ import {
   ResourceAllocationManualEditor,
   type EvaluatedManualAllocation,
 } from './resource-allocation-manual-editor'
+import {
+  buildAllocationCsv,
+  localizePlanningDay,
+  summarizeMovements,
+  trackResourceAllocation,
+} from '../presentation'
+import { ResourceAllocationAssignmentExplanation } from './resource-allocation-assignment-explanation'
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
 
@@ -42,6 +49,16 @@ const copy = {
       'QDIP врахує потреби, спеціалізації команд, їх поточне розташування, доступність локацій і переміщення на весь плановий період.',
     valueProp:
       'QDIP допомагає визначити, куди направити мобільні команди, щоб покрити більше пріоритетних потреб наявними ресурсами.',
+    heroQuestion: 'Чи можна покрити більше пріоритетних потреб тими самими командами?',
+    differentiation: 'На відміну від таблиці, QDIP оцінює наслідки розподілу на весь горизонт: де команда опиниться сьогодні впливає на доступні рішення завтра.',
+    simulate: 'Симулювати зміну ситуації',
+    recalculate: 'Перерахувати план',
+    scenarioChanged: 'СЦЕНАРІЙ ЗМІНЕНО',
+    technicalDetails: 'Технічні деталі',
+    technicalMethod: 'Метод розрахунку',
+    fewerMoves: 'Менше переміщень',
+    lowerMovement: 'Нижчий індекс переміщень',
+    balanced: 'Збалансований варіант',
     startHint: 'Перевірте дані та умови зліва, після чого запустіть розрахунок.',
     weekly: 'РЕКОМЕНДОВАНИЙ ПЛАН',
     weeklyTitle: 'Куди направити команди',
@@ -56,12 +73,12 @@ const copy = {
     why: 'ЧОМУ QDIP РЕКОМЕНДУЄ ЦЕЙ ПЛАН',
     whyTitle: 'Перевірте логіку рекомендації перед рішенням',
     tryOwnData: 'Спробувати на своїх даних',
-    baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — what-if сценарій.',
+    baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — сценарій зміни умов.',
     unavailableHint: 'Симуляція ситуації, коли мобільні команди тимчасово не можуть працювати в обраній локації.',
     reviewRecommendation: 'Перевірити рекомендацію',
     testOwnPlan: 'Перевірити свій варіант',
     moves: 'переміщень',
-    travel: 'вартість переміщень',
+    travel: 'індекс переміщень',
     rawEvidence: 'Детальні показники моделі',
     rationalePriority: 'Пріоритетні потреби',
     rationaleHorizon: 'Планування всього горизонту',
@@ -90,6 +107,16 @@ const copy = {
       'QDIP accounts for needs, team skills, current locations, location availability and movement across the full planning horizon.',
     valueProp:
       'QDIP helps decide where to send mobile teams so more priority needs are covered with the resources already available.',
+    heroQuestion: 'Can the same teams cover more priority demand?',
+    differentiation: 'Unlike a spreadsheet, QDIP evaluates consequences across the full horizon: where a team ends today changes what is feasible tomorrow.',
+    simulate: 'Simulate a change',
+    recalculate: 'Recalculate plan',
+    scenarioChanged: 'SCENARIO CHANGED',
+    technicalDetails: 'Technical details',
+    technicalMethod: 'Calculation method',
+    fewerMoves: 'Fewer moves',
+    lowerMovement: 'Lower movement index',
+    balanced: 'Balanced option',
     startHint: 'Review the data and conditions on the left, then run the calculation.',
     weekly: 'RECOMMENDED PLAN',
     weeklyTitle: 'Where to send teams',
@@ -104,7 +131,7 @@ const copy = {
     why: 'WHY QDIP RECOMMENDS THIS PLAN',
     whyTitle: 'Review the recommendation logic before deciding',
     tryOwnData: 'Try your own data',
-    baselineCapacityHint: '100% is the currently planned availability; lower or higher values are what-if scenarios.',
+    baselineCapacityHint: '100% is the currently planned availability; lower or higher values simulate changed conditions.',
     unavailableHint: 'Simulate a location that mobile teams temporarily cannot serve.',
     reviewRecommendation: 'Review the recommendation',
     testOwnPlan: 'Test your own plan',
@@ -138,6 +165,16 @@ const copy = {
       'QDIP uwzględnia potrzeby, kompetencje zespołów, bieżące lokalizacje, dostępność i przemieszczenia w całym horyzoncie planowania.',
     valueProp:
       'QDIP pomaga zdecydować, dokąd skierować zespoły mobilne, aby pokryć więcej priorytetowych potrzeb przy dostępnych zasobach.',
+    heroQuestion: 'Czy te same zespoły mogą pokryć więcej potrzeb priorytetowych?',
+    differentiation: 'W przeciwieństwie do arkusza QDIP ocenia skutki w całym horyzoncie: miejsce zakończenia pracy dziś wpływa na możliwości jutro.',
+    simulate: 'Symuluj zmianę sytuacji',
+    recalculate: 'Przelicz plan',
+    scenarioChanged: 'SCENARIUSZ ZMIENIONY',
+    technicalDetails: 'Szczegóły techniczne',
+    technicalMethod: 'Metoda obliczeń',
+    fewerMoves: 'Mniej przemieszczeń',
+    lowerMovement: 'Niższy indeks przemieszczeń',
+    balanced: 'Wariant zrównoważony',
     startHint: 'Sprawdź dane i warunki po lewej stronie, a następnie uruchom obliczenie.',
     weekly: 'REKOMENDOWANY PLAN',
     weeklyTitle: 'Dokąd skierować zespoły',
@@ -152,12 +189,12 @@ const copy = {
     why: 'DLACZEGO QDIP REKOMENDUJE TEN PLAN',
     whyTitle: 'Sprawdź logikę rekomendacji przed decyzją',
     tryOwnData: 'Wypróbuj własne dane',
-    baselineCapacityHint: '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości to scenariusz what-if.',
+    baselineCapacityHint: '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości symulują zmianę warunków.',
     unavailableHint: 'Symulacja sytuacji, w której zespoły mobilne tymczasowo nie mogą obsługiwać wybranej lokalizacji.',
     reviewRecommendation: 'Sprawdź rekomendację',
     testOwnPlan: 'Sprawdź własny wariant',
     moves: 'przemieszczeń',
-    travel: 'koszt przemieszczeń',
+    travel: 'indeks kosztu przemieszczeń',
     rawEvidence: 'Szczegółowe wskaźniki modelu',
     rationalePriority: 'Potrzeby priorytetowe',
     rationaleHorizon: 'Planowanie całego horyzontu',
@@ -167,21 +204,6 @@ const copy = {
       'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
   },
 } satisfies Record<Locale, Record<string, string>>
-
-function countPlanMoves(
-  daily: Array<{ recommended: { assignments: Record<string, string | null> } }>,
-  initial: Record<string, string | null>
-) {
-  let previous = { ...initial }
-  let moves = 0
-  for (const day of daily) {
-    for (const [team, target] of Object.entries(day.recommended.assignments)) {
-      if (target !== null && previous[team] !== target) moves += 1
-    }
-    previous = { ...previous, ...day.recommended.assignments }
-  }
-  return moves
-}
 
 function profileLabel(profileId: string, importedName: string | null, importedLabel: string) {
   if (profileId === 'imported') return importedName ? `${importedLabel}: ${importedName}` : importedLabel
@@ -205,6 +227,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const [lastInput, setLastInput] = useState<Record<string, unknown> | null>(null)
   const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null)
   const [runRevision, setRunRevision] = useState(0)
+  const [selectedExplanationTeam, setSelectedExplanationTeam] = useState<string | null>(null)
+  const openedTracked = useRef(false)
 
   const stats = useMemo(() => resourceAllocationStats(inputData), [inputData])
   const communityNames = useMemo(() => inputData.communities.map((community) => community.id), [inputData])
@@ -220,22 +244,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     [inputData]
   )
   const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.openingNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
-  const topPriorityCommunities = useMemo(
-    () =>
-      inputData.communities
-        .map((community) => {
-          const base = community.demand ?? []
-          const daily = Object.values(community.daily_demand ?? {}).flat()
-          const priorityUnits = [...base, ...daily]
-            .filter((item) => item.priority === 'critical' || item.priority === 'high')
-            .reduce((sum, item) => sum + item.units, 0)
-          return { id: community.id, priorityUnits }
-        })
-        .filter((item) => item.priorityUnits > 0)
-        .sort((a, b) => b.priorityUnits - a.priorityUnits)
-        .slice(0, 2),
-    [inputData]
-  )
   const sourceBadge =
     profileId === 'imported'
       ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
@@ -245,6 +253,17 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
           ? 'Dane demo · syntetyczne i zagregowane · bez danych osobowych'
           : 'Demo dataset · synthetic aggregate data · no beneficiary PII'
 
+  useEffect(() => {
+    if (openedTracked.current) return
+    openedTracked.current = true
+    trackResourceAllocation('ra_demo_opened', locale, {
+      profile_type: profileId === 'imported' ? 'imported' : 'demo',
+      communities_count: stats.communities,
+      teams_count: stats.teams,
+      planning_days: stats.days,
+    })
+  }, [locale, profileId, stats.communities, stats.days, stats.teams])
+
   function resetRunState() {
     setCapacityFactor(100)
     setBlockedCommunity('')
@@ -253,13 +272,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setManualSelected(null)
     setSelectedAlternative(0)
     setSelectedDay(0)
-  }
-
-  function changeProfile(nextProfileId: ResourceAllocationProfileId) {
-    setProfileId(nextProfileId)
-    setImportedName(null)
-    setInputData(cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES[nextProfileId].input))
-    resetRunState()
+    setSelectedExplanationTeam(null)
   }
 
   function useImportedData(input: ResourceAllocationInput, fileName: string) {
@@ -270,9 +283,17 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   }
 
   async function run() {
+    const recalculating = Boolean(result)
+    trackResourceAllocation(recalculating ? 'ra_scenario_recalculated' : 'ra_calculation_started', locale, {
+      profile_type: profileId === 'imported' ? 'imported' : 'demo',
+      communities_count: stats.communities,
+      teams_count: stats.teams,
+      planning_days: stats.days,
+    })
     setRunning(true)
     setError(null)
     setManualSelected(null)
+    setSelectedExplanationTeam(null)
     const scenario = {
       capacity_factor: capacityFactor / 100,
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
@@ -284,6 +305,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       setSelectedAlternative(0)
       setSelectedDay(0)
       setRunRevision((revision) => revision + 1)
+      trackResourceAllocation('ra_calculation_completed', locale, {
+        profile_type: profileId === 'imported' ? 'imported' : 'demo',
+        communities_count: stats.communities,
+        teams_count: stats.teams,
+        planning_days: stats.days,
+      })
     } catch (reason) {
       setResult(null)
       setLastInput(null)
@@ -302,15 +329,22 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       })
     : null
   const day = activePlan?.daily[selectedDay] ?? null
-  const moved = useMemo(
+  const movementSummary = useMemo(
     () =>
-      day
-        ? Object.entries(day.recommended.assignments).filter(
-            ([team, target]) => currentAllocation[team] !== target
-          ).length
-        : 0,
-    [currentAllocation, day]
+      activePlan
+        ? summarizeMovements(activePlan.daily, currentAllocation, inputData.teams.length)
+        : { teamsMoved: 0, totalTeams: inputData.teams.length, moveEvents: 0 },
+    [activePlan, currentAllocation, inputData.teams.length]
   )
+  const selectedExplanation =
+    day?.recommended.assignment_explanations?.find(
+      (item) => item.team_id === selectedExplanationTeam
+    ) ?? null
+  const planCsv = useMemo(
+    () => (activePlan ? buildAllocationCsv(activePlan.daily, inputData.teams) : undefined),
+    [activePlan, inputData.teams]
+  )
+  const exportFileName = `qdip-resource-allocation-${new Date().toISOString().slice(0, 10)}.csv`
 
   return (
     <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
@@ -335,87 +369,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4">
-            <div className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <b>{t.whatIf}</b>
-                <button type="button" onClick={resetRunState} aria-label="Reset scenario">
-                  <RotateCcw className="h-4 w-4" />
-                </button>
-              </div>
-
-              <label className="mt-6 block text-sm">
-                <span>{t.profile}</span>
-                <select
-                  data-testid="resource-profile"
-                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                  value={profileId}
-                  onChange={(event) => {
-                    if (event.target.value === 'imported') return
-                    changeProfile(event.target.value as ResourceAllocationProfileId)
-                  }}
-                >
-                  {Object.entries(RESOURCE_ALLOCATION_PROFILES).map(([id, profile]) => (
-                    <option key={id} value={id} className="bg-slate-950 text-white">
-                      {profile.label}
-                    </option>
-                  ))}
-                  {profileId === 'imported' && (
-                    <option value="imported" className="bg-slate-950 text-white">
-                      {profileLabel(profileId, importedName, t.imported)}
-                    </option>
-                  )}
-                </select>
-              </label>
-
-              <label className="mt-5 block text-sm">
-                <span className="flex justify-between">
-                  <span>{t.capacity}</span>
-                  <b>{capacityFactor}%</b>
-                </span>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.baselineCapacityHint}</p>
-                <input
-                  className="mt-3 w-full accent-rose-400"
-                  type="range"
-                  min="70"
-                  max="130"
-                  step="5"
-                  value={capacityFactor}
-                  onChange={(event) => setCapacityFactor(Number(event.target.value))}
-                />
-              </label>
-
-              <label className="mt-5 block text-sm">
-                <span>{t.inaccessible}</span>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.unavailableHint}</p>
-                <select
-                  data-testid="blocked-community"
-                  className="mt-2 w-full border border-white/15 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                  value={blockedCommunity}
-                  onChange={(event) => setBlockedCommunity(event.target.value)}
-                >
-                  <option value="" className="bg-slate-950 text-white">
-                    {t.none}
-                  </option>
-                  {blockableCommunities.map((name) => (
-                    <option key={name} value={name} className="bg-slate-950 text-white">
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                type="button"
-                disabled={running}
-                onClick={run}
-                className="mt-6 flex w-full items-center justify-center gap-2 bg-rose-500 p-4 font-bold disabled:opacity-50"
-              >
-                <Play className="h-4 w-4" />
-                {running ? t.running : t.run}
-              </button>
-            </div>
-
-            <details className="order-3 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
+            <details className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t.tryOwnData}</summary>
               <div className="mt-3">
                 <ResourceAllocationImport locale={locale} onImported={useImportedData} />
@@ -459,14 +413,24 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
             {!result && (
               <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
-                <div className="max-w-xl px-8">
+                <div className="max-w-2xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
-                  <h2 data-testid="resource-active-summary" className="mt-5 text-3xl font-black">
-                    {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
-                    {stats.openingNeeds} {t.opening.toLowerCase()}. {stats.days} {t.days}.
-                  </h2>
-                  <p className="mt-3 text-slate-400">{t.emptyText}</p>
-                  <p className="mt-4 text-sm font-semibold text-rose-200">{t.startHint}</p>
+                  <h2 className="mt-5 text-3xl font-black md:text-4xl">{t.heroQuestion}</h2>
+                  <div data-testid="resource-active-summary" className="mt-5 text-lg font-bold text-slate-200">
+                    {stats.teams} {t.teams.toLowerCase()} · {stats.communities} {t.communities.toLowerCase()} ·{' '}
+                    {stats.openingNeeds} {t.opening.toLowerCase()} · {stats.days} {t.days}
+                  </div>
+                  <p className="mx-auto mt-4 max-w-xl text-slate-400">{t.emptyText}</p>
+                  <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500">{t.differentiation}</p>
+                  <button
+                    type="button"
+                    disabled={running}
+                    onClick={run}
+                    className="mt-7 inline-flex items-center justify-center gap-2 bg-rose-500 px-6 py-4 font-bold disabled:opacity-50"
+                  >
+                    <Play className="h-4 w-4" />
+                    {running ? t.running : t.run}
+                  </button>
                 </div>
               </div>
             )}
@@ -477,8 +441,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   metrics={activePlan.aggregate_metrics}
                   summary={activePlan.demand_summary}
                   baseline={result.baseline}
-                  moved={moved}
-                  totalTeams={inputData.teams.length}
+                  teamsMoved={movementSummary.teamsMoved}
+                  totalTeams={movementSummary.totalTeams}
+                  moveEvents={movementSummary.moveEvents}
                   planningDays={stats.days}
                   locale={locale}
                 />
@@ -492,7 +457,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       </h2>
                     </div>
                     <details className="min-w-0 max-w-full text-left text-xs text-slate-500 sm:text-right">
-                      <summary className="cursor-pointer font-semibold text-slate-500">Technical details</summary>
+                      <summary className="cursor-pointer font-semibold text-slate-500">{t.technicalDetails}</summary>
                       <div className="mt-2 break-words [overflow-wrap:anywhere]">{result.engine_version}</div>
                       <div className="break-words [overflow-wrap:anywhere]">
                         {result.solver} · evaluated {result.evaluated_plans}
@@ -505,12 +470,15 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <button
                         type="button"
                         key={item.day}
-                        onClick={() => setSelectedDay(index)}
+                        onClick={() => {
+                          setSelectedDay(index)
+                          setSelectedExplanationTeam(null)
+                        }}
                         className={`min-w-0 border px-3 py-3 text-left sm:px-4 ${
                           selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'
                         }`}
                       >
-                        <b>{item.day}</b>
+                        <b>{localizePlanningDay(item.day, locale)}</b>
                         <div className="mt-1 text-xs text-slate-500">
                           {t.served}: {item.demand.served.toFixed(0)}
                         </div>
@@ -529,19 +497,42 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                           {Object.entries(day.recommended.assignments)
                             .filter(([, target]) => target === community)
                             .map(([team]) => (
-                              <div key={team} className="break-words bg-slate-950/70 px-2 py-1 text-xs font-semibold text-white [overflow-wrap:anywhere]">
+                              <button
+                                type="button"
+                                key={team}
+                                onClick={() => setSelectedExplanationTeam(team)}
+                                className={`w-full break-words px-2 py-1 text-left text-xs font-semibold [overflow-wrap:anywhere] ${
+                                  selectedExplanationTeam === team
+                                    ? 'bg-rose-300/15 text-rose-100'
+                                    : 'bg-slate-950/70 text-white'
+                                }`}
+                              >
                                 {team}
-                              </div>
+                              </button>
                             ))}
                         </div>
                       </div>
                     ))}
                   </div>
 
+                  {selectedExplanation && (
+                    <ResourceAllocationAssignmentExplanation
+                      explanation={selectedExplanation}
+                      locale={locale}
+                    />
+                  )}
+
                   <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-sm">
                     <span>
                       <Users className="mr-1 inline h-4 w-4" />
-                      {t.moved}: <b>{moved}</b>
+                      {locale === 'uk' ? 'Переміщень цього дня' : locale === 'pl' ? 'Przemieszczenia tego dnia' : 'Moves today'}:{' '}
+                      <b>
+                        {
+                          day.recommended.assignment_explanations?.filter(
+                            (item) => item.from !== item.to && item.to !== null
+                          ).length ?? 0
+                        }
+                      </b>
                     </span>
                     <span>
                       {t.needsStart}: <b>{day.demand.opening.toFixed(0)}</b>
@@ -555,14 +546,113 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 </div>
 
-                <details className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]">
+                <details
+                  data-testid="resource-scenario-details"
+                  className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) trackResourceAllocation('ra_scenario_opened', locale)
+                  }}
+                >
+                  <summary className="cursor-pointer p-6 text-lg font-black">{t.simulate}</summary>
+                  <div className="border-t border-white/10 p-6">
+                    {(capacityFactor !== 100 || blockedCommunity) && (
+                      <div className="mb-5 border-l-2 border-amber-300 bg-amber-300/[0.06] px-4 py-3 text-sm">
+                        <b className="text-amber-200">{t.scenarioChanged}</b>
+                        <div className="mt-1 text-slate-400">
+                          {t.capacity}: {capacityFactor}%{blockedCommunity ? ` · ${t.inaccessible}: ${blockedCommunity}` : ''}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <label className="text-sm">
+                        <span className="flex justify-between gap-3">
+                          <span>{t.capacity}</span>
+                          <b>{capacityFactor}%</b>
+                        </span>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.baselineCapacityHint}</p>
+                        <input
+                          className="mt-3 w-full accent-rose-400"
+                          type="range"
+                          min="70"
+                          max="130"
+                          step="5"
+                          value={capacityFactor}
+                          onChange={(event) => setCapacityFactor(Number(event.target.value))}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        <span>{t.inaccessible}</span>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.unavailableHint}</p>
+                        <select
+                          data-testid="blocked-community"
+                          className="mt-3 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+                          value={blockedCommunity}
+                          onChange={(event) => setBlockedCommunity(event.target.value)}
+                        >
+                          <option value="">{t.none}</option>
+                          {blockableCommunities.map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={running}
+                        onClick={run}
+                        className="inline-flex items-center gap-2 bg-rose-500 px-5 py-3 font-bold disabled:opacity-50"
+                      >
+                        <Play className="h-4 w-4" />
+                        {running ? t.running : t.recalculate}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetRunState}
+                        className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 text-sm font-bold"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        {locale === 'uk' ? 'Повернути базовий сценарій' : locale === 'pl' ? 'Przywróć scenariusz bazowy' : 'Restore baseline scenario'}
+                      </button>
+                    </div>
+                  </div>
+                </details>
+
+                <details
+                  className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) trackResourceAllocation('ra_explanation_opened', locale)
+                  }}
+                >
                   <summary className="cursor-pointer p-6 text-lg font-black">{t.reviewRecommendation}</summary>
                   <div className="grid gap-5 border-t border-white/10 p-6 lg:grid-cols-[.8fr_1.2fr]">
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.alternatives}</div>
                       <div className="mt-4 space-y-2">
                         {result.alternatives.map((alternative, index) => {
-                          const planMoves = countPlanMoves(alternative.daily, currentAllocation)
+                          const alternativeMovement = summarizeMovements(
+                            alternative.daily,
+                            currentAllocation,
+                            inputData.teams.length
+                          )
+                          const recommendedAlternative = result.alternatives[0]
+                          const recommendedMovement = recommendedAlternative
+                            ? summarizeMovements(
+                                recommendedAlternative.daily,
+                                currentAllocation,
+                                inputData.teams.length
+                              )
+                            : movementSummary
+                          const label =
+                            index === 0
+                              ? t.recommended
+                              : alternativeMovement.moveEvents < recommendedMovement.moveEvents
+                                ? t.fewerMoves
+                                : recommendedAlternative &&
+                                    alternative.aggregate_metrics.travel_cost <
+                                      recommendedAlternative.aggregate_metrics.travel_cost
+                                  ? t.lowerMovement
+                                  : t.balanced
                           return (
                             <button
                               type="button"
@@ -570,7 +660,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               onClick={() => {
                                 setSelectedAlternative(index)
                                 setSelectedDay(0)
+                                setSelectedExplanationTeam(null)
                                 setManualSelected(null)
+                                trackResourceAllocation('ra_alternative_selected', locale)
                               }}
                               className={`w-full border p-4 text-left ${
                                 selectedAlternative === index
@@ -579,7 +671,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               }`}
                             >
                               <div className="flex justify-between gap-3">
-                                <b>{index === 0 ? t.recommended : `${t.alternative} ${index + 1}`}</b>
+                                <b>{label}</b>
                                 <span>{pct(alternative.aggregate_metrics.priority_coverage)}</span>
                               </div>
                               <div className="mt-1 text-xs text-slate-500">
@@ -587,7 +679,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                                 {t.needsUnmet.toLowerCase()} {alternative.demand_summary.closing_unmet.toFixed(0)}
                               </div>
                               <div className="mt-1 text-xs text-slate-600">
-                                {planMoves} {t.moves} · {t.travel} {alternative.aggregate_metrics.travel_cost.toFixed(0)}
+                                {alternativeMovement.teamsMoved}/{alternativeMovement.totalTeams} {locale === 'uk' ? 'команд' : locale === 'pl' ? 'zespołów' : 'teams'} ·{' '}
+                                {alternativeMovement.moveEvents} {t.moves} · {t.travel}{' '}
+                                {alternative.aggregate_metrics.travel_cost.toFixed(0)}
                               </div>
                             </button>
                           )
@@ -601,43 +695,47 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
-                          {topPriorityCommunities.length > 0
-                            ? `${topPriorityCommunities.map((item) => item.id).join(', ')} · ${topPriorityCommunities.reduce((sum, item) => sum + item.priorityUnits, 0)} ${locale === 'uk' ? 'од. пріоритетних потреб' : locale === 'pl' ? 'jedn. potrzeb priorytetowych' : 'priority demand units'}`
-                            : t.emptyText}
+                          {locale === 'uk'
+                            ? 'Конкретні призначення пріоритезують critical/high-priority demand лише там, де відповідна команда має потрібні компетенції.'
+                            : locale === 'pl'
+                              ? 'Konkretne przydziały priorytetyzują critical/high demand tam, gdzie zespół ma odpowiednie kompetencje.'
+                              : 'Concrete assignments prioritize critical/high demand only where the assigned team has matching skills.'}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleHorizon}</b>
                           {locale === 'uk'
-                            ? `QDIP оцінює всі ${stats.days} днів разом: місце завершення одного дня впливає на можливості наступного.`
+                            ? `QDIP оцінює всі ${stats.days} днів разом: локація завершення дня змінює допустимі рішення наступного дня.`
                             : locale === 'pl'
-                              ? `QDIP ocenia wszystkie ${stats.days} dni łącznie: lokalizacja na koniec dnia wpływa na możliwości kolejnego.`
-                              : `QDIP evaluates all ${stats.days} days together: where a team ends one day changes what is feasible next.`}
+                              ? `QDIP ocenia wszystkie ${stats.days} dni łącznie: lokalizacja na koniec dnia zmienia dopuszczalne decyzje dnia następnego.`
+                              : `QDIP evaluates all ${stats.days} days jointly: the end-of-day location changes what is feasible next.`}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleConstraints}</b>
                           {locale === 'uk'
-                            ? 'Розподіл враховує спеціалізації команд, доступність локацій та допустимі призначення.'
+                            ? 'Для кожного призначення Core повертає перевірки доступності локації, допустимої громади, програмної сумісності, обмежень переміщення і ліміту команд.'
                             : locale === 'pl'
-                              ? 'Przydział uwzględnia kompetencje zespołów, dostępność lokalizacji i dopuszczalne przydziały.'
-                              : 'Allocation respects team skills, location availability and feasible assignments.'}
+                              ? 'Dla każdego przydziału Core zwraca sprawdzenia dostępności, dopuszczalnej lokalizacji, zgodności programu, ograniczeń podróży i limitu zespołów.'
+                              : 'For every assignment Core returns checks for accessibility, allowed location, program compatibility, travel feasibility and team limits.'}
                         </div>
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleCost}</b>
                           {locale === 'uk'
-                            ? `План використовує ${countPlanMoves(activePlan.daily, currentAllocation)} переміщень; оцінена вартість переміщень — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
+                            ? `План: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} команд змінюють локацію, ${movementSummary.moveEvents} переміщень; індекс переміщень — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
                             : locale === 'pl'
-                              ? `Plan wykorzystuje ${countPlanMoves(activePlan.daily, currentAllocation)} przemieszczeń; szacowany koszt przemieszczeń to ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
-                              : `The plan uses ${countPlanMoves(activePlan.daily, currentAllocation)} moves; estimated movement cost is ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`}
+                              ? `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} zespołów zmienia lokalizację, ${movementSummary.moveEvents} przemieszczeń; indeks kosztu przemieszczeń — ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`
+                              : `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} teams change location, ${movementSummary.moveEvents} move events; movement cost index is ${activePlan.aggregate_metrics.travel_cost.toFixed(0)}.`}
                         </div>
                       </div>
                       <details className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">
                         <summary className="cursor-pointer font-semibold text-slate-400">{t.rawEvidence}</summary>
                         <div className="mt-3 grid gap-2">
                           {result.evidence.slice(0, 8).map((item, index) => (
-                            <div key={`${item}-${index}`}>{item}</div>
+                            <div key={index}>
+                              {typeof item === 'string' ? item : JSON.stringify(item)}
+                            </div>
                           ))}
                         </div>
-                        <div className="mt-4">{t.heuristic}</div>
+                        <div className="mt-4"><b>{t.technicalMethod}:</b> {t.heuristic}</div>
                       </details>
                     </div>
                   </div>
@@ -671,9 +769,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     priorityCoverage={activePlan.aggregate_metrics.priority_coverage}
                     served={activePlan.demand_summary.served}
                     unmet={activePlan.demand_summary.closing_unmet}
-                    moved={countPlanMoves(activePlan.daily, currentAllocation)}
-                    totalTeams={inputData.teams.length}
+                    teamsMoved={movementSummary.teamsMoved}
+                    totalTeams={movementSummary.totalTeams}
+                    moveEvents={movementSummary.moveEvents}
                     planningDays={stats.days}
+                    planCsv={planCsv}
+                    exportFileName={exportFileName}
                     selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
                     locale={locale}
                   />

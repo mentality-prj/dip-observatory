@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, CircleHelp } from 'lucide-react'
 import type {
   ResourceAllocationBaseline,
   ResourceAllocationDemandSummary,
@@ -11,8 +11,9 @@ type Props = {
   metrics: ResourceAllocationMetrics
   summary: ResourceAllocationDemandSummary
   baseline?: ResourceAllocationBaseline | null
-  moved: number
+  teamsMoved: number
   totalTeams: number
+  moveEvents: number
   planningDays?: number
   locale: 'uk' | 'en' | 'pl'
 }
@@ -25,8 +26,10 @@ const labels = {
     recommendationTitle: 'Очікуваний результат рекомендованого плану',
     recommendationSubtitle:
       'Поточний розподіл не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
-    current: 'Якщо залишити поточний розподіл',
-    recommended: 'План QDIP',
+    current: 'Якщо на весь період залишити поточний розподіл без змін',
+    recommended: 'Рекомендований план QDIP',
+    priorityHelp: 'Частка critical/high-priority одиниць потреб, які модельований план дозволяє обслужити протягом обраного періоду.',
+    moveEvents: 'Переміщень за весь період',
     scenario: 'Модельована оцінка для планового сценарію.',
     unavailable: 'поточний план не оцінено',
     priority: 'Покриття пріоритетних потреб',
@@ -34,7 +37,7 @@ const labels = {
     served: 'Потреб буде покрито',
     unmet: 'Залишиться без покриття',
     utilization: 'Завантаження команд',
-    travel: 'Вартість переміщень',
+    travel: 'Індекс переміщень',
     moved: 'Команд змінять локацію',
     of: 'з',
   },
@@ -45,8 +48,10 @@ const labels = {
     recommendationTitle: 'Expected result of the recommended plan',
     recommendationSubtitle:
       'The current allocation could not be evaluated under the same scenario, so only the recommended plan is shown.',
-    current: 'Keep current allocation',
-    recommended: 'QDIP plan',
+    current: 'Keep the current allocation unchanged for the full horizon',
+    recommended: 'Recommended QDIP plan',
+    priorityHelp: 'Share of critical/high-priority demand units the modelled plan can serve over the selected horizon.',
+    moveEvents: 'Move events over the horizon',
     scenario: 'Modelled estimate for the planning scenario.',
     unavailable: 'current plan not evaluated',
     priority: 'Priority needs coverage',
@@ -54,7 +59,7 @@ const labels = {
     served: 'Needs served',
     unmet: 'Needs left uncovered',
     utilization: 'Team utilization',
-    travel: 'Movement cost',
+    travel: 'Movement cost index',
     moved: 'Teams changing location',
     of: 'of',
   },
@@ -65,8 +70,10 @@ const labels = {
     recommendationTitle: 'Oczekiwany wynik rekomendowanego planu',
     recommendationSubtitle:
       'Bieżącej alokacji nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
-    current: 'Pozostaw bieżący przydział',
-    recommended: 'Plan QDIP',
+    current: 'Pozostaw bieżący przydział bez zmian przez cały horyzont',
+    recommended: 'Rekomendowany plan QDIP',
+    priorityHelp: 'Udział jednostek potrzeb krytycznych i wysokiego priorytetu, które modelowany plan może obsłużyć w wybranym horyzoncie.',
+    moveEvents: 'Przemieszczenia w całym horyzoncie',
     scenario: 'Modelowana ocena dla scenariusza planowania.',
     unavailable: 'bieżący plan nieoceniony',
     priority: 'Pokrycie potrzeb priorytetowych',
@@ -74,7 +81,7 @@ const labels = {
     served: 'Obsłużone potrzeby',
     unmet: 'Potrzeby bez pokrycia',
     utilization: 'Wykorzystanie zespołów',
-    travel: 'Koszt przemieszczeń',
+    travel: 'Indeks kosztu przemieszczeń',
     moved: 'Zespoły zmieniające lokalizację',
     of: 'z',
   },
@@ -84,8 +91,9 @@ export function ResourceAllocationImpact({
   metrics,
   summary,
   baseline,
-  moved,
+  teamsMoved,
   totalTeams,
+  moveEvents,
   planningDays,
   locale,
 }: Props) {
@@ -104,10 +112,13 @@ export function ResourceAllocationImpact({
         <div className="min-w-0 text-left sm:text-right">
           <div className="text-xs text-slate-600">{t.moved}</div>
           <div className="text-2xl font-black">
-            {moved}{' '}
+            {teamsMoved}{' '}
             <span className="text-sm font-medium text-slate-600">
               {t.of} {totalTeams}
             </span>
+          </div>
+          <div className="mt-1 text-xs text-slate-500">
+            {t.moveEvents}: <b className="text-slate-300">{moveEvents}</b>
           </div>
         </div>
       </div>
@@ -143,6 +154,7 @@ export function ResourceAllocationImpact({
       <div className="mt-6 grid gap-px bg-white/5 sm:grid-cols-2 xl:grid-cols-6">
         <Impact
           label={t.priority}
+          help={t.priorityHelp}
           current={baseline?.metrics.priority_coverage}
           recommended={metrics.priority_coverage}
           format="pct"
@@ -203,6 +215,7 @@ function Impact({
   label,
   current,
   recommended,
+  help,
   format,
   inverse = false,
   unavailable,
@@ -210,6 +223,7 @@ function Impact({
   recommendedLabel,
 }: {
   label: string
+  help?: string
   current?: number
   recommended: number
   format?: 'pct'
@@ -222,7 +236,17 @@ function Impact({
   if (current === undefined)
     return (
       <div className="bg-white/[0.04] p-4">
-        <div className="text-xs leading-4 text-slate-500">{label}</div>
+        <div className="flex items-start gap-1 text-xs leading-4 text-slate-500">
+          <span>{label}</span>
+          {help && (
+            <span className="group relative inline-flex" tabIndex={0} aria-label={help}>
+              <CircleHelp className="h-3.5 w-3.5" />
+              <span className="pointer-events-none absolute left-0 top-5 z-20 hidden w-64 border border-white/10 bg-slate-950 p-2 text-[11px] leading-relaxed text-slate-300 shadow-xl group-hover:block group-focus:block">
+                {help}
+              </span>
+            </span>
+          )}
+        </div>
         <div className="mt-4 text-2xl font-black">{render(recommended)}</div>
         <div className="mt-2 text-xs text-slate-500">{unavailable}</div>
       </div>
@@ -233,7 +257,17 @@ function Impact({
   const deltaText = `${delta > 0 ? '+' : ''}${format === 'pct' ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
   return (
     <div className="bg-white/[0.04] p-4">
-      <div className="text-xs leading-4 text-slate-500">{label}</div>
+      <div className="flex items-start gap-1 text-xs leading-4 text-slate-500">
+        <span>{label}</span>
+        {help && (
+          <span className="group relative inline-flex" tabIndex={0} aria-label={help}>
+            <CircleHelp className="h-3.5 w-3.5" />
+            <span className="pointer-events-none absolute left-0 top-5 z-20 hidden w-64 border border-white/10 bg-slate-950 p-2 text-[11px] leading-relaxed text-slate-300 shadow-xl group-hover:block group-focus:block">
+              {help}
+            </span>
+          </span>
+        )}
+      </div>
       <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
         <div>
           <div className="text-[10px] leading-tight text-slate-600">{currentLabel}</div>
