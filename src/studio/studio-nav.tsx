@@ -2,35 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
+import { Boxes, Braces, GitBranch, SlidersHorizontal } from "lucide-react";
 import { studioHref } from "@/lib/platform-urls";
+
+const items = [
+  { section: "profiles", label: "Decision Profiles", description: "Build and run decisions", icon: SlidersHorizontal },
+  { section: "plugins", label: "Capabilities", description: "Inspect evidence providers", icon: Boxes },
+  { section: "bindings", label: "Output Bindings", description: "Connect outputs to dimensions", icon: GitBranch },
+  { section: "dimensions", label: "Dimensions", description: "Govern evaluation contracts", icon: Braces },
+] as const;
 
 function isActive(pathname: string, section: string) {
   const cleanPath = pathname.replace(/^\/studio/, "") || "/";
   return cleanPath === `/${section}` || cleanPath.startsWith(`/${section}/`);
 }
 
-function StudioLink({ index, label, section }: { index: string; label: string; section: string }) {
-  const pathname = usePathname();
-  return (
-    <Link aria-current={isActive(pathname, section) ? "page" : undefined} href={studioHref(section)}>
-      <i>{index}</i><span>{label}</span>
-    </Link>
-  );
-}
-
 export function StudioNav() {
-  return (
-    <nav aria-label="Decision Studio">
-      <span className="studio-nav-label">BUILD</span>
-      <StudioLink index="01" label="Decision Profiles" section="profiles" />
-      <span className="studio-nav-label">FOUNDATION</span>
-      <div className="studio-nav-group" role="group" aria-label="Plugin Registry">
-        <strong>Plugin Registry</strong>
-        <StudioLink index="02" label="Plugins & Capabilities" section="plugins" />
-        <StudioLink index="03" label="Output Bindings" section="bindings" />
-      </div>
-      <StudioLink index="04" label="Dimension Registry" section="dimensions" />
-    </nav>
-  );
+  const pathname = usePathname();
+  return <nav aria-label="QDIP Studio">
+    <span className="studio-nav-label">WORKSPACE</span>
+    {items.map(({ section, label, description, icon: Icon }, index) => <Link key={section} aria-current={isActive(pathname, section) ? "page" : undefined} href={studioHref(section)}>
+      <span className="studio-nav-icon" aria-hidden><Icon size={17}/></span><span className="studio-nav-copy"><strong>{label}</strong><small>{description}</small></span><i>{String(index + 1).padStart(2, "0")}</i>
+    </Link>)}
+  </nav>;
 }

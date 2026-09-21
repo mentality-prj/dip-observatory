@@ -4,21 +4,21 @@ import { DesignSystemProvider, ProductHeader, StatusBadge } from "@/design-syste
 import { StudioNav } from "@/features/studio";
 import { marketingHref, observatoryHref } from "@/lib/platform-urls";
 
-export const metadata = { title: "QDIP Studio" };
+export const metadata = { title: "QDIP Studio", description: "Configure, validate and evaluate decision systems with QDIP." };
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return <DesignSystemProvider theme="green" mode="light" className="studio-shell">
     <ProductHeader
       href={marketingHref("en")}
       product="Studio"
-      productSwitch={{ href: observatoryHref(), label: "Inspect in Observatory" }}
-      status={<StatusBadge><i /> Engine connected</StatusBadge>}
+      productSwitch={{ href: observatoryHref(), label: "Open Observatory" }}
+      status={<StatusBadge><i /> Core connected</StatusBadge>}
     />
-    <aside className="studio-sidebar">
-      <div className="studio-sidebar-intro"><small>CONFIGURE THE DECISION SYSTEM</small><p>Model alternatives, priorities, evidence and constraints. QDIP Core evaluates them; Observatory makes the result inspectable.</p></div>
+    <aside className="studio-sidebar" aria-label="Studio workspace navigation">
+      <div className="studio-sidebar-intro"><small>DECISION WORKSPACE</small><h2>Build decision systems</h2><p>Configure reusable decision profiles, connect evidence sources and validate contracts before evaluation.</p></div>
       <StudioNav />
-      <div className="studio-sidebar-footer"><small>QDIP decision intelligence</small></div>
+      <div className="studio-sidebar-footer"><span>QDIP Studio</span><small>Configuration · validation · evaluation</small></div>
     </aside>
-    <div className="studio-workspace"><main className="studio-main" id="main-content" tabIndex={-1}>{children}</main></div>
+    <div className="studio-workspace"><main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main></div>
   </DesignSystemProvider>;
 }
