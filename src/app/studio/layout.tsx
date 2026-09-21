@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
@@ -24,7 +24,11 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
           </StatusBadge>
         }
         productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
-        utilities={<StudioLanguageSwitcher />}
+        utilities={
+          <Suspense fallback={<div className="studio-language-switcher" aria-hidden><span>EN</span><span>UA</span><span>PL</span></div>}>
+            <StudioLanguageSwitcher />
+          </Suspense>
+        }
       />
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
         <div className="studio-sidebar-intro">
@@ -32,7 +36,9 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
           <h2>Model · connect · validate</h2>
           <p>Configure the decision model and its evidence contracts.</p>
         </div>
-        <StudioNav />
+        <Suspense fallback={null}>
+          <StudioNav />
+        </Suspense>
         <div className="studio-sidebar-footer">
           <span>QDIP Studio</span>
           <small>Decision system workspace</small>
