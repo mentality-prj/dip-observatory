@@ -268,3 +268,76 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     '2 teams. 2 communities. 20 opening needs. 5 days.'
   )
 })
+
+
+test('capacity gap handles success and non-JSON backend errors', async ({ page }) => {
+  let capacityCalls = 0
+
+  await page.route('**/api/resource-allocation/run', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        operation: 'simulate',
+        scenario: {},
+        result: allocationResult,
+      }),
+    })
+  })
+
+  await page.route('**/api/resource-allocation/capacity-gap', async (route) => {
+    capacityCalls += 1
+    if (capacityCalls === 1) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          operation: 'capacity_gap',
+          current: { priority_coverage: 0.86 },
+          target_priority_coverage: 0.9,
+          gap_to_target: 0.04,
+          target_status: 'gap',
+          minimum_capacity_to_target: [
+            {
+              resource: 'psychosocial',
+              extra_team_equivalents: 1,
+              added_capacity: 16,
+              priority_coverage: 0.91,
+              delta_priority_coverage: 0.05,
+              marginal_gain: 0.05,
+              diminishing_returns: false,
+              target_reached: true,
+            },
+          ],
+          bottlenecks: [],
+          marginal_scenarios: [],
+        }),
+      })
+      return
+    }
+
+    await route.fulfill({
+      status: 502,
+      contentType: 'text/plain',
+      body: 'An error occurred while executing capacity analysis',
+    })
+  })
+
+  await page.goto('/en/resource-allocation')
+  await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
+
+  const analyze = page.getByRole('button', {
+    name: 'Analyze capacity needed for 90% priority coverage',
+  })
+
+  await analyze.click()
+  await expect(page.getByText('Gap to target')).toBeVisible()
+  await expect(page.getByText('psychosocial')).toBeVisible()
+
+  await analyze.click()
+  await expect(
+    page.getByText('An error occurred while executing capacity analysis')
+  ).toBeVisible()
+  await expect(page.getByText(/Unexpected token/)).toHaveCount(0)
+})
