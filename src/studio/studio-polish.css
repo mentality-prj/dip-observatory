@@ -9,24 +9,24 @@
 
 /* Align the product lockup with the icon rail inside the 228px Studio sidebar. */
 .studio-shell .ds-product-header-inner {
-  position: relative;
   max-width: none;
   gap: 0;
   padding: 0 var(--ds-space-4) 0 22px;
 }
 
-/* Reserve the top of the lockup for a compact connection status. */
+/* Keep the connection status directly to the right of Studio.qdip,
+   optically raised above the logo baseline. */
 .studio-shell .ds-product-lockup {
-  transform: translateY(7px);
+  transform: none;
 }
 
 .studio-shell .ds-product-header-center {
-  position: absolute;
-  top: 3px;
-  left: 22px;
+  position: static;
   width: auto;
   min-width: 0;
-  flex: none;
+  flex: 0 0 auto;
+  margin-left: 4px;
+  transform: translateY(-8px);
 }
 
 .studio-core-status {
@@ -76,11 +76,8 @@
   .studio-shell .ds-product-header-inner {
     padding-inline: var(--ds-space-3);
   }
-  .studio-shell .ds-product-lockup {
-    transform: none;
-  }
   .studio-shell .ds-product-header-center {
-    position: static;
+    transform: none;
   }
   .studio-core-status {
     display: none;
