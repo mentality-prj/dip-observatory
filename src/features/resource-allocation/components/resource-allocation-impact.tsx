@@ -28,7 +28,8 @@ const labels = {
       'Поточний розподіл не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
     current: 'Якщо на весь період залишити поточний розподіл без змін',
     recommended: 'Рекомендований план QDIP',
-    priorityHelp: 'Частка critical/high-priority одиниць потреб, які модельований план дозволяє обслужити протягом обраного періоду.',
+    priorityHelp:
+      'Частка critical/high-priority одиниць потреб, які модельований план дозволяє обслужити протягом обраного періоду.',
     moveEvents: 'Переміщень за весь період',
     scenario: 'Модельована оцінка для планового сценарію.',
     unavailable: 'поточний план не оцінено',
@@ -72,7 +73,8 @@ const labels = {
       'Bieżącej alokacji nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
     current: 'Pozostaw bieżący przydział bez zmian przez cały horyzont',
     recommended: 'Rekomendowany plan QDIP',
-    priorityHelp: 'Udział jednostek potrzeb krytycznych i wysokiego priorytetu, które modelowany plan może obsłużyć w wybranym horyzoncie.',
+    priorityHelp:
+      'Udział jednostek potrzeb krytycznych i wysokiego priorytetu, które modelowany plan może obsłużyć w wybranym horyzoncie.',
     moveEvents: 'Przemieszczenia w całym horyzoncie',
     scenario: 'Modelowana ocena dla scenariusza planowania.',
     unavailable: 'bieżący plan nieoceniony',
@@ -100,13 +102,13 @@ export function ResourceAllocationImpact({
   const t = labels[locale]
   const compared = Boolean(baseline)
   return (
-    <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
         {compared ? t.compareKicker : t.recommendationKicker}
       </div>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-xl font-black sm:text-2xl">{compared ? t.compareTitle : t.recommendationTitle}</h3>
+          <h3 className="text-xl font-medium sm:text-2xl">{compared ? t.compareTitle : t.recommendationTitle}</h3>
           {!compared && <p className="mt-2 max-w-4xl text-sm text-slate-500">{t.recommendationSubtitle}</p>}
         </div>
         <div className="min-w-0 text-left sm:text-right">
@@ -134,9 +136,7 @@ export function ResourceAllocationImpact({
           </div>
           <p className="mt-2 text-xs text-slate-600">
             {t.scenario}
-            {planningDays
-              ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}`
-              : ''}
+            {planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}
           </p>
         </>
       )}

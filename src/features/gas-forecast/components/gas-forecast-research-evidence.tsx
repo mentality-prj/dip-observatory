@@ -18,14 +18,23 @@ export function GasForecastResearchEvidence({ evidence }: { evidence: ResearchEv
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+        <section className="border-b border-white/10 pb-5" aria-label="Research recommendation">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Recommendation</p>
+          <strong className={`mt-2 block text-2xl font-medium tracking-[-.025em] ${evidence.procurementEligible ? 'ds-state-success' : 'ds-state-blocked'}`}>
+            {evidence.procurementEligible ? 'PROCUREMENT ELIGIBLE' : 'PROCUREMENT NOT ELIGIBLE'}
+          </strong>
+          <p className="mt-2 text-sm text-slate-400">
+            Research gate {evidence.researchGate} · recommendation remains tied to the measured evidence below.
+          </p>
+        </section>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="border-t border-white/10 py-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">baseline_last · MAE</p>
-            <p className="mt-2 text-xl font-semibold text-white">{metric(evidence.baselineLastMae, ' €/MWh')}</p>
+            <p className="mt-2 text-xl font-medium text-white">{metric(evidence.baselineLastMae, ' €/MWh')}</p>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="border-t border-white/10 py-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Ridge · MAE</p>
-            <p className="mt-2 text-xl font-semibold text-white">{metric(evidence.ridgeMae, ' €/MWh')}</p>
+            <p className="mt-2 text-xl font-medium text-white">{metric(evidence.ridgeMae, ' €/MWh')}</p>
           </div>
         </div>
         <p className="text-sm text-slate-300">

@@ -2,14 +2,20 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Table } from '@/design-system'
+import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { studioHref } from '@/lib/platform-urls'
 import { studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from './contracts'
 import { ProfileEditor } from './profile-editor'
 import { ProfileRunner } from './profile-runner'
 import { Breadcrumbs, dimensionSource, profileSections, sectionLabel, type ProfileSection } from './presentation'
+import { studioLocaleFromPath } from './studio-locale'
 
 export function ProfileDetail({ id, section }: { id: string; section: ProfileSection }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
   const [data, setData] = useState<{ profile: ProfileView; dimensions: Dimension[]; plugins: Plugin[] } | null>(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -48,19 +54,19 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         ) : (
           <p role="status">Loading profile…</p>
         )}
-        <Link href={studioHref('profiles')}>Decision Profiles</Link>
+        <Link href={studioHref('profiles', locale)}>Decision Profiles</Link>
       </>
     )
   const { profile, dimensions, plugins } = data
   const plugin = plugins.find((p) => p.name === profile.plugin_id)
   const pluginName = plugin?.ui?.label ?? profile.plugin_id
-  const base = studioHref(`profiles/${encodeURIComponent(id)}`)
+  const base = studioHref(`profiles/${encodeURIComponent(id)}`, locale)
   const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== 'validation')) as Profile
   return (
     <>
       <Breadcrumbs
         items={[
-          { label: 'Decision Profiles', href: studioHref('profiles') },
+          { label: 'Decision Profiles', href: studioHref('profiles', locale) },
           { label: profile.name, href: base },
           { label: sectionLabel(section) },
         ]}
@@ -72,6 +78,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         </div>
         <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? 'Active' : 'Draft'}</Badge>
       </div>
+      <DecisionWorkflow locale={locale} tone="light" compact />
       <nav aria-label="Profile sections" className="studio-profile-nav">
         {profileSections.map((tab) => (
           <Link
@@ -200,25 +207,43 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
           </p>
         </>
       )}
-      <ProfileEditor
-        key={`${profile.id}-${profile.version}`}
-        initial={clean}
-        existing
-        plugins={plugins}
-        dimensions={dimensions}
-        section={section}
-        filter={
-          section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined
-        }
-        onSave={async (next) => {
-          const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, {
-            method: 'PATCH',
-            body: JSON.stringify(next),
-          })
-          setData({ ...data, profile: saved })
-          setMessage(`Profile ${next.name} saved at version ${next.version}.`)
-        }}
-      />
+      <div className="studio-editor-layout">
+        <div className="studio-profile-canvas">
+          <ProfileEditor
+            key={`${profile.id}-${profile.version}`}
+            initial={clean}
+            existing
+            plugins={plugins}
+            dimensions={dimensions}
+            section={section}
+            filter={
+              section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined
+            }
+            onSave={async (next) => {
+              const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                body: JSON.stringify(next),
+              })
+              setData({ ...data, profile: saved })
+              setMessage(`Profile ${next.name} saved at version ${next.version}.`)
+            }}
+          />
+        </div>
+        <aside className="studio-context-inspector" aria-label="Decision model context">
+          <h2>Decision model context</h2>
+          <dl>
+            <dt>Profile</dt><dd>{profile.name}</dd>
+            <dt>Version</dt><dd>{profile.version}</dd>
+            <dt>Section</dt><dd>{sectionLabel(section)}</dd>
+            <dt>Plugin</dt><dd>{pluginName}</dd>
+            <dt>Validation</dt><dd>{profile.validation.status}</dd>
+          </dl>
+          <p>
+            This inspector stays secondary to the model canvas. Constraints, dimensions, policies and evidence bindings
+            remain parts of one decision system rather than separate CRUD screens.
+          </p>
+        </aside>
+      </div>
     </>
   )
 }

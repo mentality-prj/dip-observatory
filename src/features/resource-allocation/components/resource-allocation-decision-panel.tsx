@@ -118,7 +118,8 @@ const copy = {
     refresh: 'Оновити історію',
     target: 'Бажане покриття пріоритетних потреб',
     currentCoverage: 'Поточне покриття',
-    decisionHelp: 'Оберіть план, який буде виконуватися. QDIP автоматично збереже стан даних, рекомендацію та ваше рішення.',
+    decisionHelp:
+      'Оберіть план, який буде виконуватися. QDIP автоматично збереже стан даних, рекомендацію та ваше рішення.',
     outcome: 'ФАКТИЧНИЙ РЕЗУЛЬТАТ',
     outcomeTitle: 'Що сталося після виконання плану?',
     outcomeHelp: 'Внесіть фактичні показники. QDIP не підмінює факт прогнозом.',
@@ -156,8 +157,7 @@ const copy = {
     reached: 'Target reached',
     gapStatus: 'Capacity gap',
     already: 'Current coverage already meets the selected target. No additional capacity is required.',
-    notEnough:
-      'The tested resource additions do not reach the selected target. Review the binding constraints below.',
+    notEnough: 'The tested resource additions do not reach the selected target. Review the binding constraints below.',
     additions: 'Minimum tested additions that reach the target',
     teamEq: 'team eq.',
     capacityUnit: 'capacity',
@@ -192,7 +192,8 @@ const copy = {
     refresh: 'Refresh history',
     target: 'Desired priority-needs coverage',
     currentCoverage: 'Current coverage',
-    decisionHelp: 'Choose the plan that will be executed. QDIP automatically stores the data state, recommendation and your decision.',
+    decisionHelp:
+      'Choose the plan that will be executed. QDIP automatically stores the data state, recommendation and your decision.',
     outcome: 'ACTUAL RESULT',
     outcomeTitle: 'What happened after the plan was executed?',
     outcomeHelp: 'Enter the actual results. QDIP does not substitute the forecast for the observed outcome.',
@@ -257,8 +258,7 @@ const copy = {
     record: 'Zapisz rzeczywisty wynik',
     recording: 'Zapisywanie…',
     completed: 'Decyzja zakończona.',
-    completedText:
-      'QDIP zapisał rekomendację, decyzję menedżera i rzeczywisty wynik w jednej historii decyzji.',
+    completedText: 'QDIP zapisał rekomendację, decyzję menedżera i rzeczywisty wynik w jednej historii decyzji.',
     timeline: 'HISTORIA DECYZJI',
     proposed: 'Rekomendacja zapisana',
     actual: 'Wynik rzeczywisty zapisany',
@@ -267,7 +267,8 @@ const copy = {
     refresh: 'Odśwież historię',
     target: 'Docelowe pokrycie potrzeb priorytetowych',
     currentCoverage: 'Bieżące pokrycie',
-    decisionHelp: 'Wybierz plan, który ma zostać wykonany. QDIP automatycznie zapisze stan danych, rekomendację i Twoją decyzję.',
+    decisionHelp:
+      'Wybierz plan, który ma zostać wykonany. QDIP automatycznie zapisze stan danych, rekomendację i Twoją decyzję.',
     outcome: 'WYNIK RZECZYWISTY',
     outcomeTitle: 'Co wydarzyło się po wykonaniu planu?',
     outcomeHelp: 'Wprowadź rzeczywiste wyniki. QDIP nie zastępuje faktu prognozą.',
@@ -443,10 +444,7 @@ export function ResourceAllocationDecisionPanel({
           : selected
       }
       if (status === 'rejected') body.reason = reason.trim()
-      await post(
-        `/api/resource-allocation/decisions/${encodeURIComponent(created.decision_id)}/feedback`,
-        body
-      )
+      await post(`/api/resource-allocation/decisions/${encodeURIComponent(created.decision_id)}/feedback`, body)
       await loadDecision(created.decision_id)
       trackResourceAllocation(
         status === 'accepted'
@@ -480,7 +478,13 @@ export function ResourceAllocationDecisionPanel({
       !Number.isFinite(unmetActual) ||
       unmetActual < 0
     ) {
-      setError(locale === 'uk' ? 'Введіть коректні фактичні показники.' : locale === 'pl' ? 'Wprowadź poprawne rzeczywiste wyniki.' : 'Enter valid actual outcome values.')
+      setError(
+        locale === 'uk'
+          ? 'Введіть коректні фактичні показники.'
+          : locale === 'pl'
+            ? 'Wprowadź poprawne rzeczywiste wyniki.'
+            : 'Enter valid actual outcome values.'
+      )
       return
     }
     setBusy('outcome')
@@ -543,138 +547,143 @@ export function ResourceAllocationDecisionPanel({
   const status = record?.status ?? lifecycle?.status
   return (
     <div className="grid min-w-0 max-w-full gap-5">
-      <details data-testid="capacity-gap-details" className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 text-white">
+      <details
+        data-testid="capacity-gap-details"
+        className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-slate-950/70 text-white"
+      >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-6">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.capacity}</div>
-            <h3 className="mt-2 text-xl font-black">{t.capacityTitle}</h3>
+            <h3 className="mt-2 text-xl font-medium">{t.capacityTitle}</h3>
           </div>
           <Gauge className="h-6 w-6" />
         </summary>
         <div className="border-t border-white/10 p-6 pt-5">
-        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <label className="text-sm">
-            <span className="block text-white/55">{t.target}</span>
-            <select
-              value={targetCoverage}
-              onChange={(event) => {
-                setTargetCoverage(Number(event.target.value))
-                setCapacity(null)
-              }}
-              className="mt-2 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+            <label className="text-sm">
+              <span className="block text-white/55">{t.target}</span>
+              <select
+                value={targetCoverage}
+                onChange={(event) => {
+                  setTargetCoverage(Number(event.target.value))
+                  setCapacity(null)
+                }}
+                className="mt-2 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+              >
+                {[0.8, 0.9, 0.95, 1].map((value) => (
+                  <option key={value} value={value}>
+                    {Math.round(value * 100)}%
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={capacityGap}
+              className="border border-white/25 px-4 py-3 text-sm font-bold disabled:opacity-40"
             >
-              {[0.8, 0.9, 0.95, 1].map((value) => (
-                <option key={value} value={value}>
-                  {Math.round(value * 100)}%
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            disabled={Boolean(busy)}
-            onClick={capacityGap}
-            className="border border-white/25 px-4 py-3 text-sm font-bold disabled:opacity-40"
-          >
-            {busy === 'capacity' ? t.analyzing : t.analyze}
-          </button>
-        </div>
-        <div className="mt-3 text-xs text-white/45">
-          {t.currentCoverage}: <b className="text-white">{Math.round(priorityCoverage * 100)}%</b>
-        </div>
-        {capacity && (
-          <div className="mt-5 space-y-4 text-sm">
-            {capacity.status === 'infeasible' ? (
-              <div className="border border-rose-300/40 p-4 text-rose-200">{t.infeasible}</div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border border-white/15 p-3">
-                    <span className="text-white/50">{t.gap}</span>
-                    <b className="mt-1 block text-xl">{Math.round((capacity.gap_to_target ?? 0) * 100)} pp</b>
+              {busy === 'capacity' ? t.analyzing : t.analyze}
+            </button>
+          </div>
+          <div className="mt-3 text-xs text-white/45">
+            {t.currentCoverage}: <b className="text-white">{Math.round(priorityCoverage * 100)}%</b>
+          </div>
+          {capacity && (
+            <div className="mt-5 space-y-4 text-sm">
+              {capacity.status === 'infeasible' ? (
+                <div className="border border-rose-300/40 p-4 text-rose-200">{t.infeasible}</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="border border-white/15 p-3">
+                      <span className="text-white/50">{t.gap}</span>
+                      <b className="mt-1 block text-xl">{Math.round((capacity.gap_to_target ?? 0) * 100)} pp</b>
+                    </div>
+                    <div className="border border-white/15 p-3">
+                      <span className="text-white/50">{t.status}</span>
+                      <b className="mt-1 block text-xl">
+                        {capacity.target_status === 'already_met' ? t.reached : t.gapStatus}
+                      </b>
+                    </div>
                   </div>
-                  <div className="border border-white/15 p-3">
-                    <span className="text-white/50">{t.status}</span>
-                    <b className="mt-1 block text-xl">
-                      {capacity.target_status === 'already_met' ? t.reached : t.gapStatus}
-                    </b>
-                  </div>
-                </div>
-                {capacity.target_status === 'already_met' && (
-                  <div className="border-l-2 border-emerald-400 pl-3">
-                    {locale === 'uk'
-                      ? `Поточне покриття вже досягає ${Math.round(targetCoverage * 100)}%. Додаткові ресурси не потрібні.`
-                      : locale === 'pl'
-                        ? `Bieżące pokrycie już osiąga ${Math.round(targetCoverage * 100)}%. Dodatkowe zasoby nie są potrzebne.`
-                        : `Current coverage already reaches ${Math.round(targetCoverage * 100)}%. No additional resources are required.`}
-                  </div>
-                )}
-                {capacity.target_status === 'gap' && recommendations.length === 0 && (
-                  <div className="border-l-2 border-amber-300 pl-3">
-                    {locale === 'uk'
-                      ? `Навіть протестоване додавання ресурсів не забезпечує ${Math.round(targetCoverage * 100)}%. Нижче показані обмеження, які стримують результат.`
-                      : locale === 'pl'
-                        ? `Nawet testowane zwiększenie zasobów nie zapewnia ${Math.round(targetCoverage * 100)}%. Poniżej pokazano ograniczenia blokujące wynik.`
-                        : `The tested resource additions do not reach ${Math.round(targetCoverage * 100)}%. Review the binding constraints below.`}
-                  </div>
-                )}
-                {recommendations.length > 0 && (
-                  <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{t.additions}</div>
-                    <div className="space-y-2">
-                      {recommendations.map((item) => (
-                        <div key={`${item.resource}-${item.added_capacity}`} className="border border-white/15 p-3">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <b>{localizeService(item.resource, locale)}</b>
-                            <span>
-                              +{item.extra_team_equivalents} {t.teamEq} · +{item.added_capacity.toFixed(0)}{' '}
-                              {t.capacityUnit}
+                  {capacity.target_status === 'already_met' && (
+                    <div className="border-l-2 border-emerald-400 pl-3">
+                      {locale === 'uk'
+                        ? `Поточне покриття вже досягає ${Math.round(targetCoverage * 100)}%. Додаткові ресурси не потрібні.`
+                        : locale === 'pl'
+                          ? `Bieżące pokrycie już osiąga ${Math.round(targetCoverage * 100)}%. Dodatkowe zasoby nie są potrzebne.`
+                          : `Current coverage already reaches ${Math.round(targetCoverage * 100)}%. No additional resources are required.`}
+                    </div>
+                  )}
+                  {capacity.target_status === 'gap' && recommendations.length === 0 && (
+                    <div className="border-l-2 border-amber-300 pl-3">
+                      {locale === 'uk'
+                        ? `Навіть протестоване додавання ресурсів не забезпечує ${Math.round(targetCoverage * 100)}%. Нижче показані обмеження, які стримують результат.`
+                        : locale === 'pl'
+                          ? `Nawet testowane zwiększenie zasobów nie zapewnia ${Math.round(targetCoverage * 100)}%. Poniżej pokazano ograniczenia blokujące wynik.`
+                          : `The tested resource additions do not reach ${Math.round(targetCoverage * 100)}%. Review the binding constraints below.`}
+                    </div>
+                  )}
+                  {recommendations.length > 0 && (
+                    <div>
+                      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{t.additions}</div>
+                      <div className="space-y-2">
+                        {recommendations.map((item) => (
+                          <div key={`${item.resource}-${item.added_capacity}`} className="border border-white/15 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <b>{localizeService(item.resource, locale)}</b>
+                              <span>
+                                +{item.extra_team_equivalents} {t.teamEq} · +{item.added_capacity.toFixed(0)}{' '}
+                                {t.capacityUnit}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-xs text-white/50">
+                              {t.priority} {Math.round(item.priority_coverage * 100)}% · {t.improvement} +
+                              {(item.delta_priority_coverage * 100).toFixed(1)} pp
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {bindingBottlenecks.length > 0 && (
+                    <div>
+                      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">
+                        {t.bottlenecks}
+                      </div>
+                      {bindingBottlenecks.slice(0, 4).map((item) => (
+                        <div
+                          key={item.resource}
+                          className="grid grid-cols-[1fr_auto] gap-3 border-t border-white/10 py-2"
+                        >
+                          <span>
+                            {localizeService(item.resource, locale)}
+                            <span className="block text-xs text-white/45">
+                              {t.demand} {item.priority_demand.toFixed(0)} · {t.available}{' '}
+                              {item.available_capacity.toFixed(0)}
                             </span>
-                          </div>
-                          <div className="mt-1 text-xs text-white/50">
-                            {t.priority} {Math.round(item.priority_coverage * 100)}% · {t.improvement} +
-                            {(item.delta_priority_coverage * 100).toFixed(1)} pp
-                          </div>
+                          </span>
+                          <b className="text-right">
+                            {t.shortfall} {item.capacity_shortfall.toFixed(0)}
+                            <span className="block text-xs font-normal text-white/45">
+                              +{(item.first_increment_gain * 100).toFixed(1)} pp {t.firstTeam}
+                            </span>
+                          </b>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-                {bindingBottlenecks.length > 0 && (
-                  <div>
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{t.bottlenecks}</div>
-                    {bindingBottlenecks.slice(0, 4).map((item) => (
-                      <div
-                        key={item.resource}
-                        className="grid grid-cols-[1fr_auto] gap-3 border-t border-white/10 py-2"
-                      >
-                        <span>
-                          {localizeService(item.resource, locale)}
-                          <span className="block text-xs text-white/45">
-                            {t.demand} {item.priority_demand.toFixed(0)} · {t.available}{' '}
-                            {item.available_capacity.toFixed(0)}
-                          </span>
-                        </span>
-                        <b className="text-right">
-                          {t.shortfall} {item.capacity_shortfall.toFixed(0)}
-                          <span className="block text-xs font-normal text-white/45">
-                            +{(item.first_increment_gain * 100).toFixed(1)} pp {t.firstTeam}
-                          </span>
-                        </b>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </details>
-      <section className="order-1 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+      <section className="order-1 min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-6">
         <div className="text-xs font-bold uppercase tracking-wider text-rose-300">04 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-xl font-black">{t.decisionTitle}</h3>
+          <h3 className="text-xl font-medium">{t.decisionTitle}</h3>
           {status && <span className="border border-white/10 px-3 py-1 text-xs font-bold uppercase">{status}</span>}
         </div>
         {manualSelected && !lifecycle && (
@@ -698,12 +707,16 @@ export function ResourceAllocationDecisionPanel({
               </div>
               <div className="border border-white/10 p-3">
                 <div className="text-xs text-slate-500">{t.decisionMoved}</div>
-                <b className="mt-1 block text-xl">{teamsMoved} / {totalTeams}</b>
+                <b className="mt-1 block text-xl">
+                  {teamsMoved} / {totalTeams}
+                </b>
               </div>
               <div className="border border-white/10 p-3">
                 <div className="text-xs text-slate-500">{t.decisionMoveEvents}</div>
                 <b className="mt-1 block text-xl">{moveEvents}</b>
-                <div className="mt-1 text-[10px] text-slate-600">{planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}</div>
+                <div className="mt-1 text-[10px] text-slate-600">
+                  {planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}
+                </div>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -766,11 +779,7 @@ export function ResourceAllocationDecisionPanel({
                   onClick={() => void decide(decisionIntent === 'modify' ? 'modified' : 'rejected')}
                   className="mt-3 bg-rose-500 px-4 py-3 text-sm font-bold text-white disabled:opacity-40"
                 >
-                  {busy
-                    ? t.snapshotBusy
-                    : decisionIntent === 'modify'
-                      ? t.confirmModify
-                      : t.confirmReject}
+                  {busy ? t.snapshotBusy : decisionIntent === 'modify' ? t.confirmModify : t.confirmReject}
                 </button>
               </div>
             )}
@@ -778,8 +787,18 @@ export function ResourceAllocationDecisionPanel({
         ) : (
           <>
             <div className="mt-4 border-l-2 border-emerald-400 pl-3 text-sm text-emerald-200">
-              <b>{status === 'rejected' ? t.reject : status === 'modified' ? (manualSelected ? t.modify : t.alternative) : t.accept}</b>
-              <div className="mt-1 text-xs text-slate-500">{t.decisionId} · {lifecycle.decisionId}</div>
+              <b>
+                {status === 'rejected'
+                  ? t.reject
+                  : status === 'modified'
+                    ? manualSelected
+                      ? t.modify
+                      : t.alternative
+                    : t.accept}
+              </b>
+              <div className="mt-1 text-xs text-slate-500">
+                {t.decisionId} · {lifecycle.decisionId}
+              </div>
             </div>
             {status && ['accepted', 'modified'].includes(status) && (
               <>
@@ -884,9 +903,22 @@ export function ResourceAllocationDecisionPanel({
                     <div className="bg-slate-950/60 p-2" />
                     <div className="bg-slate-950/60 p-2 font-bold">{t.forecast}</div>
                     <div className="bg-slate-950/60 p-2 font-bold">{t.actualValue}</div>
-                    <MetricCompare label={t.decisionCoverage} forecast={priorityCoverage} actual={record.outcomes.at(-1)?.metrics?.priority_coverage} percentage />
-                    <MetricCompare label={t.decisionServed} forecast={served} actual={record.outcomes.at(-1)?.metrics?.served} />
-                    <MetricCompare label={t.decisionUnmet} forecast={unmet} actual={record.outcomes.at(-1)?.metrics?.closing_unmet} />
+                    <MetricCompare
+                      label={t.decisionCoverage}
+                      forecast={priorityCoverage}
+                      actual={record.outcomes.at(-1)?.metrics?.priority_coverage}
+                      percentage
+                    />
+                    <MetricCompare
+                      label={t.decisionServed}
+                      forecast={served}
+                      actual={record.outcomes.at(-1)?.metrics?.served}
+                    />
+                    <MetricCompare
+                      label={t.decisionUnmet}
+                      forecast={unmet}
+                      actual={record.outcomes.at(-1)?.metrics?.closing_unmet}
+                    />
                   </div>
                 )}
               </div>
@@ -908,10 +940,7 @@ export function ResourceAllocationDecisionPanel({
                   </button>
                 </div>
                 <div className="mt-4 space-y-4 border-l border-white/15 pl-4">
-                  <TimelineItem
-                    title={t.proposed}
-                    time={formatTimestamp(record.created_at, locale)}
-                  />
+                  <TimelineItem title={t.proposed} time={formatTimestamp(record.created_at, locale)} />
                   {record.feedback.map((item, index) => (
                     <TimelineItem
                       key={`${item.timestamp}-${index}`}

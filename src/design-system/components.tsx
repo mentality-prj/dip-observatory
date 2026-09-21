@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 export type DesignTheme = 'green' | 'cyan' | 'emerald' | 'amber' | 'burgundy' | 'rose' | 'violet'
 export type DesignMode = 'dark' | 'light'
 export type ProductName = 'Studio' | 'Observatory'
-export type ProductSwitch = { href: string; label: string }
+export type ProductSwitch = { href: string; label: string; icon?: ReactNode }
 
 export function DesignSystemProvider({
   theme,
@@ -50,10 +50,11 @@ export function ProductLockup({
   )
 }
 
-export function ProductSwitchLink({ href, label }: ProductSwitch) {
+export function ProductSwitchLink({ href, label, icon }: ProductSwitch) {
   return (
     <Link className="ds-product-switch-link" href={href}>
-      {label} <span aria-hidden>↗</span>
+      {icon ? <span className="ds-product-switch-icon" aria-hidden>{icon}</span> : null}
+      <span>{label}</span>
     </Link>
   )
 }
@@ -74,7 +75,7 @@ export function ProductHeader({
   product: ProductName
   navigation?: ReactNode
   siteLink?: ProductSwitch
-  productSwitch: ProductSwitch
+  productSwitch?: ProductSwitch
   status?: ReactNode
   utilities?: ReactNode
   className?: string
@@ -91,8 +92,8 @@ export function ProductHeader({
         <div className="ds-product-header-actions">
           {status}
           {siteLink ? <ProductSwitchLink {...siteLink} /> : null}
+          {productSwitch ? <ProductSwitchLink {...productSwitch} /> : null}
           {utilities}
-          <ProductSwitchLink {...productSwitch} />
         </div>
       </div>
     </header>

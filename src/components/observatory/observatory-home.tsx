@@ -57,16 +57,16 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
 
         <section className="mt-10" aria-labelledby="observatory-inspection-model">
           <h2 id="observatory-inspection-model" className="text-xs font-semibold uppercase tracking-[.2em] text-slate-500">{t.inspectLabel}</h2>
-          <div className="mt-5 grid overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 lg:grid-cols-[1.4fr_.8fr]">
+          <div className="mt-5 grid overflow-hidden rounded-xl border border-white/10 bg-slate-950/70 lg:grid-cols-[1.4fr_.8fr]">
             <div className="border-b border-white/10 p-6 md:p-8 lg:border-b-0 lg:border-r">
               <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-cyan-300">{t.recommendation}</span>
               <div className="mt-4 flex flex-wrap items-end justify-between gap-5">
                 <div><strong className="text-3xl font-medium tracking-[-.035em] md:text-4xl">{t.recommended}</strong><p className="mt-2 text-sm text-slate-400">{t.confidence}</p></div>
-                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-xs text-emerald-300">{t.recommendedLabel}</span>
+                <span className="ds-state-chip-selected rounded-full border px-3 py-1 text-xs">{t.recommendedLabel}</span>
               </div>
               <div className="mt-8 border-t border-white/10 pt-5">
                 <span className="text-xs font-semibold uppercase tracking-[.16em] text-slate-500">{t.alternatives}</span>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">{t.alternativeItems.map(([name, reason]) => <div key={name} className="rounded-xl border border-white/8 bg-white/[.025] p-4"><strong className="text-sm font-medium text-slate-200">{name}</strong><span className="mt-1 block text-xs text-slate-500">{reason}</span></div>)}</div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">{t.alternativeItems.map(([name, reason]) => <div key={name} className="rounded-lg border-t border-white/8 bg-transparent p-4"><strong className="text-sm font-medium text-slate-200">{name}</strong><span className="mt-1 block text-xs text-slate-500">{reason}</span></div>)}</div>
               </div>
               <details className="mt-5 border-t border-white/10 pt-4 group">
                 <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-cyan-200">{t.trace}<ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary>
@@ -87,7 +87,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
 
         <section className="mt-16 border-t border-white/10 pt-10" aria-labelledby="observatory-inspect">
           <h2 id="observatory-inspect" className="text-xs font-semibold uppercase tracking-[.2em] text-slate-500">{t.inspect}</h2>
-          <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-2 xl:grid-cols-4">{t.questions.map(([title, body], index) => <div key={title} className="bg-slate-950/80 p-6"><div className="text-xs font-semibold text-cyan-300">0{index + 1}</div><h3 className="mt-4 text-base font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{body}</p></div>)}</div>
+          <div className="mt-6 grid gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-4">{t.questions.map(([title, body], index) => <div key={title} className="border-t border-white/10 pt-5"><div className="text-xs font-semibold text-cyan-300">0{index + 1}</div><h3 className="mt-4 text-base font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-500">{body}</p></div>)}</div>
           <p className="mt-6 max-w-4xl text-sm leading-6 text-slate-500">{t.note}</p>
         </section>
       </div>

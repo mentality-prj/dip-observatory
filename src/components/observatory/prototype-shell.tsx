@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useTransition } from 'react'
-import { ChevronRight, Home } from 'lucide-react'
+import { ChevronRight, Globe2, Home, Menu, SlidersHorizontal } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
@@ -15,9 +15,9 @@ type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: 
 const LOCALES: Locale[] = ['en', 'uk', 'pl']
 const LABEL: Record<Locale, string> = { en: 'EN', pl: 'PL', uk: 'UA' }
 const STUDIO_LABEL: Record<Locale, string> = {
-  en: 'Configure in Studio',
-  uk: 'Налаштувати в Studio',
-  pl: 'Konfiguruj w Studio',
+  en: 'Open Studio',
+  uk: 'Відкрити Studio',
+  pl: 'Otwórz Studio',
 }
 
 export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeShellProps) {
@@ -52,18 +52,29 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
     </nav>
   )
   const utilities = (
-    <div className={styles.locale} aria-label="Language">
-      {LOCALES.map((option) => (
-        <button
-          key={option}
-          type="button"
-          disabled={pending}
-          onClick={() => changeLocale(option)}
-          aria-current={option === locale ? 'page' : undefined}
-        >
-          {LABEL[option]}
-        </button>
-      ))}
+    <div className={styles.localeControls}>
+      <div className={styles.locale} aria-label="Language">
+        {LOCALES.map((option) => (
+          <button
+            key={option}
+            type="button"
+            disabled={pending}
+            onClick={() => changeLocale(option)}
+            aria-current={option === locale ? 'page' : undefined}
+          >
+            {LABEL[option]}
+          </button>
+        ))}
+      </div>
+      <label className={styles.localeSelect}>
+        <Globe2 aria-hidden />
+        <span className="sr-only">Language</span>
+        <select value={locale} disabled={pending} onChange={(event) => changeLocale(event.target.value as Locale)}>
+          {LOCALES.map((option) => (
+            <option key={option} value={option}>{LABEL[option]}</option>
+          ))}
+        </select>
+      </label>
     </div>
   )
   return (
@@ -74,8 +85,19 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       brandHref={marketingHref(locale)}
       product="Observatory"
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
-      mobileNavigation={<div className={styles.mobileNavigation}>{nav}</div>}
-      productSwitch={{ href: studioHref(), label: STUDIO_LABEL[locale] }}
+      mobileNavigation={
+        <details className={styles.mobileMenu}>
+          <summary><Menu aria-hidden /> <span>Applications</span></summary>
+          <div className={styles.mobileNavigation}>
+            {nav}
+            <Link className={styles.mobileProductLink} href={studioHref('', locale)}>
+              <SlidersHorizontal size={15} aria-hidden />
+              {STUDIO_LABEL[locale]}
+            </Link>
+          </div>
+        </details>
+      }
+      productSwitch={{ href: studioHref('', locale), label: STUDIO_LABEL[locale], icon: <SlidersHorizontal size={15} /> }}
       utilities={utilities}
     >
       <div className={styles.stage}>

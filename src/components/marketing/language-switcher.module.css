@@ -1,37 +1,102 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+}
+
 .root {
   display: flex;
-  gap: var(--ds-space-1);
-  padding: var(--ds-space-1);
-  border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-control);
-  background: var(--ds-surface-raised);
+  gap: 2px;
 }
+
 .root a {
   display: grid;
   min-width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: calc(var(--ds-radius-control) - 4px);
+  border-radius: var(--ds-radius-action);
   color: var(--ds-text-muted) !important;
   font-size: var(--ds-text-xs) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   letter-spacing: 0 !important;
   text-decoration: none;
 }
+
 .root a:hover {
   color: var(--ds-accent) !important;
   background: var(--ds-hover);
 }
+
 .root a[aria-current='page'] {
-  color: var(--ds-accent-contrast) !important;
-  background: var(--ds-accent);
+  color: var(--ds-accent) !important;
+  background: rgb(var(--ds-accent-rgb) / 0.08);
 }
-.root a:focus-visible {
+
+.root a:focus-visible,
+.mobile summary:focus-visible,
+.mobile a:focus-visible {
   outline: 3px solid var(--ds-focus);
   outline-offset: 2px;
 }
+
+.mobile {
+  display: none;
+  position: relative;
+}
+
+.mobile summary {
+  display: grid;
+  min-width: 42px;
+  min-height: var(--ds-header-control-height);
+  place-items: center;
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-action);
+  color: var(--ds-text-muted);
+  background: var(--ds-surface-raised);
+  font-size: var(--ds-text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mobile summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile > div {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  min-width: 72px;
+  padding: 4px;
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-panel);
+  background: var(--ds-surface-raised);
+  box-shadow: var(--ds-shadow-card);
+}
+
+.mobile a {
+  padding: 8px 10px;
+  border-radius: var(--ds-radius-action);
+  color: var(--ds-text-muted);
+  font-size: var(--ds-text-xs);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mobile a:hover,
+.mobile a[aria-current='page'] {
+  color: var(--ds-accent);
+  background: var(--ds-hover);
+}
+
 @media (max-width: 600px) {
-  .root a {
-    min-width: 30px;
+  .root {
+    display: none;
+  }
+
+  .mobile {
+    display: block;
   }
 }

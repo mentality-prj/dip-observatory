@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, ProductShell } from '@/design-system'
 import { observatoryHref, studioHref } from '@/lib/platform-urls'
 import { studioRequest, type Audit } from './contracts'
@@ -41,7 +42,7 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
       className="observatory-shell observatory-audit min-h-screen text-white"
       href={observatoryHref()}
       product="Observatory"
-      productSwitch={{ href: studioHref(), label: 'Open Studio' }}
+      productSwitch={{ href: studioHref(), label: 'Open Studio', icon: <SlidersHorizontal size={15} /> }}
     >
       <div className="observatory-audit-layout">
         <aside className="observatory-audit-sidebar">
@@ -50,7 +51,7 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
           <nav>
             <Link href={observatoryHref()}>Scenario Observatory</Link>
             <Link href={observatoryHref('decisions')}>Decision audit</Link>
-            <Link href={studioHref()}>Decision Studio ↗</Link>
+            <Link href={studioHref()}>Decision Studio</Link>
           </nav>
         </aside>
         <main id="main-content" tabIndex={-1} className="observatory-audit-main studio-main">

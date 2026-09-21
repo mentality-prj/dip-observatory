@@ -43,7 +43,7 @@
   gap: var(--ds-space-6);
   padding: var(--ds-space-8);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: var(--ds-radius-card);
+  border-radius: var(--ds-radius-marketing);
   background:
     radial-gradient(circle at 70% 20%, rgb(var(--ds-accent-rgb) / 0.18), transparent 34%), rgba(255, 255, 255, 0.045);
   box-shadow: var(--ds-shadow-card);

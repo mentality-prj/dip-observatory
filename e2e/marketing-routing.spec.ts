@@ -18,7 +18,7 @@ test.describe('current marketing demo routing', () => {
       for (const [title, path] of demos) {
         await expect(page.getByRole('link', { name: `Open ${title}` })).toHaveAttribute(
           'href',
-          `https://observatory.qdip.ai/en${path}`
+          `https://observatory.qdip.ai/${locale}${path}`
         )
       }
     })

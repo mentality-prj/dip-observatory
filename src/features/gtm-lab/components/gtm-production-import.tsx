@@ -101,8 +101,8 @@ export function GtmProductionImport({ onEvaluated }: Props) {
     <section className="mt-6 border border-white/10 bg-white/[.03] p-5" aria-labelledby="gtm-production-import">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <span className="text-[10px] font-black tracking-[.18em] text-sky-300">IMPORTED DATA</span>
-          <h2 id="gtm-production-import" className="mt-1 text-lg font-black">
+          <span className="text-[10px] font-semibold tracking-[.18em] text-sky-300">IMPORTED DATA</span>
+          <h2 id="gtm-production-import" className="mt-1 text-lg font-medium">
             Evaluate your prospect portfolio
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-400">

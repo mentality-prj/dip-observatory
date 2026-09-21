@@ -7,9 +7,9 @@ const badgeVariants = cva('ds-badge', {
   variants: {
     variant: {
       neutral: 'ds-badge-neutral',
-      cyan: 'ds-badge-accent',
-      emerald: 'ds-badge-accent',
-      amber: 'ds-badge-accent',
+      cyan: 'ds-badge-info',
+      emerald: 'ds-badge-success',
+      amber: 'ds-badge-risk',
       rose: 'ds-badge-danger',
     },
   },

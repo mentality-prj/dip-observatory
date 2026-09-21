@@ -14,13 +14,11 @@ const labels = {
     why: 'Why this recommendation?',
     reason: ['Fits the active constraints', 'Balances the configured priorities', 'Keeps the trade-offs visible'],
     gtmBody: 'Evaluate commercial opportunities against objectives, costs, evidence and uncertainty.',
-    gtmCta: 'Explore GTM Lab',
   },
   uk: {
     why: 'Чому ця рекомендація?',
     reason: ['Відповідає чинним обмеженням', 'Ураховує задані пріоритети', 'Показує компроміси між варіантами'],
     gtmBody: 'Оцінюйте комерційні можливості за цілями, витратами, доказами та невизначеністю.',
-    gtmCta: 'Відкрити GTM Lab',
   },
   pl: {
     why: 'Dlaczego ta rekomendacja?',
@@ -30,7 +28,6 @@ const labels = {
       'Pokazuje kompromisy między opcjami',
     ],
     gtmBody: 'Oceniaj możliwości komercyjne względem celów, kosztów, dowodów i niepewności.',
-    gtmCta: 'Poznaj GTM Lab',
   },
 } as const
 const patternOrder = Object.keys(DECISION_PATTERNS) as DecisionPatternId[]
@@ -38,14 +35,13 @@ const patternOrder = Object.keys(DECISION_PATTERNS) as DecisionPatternId[]
 export function DecisionPatterns({ locale, cases: c }: Props) {
   const [active, setActive] = useState<DecisionPatternId>('allocate')
   const l = labels[locale]
-  const gasLocale = locale === 'uk' ? 'en' : locale
   const marketing = {
     allocate: {
       tab: c[1],
       title: c[2],
       question: c[3],
       body: c[4],
-      href: observatoryHref(`${locale}/resource-allocation`),
+      href: observatoryHref('resource-allocation', locale),
       cta: c[5],
     },
     decide: {
@@ -53,7 +49,7 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
       title: c[7],
       question: c[8],
       body: c[9],
-      href: observatoryHref(`${gasLocale}/gas-forecast`),
+      href: observatoryHref('gas-forecast', locale),
       cta: c[10],
     },
     prioritize: {
@@ -61,8 +57,8 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
       title: c[12],
       question: c[13],
       body: l.gtmBody,
-      href: observatoryHref(`${locale}/gtm-lab`),
-      cta: l.gtmCta,
+      href: observatoryHref('gtm-lab', locale),
+      cta: c[14],
     },
   } satisfies Record<
     DecisionPatternId,
@@ -96,10 +92,6 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
             {inputs.map((item) => (
               <span key={item}>{item}</span>
             ))}
-          </div>
-          <ArrowRight className={styles.arrow} aria-hidden="true" />
-          <div className={styles.engine}>
-            QDIP<small>Decision Engine</small>
           </div>
           <ArrowRight className={styles.arrow} aria-hidden="true" />
           <div className={styles.output}>

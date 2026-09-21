@@ -10,9 +10,13 @@ export const PLATFORM_URLS = {
   observatory: process.env.NEXT_PUBLIC_OBSERVATORY_URL ?? defaultObservatoryOrigin,
 } as const
 
-export function studioHref(path = '') {
+export function studioHref(path = '', locale: PlatformLocale = 'en') {
   const suffix = path ? `/${path.replace(/^\/+/, '')}` : ''
-  return `${PLATFORM_URLS.studio}${suffix}`
+  if (isDevelopment) {
+    const query = locale === 'en' ? '' : `?lang=${locale}`
+    return `/studio${suffix}${query}`
+  }
+  return `${PLATFORM_URLS.studio}/${locale}${suffix}`
 }
 
 export function observatoryHref(path = '', locale?: PlatformLocale) {

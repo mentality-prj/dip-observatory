@@ -215,9 +215,7 @@ export function ResourceAllocationManualEditor({
         <div className="min-w-0 flex-1 basis-[16rem]">
           <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
           <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
-          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
-            {t.description}
-          </p>
+          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">{t.description}</p>
         </div>
         <button
           type="button"
@@ -241,7 +239,9 @@ export function ResourceAllocationManualEditor({
             className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
           >
             {teams.map((team) => (
-              <option key={team} value={team}>{team}</option>
+              <option key={team} value={team}>
+                {team}
+              </option>
             ))}
           </select>
         </label>
@@ -253,7 +253,9 @@ export function ResourceAllocationManualEditor({
             className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
           >
             {plan.daily.map((day) => (
-              <option key={day.day} value={day.day}>{localizePlanningDay(day.day, locale)}</option>
+              <option key={day.day} value={day.day}>
+                {localizePlanningDay(day.day, locale)}
+              </option>
             ))}
           </select>
         </label>
@@ -266,7 +268,9 @@ export function ResourceAllocationManualEditor({
           >
             <option value="">{t.unassigned}</option>
             {communities.map((community) => (
-              <option key={community} value={community}>{community}</option>
+              <option key={community} value={community}>
+                {community}
+              </option>
             ))}
           </select>
           <span className="mt-2 block text-xs text-slate-600">
@@ -369,13 +373,17 @@ export function ResourceAllocationManualEditor({
           >
             {!feasible ? (
               <>
-                <b>{violations.length + dayFailures.length} {t.violations}</b>
+                <b>
+                  {violations.length + dayFailures.length} {t.violations}
+                </b>
                 <div className="mt-2 space-y-1">
                   {violations.slice(0, 8).map((item, index) => (
                     <div key={`${item}-${index}`}>{item}</div>
                   ))}
                   {dayFailures.slice(0, 4).map((item) => (
-                    <div key={item.day}>{localizePlanningDay(item.day, locale)}: {item.status}</div>
+                    <div key={item.day}>
+                      {localizePlanningDay(item.day, locale)}: {item.status}
+                    </div>
                   ))}
                 </div>
               </>
@@ -438,7 +446,9 @@ export function ResourceAllocationManualEditor({
                       >
                         <option value="">{t.unassigned}</option>
                         {communities.map((community) => (
-                          <option key={community} value={community}>{community}</option>
+                          <option key={community} value={community}>
+                            {community}
+                          </option>
                         ))}
                       </select>
                     </label>
@@ -448,7 +458,10 @@ export function ResourceAllocationManualEditor({
             ))}
           </div>
 
-          <div className="mt-6 hidden max-w-full overflow-x-auto overscroll-x-contain px-4 md:block" data-testid="manual-desktop-table">
+          <div
+            className="mt-6 hidden max-w-full overflow-x-auto overscroll-x-contain px-4 md:block"
+            data-testid="manual-desktop-table"
+          >
             <table className="w-full min-w-[900px] border-collapse text-sm">
               <thead>
                 <tr>
@@ -474,7 +487,9 @@ export function ResourceAllocationManualEditor({
                         >
                           <option value="">{t.unassigned}</option>
                           {communities.map((community) => (
-                            <option key={community} value={community}>{community}</option>
+                            <option key={community} value={community}>
+                              {community}
+                            </option>
                           ))}
                         </select>
                       </td>
@@ -507,9 +522,7 @@ function ComparisonRow({
   const delta = reference == null || actual == null ? null : actual - reference
   const favorable = delta == null || Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
   const deltaText =
-    delta == null
-      ? '—'
-      : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
+    delta == null ? '—' : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
 
   return (
     <>

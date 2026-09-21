@@ -1,9 +1,11 @@
 import { Suspense, type ReactNode } from 'react'
+import { Cable, Telescope } from 'lucide-react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader, StatusBadge } from '@/design-system'
 import { StudioNav } from '@/features/studio'
-import { StudioLanguageSwitcher } from '@/studio/studio-language-switcher'
+import { StudioProductHeader } from '@/studio/studio-product-header'
+import { StudioMobileNavigation } from '@/studio/studio-mobile-navigation'
 import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {
@@ -14,22 +16,40 @@ export const metadata = {
 export default function StudioLayout({ children }: { children: ReactNode }) {
   return (
     <DesignSystemProvider theme="green" mode="light" className="studio-shell">
-      <ProductHeader
-        href={studioHref()}
-        brandHref={marketingHref('en')}
-        product="Studio"
-        navigation={
-          <StatusBadge>
-            <i /> Core connected
-          </StatusBadge>
+      <Suspense
+        fallback={
+          <ProductHeader
+            href={studioHref('', 'en')}
+            brandHref={marketingHref('en')}
+            product="Studio"
+            navigation={
+              <StatusBadge>
+                <Cable size={13} aria-hidden />
+                Core connected
+              </StatusBadge>
+            }
+            productSwitch={{
+              href: observatoryHref('', 'en'),
+              label: 'Open Observatory',
+              icon: <Telescope size={15} />,
+            }}
+            utilities={
+              <div className="studio-language-switcher" aria-hidden>
+                <span>EN</span><span>UA</span><span>PL</span>
+              </div>
+            }
+          />
         }
-        productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
-        utilities={
-          <Suspense fallback={<div className="studio-language-switcher" aria-hidden><span>EN</span><span>UA</span><span>PL</span></div>}>
-            <StudioLanguageSwitcher />
-          </Suspense>
-        }
-      />
+      >
+        <StudioProductHeader />
+      </Suspense>
+
+      <div className="studio-mobile-nav-wrap">
+        <Suspense fallback={null}>
+          <StudioMobileNavigation />
+        </Suspense>
+      </div>
+
       <aside className="studio-sidebar" aria-label="Studio workspace navigation">
         <div className="studio-sidebar-intro">
           <small>DECISION WORKSPACE</small>
@@ -44,8 +64,11 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
           <small>Decision system workspace</small>
         </div>
       </aside>
+
       <div className="studio-workspace">
-        <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
+        <main className="studio-main ds-page" id="main-content" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="studio-footer">
           <span><strong>QDIP</strong> <b>Studio</b></span>
           <small>Decision intelligence workspace</small>
