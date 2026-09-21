@@ -216,7 +216,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   })
 
   await expect(page.getByText('Dataset activated')).toBeVisible()
-  await expect(page.getByText(/picker-test\.csv/)).toBeVisible()
+  await expect(page.getByTestId('resource-import-file')).toContainText('picker-test.csv')
   await expect(page.getByTestId('community-count')).toHaveText('1')
   await expect(page.getByTestId('team-count')).toHaveText('1')
 
@@ -242,7 +242,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   await page.getByTestId('resource-import-dropzone').dispatchEvent('drop', { dataTransfer })
 
   await expect(page.getByText('Dataset activated')).toBeVisible()
-  await expect(page.getByText(/drop-test\.csv/)).toBeVisible()
+  await expect(page.getByTestId('resource-import-file')).toContainText('drop-test.csv')
   await expect(page.getByTestId('community-count')).toHaveText('2')
   await expect(page.getByTestId('team-count')).toHaveText('2')
 })
