@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, CircleAlert, Flag, Gauge, History, X } from 'lucide-react'
+import { Check, CircleAlert, Clipboard, Download, Flag, Gauge, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
+import { localizeService, trackResourceAllocation } from '../presentation'
 
 type CapacityRecommendation = {
   resource: string
@@ -59,9 +60,12 @@ type Props = {
   priorityCoverage: number
   served: number
   unmet: number
-  moved: number
+  teamsMoved: number
   totalTeams: number
+  moveEvents: number
   planningDays: number
+  planCsv?: string
+  exportFileName?: string
   selectionKind?: 'recommended' | 'alternative'
   locale?: Locale
 }
@@ -125,7 +129,21 @@ const copy = {
     decisionCoverage: 'Покриття пріоритетних потреб',
     decisionServed: 'Покрито за період',
     decisionUnmet: 'Залишиться непокрито',
-    decisionMoved: 'Переміщень команд',
+    decisionMoved: 'Команд змінять локацію',
+    decisionMoveEvents: 'Переміщень за період',
+    modifyReason: 'Чому ви змінили рекомендацію?',
+    rejectReason: 'Чому рекомендація не підходить?',
+    confirmModify: 'Підтвердити мій варіант',
+    confirmReject: 'Підтвердити відхилення',
+    approved: 'План затверджено',
+    nextStep: 'Наступний крок — передати план координаторам команд.',
+    exportCsv: 'Завантажити план CSV',
+    copyPlan: 'Скопіювати короткий план',
+    copied: 'План скопійовано',
+    afterExecution: 'Після виконання плану',
+    technicalHistory: 'Технічні деталі історії',
+    forecast: 'Прогноз QDIP',
+    actualValue: 'Факт',
   },
   en: {
     capacity: 'WHAT IS NEEDED FOR A BETTER RESULT',
@@ -185,7 +203,21 @@ const copy = {
     decisionCoverage: 'Priority-needs coverage',
     decisionServed: 'Covered over the horizon',
     decisionUnmet: 'Expected uncovered',
-    decisionMoved: 'Team moves',
+    decisionMoved: 'Teams changing location',
+    decisionMoveEvents: 'Move events over the horizon',
+    modifyReason: 'Why did you change the recommendation?',
+    rejectReason: 'Why is the recommendation not suitable?',
+    confirmModify: 'Confirm my plan',
+    confirmReject: 'Confirm rejection',
+    approved: 'Plan approved',
+    nextStep: 'Next step — share the approved plan with team coordinators.',
+    exportCsv: 'Download plan CSV',
+    copyPlan: 'Copy short plan',
+    copied: 'Plan copied',
+    afterExecution: 'After the plan is executed',
+    technicalHistory: 'Technical history details',
+    forecast: 'QDIP forecast',
+    actualValue: 'Actual',
   },
   pl: {
     capacity: 'CZEGO BRAKUJE DO LEPSZEGO WYNIKU',
@@ -246,7 +278,21 @@ const copy = {
     decisionCoverage: 'Pokrycie potrzeb priorytetowych',
     decisionServed: 'Pokryte w całym horyzoncie',
     decisionUnmet: 'Oczekiwane niepokryte',
-    decisionMoved: 'Przemieszczenia zespołów',
+    decisionMoved: 'Zespoły zmieniające lokalizację',
+    decisionMoveEvents: 'Przemieszczenia w całym horyzoncie',
+    modifyReason: 'Dlaczego zmieniasz rekomendację?',
+    rejectReason: 'Dlaczego rekomendacja nie pasuje?',
+    confirmModify: 'Potwierdź mój wariant',
+    confirmReject: 'Potwierdź odrzucenie',
+    approved: 'Plan zatwierdzony',
+    nextStep: 'Następny krok — przekaż zatwierdzony plan koordynatorom zespołów.',
+    exportCsv: 'Pobierz plan CSV',
+    copyPlan: 'Kopiuj krótki plan',
+    copied: 'Plan skopiowany',
+    afterExecution: 'Po wykonaniu planu',
+    technicalHistory: 'Techniczne szczegóły historii',
+    forecast: 'Prognoza QDIP',
+    actualValue: 'Fakt',
   },
 } as const
 
@@ -327,9 +373,12 @@ export function ResourceAllocationDecisionPanel({
   priorityCoverage,
   served,
   unmet,
-  moved,
+  teamsMoved,
   totalTeams,
+  moveEvents,
   planningDays,
+  planCsv,
+  exportFileName,
   selectionKind = 'recommended',
   locale = 'uk',
 }: Props) {
@@ -339,6 +388,8 @@ export function ResourceAllocationDecisionPanel({
   const [lifecycle, setLifecycle] = useState<Lifecycle>(null)
   const [record, setRecord] = useState<DecisionRecord | null>(null)
   const [reason, setReason] = useState('')
+  const [decisionIntent, setDecisionIntent] = useState<null | 'accept' | 'modify' | 'reject'>(null)
+  const [copied, setCopied] = useState(false)
   const [notes, setNotes] = useState('')
   const [actualCoverage, setActualCoverage] = useState('')
   const [actualServed, setActualServed] = useState('')
@@ -397,6 +448,15 @@ export function ResourceAllocationDecisionPanel({
         body
       )
       await loadDecision(created.decision_id)
+      trackResourceAllocation(
+        status === 'accepted'
+          ? 'ra_decision_accepted'
+          : status === 'modified'
+            ? 'ra_decision_modified'
+            : 'ra_decision_rejected',
+        locale
+      )
+      setDecisionIntent(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision update failed')
     } finally {
@@ -437,12 +497,35 @@ export function ResourceAllocationDecisionPanel({
         notes: notes || undefined,
       })
       await loadDecision(lifecycle.decisionId)
+      trackResourceAllocation('ra_actual_outcome_recorded', locale)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Outcome recording failed')
     } finally {
       setBusy(null)
     }
   }
+  function downloadPlan() {
+    if (!planCsv || typeof document === 'undefined') return
+    const blob = new Blob([planCsv], { type: 'text/csv;charset=utf-8' })
+    const href = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = href
+    anchor.download = exportFileName ?? 'qdip-resource-allocation.csv'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(href)
+    trackResourceAllocation('ra_plan_exported', locale)
+  }
+
+  async function copyPlan() {
+    if (!planCsv || !navigator.clipboard) return
+    await navigator.clipboard.writeText(planCsv.replace(/^\uFEFF/, ''))
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1800)
+    trackResourceAllocation('ra_plan_exported', locale)
+  }
+
   async function refresh() {
     if (!lifecycle) return
     setBusy('refresh')
@@ -542,7 +625,7 @@ export function ResourceAllocationDecisionPanel({
                       {recommendations.map((item) => (
                         <div key={`${item.resource}-${item.added_capacity}`} className="border border-white/15 p-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <b>{item.resource}</b>
+                            <b>{localizeService(item.resource, locale)}</b>
                             <span>
                               +{item.extra_team_equivalents} {t.teamEq} · +{item.added_capacity.toFixed(0)}{' '}
                               {t.capacityUnit}
@@ -566,7 +649,7 @@ export function ResourceAllocationDecisionPanel({
                         className="grid grid-cols-[1fr_auto] gap-3 border-t border-white/10 py-2"
                       >
                         <span>
-                          {item.resource}
+                          {localizeService(item.resource, locale)}
                           <span className="block text-xs text-white/45">
                             {t.demand} {item.priority_demand.toFixed(0)} · {t.available}{' '}
                             {item.available_capacity.toFixed(0)}
