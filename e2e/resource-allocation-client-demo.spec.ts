@@ -231,15 +231,34 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
   ].join('\n')
 
-  const dataTransfer = await page.evaluateHandle((csv) => {
+  const dropzone = page.getByTestId('resource-import-dropzone')
+
+  await dropzone.evaluate((element, csv) => {
     const transfer = new DataTransfer()
     transfer.items.add(new File([csv], 'drop-test.csv', { type: 'text/csv' }))
-    return transfer
+    element.dispatchEvent(
+      new DragEvent('dragenter', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      })
+    )
   }, dropCsv)
 
-  await page.getByTestId('resource-import-dropzone').dispatchEvent('dragenter', { dataTransfer })
+  await expect(dropzone).toHaveAttribute('data-dragging', 'true')
   await expect(page.getByText('Drop the file to import')).toBeVisible()
-  await page.getByTestId('resource-import-dropzone').dispatchEvent('drop', { dataTransfer })
+
+  await dropzone.evaluate((element, csv) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([csv], 'drop-test.csv', { type: 'text/csv' }))
+    element.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      })
+    )
+  }, dropCsv)
 
   await expect(page.getByText('Dataset activated')).toBeVisible()
   await expect(page.getByTestId('resource-import-file')).toContainText('drop-test.csv')
