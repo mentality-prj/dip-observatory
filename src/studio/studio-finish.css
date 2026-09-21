@@ -1,89 +1,28 @@
-.studio-shell > .ds-product-header {
-  grid-area: header;
-}
-
+.studio-shell > .ds-product-header { grid-area: header; }
 .studio-shell {
   background:
-    radial-gradient(circle at 82% 12%, rgb(var(--ds-accent-rgb) / 0.11), transparent 30%),
-    linear-gradient(135deg, rgb(var(--ds-accent-rgb) / 0.055), var(--ds-bg) 42%, rgb(var(--ds-accent-rgb) / 0.035));
+    radial-gradient(circle at 82% 10%, rgb(var(--ds-accent-rgb) / 0.08), transparent 28%),
+    linear-gradient(135deg, rgb(var(--ds-accent-rgb) / 0.035), var(--ds-bg) 44%, rgb(var(--ds-accent-rgb) / 0.02));
 }
-
 .studio-sidebar {
-  background: color-mix(in srgb, var(--ds-surface) 82%, rgb(var(--ds-accent-rgb) / 0.1));
-  scrollbar-color: rgb(var(--ds-accent-rgb) / 0.35) transparent;
+  background: color-mix(in srgb, var(--ds-surface) 90%, rgb(var(--ds-accent-rgb) / 0.06));
+  scrollbar-color: rgb(var(--ds-accent-rgb) / 0.28) transparent;
   scrollbar-width: thin;
 }
-
-.studio-sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.studio-sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.studio-sidebar::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: rgb(var(--ds-accent-rgb) / 0.32);
-  background-clip: padding-box;
-}
-
-.studio-workspace {
-  background: linear-gradient(180deg, rgb(var(--ds-accent-rgb) / 0.025), transparent 42%);
-}
-
-.studio-main > h1 {
-  font-weight: 400;
-}
-
-.studio-language-switcher {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-pill);
-  background: var(--ds-surface-raised);
-}
-
-.studio-language-switcher a {
-  display: grid;
-  min-width: 34px;
-  min-height: 32px;
-  place-items: center;
-  border-radius: var(--ds-radius-pill);
-  color: var(--ds-text-muted);
-  font-size: var(--ds-text-xs);
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.studio-language-switcher a:hover,
-.studio-language-switcher a[aria-current='page'] {
-  color: var(--ds-accent);
-  background: rgb(var(--ds-accent-rgb) / 0.1);
-}
-
-.ds-product-lockup-brand,
-.ds-product-lockup-product {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  color: inherit;
-  text-decoration: none;
-}
-
-.ds-product-lockup-product {
-  color: var(--ds-accent);
-}
-
-@media (max-width: 760px) {
-  .studio-shell .ds-status-badge {
-    display: none;
-  }
-
-  .studio-language-switcher a {
-    min-width: 30px;
-  }
-}
+.studio-sidebar::-webkit-scrollbar { width: 8px; }
+.studio-sidebar::-webkit-scrollbar-track { background: transparent; }
+.studio-sidebar::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgb(var(--ds-accent-rgb) / 0.28); background-clip: padding-box; }
+.studio-workspace { background: linear-gradient(180deg, rgb(var(--ds-accent-rgb) / 0.018), transparent 38%); }
+.studio-main > h1 { font-weight: 400; letter-spacing: -0.03em; }
+.studio-main h2 { font-weight: 500; }
+.studio-main h3 { font-weight: 500; }
+.studio-language-switcher { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-pill); background: var(--ds-surface-raised); }
+.studio-language-switcher a { display: grid; min-width: 34px; min-height: 32px; place-items: center; border-radius: var(--ds-radius-pill); color: var(--ds-text-muted); font-size: var(--ds-text-xs); font-weight: 600; text-decoration: none; }
+.studio-language-switcher a:hover, .studio-language-switcher a[aria-current='page'] { color: var(--ds-accent); background: rgb(var(--ds-accent-rgb) / 0.09); }
+.ds-product-lockup-brand, .ds-product-lockup-product { display: inline-flex; min-height: 44px; align-items: center; color: inherit; text-decoration: none; }
+.ds-product-lockup-product { color: var(--ds-accent); }
+/* Product accent is identity; status colors remain semantic. */
+.studio-success { border-color: rgb(var(--ds-semantic-success-rgb) / 0.28); color: var(--ds-semantic-success); background: rgb(var(--ds-semantic-success-rgb) / 0.07); }
+.studio-error, .gas-blocked { color: var(--ds-semantic-danger); }
+.studio-error { border-color: rgb(var(--ds-semantic-danger-rgb) / 0.25); background: rgb(var(--ds-semantic-danger-rgb) / 0.06); }
+@media (max-width: 760px) { .studio-shell .ds-status-badge { display: none; } .studio-language-switcher a { min-width: 30px; } }
