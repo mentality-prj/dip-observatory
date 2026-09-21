@@ -246,7 +246,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   }, dropCsv)
 
   await expect(dropzone).toHaveAttribute('data-dragging', 'true')
-  await expect(page.getByText('Drop the file to import')).toBeVisible()
+  await expect(page.getByTestId('resource-import-drag-prompt')).toContainText('Drop the file to import')
 
   await dropzone.evaluate((element, csv) => {
     const transfer = new DataTransfer()
