@@ -59,6 +59,9 @@ type Props = {
   priorityCoverage: number
   served: number
   unmet: number
+  moved: number
+  totalTeams: number
+  planningDays: number
   selectionKind?: 'recommended' | 'alternative'
   locale?: Locale
 }
@@ -114,6 +117,15 @@ const copy = {
     decisionHelp: 'Оберіть план, який буде виконуватися. QDIP автоматично збереже стан даних, рекомендацію та ваше рішення.',
     outcome: 'ФАКТИЧНИЙ РЕЗУЛЬТАТ',
     outcomeTitle: 'Що сталося після виконання плану?',
+    outcomeHelp: 'Внесіть фактичні показники. QDIP не підмінює факт прогнозом.',
+    actualCoverage: 'Фактичне покриття пріоритетних потреб, %',
+    actualServed: 'Фактично покрито одиниць потреб',
+    actualUnmet: 'Фактично залишилось непокрито',
+    expected: 'Очікування QDIP',
+    decisionCoverage: 'Покриття пріоритетних потреб',
+    decisionServed: 'Покрито за період',
+    decisionUnmet: 'Залишиться непокрито',
+    decisionMoved: 'Переміщень команд',
   },
   en: {
     capacity: 'WHAT IS NEEDED FOR A BETTER RESULT',
@@ -165,6 +177,15 @@ const copy = {
     decisionHelp: 'Choose the plan that will be executed. QDIP automatically stores the data state, recommendation and your decision.',
     outcome: 'ACTUAL RESULT',
     outcomeTitle: 'What happened after the plan was executed?',
+    outcomeHelp: 'Enter the actual results. QDIP does not substitute the forecast for the observed outcome.',
+    actualCoverage: 'Actual priority-needs coverage, %',
+    actualServed: 'Demand units actually covered',
+    actualUnmet: 'Demand units actually left uncovered',
+    expected: 'QDIP expectation',
+    decisionCoverage: 'Priority-needs coverage',
+    decisionServed: 'Covered over the horizon',
+    decisionUnmet: 'Expected uncovered',
+    decisionMoved: 'Team moves',
   },
   pl: {
     capacity: 'CZEGO BRAKUJE DO LEPSZEGO WYNIKU',
@@ -217,6 +238,15 @@ const copy = {
     decisionHelp: 'Wybierz plan, który ma zostać wykonany. QDIP automatycznie zapisze stan danych, rekomendację i Twoją decyzję.',
     outcome: 'WYNIK RZECZYWISTY',
     outcomeTitle: 'Co wydarzyło się po wykonaniu planu?',
+    outcomeHelp: 'Wprowadź rzeczywiste wyniki. QDIP nie zastępuje faktu prognozą.',
+    actualCoverage: 'Rzeczywiste pokrycie potrzeb priorytetowych, %',
+    actualServed: 'Rzeczywiście pokryte jednostki potrzeb',
+    actualUnmet: 'Rzeczywiście niepokryte jednostki potrzeb',
+    expected: 'Oczekiwanie QDIP',
+    decisionCoverage: 'Pokrycie potrzeb priorytetowych',
+    decisionServed: 'Pokryte w całym horyzoncie',
+    decisionUnmet: 'Oczekiwane niepokryte',
+    decisionMoved: 'Przemieszczenia zespołów',
   },
 } as const
 
@@ -297,6 +327,9 @@ export function ResourceAllocationDecisionPanel({
   priorityCoverage,
   served,
   unmet,
+  moved,
+  totalTeams,
+  planningDays,
   selectionKind = 'recommended',
   locale = 'uk',
 }: Props) {
@@ -307,6 +340,9 @@ export function ResourceAllocationDecisionPanel({
   const [record, setRecord] = useState<DecisionRecord | null>(null)
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
+  const [actualCoverage, setActualCoverage] = useState('')
+  const [actualServed, setActualServed] = useState('')
+  const [actualUnmet, setActualUnmet] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   async function loadDecision(decisionId: string) {
@@ -369,18 +405,32 @@ export function ResourceAllocationDecisionPanel({
   }
   async function outcome() {
     if (!lifecycle) return
+    const coverage = Number(actualCoverage)
+    const servedActual = Number(actualServed)
+    const unmetActual = Number(actualUnmet)
+    if (
+      !Number.isFinite(coverage) ||
+      coverage < 0 ||
+      coverage > 100 ||
+      !Number.isFinite(servedActual) ||
+      servedActual < 0 ||
+      !Number.isFinite(unmetActual) ||
+      unmetActual < 0
+    ) {
+      setError(locale === 'uk' ? 'Введіть коректні фактичні показники.' : locale === 'pl' ? 'Wprowadź poprawne rzeczywiste wyniki.' : 'Enter valid actual outcome values.')
+      return
+    }
     setBusy('outcome')
     setError(null)
     try {
       const actualAllocation = manualSelected?.actual_allocation ?? recommendedAllocation(selected)
-      const outcomeMetrics = manualSelected?.metrics ?? {
-        priority_coverage: priorityCoverage,
-        served,
-        closing_unmet: unmet,
-      }
       await post(`/api/resource-allocation/decisions/${encodeURIComponent(lifecycle.decisionId)}/outcomes`, {
         actual_allocation: actualAllocation,
-        metrics: outcomeMetrics,
+        metrics: {
+          priority_coverage: coverage / 100,
+          served: servedActual,
+          closing_unmet: unmetActual,
+        },
         notes: notes || undefined,
       })
       await loadDecision(lifecycle.decisionId)
@@ -406,15 +456,16 @@ export function ResourceAllocationDecisionPanel({
   const bindingBottlenecks = capacity?.bottlenecks?.filter((item) => item.binding) ?? []
   const status = record?.status ?? lifecycle?.status
   return (
-    <div className="grid min-w-0 max-w-full gap-5 xl:grid-cols-2">
-      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
-        <div className="flex items-center justify-between gap-3">
+    <div className="grid min-w-0 max-w-full gap-5">
+      <details className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 text-white">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-6">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">06 · {t.capacity}</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">OPTIONAL · {t.capacity}</div>
             <h3 className="mt-2 text-xl font-black">{t.capacityTitle}</h3>
           </div>
           <Gauge className="h-6 w-6" />
-        </div>
+        </summary>
+        <div className="border-t border-white/10 p-6 pt-5">
         <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <label className="text-sm">
             <span className="block text-white/55">{t.target}</span>
@@ -473,7 +524,13 @@ export function ResourceAllocationDecisionPanel({
                   </div>
                 )}
                 {capacity.target_status === 'gap' && recommendations.length === 0 && (
-                  <div className="border-l-2 border-amber-300 pl-3">{t.notEnough}</div>
+                  <div className="border-l-2 border-amber-300 pl-3">
+                    {locale === 'uk'
+                      ? `Навіть протестоване додавання ресурсів не забезпечує ${Math.round(targetCoverage * 100)}%. Нижче показані обмеження, які стримують результат.`
+                      : locale === 'pl'
+                        ? `Nawet testowane zwiększenie zasobów nie zapewnia ${Math.round(targetCoverage * 100)}%. Poniżej pokazano ograniczenia blokujące wynik.`
+                        : `The tested resource additions do not reach ${Math.round(targetCoverage * 100)}%. Review the binding constraints below.`}
+                  </div>
                 )}
                 {recommendations.length > 0 && (
                   <div>
@@ -526,8 +583,9 @@ export function ResourceAllocationDecisionPanel({
             )}
           </div>
         )}
-      </section>
-      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+        </div>
+      </details>
+      <section className="order-1 min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
         <div className="text-xs font-bold uppercase tracking-wider text-rose-300">07 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-black">{t.decisionTitle}</h3>
@@ -539,6 +597,25 @@ export function ResourceAllocationDecisionPanel({
         {!lifecycle ? (
           <>
             <p className="mt-4 max-w-2xl text-sm text-slate-400">{t.decisionHelp}</p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-testid="decision-summary">
+              <div className="border border-white/10 p-3">
+                <div className="text-xs text-slate-500">{t.decisionCoverage}</div>
+                <b className="mt-1 block text-xl">{Math.round(priorityCoverage * 100)}%</b>
+              </div>
+              <div className="border border-white/10 p-3">
+                <div className="text-xs text-slate-500">{t.decisionServed}</div>
+                <b className="mt-1 block text-xl">{served.toFixed(0)}</b>
+              </div>
+              <div className="border border-white/10 p-3">
+                <div className="text-xs text-slate-500">{t.decisionUnmet}</div>
+                <b className="mt-1 block text-xl">{unmet.toFixed(0)}</b>
+              </div>
+              <div className="border border-white/10 p-3">
+                <div className="text-xs text-slate-500">{t.decisionMoved}</div>
+                <b className="mt-1 block text-xl">{moved} / {totalTeams}</b>
+                <div className="mt-1 text-[10px] text-slate-600">{planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}</div>
+              </div>
+            </div>
             {(manualSelected || selectionKind === 'alternative') && (
               <textarea
                 value={reason}
@@ -594,15 +671,58 @@ export function ResourceAllocationDecisionPanel({
               <b>{status === 'rejected' ? t.reject : status === 'modified' ? (manualSelected ? t.modify : t.alternative) : t.accept}</b>
               <div className="mt-1 text-xs text-slate-500">{t.decisionId} · {lifecycle.decisionId}</div>
             </div>
-            {status && ['accepted', 'modified', 'rejected'].includes(status) && (
+            {status && ['accepted', 'modified'].includes(status) && (
               <>
                 <div className="mt-6 text-xs font-bold uppercase tracking-wider text-rose-300">08 · {t.outcome}</div>
                 <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
+                <p className="mt-2 text-sm text-slate-500">{t.outcomeHelp}</p>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <label className="text-sm">
+                    <span className="block text-slate-500">{t.actualCoverage}</span>
+                    <input
+                      aria-label={t.actualCoverage}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={actualCoverage}
+                      onChange={(event) => setActualCoverage(event.target.value)}
+                      placeholder={`${Math.round(priorityCoverage * 100)} · ${t.expected}`}
+                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="block text-slate-500">{t.actualServed}</span>
+                    <input
+                      aria-label={t.actualServed}
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={actualServed}
+                      onChange={(event) => setActualServed(event.target.value)}
+                      placeholder={`${served.toFixed(0)} · ${t.expected}`}
+                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="block text-slate-500">{t.actualUnmet}</span>
+                    <input
+                      aria-label={t.actualUnmet}
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={actualUnmet}
+                      onChange={(event) => setActualUnmet(event.target.value)}
+                      placeholder={`${unmet.toFixed(0)} · ${t.expected}`}
+                      className="mt-2 w-full border border-white/15 bg-slate-950/40 p-3"
+                    />
+                  </label>
+                </div>
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   placeholder={t.outcomeNotes}
-                  className="mt-4 min-h-20 w-full border border-white/15 p-3 text-sm"
+                  className="mt-4 min-h-20 w-full border border-white/15 bg-slate-950/40 p-3 text-sm"
                 />
                 <button
                   type="button"
