@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { StudioProductHeader } from './studio-product-header'
 
 vi.mock('next/navigation', () => ({
