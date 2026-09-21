@@ -80,7 +80,7 @@ export function ResourceAllocationImpact({ metrics, summary, baseline, moved, to
   const t = labels[locale]
   const compared = Boolean(baseline)
   return (
-    <section className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
         {compared ? t.compareKicker : t.recommendationKicker}
       </div>
@@ -89,7 +89,7 @@ export function ResourceAllocationImpact({ metrics, summary, baseline, moved, to
           <h3 className="text-xl font-black sm:text-2xl">{compared ? t.compareTitle : t.recommendationTitle}</h3>
           {!compared && <p className="mt-2 max-w-4xl text-sm text-slate-500">{t.recommendationSubtitle}</p>}
         </div>
-        <div className="text-right">
+        <div className="min-w-0 text-left sm:text-right">
           <div className="text-xs text-slate-600">{t.moved}</div>
           <div className="text-2xl font-black">
             {moved}{' '}
