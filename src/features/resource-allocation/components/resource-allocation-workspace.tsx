@@ -324,7 +324,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               {sourceBadge}
             </span>
           </div>
-          <h1 className="mt-5 text-4xl font-black tracking-tight md:text-6xl">{t.title}</h1>
+          <h1 className="mt-5 text-4xl font-medium tracking-tight md:text-6xl">{t.title}</h1>
           <p className="mt-4 max-w-4xl text-lg leading-relaxed text-slate-300">{t.valueProp}</p>
           <p className="mt-4 text-slate-400">{summary}</p>
           <p className="mt-2 text-xs text-slate-600">
@@ -335,7 +335,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4">
-            <div className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
+            <div className="order-2 rounded-[var(--ds-radius-panel)] border border-white/10 bg-slate-950/70 p-6 text-white">
               <div className="flex items-center justify-between">
                 <b>{t.whatIf}</b>
                 <button type="button" onClick={resetRunState} aria-label="Reset scenario">
@@ -415,14 +415,14 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               </button>
             </div>
 
-            <details className="order-3 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
+            <details className="order-3 rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.03] p-4">
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t.tryOwnData}</summary>
               <div className="mt-3">
                 <ResourceAllocationImport locale={locale} onImported={useImportedData} />
               </div>
             </details>
 
-            <div className="order-1 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+            <div className="order-1 rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-6">
               <b>01 · {t.state}</b>
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -461,7 +461,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
                 <div className="max-w-xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
-                  <h2 data-testid="resource-active-summary" className="mt-5 text-3xl font-black">
+                  <h2 data-testid="resource-active-summary" className="mt-5 text-3xl font-medium">
                     {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
                     {stats.openingNeeds} {t.opening.toLowerCase()}. {stats.days} {t.days}.
                   </h2>
@@ -473,6 +473,26 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
             {result && activePlan && day && (
               <>
+                <section className="mb-5 border-y border-white/10 py-5" aria-label={t.recommended}>
+                  <div className="flex flex-wrap items-end justify-between gap-5">
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">
+                        {t.recommended}
+                      </span>
+                      <h2 className="mt-2 text-2xl font-medium tracking-[-.025em] text-white md:text-3xl">
+                        {selectedAlternative === 0 ? t.recommended : `${t.alternative} ${selectedAlternative + 1}`}
+                      </h2>
+                      <p className="mt-2 text-sm text-slate-400">
+                        {t.needsServed}: {activePlan.demand_summary.served.toFixed(0)} · {t.needsUnmet}:{' '}
+                        {activePlan.demand_summary.closing_unmet.toFixed(0)}
+                      </p>
+                    </div>
+                    <div className="ds-state-chip-selected border px-4 py-2 text-right">
+                      <small className="block text-[10px] uppercase tracking-[.14em] opacity-70">Priority coverage</small>
+                      <strong className="text-xl font-medium">{pct(activePlan.aggregate_metrics.priority_coverage)}</strong>
+                    </div>
+                  </div>
+                </section>
                 <ResourceAllocationImpact
                   metrics={activePlan.aggregate_metrics}
                   summary={activePlan.demand_summary}
@@ -483,11 +503,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   locale={locale}
                 />
 
-                <div className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+                <div className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">03 · {t.weekly}</div>
-                      <h2 className="mt-2 text-2xl font-black">
+                      <h2 className="mt-2 text-2xl font-medium">
                         {t.weeklyTitle} · {stats.days} {t.days}
                       </h2>
                     </div>
@@ -507,7 +527,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         key={item.day}
                         onClick={() => setSelectedDay(index)}
                         className={`min-w-0 border px-3 py-3 text-left sm:px-4 ${
-                          selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'
+                          selectedDay === index ? 'ds-selection-surface' : 'border-white/10'
                         }`}
                       >
                         <b>{item.day}</b>
@@ -555,8 +575,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 </div>
 
-                <details className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]">
-                  <summary className="cursor-pointer p-6 text-lg font-black">{t.reviewRecommendation}</summary>
+                <details className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.03]">
+                  <summary className="cursor-pointer p-6 text-lg font-medium">{t.reviewRecommendation}</summary>
                   <div className="grid gap-5 border-t border-white/10 p-6 lg:grid-cols-[.8fr_1.2fr]">
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.alternatives}</div>
@@ -574,7 +594,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               }}
                               className={`w-full border p-4 text-left ${
                                 selectedAlternative === index
-                                  ? 'border-rose-300/40 bg-rose-300/10'
+                                  ? 'ds-selection-surface'
                                   : 'border-white/10'
                               }`}
                             >
@@ -597,7 +617,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.why}</div>
-                      <h3 className="mt-2 text-xl font-black">{t.whyTitle}</h3>
+                      <h3 className="mt-2 text-xl font-medium">{t.whyTitle}</h3>
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="border-l-2 border-rose-300/40 pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
@@ -644,8 +664,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 </details>
 
                 {lastInput && (
-                  <details className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03]">
-                    <summary className="cursor-pointer p-6 text-lg font-black">{t.testOwnPlan}</summary>
+                  <details className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.03]">
+                    <summary className="cursor-pointer p-6 text-lg font-medium">{t.testOwnPlan}</summary>
                     <div className="border-t border-white/10">
                       <ResourceAllocationManualEditor
                         key={`manual-${runRevision}`}
