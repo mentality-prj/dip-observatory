@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Boxes, Braces, GitBranch, SlidersHorizontal } from 'lucide-react'
-import { studioHref } from '@/lib/platform-urls'
+import { Boxes, Braces, GitBranch, SlidersHorizontal, Telescope } from 'lucide-react'
+import { observatoryHref, studioHref } from '@/lib/platform-urls'
 import { studioLocaleFromPath, studioSectionFromPath } from './studio-locale'
 
 const items = [
@@ -39,6 +39,10 @@ export function StudioNav() {
       {items.map(renderItem)}
       <span className="studio-nav-label">ADVANCED · PLATFORM</span>
       {platformItems.map(renderItem)}
+      <Link href={observatoryHref('', locale)}>
+        <span className="studio-nav-icon" aria-hidden><Telescope size={16} /></span>
+        <span className="studio-nav-copy"><strong>Open Observatory</strong></span>
+      </Link>
     </nav>
   )
 }
