@@ -1,9 +1,9 @@
 name: One-shot format fix
 
 on:
-  push:
+  pull_request:
     branches:
-      - chore/fix-lint-prettier-20260921
+      - dev
 
 permissions:
   contents: write
