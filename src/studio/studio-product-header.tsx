@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Cable, Telescope } from 'lucide-react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ProductHeader, StatusBadge } from '@/design-system'
@@ -17,6 +18,7 @@ export function StudioProductHeader() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const observatoryUrl = observatoryHref('', locale)
 
   return (
     <ProductHeader
@@ -29,12 +31,15 @@ export function StudioProductHeader() {
           Core connected
         </StatusBadge>
       }
-      productSwitch={{
-        href: observatoryHref('', locale),
-        label: OBSERVATORY_LABEL[locale],
-        icon: <Telescope size={15} />,
-      }}
-      utilities={<StudioLanguageSwitcher />}
+      utilities={
+        <>
+          <Link className="studio-observatory-link" href={observatoryUrl}>
+            <Telescope size={15} aria-hidden />
+            <span>{OBSERVATORY_LABEL[locale]}</span>
+          </Link>
+          <StudioLanguageSwitcher />
+        </>
+      }
     />
   )
 }
