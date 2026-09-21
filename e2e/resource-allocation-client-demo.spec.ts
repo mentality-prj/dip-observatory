@@ -153,3 +153,45 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(page.getByText('Decision completed.')).toBeVisible()
   await expect(page.getByText('Actual outcome recorded')).toBeVisible()
 })
+
+
+test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+
+  await page.route('**/api/resource-allocation/run', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        operation: 'simulate',
+        scenario: {},
+        result: allocationResult,
+      }),
+    })
+  })
+
+  await page.goto('/en/resource-allocation')
+  await expect(page.getByTestId('community-count')).toHaveText('5')
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }))
+    )
+    .toEqual({ scrollWidth: 390, clientWidth: 390 })
+
+  await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
+  await expect(page.getByText('Where to send teams each day')).toBeVisible()
+  await expect(page.getByTestId('manual-mobile-cards')).toBeVisible()
+  await expect(page.getByTestId('manual-desktop-table')).toBeHidden()
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }))
+    )
+    .toEqual({ scrollWidth: 390, clientWidth: 390 })
+})

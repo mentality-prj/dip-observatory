@@ -187,13 +187,13 @@ export function ResourceAllocationManualEditor({
     <div className="min-w-0 max-w-full space-y-5 overflow-hidden">
       {visualPlan && inputTeams.length > 0 && (
         <>
-          <div className="flex max-w-full gap-2 overflow-x-auto bg-white/[0.04] px-6 pt-5">
+          <div className="grid max-w-full grid-cols-2 gap-2 bg-white/[0.04] px-4 pt-5 sm:grid-cols-3 sm:px-6 md:grid-cols-5">
             {plan.daily.map((day) => (
               <button
                 type="button"
                 key={day.day}
                 onClick={() => setVisualDay(day.day)}
-                className={`border px-4 py-2 text-xs font-bold ${visualDay === day.day ? 'border-rose-300/40 bg-rose-300/10 text-rose-300' : 'border-white/10 text-slate-500'}`}
+                className={`min-w-0 border px-3 py-2 text-left text-xs font-bold ${visualDay === day.day ? 'border-rose-300/40 bg-rose-300/10 text-rose-300' : 'border-white/10 text-slate-500'}`}
               >
                 {day.day}
               </button>
@@ -232,7 +232,35 @@ export function ResourceAllocationManualEditor({
             <span className="break-words">{t.reset}</span>
           </button>
         </div>
-        <div className="mt-6 max-w-full overflow-x-auto overscroll-x-contain">
+        <div className="mt-6 space-y-3 md:hidden" data-testid="manual-mobile-cards">
+          {teams.map((team) => (
+            <section key={team} className="min-w-0 border border-white/10 bg-slate-950/35 p-3">
+              <b className="block break-words text-sm [overflow-wrap:anywhere]">{team}</b>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {plan.daily.map((day) => (
+                  <label key={day.day} className="min-w-0 text-xs text-slate-500">
+                    <span className="mb-1 block font-bold text-slate-400">{day.day}</span>
+                    <select
+                      aria-label={`${team} ${day.day}`}
+                      className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
+                      value={allocation[day.day]?.[team] ?? ''}
+                      onChange={(event) => change(day.day, team, event.target.value)}
+                    >
+                      <option value="">{t.unassigned}</option>
+                      {communities.map((community) => (
+                        <option key={community} value={community}>
+                          {community}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="mt-6 hidden max-w-full overflow-x-auto overscroll-x-contain md:block" data-testid="manual-desktop-table">
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr>
@@ -252,13 +280,15 @@ export function ResourceAllocationManualEditor({
                     <td key={day.day} className="border-b border-white/5 p-2">
                       <select
                         aria-label={`${team} ${day.day}`}
-                        className="w-full border border-white/10 bg-white/[0.04] p-2"
+                        className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
                         value={allocation[day.day]?.[team] ?? ''}
                         onChange={(event) => change(day.day, team, event.target.value)}
                       >
                         <option value="">{t.unassigned}</option>
                         {communities.map((community) => (
-                          <option key={community}>{community}</option>
+                          <option key={community} value={community}>
+                            {community}
+                          </option>
                         ))}
                       </select>
                     </td>

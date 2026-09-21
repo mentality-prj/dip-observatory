@@ -230,8 +230,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   )
 
   return (
-    <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] bg-transparent text-white">
-      <div className="mx-auto max-w-[1540px] px-5 py-8 md:px-10 lg:py-12">
+    <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
+      <div className="mx-auto w-full max-w-[1540px] min-w-0 px-4 py-6 sm:px-5 md:px-8 lg:px-10 lg:py-12">
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs font-bold uppercase tracking-[.18em] text-rose-300">
@@ -250,8 +250,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <DecisionWorkflow locale={locale} tone="dark" compact />
 
-        <section className="grid gap-5 py-7 xl:grid-cols-[330px_1fr]">
-          <aside className="space-y-4">
+        <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
+          <aside className="min-w-0 space-y-4">
             <div className="rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
               <div className="flex items-center justify-between">
                 <b>01 · {t.whatIf}</b>
@@ -359,7 +359,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
             </div>
           </aside>
 
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             {error && (
               <div role="alert" className="border border-rose-300/25 bg-white/[0.04] p-4 text-rose-200">
                 <CircleAlert className="mr-2 inline h-4 w-4" />
@@ -397,7 +397,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">03 · {t.weekly}</div>
                       <h2 className="mt-2 text-2xl font-black">{t.weeklyTitle}</h2>
                     </div>
-                    <div className="text-right text-xs text-slate-600">
+                    <div className="min-w-0 max-w-full break-words text-left text-xs text-slate-600 [overflow-wrap:anywhere] sm:text-right">
                       <div>{result.engine_version}</div>
                       <div>
                         {result.solver} · evaluated {result.evaluated_plans}
@@ -405,13 +405,13 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex gap-2 overflow-x-auto">
+                  <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                     {activePlan.daily.map((item, index) => (
                       <button
                         type="button"
                         key={item.day}
                         onClick={() => setSelectedDay(index)}
-                        className={`min-w-28 border px-4 py-3 text-left ${
+                        className={`min-w-0 border px-3 py-3 text-left sm:px-4 ${
                           selectedDay === index ? 'border-rose-300/40 bg-rose-300/10' : 'border-white/10'
                         }`}
                       >
@@ -423,15 +423,15 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     ))}
                   </div>
 
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                  <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {communityNames.map((community) => (
-                      <div key={community} className="min-h-32 border border-white/10 p-3">
-                        <b className="text-sm">{community}</b>
+                      <div key={community} className="min-w-0 min-h-32 border border-white/10 p-3">
+                        <b className="break-words text-sm [overflow-wrap:anywhere]">{community}</b>
                         <div className="mt-3 space-y-1">
                           {Object.entries(day.recommended.assignments)
                             .filter(([, target]) => target === community)
                             .map(([team]) => (
-                              <div key={team} className="bg-slate-950/70 px-2 py-1 text-xs font-semibold text-white">
+                              <div key={team} className="break-words bg-slate-950/70 px-2 py-1 text-xs font-semibold text-white [overflow-wrap:anywhere]">
                                 {team}
                               </div>
                             ))}
