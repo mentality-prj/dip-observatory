@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Pencil, RefreshCw } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { ResourceAllocationNetwork } from './resource-allocation-network'
+import { localizePlanningDay, trackResourceAllocation } from '../presentation'
 
 type DayPlan = { day: string; recommended: { assignments: Record<string, string | null> } }
 type ManualMetrics = {
@@ -47,7 +48,11 @@ const copy = {
     total: 'Усі потреби',
     served: 'Буде покрито',
     unmet: 'Не буде покрито',
-    travel: 'Вартість переміщень',
+    travel: 'Індекс переміщень',
+    day: 'День',
+    destination: 'Ваш варіант',
+    qdipRecommends: 'QDIP рекомендує',
+    advanced: 'Розширене редагування',
     violations: 'порушень обмежень',
     feasible: 'Ручний план допустимий за поточних обмежень.',
     qdip: 'План QDIP',
@@ -69,7 +74,11 @@ const copy = {
     total: 'All needs',
     served: 'Expected covered',
     unmet: 'Expected uncovered',
-    travel: 'Movement cost',
+    travel: 'Movement cost index',
+    day: 'Day',
+    destination: 'Your choice',
+    qdipRecommends: 'QDIP recommends',
+    advanced: 'Advanced editing',
     violations: 'constraint violations',
     feasible: 'The manual plan is feasible under current constraints.',
     qdip: 'QDIP plan',
@@ -91,7 +100,11 @@ const copy = {
     total: 'Wszystkie potrzeby',
     served: 'Zostanie pokryte',
     unmet: 'Pozostanie bez pokrycia',
-    travel: 'Koszt przemieszczeń',
+    travel: 'Indeks kosztu przemieszczeń',
+    day: 'Dzień',
+    destination: 'Twój wariant',
+    qdipRecommends: 'QDIP rekomenduje',
+    advanced: 'Edycja zaawansowana',
     violations: 'naruszeń ograniczeń',
     feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
     qdip: 'Plan QDIP',
@@ -129,6 +142,8 @@ export function ResourceAllocationManualEditor({
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [visualDay, setVisualDay] = useState(plan.daily[0]?.day ?? 'Mon')
+  const [quickTeam, setQuickTeam] = useState(teams[0] ?? '')
+  const [quickDay, setQuickDay] = useState(plan.daily[0]?.day ?? '')
   const inputTeams = useMemo(
     () =>
       Array.isArray(input.teams)
@@ -165,6 +180,7 @@ export function ResourceAllocationManualEditor({
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error ?? 'Manual plan evaluation failed')
       setEvaluation(payload as Evaluation)
+      trackResourceAllocation('ra_manual_plan_evaluated', locale)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Manual plan evaluation failed')
     } finally {
@@ -194,150 +210,111 @@ export function ResourceAllocationManualEditor({
     onUseModified({ actual_allocation, metrics: evaluatedMetrics, evaluation })
   }
   return (
-    <div className="min-w-0 max-w-full space-y-5 overflow-hidden">
-      {visualPlan && inputTeams.length > 0 && (
-        <>
-          <div className="grid max-w-full grid-cols-2 gap-2 bg-white/[0.04] px-4 pt-5 sm:grid-cols-3 sm:px-6 md:grid-cols-5">
-            {plan.daily.map((day) => (
-              <button
-                type="button"
-                key={day.day}
-                onClick={() => setVisualDay(day.day)}
-                className={`min-w-0 border px-3 py-2 text-left text-xs font-bold ${visualDay === day.day ? 'ds-selection-surface text-white' : 'border-white/10 text-slate-500'}`}
-              >
-                {day.day}
-              </button>
-            ))}
-          </div>
-          <ResourceAllocationNetwork
-            communities={communities}
-            teams={inputTeams}
-            day={visualDay}
-            opening={opening}
-            recommended={visualPlan.recommended.assignments}
-            manual={feasible ? allocation[visualDay] : null}
-            manualOpening={feasible ? manualOpening : null}
-            locale={locale}
-          />
-        </>
-      )}
-      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
-        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 basis-[16rem]">
-            <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
-            <h3 className="mt-2 break-words text-2xl font-medium [overflow-wrap:anywhere]">{t.title}</h3>
-            <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
-              {t.description}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setAllocation(seed)
-              setEvaluation(null)
-            }}
-            className="flex max-w-full shrink-0 items-center gap-2 border border-white/15 px-3 py-2 text-sm"
-          >
-            <RefreshCw className="h-4 w-4 shrink-0" />
-            <span className="break-words">{t.reset}</span>
-          </button>
+    <section className="min-w-0 max-w-full overflow-hidden p-4 sm:p-6">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-[16rem]">
+          <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
+          <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
+          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">{t.description}</p>
         </div>
-        <div className="mt-6 space-y-3 md:hidden" data-testid="manual-mobile-cards">
-          {teams.map((team) => (
-            <section key={team} className="min-w-0 border border-white/10 bg-slate-950/35 p-3">
-              <b className="block break-words text-sm [overflow-wrap:anywhere]">{team}</b>
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {plan.daily.map((day) => (
-                  <label key={day.day} className="min-w-0 text-xs text-slate-500">
-                    <span className="mb-1 block font-bold text-slate-400">{day.day}</span>
-                    <select
-                      aria-label={`${team} ${day.day}`}
-                      className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                      value={allocation[day.day]?.[team] ?? ''}
-                      onChange={(event) => change(day.day, team, event.target.value)}
-                    >
-                      <option value="">{t.unassigned}</option>
-                      {communities.map((community) => (
-                        <option key={community} value={community}>
-                          {community}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setAllocation(seed)
+            setEvaluation(null)
+          }}
+          className="flex max-w-full shrink-0 items-center gap-2 border border-white/15 px-3 py-2 text-sm"
+        >
+          <RefreshCw className="h-4 w-4 shrink-0" />
+          <span className="break-words">{t.reset}</span>
+        </button>
+      </div>
 
-        <div className="mt-6 hidden max-w-full overflow-x-auto overscroll-x-contain md:block" data-testid="manual-desktop-table">
-          <table className="w-full min-w-[900px] border-collapse text-sm">
-            <thead>
-              <tr>
-                <th className="border-b border-white/15 p-2 text-left">{t.team}</th>
-                {plan.daily.map((day) => (
-                  <th key={day.day} className="border-b border-white/15 p-2 text-left">
-                    {day.day}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {teams.map((team) => (
-                <tr key={team}>
-                  <td className="border-b border-white/5 p-2 font-bold">{team}</td>
-                  {plan.daily.map((day) => (
-                    <td key={day.day} className="border-b border-white/5 p-2">
-                      <select
-                        aria-label={`${team} ${day.day}`}
-                        className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
-                        value={allocation[day.day]?.[team] ?? ''}
-                        onChange={(event) => change(day.day, team, event.target.value)}
-                      >
-                        <option value="">{t.unassigned}</option>
-                        {communities.map((community) => (
-                          <option key={community} value={community}>
-                            {community}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
+      <div className="mt-6 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-3">
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.team}</span>
+          <select
+            value={quickTeam}
+            onChange={(event) => setQuickTeam(event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            {teams.map((team) => (
+              <option key={team} value={team}>
+                {team}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.day}</span>
+          <select
+            value={quickDay}
+            onChange={(event) => setQuickDay(event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            {plan.daily.map((day) => (
+              <option key={day.day} value={day.day}>
+                {localizePlanningDay(day.day, locale)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm">
+          <span className="block text-slate-500">{t.destination}</span>
+          <select
+            value={allocation[quickDay]?.[quickTeam] ?? ''}
+            onChange={(event) => change(quickDay, quickTeam, event.target.value)}
+            className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
+          >
+            <option value="">{t.unassigned}</option>
+            {communities.map((community) => (
+              <option key={community} value={community}>
+                {community}
+              </option>
+            ))}
+          </select>
+          <span className="mt-2 block text-xs text-slate-600">
+            {t.qdipRecommends}:{' '}
+            <b className="text-slate-400">
+              {plan.daily.find((day) => day.day === quickDay)?.recommended.assignments[quickTeam] ?? t.unassigned}
+            </b>
+          </span>
+        </label>
+      </div>
+
+      <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={running}
+          onClick={evaluate}
+          className="flex max-w-full items-center gap-2 bg-slate-950/70 px-5 py-3 font-bold text-white disabled:opacity-50"
+        >
+          <Pencil className="h-4 w-4 shrink-0" />
+          <span className="break-words">{running ? t.evaluating : t.evaluate}</span>
+        </button>
+        {evaluation && (
           <button
             type="button"
-            disabled={running}
-            onClick={evaluate}
-            className="flex max-w-full items-center gap-2 bg-slate-950/70 px-5 py-3 font-bold text-white disabled:opacity-50"
+            disabled={!feasible}
+            onClick={stageManual}
+            className="max-w-full break-words border border-rose-300/40 px-5 py-3 font-bold text-rose-300 disabled:opacity-30"
           >
-            <Pencil className="h-4 w-4 shrink-0" />
-            <span className="break-words">{running ? t.evaluating : t.evaluate}</span>
+            {t.use}
           </button>
-          {evaluation && (
-            <button
-              type="button"
-              disabled={!feasible}
-              onClick={stageManual}
-              className="max-w-full break-words border border-rose-300/40 px-5 py-3 font-bold text-rose-300 disabled:opacity-30"
-            >
-              {t.use}
-            </button>
-          )}
-        </div>
-        {error && (
-          <div
-            role="alert"
-            className="mt-4 break-words border border-rose-300/25 p-3 text-sm text-rose-200 [overflow-wrap:anywhere]"
-          >
-            {error}
-          </div>
         )}
-        {evaluation && (
+      </div>
+
+      {error && (
+        <div
+          role="alert"
+          className="mt-4 break-words border border-rose-300/25 p-3 text-sm text-rose-200 [overflow-wrap:anywhere]"
+        >
+          {error}
+        </div>
+      )}
+
+      {evaluation && (
+        <>
           <div className="mt-5 overflow-hidden border border-white/10">
             <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-px bg-white/10 text-xs">
               <div className="bg-slate-950/70 p-3" />
@@ -350,11 +327,7 @@ export function ResourceAllocationManualEditor({
                 actual={metrics?.priority_coverage}
                 percentage
               />
-              <ComparisonRow
-                label={t.served}
-                reference={referenceSummary.served}
-                actual={demand?.served}
-              />
+              <ComparisonRow label={t.served} reference={referenceSummary.served} actual={demand?.served} />
               <ComparisonRow
                 label={t.unmet}
                 reference={referenceSummary.closing_unmet}
@@ -390,10 +363,13 @@ export function ResourceAllocationManualEditor({
               </div>
             )}
           </div>
-        )}
-        {evaluation && (
+
           <div
-            className={`mt-4 break-words border p-4 text-sm [overflow-wrap:anywhere] ${!feasible ? 'ds-blocked-surface text-rose-200' : 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200'}`}
+            className={`mt-4 break-words border p-4 text-sm [overflow-wrap:anywhere] ${
+              !feasible
+                ? 'border-rose-300/35 bg-rose-300/10 text-rose-200'
+                : 'border-emerald-300/25 bg-emerald-300/10 text-emerald-200'
+            }`}
           >
             {!feasible ? (
               <>
@@ -404,9 +380,9 @@ export function ResourceAllocationManualEditor({
                   {violations.slice(0, 8).map((item, index) => (
                     <div key={`${item}-${index}`}>{item}</div>
                   ))}
-                  {dayFailures.slice(0, 4).map((day) => (
-                    <div key={day.day}>
-                      {day.day}: {day.status}
+                  {dayFailures.slice(0, 4).map((item) => (
+                    <div key={item.day}>
+                      {localizePlanningDay(item.day, locale)}: {item.status}
                     </div>
                   ))}
                 </div>
@@ -415,9 +391,117 @@ export function ResourceAllocationManualEditor({
               <b>{t.feasible}</b>
             )}
           </div>
-        )}
-      </section>
-    </div>
+        </>
+      )}
+
+      <details className="mt-6 border border-white/10 bg-white/[0.02]">
+        <summary className="cursor-pointer p-4 text-sm font-bold">{t.advanced}</summary>
+        <div className="border-t border-white/10 pb-4">
+          {visualPlan && inputTeams.length > 0 && (
+            <>
+              <div className="grid max-w-full grid-cols-2 gap-2 bg-white/[0.04] px-4 pt-5 sm:grid-cols-3 sm:px-6 md:grid-cols-5">
+                {plan.daily.map((item) => (
+                  <button
+                    type="button"
+                    key={item.day}
+                    onClick={() => setVisualDay(item.day)}
+                    className={`min-w-0 border px-3 py-2 text-left text-xs font-bold ${
+                      visualDay === item.day
+                        ? 'border-rose-300/40 bg-rose-300/10 text-rose-300'
+                        : 'border-white/10 text-slate-500'
+                    }`}
+                  >
+                    {localizePlanningDay(item.day, locale)}
+                  </button>
+                ))}
+              </div>
+              <ResourceAllocationNetwork
+                communities={communities}
+                teams={inputTeams}
+                day={visualDay}
+                opening={opening}
+                recommended={visualPlan.recommended.assignments}
+                manual={feasible ? allocation[visualDay] : null}
+                manualOpening={feasible ? manualOpening : null}
+                locale={locale}
+              />
+            </>
+          )}
+
+          <div className="mt-6 space-y-3 px-4 md:hidden" data-testid="manual-mobile-cards">
+            {teams.map((team) => (
+              <section key={team} className="min-w-0 border border-white/10 bg-slate-950/35 p-3">
+                <b className="block break-words text-sm [overflow-wrap:anywhere]">{team}</b>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {plan.daily.map((item) => (
+                    <label key={item.day} className="min-w-0 text-xs text-slate-500">
+                      <span className="mb-1 block font-bold text-slate-400">
+                        {localizePlanningDay(item.day, locale)}
+                      </span>
+                      <select
+                        aria-label={`${team} ${item.day}`}
+                        className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
+                        value={allocation[item.day]?.[team] ?? ''}
+                        onChange={(event) => change(item.day, team, event.target.value)}
+                      >
+                        <option value="">{t.unassigned}</option>
+                        {communities.map((community) => (
+                          <option key={community} value={community}>
+                            {community}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <div
+            className="mt-6 hidden max-w-full overflow-x-auto overscroll-x-contain px-4 md:block"
+            data-testid="manual-desktop-table"
+          >
+            <table className="w-full min-w-[900px] border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="border-b border-white/15 p-2 text-left">{t.team}</th>
+                  {plan.daily.map((item) => (
+                    <th key={item.day} className="border-b border-white/15 p-2 text-left">
+                      {localizePlanningDay(item.day, locale)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {teams.map((team) => (
+                  <tr key={team}>
+                    <td className="border-b border-white/5 p-2 font-bold">{team}</td>
+                    {plan.daily.map((item) => (
+                      <td key={item.day} className="border-b border-white/5 p-2">
+                        <select
+                          aria-label={`${team} ${item.day}`}
+                          className="w-full min-w-0 border border-white/10 bg-slate-950 p-2 text-white [color-scheme:dark]"
+                          value={allocation[item.day]?.[team] ?? ''}
+                          onChange={(event) => change(item.day, team, event.target.value)}
+                        >
+                          <option value="">{t.unassigned}</option>
+                          {communities.map((community) => (
+                            <option key={community} value={community}>
+                              {community}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </section>
   )
 }
 function ComparisonRow({
@@ -438,9 +522,7 @@ function ComparisonRow({
   const delta = reference == null || actual == null ? null : actual - reference
   const favorable = delta == null || Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
   const deltaText =
-    delta == null
-      ? '—'
-      : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
+    delta == null ? '—' : `${delta > 0 ? '+' : ''}${percentage ? `${Math.round(delta * 100)} pp` : delta.toFixed(0)}`
 
   return (
     <>
