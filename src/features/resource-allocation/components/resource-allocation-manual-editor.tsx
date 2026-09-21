@@ -33,16 +33,16 @@ export type EvaluatedManualAllocation = {
 }
 const copy = {
   uk: {
-    section: 'РУЧНЕ КОРИГУВАННЯ',
-    title: 'Змініть розподіл команд і перевірте наслідки',
+    section: 'ПЕРЕВІРТЕ ВЛАСНЕ РІШЕННЯ',
+    title: 'Не погоджуєтесь з рекомендацією? Перевірте свій варіант',
     description:
-      'Менеджер може змінити призначення. DIP не оптимізує їх повторно, а оцінює саме ручний план: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
+      'Змініть призначення команд. QDIP не скасує ваші зміни — він оцінить їх наслідки: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
     reset: 'Скинути',
     team: 'Команда',
     unassigned: 'Не призначено',
-    evaluate: 'Перевірити ручний план',
+    evaluate: 'Оцінити мої зміни',
     evaluating: 'Перевірка…',
-    use: 'Використати як рішення менеджера',
+    use: 'Використати мій варіант для рішення',
     priority: 'Пріоритетні потреби',
     total: 'Усі потреби',
     served: 'Буде покрито',
@@ -53,16 +53,16 @@ const copy = {
       'Ручний план допустимий за поточних обмежень. Тепер його можна порівняти з рекомендацією DIP на схемі вище.',
   },
   en: {
-    section: 'MANUAL OVERRIDE',
-    title: 'Adjust team allocation and evaluate the consequences',
+    section: 'TEST YOUR OWN DECISION',
+    title: 'Disagree with the recommendation? Test your own allocation',
     description:
-      'A manager can change assignments. DIP does not optimize them back; it evaluates the manual plan itself: coverage, unmet demand, movement and constraint violations.',
+      'Change team assignments. QDIP will not optimize your edits away — it evaluates their consequences: coverage, unmet demand, movement and constraint violations.',
     reset: 'Reset',
     team: 'Team',
     unassigned: 'Unassigned',
-    evaluate: 'Evaluate manual plan',
+    evaluate: 'Evaluate my changes',
     evaluating: 'Evaluating…',
-    use: 'Use as manager decision',
+    use: 'Use my plan for the decision',
     priority: 'Priority needs',
     total: 'All needs',
     served: 'Expected covered',
@@ -73,16 +73,16 @@ const copy = {
       'The manual plan is feasible under current constraints. It can now be compared with the DIP recommendation in the network above.',
   },
   pl: {
-    section: 'KOREKTA RĘCZNA',
-    title: 'Zmień alokację zespołów i oceń konsekwencje',
+    section: 'SPRAWDŹ WŁASNĄ DECYZJĘ',
+    title: 'Nie zgadzasz się z rekomendacją? Sprawdź własny wariant',
     description:
-      'Menedżer może zmienić przydziały. DIP nie optymalizuje ich ponownie, lecz ocenia sam plan ręczny: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
+      'Zmień przydziały zespołów. QDIP nie cofnie Twoich zmian — oceni ich skutki: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
     reset: 'Resetuj',
     team: 'Zespół',
     unassigned: 'Nieprzydzielony',
-    evaluate: 'Oceń plan ręczny',
+    evaluate: 'Oceń moje zmiany',
     evaluating: 'Ocena…',
-    use: 'Użyj jako decyzji menedżera',
+    use: 'Użyj mojego wariantu do decyzji',
     priority: 'Potrzeby priorytetowe',
     total: 'Wszystkie potrzeby',
     served: 'Zostanie pokryte',
@@ -214,7 +214,7 @@ export function ResourceAllocationManualEditor({
       <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 basis-[16rem]">
-            <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">07 · {t.section}</div>
+            <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">05 · {t.section}</div>
             <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
             <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
               {t.description}
