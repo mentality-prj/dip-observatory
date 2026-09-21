@@ -318,14 +318,18 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     }
   }
 
-  const activePlan = result
-    ? (result.alternatives[selectedAlternative] ?? {
-        daily: result.daily,
-        aggregate_metrics: result.aggregate_metrics,
-        demand_summary: result.demand_summary,
-        period_score: 0,
-      })
-    : null
+  const activePlan = useMemo(
+    () =>
+      result
+        ? (result.alternatives[selectedAlternative] ?? {
+            daily: result.daily,
+            aggregate_metrics: result.aggregate_metrics,
+            demand_summary: result.demand_summary,
+            period_score: 0,
+          })
+        : null,
+    [result, selectedAlternative]
+  )
   const day = activePlan?.daily[selectedDay] ?? null
   const movementSummary = useMemo(
     () =>
