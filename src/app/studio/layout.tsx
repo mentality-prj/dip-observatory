@@ -15,6 +15,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
       <ProductHeader
         href={marketingHref('en')}
         product="Studio"
+        siteLink={{ href: marketingHref('en'), label: 'QDIP Home' }}
         productSwitch={{ href: observatoryHref(), label: 'Open Observatory' }}
         status={
           <StatusBadge>
