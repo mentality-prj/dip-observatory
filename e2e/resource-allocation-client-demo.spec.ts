@@ -141,11 +141,8 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(page.getByText('Where to send teams each day')).toBeVisible()
   expect(sawResponsibleCitizensInput).toBe(true)
 
-  await page.getByRole('button', { name: 'Create immutable decision snapshot' }).click()
-  await expect(page.getByText('Decision ID · demo-decision-1')).toBeVisible()
-  await expect(page.getByText('resource-allocation/0.6.0 · 0.6.0')).toBeVisible()
-
-  await page.getByRole('button', { name: 'Accept DIP plan' }).click()
+  await page.getByRole('button', { name: 'Accept QDIP recommendation' }).click()
+  await expect(page.getByText(/Decision ID · demo-decision-1/)).toBeVisible()
   await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible()
 
   await page.getByPlaceholder('What actually happened after the decision was executed').fill('Executed as planned')
@@ -328,7 +325,7 @@ test('capacity gap handles success and non-JSON backend errors', async ({ page }
   await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
 
   const analyze = page.getByRole('button', {
-    name: 'Analyze capacity needed for 90% priority coverage',
+    name: 'Calculate required resources',
   })
 
   await analyze.click()
