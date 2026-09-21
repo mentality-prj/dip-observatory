@@ -61,6 +61,7 @@ export function ProductHeader({
   href,
   product,
   navigation,
+  siteLink,
   productSwitch,
   status,
   utilities,
@@ -69,6 +70,7 @@ export function ProductHeader({
   href: string
   product: ProductName
   navigation?: ReactNode
+  siteLink?: ProductSwitch
   productSwitch: ProductSwitch
   status?: ReactNode
   utilities?: ReactNode
@@ -85,6 +87,7 @@ export function ProductHeader({
         )}
         <div className="ds-product-header-actions">
           {status}
+          {siteLink ? <ProductSwitchLink {...siteLink} /> : null}
           <ProductSwitchLink {...productSwitch} />
           {utilities}
         </div>
@@ -101,6 +104,7 @@ export function ProductShell({
   product,
   navigation,
   mobileNavigation,
+  siteLink,
   productSwitch,
   status,
   utilities,
@@ -113,6 +117,7 @@ export function ProductShell({
   product: ProductName
   navigation?: ReactNode
   mobileNavigation?: ReactNode
+  siteLink?: ProductSwitch
   productSwitch: ProductSwitch
   status?: ReactNode
   utilities?: ReactNode
@@ -124,6 +129,7 @@ export function ProductShell({
         href={href}
         product={product}
         navigation={navigation}
+        siteLink={siteLink}
         productSwitch={productSwitch}
         status={status}
         utilities={utilities}
