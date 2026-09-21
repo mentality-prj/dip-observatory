@@ -44,7 +44,7 @@ const copy = {
 } as const
 
 export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
-  const [view, setView] = useState<GasForecastView>('context')
+  const [view, setView] = useState<GasForecastView>('decision')
   const t = copy[locale]
   const tabs = [
     { id: 'context' as const, label: t.context, description: t.contextBody, icon: Database },
