@@ -359,8 +359,8 @@ export function ResourceAllocationDecisionPanel({
   const bindingBottlenecks = capacity?.bottlenecks?.filter((item) => item.binding) ?? []
   const status = record?.status ?? lifecycle?.status
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
-      <section className="rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
+    <div className="grid min-w-0 max-w-full gap-5 xl:grid-cols-2">
+      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-slate-950/70 p-6 text-white">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-rose-300">08 · {t.capacity}</div>
@@ -452,7 +452,7 @@ export function ResourceAllocationDecisionPanel({
           </div>
         )}
       </section>
-      <section className="rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
+      <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-white/[0.04] p-6">
         <div className="text-xs font-bold uppercase tracking-wider text-rose-300">09 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-black">{t.decisionTitle}</h3>
