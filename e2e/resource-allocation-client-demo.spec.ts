@@ -54,6 +54,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   let status: 'proposed' | 'accepted' | 'completed' = 'proposed'
   const feedback: Array<Record<string, unknown>> = []
   const outcomes: Array<Record<string, unknown>> = []
+  let recordedOutcomeBody: Record<string, unknown> | null = null
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>
@@ -111,6 +112,7 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   })
 
   await page.route('**/api/resource-allocation/decisions/demo-decision-1/outcomes', async (route) => {
+    recordedOutcomeBody = route.request().postDataJSON() as Record<string, unknown>
     status = 'completed'
     outcomes.push({
       recorded_at: '2026-09-21T12:10:00Z',
@@ -137,18 +139,24 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(blocked).toHaveCSS('color-scheme', 'dark')
   await expect(blocked).not.toHaveCSS('background-color', 'rgb(255, 255, 255)')
 
-  await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
-  await expect(page.getByText('Where to send teams each day')).toBeVisible()
+  await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
   expect(sawResponsibleCitizensInput).toBe(true)
 
   await page.getByRole('button', { name: 'Accept QDIP recommendation' }).click()
   await expect(page.getByText(/Decision ID · demo-decision-1/)).toBeVisible()
-  await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible()
 
-  await page.getByPlaceholder('What actually happened after the decision was executed').fill('Executed as planned')
+  await page.getByLabel('Actual priority-needs coverage, %').fill('81')
+  await page.getByLabel('Demand units actually covered').fill('96')
+  await page.getByLabel('Demand units actually left uncovered').fill('32')
+  await page.getByPlaceholder('What actually happened after the decision was executed').fill('Executed with one field change')
   await page.getByRole('button', { name: 'Record actual outcome' }).click()
   await expect(page.getByText('Decision completed.')).toBeVisible()
   await expect(page.getByText('Actual outcome recorded')).toBeVisible()
+  expect(recordedOutcomeBody).not.toBeNull()
+  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).priority_coverage).toBe(0.81)
+  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).served).toBe(96)
+  expect((recordedOutcomeBody?.metrics as Record<string, unknown>).closing_unmet).toBe(32)
 })
 
 
@@ -178,8 +186,9 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
     )
     .toEqual({ scrollWidth: 390, clientWidth: 390 })
 
-  await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
-  await expect(page.getByText('Where to send teams each day')).toBeVisible()
+  await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
+  await page.getByText('Test your own plan', { exact: true }).click()
   await expect(page.getByTestId('manual-mobile-cards')).toBeVisible()
   await expect(page.getByTestId('manual-desktop-table')).toBeHidden()
 
@@ -196,6 +205,7 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
 
 test('client data importer gives feedback and supports drag and drop', async ({ page }) => {
   await page.goto('/en/resource-allocation')
+  await page.getByText('Try your own data', { exact: true }).click()
 
   const pickerCsv = [
     'record_type,id,community,service,units,priority,current_community,skills,capacity,max_teams,from,to,cost,minutes,days,budget',
@@ -261,8 +271,9 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   await expect(page.getByTestId('resource-import-file')).toContainText('drop-test.csv')
   await expect(page.getByTestId('community-count')).toHaveText('2')
   await expect(page.getByTestId('team-count')).toHaveText('2')
+  await expect(page.getByTestId('resource-data-source')).toContainText('Imported dataset · drop-test.csv')
   await expect(page.getByTestId('resource-active-summary')).toContainText(
-    '2 teams. 2 communities. 20 opening needs. 5 days.'
+    '2 teams. 2 communities. 20 demand units. 5 days.'
   )
 })
 
@@ -322,7 +333,9 @@ test('capacity gap handles success and non-JSON backend errors', async ({ page }
   })
 
   await page.goto('/en/resource-allocation')
-  await page.getByRole('button', { name: 'Calculate weekly plan' }).click()
+  await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+
+  await page.getByText('WHAT IS NEEDED FOR A BETTER RESULT', { exact: true }).click()
 
   const analyze = page.getByRole('button', {
     name: 'Calculate required resources',
