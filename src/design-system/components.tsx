@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
@@ -41,7 +42,16 @@ export function ProductLockup({
   return (
     <div className={cn('ds-product-lockup', className)}>
       <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick}>
-        QDIP
+        <Image
+          alt="QDIP"
+          className="ds-product-lockup-wordmark"
+          height={157}
+          priority
+          sizes="92px"
+          src="/qdip-logo.png"
+          style={{ clipPath: 'inset(0 10%)', height: 'auto', marginInline: '-9px', width: '92px' }}
+          width={300}
+        />
       </Link>
       <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
         .{product}
