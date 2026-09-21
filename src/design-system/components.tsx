@@ -16,7 +16,7 @@ export function ProductLockup({ href, brandHref, product, className, onClick }: 
   return (
     <div className={cn('ds-product-lockup', className)}>
       <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick}>
-        <Image alt="QDIP" className="ds-product-lockup-wordmark" height={157} priority sizes="96px" src="/qdip-logo.png" width={300} />
+        <Image alt="QDIP" className="ds-product-lockup-wordmark" height={157} priority sizes="92px" src="/qdip-logo.png" style={{ clipPath: 'inset(0 10%)', height: 'auto', marginInline: '-9px', width: '92px' }} width={300} />
       </Link>
       <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>.{product}</Link>
     </div>
@@ -28,29 +28,17 @@ export function ProductSwitchLink({ href, label, icon }: ProductSwitch) {
 }
 
 export function ProductHeader({ href, brandHref, product, navigation, siteLink, productSwitch, status, utilities, className }: { href: string; brandHref?: string; product: ProductName; navigation?: ReactNode; siteLink?: ProductSwitch; productSwitch?: ProductSwitch; status?: ReactNode; utilities?: ReactNode; className?: string }) {
-  return (
-    <header className={cn('ds-product-header', className)}><div className="ds-product-header-inner"><ProductLockup href={href} brandHref={brandHref} product={product} />{navigation ? <div className="ds-product-header-center">{navigation}</div> : <div className="ds-product-header-spacer" />}<div className="ds-product-header-actions">{status}{siteLink ? <ProductSwitchLink {...siteLink} /> : null}{productSwitch ? <ProductSwitchLink {...productSwitch} /> : null}{utilities}</div></div></header>
-  )
+  return <header className={cn('ds-product-header', className)}><div className="ds-product-header-inner"><ProductLockup href={href} brandHref={brandHref} product={product} />{navigation ? <div className="ds-product-header-center">{navigation}</div> : <div className="ds-product-header-spacer" />}<div className="ds-product-header-actions">{status}{siteLink ? <ProductSwitchLink {...siteLink} /> : null}{productSwitch ? <ProductSwitchLink {...productSwitch} /> : null}{utilities}</div></div></header>
 }
 
 export function ProductShell({ theme, mode = 'dark', className, href, brandHref, product, navigation, mobileNavigation, siteLink, productSwitch, status, utilities, children }: { theme: DesignTheme; mode?: DesignMode; className?: string; href: string; brandHref?: string; product: ProductName; navigation?: ReactNode; mobileNavigation?: ReactNode; siteLink?: ProductSwitch; productSwitch: ProductSwitch; status?: ReactNode; utilities?: ReactNode; children: ReactNode }) {
-  return (
-    <DesignSystemProvider theme={theme} mode={mode} className={className}>
-      <ProductHeader href={href} brandHref={brandHref} product={product} navigation={navigation} siteLink={siteLink} productSwitch={productSwitch} status={status} utilities={utilities} />
-      {mobileNavigation ? <div className="ds-product-mobile-navigation">{mobileNavigation}</div> : null}
-      {children}
-    </DesignSystemProvider>
-  )
+  return <DesignSystemProvider theme={theme} mode={mode} className={className}><ProductHeader href={href} brandHref={brandHref} product={product} navigation={navigation} siteLink={siteLink} productSwitch={productSwitch} status={status} utilities={utilities} />{mobileNavigation ? <div className="ds-product-mobile-navigation">{mobileNavigation}</div> : null}{children}</DesignSystemProvider>
 }
 
-export function Surface({ as: Tag = 'section', className, children }: { as?: 'section' | 'article' | 'div'; className?: string; children: ReactNode }) {
-  return <Tag className={cn('ds-surface', className)}>{children}</Tag>
-}
+export function Surface({ as: Tag = 'section', className, children }: { as?: 'section' | 'article' | 'div'; className?: string; children: ReactNode }) { return <Tag className={cn('ds-surface', className)}>{children}</Tag> }
 
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: ReactNode; title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return <div className="ds-page-header"><div>{eyebrow ? <div className="ds-page-eyebrow">{eyebrow}</div> : null}<h1 className="ds-h1">{title}</h1>{description ? <p className="ds-page-description">{description}</p> : null}</div>{actions ? <div className="ds-page-actions">{actions}</div> : null}</div>
 }
 
-export function StatusBadge({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn('ds-status-badge', className)}>{children}</span>
-}
+export function StatusBadge({ children, className }: { children: ReactNode; className?: string }) { return <span className={cn('ds-status-badge', className)}>{children}</span> }
