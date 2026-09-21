@@ -196,7 +196,7 @@ export function ResourceAllocationImport({
           <div aria-live="polite">
             <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
             <div className="mt-3 font-bold text-emerald-200">{t.ready}</div>
-            <div className="mt-1 break-words text-xs text-slate-400">
+            <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
               {fileMeta.name} · {formatBytes(fileMeta.size)}
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-left">
