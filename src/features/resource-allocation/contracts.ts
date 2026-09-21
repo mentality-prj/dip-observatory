@@ -62,7 +62,7 @@ export type ResourceAllocationResult = {
   search_space: number
   evaluated_plans: number
   engine_version: string
-  evidence: string[]
+  evidence: Array<string | Record<string, unknown>>
 }
 
 export type ResourceAllocationScenario = {
