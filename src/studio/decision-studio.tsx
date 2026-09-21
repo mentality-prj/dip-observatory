@@ -212,7 +212,8 @@ export function DecisionStudio({ section }: { section: string }) {
           )}
           {section === 'profiles' && (
             <>
-              <ProfileDashboard
+              {!editor && (
+                <ProfileDashboard
                 profiles={data.profiles}
                 plugins={data.plugins}
                 deleting={deleting}
@@ -226,9 +227,16 @@ export function DecisionStudio({ section }: { section: string }) {
                 onRequestDelete={setDeleting}
                 onCancelDelete={() => setDeleting('')}
                 onConfirmDelete={deleteProfile}
-              />
+                />
+              )}
               {editor && (
-                <ProfileEditor
+                <div className="studio-editor-workspace">
+                  <div className="studio-editor-toolbar">
+                    <Button type="button" variant="secondary" onClick={() => setEditor(null)}>
+                      Back to profiles
+                    </Button>
+                  </div>
+                  <ProfileEditor
                   key={editor.key}
                   initial={editor.profile}
                   existing={editor.existing}
@@ -243,7 +251,8 @@ export function DecisionStudio({ section }: { section: string }) {
                     await refreshProfiles()
                     setMessage(`Profile ${profile.name} saved at version ${profile.version}.`)
                   }}
-                />
+                  />
+                </div>
               )}
               {runningProfile && (
                 <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />
