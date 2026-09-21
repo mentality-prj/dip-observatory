@@ -58,7 +58,7 @@
 .studio-language-switcher span {
   display: grid;
   min-width: 32px;
-  min-height: 30px;
+  min-height: 32px;
   padding: 0;
   place-items: center;
   border: 0;
