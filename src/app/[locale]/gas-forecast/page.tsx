@@ -1,5 +1,5 @@
-import { GasForecastWorkspace } from "@/features/gas-forecast";
+import { GasForecastWorkspace } from '@/features/gas-forecast'
 
 export default function GasForecastPage() {
-  return <GasForecastWorkspace />;
+  return <GasForecastWorkspace />
 }

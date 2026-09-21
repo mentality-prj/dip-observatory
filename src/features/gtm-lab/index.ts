@@ -1,1 +1,1 @@
-export { GtmLabWorkspace } from "./components/gtm-lab-workspace";
+export { GtmLabWorkspace } from './components/gtm-lab-workspace'

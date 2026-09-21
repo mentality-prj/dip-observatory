@@ -4,103 +4,103 @@
 // lower(operatorKey + pointKey + direction), matching official-derived ENTSOG
 // client implementations.
 export interface EntsogPointPreset {
-  value: string;
-  label: string;
-  pointLabel: string;
-  operatorLabel: string;
-  direction: string;
-  tsoCountry?: string;
-  adjacentCountry?: string;
+  value: string
+  label: string
+  pointLabel: string
+  operatorLabel: string
+  direction: string
+  tsoCountry?: string
+  adjacentCountry?: string
 }
 
-type EntsogPointPresetSource = Omit<EntsogPointPreset, "value" | "label"> & {
-  displayPointLabel: string;
-  operatorKey: string;
-  pointKey: string;
-};
+type EntsogPointPresetSource = Omit<EntsogPointPreset, 'value' | 'label'> & {
+  displayPointLabel: string
+  operatorKey: string
+  pointKey: string
+}
 
 const ENTSOG_POINT_PRESET_SOURCE: readonly EntsogPointPresetSource[] = [
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00008",
-    displayPointLabel: "Melendugno - IT / TAP",
-    pointLabel: "Melendugno - IT / TAP",
-    operatorLabel: "TAP",
-    direction: "entry",
-    tsoCountry: "IT",
-    adjacentCountry: "IT",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00008',
+    displayPointLabel: 'Melendugno - IT / TAP',
+    pointLabel: 'Melendugno - IT / TAP',
+    operatorLabel: 'TAP',
+    direction: 'entry',
+    tsoCountry: 'IT',
+    adjacentCountry: 'IT',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00008",
-    displayPointLabel: "Melendugno - IT / TAP",
-    pointLabel: "Melendugno - IT / TAP",
-    operatorLabel: "TAP",
-    direction: "exit",
-    tsoCountry: "IT",
-    adjacentCountry: "IT",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00008',
+    displayPointLabel: 'Melendugno - IT / TAP',
+    pointLabel: 'Melendugno - IT / TAP',
+    operatorLabel: 'TAP',
+    direction: 'exit',
+    tsoCountry: 'IT',
+    adjacentCountry: 'IT',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00274",
-    displayPointLabel: "Kipoi (GR)",
-    pointLabel: "Kipoi",
-    operatorLabel: "TAP",
-    direction: "entry",
-    tsoCountry: "GR",
-    adjacentCountry: "TR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00274',
+    displayPointLabel: 'Kipoi (GR)',
+    pointLabel: 'Kipoi',
+    operatorLabel: 'TAP',
+    direction: 'entry',
+    tsoCountry: 'GR',
+    adjacentCountry: 'TR',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00274",
-    displayPointLabel: "Kipoi (GR)",
-    pointLabel: "Kipoi",
-    operatorLabel: "TAP",
-    direction: "exit",
-    tsoCountry: "GR",
-    adjacentCountry: "TR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00274',
+    displayPointLabel: 'Kipoi (GR)',
+    pointLabel: 'Kipoi',
+    operatorLabel: 'TAP',
+    direction: 'exit',
+    tsoCountry: 'GR',
+    adjacentCountry: 'TR',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00427",
-    displayPointLabel: "Nea Mesimvria (GR)",
-    pointLabel: "Nea Mesimvria",
-    operatorLabel: "TAP",
-    direction: "entry",
-    tsoCountry: "GR",
-    adjacentCountry: "GR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00427',
+    displayPointLabel: 'Nea Mesimvria (GR)',
+    pointLabel: 'Nea Mesimvria',
+    operatorLabel: 'TAP',
+    direction: 'entry',
+    tsoCountry: 'GR',
+    adjacentCountry: 'GR',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "ITP-00427",
-    displayPointLabel: "Nea Mesimvria (GR)",
-    pointLabel: "Nea Mesimvria",
-    operatorLabel: "TAP",
-    direction: "exit",
-    tsoCountry: "GR",
-    adjacentCountry: "GR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'ITP-00427',
+    displayPointLabel: 'Nea Mesimvria (GR)',
+    pointLabel: 'Nea Mesimvria',
+    operatorLabel: 'TAP',
+    direction: 'exit',
+    tsoCountry: 'GR',
+    adjacentCountry: 'GR',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "VTP-00044",
-    displayPointLabel: "TAP Virtual Trading Point (GR)",
-    pointLabel: "TAP Virtual Trading Point",
-    operatorLabel: "TAP",
-    direction: "entry",
-    tsoCountry: "GR",
-    adjacentCountry: "GR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'VTP-00044',
+    displayPointLabel: 'TAP Virtual Trading Point (GR)',
+    pointLabel: 'TAP Virtual Trading Point',
+    operatorLabel: 'TAP',
+    direction: 'entry',
+    tsoCountry: 'GR',
+    adjacentCountry: 'GR',
   },
   {
-    operatorKey: "AL-TSO-0001",
-    pointKey: "VTP-00044",
-    displayPointLabel: "TAP Virtual Trading Point (GR)",
-    pointLabel: "TAP Virtual Trading Point",
-    operatorLabel: "TAP",
-    direction: "exit",
-    tsoCountry: "GR",
-    adjacentCountry: "GR",
+    operatorKey: 'AL-TSO-0001',
+    pointKey: 'VTP-00044',
+    displayPointLabel: 'TAP Virtual Trading Point (GR)',
+    pointLabel: 'TAP Virtual Trading Point',
+    operatorLabel: 'TAP',
+    direction: 'exit',
+    tsoCountry: 'GR',
+    adjacentCountry: 'GR',
   },
-] as const;
+] as const
 
 function formatDirection(direction: string) {
   return direction
@@ -108,15 +108,15 @@ function formatDirection(direction: string) {
     .split(/[\s_-]+/)
     .filter(Boolean)
     .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
-    .join(" ");
+    .join(' ')
 }
 
 function toPointDirectionValue({
   operatorKey,
   pointKey,
   direction,
-}: Pick<EntsogPointPresetSource, "operatorKey" | "pointKey" | "direction">) {
-  return `${operatorKey}${pointKey}${direction}`.toLowerCase();
+}: Pick<EntsogPointPresetSource, 'operatorKey' | 'pointKey' | 'direction'>) {
+  return `${operatorKey}${pointKey}${direction}`.toLowerCase()
 }
 
 function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
@@ -128,22 +128,20 @@ function toPreset(source: EntsogPointPresetSource): EntsogPointPreset {
     direction: source.direction,
     tsoCountry: source.tsoCountry,
     adjacentCountry: source.adjacentCountry,
-  };
+  }
 }
 
 function sortPresets(presets: readonly EntsogPointPreset[]) {
   return [...presets].sort((a, b) => {
     const labelComparison = a.label.localeCompare(b.label, undefined, {
-      sensitivity: "base",
-    });
+      sensitivity: 'base',
+    })
     if (labelComparison !== 0) {
-      return labelComparison;
+      return labelComparison
     }
 
-    return a.value.localeCompare(b.value, undefined, { sensitivity: "base" });
-  });
+    return a.value.localeCompare(b.value, undefined, { sensitivity: 'base' })
+  })
 }
 
-export const ENTSOG_POINT_PRESETS: readonly EntsogPointPreset[] = sortPresets(
-  ENTSOG_POINT_PRESET_SOURCE.map(toPreset),
-);
+export const ENTSOG_POINT_PRESETS: readonly EntsogPointPreset[] = sortPresets(ENTSOG_POINT_PRESET_SOURCE.map(toPreset))

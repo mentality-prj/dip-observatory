@@ -18,15 +18,15 @@ import type {
   MispricingSignal,
   HedgeDecision,
   HedgeSignal,
-} from "@/dip/plugins/futures-mispricing/domain";
+} from '@/dip/plugins/futures-mispricing/domain'
 
 /** Plugin metadata describing identity and capabilities. */
 export interface FuturesMispricingPluginMeta {
-  id: "futures-mispricing";
-  version: "0.1.0";
-  category: "research";
-  capabilities: string[];
-  description: string;
+  id: 'futures-mispricing'
+  version: '0.1.0'
+  category: 'research'
+  capabilities: string[]
+  description: string
 }
 
 /**
@@ -35,34 +35,32 @@ export interface FuturesMispricingPluginMeta {
  */
 export interface FuturesMispricingConfigV1 {
   /** Structural valuation weights: local interpolation vs annual proxy. */
-  valuationWeights: { localInterpolation: number; annualProxy: number };
+  valuationWeights: { localInterpolation: number; annualProxy: number }
   /** Coverage factor k for the uncertainty half-width (deterministic). */
-  uncertaintyCoverageFactor: number;
+  uncertaintyCoverageFactor: number
   /** Minimum uncertainty half-width regardless of data quality (PLN/MWh). */
-  minimumHalfWidth: number;
+  minimumHalfWidth: number
   /** Number of deterministic grid points for the minimax search. */
-  minimaxGridSize: number;
+  minimaxGridSize: number
   /** Minimum discount (fraction of central) to consider a BUY. */
-  minimumBuyDiscountPercent: number;
+  minimumBuyDiscountPercent: number
   /** Minimum discount / uncertainty-width ratio for a BUY. */
-  minimumDiscountUncertaintyRatio: number;
+  minimumDiscountUncertaintyRatio: number
   /** Minimum absolute discount (PLN/MWh) for economic significance. */
-  minimumAbsoluteDiscountPln: number;
+  minimumAbsoluteDiscountPln: number
   /** Historical window length used for market dynamics (days). */
-  historicalWindowDays: number;
+  historicalWindowDays: number
   /** Robustness HIGH threshold (× uncertainty half-width). */
-  robustnessHighThreshold: number;
+  robustnessHighThreshold: number
   /** Robustness MEDIUM threshold (× uncertainty half-width). */
-  robustnessMediumThreshold: number;
+  robustnessMediumThreshold: number
   /** Configuration schema version. */
-  configVersion: "1.0";
+  configVersion: '1.0'
 }
 
-export type FuturesMispricingConfigOverride = Partial<
-  Omit<FuturesMispricingConfigV1, "valuationWeights">
-> & {
-  valuationWeights?: Partial<FuturesMispricingConfigV1["valuationWeights"]>;
-};
+export type FuturesMispricingConfigOverride = Partial<Omit<FuturesMispricingConfigV1, 'valuationWeights'>> & {
+  valuationWeights?: Partial<FuturesMispricingConfigV1['valuationWeights']>
+}
 
 /**
  * Request contract for the futures mispricing plugin.
@@ -72,15 +70,15 @@ export type FuturesMispricingConfigOverride = Partial<
  */
 export interface FuturesMispricingRequest {
   /** Decision date (ISO 8601). Information cutoff for the whole computation. */
-  decisionDate: string;
+  decisionDate: string
   /** Contract being analysed, e.g. "Q1-2027". */
-  targetContract: string;
+  targetContract: string
   /** Pre-decision market snapshot (forward curve). */
-  marketSnapshot: MarketSnapshot;
+  marketSnapshot: MarketSnapshot
   /** Pre-decision historical price observations. */
-  historicalObservations: Array<{ date: string; price: number }>;
+  historicalObservations: Array<{ date: string; price: number }>
   /** Optional configuration overrides (merged over DEFAULT_CONFIG). */
-  configuration?: FuturesMispricingConfigOverride;
+  configuration?: FuturesMispricingConfigOverride
 }
 
 /**
@@ -88,15 +86,15 @@ export interface FuturesMispricingRequest {
  */
 export interface HistoricalDynamics {
   /** Linear regression slope (PLN/MWh per day). */
-  trend: number;
+  trend: number
   /** Sample standard deviation of prices (PLN/MWh). */
-  volatility: number;
+  volatility: number
   /** Price change over the window (latest - oldest, PLN/MWh). */
-  momentum: number;
+  momentum: number
   /** Number of observations used (after the decisionDate cutoff). */
-  observationCount: number;
+  observationCount: number
   /** Span of the observation window in days. */
-  windowDays: number;
+  windowDays: number
 }
 
 /**
@@ -105,34 +103,34 @@ export interface HistoricalDynamics {
  */
 export interface DecisionTrace {
   input: {
-    decisionDate: string;
-    targetContract: string;
-    contractPrice: number;
-    historicalObservations: number;
-  };
-  curveMetrics: CurveMetrics;
-  structuralValuation: ValuationRange;
-  uncertaintyRange: ValuationRange;
-  historicalDynamics: HistoricalDynamics;
-  minimax: MinimaxResult;
-  mispricingSignal: MispricingSignal;
-  hedgeDecision: { action: HedgeSignal; rationale: string };
+    decisionDate: string
+    targetContract: string
+    contractPrice: number
+    historicalObservations: number
+  }
+  curveMetrics: CurveMetrics
+  structuralValuation: ValuationRange
+  uncertaintyRange: ValuationRange
+  historicalDynamics: HistoricalDynamics
+  minimax: MinimaxResult
+  mispricingSignal: MispricingSignal
+  hedgeDecision: { action: HedgeSignal; rationale: string }
 }
 
 /** Response contract for the futures mispricing plugin. */
 export interface FuturesMispricingResponse {
   /** Final hedge decision. */
-  decision: HedgeDecision;
+  decision: HedgeDecision
   /** Plugin version that produced this response. */
-  pluginVersion: string;
+  pluginVersion: string
   /** Model version identifier. */
-  modelVersion: string;
+  modelVersion: string
   /** Configuration schema version. */
-  configurationVersion: string;
+  configurationVersion: string
   /** Timestamp when the response was produced (metadata only). */
-  computedAt: string;
+  computedAt: string
   /** Full deterministic decision trace. */
-  decisionTrace: DecisionTrace;
+  decisionTrace: DecisionTrace
 }
 
 /**
@@ -145,7 +143,7 @@ export interface FuturesMispricingResponse {
  */
 export class FuturesMispricingInputError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "FuturesMispricingInputError";
+    super(message)
+    this.name = 'FuturesMispricingInputError'
   }
 }

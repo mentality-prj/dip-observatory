@@ -1,50 +1,345 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select } from "@/design-system";
-import { studioHref } from "@/lib/platform-urls";
-import { DecisionWorkflow } from "@/components/product/decision-workflow";
-import { BindingEditor } from "./binding-editor";
-import { emptyProfile, studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from "./contracts";
-import { Breadcrumbs, outputLabel } from "./presentation";
-import { ProfileEditor } from "./profile-editor";
-import { ProfileRunner } from "./profile-runner";
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/design-system'
+import { studioHref } from '@/lib/platform-urls'
+import { DecisionWorkflow } from '@/components/product/decision-workflow'
+import { BindingEditor } from './binding-editor'
+import { emptyProfile, studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from './contracts'
+import { Breadcrumbs, outputLabel } from './presentation'
+import { ProfileEditor } from './profile-editor'
+import { ProfileRunner } from './profile-runner'
 
-const titles: Record<string, string> = { profiles: "Decision Profiles", plugins: "Plugins & Capabilities", dimensions: "Dimension Registry", bindings: "Output Bindings" };
+const titles: Record<string, string> = {
+  profiles: 'Decision Profiles',
+  plugins: 'Plugins & Capabilities',
+  dimensions: 'Dimension Registry',
+  bindings: 'Output Bindings',
+}
 const descriptions: Record<string, string> = {
-  profiles: "Configure a repeatable decision: alternatives, dimensions, priorities, rules and constraints.",
-  plugins: "Inspect the domain capabilities that supply evidence and decision inputs.",
-  dimensions: "Define reusable evaluation dimensions and the contracts that govern them.",
-  bindings: "Map plugin outputs into the dimensions consumed by decision profiles.",
-};
+  profiles: 'Configure a repeatable decision: alternatives, dimensions, priorities, rules and constraints.',
+  plugins: 'Inspect the domain capabilities that supply evidence and decision inputs.',
+  dimensions: 'Define reusable evaluation dimensions and the contracts that govern them.',
+  bindings: 'Map plugin outputs into the dimensions consumed by decision profiles.',
+}
 
 export function DecisionStudio({ section }: { section: string }) {
-  const [data, setData] = useState<{ dimensions: Dimension[]; plugins: Plugin[]; profiles: ProfileView[] } | null>(null);
-  const [error, setError] = useState(""); const [message, setMessage] = useState("");
-  const [editor, setEditor] = useState<{ profile: Profile; existing: boolean; key: number } | null>(null);
-  const [pluginId, setPluginId] = useState(""); const [deleting, setDeleting] = useState(""); const [retry, setRetry] = useState(0);
-  const [runningProfile, setRunningProfile] = useState<Profile | null>(null);
+  const [data, setData] = useState<{ dimensions: Dimension[]; plugins: Plugin[]; profiles: ProfileView[] } | null>(null)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [editor, setEditor] = useState<{ profile: Profile; existing: boolean; key: number } | null>(null)
+  const [pluginId, setPluginId] = useState('')
+  const [deleting, setDeleting] = useState('')
+  const [retry, setRetry] = useState(0)
+  const [runningProfile, setRunningProfile] = useState<Profile | null>(null)
   useEffect(() => {
-    let disposed = false;
-    Promise.all([studioRequest<Dimension[]>("dimensions"), studioRequest<Plugin[]>("decision-studio/plugins"), section === "profiles" ? studioRequest<ProfileView[]>("decision-profiles") : Promise.resolve([])])
-      .then(([dimensions, plugins, profiles]) => { if (!disposed) { setData({ dimensions, plugins, profiles }); setError(""); } })
-      .catch((reason) => { if (!disposed) setError(String(reason)); });
-    return () => { disposed = true; };
-  }, [retry, section]);
-  async function refreshProfiles() { const profiles = await studioRequest<ProfileView[]>("decision-profiles"); setData((previous) => previous && { ...previous, profiles }); }
-  function openProfile(profile: Profile, existing: boolean) { const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== "validation")) as Profile; setEditor({ profile: clean, existing, key: Date.now() }); setMessage(""); }
-  return <>
-    <Breadcrumbs items={[...(["plugins", "bindings"].includes(section) ? [{ label: "Plugin Registry", href: studioHref("plugins") }] : []), { label: titles[section] }]} />
-    <h1>{titles[section]}</h1><p>{descriptions[section]}</p>{section === "profiles" && <DecisionWorkflow locale="en" tone="light" compact />}
-    {error && <div role="alert" className="studio-error">{error} <Button type="button" variant="secondary" onClick={() => setRetry(retry + 1)}>Retry</Button></div>}
-    {message && <div role="status" className="studio-success">{message}</div>}{!data && !error && <p role="status">Loading Decision Studio…</p>}
-    {data && <>{section === "plugins" && <div className="studio-grid">{data.plugins.map((plugin) => <Card key={plugin.name}><CardHeader><div className="studio-card-heading"><CardTitle>{plugin.ui?.label ?? plugin.name}</CardTitle><Badge variant={plugin.enabled ? "emerald" : "neutral"}>{plugin.enabled ? "Enabled" : "Disabled"}</Badge></div></CardHeader><CardContent><p>{plugin.description}</p><dl><dt>Plugin version</dt><dd>{plugin.version}</dd><dt>Category</dt><dd>{plugin.ui?.category ?? "General"}</dd></dl><h3>Capabilities</h3><ul>{plugin.capabilities.map((c) => <li key={c}>{c} <span className="studio-muted">@{plugin.capability_versions[c] ?? "unversioned"}</span></li>)}</ul><h3>Available outputs</h3>{plugin.dimension_outputs.length ? <ul>{plugin.dimension_outputs.map((o) => <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>{outputLabel(o.capability_id, o.source_path)} → {data.dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}</li>)}</ul> : <p>No dimension outputs declared.</p>}</CardContent></Card>)}</div>}
-      {section === "dimensions" && <div className="studio-grid">{data.dimensions.map((dimension) => <Card key={`${dimension.id}-${dimension.version}`}><CardHeader><div className="studio-card-heading"><CardTitle>{dimension.name}</CardTitle><Badge>{dimension.version}</Badge></div></CardHeader><CardContent><dl><dt>ID</dt><dd>{dimension.id}</dd><dt>Type</dt><dd>{dimension.type}</dd><dt>Phase</dt><dd>{dimension.phase ?? "Unavailable"}</dd><dt>Source</dt><dd>{dimension.source}</dd><dt>Evaluator</dt><dd>{dimension.evaluator_id}@{dimension.evaluator_version}</dd><dt>Blocking</dt><dd>{dimension.blocking ? "Yes" : "No"}</dd></dl><details><summary>Configuration schema</summary><pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre></details><details><summary>Value schema</summary><pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre></details></CardContent></Card>)}</div>}
-      {section === "bindings" && <><label className="studio-field">Plugin<Select value={pluginId} onChange={(e) => setPluginId(e.target.value)}><option value="">Select a plugin</option>{data.plugins.map((p) => <option key={p.name} value={p.name}>{p.ui?.label ?? p.name}</option>)}</Select></label>{data.plugins.find((p) => p.name === pluginId) && <BindingEditor key={pluginId} plugin={data.plugins.find((p) => p.name === pluginId)!} dimensions={data.dimensions} />}</>}
-      {section === "profiles" && <><div className="studio-toolbar"><Button type="button" onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}>Create profile</Button><label className="studio-field">Import profile JSON<input type="file" accept="application/json,.json" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; try { const parsed = JSON.parse(await file.text()); if (!parsed.id || !Array.isArray(parsed.dimensions) || !Array.isArray(parsed.alternatives)) throw new Error("Select a DecisionProfile JSON file."); openProfile(parsed, false); setError(""); } catch (reason) { setError(String(reason)); } e.target.value = ""; }} /></label></div>
-        {!data.profiles.length && <Card><CardHeader><CardTitle>No profiles yet</CardTitle></CardHeader><CardContent><p>Create a profile or import an example to configure alternatives, dimensions, and rules.</p></CardContent></Card>}
-        <div className="studio-grid">{data.profiles.map((profile) => <Card key={profile.id}><CardHeader><div className="studio-card-heading"><CardTitle><Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>{profile.name}</Link></CardTitle><Badge variant={profile.validation.status === "VALID" ? "emerald" : "neutral"}>{profile.validation.status}</Badge></div></CardHeader><CardContent><p>{profile.plugin_id} · {profile.capability_id}<br />Version {profile.version} · {profile.active ? "Active" : "Draft"}</p><p>{profile.dimensions.map((d) => d.dimension_id).join(" · ")}</p>{profile.validation.errors.map((validationError) => <div key={validationError} className="studio-error">{validationError}</div>)}{profile.validation.warnings.map((warning) => <p key={warning}>{warning}</p>)}<div className="studio-toolbar"><Button asChild variant="secondary"><Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>Open profile</Link></Button><Button type="button" variant="secondary" disabled={!profile.active || profile.validation.status !== "VALID"} onClick={() => setRunningProfile(profile)}>Evaluate</Button>{deleting !== profile.id ? <Button type="button" variant="secondary" onClick={() => setDeleting(profile.id)}>Delete</Button> : <><Button type="button" variant="danger" onClick={async () => { try { await studioRequest(`decision-profiles/${encodeURIComponent(profile.id)}`, { method: "DELETE" }); if (editor?.profile.id === profile.id) setEditor(null); setDeleting(""); await refreshProfiles(); setMessage("Profile deleted. Historical decisions are retained."); } catch (reason) { setError(String(reason)); } }}>Confirm delete</Button><Button type="button" variant="secondary" onClick={() => setDeleting("")}>Cancel</Button></>}</div></CardContent></Card>)}</div>
-        {editor && <ProfileEditor key={editor.key} initial={editor.profile} existing={editor.existing} plugins={data.plugins} dimensions={data.dimensions} onSave={async (profile) => { await studioRequest(editor.existing ? `decision-profiles/${encodeURIComponent(profile.id)}` : "decision-profiles", { method: editor.existing ? "PATCH" : "POST", body: JSON.stringify(profile) }); setEditor(null); await refreshProfiles(); setMessage(`Profile ${profile.name} saved at version ${profile.version}.`); }} />}{runningProfile && <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />}</>}
-    </>}</>;
+    let disposed = false
+    Promise.all([
+      studioRequest<Dimension[]>('dimensions'),
+      studioRequest<Plugin[]>('decision-studio/plugins'),
+      section === 'profiles' ? studioRequest<ProfileView[]>('decision-profiles') : Promise.resolve([]),
+    ])
+      .then(([dimensions, plugins, profiles]) => {
+        if (!disposed) {
+          setData({ dimensions, plugins, profiles })
+          setError('')
+        }
+      })
+      .catch((reason) => {
+        if (!disposed) setError(String(reason))
+      })
+    return () => {
+      disposed = true
+    }
+  }, [retry, section])
+  async function refreshProfiles() {
+    const profiles = await studioRequest<ProfileView[]>('decision-profiles')
+    setData((previous) => previous && { ...previous, profiles })
+  }
+  function openProfile(profile: Profile, existing: boolean) {
+    const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== 'validation')) as Profile
+    setEditor({ profile: clean, existing, key: Date.now() })
+    setMessage('')
+  }
+  return (
+    <>
+      <Breadcrumbs
+        items={[
+          ...(['plugins', 'bindings'].includes(section)
+            ? [{ label: 'Plugin Registry', href: studioHref('plugins') }]
+            : []),
+          { label: titles[section] },
+        ]}
+      />
+      <h1>{titles[section]}</h1>
+      <p>{descriptions[section]}</p>
+      {section === 'profiles' && <DecisionWorkflow locale="en" tone="light" compact />}
+      {error && (
+        <div role="alert" className="studio-error">
+          {error}{' '}
+          <Button type="button" variant="secondary" onClick={() => setRetry(retry + 1)}>
+            Retry
+          </Button>
+        </div>
+      )}
+      {message && (
+        <div role="status" className="studio-success">
+          {message}
+        </div>
+      )}
+      {!data && !error && <p role="status">Loading Decision Studio…</p>}
+      {data && (
+        <>
+          {section === 'plugins' && (
+            <div className="studio-grid">
+              {data.plugins.map((plugin) => (
+                <Card key={plugin.name}>
+                  <CardHeader>
+                    <div className="studio-card-heading">
+                      <CardTitle>{plugin.ui?.label ?? plugin.name}</CardTitle>
+                      <Badge variant={plugin.enabled ? 'emerald' : 'neutral'}>
+                        {plugin.enabled ? 'Enabled' : 'Disabled'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{plugin.description}</p>
+                    <dl>
+                      <dt>Plugin version</dt>
+                      <dd>{plugin.version}</dd>
+                      <dt>Category</dt>
+                      <dd>{plugin.ui?.category ?? 'General'}</dd>
+                    </dl>
+                    <h3>Capabilities</h3>
+                    <ul>
+                      {plugin.capabilities.map((c) => (
+                        <li key={c}>
+                          {c} <span className="studio-muted">@{plugin.capability_versions[c] ?? 'unversioned'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <h3>Available outputs</h3>
+                    {plugin.dimension_outputs.length ? (
+                      <ul>
+                        {plugin.dimension_outputs.map((o) => (
+                          <li key={`${o.capability_id}-${o.dimension_id}-${o.source_path}`}>
+                            {outputLabel(o.capability_id, o.source_path)} →{' '}
+                            {data.dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No dimension outputs declared.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          {section === 'dimensions' && (
+            <div className="studio-grid">
+              {data.dimensions.map((dimension) => (
+                <Card key={`${dimension.id}-${dimension.version}`}>
+                  <CardHeader>
+                    <div className="studio-card-heading">
+                      <CardTitle>{dimension.name}</CardTitle>
+                      <Badge>{dimension.version}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <dl>
+                      <dt>ID</dt>
+                      <dd>{dimension.id}</dd>
+                      <dt>Type</dt>
+                      <dd>{dimension.type}</dd>
+                      <dt>Phase</dt>
+                      <dd>{dimension.phase ?? 'Unavailable'}</dd>
+                      <dt>Source</dt>
+                      <dd>{dimension.source}</dd>
+                      <dt>Evaluator</dt>
+                      <dd>
+                        {dimension.evaluator_id}@{dimension.evaluator_version}
+                      </dd>
+                      <dt>Blocking</dt>
+                      <dd>{dimension.blocking ? 'Yes' : 'No'}</dd>
+                    </dl>
+                    <details>
+                      <summary>Configuration schema</summary>
+                      <pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre>
+                    </details>
+                    <details>
+                      <summary>Value schema</summary>
+                      <pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre>
+                    </details>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          {section === 'bindings' && (
+            <>
+              <label className="studio-field">
+                Plugin
+                <Select value={pluginId} onChange={(e) => setPluginId(e.target.value)}>
+                  <option value="">Select a plugin</option>
+                  {data.plugins.map((p) => (
+                    <option key={p.name} value={p.name}>
+                      {p.ui?.label ?? p.name}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+              {data.plugins.find((p) => p.name === pluginId) && (
+                <BindingEditor
+                  key={pluginId}
+                  plugin={data.plugins.find((p) => p.name === pluginId)!}
+                  dimensions={data.dimensions}
+                />
+              )}
+            </>
+          )}
+          {section === 'profiles' && (
+            <>
+              <div className="studio-toolbar">
+                <Button
+                  type="button"
+                  onClick={() => openProfile(emptyProfile(data.plugins.find((p) => p.enabled)), false)}
+                >
+                  Create profile
+                </Button>
+                <label className="studio-field">
+                  Import profile JSON
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      try {
+                        const parsed = JSON.parse(await file.text())
+                        if (!parsed.id || !Array.isArray(parsed.dimensions) || !Array.isArray(parsed.alternatives))
+                          throw new Error('Select a DecisionProfile JSON file.')
+                        openProfile(parsed, false)
+                        setError('')
+                      } catch (reason) {
+                        setError(String(reason))
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+              </div>
+              {!data.profiles.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>No profiles yet</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>Create a profile or import an example to configure alternatives, dimensions, and rules.</p>
+                  </CardContent>
+                </Card>
+              )}
+              <div className="studio-grid">
+                {data.profiles.map((profile) => (
+                  <Card key={profile.id}>
+                    <CardHeader>
+                      <div className="studio-card-heading">
+                        <CardTitle>
+                          <Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>{profile.name}</Link>
+                        </CardTitle>
+                        <Badge variant={profile.validation.status === 'VALID' ? 'emerald' : 'neutral'}>
+                          {profile.validation.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p>
+                        {profile.plugin_id} · {profile.capability_id}
+                        <br />
+                        Version {profile.version} · {profile.active ? 'Active' : 'Draft'}
+                      </p>
+                      <p>{profile.dimensions.map((d) => d.dimension_id).join(' · ')}</p>
+                      {profile.validation.errors.map((validationError) => (
+                        <div key={validationError} className="studio-error">
+                          {validationError}
+                        </div>
+                      ))}
+                      {profile.validation.warnings.map((warning) => (
+                        <p key={warning}>{warning}</p>
+                      ))}
+                      <div className="studio-toolbar">
+                        <Button asChild variant="secondary">
+                          <Link href={studioHref(`profiles/${encodeURIComponent(profile.id)}`)}>Open profile</Link>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={!profile.active || profile.validation.status !== 'VALID'}
+                          onClick={() => setRunningProfile(profile)}
+                        >
+                          Evaluate
+                        </Button>
+                        {deleting !== profile.id ? (
+                          <Button type="button" variant="secondary" onClick={() => setDeleting(profile.id)}>
+                            Delete
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="danger"
+                              onClick={async () => {
+                                try {
+                                  await studioRequest(`decision-profiles/${encodeURIComponent(profile.id)}`, {
+                                    method: 'DELETE',
+                                  })
+                                  if (editor?.profile.id === profile.id) setEditor(null)
+                                  setDeleting('')
+                                  await refreshProfiles()
+                                  setMessage('Profile deleted. Historical decisions are retained.')
+                                } catch (reason) {
+                                  setError(String(reason))
+                                }
+                              }}
+                            >
+                              Confirm delete
+                            </Button>
+                            <Button type="button" variant="secondary" onClick={() => setDeleting('')}>
+                              Cancel
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {editor && (
+                <ProfileEditor
+                  key={editor.key}
+                  initial={editor.profile}
+                  existing={editor.existing}
+                  plugins={data.plugins}
+                  dimensions={data.dimensions}
+                  onSave={async (profile) => {
+                    await studioRequest(
+                      editor.existing ? `decision-profiles/${encodeURIComponent(profile.id)}` : 'decision-profiles',
+                      { method: editor.existing ? 'PATCH' : 'POST', body: JSON.stringify(profile) }
+                    )
+                    setEditor(null)
+                    await refreshProfiles()
+                    setMessage(`Profile ${profile.name} saved at version ${profile.version}.`)
+                  }}
+                />
+              )}
+              {runningProfile && (
+                <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />
+              )}
+            </>
+          )}
+        </>
+      )}
+    </>
+  )
 }

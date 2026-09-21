@@ -1,20 +1,28 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
-import { resourceAllocationRequestSchema, runResourceAllocation, type UiLocale } from "@/features/resource-allocation/server/run-resource-allocation";
-import { DipApiError } from "@/lib/dip-api";
+import {
+  resourceAllocationRequestSchema,
+  runResourceAllocation,
+  type UiLocale,
+} from '@/features/resource-allocation/server/run-resource-allocation'
+import { DipApiError } from '@/lib/dip-api'
 
-export const maxDuration = 60;
+export const maxDuration = 60
 
-function requestLocale(request: Request): UiLocale { const language=request.headers.get("accept-language")?.toLowerCase() ?? ""; return language.startsWith("pl") ? "pl" : language.startsWith("en") ? "en" : "uk"; }
+function requestLocale(request: Request): UiLocale {
+  const language = request.headers.get('accept-language')?.toLowerCase() ?? ''
+  return language.startsWith('pl') ? 'pl' : language.startsWith('en') ? 'en' : 'uk'
+}
 
 export async function POST(request: Request) {
   try {
-    const input=resourceAllocationRequestSchema.parse(await request.json());
-    return NextResponse.json(await runResourceAllocation(input,requestLocale(request)));
-  } catch(error) {
-    if(error instanceof z.ZodError) return NextResponse.json({error:"Invalid resource-allocation state.",issues:error.issues},{status:422});
-    if(error instanceof DipApiError) return NextResponse.json({error:error.message},{status:error.status});
-    return NextResponse.json({error:"Unexpected resource-allocation engine error."},{status:500});
+    const input = resourceAllocationRequestSchema.parse(await request.json())
+    return NextResponse.json(await runResourceAllocation(input, requestLocale(request)))
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return NextResponse.json({ error: 'Invalid resource-allocation state.', issues: error.issues }, { status: 422 })
+    if (error instanceof DipApiError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: 'Unexpected resource-allocation engine error.' }, { status: 500 })
   }
 }

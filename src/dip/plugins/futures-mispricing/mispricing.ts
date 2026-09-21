@@ -33,9 +33,9 @@ import type {
   MinimaxResult,
   HedgeSignal,
   Robustness,
-} from "@/dip/plugins/futures-mispricing/domain";
-import { DEFAULT_CONFIG } from "./config";
-import type { FuturesMispricingConfigV1 } from "./types";
+} from '@/dip/plugins/futures-mispricing/domain'
+import { DEFAULT_CONFIG } from './config'
+import type { FuturesMispricingConfigV1 } from './types'
 
 // ---------------------------------------------------------------------------
 // Decision thresholds (explicit configuration — not outcome-fitted)
@@ -45,22 +45,20 @@ import type { FuturesMispricingConfigV1 } from "./types";
  * Minimum discount as a fraction of central valuation to consider a BUY.
  * 3% is a structurally meaningful threshold for energy futures hedging.
  */
-export const MIN_BUY_DISCOUNT_PCT = DEFAULT_CONFIG.minimumBuyDiscountPercent;
+export const MIN_BUY_DISCOUNT_PCT = DEFAULT_CONFIG.minimumBuyDiscountPercent
 
 /**
  * Minimum ratio of (discountAbsolute / uncertaintyWidth) for a BUY.
  * Discount must be materially larger than the uncertainty to be actionable.
  * A ratio of 0.5 means the discount must exceed half the uncertainty width.
  */
-export const MIN_DISCOUNT_UNCERTAINTY_RATIO =
-  DEFAULT_CONFIG.minimumDiscountUncertaintyRatio;
+export const MIN_DISCOUNT_UNCERTAINTY_RATIO = DEFAULT_CONFIG.minimumDiscountUncertaintyRatio
 
 /**
  * Minimum absolute discount (PLN/MWh) for economic significance.
  * Below this, even a structurally cheap contract may not be worth transacting.
  */
-export const MIN_ABSOLUTE_DISCOUNT_PLN =
-  DEFAULT_CONFIG.minimumAbsoluteDiscountPln;
+export const MIN_ABSOLUTE_DISCOUNT_PLN = DEFAULT_CONFIG.minimumAbsoluteDiscountPln
 
 // ---------------------------------------------------------------------------
 // Robustness classification
@@ -76,15 +74,12 @@ export const MIN_ABSOLUTE_DISCOUNT_PLN =
 export function classifyRobustness(
   discountAbsolute: number,
   uncertaintyWidth: number,
-  config: Pick<
-    FuturesMispricingConfigV1,
-    "robustnessHighThreshold" | "robustnessMediumThreshold"
-  > = DEFAULT_CONFIG,
+  config: Pick<FuturesMispricingConfigV1, 'robustnessHighThreshold' | 'robustnessMediumThreshold'> = DEFAULT_CONFIG
 ): Robustness {
-  const halfWidth = uncertaintyWidth / 2;
-  if (discountAbsolute > config.robustnessHighThreshold * halfWidth) return "HIGH";
-  if (discountAbsolute > config.robustnessMediumThreshold * halfWidth) return "MEDIUM";
-  return "LOW";
+  const halfWidth = uncertaintyWidth / 2
+  if (discountAbsolute > config.robustnessHighThreshold * halfWidth) return 'HIGH'
+  if (discountAbsolute > config.robustnessMediumThreshold * halfWidth) return 'MEDIUM'
+  return 'LOW'
 }
 
 // ---------------------------------------------------------------------------
@@ -104,18 +99,12 @@ export function classifySignal(
   minimax: MinimaxResult,
   config: Pick<
     FuturesMispricingConfigV1,
-    | "minimumAbsoluteDiscountPln"
-    | "minimumBuyDiscountPercent"
-    | "minimumDiscountUncertaintyRatio"
-  > = DEFAULT_CONFIG,
+    'minimumAbsoluteDiscountPln' | 'minimumBuyDiscountPercent' | 'minimumDiscountUncertaintyRatio'
+  > = DEFAULT_CONFIG
 ): HedgeSignal {
-  const discountAbsolute = valuation.lower - currentPrice;
-  const discountPercent =
-    valuation.central > 0 ? (valuation.central - currentPrice) / valuation.central : 0;
-  const discountUncertaintyRatio =
-    valuation.uncertaintyWidth > 0
-      ? discountAbsolute / valuation.uncertaintyWidth
-      : 0;
+  const discountAbsolute = valuation.lower - currentPrice
+  const discountPercent = valuation.central > 0 ? (valuation.central - currentPrice) / valuation.central : 0
+  const discountUncertaintyRatio = valuation.uncertaintyWidth > 0 ? discountAbsolute / valuation.uncertaintyWidth : 0
 
   // BUY: price is below even worst-case lower bound, discount is material
   if (
@@ -124,16 +113,16 @@ export function classifySignal(
     discountUncertaintyRatio >= config.minimumDiscountUncertaintyRatio &&
     discountAbsolute > config.minimumAbsoluteDiscountPln
   ) {
-    return "BUY";
+    return 'BUY'
   }
 
   // WATCH: price is below central but not robustly below lower bound
   if (currentPrice < valuation.central) {
-    return "WATCH";
+    return 'WATCH'
   }
 
   // NO_ACTION: price at or above central estimate
-  return "NO_ACTION";
+  return 'NO_ACTION'
 }
 
 // ---------------------------------------------------------------------------
@@ -148,13 +137,13 @@ export function explainSignal(
   currentPrice: number,
   valuation: ValuationRange,
   minimax: MinimaxResult,
-  signal: HedgeSignal,
+  signal: HedgeSignal
 ): string {
-  const discountFromCentral = valuation.central - currentPrice;
-  const discountPct = ((discountFromCentral / valuation.central) * 100).toFixed(1);
-  const robustDisc = minimax.robustDiscount;
+  const discountFromCentral = valuation.central - currentPrice
+  const discountPct = ((discountFromCentral / valuation.central) * 100).toFixed(1)
+  const robustDisc = minimax.robustDiscount
 
-  if (signal === "BUY") {
+  if (signal === 'BUY') {
     return (
       `${contract} is trading at ${currentPrice.toFixed(0)} PLN/MWh, ` +
       `${discountFromCentral.toFixed(0)} PLN (${discountPct}%) below the central ` +
@@ -162,24 +151,24 @@ export function explainSignal(
       `The current price is ${robustDisc.toFixed(0)} PLN below even the ` +
       `worst-case lower valuation bound of ${minimax.worstCaseLow.toFixed(0)} PLN/MWh. ` +
       `The discount is materially larger than the uncertainty range — robust BUY signal.`
-    );
+    )
   }
 
-  if (signal === "WATCH") {
+  if (signal === 'WATCH') {
     return (
       `${contract} is trading at ${currentPrice.toFixed(0)} PLN/MWh, below the ` +
       `central valuation of ${valuation.central.toFixed(0)} PLN/MWh, but the ` +
       `discount of ${discountFromCentral.toFixed(0)} PLN does not exceed the ` +
       `uncertainty range of ±${(valuation.uncertaintyWidth / 2).toFixed(0)} PLN/MWh. ` +
       `Monitor for further weakness before committing.`
-    );
+    )
   }
 
   return (
     `${contract} at ${currentPrice.toFixed(0)} PLN/MWh is at or above the ` +
     `central valuation of ${valuation.central.toFixed(0)} PLN/MWh. ` +
     `No mispricing detected under current curve structure.`
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -201,32 +190,19 @@ export function computeMispricingSignal(
   minimax: MinimaxResult,
   config: Pick<
     FuturesMispricingConfigV1,
-    | "minimumAbsoluteDiscountPln"
-    | "minimumBuyDiscountPercent"
-    | "minimumDiscountUncertaintyRatio"
-    | "robustnessHighThreshold"
-    | "robustnessMediumThreshold"
-  > = DEFAULT_CONFIG,
+    | 'minimumAbsoluteDiscountPln'
+    | 'minimumBuyDiscountPercent'
+    | 'minimumDiscountUncertaintyRatio'
+    | 'robustnessHighThreshold'
+    | 'robustnessMediumThreshold'
+  > = DEFAULT_CONFIG
 ): MispricingSignal {
-  const discountAbsolute = valuation.lower - currentPrice;
-  const discountPercent =
-    valuation.central > 0
-      ? (valuation.central - currentPrice) / valuation.central
-      : 0;
+  const discountAbsolute = valuation.lower - currentPrice
+  const discountPercent = valuation.central > 0 ? (valuation.central - currentPrice) / valuation.central : 0
 
-  const signal = classifySignal(currentPrice, valuation, minimax, config);
-  const robustness = classifyRobustness(
-    Math.max(discountAbsolute, 0),
-    valuation.uncertaintyWidth,
-    config,
-  );
-  const explanation = explainSignal(
-    contract,
-    currentPrice,
-    valuation,
-    minimax,
-    signal,
-  );
+  const signal = classifySignal(currentPrice, valuation, minimax, config)
+  const robustness = classifyRobustness(Math.max(discountAbsolute, 0), valuation.uncertaintyWidth, config)
+  const explanation = explainSignal(contract, currentPrice, valuation, minimax, signal)
 
   return {
     contract,
@@ -237,5 +213,5 @@ export function computeMispricingSignal(
     signal,
     robustness,
     explanation,
-  };
+  }
 }

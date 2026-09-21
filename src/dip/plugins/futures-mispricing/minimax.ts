@@ -21,11 +21,11 @@
  * No random sampling. No Monte Carlo. Deterministic and reproducible.
  */
 
-import type { ValuationRange, MinimaxResult } from "@/dip/plugins/futures-mispricing/domain";
-import { FuturesMispricingInputError } from "./types";
+import type { ValuationRange, MinimaxResult } from '@/dip/plugins/futures-mispricing/domain'
+import { FuturesMispricingInputError } from './types'
 
 /** Number of grid points for the minimax search. */
-export const MINIMAX_GRID_SIZE = 100;
+export const MINIMAX_GRID_SIZE = 100
 
 // ---------------------------------------------------------------------------
 // Grid generation
@@ -39,16 +39,12 @@ export const MINIMAX_GRID_SIZE = 100;
  * @param upper  Upper bound of uncertainty interval
  * @param n      Number of grid points (>= 2)
  */
-export function generateMinimaxGrid(
-  lower: number,
-  upper: number,
-  n: number = MINIMAX_GRID_SIZE,
-): number[] {
-  if (n < 2) throw new FuturesMispricingInputError("Grid must have at least 2 points");
-  if (upper <= lower) return [lower];
+export function generateMinimaxGrid(lower: number, upper: number, n: number = MINIMAX_GRID_SIZE): number[] {
+  if (n < 2) throw new FuturesMispricingInputError('Grid must have at least 2 points')
+  if (upper <= lower) return [lower]
 
-  const step = (upper - lower) / (n - 1);
-  return Array.from({ length: n }, (_, i) => lower + i * step);
+  const step = (upper - lower) / (n - 1)
+  return Array.from({ length: n }, (_, i) => lower + i * step)
 }
 
 // ---------------------------------------------------------------------------
@@ -66,7 +62,7 @@ export function generateMinimaxGrid(
  * looks least mispriced from below).
  */
 export function computeStateLoss(state: number, central: number): number {
-  return Math.abs(state - central);
+  return Math.abs(state - central)
 }
 
 // ---------------------------------------------------------------------------
@@ -93,23 +89,21 @@ export function computeStateLoss(state: number, central: number): number {
 export function runMinimax(
   currentPrice: number,
   valuation: ValuationRange,
-  gridSize: number = MINIMAX_GRID_SIZE,
+  gridSize: number = MINIMAX_GRID_SIZE
 ): MinimaxResult {
-  const grid = generateMinimaxGrid(valuation.lower, valuation.upper, gridSize);
+  const grid = generateMinimaxGrid(valuation.lower, valuation.upper, gridSize)
 
   // Worst-case from buyer's perspective: adversary chooses state to minimise discount
   // i.e., adversary picks the lowest valuation state
-  const worstCaseLow = grid[0]; // = valuation.lower (grid includes endpoints)
-  const worstCaseHigh = grid[grid.length - 1]; // = valuation.upper
+  const worstCaseLow = grid[0] // = valuation.lower (grid includes endpoints)
+  const worstCaseHigh = grid[grid.length - 1] // = valuation.upper
 
   // Maximum deviation from central estimate
-  const worstCaseDeviation = Math.max(
-    ...grid.map((state) => computeStateLoss(state, valuation.central)),
-  );
+  const worstCaseDeviation = Math.max(...grid.map((state) => computeStateLoss(state, valuation.central)))
 
   // Robust discount: how much cheaper is current price vs. even the worst-case low?
   // Positive = current price is below even the worst-case lower bound
-  const robustDiscount = worstCaseLow - currentPrice;
+  const robustDiscount = worstCaseLow - currentPrice
 
   return {
     worstCaseLow,
@@ -117,7 +111,7 @@ export function runMinimax(
     worstCaseDeviation,
     robustDiscount,
     gridSize,
-  };
+  }
 }
 
 /**
@@ -132,9 +126,9 @@ export function runMinimax(
 export function RobustMinimaxEstimatorV1(
   currentPrice: number,
   valuation: ValuationRange,
-  gridSize: number = MINIMAX_GRID_SIZE,
+  gridSize: number = MINIMAX_GRID_SIZE
 ): MinimaxResult {
-  return runMinimax(currentPrice, valuation, gridSize);
+  return runMinimax(currentPrice, valuation, gridSize)
 }
 
 // ---------------------------------------------------------------------------
@@ -154,17 +148,17 @@ export function computeMinimaxSensitivity(
   currentPrice: number,
   centralEstimate: number,
   baseHalfWidth: number,
-  multipliers: number[] = [0.5, 1.0, 1.5, 2.0],
+  multipliers: number[] = [0.5, 1.0, 1.5, 2.0]
 ): Array<{ multiplier: number; result: MinimaxResult }> {
   return multipliers.map((m) => {
-    const hw = baseHalfWidth * m;
+    const hw = baseHalfWidth * m
     const valuation: ValuationRange = {
       lower: centralEstimate - hw,
       central: centralEstimate,
       upper: centralEstimate + hw,
       uncertaintyWidth: 2 * hw,
       methodology: `sensitivity at multiplier ${m}`,
-    };
-    return { multiplier: m, result: runMinimax(currentPrice, valuation) };
-  });
+    }
+    return { multiplier: m, result: runMinimax(currentPrice, valuation) }
+  })
 }

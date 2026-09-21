@@ -1,87 +1,83 @@
-import type { GtmDemo } from "./contracts";
-import type { PipelineProspect, PipelineRun } from "./import-contracts";
+import type { GtmDemo } from './contracts'
+import type { PipelineProspect, PipelineRun } from './import-contracts'
 
-export type GtmDecision = "PURSUE" | "RESEARCH" | "WATCH" | "SKIP";
-export type EvidenceKind = "FACT" | "SIGNAL" | "HYPOTHESIS" | "UNKNOWN";
+export type GtmDecision = 'PURSUE' | 'RESEARCH' | 'WATCH' | 'SKIP'
+export type EvidenceKind = 'FACT' | 'SIGNAL' | 'HYPOTHESIS' | 'UNKNOWN'
 
 export type PortfolioEvidence = {
-  id: string;
-  kind?: EvidenceKind;
-  content: string;
-  source?: string;
-  sourceType?: string;
-  observedAt?: string;
-  freshness?: number;
-  confidence?: number;
-};
+  id: string
+  kind?: EvidenceKind
+  content: string
+  source?: string
+  sourceType?: string
+  observedAt?: string
+  freshness?: number
+  confidence?: number
+}
 
 export type PortfolioItem = {
-  id: string;
-  companyId: string;
-  opportunityId: string;
-  name: string;
-  domain?: string | null;
-  country?: string | null;
-  industry?: string | null;
-  decision: GtmDecision;
-  opportunity: number;
-  uncertainty: number;
-  evidenceQuality: number;
-  confidence?: number | null;
-  qdipFit: number;
-  reasons: string[];
-  risks: string[];
-  missingInformation: string[];
-  researchObjectives: string[];
-  evidence: PortfolioEvidence[];
+  id: string
+  companyId: string
+  opportunityId: string
+  name: string
+  domain?: string | null
+  country?: string | null
+  industry?: string | null
+  decision: GtmDecision
+  opportunity: number
+  uncertainty: number
+  evidenceQuality: number
+  confidence?: number | null
+  qdipFit: number
+  reasons: string[]
+  risks: string[]
+  missingInformation: string[]
+  researchObjectives: string[]
+  evidence: PortfolioEvidence[]
   capability?: {
-    id: string;
-    name: string;
-    problem?: string | null;
-    rationale: string[];
-  } | null;
+    id: string
+    name: string
+    problem?: string | null
+    rationale: string[]
+  } | null
   nextAction?: {
-    type: string;
-    title: string;
-    description?: string | null;
-    targetRole?: string | null;
-    reason?: string | null;
-  } | null;
+    type: string
+    title: string
+    description?: string | null
+    targetRole?: string | null
+    reason?: string | null
+  } | null
   provenance?: {
-    decisionId: string;
-    executedAt: string;
-    pluginId: string;
-    pluginVersion?: string | null;
-    modelVersion?: string | null;
-    traceId?: string | null;
-  } | null;
-  error?: string | null;
-};
+    decisionId: string
+    executedAt: string
+    pluginId: string
+    pluginVersion?: string | null
+    modelVersion?: string | null
+    traceId?: string | null
+  } | null
+  error?: string | null
+}
 
 export type PortfolioModel = {
-  source: "DEMO" | "IMPORTED";
-  id: string;
-  status: string;
-  items: PortfolioItem[];
-  failed: number;
-};
+  source: 'DEMO' | 'IMPORTED'
+  id: string
+  status: string
+  items: PortfolioItem[]
+  failed: number
+}
 
 function decisionIdentity(companyId: string, opportunityId: string, decisionId?: string | null) {
-  return `${companyId}:${opportunityId}:${decisionId ?? "decision"}`;
+  return `${companyId}:${opportunityId}:${decisionId ?? 'decision'}`
 }
 
 export function fromDemo(data: GtmDemo): PortfolioModel {
   return {
-    source: "DEMO",
+    source: 'DEMO',
     id: data.dataset_id,
-    status: "COMPLETED",
+    status: 'COMPLETED',
     failed: 0,
     items: data.prospects.map((prospect) => ({
-      id: decisionIdentity(
-        prospect.company.id,
-        prospect.decision.opportunity_id,
-        prospect.decision.opportunity_id,
-      ),
+      id: decisionIdentity(prospect.company.id, prospect.decision.opportunity_id, prospect.decision.opportunity_id),
       companyId: prospect.company.id,
       opportunityId: prospect.decision.opportunity_id,
       name: prospect.company.name,
@@ -110,23 +106,21 @@ export function fromDemo(data: GtmDemo): PortfolioModel {
       nextAction: null,
       provenance: {
         decisionId: prospect.decision.opportunity_id,
-        executedAt: "",
-        pluginId: "gtm-lab",
+        executedAt: '',
+        pluginId: 'gtm-lab',
         modelVersion: prospect.decision.model_version,
       },
     })),
-  };
+  }
 }
 
 function fromProspect(prospect: PipelineProspect): PortfolioItem[] {
   return prospect.decisions.flatMap((decision) => {
-    const opportunity = prospect.opportunities.find(
-      (candidate) => candidate.id === decision.opportunity_id,
-    );
-    if (!opportunity) return [];
+    const opportunity = prospect.opportunities.find((candidate) => candidate.id === decision.opportunity_id)
+    if (!opportunity) return []
 
-    const fit = decision.qdip_capability_fit ?? opportunity.capability_fit ?? null;
-    const decisionId = decision.provenance?.decision_id ?? null;
+    const fit = decision.qdip_capability_fit ?? opportunity.capability_fit ?? null
+    const decisionId = decision.provenance?.decision_id ?? null
 
     return [
       {
@@ -175,16 +169,16 @@ function fromProspect(prospect: PipelineProspect): PortfolioItem[] {
           : null,
         error: prospect.error,
       },
-    ];
-  });
+    ]
+  })
 }
 
 export function fromPipeline(run: PipelineRun): PortfolioModel {
   return {
-    source: "IMPORTED",
+    source: 'IMPORTED',
     id: run.run_id,
     status: run.status,
     failed: run.summary.failed_prospects,
     items: run.prospects.flatMap(fromProspect),
-  };
+  }
 }

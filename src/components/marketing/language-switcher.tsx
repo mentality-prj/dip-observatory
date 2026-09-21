@@ -1,20 +1,20 @@
-import Link from "next/link";
-import { marketingLocales, type MarketingLocale } from "./qdip-copy";
-import styles from "./language-switcher.module.css";
+import Link from 'next/link'
+import { marketingLocales, type MarketingLocale } from './qdip-copy'
+import styles from './language-switcher.module.css'
 
-const labels: Record<MarketingLocale, string> = { en: "EN", uk: "UA", pl: "PL" };
+const labels: Record<MarketingLocale, string> = { en: 'EN', uk: 'UA', pl: 'PL' }
 
 type LanguageSwitcherProps = {
-  locale: MarketingLocale;
-  hrefForLocale: (locale: MarketingLocale) => string;
-};
+  locale: MarketingLocale
+  hrefForLocale: (locale: MarketingLocale) => string
+}
 
 export function LanguageSwitcher({ locale, hrefForLocale }: LanguageSwitcherProps) {
   return (
     <nav aria-label="Language" className={styles.root}>
       {marketingLocales.map((targetLocale) => (
         <Link
-          aria-current={locale === targetLocale ? "page" : undefined}
+          aria-current={locale === targetLocale ? 'page' : undefined}
           href={hrefForLocale(targetLocale)}
           key={targetLocale}
         >
@@ -22,5 +22,5 @@ export function LanguageSwitcher({ locale, hrefForLocale }: LanguageSwitcherProp
         </Link>
       ))}
     </nav>
-  );
+  )
 }

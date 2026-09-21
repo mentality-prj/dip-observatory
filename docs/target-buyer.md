@@ -3,6 +3,7 @@
 Primary public-site buyer: CEO, executive director or operational decision owner in a small company or NGO.
 
 Typical situation:
+
 - the organization cannot justify a large enterprise platform or long transformation project;
 - a team repeatedly compares requests, opportunities or actions manually;
 - priorities compete and resources or operating constraints matter;

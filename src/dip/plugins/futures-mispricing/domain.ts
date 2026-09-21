@@ -8,13 +8,13 @@
  */
 
 /** Hedge timing recommendation produced by the mispricing engine. */
-export type HedgeSignal = "BUY" | "WATCH" | "NO_ACTION";
+export type HedgeSignal = 'BUY' | 'WATCH' | 'NO_ACTION'
 
 /** Qualitative robustness of the mispricing opportunity. */
-export type Robustness = "HIGH" | "MEDIUM" | "LOW";
+export type Robustness = 'HIGH' | 'MEDIUM' | 'LOW'
 
 /** Retrospective outcome classification used ONLY for post-decision reporting. */
-export type OutcomeStatus = "FAVOURABLE" | "NEUTRAL" | "UNFAVOURABLE";
+export type OutcomeStatus = 'FAVOURABLE' | 'NEUTRAL' | 'UNFAVOURABLE'
 
 /**
  * A single futures contract with price data available at decision time.
@@ -22,42 +22,42 @@ export type OutcomeStatus = "FAVOURABLE" | "NEUTRAL" | "UNFAVOURABLE";
  */
 export interface FuturesContract {
   /** Unique contract identifier, e.g. "Q1-2027". */
-  id: string;
+  id: string
   /** Underlying product / commodity. */
-  product: string;
+  product: string
   /** Delivery period label, e.g. "Q1 2027". */
-  deliveryPeriod: string;
+  deliveryPeriod: string
   /**
    * Delivery period ordinal — monotonically increasing across the curve.
    * Used for mathematical ordering and spread calculations.
    */
-  deliveryOrdinal: number;
+  deliveryOrdinal: number
   /** Date at which this snapshot was captured (ISO 8601). */
-  decisionDate: string;
+  decisionDate: string
   /** Last traded / mid price in PLN/MWh. */
-  price: number;
+  price: number
   /** Best bid (optional). */
-  bid?: number;
+  bid?: number
   /** Best offer/ask (optional). */
-  ask?: number;
+  ask?: number
   /** Official settlement price if available. */
-  settlementPrice?: number;
+  settlementPrice?: number
 }
 
 /** A single point on the forward curve. */
 export interface ForwardCurvePoint {
   /** Contract identifier. */
-  contract: string;
+  contract: string
   /** Human-readable delivery period. */
-  deliveryPeriod: string;
+  deliveryPeriod: string
   /** Delivery period ordinal — same as in FuturesContract. */
-  deliveryOrdinal: number;
+  deliveryOrdinal: number
   /** Mid price in PLN/MWh. */
-  price: number;
+  price: number
   /** Snapshot timestamp (ISO 8601). */
-  timestamp: string;
+  timestamp: string
   /** True when this is the target contract being analysed. */
-  isTarget?: boolean;
+  isTarget?: boolean
 }
 
 /**
@@ -66,9 +66,9 @@ export interface ForwardCurvePoint {
  */
 export interface MarketSnapshot {
   /** Snapshot timestamp (ISO 8601). */
-  timestamp: string;
+  timestamp: string
   /** Forward curve points, ordered by deliveryOrdinal. */
-  points: ForwardCurvePoint[];
+  points: ForwardCurvePoint[]
 }
 
 /**
@@ -77,18 +77,18 @@ export interface MarketSnapshot {
  */
 export interface ValuationRange {
   /** Conservative lower bound of the defensible valuation. */
-  lower: number;
+  lower: number
   /** Central estimate derived from curve structure. */
-  central: number;
+  central: number
   /** Optimistic upper bound. */
-  upper: number;
+  upper: number
   /**
    * Width of the uncertainty interval (upper - lower).
    * Derived from measurable properties of the available data.
    */
-  uncertaintyWidth: number;
+  uncertaintyWidth: number
   /** Human-readable description of how the range was calculated. */
-  methodology: string;
+  methodology: string
 }
 
 /**
@@ -97,64 +97,64 @@ export interface ValuationRange {
  */
 export interface MispricingSignal {
   /** Contract being analysed. */
-  contract: string;
+  contract: string
   /** Price of the contract at decision time (PLN/MWh). */
-  currentPrice: number;
+  currentPrice: number
   /** Valuation range derived from curve structure and uncertainty model. */
-  valuationRange: ValuationRange;
+  valuationRange: ValuationRange
   /** Absolute discount: lowerValuation - currentPrice (positive = cheap). */
-  discountAbsolute: number;
+  discountAbsolute: number
   /** Relative discount as a fraction of central valuation (e.g. 0.08 = 8%). */
-  discountPercent: number;
+  discountPercent: number
   /** Hedge timing recommendation. */
-  signal: HedgeSignal;
+  signal: HedgeSignal
   /**
    * Qualitative robustness of the opportunity.
    * Based on discount/uncertainty ratio — NOT a fake probability.
    */
-  robustness: Robustness;
+  robustness: Robustness
   /** Human-readable explanation of the signal. */
-  explanation: string;
+  explanation: string
 }
 
 /** Forward curve structural metrics computed around a target contract. */
 export interface CurveMetrics {
   /** Overall slope of the curve (PLN/MWh per ordinal unit). */
-  overallSlope: number;
+  overallSlope: number
   /** Local slope around the target contract (PLN/MWh per ordinal unit). */
-  localSlope: number;
+  localSlope: number
   /** Second derivative — curvature at target contract position. */
-  curvature: number;
+  curvature: number
   /** Spread to the preceding quarterly contract (PLN/MWh). */
-  spreadToPrevious: number;
+  spreadToPrevious: number
   /** Spread to the following quarterly contract (PLN/MWh). */
-  spreadToNext: number;
+  spreadToNext: number
   /** Spread to the same-year annual (Cal) contract (PLN/MWh). */
-  spreadToAnnual: number;
+  spreadToAnnual: number
   /**
    * Normalised deviation of the target contract price from the local curve fit.
    * Positive = target is above local curve; negative = below (cheap).
    */
-  normalisedDeviation: number;
+  normalisedDeviation: number
   /** Number of curve points used in the calculation. */
-  dataPoints: number;
+  dataPoints: number
 }
 
 /** Output of the minimax layer — robust worst-case valuation bounds. */
 export interface MinimaxResult {
   /** Worst-case lower bound under adversarial uncertainty perturbation. */
-  worstCaseLow: number;
+  worstCaseLow: number
   /** Worst-case upper bound under adversarial uncertainty perturbation. */
-  worstCaseHigh: number;
+  worstCaseHigh: number
   /** Maximum absolute deviation from central estimate in the uncertainty set. */
-  worstCaseDeviation: number;
+  worstCaseDeviation: number
   /**
    * Robust discount: worstCaseLow - currentPrice.
    * Positive means the current price is below even the worst-case lower bound.
    */
-  robustDiscount: number;
+  robustDiscount: number
   /** Grid size used for the deterministic minimax search. */
-  gridSize: number;
+  gridSize: number
 }
 
 /**
@@ -163,31 +163,31 @@ export interface MinimaxResult {
  */
 export interface HedgeDecision {
   /** Recommended action. */
-  action: HedgeSignal;
+  action: HedgeSignal
   /** Contract identifier. */
-  contract: string;
+  contract: string
   /** Current market entry price (PLN/MWh). */
-  entryPrice: number;
+  entryPrice: number
   /** Robust valuation range used in the decision. */
-  valuationRange: ValuationRange;
+  valuationRange: ValuationRange
   /** Minimax analysis result. */
-  minimax: MinimaxResult;
+  minimax: MinimaxResult
   /**
    * Distance between current price and the worst-case lower bound (PLN/MWh).
    * Always >= 0. Zero when price is at or above worstCaseLow; positive when
    * the price is inside the uncertainty range.
    */
-  downside: number;
+  downside: number
   /** Potential upside relative to current price (central - currentPrice). */
-  upside: number;
+  upside: number
   /** Robustness classification of the opportunity. */
-  robustness: Robustness;
+  robustness: Robustness
   /** Decision date (ISO 8601 date string). */
-  decisionDate: string;
+  decisionDate: string
   /** Human-readable rationale for the decision. */
-  rationale: string;
+  rationale: string
   /** Forward curve structural metrics. */
-  curveMetrics: CurveMetrics;
+  curveMetrics: CurveMetrics
 }
 
 /**
@@ -197,18 +197,18 @@ export interface HedgeDecision {
  */
 export interface Outcome {
   /** Price at which the hedge was evaluated (decision-time price). */
-  decisionPrice: number;
+  decisionPrice: number
   /**
    * Reference / current market price at time of outcome review.
    * THIS IS POST-DECISION INFORMATION — not available at decision time.
    */
-  referencePrice: number;
+  referencePrice: number
   /** Absolute change: referencePrice - decisionPrice. */
-  absoluteChange: number;
+  absoluteChange: number
   /** Percentage change as a fraction (e.g. 0.165 = +16.5%). */
-  percentageChange: number;
+  percentageChange: number
   /** Qualitative outcome relative to the hedge decision. */
-  outcomeStatus: OutcomeStatus;
+  outcomeStatus: OutcomeStatus
 }
 
 /**
@@ -217,6 +217,6 @@ export interface Outcome {
  */
 export interface OutcomeData {
   /** Clearly labelled as post-decision data. */
-  _label: "SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME";
-  outcome: Outcome;
+  _label: 'SUBSEQUENT_OUTCOME_NOT_AVAILABLE_AT_DECISION_TIME'
+  outcome: Outcome
 }

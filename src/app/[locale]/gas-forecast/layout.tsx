@@ -1,12 +1,16 @@
-import type { ReactNode } from "react";
-import { PrototypeRouteLayout } from "@/features/observatory";
+import type { ReactNode } from 'react'
+import { PrototypeRouteLayout } from '@/features/observatory'
 
 export default function GasForecastLayout({
   children,
   params,
 }: {
-  children: ReactNode;
-  params: Promise<{ locale: string }>;
+  children: ReactNode
+  params: Promise<{ locale: string }>
 }) {
-  return <PrototypeRouteLayout params={params} theme="cyan">{children}</PrototypeRouteLayout>;
+  return (
+    <PrototypeRouteLayout params={params} theme="cyan">
+      {children}
+    </PrototypeRouteLayout>
+  )
 }
