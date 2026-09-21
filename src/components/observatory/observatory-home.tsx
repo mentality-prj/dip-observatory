@@ -49,7 +49,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
       <div className="relative z-10 mx-auto max-w-[1500px]">
         <header className="max-w-5xl">
           <div className="observatory-eyebrow">{t.eyebrow}</div>
-          <h1 className="mt-5 max-w-4xl text-4xl font-medium tracking-[-.045em] md:text-6xl lg:text-7xl">{t.title}</h1>
+          <h1 className="mt-5 max-w-4xl text-4xl font-normal tracking-[-.03em] md:text-6xl lg:text-7xl">{t.title}</h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-slate-400 md:text-lg">{t.subtitle}</p>
         </header>
 
