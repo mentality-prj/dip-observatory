@@ -18,7 +18,6 @@ export function StudioProductHeader() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
-  const observatoryUrl = observatoryHref('', locale)
 
   return (
     <ProductHeader
@@ -33,7 +32,7 @@ export function StudioProductHeader() {
       }
       utilities={
         <>
-          <Link className="studio-observatory-link" href={observatoryUrl}>
+          <Link className="ds-button ds-button-secondary ds-button-sm" href={observatoryHref('', locale)}>
             <Telescope size={15} aria-hidden />
             <span>{OBSERVATORY_LABEL[locale]}</span>
           </Link>
