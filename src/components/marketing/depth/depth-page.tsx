@@ -9,7 +9,6 @@ import { getDepthContent, type DepthPageKey } from './content'
 import styles from './depth-page.module.css'
 
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
-const paths = ['how-it-works', 'use-cases', 'core', 'core/research'] as const
 
 export function DepthPage({ locale, page }: { locale: MarketingLocale; page: DepthPageKey }) {
   const c = getDepthContent(locale, page)
