@@ -371,9 +371,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
               <div className="flex min-h-[560px] items-center justify-center border border-dashed border-white/15 bg-white/[0.04] text-center">
                 <div className="max-w-xl px-8">
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
-                  <h2 className="mt-5 text-3xl font-black">
+                  <h2 data-testid="resource-active-summary" className="mt-5 text-3xl font-black">
                     {stats.teams} {t.teams.toLowerCase()}. {stats.communities} {t.communities.toLowerCase()}.{' '}
-                    {stats.days} {t.days}.
+                    {stats.openingNeeds} {t.opening.toLowerCase()}. {stats.days} {t.days}.
                   </h2>
                   <p className="mt-3 text-slate-500">{t.emptyText}</p>
                 </div>
