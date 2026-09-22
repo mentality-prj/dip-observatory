@@ -1,6 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
 
 const viewports = [
   { name: 'phone-390', width: 390, height: 844 },
@@ -60,22 +58,8 @@ test.describe('Studio responsive shell', () => {
       // Desktop/tablet keep the shared ProductHeader geometry unchanged.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       if (viewport.width <= 760) {
-        const browserCssDebug = await status.evaluate((element) => {
-          const style = getComputedStyle(element.parentElement as Element)
-          return { marginLeft: style.marginLeft, transform: style.transform }
-        })
-        const builtCssFiles = readdirSync('.next/static', { recursive: true })
-          .map(String)
-          .filter((path) => path.endsWith('.css'))
-        const builtCss = builtCssFiles.map((path) => readFileSync(join('.next/static', path), 'utf8')).join('\n')
-        const selectorIndex = builtCss.indexOf('.studio-shell .ds-product-header-brand-status')
-        const buildCssDebug = {
-          hasMinus34: builtCss.includes('-34px'),
-          selectorSnippet: selectorIndex >= 0 ? builtCss.slice(selectorIndex, selectorIndex + 500) : 'selector-not-found',
-        }
-        const debug = JSON.stringify({ browserCssDebug, buildCssDebug })
-        expect(brandGap, debug).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap, debug).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
       } else {
         expect(brandGap).toBeGreaterThanOrEqual(0)
         expect(brandGap).toBeLessThanOrEqual(2)
