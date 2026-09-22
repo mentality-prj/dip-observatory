@@ -64,6 +64,16 @@
 .ds-product-lockup-brand {
   font-weight: 450;
 }
+.ds-product-lockup-wordmark-frame {
+  display: inline-flex;
+  width: 90px;
+  flex: 0 0 90px;
+  align-items: center;
+  overflow: hidden;
+}
+.ds-product-lockup-wordmark {
+  flex: 0 0 auto;
+}
 .ds-product-lockup-product {
   color: var(--ds-accent);
   font-weight: 350;
