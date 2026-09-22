@@ -7,6 +7,11 @@ import { STUDIO_LOCALES, studioLocaleFromPath, type StudioLocale } from './studi
 const StudioLocaleContext = createContext<StudioLocale>('en')
 
 function explicitLocale(pathname: string, searchLocale: string | null): StudioLocale | null {
+  if (typeof window !== 'undefined') {
+    const browserFirst = window.location.pathname.split('/').filter(Boolean)[0]
+    if (STUDIO_LOCALES.includes(browserFirst as StudioLocale)) return browserFirst as StudioLocale
+  }
+
   const first = pathname.split('/').filter(Boolean)[0]
   if (STUDIO_LOCALES.includes(first as StudioLocale)) return first as StudioLocale
   if (STUDIO_LOCALES.includes(searchLocale as StudioLocale)) return searchLocale as StudioLocale
