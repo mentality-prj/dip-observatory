@@ -24,6 +24,8 @@ import {
 } from './contracts'
 import { JsonField, SchemaField } from './schema-form'
 import { RuleSummary, type ProfileSection } from './presentation'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 export function ProfileEditor({
   initial,
@@ -42,6 +44,8 @@ export function ProfileEditor({
   filter?: string
   section?: ProfileSection
 }) {
+  const locale = useStudioLocale()
+  const copy = studioCopy(locale).editor
   const [profile, setProfile] = useState<Profile>(initial)
   const [bindings, setBindings] = useState<Binding[]>([])
   const [error, setError] = useState('')
@@ -85,14 +89,14 @@ export function ProfileEditor({
       <Card>
         <CardHeader>
           <div className="studio-card-heading">
-            <CardTitle>{existing ? 'Edit profile' : 'Create profile'}</CardTitle>
-            <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? 'Active' : 'Draft'}</Badge>
+            <CardTitle>{existing ? copy.editProfile : copy.createProfile}</CardTitle>
+            <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? copy.active : copy.draft}</Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="studio-grid">
             <label className="studio-field">
-              Profile ID
+              {copy.profileId}
               <Input
                 required
                 pattern="[a-zA-Z0-9][a-zA-Z0-9_-]*"
@@ -103,7 +107,7 @@ export function ProfileEditor({
             </label>
             {(!section || section === 'overview') && (
               <label className="studio-field">
-                Name
+                {copy.name}
                 <Input
                   required
                   value={profile.name}
@@ -112,20 +116,20 @@ export function ProfileEditor({
               </label>
             )}
             <label className="studio-field">
-              {existing ? 'New version' : 'Version'}
+              {existing ? copy.newVersion : copy.version}
               <Input
                 required
                 value={profile.version}
                 onChange={(e) => setProfile({ ...profile, version: e.target.value })}
               />
-              {existing && <small>Use a new version to preserve previous configuration.</small>}
+              {existing && <small>{copy.preserveVersion}</small>}
             </label>
           </div>
           {(!section || section === 'overview') && (
             <>
               <div className="studio-grid">
                 <label className="studio-field">
-                  Plugin
+                  {copy.plugin}
                   <Select
                     required
                     value={profile.plugin_id}
@@ -142,17 +146,17 @@ export function ProfileEditor({
                       })
                     }}
                   >
-                    <option value="">Select plugin</option>
+                    <option value="">{copy.selectPlugin}</option>
                     {plugins.map((p) => (
                       <option key={p.name} value={p.name} disabled={!p.enabled}>
                         {p.ui?.label ?? p.name} · {p.version}
-                        {!p.enabled && ' (disabled)'}
+                        {!p.enabled && ` (${copy.disabled})`}
                       </option>
                     ))}
                   </Select>
                 </label>
                 <label className="studio-field">
-                  Capability
+                  {copy.capability}
                   <Select
                     required
                     value={profile.capability_id}
@@ -167,15 +171,15 @@ export function ProfileEditor({
                   >
                     {plugin?.capabilities.map((id) => (
                       <option key={id} value={id}>
-                        {id} · {plugin.capability_versions[id] ?? 'unversioned'}
+                        {id} · {plugin.capability_versions[id] ?? copy.unversioned}
                       </option>
                     ))}
                   </Select>
                 </label>
               </div>
               <p className="studio-muted">
-                Pinned contracts: plugin {profile.plugin_version || 'unavailable'} · capability{' '}
-                {profile.capability_version || 'unavailable'}
+                {copy.pinnedContracts}: plugin {profile.plugin_version || copy.unavailable} · capability{' '}
+                {profile.capability_version || copy.unavailable}
               </p>
               {plugin &&
                 (profile.plugin_version !== plugin.version ||
@@ -191,7 +195,7 @@ export function ProfileEditor({
                       })
                     }
                   >
-                    Use installed contract versions
+                    {copy.useInstalledVersions}
                   </Button>
                 )}
               <label className="studio-check">
@@ -199,7 +203,7 @@ export function ProfileEditor({
                   checked={profile.active}
                   onChange={(e) => setProfile({ ...profile, active: e.target.checked })}
                 />
-                Activate after validation
+                {copy.activateAfterValidation}
               </label>
             </>
           )}
@@ -208,15 +212,15 @@ export function ProfileEditor({
       {(!section || section === 'alternatives') && (
         <Card>
           <CardHeader>
-            <CardTitle>Alternatives</CardTitle>
-            <p>Describe the options and their attributes. Dimensions evaluate each option separately.</p>
+            <CardTitle>{copy.alternatives}</CardTitle>
+            <p>{copy.alternativesHelp}</p>
           </CardHeader>
           <CardContent>
             {profile.alternatives.map((alternative, index) => (
               <div key={index} className="studio-schema">
                 <div className="studio-grid">
                   <label className="studio-field">
-                    Alternative ID
+                    {copy.alternativeId}
                     <Input
                       required
                       value={alternative.id}
@@ -231,7 +235,7 @@ export function ProfileEditor({
                     />
                   </label>
                   <label className="studio-field">
-                    Label
+                    {copy.label}
                     <Input
                       value={alternative.label}
                       onChange={(e) =>
@@ -246,7 +250,7 @@ export function ProfileEditor({
                   </label>
                 </div>
                 <JsonField
-                  label="Attributes"
+                  label={copy.attributes}
                   value={alternative.attributes}
                   onChange={(attributes) =>
                     setProfile({
@@ -265,7 +269,7 @@ export function ProfileEditor({
                     setProfile({ ...profile, alternatives: profile.alternatives.filter((_, i) => i !== index) })
                   }
                 >
-                  Remove alternative
+                  {copy.removeAlternative}
                 </Button>
               </div>
             ))}
@@ -282,7 +286,7 @@ export function ProfileEditor({
                 })
               }
             >
-              Add alternative
+              {copy.addAlternative}
             </Button>
           </CardContent>
         </Card>
@@ -290,8 +294,8 @@ export function ProfileEditor({
       {(!section || !['overview', 'alternatives'].includes(section)) && (
         <Card>
           <CardHeader>
-            <CardTitle>Decision dimensions</CardTitle>
-            <p>Select relevant dimensions, pin their contracts, and configure evaluation.</p>
+            <CardTitle>{copy.decisionDimensions}</CardTitle>
+            <p>{copy.dimensionsHelp}</p>
           </CardHeader>
           <CardContent>
             <div className="studio-grid">
@@ -343,16 +347,16 @@ export function ProfileEditor({
               return (
                 <section key={item.dimension_id} className="studio-schema">
                   <h3>{definition?.name ?? item.dimension_id}</h3>
-                  {definition?.type === 'rules' && <RuleSummary configuration={item.configuration} />}
-                  {!definition && <p className="studio-error">This pinned dimension contract is unavailable.</p>}
+                  {definition?.type === 'rules' && <RuleSummary configuration={item.configuration} locale={locale} />}
+                  {!definition && <p className="studio-error">{copy.contractUnavailable}</p>}
                   <div className="studio-grid">
                     <label className="studio-field">
-                      Contract version
+                      {copy.contractVersion}
                       <Select
                         value={item.version}
                         onChange={(e) => changeDimension(index, { version: e.target.value })}
                       >
-                        {!definition && <option value={item.version}>{item.version} (unavailable)</option>}
+                        {!definition && <option value={item.version}>{item.version} ({copy.unavailable})</option>}
                         {dimensions
                           .filter((d) => d.id === item.dimension_id)
                           .map((d) => (
@@ -364,7 +368,7 @@ export function ProfileEditor({
                     </label>
                     {definition?.type !== 'rules' && (
                       <label className="studio-field">
-                        Weight
+                        {copy.weight}
                         <Input
                           type="number"
                           min={0}
@@ -376,7 +380,7 @@ export function ProfileEditor({
                       </label>
                     )}
                     <label className="studio-field">
-                      Plugin output binding
+                      {copy.pluginBinding}
                       <Select
                         value={item.binding_id ? `${item.binding_id}|${item.binding_version}` : ''}
                         onChange={(e) => {
@@ -387,11 +391,11 @@ export function ProfileEditor({
                           })
                         }}
                       >
-                        <option value="">Configuration / runtime input</option>
+                        <option value="">{copy.configurationRuntime}</option>
                         {item.binding_id &&
                           !bindings.some((b) => b.id === item.binding_id && b.version === item.binding_version) && (
                             <option value={`${item.binding_id}|${item.binding_version}`}>
-                              {item.binding_id}@{item.binding_version} (unavailable)
+                              {item.binding_id}@{item.binding_version} ({copy.unavailable})
                             </option>
                           )}
                         {bindings
@@ -411,7 +415,7 @@ export function ProfileEditor({
                       checked={item.required}
                       onChange={(e) => changeDimension(index, { required: e.target.checked })}
                     />
-                    Required
+                    {copy.required}
                   </label>
                   {definition && (
                     <SchemaField
@@ -431,8 +435,8 @@ export function ProfileEditor({
       )}
       {(!section || section === 'overview') && (
         <Disclosure className="studio-schema">
-          <summary>Runtime context schema</summary>
-          <p>Validate application-supplied context separately from business configuration and plugin inputs.</p>
+          <summary>{copy.runtimeSchema}</summary>
+          <p>{copy.runtimeSchemaHelp}</p>
           <JsonField
             label="JSON Schema"
             value={profile.context_schema}
@@ -446,7 +450,7 @@ export function ProfileEditor({
         </div>
       )}
       <Button disabled={busy || !profile.dimensions.length} type="submit">
-        {busy ? 'Saving…' : 'Save profile'}
+        {busy ? copy.saving : copy.saveProfile}
       </Button>
     </form>
   )
