@@ -12,8 +12,6 @@ const PRODUCT_WORDMARK_FRAME_WIDTH = 124
 const MOBILE_WORDMARK_OPTICAL_INSET = 34
 
 test.describe('Studio responsive shell', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
-
   for (const viewport of viewports) {
     test(`${viewport.name} keeps header, navigation and footer on one viewport grid`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -21,9 +19,9 @@ test.describe('Studio responsive shell', () => {
         await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
       })
 
-      const response = await page.goto('/en')
+      const response = await page.goto('http://studio.localhost:3000/en')
       expect(response?.status()).toBeLessThan(400)
-      expect(new URL(page.url()).origin).toBe('http://127.0.0.1:3000')
+      expect(new URL(page.url()).origin).toBe('http://studio.localhost:3000')
 
       const stylesheetOrigins = await page.evaluate(() =>
         Array.from(document.styleSheets)
@@ -31,7 +29,7 @@ test.describe('Studio responsive shell', () => {
           .filter((href): href is string => Boolean(href))
           .map((href) => new URL(href).origin)
       )
-      expect(stylesheetOrigins.every((origin) => origin === 'http://127.0.0.1:3000')).toBe(true)
+      expect(stylesheetOrigins.every((origin) => origin === 'http://studio.localhost:3000')).toBe(true)
 
       const shell = page.locator('.studio-shell')
       const lockup = page.locator('.ds-product-lockup')
