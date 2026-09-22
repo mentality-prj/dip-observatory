@@ -8,20 +8,27 @@ const heroCta = {
 
 const demoNames = {
   en: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
-  uk: ['Розподіл ресурсів', 'Gas Decision', 'GTM Lab'],
+  uk: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
   pl: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
 } as const
 
 const proofArtifacts = {
   en: ['Audit trace', 'Baseline comparison', 'Deterministic replay'],
-  uk: ['Audit trace', 'Порівняння з baseline', 'Детермінований replay'],
-  pl: ['Audit trace', 'Porównanie z baseline', 'Deterministyczny replay'],
+  uk: ['Аудит рішення', 'Порівняння з базовим сценарієм', 'Детерміноване відтворення'],
+  pl: ['Ślad audytowy decyzji', 'Porównanie ze scenariuszem bazowym', 'Deterministyczne odtworzenie'],
 } as const
 
 const decisionPreview = {
   en: 'Recommended allocation plan',
   uk: 'Рекомендований план розподілу',
   pl: 'Rekomendowany plan alokacji',
+} as const
+
+
+const studioUi = {
+  en: { heading: 'Decision Workspace', decisions: 'Decisions' },
+  uk: { heading: 'Робочий простір рішень', decisions: 'Рішення' },
+  pl: { heading: 'Przestrzeń decyzji', decisions: 'Decyzje' },
 } as const
 
 const footerLabels = {
@@ -80,6 +87,9 @@ test.describe('P1 Studio localization gate', () => {
       const response = await page.goto(`/${locale}`)
       expect(response?.status()).toBeLessThan(400)
       await expect(page).toHaveURL(new RegExp(`/${locale}/profiles$`))
+
+      await expect(page.getByRole('heading', { level: 1, name: studioUi[locale].heading })).toBeVisible()
+      await expect(page.getByRole('link', { name: studioUi[locale].decisions }).first()).toBeVisible()
 
       const footer = page.locator('.studio-site-footer')
       await expect(footer).toBeVisible()
