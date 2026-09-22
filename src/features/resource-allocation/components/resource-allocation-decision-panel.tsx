@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Check, CircleAlert, Clipboard, Download, Flag, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
+import { importResourceAllocationFile } from '../importer'
 import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
 import { trackResourceAllocation } from '../presentation'
 
@@ -115,6 +116,11 @@ const copy = {
     copyPlan: 'Скопіювати короткий план',
     copied: 'План скопійовано',
     afterExecution: 'Після виконання плану',
+    importActual: 'Імпортувати фактичний тиждень',
+    importingActual: 'Оцінюю фактичний тиждень…',
+    actualImported: 'Фактичний тиждень оцінено',
+    actualImportHelp:
+      'Завантажте той самий pilot-format із фактичними потребами та baseline rows як реально виконаними призначеннями. QDIP розрахує фактичні KPI замість ручного введення.',
     technicalHistory: 'Технічні деталі історії',
     forecast: 'Прогноз QDIP',
     actualValue: 'Факт',
@@ -189,6 +195,11 @@ const copy = {
     copyPlan: 'Copy short plan',
     copied: 'Plan copied',
     afterExecution: 'After the plan is executed',
+    importActual: 'Import actual week',
+    importingActual: 'Evaluating actual week…',
+    actualImported: 'Actual week evaluated',
+    actualImportHelp:
+      'Upload the same pilot format with observed demand and baseline rows as the assignments actually executed. QDIP will calculate actual KPIs instead of requiring manual entry.',
     technicalHistory: 'Technical history details',
     forecast: 'QDIP forecast',
     actualValue: 'Actual',
@@ -264,6 +275,11 @@ const copy = {
     copyPlan: 'Kopiuj krótki plan',
     copied: 'Plan skopiowany',
     afterExecution: 'Po wykonaniu planu',
+    importActual: 'Importuj rzeczywisty tydzień',
+    importingActual: 'Oceniam rzeczywisty tydzień…',
+    actualImported: 'Rzeczywisty tydzień oceniony',
+    actualImportHelp:
+      'Wczytaj ten sam format pilotażowy z rzeczywistym popytem i wierszami baseline jako faktycznie wykonanymi przydziałami. QDIP obliczy rzeczywiste KPI zamiast ręcznego wprowadzania.',
     technicalHistory: 'Techniczne szczegóły historii',
     forecast: 'Prognoza QDIP',
     actualValue: 'Fakt',
@@ -380,6 +396,11 @@ export function ResourceAllocationDecisionPanel({
   const [actualCoverage, setActualCoverage] = useState('')
   const [actualServed, setActualServed] = useState('')
   const [actualUnmet, setActualUnmet] = useState('')
+  const [actualImportedAllocation, setActualImportedAllocation] = useState<
+    Record<string, Record<string, string | null>> | null
+  >(null)
+  const [actualImportName, setActualImportName] = useState<string | null>(null)
+  const actualFileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   async function loadDecision(decisionId: string) {
@@ -440,6 +461,73 @@ export function ResourceAllocationDecisionPanel({
       setBusy(null)
     }
   }
+  async function importActualWeek(file: File | undefined) {
+    if (!file) return
+    setBusy('actual-import')
+    setError(null)
+    try {
+      const actualInput = await importResourceAllocationFile(file)
+      if (!actualInput.baseline_plan)
+        throw new Error(
+          locale === 'uk'
+            ? 'Файл фактичного тижня повинен містити baseline rows для кожної команди і кожного дня.'
+            : locale === 'pl'
+              ? 'Plik rzeczywistego tygodnia musi zawierać wiersze baseline dla każdego zespołu i każdego dnia.'
+              : 'The actual-week file must include baseline rows for every team and planning day.'
+        )
+
+      const evaluation = await requestJson<{
+        status?: string
+        demand_summary?: {
+          priority_coverage?: number
+          served?: number
+          closing_unmet?: number
+        }
+      }>(
+        '/api/resource-allocation/run',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            ...actualInput,
+            operation: 'evaluate_manual',
+            manual_allocation: actualInput.baseline_plan,
+          }),
+        },
+        pilotAccessKey
+      )
+
+      const summary = evaluation.demand_summary
+      if (
+        evaluation.status !== 'ok' ||
+        !summary ||
+        typeof summary.priority_coverage !== 'number' ||
+        typeof summary.served !== 'number' ||
+        typeof summary.closing_unmet !== 'number'
+      )
+        throw new Error(
+          locale === 'uk'
+            ? 'Не вдалося розрахувати фактичні KPI з імпортованого тижня.'
+            : locale === 'pl'
+              ? 'Nie udało się obliczyć rzeczywistych KPI z zaimportowanego tygodnia.'
+              : 'Could not calculate actual KPIs from the imported week.'
+        )
+
+      setActualCoverage((summary.priority_coverage * 100).toFixed(1).replace(/\.0$/, ''))
+      setActualServed(summary.served.toFixed(0))
+      setActualUnmet(summary.closing_unmet.toFixed(0))
+      setActualImportedAllocation(actualInput.baseline_plan)
+      setActualImportName(file.name)
+      trackResourceAllocation('ra_actual_outcome_imported', locale)
+    } catch (e) {
+      setActualImportedAllocation(null)
+      setActualImportName(null)
+      setError(e instanceof Error ? e.message : 'Actual-week import failed')
+    } finally {
+      setBusy(null)
+      if (actualFileRef.current) actualFileRef.current.value = ''
+    }
+  }
+
   async function outcome() {
     if (!lifecycle) return
     const coverage = Number(actualCoverage)
@@ -469,7 +557,8 @@ export function ResourceAllocationDecisionPanel({
     setBusy('outcome')
     setError(null)
     try {
-      const actualAllocation = manualSelected?.actual_allocation ?? recommendedAllocation(selected)
+      const actualAllocation =
+        actualImportedAllocation ?? manualSelected?.actual_allocation ?? recommendedAllocation(selected)
       await post(`/api/resource-allocation/decisions/${encodeURIComponent(lifecycle.decisionId)}/outcomes`, {
         actual_allocation: actualAllocation,
         metrics: {
@@ -677,6 +766,34 @@ export function ResourceAllocationDecisionPanel({
                     <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.outcome}</div>
                     <h4 className="mt-2 text-lg font-black">{t.outcomeTitle}</h4>
                     <p className="mt-2 text-sm text-slate-500">{t.outcomeHelp}</p>
+                    <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.025] p-4">
+                      <input
+                        ref={actualFileRef}
+                        type="file"
+                        accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        className="sr-only"
+                        onChange={(event) => void importActualWeek(event.target.files?.[0])}
+                      />
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <b className="text-sm">{t.importActual}</b>
+                          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">{t.actualImportHelp}</p>
+                          {actualImportName && (
+                            <div data-testid="actual-week-imported" className="mt-2 text-xs text-emerald-300">
+                              {t.actualImported} · {actualImportName}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={Boolean(busy)}
+                          onClick={() => actualFileRef.current?.click()}
+                          className="border border-white/20 px-4 py-2 text-sm font-bold disabled:opacity-40"
+                        >
+                          {busy === 'actual-import' ? t.importingActual : t.importActual}
+                        </button>
+                      </div>
+                    </div>
                     <div className="mt-4 grid gap-3 md:grid-cols-3">
                       <label className="text-sm">
                         <span className="block text-slate-500">{t.actualCoverage}</span>
