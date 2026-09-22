@@ -161,6 +161,28 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>
+    if (body.operation === 'evaluate_manual') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          aggregate_metrics: {
+            priority_coverage: 0.81,
+            total_coverage: 0.75,
+            travel_cost: 0,
+          },
+          demand_summary: {
+            total_available: 128,
+            served: 96,
+            closing_unmet: 32,
+            priority_coverage: 0.81,
+          },
+        }),
+      })
+      return
+    }
+
     const communities = Array.isArray(body.communities) ? body.communities : []
     sawResponsibleCitizensInput = communities.some(
       (item) =>
@@ -268,12 +290,73 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   expect(download.suggestedFilename()).toMatch(/^qdip-resource-allocation-\d{4}-\d{2}-\d{2}\.csv$/)
 
   await page.getByText('After the plan is executed', { exact: true }).click()
-  await page.getByLabel('Actual priority-needs coverage, %').fill('81')
-  await page.getByLabel('Demand units actually covered').fill('96')
-  await page.getByLabel('Demand units actually left uncovered').fill('32')
+
+  const actualColumns = [
+    'record_type',
+    'id',
+    'day',
+    'community',
+    'service',
+    'units',
+    'priority',
+    'program',
+    'current_community',
+    'skills',
+    'capacity',
+    'available',
+    'accessible',
+    'max_teams',
+    'allowed_communities',
+    'allowed_programs',
+    'programs',
+    'max_daily_capacity',
+    'max_travel_cost',
+    'max_travel_minutes',
+    'cost_per_capacity',
+    'from',
+    'to',
+    'cost',
+    'minutes',
+    'days',
+    'budget',
+    'target_priority_coverage',
+    'planning_unit',
+    'team',
+  ] as const
+  const actualRow = (
+    values: Partial<Record<(typeof actualColumns)[number], string | number | boolean>>
+  ) => actualColumns.map((column) => String(values[column] ?? '')).join(',')
+  const actualCsv = [
+    actualColumns.join(','),
+    actualRow({ record_type: 'settings', days: 'Mon', planning_unit: 'consultation' }),
+    actualRow({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 1 }),
+    actualRow({ record_type: 'demand', community: 'Hub A', service: 'psychosocial', units: 128, priority: 'high' }),
+    actualRow({
+      record_type: 'team',
+      id: 'Team A',
+      current_community: 'Hub A',
+      skills: 'psychosocial',
+      capacity: 96,
+    }),
+    actualRow({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
+  ].join('\n')
+
+  const actualChooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Import actual week' }).click()
+  await (await actualChooser).setFiles({
+    name: 'actual-week.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(actualCsv),
+  })
+
+  await expect(page.getByTestId('actual-week-imported')).toContainText('actual-week.csv')
+  await expect(page.getByLabel('Actual priority-needs coverage, %')).toHaveValue('81')
+  await expect(page.getByLabel('Demand units actually covered')).toHaveValue('96')
+  await expect(page.getByLabel('Demand units actually left uncovered')).toHaveValue('32')
+
   await page
     .getByPlaceholder('What actually happened after the decision was executed')
-    .fill('Executed with one field change')
+    .fill('Imported observed week')
   await page.getByRole('button', { name: 'Record actual outcome' }).click()
   await expect(page.getByText('Decision completed.')).toBeVisible()
   await expect(page.getByText('Actual outcome recorded')).toBeVisible()
