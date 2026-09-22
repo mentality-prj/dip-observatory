@@ -5,6 +5,7 @@ import { QdipLogo } from '@/components/marketing/qdip-logo'
 import marketingStyles from '@/components/marketing/qdip-site.module.css'
 import { marketingHref } from '@/lib/platform-urls'
 import type { StudioLocale } from './studio-locale'
+import { studioCopy } from './studio-copy'
 import { useStudioLocale } from './use-studio-locale'
 
 const footerCopy: Record<StudioLocale, { how: string; cases: string; core: string; research: string; navLabel: string }> = {
@@ -35,10 +36,11 @@ export function StudioFooter() {
   const locale = useStudioLocale()
   const root = marketingHref(locale)
   const c = footerCopy[locale]
+  const common = studioCopy(locale)
 
   return (
     <footer className={`${marketingStyles.footer} studio-site-footer`}>
-      <Link href={root} aria-label="QDIP home"><QdipLogo /></Link>
+      <Link href={root} aria-label={common.breadcrumbs.home}><QdipLogo /></Link>
       <nav aria-label={c.navLabel}>
         <Link href={`${root}/how-it-works`}>{c.how}</Link>
         <Link href={`${root}/use-cases`}>{c.cases}</Link>
