@@ -6,7 +6,7 @@ export const marketingCopy = {
     nav: ['How it works', 'Use cases', 'Why QDIP', 'Technology', 'See demos'],
     hero: [
       'Decision Engine',
-      'Make complex decisions repeatable.',
+      'Make complex decisions repeatable',
       'Your team already has the information. QDIP helps decide what to do next.',
       'When a recurring decision involves several options, competing priorities, constraints and uncertainty, QDIP evaluates the available choices and provides a recommendation with supporting evidence.',
       'Your team makes the final decision.',
@@ -99,7 +99,7 @@ export const marketingCopy = {
     nav: ['Як це працює', 'Сценарії', 'Чому QDIP', 'Технологія', 'Демо'],
     hero: [
       'Рушій прийняття рішень',
-      'Приймайте складні рішення послідовно.',
+      'Приймайте складні рішення послідовно',
       'У вашої команди вже є інформація. QDIP допомагає визначити, що робити далі.',
       'Коли регулярне рішення передбачає кілька варіантів, суперечливі пріоритети, обмеження та невизначеність, QDIP оцінює доступні варіанти й надає рекомендацію з обґрунтуванням.',
       'Остаточне рішення приймає ваша команда.',
@@ -184,7 +184,7 @@ export const marketingCopy = {
     nav: ['Jak to działa', 'Przypadki użycia', 'Dlaczego QDIP', 'Technologia', 'Demo'],
     hero: [
       'Silnik decyzyjny',
-      'Podejmuj złożone decyzje w sposób powtarzalny.',
+      'Podejmuj złożone decyzje w sposób powtarzalny',
       'Twój zespół ma już potrzebne informacje. QDIP pomaga zdecydować, co zrobić dalej.',
       'Gdy regularnie podejmowana decyzja obejmuje kilka opcji, sprzeczne priorytety, ograniczenia i niepewność, QDIP ocenia dostępne możliwości i przedstawia rekomendację wraz z uzasadnieniem.',
       'Ostateczną decyzję podejmuje Twój zespół.',
