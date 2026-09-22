@@ -25,7 +25,7 @@ export default function StudioLayout({ children }: { children: ReactNode }) {
             href={studioHref('', 'en')}
             brandHref={marketingHref('en')}
             product="Studio"
-            navigation={coreStatus}
+            brandStatus={coreStatus}
             utilities={
               <div className="studio-language-switcher" aria-hidden>
                 <span>EN</span><span>UA</span><span>PL</span>
