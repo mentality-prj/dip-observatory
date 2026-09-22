@@ -52,7 +52,7 @@ export default async function StudioLayout({ children }: { children: ReactNode }
         <aside className="studio-sidebar" aria-label={c.nav.workspace}>
           <div className="studio-sidebar-intro">
             <small>{c.nav.decisionWorkspace}</small>
-            <h2>Model · connect · validate</h2>
+            <h2>{c.shell.motto}</h2>
             <p>{c.decisionStudio.descriptions.profiles}</p>
           </div>
           <Suspense fallback={null}><StudioNav /></Suspense>
