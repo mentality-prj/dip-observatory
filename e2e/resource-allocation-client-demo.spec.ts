@@ -340,7 +340,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'community,Hub A,,,,,,,,2,,,,,,',
     'demand,,Hub A,psychosocial,12,high,,,,,,,,,,',
     'team,Team A,,,,,Hub A,psychosocial,10,,,,,,,',
-    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
+    'settings,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
   ].join('\n')
 
   const input = page.locator('input[type="file"]')
@@ -363,7 +363,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'demand,,Hub B,legal,8,normal,,,,,,,,,,',
     'team,Team A,,,,,Hub A,psychosocial|legal,10,,,,,,,',
     'team,Team B,,,,,Hub B,legal,8,,,,,,,',
-    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
+    'settings,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
   ].join('\n')
 
   const dropzone = page.getByTestId('resource-import-dropzone')
