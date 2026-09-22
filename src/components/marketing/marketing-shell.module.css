@@ -2,6 +2,15 @@
   margin-inline-start: 0;
 }
 
+/* Homepage .site used overflow:hidden to clip decorative artwork. That makes the
+   provider an overflow ancestor and prevents the shared sticky header from
+   sticking. overflow:clip preserves visual clipping without creating a scroll
+   container. Double class specificity intentionally wins over .site regardless
+   of CSS-module injection order. */
+.stickyRoot.stickyRoot {
+  overflow: clip;
+}
+
 .footer {
   display: grid;
   grid-template-columns: auto 1fr auto;
