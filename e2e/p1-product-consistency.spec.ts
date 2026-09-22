@@ -12,6 +12,18 @@ const demoNames = {
   pl: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
 } as const
 
+const proofArtifacts = {
+  en: ['Audit trace', 'Baseline comparison', 'Deterministic replay'],
+  uk: ['Audit trace', 'Порівняння з baseline', 'Детермінований replay'],
+  pl: ['Audit trace', 'Porównanie z baseline', 'Deterministyczny replay'],
+} as const
+
+const decisionPreview = {
+  en: 'Recommended allocation plan',
+  uk: 'Рекомендований план розподілу',
+  pl: 'Rekomendowany plan alokacji',
+} as const
+
 const footerLabels = {
   en: ['How it works', 'Use cases', 'QDIP Core', 'Research'],
   uk: ['Як це працює', 'Сценарії', 'QDIP Core', 'Дослідження'],
@@ -31,6 +43,12 @@ test.describe('P1 marketing conversion gate', () => {
         'href',
         `https://observatory.qdip.ai/${locale}`
       )
+
+      const proof = page.locator('#why')
+      await expect(proof.locator('article')).toHaveCount(3)
+      for (const artifact of proofArtifacts[locale]) {
+        await expect(proof.getByText(artifact, { exact: true })).toBeVisible()
+      }
     })
   }
 })
@@ -47,7 +65,7 @@ test.describe('P1 Observatory consistency gate', () => {
         await expect(page.getByRole('heading', { level: 3, name })).toBeVisible()
       }
 
-      await expect(page.getByText('Option B', { exact: true })).toHaveCount(0)
+      await expect(page.getByText(decisionPreview[locale], { exact: true })).toBeVisible()
       await expect(page.locator('[data-use-case="resource-allocation"]')).toBeVisible()
     })
   }
