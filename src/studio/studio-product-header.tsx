@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { ProductHeader } from '@/design-system'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { StudioLanguageSwitcher } from './studio-language-switcher'
-import { studioLocaleFromPath } from './studio-locale'
+import { useStudioLocale } from './use-studio-locale'
 
 type CoreStatus = 'checking' | 'connected' | 'unavailable'
 
@@ -61,9 +60,7 @@ export function StudioCoreStatus() {
 }
 
 export function StudioProductHeader() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const locale = useStudioLocale()
 
   return (
     <ProductHeader
