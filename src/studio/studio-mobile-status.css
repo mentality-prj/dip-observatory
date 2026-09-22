@@ -1,14 +1,12 @@
-/* Mobile optical alignment for Studio product status.
-   ProductLockup keeps a 124px frame so the QDIP artwork is not clipped, but the
-   PNG contains transparent horizontal space. On narrow headers the status must
-   follow the visible wordmark edge, not the frame's layout edge.
+/* Studio-only optical alignment for the product status.
+   ProductLockup keeps a 124px frame so the QDIP artwork is not clipped, while
+   the artwork itself has 34px of optical whitespace at its right edge.
 
-   studio-finish.css also owns this property inside its mobile breakpoint. Next's
-   CSS chunk ordering is not a stable cascade contract, so this narrowly-scoped
-   override is intentionally important until the lockup exposes optical geometry
-   as a design-system token. */
+   Scope this rule to the real StudioProductHeader. The Suspense fallback uses
+   the shared ProductHeader without this class, so it cannot affect the stable
+   post-hydration geometry measured by the responsive regression test. */
 @media (max-width: 760px) {
-  .studio-shell .ds-product-header-brand-status {
+  .studio-shell .studio-product-header .ds-product-header-brand-status {
     margin-left: -34px !important;
   }
 }
