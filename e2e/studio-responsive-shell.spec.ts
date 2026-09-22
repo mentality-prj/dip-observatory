@@ -57,8 +57,11 @@ test.describe('Studio responsive shell', () => {
       expect(brandGap).toBeLessThanOrEqual(2)
 
       const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
-      expect(statusTopOffset).toBeGreaterThanOrEqual(4)
-      expect(statusTopOffset).toBeLessThanOrEqual(10)
+      const expectedStatusTop = viewport.width <= 760
+        ? { min: 10, max: 13 }
+        : { min: 4, max: 10 }
+      expect(statusTopOffset).toBeGreaterThanOrEqual(expectedStatusTop.min)
+      expect(statusTopOffset).toBeLessThanOrEqual(expectedStatusTop.max)
 
       if (viewport.width <= 980) {
         await expect(page.getByText('Workspace', { exact: true })).toBeVisible()
