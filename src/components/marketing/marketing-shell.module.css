@@ -22,7 +22,7 @@
 @media (max-width: 900px) {
   .footer { grid-template-columns: 1fr; gap: var(--ds-space-4); }
   .footer nav { order: 1; margin: 0; flex-wrap: wrap; }
-  .footerBrand { order: 2; margin-inline-start: 23px; }
+  .footerBrand { order: 2; }
   .copyright { order: 3; }
 }
 @media (max-width: 600px) {
