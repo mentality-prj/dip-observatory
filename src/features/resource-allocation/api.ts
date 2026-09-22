@@ -21,12 +21,16 @@ export function buildResourceAllocationInput(
 
 export async function runResourceAllocationScenario(
   input: ResourceAllocationInput,
-  scenario: ResourceAllocationScenario
+  scenario: ResourceAllocationScenario,
+  pilotAccessKey?: string
 ): Promise<ResourceAllocationResult> {
   const request = buildResourceAllocationInput(input, scenario)
   const response = await fetch('/api/resource-allocation/run', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(pilotAccessKey ? { 'x-qdip-pilot-key': pilotAccessKey } : {}),
+    },
     body: JSON.stringify(request),
   })
 
