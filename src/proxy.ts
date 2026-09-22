@@ -27,7 +27,13 @@ export function proxy(request: NextRequest) {
       u.searchParams.set('lang', localizedStudio[1])
       const requestHeaders = new Headers(request.headers)
       requestHeaders.set('x-qdip-studio-locale', localizedStudio[1])
-      return NextResponse.rewrite(u, { request: { headers: requestHeaders } })
+      const response = NextResponse.rewrite(u, { request: { headers: requestHeaders } })
+      response.cookies.set('qdip-studio-locale', localizedStudio[1], {
+        path: '/',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365,
+      })
+      return response
     }
     if (pathname.startsWith('/studio')) {
       const suffix = pathname.slice('/studio'.length)
