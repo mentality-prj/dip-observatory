@@ -44,7 +44,7 @@ const copy = {
     eyebrow: 'QDIP OBSERVATORY · РОЗУМІТИ',
     title: 'Розумійте рекомендацію, а не лише результат.',
     subtitle:
-      'Observatory — простір перевірки рішень QDIP. Кожен застосунок має однакову логіку: спочатку рекомендація, потім альтернативи, докази та trace.',
+      'Observatory — простір перевірки рішень QDIP. Кожен застосунок має однакову логіку: спочатку рекомендація, потім альтернативи, докази та історія рішення.',
     inspectLabel: 'Розподіл ресурсів · preview рішення',
     recommendation: 'Рекомендація',
     recommended: 'Рекомендований план розподілу',
@@ -57,7 +57,7 @@ const copy = {
       ['Поточний розподіл', 'Зберегти поточне розміщення команд'],
       ['Ручний override', 'Відповідальна людина змінює запропонований план'],
     ],
-    trace: 'Відкрити trace рішення',
+    trace: 'Відкрити історію рішення',
     traceBody:
       'Потреби й доступні команди → допустимі розподіли → перевірка обмежень → оцінка пріоритетів → рекомендований розподіл.',
     previewCta: 'Відкрити Resource Allocation',
@@ -72,13 +72,13 @@ const copy = {
       ['Що змінилося?', 'Порівняйте стан і сценарій, які привели до іншого результату.'],
       ['Що змінить рішення?', 'Дослідіть, які обмеження або докази можуть змінити рекомендацію.'],
     ],
-    note: 'Demos — попередньо налаштовані decision applications. Studio конфігурує модель рішення, QDIP Core її оцінює, а Observatory робить результат доступним для перевірки.',
+    note: 'Демо — попередньо налаштовані застосунки для рішень. Studio конфігурує модель рішення, QDIP Core її оцінює, а Observatory робить результат доступним для перевірки.',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · ZROZUMIEĆ',
     title: 'Zrozum rekomendację, nie tylko wynik.',
     subtitle:
-      'Observatory to warstwa inspekcji decyzji QDIP. Każda aplikacja ma tę samą narrację: najpierw rekomendacja, potem alternatywy, dowody i trace.',
+      'Observatory to warstwa inspekcji decyzji QDIP. Każda aplikacja ma tę samą narrację: najpierw rekomendacja, potem alternatywy, dowody i ślad decyzji.',
     inspectLabel: 'Resource Allocation · podgląd decyzji',
     recommendation: 'Rekomendacja',
     recommended: 'Rekomendowany plan alokacji',
@@ -91,7 +91,7 @@ const copy = {
       ['Bieżąca alokacja', 'Zachowaj obecne rozmieszczenie zespołów'],
       ['Ręczne nadpisanie', 'Osoba odpowiedzialna zmienia proponowany plan'],
     ],
-    trace: 'Otwórz trace decyzji',
+    trace: 'Otwórz ślad decyzji',
     traceBody:
       'Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.',
     previewCta: 'Otwórz Resource Allocation',
