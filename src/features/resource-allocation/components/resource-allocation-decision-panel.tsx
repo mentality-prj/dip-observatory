@@ -36,6 +36,7 @@ type Props = {
   moveEvents: number
   planningDays: number
   planCsv?: string
+  planShortText?: string
   exportFileName?: string
   selectionKind?: 'recommended' | 'alternative'
   pilotAccessKey?: string
@@ -363,6 +364,7 @@ export function ResourceAllocationDecisionPanel({
   moveEvents,
   planningDays,
   planCsv,
+  planShortText,
   exportFileName,
   selectionKind = 'recommended',
   pilotAccessKey,
@@ -500,8 +502,8 @@ export function ResourceAllocationDecisionPanel({
   }
 
   async function copyPlan() {
-    if (!planCsv || !navigator.clipboard) return
-    await navigator.clipboard.writeText(planCsv.replace(/^\uFEFF/, ''))
+    if (!planShortText || !navigator.clipboard) return
+    await navigator.clipboard.writeText(planShortText)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1800)
     trackResourceAllocation('ra_plan_exported', locale)
