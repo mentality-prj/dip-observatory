@@ -3,18 +3,14 @@
 import { useEffect, useState } from 'react'
 import { ProductHeader } from '@/design-system'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { studioCopy } from './studio-copy'
 import { StudioLanguageSwitcher } from './studio-language-switcher'
 import { useStudioLocale } from './use-studio-locale'
 
 type CoreStatus = 'checking' | 'connected' | 'unavailable'
 
-const STATUS_COPY: Record<CoreStatus, { full: string; compact: string }> = {
-  checking: { full: 'Core checking', compact: 'Checking' },
-  connected: { full: 'Core connected', compact: 'Connected' },
-  unavailable: { full: 'Core unavailable', compact: 'Offline' },
-}
-
 export function StudioCoreStatus() {
+  const locale = useStudioLocale()
   const [status, setStatus] = useState<CoreStatus>('checking')
 
   useEffect(() => {
@@ -43,7 +39,7 @@ export function StudioCoreStatus() {
     }
   }, [])
 
-  const copy = STATUS_COPY[status]
+  const copy = studioCopy(locale).headerStatus[status]
   return (
     <span
       className="studio-core-status"
