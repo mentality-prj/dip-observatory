@@ -15,19 +15,19 @@ const copy = {
   },
   uk: {
     items: [
-      ['Audit trace', 'Відкрийте рекомендацію з альтернативами, доказами та trace рішення для перевірки.', 'Перевірити рішення'],
-      ['Порівняння з baseline', 'Перегляньте експерименти Gas Decision у порівнянні з явним baseline, а не ізольованим результатом моделі.', 'Відкрити Gas Decision'],
-      ['Детермінований replay', 'Перегляньте research і reproducibility layer, який зберігає шлях рішення відтворюваним між запусками.', 'Переглянути research'],
+      ['Аудит рішення', 'Відкрийте рекомендацію з альтернативами, доказами та історією рішення для перевірки.', 'Перевірити рішення'],
+      ['Порівняння з базовим сценарієм', 'Перегляньте експерименти Gas Decision у порівнянні з явним базовим сценарієм, а не ізольованим результатом моделі.', 'Відкрити Gas Decision'],
+      ['Детерміноване відтворення', 'Перегляньте дослідження та шар відтворюваності, який зберігає шлях рішення відтворюваним між запусками.', 'Переглянути дослідження'],
     ],
-    links: ['Архітектура', 'Пояснюваність', 'Research'],
+    links: ['Архітектура', 'Пояснюваність', 'Дослідження'],
   },
   pl: {
     items: [
-      ['Audit trace', 'Otwórz rekomendację z alternatywami, dowodami i trace decyzji do inspekcji.', 'Sprawdź decyzję'],
-      ['Porównanie z baseline', 'Przejrzyj eksperymenty Gas Decision względem jawnego baseline zamiast izolowanego wyniku modelu.', 'Otwórz Gas Decision'],
-      ['Deterministyczny replay', 'Przejrzyj warstwę badań i odtwarzalności, która zachowuje ścieżkę decyzji między przebiegami.', 'Przejrzyj research'],
+      ['Ślad audytowy decyzji', 'Otwórz rekomendację z alternatywami, dowodami i śladem decyzji do inspekcji.', 'Sprawdź decyzję'],
+      ['Porównanie ze scenariuszem bazowym', 'Przejrzyj eksperymenty Gas Decision względem jawnego scenariusza bazowego zamiast izolowanego wyniku modelu.', 'Otwórz Gas Decision'],
+      ['Deterministyczne odtworzenie', 'Przejrzyj warstwę badań i odtwarzalności, która zachowuje ścieżkę decyzji między przebiegami.', 'Przejrzyj badania'],
     ],
-    links: ['Architektura', 'Wyjaśnialność', 'Research'],
+    links: ['Architektura', 'Wyjaśnialność', 'Badania'],
   },
 } as const
 
