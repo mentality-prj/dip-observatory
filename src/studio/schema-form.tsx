@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Checkbox, Input, Select, Textarea } from '@/design-system'
 import type { JsonSchema } from './contracts'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 export function schemaDefault(schema: JsonSchema): unknown {
   if (schema.default !== undefined) return structuredClone(schema.default)
@@ -27,6 +29,7 @@ export function JsonField({
   value: unknown
   onChange: (value: unknown) => void
 }) {
+  const copy = studioCopy(useStudioLocale()).schema
   const id = useId()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [state, setState] = useState({ value, text: JSON.stringify(value, null, 2), error: '' })
@@ -37,7 +40,7 @@ export function JsonField({
   }, [error])
   return (
     <label className="studio-field" htmlFor={id}>
-      {label}
+      {resolvedLabel}
       <Textarea
         ref={inputRef}
         id={id}
@@ -53,7 +56,7 @@ export function JsonField({
             setState({ value: parsed, text, error: '' })
             onChange(parsed)
           } catch {
-            const message = 'Enter valid JSON before saving.'
+            const message = copy.invalidJson
             event.target.setCustomValidity(message)
             setState({ ...state, text, error: message })
           }
@@ -72,7 +75,7 @@ export function SchemaField({
   schema,
   value,
   onChange,
-  label = 'Configuration',
+  label,
   root,
   depth = 0,
 }: {
@@ -83,9 +86,11 @@ export function SchemaField({
   root?: JsonSchema
   depth?: number
 }) {
+  const copy = studioCopy(useStudioLocale()).schema
+  const resolvedLabel = label ?? copy.configuration
   const id = useId()
   const document = root ?? schema
-  if (depth > 12) return <JsonField label={label} value={value} onChange={onChange} />
+  if (depth > 12) return <JsonField label={resolvedLabel} value={value} onChange={onChange} />
   if (schema.$ref?.startsWith('#/$defs/')) {
     const resolved = document.$defs?.[schema.$ref.slice(8)]
     if (resolved)
@@ -94,7 +99,7 @@ export function SchemaField({
           schema={resolved}
           value={value}
           onChange={onChange}
-          label={label}
+          label={resolvedLabel}
           root={document}
           depth={depth + 1}
         />
@@ -103,7 +108,7 @@ export function SchemaField({
   if (schema.enum)
     return (
       <label className="studio-field" htmlFor={id}>
-        {label}
+        {resolvedLabel}
         <Select id={id} value={JSON.stringify(value)} onChange={(event) => onChange(JSON.parse(event.target.value))}>
           {schema.enum.map((option) => (
             <option key={JSON.stringify(option)} value={JSON.stringify(option)}>
@@ -117,7 +122,7 @@ export function SchemaField({
     const object = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>
     return (
       <fieldset className="studio-schema">
-        <legend>{label}</legend>
+        <legend>{resolvedLabel}</legend>
         {schema.description && <p>{schema.description}</p>}
         {Object.entries(schema.properties).map(([key, child]) => {
           const required = schema.required?.includes(key)
@@ -158,24 +163,24 @@ export function SchemaField({
     const items = Array.isArray(value) ? value : []
     return (
       <fieldset className="studio-schema">
-        <legend>{label}</legend>
+        <legend>{resolvedLabel}</legend>
         {items.map((item, index) => (
           <div key={index} className="studio-array-item">
             <SchemaField
               schema={schema.items!}
               root={document}
               value={item}
-              label={`${label} ${index + 1}`}
+              label={`${resolvedLabel} ${index + 1}`}
               depth={depth + 1}
               onChange={(next) => onChange(items.map((entry, i) => (i === index ? next : entry)))}
             />
             <Button type="button" variant="secondary" onClick={() => onChange(items.filter((_, i) => i !== index))}>
-              Remove item {index + 1}
+              {copy.removeItem} {index + 1}
             </Button>
           </div>
         ))}
         <Button type="button" variant="secondary" onClick={() => onChange([...items, schemaDefault(schema.items!)])}>
-          Add item
+          {copy.addItem}
         </Button>
       </fieldset>
     )
@@ -184,13 +189,13 @@ export function SchemaField({
     return (
       <label className="studio-check">
         <Checkbox checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
-        {label}
+        {resolvedLabel}
       </label>
     )
   if (['string', 'number', 'integer'].includes(schema.type ?? ''))
     return (
       <label className="studio-field" htmlFor={id}>
-        {label}
+        {resolvedLabel}
         <Input
           id={id}
           required
@@ -213,5 +218,5 @@ export function SchemaField({
         {schema.description && <small>{schema.description}</small>}
       </label>
     )
-  return <JsonField label={label} value={value === undefined ? null : value} onChange={onChange} />
+  return <JsonField label={resolvedLabel} value={value === undefined ? null : value} onChange={onChange} />
 }
