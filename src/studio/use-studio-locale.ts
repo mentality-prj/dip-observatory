@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { studioLocaleFromPath, type StudioLocale } from './studio-locale'
+import { STUDIO_LOCALES, studioLocaleFromPath, type StudioLocale } from './studio-locale'
 
-function localeFromBrowserPath(fallbackPathname: string, searchLocale: string | null): StudioLocale {
+function browserLocale(fallbackPathname: string, searchLocale: string | null): StudioLocale {
   if (typeof window === 'undefined') return studioLocaleFromPath(fallbackPathname, searchLocale)
-  return studioLocaleFromPath(window.location.pathname, searchLocale)
+
+  const first = window.location.pathname.split('/').filter(Boolean)[0]
+  if (STUDIO_LOCALES.includes(first as StudioLocale)) return first as StudioLocale
+
+  const cookieLocale = document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('qdip-studio-locale='))
+    ?.split('=')[1]
+
+  return studioLocaleFromPath(fallbackPathname, cookieLocale ?? searchLocale)
 }
 
 export function useStudioLocale() {
@@ -16,7 +26,7 @@ export function useStudioLocale() {
   const [locale, setLocale] = useState<StudioLocale>(() => studioLocaleFromPath(pathname, searchLocale))
 
   useEffect(() => {
-    setLocale(localeFromBrowserPath(pathname, searchLocale))
+    setLocale(browserLocale(pathname, searchLocale))
   }, [pathname, searchLocale])
 
   return locale
