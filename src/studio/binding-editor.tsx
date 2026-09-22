@@ -5,8 +5,11 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/desig
 import { studioRequest, type Binding, type Dimension, type Plugin } from './contracts'
 import { outputLabel } from './presentation'
 import { JsonField } from './schema-form'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensions: Dimension[] }) {
+  const copy = studioCopy(useStudioLocale()).bindings
   const [bindings, setBindings] = useState<Binding[] | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -24,7 +27,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
       disposed = true
     }
   }, [plugin.name])
-  if (!bindings) return <p role="status">{error || 'Loading bindings…'}</p>
+  if (!bindings) return <p role="status">{error || copy.loading}</p>
   function update(index: number, patch: Partial<Binding>) {
     setBindings((previous) => previous!.map((b, i) => (i === index ? { ...b, ...patch } : b)))
   }
@@ -40,7 +43,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
             method: 'PUT',
             body: JSON.stringify(bindings),
           })
-          setMessage('Bindings saved. Update profiles to reference changed binding versions.')
+          setMessage(copy.saved)
         } catch (reason) {
           setError(reason instanceof Error ? reason.message : String(reason))
         } finally {
@@ -48,7 +51,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
         }
       }}
     >
-      <p>Map declared outputs to dimension inputs. Change a binding’s version when editing its contract.</p>
+      <p>{copy.intro}</p>
       {bindings.map((binding, index) => (
         <Card key={index}>
           <CardHeader>
@@ -57,7 +60,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
               {dimensions.find((d) => d.id === binding.dimension_id)?.name ?? binding.dimension_id}
             </CardTitle>
             <p>
-              Pinned contracts: plugin {binding.plugin_version} · capability {binding.capability_version}
+              {copy.pinnedContracts}: plugin {binding.plugin_version} · capability {binding.capability_version}
             </p>
           </CardHeader>
           <CardContent>
@@ -73,20 +76,20 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                   })
                 }
               >
-                Use installed contract versions
+                {copy.useInstalledVersions}
               </Button>
             )}
             <div className="studio-grid">
               <label className="studio-field">
-                Binding ID
+                {copy.bindingId}
                 <Input required value={binding.id} onChange={(e) => update(index, { id: e.target.value })} />
               </label>
               <label className="studio-field">
-                Version
+                {copy.version}
                 <Input required value={binding.version} onChange={(e) => update(index, { version: e.target.value })} />
               </label>
               <label className="studio-field">
-                Available output
+                {copy.availableOutput}
                 <select
                   className="ds-select"
                   value={`${binding.capability_id}|${binding.dimension_id}|${binding.source_path}`}
@@ -113,7 +116,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 </select>
               </label>
               <label className="studio-field">
-                Dimension version
+                {copy.dimensionVersion}
                 <select
                   className="ds-select"
                   value={binding.dimension_version}
@@ -121,7 +124,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 >
                   {!dimensions.some(
                     (d) => d.id === binding.dimension_id && d.version === binding.dimension_version
-                  ) && <option value={binding.dimension_version}>{binding.dimension_version} (unavailable)</option>}
+                  ) && <option value={binding.dimension_version}>{binding.dimension_version} ({copy.unavailable})</option>}
                   {dimensions
                     .filter((d) => d.id === binding.dimension_id)
                     .map((d) => (
@@ -136,7 +139,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 checked={binding.required}
                 onChange={(e) => update(index, { required: e.target.checked })}
               />
-              Required output
+              {copy.requiredOutput}
             </label>
             <label className="studio-check">
               <input
@@ -144,15 +147,15 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 checked={binding.enabled}
                 onChange={(e) => update(index, { enabled: e.target.checked })}
               />
-              Enabled
+              {copy.enabled}
             </label>
             <details>
-              <summary>Advanced details</summary>
+              <summary>{copy.advancedDetails}</summary>
               <p>
-                Internal source path: <code>{binding.source_path}</code>
+                {copy.internalSourcePath}: <code>{binding.source_path}</code>
               </p>
               <JsonField
-                label="Target field → relative source path (or null)"
+                label={copy.targetPath}
                 value={binding.mapping}
                 onChange={(mapping) => update(index, { mapping: mapping as Binding['mapping'] })}
               />
@@ -162,7 +165,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
               type="button"
               onClick={() => setBindings(bindings.filter((_, i) => i !== index))}
             >
-              Remove binding
+              {copy.removeBinding}
             </Button>
           </CardContent>
         </Card>
@@ -193,13 +196,13 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
             ])
           }}
         >
-          Add binding
+          {copy.addBinding}
         </Button>
         <Button disabled={busy || !plugin.enabled} type="submit">
-          {busy ? 'Saving…' : 'Save bindings'}
+          {busy ? copy.saving : copy.saveBindings}
         </Button>
       </div>
-      {!plugin.dimension_outputs.length && <p>This plugin has no declared dimension outputs.</p>}
+      {!plugin.dimension_outputs.length && <p>{copy.noOutputs}</p>}
       {error && (
         <div role="alert" className="studio-error">
           {error}
