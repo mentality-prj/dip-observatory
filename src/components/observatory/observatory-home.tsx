@@ -11,21 +11,22 @@ const copy = {
     title: 'Understand the recommendation, not just the output.',
     subtitle:
       'Observatory is the inspection surface for QDIP decisions. Every application follows the same narrative: recommendation first, then alternatives, evidence and trace.',
-    inspectLabel: 'Decision inspection model',
+    inspectLabel: 'Resource Allocation · decision preview',
     recommendation: 'Recommendation',
-    recommended: 'Option B',
-    confidence: 'Supported by current evidence',
-    recommendedLabel: 'Recommended',
+    recommended: 'Recommended allocation plan',
+    confidence: 'Generated from the configured scenario and operational constraints',
+    recommendedLabel: 'QDIP recommendation',
     evidence: 'Evidence',
-    evidenceItems: ['Constraints satisfied', 'Priority fit is strongest', 'Trade-offs remain visible'],
+    evidenceItems: ['Capacity and skill constraints checked', 'Priority coverage compared', 'Team movements and trade-offs exposed'],
     alternatives: 'Alternatives',
     alternativeItems: [
-      ['Option A', 'Higher cost'],
-      ['Option C', 'Constraint conflict'],
+      ['Current allocation', 'Keep the existing team placement'],
+      ['Manual override', 'Responsible person changes the proposed plan'],
     ],
     trace: 'Open decision trace',
     traceBody:
-      'Context → alternatives → evaluation → recommendation. The trace remains secondary until deeper inspection is needed.',
+      'Needs and available teams → feasible allocations → constraint checks → priority evaluation → recommended allocation.',
+    previewCta: 'Open Resource Allocation',
     demos: 'Live decision applications',
     demosBody:
       'Different domains, the same inspection grammar. Open an application to examine a real recommendation and the evidence behind it.',
@@ -44,21 +45,22 @@ const copy = {
     title: 'Розумійте рекомендацію, а не лише результат.',
     subtitle:
       'Observatory — простір перевірки рішень QDIP. Кожен застосунок має однакову логіку: спочатку рекомендація, потім альтернативи, докази та trace.',
-    inspectLabel: 'Модель перевірки рішення',
+    inspectLabel: 'Розподіл ресурсів · preview рішення',
     recommendation: 'Рекомендація',
-    recommended: 'Варіант B',
-    confidence: 'Підтверджено поточними доказами',
-    recommendedLabel: 'Рекомендовано',
+    recommended: 'Рекомендований план розподілу',
+    confidence: 'Сформовано з налаштованого сценарію та операційних обмежень',
+    recommendedLabel: 'Рекомендація QDIP',
     evidence: 'Докази',
-    evidenceItems: ['Обмеження виконані', 'Найкраща відповідність пріоритетам', 'Компроміси залишаються видимими'],
+    evidenceItems: ['Перевірено обмеження спроможності та навичок', 'Порівняно покриття пріоритетних потреб', 'Показано переміщення команд і компроміси'],
     alternatives: 'Альтернативи',
     alternativeItems: [
-      ['Варіант A', 'Вищі витрати'],
-      ['Варіант C', 'Конфлікт з обмеженням'],
+      ['Поточний розподіл', 'Зберегти поточне розміщення команд'],
+      ['Ручний override', 'Відповідальна людина змінює запропонований план'],
     ],
     trace: 'Відкрити trace рішення',
     traceBody:
-      'Контекст → альтернативи → оцінювання → рекомендація. Trace залишається другим рівнем, доки не потрібна глибша перевірка.',
+      'Потреби й доступні команди → допустимі розподіли → перевірка обмежень → оцінка пріоритетів → рекомендований розподіл.',
+    previewCta: 'Відкрити Resource Allocation',
     demos: 'Робочі decision applications',
     demosBody:
       'Різні домени, однакова логіка перевірки. Відкрийте застосунок, щоб дослідити реальну рекомендацію та докази.',
@@ -77,21 +79,22 @@ const copy = {
     title: 'Zrozum rekomendację, nie tylko wynik.',
     subtitle:
       'Observatory to warstwa inspekcji decyzji QDIP. Każda aplikacja ma tę samą narrację: najpierw rekomendacja, potem alternatywy, dowody i trace.',
-    inspectLabel: 'Model inspekcji decyzji',
+    inspectLabel: 'Resource Allocation · podgląd decyzji',
     recommendation: 'Rekomendacja',
-    recommended: 'Opcja B',
-    confidence: 'Potwierdzone aktualnymi dowodami',
-    recommendedLabel: 'Rekomendowane',
+    recommended: 'Rekomendowany plan alokacji',
+    confidence: 'Wygenerowany z konfiguracji scenariusza i ograniczeń operacyjnych',
+    recommendedLabel: 'Rekomendacja QDIP',
     evidence: 'Dowody',
-    evidenceItems: ['Ograniczenia spełnione', 'Najlepsze dopasowanie priorytetów', 'Kompromisy pozostają widoczne'],
+    evidenceItems: ['Sprawdzono ograniczenia pojemności i kompetencji', 'Porównano pokrycie potrzeb priorytetowych', 'Pokazano przeniesienia zespołów i kompromisy'],
     alternatives: 'Alternatywy',
     alternativeItems: [
-      ['Opcja A', 'Wyższy koszt'],
-      ['Opcja C', 'Konflikt z ograniczeniem'],
+      ['Bieżąca alokacja', 'Zachowaj obecne rozmieszczenie zespołów'],
+      ['Ręczne nadpisanie', 'Osoba odpowiedzialna zmienia proponowany plan'],
     ],
     trace: 'Otwórz trace decyzji',
     traceBody:
-      'Kontekst → alternatywy → ocena → rekomendacja. Trace pozostaje drugim poziomem, dopóki nie jest potrzebna głębsza inspekcja.',
+      'Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.',
+    previewCta: 'Otwórz Resource Allocation',
     demos: 'Działające aplikacje decyzyjne',
     demosBody:
       'Różne domeny, ta sama logika inspekcji. Otwórz aplikację, aby zbadać rzeczywistą rekomendację i stojące za nią dowody.',
@@ -166,6 +169,13 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                 </summary>
                 <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-500">{t.traceBody}</p>
               </details>
+              <Link
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
+                href={buildLocalePath('/resource-allocation', locale)}
+              >
+                {t.previewCta}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
             <aside className="bg-white/[.018] p-6 md:p-8" aria-label={t.evidence}>
               <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">{t.evidence}</span>
