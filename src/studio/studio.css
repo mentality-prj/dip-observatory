@@ -1,9 +1,6 @@
 .studio-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  grid-template-rows: var(--ds-header-height) 1fr;
-  grid-template-areas: 'header header' 'sidebar workspace';
   color: var(--ds-text);
   background: var(--ds-bg);
   font-family: var(--ds-font-sans);
@@ -423,38 +420,6 @@
   outline-offset: 3px;
 }
 @media (max-width: 900px) {
-  .studio-shell {
-    grid-template-columns: 1fr;
-    grid-template-rows: var(--ds-header-height) auto 1fr;
-    grid-template-areas: 'header' 'sidebar' 'workspace';
-  }
-  .studio-sidebar {
-    position: static;
-    height: auto;
-    padding: var(--ds-space-3) var(--ds-space-5);
-  }
-  .studio-sidebar-intro,
-  .studio-sidebar-footer,
-  .studio-nav-label {
-    display: none;
-  }
-  .studio-sidebar nav {
-    display: flex;
-    overflow-x: auto;
-  }
-  .studio-sidebar nav a {
-    flex: 0 0 auto;
-    min-height: 48px;
-    grid-template-columns: 28px auto;
-  }
-  .studio-nav-icon {
-    width: 28px;
-    height: 28px;
-  }
-  .studio-nav-copy small,
-  .studio-sidebar nav a > i {
-    display: none;
-  }
   .studio-main {
     padding: var(--ds-space-8) var(--ds-space-6) var(--ds-space-16);
   }
@@ -466,9 +431,6 @@
   }
 }
 @media (max-width: 620px) {
-  .studio-sidebar {
-    padding-inline: var(--ds-space-3);
-  }
   .studio-main {
     padding: var(--ds-space-6) var(--ds-space-4) var(--ds-space-12);
   }
