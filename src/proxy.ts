@@ -25,13 +25,9 @@ export function proxy(request: NextRequest) {
       const u = request.nextUrl.clone()
       u.pathname = localizedStudio[2] ? `/studio${localizedStudio[2]}` : '/studio'
       u.searchParams.set('lang', localizedStudio[1])
-      const response = NextResponse.rewrite(u)
-      response.cookies.set('qdip-studio-locale', localizedStudio[1], {
-        path: '/',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365,
-      })
-      return response
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-qdip-studio-locale', localizedStudio[1])
+      return NextResponse.rewrite(u, { request: { headers: requestHeaders } })
     }
     if (pathname.startsWith('/studio')) {
       const suffix = pathname.slice('/studio'.length)
