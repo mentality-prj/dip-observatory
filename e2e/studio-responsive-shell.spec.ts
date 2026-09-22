@@ -23,6 +23,15 @@ test.describe('Studio responsive shell', () => {
 
       const response = await page.goto('/en')
       expect(response?.status()).toBeLessThan(400)
+      expect(new URL(page.url()).origin).toBe('http://127.0.0.1:3000')
+
+      const stylesheetOrigins = await page.evaluate(() =>
+        Array.from(document.styleSheets)
+          .map((sheet) => sheet.href)
+          .filter((href): href is string => Boolean(href))
+          .map((href) => new URL(href).origin)
+      )
+      expect(stylesheetOrigins.every((origin) => origin === 'http://127.0.0.1:3000')).toBe(true)
 
       const shell = page.locator('.studio-shell')
       const lockup = page.locator('.ds-product-lockup')
@@ -58,34 +67,8 @@ test.describe('Studio responsive shell', () => {
       // wordmark asset while tablet/desktop keep the shared ProductHeader geometry.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       if (viewport.width <= 760) {
-        const cascade = await status.evaluate((element) => {
-          const parent = element.parentElement as Element
-          const matches: Array<{ href: string | null; media: string | null; css: string }> = []
-          const visitRules = (rules: CSSRuleList, href: string | null, media: string | null) => {
-            for (const rule of Array.from(rules)) {
-              if (rule instanceof CSSMediaRule) {
-                if (matchMedia(rule.conditionText).matches) visitRules(rule.cssRules, href, rule.conditionText)
-                continue
-              }
-              if (rule instanceof CSSStyleRule && parent.matches(rule.selectorText)) {
-                if (rule.style.marginLeft || rule.style.margin) {
-                  matches.push({ href, media, css: rule.cssText })
-                }
-              }
-            }
-          }
-          for (const sheet of Array.from(document.styleSheets)) {
-            try {
-              visitRules(sheet.cssRules, sheet.href, null)
-            } catch {}
-          }
-          return {
-            computedMarginLeft: getComputedStyle(parent).marginLeft,
-            matches,
-          }
-        })
-        expect(brandGap, JSON.stringify(cascade)).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap, JSON.stringify(cascade)).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
       } else {
         expect(brandGap).toBeGreaterThanOrEqual(0)
         expect(brandGap).toBeLessThanOrEqual(2)
