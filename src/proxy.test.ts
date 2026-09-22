@@ -6,6 +6,11 @@ import { proxy } from './proxy'
 function request(host: string, pathname = '/') {
   return new NextRequest(`https://${host}${pathname}`, { headers: { host } })
 }
+function forwardedRequest(forwardedHost: string, pathname = '/') {
+  return new NextRequest(`http://127.0.0.1:3000${pathname}`, {
+    headers: { host: '127.0.0.1:3000', 'x-forwarded-host': forwardedHost },
+  })
+}
 test('routes localized Studio URLs to the Studio app', () => {
   const home = proxy(request('studio.qdip.ai', '/en'))
   const profiles = proxy(request('studio.qdip.ai', '/uk/profiles'))
@@ -45,4 +50,14 @@ test('routes localized marketing URLs and nested public pages', () => {
   assert.equal(new URL(canonical.headers.get('location')!).pathname, '/pl/use-cases')
   assert.equal(isRewrite(preview), false)
   assert.equal(isRewrite(observatory), false)
+})
+
+test('keeps forwarded-host surface rewrites on the local origin in CI', () => {
+  const response = proxy(forwardedRequest('studio.qdip.ai', '/en'))
+  assert.equal(isRewrite(response), true)
+
+  const rewritten = new URL(getRewrittenUrl(response)!)
+  assert.equal(rewritten.origin, 'http://127.0.0.1:3000')
+  assert.equal(rewritten.pathname, '/studio')
+  assert.equal(rewritten.searchParams.get('lang'), 'en')
 })
