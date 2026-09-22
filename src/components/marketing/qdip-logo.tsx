@@ -2,9 +2,12 @@ import Image from 'next/image'
 import styles from './qdip-site.module.css'
 import logoStyles from './qdip-logo.module.css'
 
-export function QdipLogo({ inverse = false }: { inverse?: boolean }) {
+export function QdipLogo({ inverse = false, className }: { inverse?: boolean; className?: string }) {
   return (
-    <span className={`${styles.logo} ${logoStyles.brand}`} data-inverse={inverse || undefined}>
+    <span
+      className={`${styles.logo} ${logoStyles.brand}${className ? ` ${className}` : ''}`}
+      data-inverse={inverse || undefined}
+    >
       <Image
         alt="QDIP"
         className={styles.logoWordmark}
