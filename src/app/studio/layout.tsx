@@ -30,7 +30,6 @@ export default async function StudioLayout({ children }: { children: ReactNode }
         <Suspense
           fallback={
             <ProductHeader
-              className="studio-product-header"
               href={studioHref('', locale)}
               brandHref={marketingHref(locale)}
               product="Studio"
