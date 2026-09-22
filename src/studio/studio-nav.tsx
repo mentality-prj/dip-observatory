@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Boxes, Braces, GitBranch, SlidersHorizontal, Telescope } from 'lucide-react'
 import { observatoryHref, studioHref } from '@/lib/platform-urls'
-import { studioLocaleFromPath, studioSectionFromPath } from './studio-locale'
+import { studioSectionFromPath } from './studio-locale'
+import { useStudioLocale } from './use-studio-locale'
 
 const items = [
   { section: 'profiles', label: 'Decisions', description: 'Alternatives, evaluation, constraints, validation and runs', icon: SlidersHorizontal },
@@ -23,8 +24,7 @@ function isActive(pathname: string, section: string) {
 
 export function StudioNav() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const locale = useStudioLocale()
   const localizedHref = (section: string) => studioHref(section, locale)
   const renderItem = ({ section, label, description, icon: Icon }: (typeof items)[number] | (typeof platformItems)[number]) => (
     <Link key={section} aria-current={isActive(pathname, section) ? 'page' : undefined} href={localizedHref(section)}>
