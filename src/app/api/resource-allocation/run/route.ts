@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import {
-  assertResourceAllocationAccess,
+  assertSameOriginMutation,
   ResourceAllocationAccessError,
 } from '@/features/resource-allocation/server/access'
 import { normalizeResourceAllocationBusinessMetrics } from '@/features/resource-allocation/server/normalize-business-metrics'
@@ -23,7 +23,7 @@ function requestLocale(request: Request): UiLocale {
 export async function POST(request: Request) {
   try {
     const input = resourceAllocationRequestSchema.parse(await request.json())
-    assertResourceAllocationAccess(request, input)
+    assertSameOriginMutation(request)
     const result = await runResourceAllocation(input, requestLocale(request))
     return NextResponse.json(normalizeResourceAllocationBusinessMetrics(result))
   } catch (error) {
