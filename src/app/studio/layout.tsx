@@ -1,11 +1,14 @@
 import { Suspense, type ReactNode } from 'react'
+import { headers } from 'next/headers'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
 import { StudioNav } from '@/features/studio'
 import { StudioFooter } from '@/studio/studio-footer'
+import { parseStudioLocale } from '@/studio/studio-locale'
 import { StudioCoreStatus, StudioProductHeader } from '@/studio/studio-product-header'
 import { StudioMobileNavigation } from '@/studio/studio-mobile-navigation'
+import { StudioLocaleProvider } from '@/studio/use-studio-locale'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {
@@ -15,45 +18,50 @@ export const metadata = {
 
 const coreStatus = <StudioCoreStatus />
 
-export default function StudioLayout({ children }: { children: ReactNode }) {
+export default async function StudioLayout({ children }: { children: ReactNode }) {
+  const requestHeaders = await headers()
+  const locale = parseStudioLocale(requestHeaders.get('x-qdip-studio-locale'))
+
   return (
-    <DesignSystemProvider theme="green" mode="light" className="studio-shell">
-      <Suspense
-        fallback={
-          <ProductHeader
-            href={studioHref('', 'en')}
-            brandHref={marketingHref('en')}
-            product="Studio"
-            brandStatus={coreStatus}
-            utilities={
-              <div className="studio-language-switcher" aria-hidden>
-                <span>EN</span><span>UA</span><span>PL</span>
-              </div>
-            }
-          />
-        }
-      >
-        <StudioProductHeader />
-      </Suspense>
+    <StudioLocaleProvider initialLocale={locale}>
+      <DesignSystemProvider theme="green" mode="light" className="studio-shell">
+        <Suspense
+          fallback={
+            <ProductHeader
+              href={studioHref('', locale)}
+              brandHref={marketingHref(locale)}
+              product="Studio"
+              brandStatus={coreStatus}
+              utilities={
+                <div className="studio-language-switcher" aria-hidden>
+                  <span>EN</span><span>UA</span><span>PL</span>
+                </div>
+              }
+            />
+          }
+        >
+          <StudioProductHeader />
+        </Suspense>
 
-      <div className="studio-mobile-nav-wrap">
-        <Suspense fallback={null}><StudioMobileNavigation /></Suspense>
-      </div>
-
-      <aside className="studio-sidebar" aria-label="Studio workspace navigation">
-        <div className="studio-sidebar-intro">
-          <small>DECISION WORKSPACE</small>
-          <h2>Model · connect · validate</h2>
-          <p>Configure the decision model and its evidence contracts.</p>
+        <div className="studio-mobile-nav-wrap">
+          <Suspense fallback={null}><StudioMobileNavigation /></Suspense>
         </div>
-        <Suspense fallback={null}><StudioNav /></Suspense>
-      </aside>
 
-      <div className="studio-workspace">
-        <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
-      </div>
+        <aside className="studio-sidebar" aria-label="Studio workspace navigation">
+          <div className="studio-sidebar-intro">
+            <small>DECISION WORKSPACE</small>
+            <h2>Model · connect · validate</h2>
+            <p>Configure the decision model and its evidence contracts.</p>
+          </div>
+          <Suspense fallback={null}><StudioNav /></Suspense>
+        </aside>
 
-      <Suspense fallback={null}><StudioFooter /></Suspense>
-    </DesignSystemProvider>
+        <div className="studio-workspace">
+          <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
+        </div>
+
+        <Suspense fallback={null}><StudioFooter /></Suspense>
+      </DesignSystemProvider>
+    </StudioLocaleProvider>
   )
 }
