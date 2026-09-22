@@ -2,14 +2,11 @@
 
 import Link from 'next/link'
 import { Home } from 'lucide-react'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
-import { studioLocaleFromPath } from './studio-locale'
+import { useStudioLocale } from './use-studio-locale'
 
 export function StudioBreadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const locale = useStudioLocale()
   const localizeHref = (href: string) => {
     if (href.startsWith('https://studio.qdip.ai')) {
       const target = new URL(href)
