@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { studioHref } from '@/lib/platform-urls'
 import { useTransition } from 'react'
 import { Globe2 } from 'lucide-react'
@@ -8,17 +8,16 @@ import { Globe2 } from 'lucide-react'
 import {
   STUDIO_LOCALES,
   STUDIO_LOCALE_LABEL,
-  studioLocaleFromPath,
   studioSectionFromPath,
   type StudioLocale,
 } from './studio-locale'
+import { useStudioLocale } from './use-studio-locale'
 
 export function StudioLanguageSwitcher() {
   const pathname = usePathname()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
-  const active = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const active = useStudioLocale()
 
   const changeLocale = (locale: StudioLocale) => {
     if (locale === active) return
