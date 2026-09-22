@@ -27,9 +27,9 @@ const useCases = [
     navigation: visible(10),
     decisionPattern: 'decide',
     title: {
-      en: 'European Gas Forecasting',
-      uk: 'Прогнозування європейського газового ринку',
-      pl: 'Prognozowanie europejskiego rynku gazu',
+      en: 'Gas Decision',
+      uk: 'Gas Decision',
+      pl: 'Gas Decision',
     },
     description: {
       en: 'Market inputs, data providers and gas forecasting decision support in one workspace.',
@@ -45,7 +45,7 @@ const useCases = [
     route: '/resource-allocation',
     navigation: visible(20),
     decisionPattern: 'allocate',
-    title: { en: 'Resource Allocation', uk: 'Розподіл ресурсів', pl: 'Alokacja zasobów' },
+    title: { en: 'Resource Allocation', uk: 'Розподіл ресурсів', pl: 'Resource Allocation' },
     description: {
       en: 'Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.',
       uk: 'Розподіл гуманітарних мобільних команд з урахуванням пропускної здатності, навичок, доступності та обмежень на переміщення.',
@@ -60,7 +60,7 @@ const useCases = [
     route: '/gtm-lab',
     navigation: visible(30),
     decisionPattern: 'prioritize',
-    title: { en: 'GTM Decision Lab', uk: 'Лабораторія GTM рішень', pl: 'Laboratorium decyzji GTM' },
+    title: { en: 'GTM Lab', uk: 'GTM Lab', pl: 'GTM Lab' },
     description: {
       en: 'Evaluate commercial opportunities under incomplete market evidence and decide whether to pursue, research or skip.',
       uk: 'Оцінка комерційних можливостей за неповних ринкових даних: опрацювати, дослідити або відхилити.',
