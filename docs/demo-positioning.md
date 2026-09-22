@@ -23,3 +23,5 @@ Use these names consistently in Marketing, Observatory navigation, metadata and 
 - GTM Lab
 
 Longer technical descriptions belong inside each application, not in cross-product navigation.
+
+These three application names are canonical product identifiers. Do not translate them in UA or PL UI; localize the surrounding questions, descriptions, tags and CTA verbs instead.
