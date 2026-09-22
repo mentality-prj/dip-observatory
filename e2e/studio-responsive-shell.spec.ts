@@ -12,7 +12,7 @@ test.describe('Studio responsive shell', () => {
   test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
 
   for (const viewport of viewports) {
-    test(`${viewport.name} keeps header, navigation and footer on one viewport grid`, async ({ page }) => {
+    test(`${viewport.name} keeps header, navigation and footer on one viewport grid`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await page.route('**/api/studio/dimensions', async (route) => {
         await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
@@ -52,6 +52,11 @@ test.describe('Studio responsive shell', () => {
       } else {
         await expect(page.locator('.studio-sidebar')).toBeVisible()
       }
+
+      await testInfo.attach(`studio-${viewport.name}`, {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      })
     })
   }
 })
