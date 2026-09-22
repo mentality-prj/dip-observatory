@@ -1,0 +1,9 @@
+/* Mobile optical alignment for Studio product status.
+   ProductLockup keeps a 124px frame so the QDIP artwork is not clipped, but the
+   PNG contains transparent horizontal space. On narrow headers the status must
+   follow the visible wordmark edge, not the frame's layout edge. */
+@media (max-width: 760px) {
+  .studio-shell .ds-product-header-brand-status {
+    margin-left: -34px;
+  }
+}
