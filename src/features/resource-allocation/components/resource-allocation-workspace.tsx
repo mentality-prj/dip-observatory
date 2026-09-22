@@ -26,13 +26,40 @@ import { ResourceAllocationAssignmentExplanation } from './resource-allocation-a
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
 
+type CountKind = 'teams' | 'communities' | 'demand' | 'days'
+
+const COUNT_FORMS: Record<Locale, Record<CountKind, Record<string, string>>> = {
+  uk: {
+    teams: { one: 'команда', few: 'команди', many: 'команд', other: 'команди' },
+    communities: { one: 'громада', few: 'громади', many: 'громад', other: 'громади' },
+    demand: { one: 'одиниця потреб', few: 'одиниці потреб', many: 'одиниць потреб', other: 'одиниці потреб' },
+    days: { one: 'день', few: 'дні', many: 'днів', other: 'дня' },
+  },
+  en: {
+    teams: { one: 'team', other: 'teams' },
+    communities: { one: 'community', other: 'communities' },
+    demand: { one: 'demand unit', other: 'demand units' },
+    days: { one: 'day', other: 'days' },
+  },
+  pl: {
+    teams: { one: 'zespół', few: 'zespoły', many: 'zespołów', other: 'zespołu' },
+    communities: { one: 'społeczność', few: 'społeczności', many: 'społeczności', other: 'społeczności' },
+    demand: { one: 'jednostka potrzeb', few: 'jednostki potrzeb', many: 'jednostek potrzeb', other: 'jednostki potrzeb' },
+    days: { one: 'dzień', few: 'dni', many: 'dni', other: 'dnia' },
+  },
+}
+
+function countPhrase(locale: Locale, count: number, kind: CountKind): string {
+  const category = new Intl.PluralRules(locale === 'uk' ? 'uk-UA' : locale === 'pl' ? 'pl-PL' : 'en').select(count)
+  const forms = COUNT_FORMS[locale][kind]
+  return `${count} ${forms[category] ?? forms.other}`
+}
+
 const copy = {
   uk: {
     title: 'План розподілу мобільних команд',
     run: 'Розрахувати рекомендований розподіл',
     running: 'Розрахунок…',
-    whatIf: 'ЩО ЗМІНИЛОСЯ СЬОГОДНІ',
-    profile: 'Профіль даних',
     imported: 'Імпортовані дані',
     capacity: 'Зміна доступної потужності від базового плану',
     inaccessible: 'Локація недоступна для виїзду',
@@ -56,15 +83,9 @@ const copy = {
     recalculate: 'Перерахувати план',
     scenarioChanged: 'СЦЕНАРІЙ ЗМІНЕНО',
     technicalDetails: 'Технічні деталі',
-    technicalMethod: 'Метод розрахунку',
-    fewerMoves: 'Менше переміщень',
-    lowerMovement: 'Нижчий індекс переміщень',
-    balanced: 'Збалансований варіант',
-    startHint: 'Перевірте дані та умови зліва, після чого запустіть розрахунок.',
     weekly: 'РЕКОМЕНДОВАНИЙ ПЛАН',
     weeklyTitle: 'Куди направити команди',
     served: 'покрито сьогодні',
-    moved: 'Змінять локацію',
     needsStart: 'Потреб на початку дня',
     needsServed: 'Буде покрито',
     needsUnmet: 'Залишок після дня',
@@ -76,24 +97,17 @@ const copy = {
     tryOwnData: 'Спробувати на своїх даних',
     baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — сценарій зміни умов.',
     unavailableHint: 'Симуляція ситуації, коли мобільні команди тимчасово не можуть працювати в обраній локації.',
-    reviewRecommendation: 'Перевірити рекомендацію',
     testOwnPlan: 'Перевірити свій варіант',
     moves: 'переміщень',
-    travel: 'індекс переміщень',
-    rawEvidence: 'Детальні показники моделі',
     rationalePriority: 'Пріоритетні потреби',
     rationaleHorizon: 'Планування всього горизонту',
     rationaleConstraints: 'Компетенції та обмеження',
     rationaleCost: 'Переміщення та вартість',
-    heuristic:
-      'Для великих просторів рішень використовується детермінований branch-aware beam search; інтерфейс не називає евристичний результат математично гарантованим глобальним оптимумом.',
   },
   en: {
     title: 'Mobile team allocation plan',
     run: 'Calculate recommended allocation',
     running: 'Calculating…',
-    whatIf: 'WHAT CHANGED TODAY',
-    profile: 'Data profile',
     imported: 'Imported data',
     capacity: 'Available capacity versus the baseline plan',
     inaccessible: 'Location unavailable for field work',
@@ -117,15 +131,9 @@ const copy = {
     recalculate: 'Recalculate plan',
     scenarioChanged: 'SCENARIO CHANGED',
     technicalDetails: 'Technical details',
-    technicalMethod: 'Calculation method',
-    fewerMoves: 'Fewer moves',
-    lowerMovement: 'Lower movement index',
-    balanced: 'Balanced option',
-    startHint: 'Review the data and conditions on the left, then run the calculation.',
     weekly: 'RECOMMENDED PLAN',
     weeklyTitle: 'Where to send teams',
     served: 'covered today',
-    moved: 'Teams changing location',
     needsStart: 'Needs at start of day',
     needsServed: 'Expected covered',
     needsUnmet: 'Remaining after the day',
@@ -138,24 +146,17 @@ const copy = {
     baselineCapacityHint:
       '100% is the currently planned availability; lower or higher values simulate changed conditions.',
     unavailableHint: 'Simulate a location that mobile teams temporarily cannot serve.',
-    reviewRecommendation: 'Review the recommendation',
     testOwnPlan: 'Test your own plan',
     moves: 'moves',
-    travel: 'movement cost',
-    rawEvidence: 'Detailed model metrics',
     rationalePriority: 'Priority needs',
     rationaleHorizon: 'Full-horizon planning',
     rationaleConstraints: 'Skills and constraints',
     rationaleCost: 'Movement and cost',
-    heuristic:
-      'Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum.',
   },
   pl: {
     title: 'Plan alokacji zespołów mobilnych',
     run: 'Oblicz rekomendowany przydział',
     running: 'Obliczanie…',
-    whatIf: 'CO ZMIENIŁO SIĘ DZISIAJ',
-    profile: 'Profil danych',
     imported: 'Dane importowane',
     capacity: 'Zmiana dostępnej zdolności względem planu bazowego',
     inaccessible: 'Lokalizacja niedostępna dla zespołów',
@@ -179,15 +180,9 @@ const copy = {
     recalculate: 'Przelicz plan',
     scenarioChanged: 'SCENARIUSZ ZMIENIONY',
     technicalDetails: 'Szczegóły techniczne',
-    technicalMethod: 'Metoda obliczeń',
-    fewerMoves: 'Mniej przemieszczeń',
-    lowerMovement: 'Niższy indeks przemieszczeń',
-    balanced: 'Wariant zrównoważony',
-    startHint: 'Sprawdź dane i warunki po lewej stronie, a następnie uruchom obliczenie.',
     weekly: 'REKOMENDOWANY PLAN',
     weeklyTitle: 'Dokąd skierować zespoły',
     served: 'pokryto dziś',
-    moved: 'Zespoły zmieniające lokalizację',
     needsStart: 'Potrzeby na początku dnia',
     needsServed: 'Zostanie pokryte',
     needsUnmet: 'Pozostanie po dniu',
@@ -201,17 +196,12 @@ const copy = {
       '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości symulują zmianę warunków.',
     unavailableHint:
       'Symulacja sytuacji, w której zespoły mobilne tymczasowo nie mogą obsługiwać wybranej lokalizacji.',
-    reviewRecommendation: 'Sprawdź rekomendację',
     testOwnPlan: 'Sprawdź własny wariant',
     moves: 'przemieszczeń',
-    travel: 'indeks kosztu przemieszczeń',
-    rawEvidence: 'Szczegółowe wskaźniki modelu',
     rationalePriority: 'Potrzeby priorytetowe',
     rationaleHorizon: 'Planowanie całego horyzontu',
     rationaleConstraints: 'Kompetencje i ograniczenia',
     rationaleCost: 'Przemieszczenia i koszt',
-    heuristic:
-      'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
   },
 } satisfies Record<Locale, Record<string, string>>
 
@@ -255,7 +245,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       Object.fromEntries(inputData.teams.map((team) => [team.id, team.current_community ?? null])),
     [inputData]
   )
-  const summary = `${stats.teams} ${t.teams.toLowerCase()} · ${stats.communities} ${t.communities.toLowerCase()} · ${stats.horizonNeeds} ${t.opening.toLowerCase()} · ${stats.days} ${t.days}`
+  const summary = [
+    countPhrase(locale, stats.teams, 'teams'),
+    countPhrase(locale, stats.communities, 'communities'),
+    countPhrase(locale, stats.horizonNeeds, 'demand'),
+    countPhrase(locale, stats.days, 'days'),
+  ].join(' · ')
   const sourceBadge =
     profileId === 'imported'
       ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
@@ -293,6 +288,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setImportedName(fileName)
     setPilotAccessKey(accessKey)
     setInputData(input)
+    trackResourceAllocation('ra_pilot_dataset_imported', locale, {
+      profile_type: 'imported',
+      communities_count: input.communities.length,
+      teams_count: input.teams.length,
+      planning_days: input.planning_period?.days.length ?? 0,
+    })
     resetRunState()
   }
 
@@ -483,8 +484,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   <Route className="mx-auto h-11 w-11 text-rose-300" />
                   <h2 className="mt-5 text-3xl font-black md:text-4xl">{t.heroQuestion}</h2>
                   <div data-testid="resource-active-summary" className="mt-5 text-lg font-bold text-slate-200">
-                    {stats.teams} {t.teams.toLowerCase()} · {stats.communities} {t.communities.toLowerCase()} ·{' '}
-                    {stats.horizonNeeds} {t.opening.toLowerCase()} · {stats.days} {t.days}
+                    {summary}
                   </div>
                   <p className="mx-auto mt-4 max-w-xl text-slate-400">{t.emptyText}</p>
                   <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500">{t.differentiation}</p>
@@ -917,6 +917,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     </p>
                     <a
                       href="#resource-import"
+                      onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
                       className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
                     >
                       {locale === 'uk'
