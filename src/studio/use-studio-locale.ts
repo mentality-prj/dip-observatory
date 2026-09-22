@@ -1,33 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { STUDIO_LOCALES, studioLocaleFromPath, type StudioLocale } from './studio-locale'
 
-function browserLocale(fallbackPathname: string, searchLocale: string | null): StudioLocale {
-  if (typeof window === 'undefined') return studioLocaleFromPath(fallbackPathname, searchLocale)
+const StudioLocaleContext = createContext<StudioLocale>('en')
 
-  const first = window.location.pathname.split('/').filter(Boolean)[0]
+function explicitLocale(pathname: string, searchLocale: string | null): StudioLocale | null {
+  const first = pathname.split('/').filter(Boolean)[0]
   if (STUDIO_LOCALES.includes(first as StudioLocale)) return first as StudioLocale
-
-  const cookieLocale = document.cookie
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith('qdip-studio-locale='))
-    ?.split('=')[1]
-
-  return studioLocaleFromPath(fallbackPathname, cookieLocale ?? searchLocale)
+  if (STUDIO_LOCALES.includes(searchLocale as StudioLocale)) return searchLocale as StudioLocale
+  return null
 }
 
-export function useStudioLocale() {
+export function StudioLocaleProvider({
+  initialLocale,
+  children,
+}: {
+  initialLocale: StudioLocale
+  children: ReactNode
+}) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const searchLocale = searchParams.get('lang')
-  const [locale, setLocale] = useState<StudioLocale>(() => studioLocaleFromPath(pathname, searchLocale))
+  const [locale, setLocale] = useState(initialLocale)
 
   useEffect(() => {
-    setLocale(browserLocale(pathname, searchLocale))
+    const next = explicitLocale(pathname, searchLocale)
+    if (next) setLocale(next)
   }, [pathname, searchLocale])
 
-  return locale
+  return <StudioLocaleContext.Provider value={locale}>{children}</StudioLocaleContext.Provider>
+}
+
+export function useStudioLocale() {
+  return useContext(StudioLocaleContext)
+}
+
+export function resolveStudioLocale(pathname: string, searchLocale?: string | null) {
+  return studioLocaleFromPath(pathname, searchLocale)
 }
