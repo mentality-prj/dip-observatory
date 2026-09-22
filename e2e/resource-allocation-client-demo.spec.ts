@@ -506,7 +506,7 @@ test('real-pilot import sends weekly baseline and daily state without access-cod
 
   await page.goto('/en/resource-allocation')
   await page.getByText('Try your own data', { exact: true }).click()
-  await expect(page.getByTestId('resource-pilot-access-key')).toHaveCount(0)
+  await expect(page.locator('input[type="password"]')).toHaveCount(0)
 
   const columns = [
     'record_type',
