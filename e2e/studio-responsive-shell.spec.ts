@@ -58,8 +58,22 @@ test.describe('Studio responsive shell', () => {
       // Desktop/tablet keep the shared ProductHeader geometry unchanged.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       if (viewport.width <= 760) {
-        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+        const cssDebug = await status.evaluate((element) => {
+          const style = getComputedStyle(element.parentElement as Element)
+          let hasOpticalRule = false
+          for (const sheet of Array.from(document.styleSheets)) {
+            try {
+              for (const rule of Array.from(sheet.cssRules)) {
+                if (rule.cssText.includes('margin-left: -34px')) hasOpticalRule = true
+              }
+            } catch {
+              // Ignore cross-origin stylesheets.
+            }
+          }
+          return { marginLeft: style.marginLeft, transform: style.transform, hasOpticalRule }
+        })
+        expect(brandGap, JSON.stringify(cssDebug)).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap, JSON.stringify(cssDebug)).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
       } else {
         expect(brandGap).toBeGreaterThanOrEqual(0)
         expect(brandGap).toBeLessThanOrEqual(2)
