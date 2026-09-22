@@ -35,8 +35,6 @@ const copy = {
     baselineNo: 'не надано',
     scheduled: 'майбутніх потреб',
     rules: 'денних правил доступності',
-    accessCode: 'Код доступу до pilot',
-    accessHint: 'Потрібен для розрахунку та збереження імпортованих клієнтських даних.',
   },
   en: {
     title: 'Client data',
@@ -59,8 +57,6 @@ const copy = {
     baselineNo: 'not provided',
     scheduled: 'scheduled demand',
     rules: 'daily availability rules',
-    accessCode: 'Pilot access code',
-    accessHint: 'Required to calculate and persist imported client data.',
   },
   pl: {
     title: 'Dane klienta',
@@ -83,8 +79,6 @@ const copy = {
     baselineNo: 'brak',
     scheduled: 'przyszłych potrzeb',
     rules: 'dziennych reguł dostępności',
-    accessCode: 'Kod dostępu do pilotażu',
-    accessHint: 'Wymagany do obliczeń i zapisu zaimportowanych danych klienta.',
   },
 } as const
 
@@ -99,7 +93,7 @@ export function ResourceAllocationImport({
   onImported,
 }: {
   locale: Locale
-  onImported: (input: ResourceAllocationInput, fileName: string, pilotAccessKey: string) => void
+  onImported: (input: ResourceAllocationInput, fileName: string) => void
 }) {
   const t = copy[locale]
   const inputRef = useRef<HTMLInputElement>(null)
@@ -109,7 +103,6 @@ export function ResourceAllocationImport({
   const [fileMeta, setFileMeta] = useState<{ name: string; size: number } | null>(null)
   const [summary, setSummary] = useState<ResourceAllocationImportSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [pilotAccessKey, setPilotAccessKey] = useState('')
 
   const busy = stage === 'reading' || stage === 'validating'
 
@@ -125,7 +118,7 @@ export function ResourceAllocationImport({
       setStage('validating')
       const imported = await importResourceAllocationFile(file)
       const nextSummary = summarizeResourceAllocationImport(imported)
-      onImported(imported, file.name, pilotAccessKey.trim())
+      onImported(imported, file.name)
       setSummary(nextSummary)
       setStage('ready')
     } catch (reason) {
@@ -174,19 +167,6 @@ export function ResourceAllocationImport({
           <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.body}</p>
         </div>
       </div>
-
-      <label className="mt-4 block text-xs">
-        <span className="font-semibold text-slate-300">{t.accessCode}</span>
-        <input
-          type="password"
-          autoComplete="off"
-          value={pilotAccessKey}
-          onChange={(event) => setPilotAccessKey(event.target.value)}
-          data-testid="resource-pilot-access-key"
-          className="mt-2 w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-white"
-        />
-        <span className="mt-1 block leading-relaxed text-slate-600">{t.accessHint}</span>
-      </label>
 
       <input
         ref={inputRef}
