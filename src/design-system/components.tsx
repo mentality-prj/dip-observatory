@@ -14,7 +14,7 @@ export function ProductLockup({ href, brandHref, product, className, onClick }: 
   return <div className={cn('ds-product-lockup', className)} style={{ gap: 0 }}>
     <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick} style={{ fontSize: '1.35rem', fontWeight: 400, lineHeight: 1 }}>{product}.</Link>
     <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '-12px', transform: 'translateY(-2px)' }}>
-      <span className="ds-product-lockup-wordmark-frame" aria-hidden="true">
+      <span className="ds-product-lockup-wordmark-frame" aria-hidden="true" style={{ width: '124px', flex: '0 0 124px' }}>
         <Image alt="" className="ds-product-lockup-wordmark" height={157} priority sizes="156px" src="/qdip-logo.png" style={{ clipPath: 'inset(0 10%)', height: 'auto', marginInline: '-16px', width: '156px' }} width={300} />
       </span>
     </Link>
