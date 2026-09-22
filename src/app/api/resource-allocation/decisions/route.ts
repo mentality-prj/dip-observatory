@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import {
-  assertResourceAllocationAccess,
+  assertSameOriginMutation,
   ResourceAllocationAccessError,
 } from '@/features/resource-allocation/server/access'
 import { createResourceAllocationDecision, DipApiError } from '@/lib/dip-api'
@@ -11,7 +11,7 @@ export const maxDuration = 60
 export async function POST(request: Request) {
   try {
     const input = (await request.json()) as Record<string, unknown>
-    assertResourceAllocationAccess(request, input)
+    assertSameOriginMutation(request)
     return NextResponse.json(await createResourceAllocationDecision(input))
   } catch (error) {
     if (error instanceof ResourceAllocationAccessError)
