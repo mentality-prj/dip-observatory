@@ -8,6 +8,8 @@ const viewports = [
   { name: 'desktop-1440', width: 1440, height: 900 },
 ] as const
 
+const PRODUCT_WORDMARK_FRAME_WIDTH = 124
+
 test.describe('Studio responsive shell', () => {
   test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
 
@@ -46,9 +48,9 @@ test.describe('Studio responsive shell', () => {
       expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
 
-      // Frozen brand geometry: the frame represents the visible QDIP wordmark width,
-      // so status placement never depends on transparent pixels inside qdip-logo.png.
-      expect(Math.abs((wordmarkFrameBox?.width ?? 0) - 90)).toBeLessThanOrEqual(1)
+      // Frozen brand geometry: assert the actual shared ProductLockup contract.
+      // The frame was intentionally widened to 124px so the QDIP wordmark is not clipped.
+      expect(Math.abs((wordmarkFrameBox?.width ?? 0) - PRODUCT_WORDMARK_FRAME_WIDTH)).toBeLessThanOrEqual(1)
       const expectedLeft = viewport.width <= 760 ? 14 : 22
       expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
 
