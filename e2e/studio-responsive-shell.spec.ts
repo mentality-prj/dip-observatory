@@ -58,26 +58,8 @@ test.describe('Studio responsive shell', () => {
       // Desktop/tablet keep the shared ProductHeader geometry unchanged.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       if (viewport.width <= 760) {
-        const geometryDebug = await status.evaluate((element) => {
-          const parent = element.parentElement
-          const lockupElement = document.querySelector('.ds-product-lockup')
-          const statusStyle = getComputedStyle(element)
-          const parentStyle = parent ? getComputedStyle(parent) : null
-          return {
-            innerWidth,
-            mediaMatches: matchMedia('(max-width: 760px)').matches,
-            statusPosition: statusStyle.position,
-            statusLeft: statusStyle.left,
-            statusTransform: statusStyle.transform,
-            parentMarginLeft: parentStyle?.marginLeft ?? null,
-            parentTransform: parentStyle?.transform ?? null,
-            statusRect: element.getBoundingClientRect().toJSON(),
-            parentRect: parent?.getBoundingClientRect().toJSON() ?? null,
-            lockupRect: lockupElement?.getBoundingClientRect().toJSON() ?? null,
-          }
-        })
-        expect(brandGap, JSON.stringify(geometryDebug)).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap, JSON.stringify(geometryDebug)).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
       } else {
         expect(brandGap).toBeGreaterThanOrEqual(0)
         expect(brandGap).toBeLessThanOrEqual(2)
