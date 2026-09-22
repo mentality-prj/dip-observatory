@@ -15,7 +15,13 @@ import { ResourceAllocationDecisionPanel } from './resource-allocation-decision-
 import { ResourceAllocationImpact } from './resource-allocation-impact'
 import { ResourceAllocationImport } from './resource-allocation-import'
 import { ResourceAllocationManualEditor, type EvaluatedManualAllocation } from './resource-allocation-manual-editor'
-import { buildAllocationCsv, localizePlanningDay, summarizeMovements, trackResourceAllocation } from '../presentation'
+import {
+  buildAllocationCsv,
+  buildAllocationShortText,
+  localizePlanningDay,
+  summarizeMovements,
+  trackResourceAllocation,
+} from '../presentation'
 import { ResourceAllocationAssignmentExplanation } from './resource-allocation-assignment-explanation'
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
@@ -360,6 +366,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const planCsv = useMemo(
     () => (activePlan ? buildAllocationCsv(activePlan.daily, inputData.teams) : undefined),
     [activePlan, inputData.teams]
+  )
+  const planShortText = useMemo(
+    () => (activePlan ? buildAllocationShortText(activePlan.daily, locale) : undefined),
+    [activePlan, locale]
   )
   const exportFileName = `qdip-resource-allocation-${new Date().toISOString().slice(0, 10)}.csv`
   const businessPriorityCoverage =
@@ -873,6 +883,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       moveEvents={movementSummary.moveEvents}
                       planningDays={stats.days}
                       planCsv={planCsv}
+                      planShortText={planShortText}
                       exportFileName={exportFileName}
                       selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
                       pilotAccessKey={profileId === 'imported' ? pilotAccessKey : undefined}
