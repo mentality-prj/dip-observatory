@@ -226,7 +226,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [profileId, setProfileId] = useState<string>('responsible-citizens')
   const [importedName, setImportedName] = useState<string | null>(null)
-  const [pilotAccessKey, setPilotAccessKey] = useState('')
   const [inputData, setInputData] = useState<ResourceAllocationInput>(() =>
     cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES['responsible-citizens'].input)
   )
@@ -295,10 +294,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setSelectedExplanationTeam(null)
   }
 
-  function useImportedData(input: ResourceAllocationInput, fileName: string, accessKey: string) {
+  function useImportedData(input: ResourceAllocationInput, fileName: string) {
     setProfileId('imported')
     setImportedName(fileName)
-    setPilotAccessKey(accessKey)
     setInputData(input)
     trackResourceAllocation('ra_pilot_dataset_imported', locale, {
       profile_type: 'imported',
@@ -327,11 +325,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       unavailable_teams: unavailableTeam ? [unavailableTeam] : [],
     }
     try {
-      const nextResult = await runResourceAllocationScenario(
-        inputData,
-        scenario,
-        profileId === 'imported' ? pilotAccessKey : undefined
-      )
+      const nextResult = await runResourceAllocationScenario(inputData, scenario)
       setResult(nextResult)
       setLastInput(buildResourceAllocationInput(inputData, scenario) as Record<string, unknown>)
       setSelectedAlternative(0)
@@ -873,7 +867,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         communities={communityNames}
                         teams={teamIds}
                         onUseModified={setManualSelected}
-                        pilotAccessKey={profileId === 'imported' ? pilotAccessKey : undefined}
                         locale={locale}
                       />
                     </div>
@@ -898,7 +891,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       planShortText={planShortText}
                       exportFileName={exportFileName}
                       selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
-                      pilotAccessKey={profileId === 'imported' ? pilotAccessKey : undefined}
                       locale={locale}
                     />
 
