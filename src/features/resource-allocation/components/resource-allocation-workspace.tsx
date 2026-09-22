@@ -212,6 +212,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [profileId, setProfileId] = useState<string>('responsible-citizens')
   const [importedName, setImportedName] = useState<string | null>(null)
+  const [pilotAccessKey, setPilotAccessKey] = useState('')
   const [inputData, setInputData] = useState<ResourceAllocationInput>(() =>
     cloneResourceAllocationInput(RESOURCE_ALLOCATION_PROFILES['responsible-citizens'].input)
   )
@@ -273,9 +274,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     setSelectedExplanationTeam(null)
   }
 
-  function useImportedData(input: ResourceAllocationInput, fileName: string) {
+  function useImportedData(input: ResourceAllocationInput, fileName: string, accessKey: string) {
     setProfileId('imported')
     setImportedName(fileName)
+    setPilotAccessKey(accessKey)
     setInputData(input)
     resetRunState()
   }
@@ -297,7 +299,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
     }
     try {
-      const nextResult = await runResourceAllocationScenario(inputData, scenario)
+      const nextResult = await runResourceAllocationScenario(
+        inputData,
+        scenario,
+        profileId === 'imported' ? pilotAccessKey : undefined
+      )
       setResult(nextResult)
       setLastInput(buildResourceAllocationInput(inputData, scenario) as Record<string, unknown>)
       setSelectedAlternative(0)
@@ -818,6 +824,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         communities={communityNames}
                         teams={teamIds}
                         onUseModified={setManualSelected}
+                        pilotAccessKey={profileId === 'imported' ? pilotAccessKey : undefined}
                         locale={locale}
                       />
                     </div>
@@ -841,6 +848,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       planCsv={planCsv}
                       exportFileName={exportFileName}
                       selectionKind={selectedAlternative === 0 ? 'recommended' : 'alternative'}
+                      pilotAccessKey={profileId === 'imported' ? pilotAccessKey : undefined}
                       locale={locale}
                     />
 
