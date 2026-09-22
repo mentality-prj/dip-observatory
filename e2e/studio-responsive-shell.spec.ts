@@ -8,6 +8,8 @@ const viewports = [
   { name: 'desktop-1440', width: 1440, height: 900 },
 ] as const
 
+const PRODUCT_WORDMARK_FRAME_WIDTH = 124
+
 test.describe('Studio responsive shell', () => {
   test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
 
@@ -46,9 +48,9 @@ test.describe('Studio responsive shell', () => {
       expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
 
-      // Frozen brand geometry: the frame represents the visible QDIP wordmark width,
-      // so status placement never depends on transparent pixels inside qdip-logo.png.
-      expect(Math.abs((wordmarkFrameBox?.width ?? 0) - 90)).toBeLessThanOrEqual(1)
+      // Frozen brand geometry: assert the accepted shared ProductLockup contract.
+      // The frame is intentionally 124px so the QDIP wordmark is not clipped.
+      expect(Math.abs((wordmarkFrameBox?.width ?? 0) - PRODUCT_WORDMARK_FRAME_WIDTH)).toBeLessThanOrEqual(1)
       const expectedLeft = viewport.width <= 760 ? 14 : 22
       expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
 
@@ -56,10 +58,13 @@ test.describe('Studio responsive shell', () => {
       expect(brandGap).toBeGreaterThanOrEqual(0)
       expect(brandGap).toBeLessThanOrEqual(2)
 
+      // The status is vertically centered against the accepted lockup and then lifted by
+      // the Studio-specific transform. Guard the rendered geometry instead of the obsolete
+      // pre-wordmark-resize offsets.
       const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
       const expectedStatusTop = viewport.width <= 760
-        ? { min: 10, max: 13 }
-        : { min: 4, max: 10 }
+        ? { min: 20, max: 22 }
+        : { min: 18, max: 20 }
       expect(statusTopOffset).toBeGreaterThanOrEqual(expectedStatusTop.min)
       expect(statusTopOffset).toBeLessThanOrEqual(expectedStatusTop.max)
 

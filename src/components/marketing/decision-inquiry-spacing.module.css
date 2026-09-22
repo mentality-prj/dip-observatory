@@ -1,9 +1,9 @@
 .form {
-  margin-top: calc(-1 * var(--section-y) + var(--ds-space-8)) !important;
+  margin-top: calc(-1 * var(--section-y) + var(--ds-space-4)) !important;
 }
 
 @media (max-width: 600px) {
   .form {
-    margin-top: calc(-1 * var(--section-y-mobile) + var(--ds-space-6)) !important;
+    margin-top: calc(-1 * var(--section-y-mobile) + var(--ds-space-3)) !important;
   }
 }
