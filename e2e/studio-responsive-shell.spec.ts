@@ -9,6 +9,7 @@ const viewports = [
 ] as const
 
 const PRODUCT_WORDMARK_FRAME_WIDTH = 124
+const MOBILE_WORDMARK_OPTICAL_INSET = 34
 
 test.describe('Studio responsive shell', () => {
   test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
@@ -48,16 +49,21 @@ test.describe('Studio responsive shell', () => {
       expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
 
-      // Frozen DOM geometry: the 124px frame prevents clipping and the status
-      // follows the lockup layout box. Bitmap optical whitespace is not a DOM
-      // bounding-box contract; validate that separately with visual regression.
+      // The shared frame remains wide enough to avoid clipping the QDIP artwork.
       expect(Math.abs((wordmarkFrameBox?.width ?? 0) - PRODUCT_WORDMARK_FRAME_WIDTH)).toBeLessThanOrEqual(1)
       const expectedLeft = viewport.width <= 760 ? 14 : 22
       expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
 
+      // Phones compensate for the transparent right-side whitespace inside the
+      // wordmark asset while tablet/desktop keep the shared ProductHeader geometry.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
-      expect(brandGap).toBeGreaterThanOrEqual(0)
-      expect(brandGap).toBeLessThanOrEqual(2)
+      if (viewport.width <= 760) {
+        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+      } else {
+        expect(brandGap).toBeGreaterThanOrEqual(0)
+        expect(brandGap).toBeLessThanOrEqual(2)
+      }
 
       const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
       const expectedStatusTop = viewport.width <= 760
