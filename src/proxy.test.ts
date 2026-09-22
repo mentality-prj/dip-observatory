@@ -12,8 +12,10 @@ test('routes localized Studio URLs to the Studio app', () => {
   assert.equal(isRewrite(home), true)
   assert.equal(new URL(getRewrittenUrl(home)!).pathname, '/studio')
   assert.equal(new URL(getRewrittenUrl(home)!).searchParams.get('lang'), 'en')
+  assert.equal(home.cookies.get('qdip-studio-locale')?.value, 'en')
   assert.equal(new URL(getRewrittenUrl(profiles)!).pathname, '/studio/profiles')
   assert.equal(new URL(getRewrittenUrl(profiles)!).searchParams.get('lang'), 'uk')
+  assert.equal(profiles.cookies.get('qdip-studio-locale')?.value, 'uk')
 })
 
 test('redirects legacy Studio URLs to the English canonical route', () => {
