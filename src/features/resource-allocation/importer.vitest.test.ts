@@ -2,6 +2,45 @@ import { describe, expect, it } from 'vitest'
 
 import { importResourceAllocationFile, summarizeResourceAllocationImport } from './importer'
 
+const columns = [
+  'record_type',
+  'id',
+  'day',
+  'community',
+  'service',
+  'units',
+  'priority',
+  'program',
+  'current_community',
+  'skills',
+  'capacity',
+  'available',
+  'accessible',
+  'max_teams',
+  'allowed_communities',
+  'allowed_programs',
+  'programs',
+  'max_daily_capacity',
+  'max_travel_cost',
+  'max_travel_minutes',
+  'cost_per_capacity',
+  'from',
+  'to',
+  'cost',
+  'minutes',
+  'days',
+  'budget',
+  'target_priority_coverage',
+  'planning_unit',
+  'team',
+] as const
+
+const header = columns.join(',')
+
+function row(values: Partial<Record<(typeof columns)[number], string | number | boolean>>) {
+  return columns.map((column) => String(values[column] ?? '')).join(',')
+}
+
 function csvFile(lines: string[], name = 'pilot.csv'): File {
   const content = lines.join('\n')
   return {
@@ -11,28 +50,66 @@ function csvFile(lines: string[], name = 'pilot.csv'): File {
   } as File
 }
 
-const header =
-  'record_type,id,day,community,service,units,priority,program,current_community,skills,capacity,available,accessible,max_teams,allowed_communities,allowed_programs,programs,max_daily_capacity,max_travel_cost,max_travel_minutes,cost_per_capacity,from,to,cost,minutes,days,budget,target_priority_coverage,planning_unit,team'
-
 describe('resource allocation real-pilot importer', () => {
   it('imports daily demand, availability, accessibility and a complete manual baseline', async () => {
     const input = await importResourceAllocationFile(
       csvFile([
         header,
-        'settings,,,,,,,,,,,,,,,,,,,,,,,,,Mon|Tue,100,0.9,consultation,',
-        'community,,,Hub A,,,,,,,,,true,2,,,,,,,,,,,,,,,,',
-        'community,,,Hub B,,,,,,,,,true,2,,,,,,,,,,,,,,,,',
-        'community_day,,Tue,Hub B,,,,,,,,,false,,,,,,,,,,,,,,,,',
-        'demand,,,Hub A,psychosocial,10,high,,,,,,,,,,,,,,,,,,,',
-        'demand,,Tue,Hub B,legal,4,critical,,,,,,,,,,,,,,,,,,,',
-        'team,Team A,,,,,,,Hub A,psychosocial|legal,8,,,,Hub A|Hub B,,,10,20,60,1,,,,,,,,',
-        'team,Team B,,,,,,,Hub B,legal,6,,,,Hub A|Hub B,,,8,20,60,1,,,,,,,,',
-        'team_day,Team A,Tue,,,,,,,,0,false,,,,,,,,,,,,,,,,,',
-        'travel,,,,,,,,,,,,,,,,,,,,,Hub A,Hub B,5,30,,,,',
-        'baseline,,Mon,Hub A,,,,,,,,,,,,,,,,,,,,,,,,,,Team A',
-        'baseline,,Mon,Hub B,,,,,,,,,,,,,,,,,,,,,,,,,,Team B',
-        'baseline,,Tue,Hub B,,,,,,,,,,,,,,,,,,,,,,,,,,Team A',
-        'baseline,,Tue,,,,,,,,,,,,,,,,,,,,,,,,,,,,Team B',
+        row({
+          record_type: 'settings',
+          days: 'Mon|Tue',
+          budget: 100,
+          target_priority_coverage: 0.9,
+          planning_unit: 'consultation',
+        }),
+        row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 }),
+        row({ record_type: 'community', community: 'Hub B', accessible: true, max_teams: 2 }),
+        row({ record_type: 'community_day', community: 'Hub B', day: 'Tue', accessible: false }),
+        row({
+          record_type: 'demand',
+          community: 'Hub A',
+          service: 'psychosocial',
+          units: 10,
+          priority: 'high',
+        }),
+        row({
+          record_type: 'demand',
+          day: 'Tue',
+          community: 'Hub B',
+          service: 'legal',
+          units: 4,
+          priority: 'critical',
+        }),
+        row({
+          record_type: 'team',
+          id: 'Team A',
+          current_community: 'Hub A',
+          skills: 'psychosocial|legal',
+          capacity: 8,
+          allowed_communities: 'Hub A|Hub B',
+          max_daily_capacity: 10,
+          max_travel_cost: 20,
+          max_travel_minutes: 60,
+          cost_per_capacity: 1,
+        }),
+        row({
+          record_type: 'team',
+          id: 'Team B',
+          current_community: 'Hub B',
+          skills: 'legal',
+          capacity: 6,
+          allowed_communities: 'Hub A|Hub B',
+          max_daily_capacity: 8,
+          max_travel_cost: 20,
+          max_travel_minutes: 60,
+          cost_per_capacity: 1,
+        }),
+        row({ record_type: 'team_day', id: 'Team A', day: 'Tue', available: false, capacity: 0 }),
+        row({ record_type: 'travel', from: 'Hub A', to: 'Hub B', cost: 5, minutes: 30 }),
+        row({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
+        row({ record_type: 'baseline', day: 'Mon', team: 'Team B', community: 'Hub B' }),
+        row({ record_type: 'baseline', day: 'Tue', team: 'Team A', community: 'Hub B' }),
+        row({ record_type: 'baseline', day: 'Tue', team: 'Team B' }),
       ])
     )
 
@@ -69,8 +146,14 @@ describe('resource allocation real-pilot importer', () => {
       importResourceAllocationFile(
         csvFile([
           header,
-          'community,,,Hub A,,,,,,,,,true,2,,,,,,,,,,,,,,,,',
-          'team,Team A,,,,,,,Hub A,psychosocial,not-a-number,,,,,,,,,,,,,,,,,,',
+          row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 }),
+          row({
+            record_type: 'team',
+            id: 'Team A',
+            current_community: 'Hub A',
+            skills: 'psychosocial',
+            capacity: 'not-a-number',
+          }),
         ])
       )
     ).rejects.toThrow(/valid number/)
@@ -81,9 +164,21 @@ describe('resource allocation real-pilot importer', () => {
       importResourceAllocationFile(
         csvFile([
           header,
-          'community,,,Hub A,,,,,,,,,true,2,,,,,,,,,,,,,,,,',
-          'demand,,,Hub A,psychosocial,10,urgent,,,,,,,,,,,,,,,,,,,',
-          'team,Team A,,,,,,,Hub A,psychosocial,8,,,,,,,,,,,,,,,,,,',
+          row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 }),
+          row({
+            record_type: 'demand',
+            community: 'Hub A',
+            service: 'psychosocial',
+            units: 10,
+            priority: 'urgent',
+          }),
+          row({
+            record_type: 'team',
+            id: 'Team A',
+            current_community: 'Hub A',
+            skills: 'psychosocial',
+            capacity: 8,
+          }),
         ])
       )
     ).rejects.toThrow(/critical, high or normal/)
@@ -94,10 +189,16 @@ describe('resource allocation real-pilot importer', () => {
       importResourceAllocationFile(
         csvFile([
           header,
-          'settings,,,,,,,,,,,,,,,,,,,,,,,,,Mon|Tue,,,,',
-          'community,,,Hub A,,,,,,,,,true,2,,,,,,,,,,,,,,,,',
-          'team,Team A,,,,,,,Hub A,psychosocial,8,,,,,,,,,,,,,,,,,,',
-          'baseline,,Mon,Hub A,,,,,,,,,,,,,,,,,,,,,,,,,,Team A',
+          row({ record_type: 'settings', days: 'Mon|Tue' }),
+          row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 }),
+          row({
+            record_type: 'team',
+            id: 'Team A',
+            current_community: 'Hub A',
+            skills: 'psychosocial',
+            capacity: 8,
+          }),
+          row({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
         ])
       )
     ).rejects.toThrow(/Baseline plan must contain every team for every planning day/)
@@ -109,8 +210,14 @@ describe('resource allocation real-pilot importer', () => {
       importResourceAllocationFile(
         csvFile([
           piiHeader,
-          'community,,,Hub A,,,,,,,,,true,2,,,,,,,,,,,,,,,,,+48123456789',
-          'team,Team A,,,,,,,Hub A,psychosocial,8,,,,,,,,,,,,,,,,,,,',
+          `${row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 })},+48123456789`,
+          `${row({
+            record_type: 'team',
+            id: 'Team A',
+            current_community: 'Hub A',
+            skills: 'psychosocial',
+            capacity: 8,
+          })},`,
         ])
       )
     ).rejects.toThrow(/Personal-data column "phone" is not allowed/)
