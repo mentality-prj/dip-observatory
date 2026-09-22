@@ -4,19 +4,22 @@ import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
+import { sharedI18n } from '@/lib/product-i18n'
+import type { MarketingLocale } from './qdip-copy'
 import styles from './qdip-site.module.css'
 
 type Item = { href: string; label: string; icon?: ReactNode }
 
-export function MobileMenu({ items }: { items: readonly Item[] }) {
+export function MobileMenu({ items, locale }: { items: readonly Item[]; locale: MarketingLocale }) {
   const [open, setOpen] = useState(false)
+  const a11y = sharedI18n[locale]
   return (
     <div className={styles.mobileMenu}>
-      <button aria-controls="mobile-navigation" aria-expanded={open} aria-label={open ? 'Close navigation' : 'Open navigation'} className={styles.menuButton} onClick={() => setOpen((v) => !v)} type="button">
+      <button aria-controls="mobile-navigation" aria-expanded={open} aria-label={open ? a11y.closeNavigation : a11y.openNavigation} className={styles.menuButton} onClick={() => setOpen((v) => !v)} type="button">
         {open ? <X aria-hidden="true" size={22} /> : <Menu aria-hidden="true" size={22} />}
       </button>
       {open && (
-        <nav aria-label="Mobile navigation" className={styles.mobileNav} id="mobile-navigation">
+        <nav aria-label={a11y.mobileNavigation} className={styles.mobileNav} id="mobile-navigation">
           {items.map((item) => (
             <Link
               href={item.href}

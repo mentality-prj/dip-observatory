@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { sharedI18n } from '@/lib/product-i18n'
 import { marketingLocales, type MarketingLocale } from './qdip-copy'
 import styles from './language-switcher.module.css'
 
@@ -10,9 +11,10 @@ type LanguageSwitcherProps = {
 }
 
 export function LanguageSwitcher({ locale, hrefForLocale }: LanguageSwitcherProps) {
+  const a11y = sharedI18n[locale]
   return (
     <div className={styles.wrapper}>
-      <nav aria-label="Language" className={styles.root}>
+      <nav aria-label={a11y.language} className={styles.root}>
         {marketingLocales.map((targetLocale) => (
           <Link
             aria-current={locale === targetLocale ? 'page' : undefined}
@@ -24,7 +26,7 @@ export function LanguageSwitcher({ locale, hrefForLocale }: LanguageSwitcherProp
         ))}
       </nav>
       <details className={styles.mobile}>
-        <summary aria-label="Language">{labels[locale]}</summary>
+        <summary aria-label={a11y.language}>{labels[locale]}</summary>
         <div>
           {marketingLocales.map((targetLocale) => (
             <Link

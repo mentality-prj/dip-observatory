@@ -7,6 +7,7 @@ import { ChevronRight, Globe2, Home, Menu, SlidersHorizontal } from 'lucide-reac
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { observatoryI18n, sharedI18n } from '@/lib/product-i18n'
 import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
 import styles from './prototype-shell.module.css'
 
@@ -27,6 +28,8 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
   const activeNavRef = useRef<HTMLAnchorElement>(null)
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), '') || '/'
   const navItems = observableUseCases()
+  const a11y = sharedI18n[locale]
+  const observatory = observatoryI18n[locale]
   const isActive = (href: string) => normalizedPath === href || normalizedPath.startsWith(`${href}/`)
   const activeItem = navItems.find((item) => isActive(item.route))
   useEffect(() => activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' }), [normalizedPath])
@@ -34,7 +37,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
     if (next !== locale) startTransition(() => router.replace(buildLocalePath(normalizedPath, next)))
   }
   const nav = (
-    <nav className={styles.navigation} aria-label="Observatory applications">
+    <nav className={styles.navigation} aria-label={observatory.applications}>
       {navItems.map((item) => {
         const active = isActive(item.route)
         return (
@@ -53,7 +56,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
   )
   const utilities = (
     <div className={styles.localeControls}>
-      <div className={styles.locale} aria-label="Language">
+      <div className={styles.locale} aria-label={a11y.language}>
         {LOCALES.map((option) => (
           <button
             key={option}
@@ -68,7 +71,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       </div>
       <label className={styles.localeSelect}>
         <Globe2 aria-hidden />
-        <span className="sr-only">Language</span>
+        <span className="sr-only">{a11y.language}</span>
         <select value={locale} disabled={pending} onChange={(event) => changeLocale(event.target.value as Locale)}>
           {LOCALES.map((option) => (
             <option key={option} value={option}>
@@ -90,7 +93,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       mobileNavigation={
         <details className={styles.mobileMenu}>
           <summary>
-            <Menu aria-hidden /> <span>Applications</span>
+            <Menu aria-hidden /> <span>{observatory.mobileApplications}</span>
           </summary>
           <div className={styles.mobileNavigation}>
             {nav}
@@ -109,8 +112,8 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       utilities={utilities}
     >
       <div className={styles.stage}>
-        <div className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Link className={styles.breadcrumbHome} href={marketingHref(locale)} aria-label="QDIP home">
+        <div className={styles.breadcrumb} aria-label={a11y.breadcrumb}>
+          <Link className={styles.breadcrumbHome} href={marketingHref(locale)} aria-label={a11y.home}>
             <Home />
           </Link>
           <ChevronRight />
