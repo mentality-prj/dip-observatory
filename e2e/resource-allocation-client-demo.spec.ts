@@ -488,13 +488,11 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   )
 })
 
-test('real-pilot import sends weekly baseline, daily state and access key', async ({ page }) => {
+test('real-pilot import sends weekly baseline and daily state without access-code friction', async ({ page }) => {
   let capturedBody: Record<string, unknown> | null = null
-  let capturedPilotKey: string | null = null
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     capturedBody = route.request().postDataJSON() as Record<string, unknown>
-    capturedPilotKey = await route.request().headerValue('x-qdip-pilot-key')
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -508,7 +506,7 @@ test('real-pilot import sends weekly baseline, daily state and access key', asyn
 
   await page.goto('/en/resource-allocation')
   await page.getByText('Try your own data', { exact: true }).click()
-  await page.getByTestId('resource-pilot-access-key').fill('pilot-test-key')
+  await expect(page.getByTestId('resource-pilot-access-key')).toHaveCount(0)
 
   const columns = [
     'record_type',
@@ -587,7 +585,6 @@ test('real-pilot import sends weekly baseline, daily state and access key', asyn
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
   await expect.poll(() => capturedBody !== null).toBe(true)
 
-  expect(capturedPilotKey).toBe('pilot-test-key')
   const submittedBody = capturedBody as unknown as Record<string, unknown>
   expect(submittedBody.provenance).toMatchObject({
     source: 'client-import:pilot-week.csv',
