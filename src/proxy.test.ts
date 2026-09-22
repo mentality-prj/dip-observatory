@@ -56,3 +56,16 @@ test('supports localhost product subdomains for local and CI routing', () => {
   assert.equal(new URL(getRewrittenUrl(observatory)!).pathname, '/observatory/decisions')
   assert.equal(new URL(getRewrittenUrl(marketing)!).pathname, '/platform/en')
 })
+
+test('does not canonicalize an already rewritten internal route', () => {
+  const internal = new NextRequest('http://studio.localhost:3000/studio', {
+    headers: {
+      host: 'studio.localhost:3000',
+      'x-qdip-internal-rewrite': '1',
+      'x-qdip-studio-locale': 'en',
+    },
+  })
+
+  assert.equal(isRewrite(proxy(internal)), false)
+  assert.equal(proxy(internal).status, 200)
+})
