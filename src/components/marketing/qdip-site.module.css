@@ -669,6 +669,17 @@
   font-size: var(--ds-text-xs);
   line-height: 1.5;
 }
+.evidenceArtifactLink {
+  display: inline-flex;
+  margin-top: var(--ds-space-3);
+  color: var(--accent);
+  font-size: var(--ds-text-xs);
+  font-weight: 700;
+}
+.evidenceArtifactLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .evidenceLinks {
   display: flex;
   flex-wrap: wrap;
