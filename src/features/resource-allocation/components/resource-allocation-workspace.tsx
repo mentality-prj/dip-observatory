@@ -103,6 +103,10 @@ const copy = {
     rationaleHorizon: 'Планування всього горизонту',
     rationaleConstraints: 'Компетенції та обмеження',
     rationaleCost: 'Переміщення та вартість',
+    rawEvidence: 'Детальні показники моделі',
+    technicalMethod: 'Метод розрахунку',
+    heuristic:
+      'Для великих просторів рішень використовується детермінований branch-aware beam search; інтерфейс не називає евристичний результат математично гарантованим глобальним оптимумом.',
   },
   en: {
     title: 'Mobile team allocation plan',
@@ -152,6 +156,10 @@ const copy = {
     rationaleHorizon: 'Full-horizon planning',
     rationaleConstraints: 'Skills and constraints',
     rationaleCost: 'Movement and cost',
+    rawEvidence: 'Detailed model metrics',
+    technicalMethod: 'Calculation method',
+    heuristic:
+      'Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum.',
   },
   pl: {
     title: 'Plan alokacji zespołów mobilnych',
@@ -202,6 +210,10 @@ const copy = {
     rationaleHorizon: 'Planowanie całego horyzontu',
     rationaleConstraints: 'Kompetencje i ograniczenia',
     rationaleCost: 'Przemieszczenia i koszt',
+    rawEvidence: 'Szczegółowe wskaźniki modelu',
+    technicalMethod: 'Metoda obliczeń',
+    heuristic:
+      'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
   },
 } satisfies Record<Locale, Record<string, string>>
 
