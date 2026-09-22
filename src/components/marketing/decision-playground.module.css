@@ -51,6 +51,20 @@
 .stage :global(.ds-workflow-compact) {
   margin: 0;
 }
+.stage :global(.ds-workflow-step) {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.stage :global(.ds-workflow-step strong) {
+  color: #fff;
+}
+.stage :global(.ds-workflow-step span) {
+  color: #bdaeb4;
+}
+.stage :global(.ds-workflow-index) {
+  color: #8b1538;
+  background: #fff8fa;
+  border-color: rgba(255, 255, 255, 0.55);
+}
 .controls {
   display: flex;
   align-items: center;
