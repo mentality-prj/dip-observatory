@@ -931,6 +931,9 @@
     gap: var(--ds-space-4) var(--ds-space-5);
     padding: var(--ds-space-6);
   }
+  .footer .logo {
+    margin-left: 0;
+  }
   .footer nav {
     gap: var(--ds-space-3) var(--ds-space-5);
   }
