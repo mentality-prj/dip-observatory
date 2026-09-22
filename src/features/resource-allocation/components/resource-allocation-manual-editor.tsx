@@ -121,7 +121,6 @@ export function ResourceAllocationManualEditor({
   communities,
   teams,
   onUseModified,
-  pilotAccessKey,
   locale,
 }: {
   input: Record<string, unknown>
@@ -131,7 +130,6 @@ export function ResourceAllocationManualEditor({
   communities: string[]
   teams: string[]
   onUseModified: (selected: EvaluatedManualAllocation) => void
-  pilotAccessKey?: string
   locale: Locale
 }) {
   const t = copy[locale]
@@ -176,10 +174,7 @@ export function ResourceAllocationManualEditor({
     try {
       const response = await fetch('/api/resource-allocation/run', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(pilotAccessKey ? { 'x-qdip-pilot-key': pilotAccessKey } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...input, operation: 'evaluate_manual', manual_allocation: allocation }),
       })
       const payload = await response.json()
