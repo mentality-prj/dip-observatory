@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { GitCompareArrows, History, SearchCheck } from 'lucide-react'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
+import { marketingA11yI18n } from '@/lib/product-i18n'
 import type { MarketingLocale } from './qdip-copy'
 import styles from './qdip-site.module.css'
 
@@ -41,9 +42,10 @@ export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
     `${base}/core/research`,
   ] as const
   const c = copy[locale]
+  const a11y = marketingA11yI18n[locale]
 
   return (
-    <section className={styles.evidenceStrip} id="why" aria-label="QDIP evidence and trust">
+    <section className={styles.evidenceStrip} id="why" aria-label={a11y.evidence}>
       <div className={styles.evidenceGrid}>
         {c.items.map(([title, body, action], index) => {
           const Icon = icons[index] ?? SearchCheck
@@ -61,7 +63,7 @@ export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
           )
         })}
       </div>
-      <nav className={styles.evidenceLinks} aria-label="Technical evidence">
+      <nav className={styles.evidenceLinks} aria-label={a11y.technicalEvidence}>
         <Link href={`${base}/core/architecture`}>{c.links[0]}</Link>
         <Link href={`${base}/core/explainability`}>{c.links[1]}</Link>
         <Link href={`${base}/core/research`}>{c.links[2]}</Link>
