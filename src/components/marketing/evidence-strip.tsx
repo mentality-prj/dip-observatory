@@ -1,69 +1,70 @@
 import Link from 'next/link'
-import { FlaskConical, GitCompareArrows, Repeat2, Scale, ScanSearch, ShieldCheck } from 'lucide-react'
-import { marketingLocaleHref } from '@/lib/platform-urls'
+import { GitCompareArrows, History, SearchCheck } from 'lucide-react'
+import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import type { MarketingLocale } from './qdip-copy'
 import styles from './qdip-site.module.css'
 
 const copy = {
-  en: [
-    ['Reproducible', 'Experiments and decision runs keep their inputs and versions visible.'],
-    ['Inspectable', 'Audit trace and evidence remain attached to the recommendation.'],
-    ['Explainable', 'Review constraints, trade-offs and the factors behind a result.'],
-    [
-      'Baseline-aware',
-      'Experiments compare against explicit baselines instead of presenting model output in isolation.',
+  en: {
+    items: [
+      ['Audit trace', 'Open an inspectable recommendation with alternatives, evidence and decision trace.', 'Inspect a decision'],
+      ['Baseline comparison', 'Review Gas Decision experiments against an explicit baseline instead of model output in isolation.', 'Open Gas Decision'],
+      ['Deterministic replay', 'Review the research and reproducibility layer used to keep decision paths inspectable across runs.', 'Review research'],
     ],
-    [
-      'Deterministic demos',
-      'Bundled demo states can be replayed so the same inputs produce the same inspectable path.',
+    links: ['Architecture', 'Explainability', 'Research'],
+  },
+  uk: {
+    items: [
+      ['Audit trace', 'Відкрийте рекомендацію з альтернативами, доказами та trace рішення для перевірки.', 'Перевірити рішення'],
+      ['Порівняння з baseline', 'Перегляньте експерименти Gas Decision у порівнянні з явним baseline, а не ізольованим результатом моделі.', 'Відкрити Gas Decision'],
+      ['Детермінований replay', 'Перегляньте research і reproducibility layer, який зберігає шлях рішення відтворюваним між запусками.', 'Переглянути research'],
     ],
-    ['Research-backed', 'Architecture and research notes are available for technical review.'],
-  ],
-  uk: [
-    ['Відтворюваність', 'Експерименти та decision runs зберігають видимими вхідні дані й версії.'],
-    ['Перевірюваність', 'Audit trace і докази залишаються пов’язаними з рекомендацією.'],
-    ['Пояснюваність', 'Перевіряйте обмеження, компроміси та фактори, що вплинули на результат.'],
-    [
-      'Порівняння з baseline',
-      'Експерименти порівнюються з явними baseline, а не показують модельний результат ізольовано.',
+    links: ['Архітектура', 'Пояснюваність', 'Research'],
+  },
+  pl: {
+    items: [
+      ['Audit trace', 'Otwórz rekomendację z alternatywami, dowodami i trace decyzji do inspekcji.', 'Sprawdź decyzję'],
+      ['Porównanie z baseline', 'Przejrzyj eksperymenty Gas Decision względem jawnego baseline zamiast izolowanego wyniku modelu.', 'Otwórz Gas Decision'],
+      ['Deterministyczny replay', 'Przejrzyj warstwę badań i odtwarzalności, która zachowuje ścieżkę decyzji między przebiegami.', 'Przejrzyj research'],
     ],
-    ['Детерміновані демо', 'Вбудовані demo states можна повторити з тим самим відтворюваним шляхом рішення.'],
-    ['Наукова основа', 'Архітектура та research notes доступні для технічного аналізу.'],
-  ],
-  pl: [
-    ['Powtarzalność', 'Eksperymenty i przebiegi decyzji zachowują widoczne dane wejściowe oraz wersje.'],
-    ['Inspekcja', 'Audit trace i dowody pozostają powiązane z rekomendacją.'],
-    ['Wyjaśnialność', 'Sprawdzaj ograniczenia, kompromisy i czynniki stojące za wynikiem.'],
-    ['Porównanie z baseline', 'Eksperymenty są porównywane z jawnymi baseline, a nie pokazywane w izolacji.'],
-    ['Deterministyczne demo', 'Wbudowane stany demo można odtworzyć z tym samym inspekcyjnym przebiegiem decyzji.'],
-    ['Podstawa badawcza', 'Architektura i notatki badawcze są dostępne do przeglądu technicznego.'],
-  ],
+    links: ['Architektura', 'Wyjaśnialność', 'Research'],
+  },
 } as const
 
-const icons = [FlaskConical, ShieldCheck, ScanSearch, Scale, Repeat2, GitCompareArrows] as const
+const icons = [SearchCheck, GitCompareArrows, History] as const
 
 export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
   const base = marketingLocaleHref(locale)
+  const destinations = [
+    observatoryHref('', locale),
+    observatoryHref('gas-forecast', locale),
+    `${base}/core/research`,
+  ] as const
+  const c = copy[locale]
+
   return (
     <section className={styles.evidenceStrip} id="why" aria-label="QDIP evidence and trust">
       <div className={styles.evidenceGrid}>
-        {copy[locale].map(([title, body], index) => {
-          const Icon = icons[index] ?? ShieldCheck
+        {c.items.map(([title, body, action], index) => {
+          const Icon = icons[index] ?? SearchCheck
           return (
             <article key={title}>
               <Icon size={17} aria-hidden />
               <div>
                 <strong>{title}</strong>
                 <span>{body}</span>
+                <Link className={styles.evidenceArtifactLink} href={destinations[index]}>
+                  {action}
+                </Link>
               </div>
             </article>
           )
         })}
       </div>
       <nav className={styles.evidenceLinks} aria-label="Technical evidence">
-        <Link href={`${base}/core/architecture`}>Architecture</Link>
-        <Link href={`${base}/core/explainability`}>Explainability</Link>
-        <Link href={`${base}/core/research`}>Research</Link>
+        <Link href={`${base}/core/architecture`}>{c.links[0]}</Link>
+        <Link href={`${base}/core/explainability`}>{c.links[1]}</Link>
+        <Link href={`${base}/core/research`}>{c.links[2]}</Link>
       </nav>
     </section>
   )
