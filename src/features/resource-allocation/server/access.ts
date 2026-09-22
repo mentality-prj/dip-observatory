@@ -38,6 +38,25 @@ export function assertSameOriginMutation(request: Request) {
     throw new ResourceAllocationAccessError('A same-origin request is required.', 403)
 }
 
+export function assertResourceAllocationDecisionAccess(request: Request, decision: unknown) {
+  if (!decision || typeof decision !== 'object' || Array.isArray(decision)) return
+  const provenance = (decision as Record<string, unknown>).provenance
+  if (!provenance || typeof provenance !== 'object' || Array.isArray(provenance)) return
+  const source = (provenance as Record<string, unknown>).source
+  if (typeof source !== 'string' || !source.startsWith('client-import:')) return
+
+  const expected = process.env.QDIP_RESOURCE_ALLOCATION_PILOT_KEY?.trim()
+  if (!expected)
+    throw new ResourceAllocationAccessError(
+      'Client-data pilots are disabled until QDIP_RESOURCE_ALLOCATION_PILOT_KEY is configured.',
+      503
+    )
+
+  const provided = request.headers.get('x-qdip-pilot-key')?.trim() ?? ''
+  if (!provided || !safeEqual(provided, expected))
+    throw new ResourceAllocationAccessError('A valid Resource Allocation pilot access code is required.', 401)
+}
+
 export function assertResourceAllocationAccess(request: Request, input: unknown) {
   assertSameOriginMutation(request)
   if (!isClientResourceAllocationInput(input)) return
