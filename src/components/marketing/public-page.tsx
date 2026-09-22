@@ -122,7 +122,7 @@ const copy: Record<MarketingLocale, Copy> = {
       research: [
         'Research',
         'Applied research into repeatable decisions under constraints and uncertainty.',
-        'Public experiments currently include Gas and Resource Allocation. Claims are limited to implemented demonstrations; no publication, institutional validation or customer outcome is implied.',
+        'Public demonstrations currently include Resource Allocation, Gas Decision and GTM Lab. Claims are limited to implemented demonstrations; no publication, institutional validation or customer outcome is implied.',
       ],
     },
   },
@@ -213,7 +213,7 @@ const copy: Record<MarketingLocale, Copy> = {
       research: [
         'Дослідження',
         'Прикладні дослідження регулярних рішень за наявності обмежень і невизначеності.',
-        'Публічні експерименти наразі включають Gas і Resource Allocation. Твердження обмежені реалізованими демонстраціями; ми не заявляємо про публікації, інституційну валідацію чи результати клієнтів.',
+        'Публічні демонстрації наразі включають Resource Allocation, Gas Decision і GTM Lab. Твердження обмежені реалізованими демонстраціями; ми не заявляємо про публікації, інституційну валідацію чи результати клієнтів.',
       ],
     },
   },
@@ -298,7 +298,7 @@ const copy: Record<MarketingLocale, Copy> = {
       research: [
         'Badania',
         'Badania stosowane nad regularnymi decyzjami podejmowanymi przy ograniczeniach i niepewności.',
-        'Publiczne eksperymenty obejmują obecnie Gas i Resource Allocation. Twierdzenia ograniczają się do wdrożonych demonstracji; nie deklarujemy publikacji, walidacji instytucjonalnej ani wyników klientów.',
+        'Publiczne demonstracje obejmują obecnie Resource Allocation, Gas Decision i GTM Lab. Twierdzenia ograniczają się do wdrożonych demonstracji; nie deklarujemy publikacji, walidacji instytucjonalnej ani wyników klientów.',
       ],
     },
   },
