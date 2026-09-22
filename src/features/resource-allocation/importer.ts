@@ -15,17 +15,35 @@ function clean(value: unknown): string {
   return String(value ?? '').trim()
 }
 
-function number(value: unknown, fallback = 0): number {
-  const parsed = Number(clean(value).replace(',', '.'))
-  return Number.isFinite(parsed) ? parsed : fallback
+function parseNumber(
+  value: unknown,
+  label: string,
+  options: { optional?: boolean; min?: number; max?: number; integer?: boolean } = {}
+): number | undefined {
+  const raw = clean(value)
+  if (!raw) {
+    if (options.optional) return undefined
+    throw new Error(`${label} is required.`)
+  }
+  const parsed = Number(raw.replace(',', '.'))
+  if (!Number.isFinite(parsed)) throw new Error(`${label} must be a valid number; received "${raw}".`)
+  if (options.integer && !Number.isInteger(parsed)) throw new Error(`${label} must be an integer.`)
+  if (options.min !== undefined && parsed < options.min)
+    throw new Error(`${label} must be at least ${options.min}.`)
+  if (options.max !== undefined && parsed > options.max)
+    throw new Error(`${label} must be at most ${options.max}.`)
+  return parsed
 }
 
-function boolean(value: unknown, fallback = true): boolean {
+function parseBoolean(value: unknown, label: string, fallback?: boolean): boolean {
   const normalized = clean(value).toLowerCase()
-  if (!normalized) return fallback
+  if (!normalized) {
+    if (fallback !== undefined) return fallback
+    throw new Error(`${label} is required and must be true/false.`)
+  }
   if (['false', '0', 'no', 'n', 'ні', 'nie'].includes(normalized)) return false
   if (['true', '1', 'yes', 'y', 'так'].includes(normalized)) return true
-  return fallback
+  throw new Error(`${label} must be true/false; received "${clean(value)}".`)
 }
 
 function list(value: unknown): string[] {
@@ -35,10 +53,47 @@ function list(value: unknown): string[] {
     .filter(Boolean)
 }
 
-function priority(value: unknown): ResourceAllocationPriority {
+function parsePriority(value: unknown, label: string): ResourceAllocationPriority {
   const normalized = clean(value).toLowerCase()
+  if (!normalized) return 'normal'
   if (normalized === 'critical' || normalized === 'high' || normalized === 'normal') return normalized
-  return 'normal'
+  throw new Error(`${label} must be one of critical, high or normal; received "${clean(value)}".`)
+}
+
+function sanitizeSourceFileName(fileName: string): string {
+  const leaf = fileName.split(/[\\/]/).pop() ?? 'import'
+  const sanitized = leaf.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[^\p{L}\p{N}._ -]/gu, '_').trim()
+  return (sanitized || 'import').slice(0, 120)
+}
+
+const PII_COLUMNS = new Set([
+  'first_name',
+  'last_name',
+  'full_name',
+  'beneficiary_name',
+  'beneficiary_id',
+  'phone',
+  'phone_number',
+  'email',
+  'email_address',
+  'address',
+  'home_address',
+  'passport',
+  'passport_number',
+  'document_number',
+  'date_of_birth',
+  'dob',
+])
+
+function rejectPiiColumns(sheets: SheetRows[]) {
+  for (const sheet of sheets) {
+    for (const row of sheet.rows) {
+      for (const [key, value] of Object.entries(row)) {
+        if (PII_COLUMNS.has(key.toLowerCase()) && clean(value))
+          throw new Error(`Personal-data column "${key}" is not allowed in Resource Allocation imports.`)
+      }
+    }
+  }
 }
 
 function parseCsv(text: string): Row[] {
@@ -251,100 +306,242 @@ async function parseXlsx(buffer: ArrayBuffer): Promise<SheetRows[]> {
 }
 
 function rowType(sheet: string, row: Row): string {
-  const explicit = clean(row.record_type || row.type || row.kind).toLowerCase()
+  const explicit = clean(row.record_type || row.type || row.kind).toLowerCase().replace(/[ -]/g, '_')
   if (explicit) return explicit
   const normalizedSheet = sheet.toLowerCase().replace(/[ _-]/g, '')
+  if (normalizedSheet.startsWith('communit') && normalizedSheet.includes('day')) return 'community_day'
   if (normalizedSheet.startsWith('communit')) return 'community'
+  if (normalizedSheet.startsWith('team') && normalizedSheet.includes('day')) return 'team_day'
   if (normalizedSheet.startsWith('team')) return 'team'
+  if (normalizedSheet.startsWith('baseline')) return 'baseline'
   if (normalizedSheet.startsWith('demand') || normalizedSheet.startsWith('need')) return 'demand'
   if (normalizedSheet.startsWith('travel') || normalizedSheet.startsWith('route')) return 'travel'
   if (normalizedSheet.startsWith('setting') || normalizedSheet.startsWith('config')) return 'settings'
   return ''
 }
 
-function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationInput {
-  const communities = new Map<string, ResourceAllocationCommunityInput>()
-  const teams: ResourceAllocationTeamInput[] = []
-  const travel: ResourceAllocationTravelEdgeInput[] = []
-  let days = DEFAULT_DAYS
-  let budget: number | undefined
-  let targetPriorityCoverage: number | undefined
+function required(value: unknown, label: string): string {
+  const result = clean(value)
+  if (!result) throw new Error(`${label} is required.`)
+  return result
+}
 
-  const demandRows: Array<{ community: string; row: Row }> = []
+function validateDay(day: string, days: string[], label: string) {
+  if (!days.includes(day)) throw new Error(`${label} references day "${day}" outside planning_period.days.`)
+}
+
+function nullableDestination(value: unknown): string | null {
+  const normalized = clean(value)
+  if (!normalized || ['none', 'null', 'unassigned', '-'].includes(normalized.toLowerCase())) return null
+  return normalized
+}
+
+function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationInput {
+  rejectPiiColumns(sheets)
+
+  const rowsByType = new Map<string, Row[]>()
   for (const sheet of sheets) {
     for (const row of sheet.rows) {
       const type = rowType(sheet.sheet, row)
-      if (type === 'community' || type === 'communities') {
-        const id = clean(row.id || row.community || row.name)
-        if (!id) continue
-        communities.set(id, {
-          id,
-          accessible: boolean(row.accessible, true),
-          max_teams: number(row.max_teams, 30),
-          demand: [],
-        })
-      } else if (type === 'demand' || type === 'need') {
-        const community = clean(row.community || row.community_id || row.location)
-        if (community) demandRows.push({ community, row })
-      } else if (type === 'team' || type === 'teams') {
-        const id = clean(row.id || row.team || row.name)
-        if (!id) continue
-        teams.push({
-          id,
-          current_community: clean(row.current_community || row.community || row.location) || null,
-          skills: list(row.skills || row.services),
-          capacity: number(row.capacity),
-          max_daily_capacity: row.max_daily_capacity ? number(row.max_daily_capacity) : undefined,
-          max_travel_cost: row.max_travel_cost ? number(row.max_travel_cost) : undefined,
-          max_travel_minutes: row.max_travel_minutes ? number(row.max_travel_minutes) : undefined,
-          cost_per_capacity: number(row.cost_per_capacity),
-        })
-      } else if (type === 'travel' || type === 'route') {
-        const from = clean(row.from)
-        const to = clean(row.to)
-        if (!from || !to) continue
-        travel.push({
-          from,
-          to,
-          cost: number(row.cost),
-          minutes: row.minutes ? number(row.minutes) : undefined,
-        })
-      } else if (type === 'settings' || type === 'config') {
-        const parsedDays = list(row.days)
-        if (parsedDays.length > 0) days = parsedDays
-        if (row.budget) budget = number(row.budget)
-        if (row.target_priority_coverage) targetPriorityCoverage = number(row.target_priority_coverage)
-      }
+      if (!type) throw new Error(`Unable to determine record_type in sheet "${sheet.sheet}".`)
+      if (
+        !['community', 'communities', 'demand', 'need', 'team', 'teams', 'team_day', 'community_day', 'travel', 'route', 'baseline', 'settings', 'config'].includes(
+          type
+        )
+      )
+        throw new Error(`Unsupported record_type "${type}".`)
+      const normalized =
+        type === 'communities'
+          ? 'community'
+          : type === 'need'
+            ? 'demand'
+            : type === 'teams'
+              ? 'team'
+              : type === 'route'
+                ? 'travel'
+                : type === 'config'
+                  ? 'settings'
+                  : type
+      rowsByType.set(normalized, [...(rowsByType.get(normalized) ?? []), row])
     }
   }
 
-  for (const { community, row } of demandRows) {
-    const target = communities.get(community)
-    if (!target) throw new Error(`Demand references unknown community: ${community}`)
-    const service = clean(row.service)
-    if (!service) throw new Error(`Demand in ${community} is missing service.`)
-    target.demand.push({
-      service,
-      units: number(row.units),
-      priority: priority(row.priority),
-      program: clean(row.program) || undefined,
+  const settingsRows = rowsByType.get('settings') ?? []
+  if (settingsRows.length > 1) throw new Error('Import supports one settings row.')
+  const settings = settingsRows[0] ?? {}
+  const parsedDays = list(settings.days)
+  const days = parsedDays.length > 0 ? parsedDays : DEFAULT_DAYS
+  if (days.length > 31) throw new Error('Planning period supports at most 31 days.')
+  if (new Set(days).size !== days.length) throw new Error('planning_period.days must be unique.')
+
+  const budget = parseNumber(settings.budget, 'settings.budget', { optional: true, min: 0 })
+  const targetPriorityCoverage = parseNumber(settings.target_priority_coverage, 'settings.target_priority_coverage', {
+    optional: true,
+    min: 0,
+    max: 1,
+  })
+  const planningUnit = clean(settings.planning_unit) || 'client-defined-demand-unit'
+
+  const communities = new Map<string, ResourceAllocationCommunityInput>()
+  for (const row of rowsByType.get('community') ?? []) {
+    const id = required(row.id || row.community || row.name, 'community.id')
+    if (communities.has(id)) throw new Error(`Duplicate community id: ${id}`)
+    const maxTeams = parseNumber(row.max_teams, `community ${id}.max_teams`, {
+      optional: true,
+      min: 0,
+      integer: true,
+    })
+    communities.set(id, {
+      id,
+      accessible: parseBoolean(row.accessible, `community ${id}.accessible`, true),
+      max_teams: maxTeams ?? 30,
+      demand: [],
+      allowed_programs: list(row.allowed_programs).length ? list(row.allowed_programs) : undefined,
     })
   }
-
   if (communities.size === 0) throw new Error('Import requires at least one community.')
+
+  const teams: ResourceAllocationTeamInput[] = []
+  const teamsById = new Map<string, ResourceAllocationTeamInput>()
+  for (const row of rowsByType.get('team') ?? []) {
+    const id = required(row.id || row.team || row.name, 'team.id')
+    if (teamsById.has(id)) throw new Error(`Duplicate team id: ${id}`)
+    const skills = list(row.skills || row.services)
+    if (skills.length === 0) throw new Error(`Team ${id} requires at least one skill.`)
+    const team: ResourceAllocationTeamInput = {
+      id,
+      current_community: clean(row.current_community || row.community || row.location) || null,
+      skills,
+      capacity: parseNumber(row.capacity, `team ${id}.capacity`, { min: 0 }) as number,
+      allowed_communities: list(row.allowed_communities).length ? list(row.allowed_communities) : undefined,
+      max_daily_capacity: parseNumber(row.max_daily_capacity, `team ${id}.max_daily_capacity`, {
+        optional: true,
+        min: 0,
+      }),
+      max_travel_cost: parseNumber(row.max_travel_cost, `team ${id}.max_travel_cost`, {
+        optional: true,
+        min: 0,
+      }),
+      max_travel_minutes: parseNumber(row.max_travel_minutes, `team ${id}.max_travel_minutes`, {
+        optional: true,
+        min: 0,
+      }),
+      cost_per_capacity:
+        parseNumber(row.cost_per_capacity, `team ${id}.cost_per_capacity`, { optional: true, min: 0 }) ?? 0,
+      programs: list(row.programs),
+    }
+    teams.push(team)
+    teamsById.set(id, team)
+  }
   if (teams.length === 0) throw new Error('Import requires at least one team.')
 
   const knownCommunities = new Set(communities.keys())
   for (const team of teams) {
     if (team.current_community && !knownCommunities.has(team.current_community))
       throw new Error(`Team ${team.id} references unknown community: ${team.current_community}`)
+    for (const community of team.allowed_communities ?? [])
+      if (!knownCommunities.has(community))
+        throw new Error(`Team ${team.id} allowed_communities references unknown community: ${community}`)
   }
-  for (const edge of travel) {
-    if (!knownCommunities.has(edge.from) || !knownCommunities.has(edge.to))
-      throw new Error(`Travel edge references unknown community: ${edge.from} → ${edge.to}`)
+
+  for (const row of rowsByType.get('community_day') ?? []) {
+    const communityId = required(row.id || row.community || row.community_id, 'community_day.community')
+    const target = communities.get(communityId)
+    if (!target) throw new Error(`community_day references unknown community: ${communityId}`)
+    const day = required(row.day, `community_day ${communityId}.day`)
+    validateDay(day, days, `community_day ${communityId}`)
+    target.accessibility = {
+      ...(target.accessibility ?? {}),
+      [day]: parseBoolean(row.accessible, `community_day ${communityId} ${day}.accessible`),
+    }
+  }
+
+  for (const row of rowsByType.get('demand') ?? []) {
+    const communityId = required(row.community || row.community_id || row.location, 'demand.community')
+    const target = communities.get(communityId)
+    if (!target) throw new Error(`Demand references unknown community: ${communityId}`)
+    const service = required(row.service, `demand in ${communityId}.service`)
+    const item = {
+      service,
+      units: parseNumber(row.units, `demand ${communityId}/${service}.units`, { min: 0 }) as number,
+      priority: parsePriority(row.priority, `demand ${communityId}/${service}.priority`),
+      program: clean(row.program) || undefined,
+    }
+    const day = clean(row.day)
+    if (day) {
+      validateDay(day, days, `demand ${communityId}/${service}`)
+      target.daily_demand = { ...(target.daily_demand ?? {}) }
+      target.daily_demand[day] = [...(target.daily_demand[day] ?? []), item]
+    } else {
+      target.demand.push(item)
+    }
+  }
+
+  for (const row of rowsByType.get('team_day') ?? []) {
+    const teamId = required(row.id || row.team || row.team_id, 'team_day.team')
+    const team = teamsById.get(teamId)
+    if (!team) throw new Error(`team_day references unknown team: ${teamId}`)
+    const day = required(row.day, `team_day ${teamId}.day`)
+    validateDay(day, days, `team_day ${teamId}`)
+    const hasAvailability = Boolean(clean(row.available))
+    const hasCapacity = Boolean(clean(row.capacity))
+    if (!hasAvailability && !hasCapacity)
+      throw new Error(`team_day ${teamId}/${day} requires available and/or capacity.`)
+    if (hasAvailability)
+      team.availability = {
+        ...(team.availability ?? {}),
+        [day]: parseBoolean(row.available, `team_day ${teamId}/${day}.available`),
+      }
+    if (hasCapacity)
+      team.daily_capacity = {
+        ...(team.daily_capacity ?? {}),
+        [day]: parseNumber(row.capacity, `team_day ${teamId}/${day}.capacity`, { min: 0 }) as number,
+      }
+  }
+
+  const travel: ResourceAllocationTravelEdgeInput[] = []
+  for (const row of rowsByType.get('travel') ?? []) {
+    const from = required(row.from, 'travel.from')
+    const to = required(row.to, 'travel.to')
+    if (!knownCommunities.has(from) || !knownCommunities.has(to))
+      throw new Error(`Travel edge references unknown community: ${from} → ${to}`)
+    travel.push({
+      from,
+      to,
+      cost: parseNumber(row.cost, `travel ${from}→${to}.cost`, { optional: true, min: 0 }) ?? 0,
+      minutes: parseNumber(row.minutes, `travel ${from}→${to}.minutes`, { optional: true, min: 0 }),
+    })
+  }
+
+  let baselinePlan: Record<string, Record<string, string | null>> | undefined
+  const baselineRows = rowsByType.get('baseline') ?? []
+  if (baselineRows.length > 0) {
+    baselinePlan = Object.fromEntries(days.map((day) => [day, {}]))
+    for (const row of baselineRows) {
+      const day = required(row.day, 'baseline.day')
+      validateDay(day, days, 'baseline')
+      const teamId = required(row.team || row.team_id || row.id, `baseline ${day}.team`)
+      if (!teamsById.has(teamId)) throw new Error(`Baseline references unknown team: ${teamId}`)
+      if (Object.prototype.hasOwnProperty.call(baselinePlan[day], teamId))
+        throw new Error(`Duplicate baseline assignment for ${day}/${teamId}.`)
+      const destination = nullableDestination(row.community || row.destination || row.location)
+      if (destination && !knownCommunities.has(destination))
+        throw new Error(`Baseline references unknown community: ${destination}`)
+      baselinePlan[day][teamId] = destination
+    }
+    const missing = days.flatMap((day) =>
+      teams.filter((team) => !Object.prototype.hasOwnProperty.call(baselinePlan?.[day] ?? {}, team.id)).map(
+        (team) => `${day}/${team.id}`
+      )
+    )
+    if (missing.length > 0)
+      throw new Error(
+        `Baseline plan must contain every team for every planning day. Missing: ${missing.slice(0, 8).join(', ')}${missing.length > 8 ? '…' : ''}`
+      )
   }
 
   const currentAllocation = Object.fromEntries(teams.map((team) => [team.id, team.current_community ?? null]))
+  const safeFileName = sanitizeSourceFileName(fileName)
 
   return {
     operation: 'optimize',
@@ -353,13 +550,68 @@ function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationIn
     teams,
     travel_edges: travel,
     current_allocation: currentAllocation,
+    baseline_plan: baselinePlan,
     budget,
     target_priority_coverage: targetPriorityCoverage ?? 0.9,
     provenance: {
-      source: `client-import:${fileName}`,
+      source: `client-import:${safeFileName}`,
       imported_at: new Date().toISOString(),
-      mapping_version: 'resource-allocation-import/1',
+      mapping_version: 'resource-allocation-import/2',
+      planning_unit: planningUnit,
     },
+  }
+}
+
+export type ResourceAllocationImportSummary = {
+  days: number
+  communities: number
+  teams: number
+  openingDemand: number
+  scheduledDemand: number
+  horizonDemand: number
+  baselineProvided: boolean
+  dailyDemandDays: number
+  availabilityRules: number
+}
+
+export function summarizeResourceAllocationImport(input: ResourceAllocationInput): ResourceAllocationImportSummary {
+  const openingDemand = input.communities.reduce(
+    (sum, community) => sum + community.demand.reduce((total, demand) => total + demand.units, 0),
+    0
+  )
+  const scheduledDemand = input.communities.reduce(
+    (sum, community) =>
+      sum +
+      Object.values(community.daily_demand ?? {}).reduce(
+        (daySum, demands) => daySum + demands.reduce((total, demand) => total + demand.units, 0),
+        0
+      ),
+    0
+  )
+  const dailyDemandDays = new Set(
+    input.communities.flatMap((community) =>
+      Object.entries(community.daily_demand ?? {})
+        .filter(([, demands]) => demands.length > 0)
+        .map(([day]) => day)
+    )
+  ).size
+  const availabilityRules =
+    input.communities.reduce((sum, community) => sum + Object.keys(community.accessibility ?? {}).length, 0) +
+    input.teams.reduce(
+      (sum, team) => sum + Object.keys(team.availability ?? {}).length + Object.keys(team.daily_capacity ?? {}).length,
+      0
+    )
+
+  return {
+    days: input.planning_period?.days.length ?? 0,
+    communities: input.communities.length,
+    teams: input.teams.length,
+    openingDemand,
+    scheduledDemand,
+    horizonDemand: openingDemand + scheduledDemand,
+    baselineProvided: Boolean(input.baseline_plan),
+    dailyDemandDays,
+    availabilityRules,
   }
 }
 
@@ -372,4 +624,4 @@ export async function importResourceAllocationFile(file: File): Promise<Resource
 }
 
 export const RESOURCE_ALLOCATION_IMPORT_COLUMNS =
-  'record_type,id,community,service,units,priority,current_community,skills,capacity,max_teams,from,to,cost,minutes,days,budget'
+  'record_type,id,day,community,service,units,priority,program,current_community,skills,capacity,available,accessible,max_teams,allowed_communities,allowed_programs,programs,max_daily_capacity,max_travel_cost,max_travel_minutes,cost_per_capacity,from,to,cost,minutes,days,budget,target_priority_coverage,planning_unit'
