@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Table } from '@/design-system'
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { studioHref } from '@/lib/platform-urls'
@@ -10,17 +9,18 @@ import { studioRequest, type Dimension, type Plugin, type Profile, type ProfileV
 import { ProfileEditor } from './profile-editor'
 import { ProfileRunner } from './profile-runner'
 import { Breadcrumbs, dimensionSource, profileSections, sectionLabel, type ProfileSection } from './presentation'
-import { studioLocaleFromPath } from './studio-locale'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 export function ProfileDetail({ id, section }: { id: string; section: ProfileSection }) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const locale = useStudioLocale()
+  const c = studioCopy(locale).detail
   const [data, setData] = useState<{ profile: ProfileView; dimensions: Dimension[]; plugins: Plugin[] } | null>(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [retry, setRetry] = useState(0)
   const [running, setRunning] = useState(false)
+
   useEffect(() => {
     let disposed = false
     Promise.all([
@@ -41,143 +41,131 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
       disposed = true
     }
   }, [id, retry])
-  if (!data)
+
+  if (!data) {
     return (
       <>
         {error ? (
           <div role="alert">
             {error}{' '}
             <Button variant="secondary" type="button" onClick={() => setRetry(retry + 1)}>
-              Retry
+              {c.retry}
             </Button>
           </div>
         ) : (
-          <p role="status">Loading profile…</p>
+          <p role="status">{c.loading}</p>
         )}
-        <Link href={studioHref('profiles', locale)}>Decision Profiles</Link>
+        <Link href={studioHref('profiles', locale)}>{c.decisionProfiles}</Link>
       </>
     )
+  }
+
   const { profile, dimensions, plugins } = data
   const plugin = plugins.find((p) => p.name === profile.plugin_id)
   const pluginName = plugin?.ui?.label ?? profile.plugin_id
   const base = studioHref(`profiles/${encodeURIComponent(id)}`, locale)
   const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== 'validation')) as Profile
+  const sourceLabels = studioCopy(locale).presentation
+
   return (
     <>
       <Breadcrumbs
         items={[
-          { label: 'Decision Profiles', href: studioHref('profiles', locale) },
+          { label: c.decisionProfiles, href: studioHref('profiles', locale) },
           { label: profile.name, href: base },
-          { label: sectionLabel(section) },
+          { label: sectionLabel(section, locale) },
         ]}
       />
+
       <div className="studio-title-row">
         <div>
           <h1>{profile.name}</h1>
-          <p>Version {profile.version}</p>
+          <p>{c.version} {profile.version}</p>
         </div>
-        <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? 'Active' : 'Draft'}</Badge>
+        <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? c.active : c.draft}</Badge>
       </div>
+
       <DecisionWorkflow locale={locale} tone="light" compact />
-      <nav aria-label="Profile sections" className="studio-profile-nav">
+
+      <nav aria-label={c.profileSections} className="studio-profile-nav">
         {profileSections.map((tab) => (
           <Link
             key={tab}
             aria-current={section === tab ? 'page' : undefined}
             href={tab === 'overview' ? base : `${base}/${tab}`}
           >
-            {sectionLabel(tab)}
+            {sectionLabel(tab, locale)}
           </Link>
         ))}
       </nav>
-      {error && (
-        <p role="alert" className="studio-error">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p role="status" className="studio-success">
-          {message}
-        </p>
-      )}
+
+      {error && <p role="alert" className="studio-error">{error}</p>}
+      {message && <p role="status" className="studio-success">{message}</p>}
       {profile.validation.errors.map((validationError) => (
-        <p key={validationError} className="studio-error">
-          {validationError}
-        </p>
+        <p key={validationError} className="studio-error">{validationError}</p>
       ))}
+
       {section === 'overview' && (
         <>
           <Card>
-            <CardHeader>
-              <CardTitle>Overview</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>{c.overview}</CardTitle></CardHeader>
             <CardContent>
               <dl>
-                <dt>Profile</dt>
-                <dd>{profile.name}</dd>
-                <dt>ID</dt>
-                <dd>{profile.id}</dd>
-                <dt>Version</dt>
-                <dd>{profile.version}</dd>
-                <dt>Status</dt>
-                <dd>{profile.active ? 'Active' : 'Draft'}</dd>
-                <dt>Plugin</dt>
-                <dd>
-                  {pluginName} @ {profile.plugin_version}
-                </dd>
-                <dt>Capability</dt>
-                <dd>
-                  {profile.capability_id} @ {profile.capability_version}
-                </dd>
+                <dt>{c.profile}</dt><dd>{profile.name}</dd>
+                <dt>ID</dt><dd>{profile.id}</dd>
+                <dt>{c.version}</dt><dd>{profile.version}</dd>
+                <dt>{c.status}</dt><dd>{profile.active ? c.active : c.draft}</dd>
+                <dt>{c.plugin}</dt><dd>{pluginName} @ {profile.plugin_version}</dd>
+                <dt>{c.capability}</dt><dd>{profile.capability_id} @ {profile.capability_version}</dd>
               </dl>
-              <h3>Execution model</h3>
+              <h3>{c.executionModel}</h3>
               <p className="studio-flow">
-                {pluginName} → Output Bindings → Decision Dimensions → Alternatives → Decision
+                {pluginName} → {c.outputBindings} → {c.decisionDimensions} → {c.alternatives} → {c.decision}
               </p>
             </CardContent>
           </Card>
+
           <Button
             type="button"
             disabled={!profile.active || profile.validation.status !== 'VALID'}
             onClick={() => setRunning(!running)}
           >
-            Evaluate
+            {c.evaluate}
           </Button>
           {running && <ProfileRunner profile={clean} />}
         </>
       )}
+
       {section === 'dimensions' && (
         <Card>
-          <CardHeader>
-            <CardTitle>Enabled dimensions</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{c.enabledDimensions}</CardTitle></CardHeader>
           <CardContent>
             <Table>
               <thead>
                 <tr>
-                  <th>Dimension</th>
-                  <th>Source</th>
-                  <th>Weight</th>
-                  <th>Required</th>
+                  <th>{c.dimension}</th>
+                  <th>{c.source}</th>
+                  <th>{c.weight}</th>
+                  <th>{c.required}</th>
                 </tr>
               </thead>
               <tbody>
                 {profile.dimensions.map((item) => {
                   const definition = dimensions.find((d) => d.id === item.dimension_id && d.version === item.version)
-                  const source = dimensionSource(item)
+                  const source = dimensionSource(item, locale)
                   return (
                     <tr key={item.dimension_id}>
                       <td>{definition?.name ?? item.dimension_id}</td>
                       <td>
                         {source}
-                        {source === 'Plugin supplied'
+                        {source === sourceLabels.pluginSupplied
                           ? ` · ${pluginName}`
-                          : source === 'DIP calculated'
+                          : source === sourceLabels.dipCalculated
                             ? ' · DIP evaluator'
                             : ''}
                       </td>
                       <td>{definition?.type === 'rules' ? '—' : item.weight}</td>
-                      <td>{item.required ? 'Yes' : 'No'}</td>
+                      <td>{item.required ? c.yes : c.no}</td>
                     </tr>
                   )
                 })}
@@ -186,27 +174,28 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
           </CardContent>
         </Card>
       )}
+
       {section === 'constraints' && (
         <>
-          <h2>Constraints</h2>
-          <p>Rules for this profile determine whether each alternative is feasible. Blocking: Yes.</p>
+          <h2>{c.constraints}</h2>
+          <p>{c.constraintsHelp}</p>
         </>
       )}
+
       {section === 'policies' && (
         <>
-          <h2>Policies</h2>
-          <p>Policies may require actions or approvals without necessarily making an alternative infeasible.</p>
+          <h2>{c.policies}</h2>
+          <p>{c.policiesHelp}</p>
         </>
       )}
+
       {section === 'compliance' && (
         <>
-          <h2>Compliance</h2>
-          <p>
-            Frameworks and rules for this profile, including conditions, actions and severity. A framework such as GDPR
-            is a ruleset, not a numeric score.
-          </p>
+          <h2>{c.compliance}</h2>
+          <p>{c.complianceHelp}</p>
         </>
       )}
+
       <div className="studio-editor-layout">
         <div className="studio-profile-canvas">
           <ProfileEditor
@@ -216,37 +205,28 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
             plugins={plugins}
             dimensions={dimensions}
             section={section}
-            filter={
-              section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined
-            }
+            filter={section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined}
             onSave={async (next) => {
               const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, {
                 method: 'PATCH',
                 body: JSON.stringify(next),
               })
               setData({ ...data, profile: saved })
-              setMessage(`Profile ${next.name} saved at version ${next.version}.`)
+              setMessage(`${c.profile} ${next.name} ${c.savedAtVersion} ${next.version}.`)
             }}
           />
         </div>
-        <aside className="studio-context-inspector" aria-label="Decision model context">
-          <h2>Decision model context</h2>
+
+        <aside className="studio-context-inspector" aria-label={c.context}>
+          <h2>{c.context}</h2>
           <dl>
-            <dt>Profile</dt>
-            <dd>{profile.name}</dd>
-            <dt>Version</dt>
-            <dd>{profile.version}</dd>
-            <dt>Section</dt>
-            <dd>{sectionLabel(section)}</dd>
-            <dt>Plugin</dt>
-            <dd>{pluginName}</dd>
-            <dt>Validation</dt>
-            <dd>{profile.validation.status}</dd>
+            <dt>{c.profile}</dt><dd>{profile.name}</dd>
+            <dt>{c.version}</dt><dd>{profile.version}</dd>
+            <dt>{c.section}</dt><dd>{sectionLabel(section, locale)}</dd>
+            <dt>{c.plugin}</dt><dd>{pluginName}</dd>
+            <dt>{c.validation}</dt><dd>{profile.validation.status}</dd>
           </dl>
-          <p>
-            This inspector stays secondary to the model canvas. Constraints, dimensions, policies and evidence bindings
-            remain parts of one decision system rather than separate CRUD screens.
-          </p>
+          <p>{c.contextHelp}</p>
         </aside>
       </div>
     </>
