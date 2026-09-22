@@ -4,13 +4,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { studioHref } from '@/lib/platform-urls'
 import { useTransition } from 'react'
 import { Globe2 } from 'lucide-react'
-
 import {
   STUDIO_LOCALES,
   STUDIO_LOCALE_LABEL,
   studioSectionFromPath,
   type StudioLocale,
 } from './studio-locale'
+import { studioCopy } from './studio-copy'
 import { useStudioLocale } from './use-studio-locale'
 
 export function StudioLanguageSwitcher() {
@@ -18,6 +18,7 @@ export function StudioLanguageSwitcher() {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const active = useStudioLocale()
+  const c = studioCopy(active)
 
   const changeLocale = (locale: StudioLocale) => {
     if (locale === active) return
@@ -27,14 +28,14 @@ export function StudioLanguageSwitcher() {
 
   return (
     <div className="studio-language-controls">
-      <div className="studio-language-switcher" aria-label="Language">
+      <div className="studio-language-switcher" aria-label={c.language.label}>
         {STUDIO_LOCALES.map((locale) => (
           <button
             key={locale}
             type="button"
             disabled={pending}
             aria-current={locale === active ? 'page' : undefined}
-            aria-label={`Switch language to ${locale}`}
+            aria-label={`${c.language.switchTo} ${STUDIO_LOCALE_LABEL[locale]}`}
             onClick={() => changeLocale(locale)}
           >
             {STUDIO_LOCALE_LABEL[locale]}
@@ -43,7 +44,7 @@ export function StudioLanguageSwitcher() {
       </div>
       <label className="studio-language-select">
         <Globe2 size={14} aria-hidden />
-        <span className="sr-only">Language</span>
+        <span className="sr-only">{c.language.label}</span>
         <select
           value={active}
           disabled={pending}
