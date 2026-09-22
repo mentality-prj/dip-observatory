@@ -4,20 +4,15 @@ import dynamic from 'next/dynamic'
 import { Card, CardContent } from '@/design-system'
 import { findUseCaseByPlugin, type StudioRendererId } from '@/use-cases/registry'
 import type { Audit } from './contracts'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 const studioRenderers: Record<StudioRendererId, React.ComponentType<{ audit: Audit }>> = {
-  'gas-forecast': dynamic(() => import('@/use-cases/gas-forecast/studio-panel'), {
-    loading: () => (
-      <Card>
-        <CardContent>
-          <p role="status">Loading application view…</p>
-        </CardContent>
-      </Card>
-    ),
-  }),
+  'gas-forecast': dynamic(() => import('@/use-cases/gas-forecast/studio-panel')),
 }
 
 function GenericDecisionPanel({ audit }: { audit: Audit }) {
+  const copy = studioCopy(useStudioLocale()).genericPanel
   return (
     <Card>
       <CardContent>
@@ -25,18 +20,18 @@ function GenericDecisionPanel({ audit }: { audit: Audit }) {
           <table className="studio-table">
             <thead>
               <tr>
-                <th>Alternative</th>
-                <th>Feasible</th>
-                <th>Score</th>
-                <th>Rank</th>
-                <th>Required actions</th>
+                <th>{copy.alternative}</th>
+                <th>{copy.feasible}</th>
+                <th>{copy.score}</th>
+                <th>{copy.rank}</th>
+                <th>{copy.requiredActions}</th>
               </tr>
             </thead>
             <tbody>
               {audit.dimension_results.map((alternative) => (
                 <tr key={alternative.alternative_id}>
                   <td>{alternative.alternative_id}</td>
-                  <td>{alternative.feasible ? 'Yes' : 'No'}</td>
+                  <td>{alternative.feasible ? copy.yes : copy.no}</td>
                   <td>{alternative.score?.toFixed(4) ?? '—'}</td>
                   <td>{alternative.rank ?? '—'}</td>
                   <td>{alternative.dimensions.flatMap((dimension) => dimension.required_actions).join(', ') || '—'}</td>
