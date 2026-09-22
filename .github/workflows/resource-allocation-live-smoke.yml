@@ -1,0 +1,31 @@
+name: Resource Allocation Live Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'src/features/resource-allocation/**'
+      - 'src/app/api/resource-allocation/**'
+      - 'scripts/resource-allocation-live-smoke.ts'
+      - '.github/workflows/resource-allocation-live-smoke.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * *'
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify deployed Observatory → Core canonical path
+        env:
+          QDIP_SMOKE_BASE_URL: https://qdip.ai
+        run: pnpm exec tsx scripts/resource-allocation-live-smoke.ts
