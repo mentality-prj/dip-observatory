@@ -45,7 +45,7 @@ const icons = [FlaskConical, ShieldCheck, ScanSearch, Scale, Repeat2, GitCompare
 export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
   const base = marketingLocaleHref(locale)
   return (
-    <section className={styles.evidenceStrip} aria-label="QDIP evidence and trust">
+    <section className={styles.evidenceStrip} id="why" aria-label="QDIP evidence and trust">
       <div className={styles.evidenceGrid}>
         {copy[locale].map(([title, body], index) => {
           const Icon = icons[index] ?? ShieldCheck
