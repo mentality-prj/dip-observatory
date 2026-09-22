@@ -28,13 +28,11 @@
 }
 
 .studio-shell .ds-product-header-brand {
-  /* Keep this at zero: the QDIP PNG has transparent optical width on its right edge. */
   gap: 0;
 }
 
 .studio-shell .ds-product-header-brand-status {
-  /* Preserve the visually approved status position from the pre-brand-slot layout. */
-  margin-left: -34px;
+  margin-left: 0;
   transform: translateY(-8px);
 }
 
@@ -1084,7 +1082,7 @@ body:has(.studio-shell)::-webkit-scrollbar-thumb {
   }
 
   .studio-shell .ds-product-header-brand-status {
-    margin-left: -36px;
+    margin-left: 0;
     transform: translateY(-6px);
   }
 
