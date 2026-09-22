@@ -30,6 +30,8 @@ const copy = {
     imported: 'Імпортовані дані',
     capacity: 'Зміна доступної потужності від базового плану',
     inaccessible: 'Локація недоступна для виїзду',
+    unavailableTeam: 'Команда тимчасово недоступна',
+    unavailableTeamHint: 'Перевірте, як зміниться план, якщо одна команда не зможе працювати в цьому горизонті.',
     none: 'Немає',
     state: 'ДАНІ ТА ПОТОЧНА СИТУАЦІЯ',
     communities: 'Громади',
@@ -89,6 +91,8 @@ const copy = {
     imported: 'Imported data',
     capacity: 'Available capacity versus the baseline plan',
     inaccessible: 'Location unavailable for field work',
+    unavailableTeam: 'Team temporarily unavailable',
+    unavailableTeamHint: 'See how the plan changes if one team cannot work during this horizon.',
     none: 'None',
     state: 'DATA AND CURRENT SITUATION',
     communities: 'Communities',
@@ -149,6 +153,8 @@ const copy = {
     imported: 'Dane importowane',
     capacity: 'Zmiana dostępnej zdolności względem planu bazowego',
     inaccessible: 'Lokalizacja niedostępna dla zespołów',
+    unavailableTeam: 'Zespół tymczasowo niedostępny',
+    unavailableTeamHint: 'Sprawdź zmianę planu, gdy jeden zespół nie może pracować w tym horyzoncie.',
     none: 'Brak',
     state: 'DANE I BIEŻĄCA SYTUACJA',
     communities: 'Społeczności',
@@ -223,6 +229,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   const [error, setError] = useState<string | null>(null)
   const [capacityFactor, setCapacityFactor] = useState(100)
   const [blockedCommunity, setBlockedCommunity] = useState('')
+  const [unavailableTeam, setUnavailableTeam] = useState('')
   const [lastInput, setLastInput] = useState<Record<string, unknown> | null>(null)
   const [manualSelected, setManualSelected] = useState<EvaluatedManualAllocation | null>(null)
   const [runRevision, setRunRevision] = useState(0)
@@ -266,6 +273,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   function resetRunState() {
     setCapacityFactor(100)
     setBlockedCommunity('')
+    setUnavailableTeam('')
     setResult(null)
     setLastInput(null)
     setManualSelected(null)
@@ -297,6 +305,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     const scenario = {
       capacity_factor: capacityFactor / 100,
       inaccessible_communities: blockedCommunity ? [blockedCommunity] : [],
+      unavailable_teams: unavailableTeam ? [unavailableTeam] : [],
     }
     try {
       const nextResult = await runResourceAllocationScenario(
@@ -739,16 +748,17 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 >
                   <summary className="cursor-pointer p-6 text-lg font-black">05 · {t.simulate}</summary>
                   <div className="border-t border-white/10 p-6">
-                    {(capacityFactor !== 100 || blockedCommunity) && (
+                    {(capacityFactor !== 100 || blockedCommunity || unavailableTeam) && (
                       <div className="mb-5 border-l-2 border-amber-300 bg-amber-300/[0.06] px-4 py-3 text-sm">
                         <b className="text-amber-200">{t.scenarioChanged}</b>
                         <div className="mt-1 text-slate-400">
                           {t.capacity}: {capacityFactor}%
                           {blockedCommunity ? ` · ${t.inaccessible}: ${blockedCommunity}` : ''}
+                          {unavailableTeam ? ` · ${t.unavailableTeam}: ${unavailableTeam}` : ''}
                         </div>
                       </div>
                     )}
-                    <div className="grid gap-5 md:grid-cols-2">
+                    <div className="grid gap-5 md:grid-cols-3">
                       <label className="text-sm">
                         <span className="flex justify-between gap-3">
                           <span>{t.capacity}</span>
@@ -778,6 +788,23 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                           {blockableCommunities.map((name) => (
                             <option key={name} value={name}>
                               {name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-sm">
+                        <span>{t.unavailableTeam}</span>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-500">{t.unavailableTeamHint}</p>
+                        <select
+                          data-testid="unavailable-team"
+                          className="mt-3 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
+                          value={unavailableTeam}
+                          onChange={(event) => setUnavailableTeam(event.target.value)}
+                        >
+                          <option value="">{t.none}</option>
+                          {teamIds.map((team) => (
+                            <option key={team} value={team}>
+                              {team}
                             </option>
                           ))}
                         </select>
