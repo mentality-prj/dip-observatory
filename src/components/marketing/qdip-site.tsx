@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Play } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
-import { marketingLocaleHref } from '@/lib/platform-urls'
+import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { QdipLogo } from './qdip-logo'
 import { MarketingHeader } from './marketing-header'
@@ -29,7 +29,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
             <p>{c.hero[3]}</p>
             <strong className={styles.human}>{c.hero[4]}</strong>
             <div className={styles.heroActions}>
-              <Link className={styles.primaryButtonLarge} href={path(locale, 'use-cases')}><Play size={16} />{c.hero[5]}</Link>
+              <Link className={styles.primaryButtonLarge} href={observatoryHref('', locale)}><Play size={16} />{c.hero[5]}</Link>
               <Link className={styles.secondaryButton} href={path(locale, 'how-it-works')}>{c.nav[0]} <ArrowRight size={15} /></Link>
             </div>
           </div>
