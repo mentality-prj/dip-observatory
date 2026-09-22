@@ -1,40 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, CircleAlert, Clipboard, Download, Flag, Gauge, History, X } from 'lucide-react'
+import { Check, CircleAlert, Clipboard, Download, Flag, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
-import { localizeService, trackResourceAllocation } from '../presentation'
+import { trackResourceAllocation } from '../presentation'
 
-type CapacityRecommendation = {
-  resource: string
-  extra_team_equivalents: number
-  added_capacity: number
-  priority_coverage: number
-  delta_priority_coverage: number
-  marginal_gain: number
-  diminishing_returns: boolean
-  target_reached: boolean
-}
-type CapacityBottleneck = {
-  resource: string
-  priority_demand: number
-  available_capacity: number
-  capacity_shortfall: number
-  first_increment_gain: number
-  binding: boolean
-}
-type CapacityGap = {
-  status: 'ok' | 'infeasible'
-  operation: 'capacity_gap'
-  current?: { priority_coverage?: number }
-  target_priority_coverage?: number
-  gap_to_target?: number
-  target_status?: 'already_met' | 'gap'
-  minimum_capacity_to_target?: CapacityRecommendation[]
-  bottlenecks?: CapacityBottleneck[]
-  marginal_scenarios?: CapacityRecommendation[]
-}
 type Feedback = {
   status: 'accepted' | 'modified' | 'rejected'
   reason?: string | null
@@ -384,8 +355,6 @@ export function ResourceAllocationDecisionPanel({
   locale = 'uk',
 }: Props) {
   const t = copy[locale]
-  const [capacity, setCapacity] = useState<CapacityGap | null>(null)
-  const [targetCoverage, setTargetCoverage] = useState(0.9)
   const [lifecycle, setLifecycle] = useState<Lifecycle>(null)
   const [record, setRecord] = useState<DecisionRecord | null>(null)
   const [reason, setReason] = useState('')
@@ -404,22 +373,6 @@ export function ResourceAllocationDecisionPanel({
     setRecord(payload)
     setLifecycle({ decisionId: payload.decision_id, status: payload.status })
     return payload
-  }
-  async function capacityGap() {
-    setBusy('capacity')
-    setError(null)
-    try {
-      setCapacity(
-        await post<CapacityGap>('/api/resource-allocation/capacity-gap', {
-          ...input,
-          target_priority_coverage: targetCoverage,
-        })
-      )
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Capacity analysis failed')
-    } finally {
-      setBusy(null)
-    }
   }
   async function decide(status: 'accepted' | 'modified' | 'rejected') {
     if ((status === 'modified' || status === 'rejected') && !reason.trim()) {
@@ -542,146 +495,11 @@ export function ResourceAllocationDecisionPanel({
       setBusy(null)
     }
   }
-  const recommendations = capacity?.minimum_capacity_to_target ?? []
-  const bindingBottlenecks = capacity?.bottlenecks?.filter((item) => item.binding) ?? []
   const status = record?.status ?? lifecycle?.status
   return (
     <div className="grid min-w-0 max-w-full gap-5">
-      <details
-        data-testid="capacity-gap-details"
-        className="order-2 min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-slate-950/70 text-white"
-      >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-6">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.capacity}</div>
-            <h3 className="mt-2 text-xl font-medium">{t.capacityTitle}</h3>
-          </div>
-          <Gauge className="h-6 w-6" />
-        </summary>
-        <div className="border-t border-white/10 p-6 pt-5">
-          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-            <label className="text-sm">
-              <span className="block text-white/55">{t.target}</span>
-              <select
-                value={targetCoverage}
-                onChange={(event) => {
-                  setTargetCoverage(Number(event.target.value))
-                  setCapacity(null)
-                }}
-                className="mt-2 w-full border border-white/15 bg-slate-950 p-3 text-white [color-scheme:dark]"
-              >
-                {[0.8, 0.9, 0.95, 1].map((value) => (
-                  <option key={value} value={value}>
-                    {Math.round(value * 100)}%
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="button"
-              disabled={Boolean(busy)}
-              onClick={capacityGap}
-              className="border border-white/25 px-4 py-3 text-sm font-bold disabled:opacity-40"
-            >
-              {busy === 'capacity' ? t.analyzing : t.analyze}
-            </button>
-          </div>
-          <div className="mt-3 text-xs text-white/45">
-            {t.currentCoverage}: <b className="text-white">{Math.round(priorityCoverage * 100)}%</b>
-          </div>
-          {capacity && (
-            <div className="mt-5 space-y-4 text-sm">
-              {capacity.status === 'infeasible' ? (
-                <div className="border border-rose-300/40 p-4 text-rose-200">{t.infeasible}</div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="border border-white/15 p-3">
-                      <span className="text-white/50">{t.gap}</span>
-                      <b className="mt-1 block text-xl">{Math.round((capacity.gap_to_target ?? 0) * 100)} pp</b>
-                    </div>
-                    <div className="border border-white/15 p-3">
-                      <span className="text-white/50">{t.status}</span>
-                      <b className="mt-1 block text-xl">
-                        {capacity.target_status === 'already_met' ? t.reached : t.gapStatus}
-                      </b>
-                    </div>
-                  </div>
-                  {capacity.target_status === 'already_met' && (
-                    <div className="border-l-2 border-emerald-400 pl-3">
-                      {locale === 'uk'
-                        ? `Поточне покриття вже досягає ${Math.round(targetCoverage * 100)}%. Додаткові ресурси не потрібні.`
-                        : locale === 'pl'
-                          ? `Bieżące pokrycie już osiąga ${Math.round(targetCoverage * 100)}%. Dodatkowe zasoby nie są potrzebne.`
-                          : `Current coverage already reaches ${Math.round(targetCoverage * 100)}%. No additional resources are required.`}
-                    </div>
-                  )}
-                  {capacity.target_status === 'gap' && recommendations.length === 0 && (
-                    <div className="border-l-2 border-amber-300 pl-3">
-                      {locale === 'uk'
-                        ? `Навіть протестоване додавання ресурсів не забезпечує ${Math.round(targetCoverage * 100)}%. Нижче показані обмеження, які стримують результат.`
-                        : locale === 'pl'
-                          ? `Nawet testowane zwiększenie zasobów nie zapewnia ${Math.round(targetCoverage * 100)}%. Poniżej pokazano ograniczenia blokujące wynik.`
-                          : `The tested resource additions do not reach ${Math.round(targetCoverage * 100)}%. Review the binding constraints below.`}
-                    </div>
-                  )}
-                  {recommendations.length > 0 && (
-                    <div>
-                      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{t.additions}</div>
-                      <div className="space-y-2">
-                        {recommendations.map((item) => (
-                          <div key={`${item.resource}-${item.added_capacity}`} className="border border-white/15 p-3">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <b>{localizeService(item.resource, locale)}</b>
-                              <span>
-                                +{item.extra_team_equivalents} {t.teamEq} · +{item.added_capacity.toFixed(0)}{' '}
-                                {t.capacityUnit}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-xs text-white/50">
-                              {t.priority} {Math.round(item.priority_coverage * 100)}% · {t.improvement} +
-                              {(item.delta_priority_coverage * 100).toFixed(1)} pp
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {bindingBottlenecks.length > 0 && (
-                    <div>
-                      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">
-                        {t.bottlenecks}
-                      </div>
-                      {bindingBottlenecks.slice(0, 4).map((item) => (
-                        <div
-                          key={item.resource}
-                          className="grid grid-cols-[1fr_auto] gap-3 border-t border-white/10 py-2"
-                        >
-                          <span>
-                            {localizeService(item.resource, locale)}
-                            <span className="block text-xs text-white/45">
-                              {t.demand} {item.priority_demand.toFixed(0)} · {t.available}{' '}
-                              {item.available_capacity.toFixed(0)}
-                            </span>
-                          </span>
-                          <b className="text-right">
-                            {t.shortfall} {item.capacity_shortfall.toFixed(0)}
-                            <span className="block text-xs font-normal text-white/45">
-                              +{(item.first_increment_gain * 100).toFixed(1)} pp {t.firstTeam}
-                            </span>
-                          </b>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </details>
       <section className="order-1 min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-6">
-        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">04 · {t.decision}</div>
+        <div className="text-xs font-bold uppercase tracking-wider text-rose-300">06 · {t.decision}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-medium">{t.decisionTitle}</h3>
           {status && <span className="border border-white/10 px-3 py-1 text-xs font-bold uppercase">{status}</span>}

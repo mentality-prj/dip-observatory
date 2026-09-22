@@ -236,11 +236,15 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   await expect(page.getByTestId('resource-scenario-details')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
-  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
   await expect(page.getByText('Reference manual plan').first()).toBeVisible()
   await expect(page.getByText('+20', { exact: true })).toBeVisible()
   await expect(page.getByText('more demand units', { exact: true })).toBeVisible()
   await expect(page.getByText('without adding teams', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('resource-why-details')).toBeVisible()
+  await expect(page.getByText('03 · WHY QDIP RECOMMENDS THIS PLAN')).toBeVisible()
+  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
+  await expect(page.getByTestId('capacity-gap-details')).toHaveCount(0)
+  await expect(page.getByTestId('resource-pilot-cta')).toBeVisible()
   await expect(
     page.getByLabel(
       'Share of priority demand units the modelled plan can serve across the full planning horizon.'
@@ -436,9 +440,7 @@ test('client can simulate an operational disruption after seeing value', async (
   expect(scenario.inaccessible_communities).toEqual(['Краматорський напрямок'])
 })
 
-test('capacity gap handles success and non-JSON backend errors', async ({ page }) => {
-  let capacityCalls = 0
-
+test('non-horizon capacity gap stays out of the client demo', async ({ page }) => {
   await page.route('**/api/resource-allocation/run', async (route) => {
     await route.fulfill({
       status: 200,
@@ -451,60 +453,11 @@ test('capacity gap handles success and non-JSON backend errors', async ({ page }
     })
   })
 
-  await page.route('**/api/resource-allocation/capacity-gap', async (route) => {
-    capacityCalls += 1
-    if (capacityCalls === 1) {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          status: 'ok',
-          operation: 'capacity_gap',
-          current: { priority_coverage: 0.86 },
-          target_priority_coverage: 0.9,
-          gap_to_target: 0.04,
-          target_status: 'gap',
-          minimum_capacity_to_target: [
-            {
-              resource: 'psychosocial',
-              extra_team_equivalents: 1,
-              added_capacity: 16,
-              priority_coverage: 0.91,
-              delta_priority_coverage: 0.05,
-              marginal_gain: 0.05,
-              diminishing_returns: false,
-              target_reached: true,
-            },
-          ],
-          bottlenecks: [],
-          marginal_scenarios: [],
-        }),
-      })
-      return
-    }
-
-    await route.fulfill({
-      status: 502,
-      contentType: 'text/plain',
-      body: 'An error occurred while executing capacity analysis',
-    })
-  })
-
   await page.goto('/en/resource-allocation')
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
-  await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
 
-  await page.getByTestId('capacity-gap-details').locator('summary').click()
-
-  const analyze = page.getByRole('button', {
-    name: 'Calculate required resources',
-  })
-
-  await analyze.click()
-  await expect(page.getByText('Gap to target')).toBeVisible()
-  await expect(page.getByText('Psychosocial support')).toBeVisible()
-
-  await analyze.click()
-  await expect(page.getByText('An error occurred while executing capacity analysis')).toBeVisible()
-  await expect(page.getByText(/Unexpected token/)).toHaveCount(0)
+  await expect(page.getByTestId('capacity-gap-details')).toHaveCount(0)
+  await expect(page.getByText('WHAT IS NEEDED FOR A BETTER RESULT')).toHaveCount(0)
+  await expect(page.getByText('06 · MAKE THE DECISION')).toBeVisible()
+  await expect(page.getByTestId('resource-pilot-cta')).toContainText('07 · TEST ON YOUR DATA')
 })
