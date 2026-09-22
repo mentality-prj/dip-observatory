@@ -6,8 +6,12 @@ import { Button, CardContent, CardDescription, CardHeader, CardTitle } from '@/d
 import { observatoryHref } from '@/lib/platform-urls'
 import { studioRequest, type Audit, type Profile } from './contracts'
 import { JsonField, SchemaField, schemaDefault } from './schema-form'
+import { studioCopy } from './studio-copy'
+import { useStudioLocale } from './use-studio-locale'
 
 export function ProfileRunner({ profile }: { profile: Profile }) {
+  const locale = useStudioLocale()
+  const copy = studioCopy(locale).runner
   const [context, setContext] = useState(schemaDefault(profile.context_schema))
   const [input, setInput] = useState<unknown>({})
   const [result, setResult] = useState<Audit | null>(null)
@@ -37,9 +41,9 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
       }}
     >
       <CardHeader>
-        <CardTitle>Evaluate {profile.name}</CardTitle>
+        <CardTitle>{copy.evaluate} {profile.name}</CardTitle>
         <CardDescription>
-          Supply context for this execution. The result will be recorded in Observatory.
+          {copy.description}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -47,11 +51,11 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
           schema={profile.context_schema}
           value={context}
           onChange={setContext}
-          label="Runtime decision context"
+          label={copy.runtimeContext}
         />
-        <JsonField label="Plugin capability input" value={input} onChange={setInput} />
+        <JsonField label={copy.pluginInput} value={input} onChange={setInput} />
         <Button disabled={busy} type="submit">
-          {busy ? 'Evaluating…' : 'Evaluate alternatives'}
+          {busy ? copy.evaluating : copy.evaluateAlternatives}
         </Button>
         {error && (
           <div role="alert" className="studio-error">
@@ -60,9 +64,9 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
         )}
         {result && (
           <div className="studio-success" role="status">
-            {result.status}: {result.selected_alternative ?? 'No feasible alternative'}.{' '}
+            {result.status}: {result.selected_alternative ?? copy.noAlternative}.{' '}
             <Link href={observatoryHref(`decisions?decision=${encodeURIComponent(result.decision_id)}`)}>
-              Inspect decision and audit
+              {copy.inspect}
             </Link>
           </div>
         )}
