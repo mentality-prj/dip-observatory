@@ -40,7 +40,7 @@ export function JsonField({
   }, [error])
   return (
     <label className="studio-field" htmlFor={id}>
-      {resolvedLabel}
+      {label}
       <Textarea
         ref={inputRef}
         id={id}
