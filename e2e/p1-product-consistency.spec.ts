@@ -8,14 +8,14 @@ const heroCta = {
 
 const demoNames = {
   en: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
-  uk: ['Розподіл ресурсів', 'Gas Decision', 'GTM Lab'],
+  uk: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
   pl: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
 } as const
 
 const proofArtifacts = {
   en: ['Audit trace', 'Baseline comparison', 'Deterministic replay'],
-  uk: ['Audit trace', 'Порівняння з baseline', 'Детермінований replay'],
-  pl: ['Audit trace', 'Porównanie z baseline', 'Deterministyczny replay'],
+  uk: ['Аудит рішення', 'Порівняння з базовим сценарієм', 'Детерміноване відтворення'],
+  pl: ['Ślad audytowy decyzji', 'Porównanie ze scenariuszem bazowym', 'Deterministyczne odtworzenie'],
 } as const
 
 const decisionPreview = {
