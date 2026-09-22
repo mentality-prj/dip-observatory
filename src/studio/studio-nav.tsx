@@ -5,29 +5,29 @@ import { usePathname } from 'next/navigation'
 import { Boxes, Braces, GitBranch, SlidersHorizontal, Telescope } from 'lucide-react'
 import { observatoryHref, studioHref } from '@/lib/platform-urls'
 import { studioSectionFromPath } from './studio-locale'
+import { studioCopy } from './studio-copy'
 import { useStudioLocale } from './use-studio-locale'
-
-const items = [
-  { section: 'profiles', label: 'Decisions', description: 'Alternatives, evaluation, constraints, validation and runs', icon: SlidersHorizontal },
-] as const
-
-const platformItems = [
-  { section: 'plugins', label: 'Evidence Sources', description: 'Domain capabilities and evidence providers', icon: Boxes },
-  { section: 'bindings', label: 'Evidence Mapping', description: 'Map evidence outputs into the decision model', icon: GitBranch },
-  { section: 'dimensions', label: 'Evaluation Contracts', description: 'Reusable platform evaluation contracts', icon: Braces },
-] as const
-
-function isActive(pathname: string, section: string) {
-  const activeSection = studioSectionFromPath(pathname)
-  return activeSection === section || activeSection.startsWith(`${section}/`)
-}
 
 export function StudioNav() {
   const pathname = usePathname()
   const locale = useStudioLocale()
+  const c = studioCopy(locale)
   const localizedHref = (section: string) => studioHref(section, locale)
+  const items = [
+    { section: 'profiles', label: c.nav.decisions, description: c.nav.decisionsDescription, icon: SlidersHorizontal },
+  ] as const
+  const platformItems = [
+    { section: 'plugins', label: c.nav.evidenceSources, description: c.nav.evidenceSourcesDescription, icon: Boxes },
+    { section: 'bindings', label: c.nav.evidenceMapping, description: c.nav.evidenceMappingDescription, icon: GitBranch },
+    { section: 'dimensions', label: c.nav.evaluationContracts, description: c.nav.evaluationContractsDescription, icon: Braces },
+  ] as const
+
+  const isActive = (section: string) => {
+    const activeSection = studioSectionFromPath(pathname)
+    return activeSection === section || activeSection.startsWith(`${section}/`)
+  }
   const renderItem = ({ section, label, description, icon: Icon }: (typeof items)[number] | (typeof platformItems)[number]) => (
-    <Link key={section} aria-current={isActive(pathname, section) ? 'page' : undefined} href={localizedHref(section)}>
+    <Link key={section} aria-current={isActive(section) ? 'page' : undefined} href={localizedHref(section)}>
       <span className="studio-nav-icon" aria-hidden><Icon size={16} /></span>
       <span className="studio-nav-copy"><strong>{label}</strong><small className="sr-only">{description}</small></span>
     </Link>
@@ -35,13 +35,13 @@ export function StudioNav() {
 
   return (
     <nav aria-label="QDIP Studio">
-      <span className="studio-nav-label">DECISION WORKSPACE</span>
+      <span className="studio-nav-label">{c.nav.decisionWorkspace}</span>
       {items.map(renderItem)}
-      <span className="studio-nav-label">ADVANCED · PLATFORM</span>
+      <span className="studio-nav-label">{c.nav.advancedPlatform}</span>
       {platformItems.map(renderItem)}
       <Link href={observatoryHref('', locale)}>
         <span className="studio-nav-icon" aria-hidden><Telescope size={16} /></span>
-        <span className="studio-nav-copy"><strong>Open Observatory</strong></span>
+        <span className="studio-nav-copy"><strong>{c.nav.openObservatory}</strong></span>
       </Link>
     </nav>
   )
