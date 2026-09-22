@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import {
   assertResourceAllocationAccess,
+  assertResourceAllocationDecisionAccess,
   assertSameOriginMutation,
   ResourceAllocationAccessError,
 } from './access'
@@ -63,6 +64,31 @@ describe('Resource Allocation pilot access', () => {
         { provenance: { source: 'client-import:week.csv' } }
       )
     ).toThrowError(ResourceAllocationAccessError)
+  })
+
+  it('requires pilot access for persisted client-import decisions', () => {
+    process.env.QDIP_RESOURCE_ALLOCATION_PILOT_KEY = 'pilot-secret'
+    const decision = { provenance: { source: 'client-import:week.csv' } }
+
+    expect(() =>
+      assertResourceAllocationDecisionAccess(
+        request({ 'x-qdip-pilot-key': 'pilot-secret' }),
+        decision
+      )
+    ).not.toThrow()
+
+    expect(() => assertResourceAllocationDecisionAccess(request(), decision)).toThrowError(
+      ResourceAllocationAccessError
+    )
+  })
+
+  it('keeps synthetic persisted decisions readable without pilot access', () => {
+    process.env.QDIP_RESOURCE_ALLOCATION_PILOT_KEY = 'pilot-secret'
+    expect(() =>
+      assertResourceAllocationDecisionAccess(request(), {
+        provenance: { source: 'responsible-citizens-canonical-v1' },
+      })
+    ).not.toThrow()
   })
 
   it('rejects cross-origin mutations', () => {
