@@ -58,8 +58,34 @@ test.describe('Studio responsive shell', () => {
       // wordmark asset while tablet/desktop keep the shared ProductHeader geometry.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       if (viewport.width <= 760) {
-        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+        const cascade = await status.evaluate((element) => {
+          const parent = element.parentElement as Element
+          const matches: Array<{ href: string | null; media: string | null; css: string }> = []
+          const visitRules = (rules: CSSRuleList, href: string | null, media: string | null) => {
+            for (const rule of Array.from(rules)) {
+              if (rule instanceof CSSMediaRule) {
+                if (matchMedia(rule.conditionText).matches) visitRules(rule.cssRules, href, rule.conditionText)
+                continue
+              }
+              if (rule instanceof CSSStyleRule && parent.matches(rule.selectorText)) {
+                if (rule.style.marginLeft || rule.style.margin) {
+                  matches.push({ href, media, css: rule.cssText })
+                }
+              }
+            }
+          }
+          for (const sheet of Array.from(document.styleSheets)) {
+            try {
+              visitRules(sheet.cssRules, sheet.href, null)
+            } catch {}
+          }
+          return {
+            computedMarginLeft: getComputedStyle(parent).marginLeft,
+            matches,
+          }
+        })
+        expect(brandGap, JSON.stringify(cascade)).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap, JSON.stringify(cascade)).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
       } else {
         expect(brandGap).toBeGreaterThanOrEqual(0)
         expect(brandGap).toBeLessThanOrEqual(2)
