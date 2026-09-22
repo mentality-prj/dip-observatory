@@ -1,5 +1,6 @@
 import type { Locale } from '@/lib/observatory-i18n'
 import type { DecisionPatternId } from '@/product/experience'
+import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 
 export type LocalizedText = Record<Locale, string>
 export type UseCaseIcon = 'heart' | 'sparkles'
@@ -27,9 +28,9 @@ const useCases = [
     navigation: visible(10),
     decisionPattern: 'decide',
     title: {
-      en: 'Gas Decision',
-      uk: 'Gas Decision',
-      pl: 'Gas Decision',
+      en: PUBLIC_DEMO_NAMES.gasDecision,
+      uk: PUBLIC_DEMO_NAMES.gasDecision,
+      pl: PUBLIC_DEMO_NAMES.gasDecision,
     },
     description: {
       en: 'Market inputs, data providers and gas forecasting decision support in one workspace.',
@@ -45,7 +46,11 @@ const useCases = [
     route: '/resource-allocation',
     navigation: visible(20),
     decisionPattern: 'allocate',
-    title: { en: 'Resource Allocation', uk: 'Розподіл ресурсів', pl: 'Resource Allocation' },
+    title: {
+      en: PUBLIC_DEMO_NAMES.resourceAllocation,
+      uk: PUBLIC_DEMO_NAMES.resourceAllocation,
+      pl: PUBLIC_DEMO_NAMES.resourceAllocation,
+    },
     description: {
       en: 'Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.',
       uk: 'Розподіл гуманітарних мобільних команд з урахуванням пропускної здатності, навичок, доступності та обмежень на переміщення.',
@@ -60,7 +65,11 @@ const useCases = [
     route: '/gtm-lab',
     navigation: visible(30),
     decisionPattern: 'prioritize',
-    title: { en: 'GTM Lab', uk: 'GTM Lab', pl: 'GTM Lab' },
+    title: {
+      en: PUBLIC_DEMO_NAMES.gtmLab,
+      uk: PUBLIC_DEMO_NAMES.gtmLab,
+      pl: PUBLIC_DEMO_NAMES.gtmLab,
+    },
     description: {
       en: 'Evaluate commercial opportunities under incomplete market evidence and decide whether to pursue, research or skip.',
       uk: 'Оцінка комерційних можливостей за неповних ринкових даних: опрацювати, дослідити або відхилити.',
