@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { importResourceAllocationFile, summarizeResourceAllocationImport } from './importer'
 
-function csvFile(lines: string[], name = 'pilot.csv') {
-  return new File([lines.join('\n')], name, { type: 'text/csv' })
+function csvFile(lines: string[], name = 'pilot.csv'): File {
+  const content = lines.join('\n')
+  return {
+    name,
+    text: async () => content,
+    arrayBuffer: async () => new TextEncoder().encode(content).buffer,
+  } as File
 }
 
 const header =
