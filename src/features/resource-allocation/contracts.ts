@@ -81,6 +81,7 @@ export type ResourceAllocationResult = {
 export type ResourceAllocationScenario = {
   capacity_factor?: number
   inaccessible_communities?: string[]
+  unavailable_teams?: string[]
 }
 
 export type ResourceAllocationSimulationResponse = {

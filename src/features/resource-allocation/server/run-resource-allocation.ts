@@ -216,13 +216,7 @@ function coreInput(input: Input): Record<string, unknown> {
   delete rest.baseline_plan
   return {
     ...rest,
-    provenance: provenance
-      ? {
-          source: provenance.source,
-          imported_at: provenance.imported_at,
-          mapping_version: provenance.mapping_version,
-        }
-      : provenance,
+    provenance: provenance ? { ...provenance } : provenance,
   }
 }
 

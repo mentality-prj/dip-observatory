@@ -161,6 +161,28 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>
+    if (body.operation === 'evaluate_manual') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          aggregate_metrics: {
+            priority_coverage: 0.81,
+            total_coverage: 0.75,
+            travel_cost: 0,
+          },
+          demand_summary: {
+            total_available: 128,
+            served: 96,
+            closing_unmet: 32,
+            priority_coverage: 0.81,
+          },
+        }),
+      })
+      return
+    }
+
     const communities = Array.isArray(body.communities) ? body.communities : []
     sawResponsibleCitizensInput = communities.some(
       (item) =>
@@ -268,12 +290,73 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
   expect(download.suggestedFilename()).toMatch(/^qdip-resource-allocation-\d{4}-\d{2}-\d{2}\.csv$/)
 
   await page.getByText('After the plan is executed', { exact: true }).click()
-  await page.getByLabel('Actual priority-needs coverage, %').fill('81')
-  await page.getByLabel('Demand units actually covered').fill('96')
-  await page.getByLabel('Demand units actually left uncovered').fill('32')
+
+  const actualColumns = [
+    'record_type',
+    'id',
+    'day',
+    'community',
+    'service',
+    'units',
+    'priority',
+    'program',
+    'current_community',
+    'skills',
+    'capacity',
+    'available',
+    'accessible',
+    'max_teams',
+    'allowed_communities',
+    'allowed_programs',
+    'programs',
+    'max_daily_capacity',
+    'max_travel_cost',
+    'max_travel_minutes',
+    'cost_per_capacity',
+    'from',
+    'to',
+    'cost',
+    'minutes',
+    'days',
+    'budget',
+    'target_priority_coverage',
+    'planning_unit',
+    'team',
+  ] as const
+  const actualRow = (
+    values: Partial<Record<(typeof actualColumns)[number], string | number | boolean>>
+  ) => actualColumns.map((column) => String(values[column] ?? '')).join(',')
+  const actualCsv = [
+    actualColumns.join(','),
+    actualRow({ record_type: 'settings', days: 'Mon', planning_unit: 'consultation' }),
+    actualRow({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 1 }),
+    actualRow({ record_type: 'demand', community: 'Hub A', service: 'psychosocial', units: 128, priority: 'high' }),
+    actualRow({
+      record_type: 'team',
+      id: 'Team A',
+      current_community: 'Hub A',
+      skills: 'psychosocial',
+      capacity: 96,
+    }),
+    actualRow({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
+  ].join('\n')
+
+  const actualChooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Import actual week' }).click()
+  await (await actualChooser).setFiles({
+    name: 'actual-week.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(actualCsv),
+  })
+
+  await expect(page.getByTestId('actual-week-imported')).toContainText('actual-week.csv')
+  await expect(page.getByLabel('Actual priority-needs coverage, %')).toHaveValue('81')
+  await expect(page.getByLabel('Demand units actually covered')).toHaveValue('96')
+  await expect(page.getByLabel('Demand units actually left uncovered')).toHaveValue('32')
+
   await page
     .getByPlaceholder('What actually happened after the decision was executed')
-    .fill('Executed with one field change')
+    .fill('Imported observed week')
   await page.getByRole('button', { name: 'Record actual outcome' }).click()
   await expect(page.getByText('Decision completed.')).toBeVisible()
   await expect(page.getByText('Actual outcome recorded')).toBeVisible()
@@ -340,7 +423,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'community,Hub A,,,,,,,,2,,,,,,',
     'demand,,Hub A,psychosocial,12,high,,,,,,,,,,',
     'team,Team A,,,,,Hub A,psychosocial,10,,,,,,,',
-    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
+    'settings,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
   ].join('\n')
 
   const input = page.locator('input[type="file"]')
@@ -363,7 +446,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'demand,,Hub B,legal,8,normal,,,,,,,,,,',
     'team,Team A,,,,,Hub A,psychosocial|legal,10,,,,,,,',
     'team,Team B,,,,,Hub B,legal,8,,,,,,,',
-    'settings,,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
+    'settings,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,120',
   ].join('\n')
 
   const dropzone = page.getByTestId('resource-import-dropzone')
@@ -405,6 +488,125 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
   )
 })
 
+test('real-pilot import sends weekly baseline and daily state without access-code friction', async ({ page }) => {
+  let capturedBody: Record<string, unknown> | null = null
+
+  await page.route('**/api/resource-allocation/run', async (route) => {
+    capturedBody = route.request().postDataJSON() as Record<string, unknown>
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        operation: 'simulate',
+        scenario: capturedBody.scenario ?? {},
+        result: allocationResult,
+      }),
+    })
+  })
+
+  await page.goto('/en/resource-allocation')
+  await page.getByText('Try your own data', { exact: true }).click()
+  await expect(page.locator('input[type="password"]')).toHaveCount(0)
+
+  const columns = [
+    'record_type',
+    'id',
+    'day',
+    'community',
+    'service',
+    'units',
+    'priority',
+    'program',
+    'current_community',
+    'skills',
+    'capacity',
+    'available',
+    'accessible',
+    'max_teams',
+    'allowed_communities',
+    'allowed_programs',
+    'programs',
+    'max_daily_capacity',
+    'max_travel_cost',
+    'max_travel_minutes',
+    'cost_per_capacity',
+    'from',
+    'to',
+    'cost',
+    'minutes',
+    'days',
+    'budget',
+    'target_priority_coverage',
+    'planning_unit',
+    'team',
+  ] as const
+  const row = (values: Partial<Record<(typeof columns)[number], string | number | boolean>>) =>
+    columns.map((column) => String(values[column] ?? '')).join(',')
+
+  const csv = [
+    columns.join(','),
+    row({ record_type: 'settings', days: 'Mon|Tue', planning_unit: 'consultation' }),
+    row({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 2 }),
+    row({ record_type: 'community', community: 'Hub B', accessible: true, max_teams: 2 }),
+    row({ record_type: 'community_day', community: 'Hub B', day: 'Tue', accessible: false }),
+    row({ record_type: 'demand', community: 'Hub A', service: 'psychosocial', units: 10, priority: 'high' }),
+    row({ record_type: 'demand', day: 'Tue', community: 'Hub B', service: 'legal', units: 4, priority: 'critical' }),
+    row({
+      record_type: 'team',
+      id: 'Team A',
+      current_community: 'Hub A',
+      skills: 'psychosocial|legal',
+      capacity: 8,
+    }),
+    row({
+      record_type: 'team',
+      id: 'Team B',
+      current_community: 'Hub B',
+      skills: 'legal',
+      capacity: 6,
+    }),
+    row({ record_type: 'team_day', id: 'Team A', day: 'Tue', available: false, capacity: 0 }),
+    row({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
+    row({ record_type: 'baseline', day: 'Mon', team: 'Team B', community: 'Hub B' }),
+    row({ record_type: 'baseline', day: 'Tue', team: 'Team A', community: 'Hub B' }),
+    row({ record_type: 'baseline', day: 'Tue', team: 'Team B' }),
+  ].join('\n')
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'pilot-week.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(csv),
+  })
+
+  await expect(page.getByTestId('resource-import-summary')).toContainText('provided')
+  await expect(page.getByTestId('resource-import-summary')).toContainText('14')
+  await expect(page.getByTestId('resource-active-summary')).toContainText('2 days')
+
+  await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+  await expect.poll(() => capturedBody !== null).toBe(true)
+
+  const submittedBody = capturedBody as unknown as Record<string, unknown>
+  expect(submittedBody.provenance).toMatchObject({
+    source: 'client-import:pilot-week.csv',
+    mapping_version: 'resource-allocation-import/2',
+    planning_unit: 'consultation',
+  })
+  expect(submittedBody.baseline_plan).toEqual({
+    Mon: { 'Team A': 'Hub A', 'Team B': 'Hub B' },
+    Tue: { 'Team A': 'Hub B', 'Team B': null },
+  })
+
+  const communities = submittedBody.communities as Array<Record<string, unknown>>
+  const hubB = communities.find((community) => community.id === 'Hub B') as Record<string, unknown>
+  expect((hubB.daily_demand as Record<string, unknown>).Tue).toBeDefined()
+  expect((hubB.accessibility as Record<string, unknown>).Tue).toBe(false)
+
+  const teams = submittedBody.teams as Array<Record<string, unknown>>
+  const teamA = teams.find((team) => team.id === 'Team A') as Record<string, unknown>
+  expect((teamA.availability as Record<string, unknown>).Tue).toBe(false)
+  expect((teamA.daily_capacity as Record<string, unknown>).Tue).toBe(0)
+})
+
 test('client can simulate an operational disruption after seeing value', async ({ page }) => {
   const requestBodies: Array<Record<string, unknown>> = []
 
@@ -432,12 +634,15 @@ test('client can simulate an operational disruption after seeing value', async (
   const blocked = page.getByTestId('blocked-community')
   await expect(blocked).toContainText('Краматорський напрямок')
   await blocked.selectOption({ label: 'Краматорський напрямок' })
+  const unavailableTeam = page.getByTestId('unavailable-team')
+  await unavailableTeam.selectOption({ label: 'Мобільна команда 1' })
   await page.getByRole('button', { name: 'Recalculate plan' }).click()
 
   await expect(page.getByText('SCENARIO CHANGED')).toBeVisible()
   expect(requestBodies).toHaveLength(2)
   const scenario = requestBodies[1].scenario as Record<string, unknown>
   expect(scenario.inaccessible_communities).toEqual(['Краматорський напрямок'])
+  expect(scenario.unavailable_teams).toEqual(['Мобільна команда 1'])
 })
 
 test('non-horizon capacity gap stays out of the client demo', async ({ page }) => {

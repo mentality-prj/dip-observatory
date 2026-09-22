@@ -103,6 +103,17 @@ export function buildAllocationCsv(daily: ResourceAllocationDayPlan[], teams: Re
   return '\uFEFF' + rows.map((row) => row.map(csvCell).join(',')).join('\n')
 }
 
+export function buildAllocationShortText(daily: ResourceAllocationDayPlan[], locale: Locale): string {
+  return daily
+    .map((day) => {
+      const assignments = Object.entries(day.recommended.assignments)
+        .map(([team, target]) => `${team} → ${target ?? '—'}`)
+        .join('; ')
+      return `${localizePlanningDay(day.day, locale)}: ${assignments}`
+    })
+    .join('\n')
+}
+
 export type ResourceAllocationAnalyticsEvent =
   | 'ra_demo_opened'
   | 'ra_calculation_started'
@@ -117,6 +128,9 @@ export type ResourceAllocationAnalyticsEvent =
   | 'ra_decision_rejected'
   | 'ra_plan_exported'
   | 'ra_actual_outcome_recorded'
+  | 'ra_pilot_cta_clicked'
+  | 'ra_pilot_dataset_imported'
+  | 'ra_actual_outcome_imported'
 
 export function trackResourceAllocation(
   event: ResourceAllocationAnalyticsEvent,

@@ -4,8 +4,12 @@ import { useRef, useState } from 'react'
 import { CheckCircle2, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { ResourceAllocationInput } from '../contracts'
-import { resourceAllocationStats } from '../demo-data'
-import { importResourceAllocationFile, RESOURCE_ALLOCATION_IMPORT_COLUMNS } from '../importer'
+import {
+  importResourceAllocationFile,
+  RESOURCE_ALLOCATION_IMPORT_COLUMNS,
+  summarizeResourceAllocationImport,
+  type ResourceAllocationImportSummary,
+} from '../importer'
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
 
@@ -25,6 +29,12 @@ const copy = {
     teams: 'команд',
     demand: 'од. потреб',
     replace: 'Замінити файл',
+    days: 'днів',
+    baseline: 'Ручний baseline',
+    baselineYes: 'надано',
+    baselineNo: 'не надано',
+    scheduled: 'майбутніх потреб',
+    rules: 'денних правил доступності',
   },
   en: {
     title: 'Client data',
@@ -41,6 +51,12 @@ const copy = {
     teams: 'teams',
     demand: 'demand units',
     replace: 'Replace file',
+    days: 'days',
+    baseline: 'Manual baseline',
+    baselineYes: 'provided',
+    baselineNo: 'not provided',
+    scheduled: 'scheduled demand',
+    rules: 'daily availability rules',
   },
   pl: {
     title: 'Dane klienta',
@@ -57,6 +73,12 @@ const copy = {
     teams: 'zespołów',
     demand: 'jedn. potrzeb',
     replace: 'Zastąp plik',
+    days: 'dni',
+    baseline: 'Plan ręczny',
+    baselineYes: 'dostarczony',
+    baselineNo: 'brak',
+    scheduled: 'przyszłych potrzeb',
+    rules: 'dziennych reguł dostępności',
   },
 } as const
 
@@ -79,7 +101,7 @@ export function ResourceAllocationImport({
   const [stage, setStage] = useState<ImportStage>('idle')
   const [dragging, setDragging] = useState(false)
   const [fileMeta, setFileMeta] = useState<{ name: string; size: number } | null>(null)
-  const [stats, setStats] = useState<ReturnType<typeof resourceAllocationStats> | null>(null)
+  const [summary, setSummary] = useState<ResourceAllocationImportSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const busy = stage === 'reading' || stage === 'validating'
@@ -87,7 +109,7 @@ export function ResourceAllocationImport({
   async function handleFile(file: File | undefined) {
     if (!file || busy) return
     setFileMeta({ name: file.name, size: file.size })
-    setStats(null)
+    setSummary(null)
     setError(null)
     setStage('reading')
 
@@ -95,9 +117,9 @@ export function ResourceAllocationImport({
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       setStage('validating')
       const imported = await importResourceAllocationFile(file)
-      const nextStats = resourceAllocationStats(imported)
+      const nextSummary = summarizeResourceAllocationImport(imported)
       onImported(imported, file.name)
-      setStats(nextStats)
+      setSummary(nextSummary)
       setStage('ready')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Import failed')
@@ -187,27 +209,44 @@ export function ResourceAllocationImport({
               <div className="h-full w-1/2 animate-pulse rounded-full bg-rose-400" />
             </div>
           </div>
-        ) : stage === 'ready' && fileMeta && stats ? (
+        ) : stage === 'ready' && fileMeta && summary ? (
           <div aria-live="polite">
             <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
             <div className="mt-3 font-bold text-emerald-200">{t.ready}</div>
             <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
               {fileMeta.name} · {formatBytes(fileMeta.size)}
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-left">
+            <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3">
               <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{stats.communities}</b>
+                <b className="block text-lg">{summary.communities}</b>
                 <span className="text-[10px] leading-tight text-slate-500">{t.communities}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{stats.teams}</b>
+                <b className="block text-lg">{summary.teams}</b>
                 <span className="text-[10px] leading-tight text-slate-500">{t.teams}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{stats.openingNeeds}</b>
+                <b className="block text-lg">{summary.horizonDemand}</b>
                 <span className="text-[10px] leading-tight text-slate-500">{t.demand}</span>
               </div>
+              <div className="rounded-lg bg-white/[0.04] p-2">
+                <b className="block text-lg">{summary.days}</b>
+                <span className="text-[10px] leading-tight text-slate-500">{t.days}</span>
+              </div>
+              <div className="rounded-lg bg-white/[0.04] p-2">
+                <b className="block text-sm">{summary.baselineProvided ? t.baselineYes : t.baselineNo}</b>
+                <span className="text-[10px] leading-tight text-slate-500">{t.baseline}</span>
+              </div>
+              <div className="rounded-lg bg-white/[0.04] p-2">
+                <b className="block text-lg">{summary.scheduledDemand}</b>
+                <span className="text-[10px] leading-tight text-slate-500">{t.scheduled}</span>
+              </div>
             </div>
+            {summary.availabilityRules > 0 && (
+              <div className="mt-2 text-left text-[11px] text-slate-500">
+                {summary.availabilityRules} {t.rules}
+              </div>
+            )}
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
