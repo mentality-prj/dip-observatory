@@ -15,6 +15,16 @@ function explicitLocale(pathname: string, searchLocale: string | null): StudioLo
   const first = pathname.split('/').filter(Boolean)[0]
   if (STUDIO_LOCALES.includes(first as StudioLocale)) return first as StudioLocale
   if (STUDIO_LOCALES.includes(searchLocale as StudioLocale)) return searchLocale as StudioLocale
+
+  if (typeof document !== 'undefined') {
+    const cookieLocale = document.cookie
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('qdip-studio-locale='))
+      ?.slice('qdip-studio-locale='.length)
+    if (STUDIO_LOCALES.includes(cookieLocale as StudioLocale)) return cookieLocale as StudioLocale
+  }
+
   return null
 }
 
