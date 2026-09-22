@@ -7,6 +7,7 @@ import { MobileMenu } from './mobile-menu'
 import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { QdipLogo } from './qdip-logo'
 import styles from './qdip-site.module.css'
+import shellStyles from './marketing-shell.module.css'
 
 function marketingPath(locale: MarketingLocale, slug: string) { return `${marketingLocaleHref(locale)}/${slug}` }
 
@@ -30,7 +31,7 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
   return (
     <header className={styles.header}>
       <div className={styles.headerInner}>
-        <Link className={styles.brand} href={marketingLocaleHref(locale)} aria-label={a11y.home}><QdipLogo /></Link>
+        <Link className={`${styles.brand} ${shellStyles.headerBrand}`} href={marketingLocaleHref(locale)} aria-label={a11y.home}><QdipLogo /></Link>
         <nav aria-label={a11y.primaryNavigation} className={styles.nav}>{items.map((item) => <Link href={item.href} key={`${item.href}-${item.label}`}>{item.label}</Link>)}</nav>
         <div className={styles.headerTools}>
           <div className={styles.productLinks} aria-label={a11y.products}>

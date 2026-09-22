@@ -1,11 +1,9 @@
-import Link from 'next/link'
 import { ArrowRight, Play } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
-import { sharedI18n } from '@/lib/product-i18n'
 import { marketingCopy, type MarketingLocale } from './qdip-copy'
-import { QdipLogo } from './qdip-logo'
 import { MarketingHeader } from './marketing-header'
+import { MarketingFooter } from './marketing-footer'
 import { MarketingTrackedLink } from './marketing-analytics'
 import { SignatureDecisionVisual } from './signature-decision-visual'
 import { DecisionPatterns } from './decision-patterns'
@@ -18,7 +16,6 @@ const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(l
 
 export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   const c = marketingCopy[locale]
-  const a11y = sharedI18n[locale]
   const decisionHref = path(locale, 'decision')
   return (
     <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
@@ -56,11 +53,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
           <p>{c.conversion[1]}</p>
           <MarketingTrackedLink event="marketing_decision_intake_click" locale={locale} placement="final_cta" className={styles.primaryButtonLarge} href={decisionHref}>{c.conversion[2]} <ArrowRight size={16} /></MarketingTrackedLink>
         </section>
-        <footer className={styles.footer}>
-          <QdipLogo />
-          <nav aria-label={a11y.footerNavigation}><Link href={path(locale, 'how-it-works')}>{c.nav[0]}</Link><Link href={path(locale, 'use-cases')}>{c.nav[1]}</Link><Link href={path(locale, 'core')}>QDIP Core</Link><Link href={path(locale, 'core/research')}>{locale === 'en' ? 'Research' : locale === 'uk' ? 'Дослідження' : 'Badania'}</Link></nav>
-          <span>© {new Date().getFullYear()} QDIP</span>
-        </footer>
+        <MarketingFooter locale={locale} />
       </main>
     </DesignSystemProvider>
   )
