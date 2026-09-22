@@ -616,6 +616,7 @@
 
 .evidenceStrip {
   width: min(calc(100% - 48px), var(--ds-header-content-max));
+  scroll-margin-top: calc(var(--ds-header-height) + var(--ds-space-4));
   margin: 0 auto;
   padding: var(--ds-space-6) 0;
   border-top: 1px solid var(--line);
