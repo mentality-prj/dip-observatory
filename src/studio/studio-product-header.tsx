@@ -60,7 +60,6 @@ export function StudioProductHeader() {
 
   return (
     <ProductHeader
-      className="studio-product-header"
       href={studioHref('', locale)}
       brandHref={marketingHref(locale)}
       product="Studio"
