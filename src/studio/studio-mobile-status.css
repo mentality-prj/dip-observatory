@@ -1,9 +1,14 @@
 /* Mobile optical alignment for Studio product status.
    ProductLockup keeps a 124px frame so the QDIP artwork is not clipped, but the
    PNG contains transparent horizontal space. On narrow headers the status must
-   follow the visible wordmark edge, not the frame's layout edge. */
+   follow the visible wordmark edge, not the frame's layout edge.
+
+   studio-finish.css also owns this property inside its mobile breakpoint. Next's
+   CSS chunk ordering is not a stable cascade contract, so this narrowly-scoped
+   override is intentionally important until the lockup exposes optical geometry
+   as a design-system token. */
 @media (max-width: 760px) {
   .studio-shell .ds-product-header-brand-status {
-    margin-left: -34px;
+    margin-left: -34px !important;
   }
 }
