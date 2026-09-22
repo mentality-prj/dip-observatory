@@ -128,6 +128,8 @@ export type ResourceAllocationAnalyticsEvent =
   | 'ra_decision_rejected'
   | 'ra_plan_exported'
   | 'ra_actual_outcome_recorded'
+  | 'ra_pilot_cta_clicked'
+  | 'ra_pilot_dataset_imported'
 
 export function trackResourceAllocation(
   event: ResourceAllocationAnalyticsEvent,
