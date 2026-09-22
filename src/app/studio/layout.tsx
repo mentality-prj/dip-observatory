@@ -1,7 +1,6 @@
 import { Suspense, type ReactNode } from 'react'
 import '@/studio/studio.css'
 import '@/studio/studio-finish.css'
-import '@/studio/studio-polish.css'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
 import { StudioNav } from '@/features/studio'
 import { StudioFooter } from '@/studio/studio-footer'
