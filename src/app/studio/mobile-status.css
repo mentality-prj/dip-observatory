@@ -1,8 +1,0 @@
-/* Studio route-local optical alignment.
-   Keep shared ProductLockup geometry unchanged; only overlap the status with
-   the transparent right-side whitespace in the QDIP wordmark on phones. */
-@media (max-width: 760px) {
-  .studio-shell .ds-product-header-brand-status {
-    margin-left: -34px;
-  }
-}
