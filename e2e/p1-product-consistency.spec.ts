@@ -81,11 +81,6 @@ test.describe('P1 Studio localization gate', () => {
 
       const footer = page.locator('.studio-site-footer')
       await expect(footer).toBeVisible()
-      console.log('studio-locale-debug', {
-        expected: locale,
-        url: page.url(),
-        footer: await footer.innerText(),
-      })
       for (const label of footerLabels[locale]) {
         await expect(footer.getByRole('link', { name: label })).toBeVisible()
       }
