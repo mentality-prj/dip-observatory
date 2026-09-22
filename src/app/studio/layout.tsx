@@ -27,6 +27,13 @@ export default async function StudioLayout({ children }: { children: ReactNode }
   return (
     <StudioLocaleProvider initialLocale={locale}>
       <DesignSystemProvider theme="green" mode="light" className="studio-shell">
+        <style>{`
+          @media (max-width: 760px) {
+            .studio-shell .ds-product-header-brand-status {
+              margin-left: -34px;
+            }
+          }
+        `}</style>
         <Suspense
           fallback={
             <ProductHeader
