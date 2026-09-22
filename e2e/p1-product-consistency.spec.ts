@@ -40,11 +40,9 @@ const footerLabels = {
 const locales = ['en', 'uk', 'pl'] as const
 
 test.describe('P1 marketing conversion gate', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'qdip.ai' } })
-
   for (const locale of locales) {
     test(`${locale} hero CTA opens localized Observatory directly`, async ({ page }) => {
-      const response = await page.goto(`/${locale}`)
+      const response = await page.goto(`http://qdip.localhost:3000/${locale}`)
       expect(response?.status()).toBeLessThan(400)
 
       await expect(page.getByRole('link', { name: heroCta[locale] })).toHaveAttribute(
@@ -62,11 +60,9 @@ test.describe('P1 marketing conversion gate', () => {
 })
 
 test.describe('P1 Observatory consistency gate', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'observatory.qdip.ai' } })
-
   for (const locale of locales) {
     test(`${locale} uses canonical public demo names and a concrete decision preview`, async ({ page }) => {
-      const response = await page.goto(`/${locale}`)
+      const response = await page.goto(`http://observatory.localhost:3000/${locale}`)
       expect(response?.status()).toBeLessThan(400)
 
       for (const name of demoNames[locale]) {
@@ -80,11 +76,9 @@ test.describe('P1 Observatory consistency gate', () => {
 })
 
 test.describe('P1 Studio localization gate', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
-
   for (const locale of locales) {
     test(`${locale} footer uses the active Studio locale`, async ({ page }) => {
-      const response = await page.goto(`/${locale}`)
+      const response = await page.goto(`http://studio.localhost:3000/${locale}`)
       expect(response?.status()).toBeLessThan(400)
       await expect(page).toHaveURL(new RegExp(`/${locale}/profiles$`))
 
