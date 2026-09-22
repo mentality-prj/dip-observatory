@@ -1083,10 +1083,12 @@ body:has(.studio-shell)::-webkit-scrollbar-thumb {
 
   .studio-shell .ds-product-header-brand-status {
     margin-left: 0;
-    transform: translate(-34px, -6px);
+    transform: translateY(-6px);
   }
 
   .studio-core-status {
+    position: relative;
+    left: -34px;
     gap: 4px;
     padding: 2px 5px;
     font-size: 0.5rem;
