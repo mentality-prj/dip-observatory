@@ -23,6 +23,7 @@ test.describe('Studio responsive shell', () => {
 
       const shell = page.locator('.studio-shell')
       const lockup = page.locator('.ds-product-lockup')
+      const wordmarkFrame = page.locator('.ds-product-lockup-wordmark-frame')
       const status = page.locator('.studio-core-status')
       const footer = page.locator('.studio-site-footer')
 
@@ -39,12 +40,25 @@ test.describe('Studio responsive shell', () => {
       expect(Math.abs((footerBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(2)
 
       const lockupBox = await lockup.boundingBox()
+      const wordmarkFrameBox = await wordmarkFrame.boundingBox()
       const statusBox = await status.boundingBox()
       expect(lockupBox).not.toBeNull()
+      expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
+
+      // Frozen brand geometry: the frame represents the visible QDIP wordmark width,
+      // so status placement never depends on transparent pixels inside qdip-logo.png.
+      expect(Math.abs((wordmarkFrameBox?.width ?? 0) - 90)).toBeLessThanOrEqual(1)
+      const expectedLeft = viewport.width <= 760 ? 14 : 22
+      expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
+
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
       expect(brandGap).toBeGreaterThanOrEqual(0)
-      expect(brandGap).toBeLessThanOrEqual(8)
+      expect(brandGap).toBeLessThanOrEqual(2)
+
+      const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
+      expect(statusTopOffset).toBeGreaterThanOrEqual(4)
+      expect(statusTopOffset).toBeLessThanOrEqual(10)
 
       if (viewport.width <= 980) {
         await expect(page.getByText('Workspace', { exact: true })).toBeVisible()
