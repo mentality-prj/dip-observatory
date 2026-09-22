@@ -1,4 +1,8 @@
+'use client'
+
 import type { Audit, DimensionResult } from '@/studio/contracts'
+import { studioCopy } from '@/studio/studio-copy'
+import { useStudioLocale } from '@/studio/use-studio-locale'
 
 type GasSignals = {
   current_price_eur_mwh?: number
@@ -39,6 +43,7 @@ function valueText(result?: DimensionResult): string {
 }
 
 export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
+  const copy = studioCopy(useStudioLocale()).gasPanel
   const signals = audit.plugin_outputs as GasSignals
   const evidence = signals.evidence?.[0]
   const baseline = evidence?.model_status === 'baseline'
@@ -49,70 +54,70 @@ export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
       <section className="studio-card gas-forecast-card">
         <header>
           <div>
-            <h2>Gas forecast</h2>
-            <p>{signals.forecast_horizon_days ?? '—'}-day market outlook</p>
+            <h2>{copy.title}</h2>
+            <p>{signals.forecast_horizon_days ?? '—'}-{copy.dayOutlook}</p>
           </div>
-          {baseline && <span className="studio-tag">Baseline model · not production validated</span>}
+          {baseline && <span className="studio-tag">{copy.baseline}</span>}
         </header>
         <div className="gas-metric-grid">
           <div>
-            <span>Current TTF</span>
+            <span>{copy.currentTtf}</span>
             <strong>{eur(signals.current_price_eur_mwh)}</strong>
           </div>
           <div>
-            <span>Expected price</span>
+            <span>{copy.expectedPrice}</span>
             <strong>{eur(signals.expected_price_eur_mwh)}</strong>
           </div>
           <div>
-            <span>Expected change</span>
+            <span>{copy.expectedChange}</span>
             <strong>{eur(signals.expected_price_change_eur_mwh)}</strong>
           </div>
           <div>
-            <span>Expected return</span>
+            <span>{copy.expectedReturn}</span>
             <strong>{pct(signals.expected_return_pct)}</strong>
           </div>
           <div>
-            <span>Price lower</span>
+            <span>{copy.priceLower}</span>
             <strong>{pct(signals.probability_price_down)}</strong>
           </div>
           <div>
-            <span>Price higher</span>
+            <span>{copy.priceHigher}</span>
             <strong>{pct(signals.probability_price_up)}</strong>
           </div>
         </div>
         {distribution && (
-          <div className="gas-range" aria-label="Forecast distribution">
-            <h3>Forecast distribution</h3>
+          <div className="gas-range" aria-label={copy.distribution}>
+            <h3>{copy.distribution}</h3>
             <div>
               <span>P10 {eur(distribution.p10_eur_mwh)}</span>
               <span>P50 {eur(distribution.p50_eur_mwh)}</span>
               <span>P90 {eur(distribution.p90_eur_mwh)}</span>
             </div>
-            <small>P10/P90 describe model distribution quantiles, not a guaranteed range.</small>
+            <small>{copy.distributionHelp}</small>
           </div>
         )}
         <div className="gas-metric-grid">
           <div>
-            <span>Expected saving by waiting</span>
+            <span>{copy.expectedSaving}</span>
             <strong>{eur(signals.expected_saving_eur_mwh)}</strong>
           </div>
           <div>
-            <span>Expected adverse move</span>
+            <span>{copy.adverseMove}</span>
             <strong>{eur(signals.expected_adverse_move_eur_mwh)}</strong>
           </div>
           <div>
-            <span>Forecast uncertainty</span>
+            <span>{copy.uncertainty}</span>
             <strong>{signals.uncertainty == null ? '—' : signals.uncertainty.toFixed(3)}</strong>
-            <small>{signals.uncertainty_calibrated ? 'Calibrated' : 'Not calibrated'}</small>
+            <small>{signals.uncertainty_calibrated ? copy.calibrated : copy.notCalibrated}</small>
           </div>
           <div>
-            <span>Confidence</span>
-            <strong>{signals.confidence == null ? 'Unavailable' : pct(signals.confidence)}</strong>
-            <small>{signals.confidence_calibrated ? 'Calibrated' : 'Not calibrated'}</small>
+            <span>{copy.confidence}</span>
+            <strong>{signals.confidence == null ? copy.unavailable : pct(signals.confidence)}</strong>
+            <small>{signals.confidence_calibrated ? copy.calibrated : copy.notCalibrated}</small>
           </div>
         </div>
         <details>
-          <summary>Data quality & model evidence</summary>
+          <summary>{copy.evidence}</summary>
           <pre>
             {JSON.stringify(
               { data_quality: signals.data_quality, evidence: signals.evidence, provenance: signals.provenance },
@@ -123,19 +128,19 @@ export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
         </details>
       </section>
       <section className="studio-card">
-        <h2>Procurement alternatives</h2>
+        <h2>{copy.procurement}</h2>
         <div className="studio-table-wrap">
           <table className="studio-table">
             <thead>
               <tr>
-                <th>Alternative</th>
-                <th>Expected cost</th>
-                <th>Expected effect</th>
-                <th>Risk</th>
-                <th>Uncertainty</th>
-                <th>Constraints</th>
-                <th>Policy</th>
-                <th>Score</th>
+                <th>{copy.alternative}</th>
+                <th>{copy.expectedCost}</th>
+                <th>{copy.expectedEffect}</th>
+                <th>{copy.risk}</th>
+                <th>{copy.uncertainty}</th>
+                <th>{copy.constraints}</th>
+                <th>{copy.policy}</th>
+                <th>{copy.score}</th>
               </tr>
             </thead>
             <tbody>
@@ -149,7 +154,7 @@ export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
                   >
                     <td>
                       <strong>{alternative.alternative_id}</strong>
-                      {!alternative.feasible && <small className="gas-blocked">INFEASIBLE</small>}
+                      {!alternative.feasible && <small className="gas-blocked">{copy.infeasible}</small>}
                     </td>
                     <td>{valueText(dimension(alternative, 'cost'))}</td>
                     <td>{valueText(dimension(alternative, 'expected_effect'))}</td>
@@ -165,7 +170,7 @@ export default function GasForecastStudioPanel({ audit }: { audit: Audit }) {
           </table>
         </div>
         <p>
-          Selected decision: <strong>{audit.selected_alternative ?? 'No feasible alternative'}</strong>
+          {copy.selectedDecision}: <strong>{audit.selected_alternative ?? copy.noAlternative}</strong>
         </p>
       </section>
     </>
