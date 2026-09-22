@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { QdipLogo } from '@/components/marketing/qdip-logo'
 import marketingStyles from '@/components/marketing/qdip-site.module.css'
 import { marketingHref } from '@/lib/platform-urls'
-import { studioLocaleFromPath, type StudioLocale } from './studio-locale'
+import type { StudioLocale } from './studio-locale'
+import { useStudioLocale } from './use-studio-locale'
 
 const footerCopy: Record<StudioLocale, { how: string; cases: string; core: string; research: string; navLabel: string }> = {
   en: {
@@ -32,9 +32,7 @@ const footerCopy: Record<StudioLocale, { how: string; cases: string; core: strin
 }
 
 export function StudioFooter() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const locale = studioLocaleFromPath(pathname, searchParams.get('lang'))
+  const locale = useStudioLocale()
   const root = marketingHref(locale)
   const c = footerCopy[locale]
 
