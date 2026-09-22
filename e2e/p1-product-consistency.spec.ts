@@ -24,6 +24,13 @@ const decisionPreview = {
   pl: 'Rekomendowany plan alokacji',
 } as const
 
+
+const studioUi = {
+  en: { heading: 'Decision Workspace', decisions: 'Decisions' },
+  uk: { heading: 'Робочий простір рішень', decisions: 'Рішення' },
+  pl: { heading: 'Przestrzeń decyzji', decisions: 'Decyzje' },
+} as const
+
 const footerLabels = {
   en: ['How it works', 'Use cases', 'QDIP Core', 'Research'],
   uk: ['Як це працює', 'Сценарії', 'QDIP Core', 'Дослідження'],
@@ -80,6 +87,9 @@ test.describe('P1 Studio localization gate', () => {
       const response = await page.goto(`/${locale}`)
       expect(response?.status()).toBeLessThan(400)
       await expect(page).toHaveURL(new RegExp(`/${locale}/profiles$`))
+
+      await expect(page.getByRole('heading', { level: 1, name: studioUi[locale].heading })).toBeVisible()
+      await expect(page.getByRole('link', { name: studioUi[locale].decisions }).first()).toBeVisible()
 
       const footer = page.locator('.studio-site-footer')
       await expect(footer).toBeVisible()
