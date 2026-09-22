@@ -505,22 +505,23 @@ test('real-pilot import sends weekly baseline, daily state and access key', asyn
   await expect.poll(() => capturedBody !== null).toBe(true)
 
   expect(capturedPilotKey).toBe('pilot-test-key')
-  expect(capturedBody?.provenance).toMatchObject({
+  const submittedBody = capturedBody as unknown as Record<string, unknown>
+  expect(submittedBody.provenance).toMatchObject({
     source: 'client-import:pilot-week.csv',
     mapping_version: 'resource-allocation-import/2',
     planning_unit: 'consultation',
   })
-  expect(capturedBody?.baseline_plan).toEqual({
+  expect(submittedBody.baseline_plan).toEqual({
     Mon: { 'Team A': 'Hub A', 'Team B': 'Hub B' },
     Tue: { 'Team A': 'Hub B', 'Team B': null },
   })
 
-  const communities = capturedBody?.communities as Array<Record<string, unknown>>
+  const communities = submittedBody.communities as Array<Record<string, unknown>>
   const hubB = communities.find((community) => community.id === 'Hub B') as Record<string, unknown>
   expect((hubB.daily_demand as Record<string, unknown>).Tue).toBeDefined()
   expect((hubB.accessibility as Record<string, unknown>).Tue).toBe(false)
 
-  const teams = capturedBody?.teams as Array<Record<string, unknown>>
+  const teams = submittedBody.teams as Array<Record<string, unknown>>
   const teamA = teams.find((team) => team.id === 'Team A') as Record<string, unknown>
   expect((teamA.availability as Record<string, unknown>).Tue).toBe(false)
   expect((teamA.daily_capacity as Record<string, unknown>).Tue).toBe(0)
