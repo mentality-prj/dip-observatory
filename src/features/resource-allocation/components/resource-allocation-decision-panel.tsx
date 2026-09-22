@@ -40,7 +40,6 @@ type Props = {
   planShortText?: string
   exportFileName?: string
   selectionKind?: 'recommended' | 'alternative'
-  pilotAccessKey?: string
   locale?: Locale
 }
 
@@ -286,16 +285,11 @@ const copy = {
   },
 } as const
 
-async function requestJson<T extends object>(
-  path: string,
-  init?: RequestInit,
-  pilotAccessKey?: string
-): Promise<T> {
+async function requestJson<T extends object>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(pilotAccessKey ? { 'x-qdip-pilot-key': pilotAccessKey } : {}),
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',
@@ -340,12 +334,8 @@ async function requestJson<T extends object>(
 
   return payload as T
 }
-async function post<T extends object>(
-  path: string,
-  body: Record<string, unknown>,
-  pilotAccessKey?: string
-): Promise<T> {
-  return requestJson<T>(path, { method: 'POST', body: JSON.stringify(body) }, pilotAccessKey)
+async function post<T extends object>(path: string, body: Record<string, unknown>): Promise<T> {
+  return requestJson<T>(path, { method: 'POST', body: JSON.stringify(body) })
 }
 function formatTimestamp(value: string, locale: Locale) {
   const language = locale === 'uk' ? 'uk-UA' : locale === 'pl' ? 'pl-PL' : 'en-GB'
@@ -383,7 +373,6 @@ export function ResourceAllocationDecisionPanel({
   planShortText,
   exportFileName,
   selectionKind = 'recommended',
-  pilotAccessKey,
   locale = 'uk',
 }: Props) {
   const t = copy[locale]
@@ -405,9 +394,7 @@ export function ResourceAllocationDecisionPanel({
   const [error, setError] = useState<string | null>(null)
   async function loadDecision(decisionId: string) {
     const payload = await requestJson<DecisionRecord>(
-      `/api/resource-allocation/decisions/${encodeURIComponent(decisionId)}`,
-      undefined,
-      pilotAccessKey
+      `/api/resource-allocation/decisions/${encodeURIComponent(decisionId)}`
     )
     setRecord(payload)
     setLifecycle({ decisionId: payload.decision_id, status: payload.status })
@@ -423,8 +410,7 @@ export function ResourceAllocationDecisionPanel({
     try {
       const created = await post<{ decision_id: string; status: string }>(
         '/api/resource-allocation/decisions',
-        input,
-        pilotAccessKey
+        input
       )
       const body: Record<string, unknown> = { status }
       if (status === 'modified') {
@@ -442,8 +428,7 @@ export function ResourceAllocationDecisionPanel({
       if (status === 'rejected') body.reason = reason.trim()
       await post(
         `/api/resource-allocation/decisions/${encodeURIComponent(created.decision_id)}/feedback`,
-        body,
-        pilotAccessKey
+        body
       )
       await loadDecision(created.decision_id)
       trackResourceAllocation(
@@ -492,8 +477,7 @@ export function ResourceAllocationDecisionPanel({
             operation: 'evaluate_manual',
             manual_allocation: actualInput.baseline_plan,
           }),
-        },
-        pilotAccessKey
+        }
       )
 
       const summary = evaluation.demand_summary
@@ -567,7 +551,7 @@ export function ResourceAllocationDecisionPanel({
           closing_unmet: unmetActual,
         },
         notes: notes || undefined,
-      }, pilotAccessKey)
+      })
       await loadDecision(lifecycle.decisionId)
       trackResourceAllocation('ra_actual_outcome_recorded', locale)
     } catch (e) {
