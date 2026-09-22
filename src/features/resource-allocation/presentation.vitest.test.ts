@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAllocationCsv, localizePlanningDay, summarizeMovements } from './presentation'
+import { buildAllocationCsv, buildAllocationShortText, localizePlanningDay, summarizeMovements } from './presentation'
 
 describe('resource allocation presentation helpers', () => {
   it('distinguishes unique moved teams from move events', () => {
@@ -15,6 +15,32 @@ describe('resource allocation presentation helpers', () => {
     expect(localizePlanningDay('Mon', 'uk')).toBe('Пн')
     expect(localizePlanningDay('Tue', 'pl')).toBe('Wt')
     expect(localizePlanningDay('special-day', 'uk')).toBe('special-day')
+  })
+
+  it('builds a human-readable short plan for clipboard sharing', () => {
+    const text = buildAllocationShortText(
+      [
+        {
+          day: 'Mon',
+          status: 'ok',
+          recommended: {
+            assignments: { 'Team A': 'Hub B', 'Team B': null },
+            metrics: {
+              priority_coverage: 1,
+              total_coverage: 1,
+              unmet_need: 0,
+              capacity_utilization: 1,
+              travel_cost: 0,
+            },
+          },
+          demand: { opening: 10, served: 10, closing_unmet: 0 },
+        },
+      ],
+      'en'
+    )
+
+    expect(text).toBe('Mon: Team A → Hub B; Team B → —')
+    expect(text).not.toContain('day,team,from,to')
   })
 
   it('exports UTF-8 BOM CSV with stable machine columns and escaped values', () => {
