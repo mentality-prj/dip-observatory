@@ -19,7 +19,7 @@ const whyLabels = {
   pl: 'Dlaczego QDIP',
 } as const
 
-test.describe('current marketing demo routing', () => {
+test.describe('current marketing routing', () => {
   test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'qdip.ai' } })
 
   for (const locale of locales) {
@@ -29,20 +29,7 @@ test.describe('current marketing demo routing', () => {
 
       await expect(page.getByRole('heading', { level: 1, name: heroHeadlines[locale] })).toBeVisible()
       const why = page.getByRole('link', { name: whyLabels[locale] }).first()
-      await expect(why).toHaveAttribute('href', new RegExp('#why
-      const response = await page.goto(`/${locale}/use-cases#demos`)
-      expect(response?.status()).toBeLessThan(400)
-
-      for (const [title, path] of demos) {
-        await expect(page.getByRole('link', { name: `Open ${title}` })).toHaveAttribute(
-          'href',
-          `https://observatory.qdip.ai/${locale}${path}`
-        )
-      }
-    })
-  }
-})
-))
+      await expect(why).toHaveAttribute('href', /#why$/)
       await expect(page.locator('#why')).toHaveCount(1)
     })
 
