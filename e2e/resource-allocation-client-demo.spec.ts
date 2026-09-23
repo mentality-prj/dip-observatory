@@ -414,6 +414,21 @@ test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
     .toEqual({ scrollWidth: 390, clientWidth: 390 })
 })
 
+test('client can download editable CSV template and fictional example', async ({ page }) => {
+  await page.goto('/en/resource-allocation')
+  await page.getByText('Try your own data', { exact: true }).click()
+
+  const templateDownloadPromise = page.waitForEvent('download')
+  await page.getByTestId('resource-download-template').click()
+  const templateDownload = await templateDownloadPromise
+  expect(templateDownload.suggestedFilename()).toBe('qdip-resource-allocation-template.csv')
+
+  const exampleDownloadPromise = page.waitForEvent('download')
+  await page.getByTestId('resource-download-example').click()
+  const exampleDownload = await exampleDownloadPromise
+  expect(exampleDownload.suggestedFilename()).toBe('qdip-resource-allocation-example.csv')
+})
+
 test('client data importer gives feedback and supports drag and drop', async ({ page }) => {
   await page.goto('/en/resource-allocation')
   await page.getByText('Try your own data', { exact: true }).click()

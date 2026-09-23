@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { importResourceAllocationFile, summarizeResourceAllocationImport } from './importer'
+import {
+  buildResourceAllocationExampleCsv,
+  buildResourceAllocationTemplateCsv,
+  importResourceAllocationFile,
+  RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST,
+  summarizeResourceAllocationImport,
+} from './importer'
 
 const columns = [
   'record_type',
@@ -51,6 +57,46 @@ function csvFile(lines: string[], name = 'pilot.csv'): File {
 }
 
 describe('resource allocation real-pilot importer', () => {
+  it('keeps downloadable CSV fixtures aligned with the real importer contract', async () => {
+    expect(RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST).toContain('team')
+
+    const template = buildResourceAllocationTemplateCsv()
+    const example = buildResourceAllocationExampleCsv()
+
+    expect(template.startsWith('\uFEFF' + RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.join(','))).toBe(true)
+    expect(example.startsWith('\uFEFF' + RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.join(','))).toBe(true)
+
+    const importedTemplate = await importResourceAllocationFile(
+      csvFile(template.split('\n'), 'qdip-resource-allocation-template.csv')
+    )
+    const importedExample = await importResourceAllocationFile(
+      csvFile(example.split('\n'), 'qdip-resource-allocation-example.csv')
+    )
+
+    expect(summarizeResourceAllocationImport(importedTemplate)).toMatchObject({
+      days: 2,
+      communities: 2,
+      teams: 2,
+      baselineProvided: true,
+    })
+    expect(summarizeResourceAllocationImport(importedExample)).toMatchObject({
+      days: 5,
+      communities: 4,
+      teams: 4,
+      baselineProvided: true,
+      dailyDemandDays: 2,
+    })
+    expect(importedExample.teams.find((team) => team.id === 'Field Team Delta')?.availability?.Fri).toBe(false)
+    expect(importedExample.communities.find((community) => community.id === 'West Point')?.accessibility?.Thu).toBe(
+      false
+    )
+
+    expect(example).not.toContain('Краматорський')
+    expect(example).not.toContain('Покровський')
+    expect(example).not.toContain('Мобільна команда')
+    expect(example).not.toContain('responsible-citizens')
+  })
+
   it('imports daily demand, availability, accessibility and a complete manual baseline', async () => {
     const input = await importResourceAllocationFile(
       csvFile([
