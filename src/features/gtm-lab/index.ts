@@ -1,2 +1,7 @@
 export { GtmLabWorkspace } from './components/gtm-lab-workspace'
-export { prospectSeedSchema, type ProspectSeed } from './import-contracts'
+export {
+  commercialContextSchema,
+  prospectSeedSchema,
+  type CommercialContext,
+  type ProspectSeed,
+} from './import-contracts'
