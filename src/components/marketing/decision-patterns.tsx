@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ArrowRight, Check, CircleSlash2 } from 'lucide-react'
-import { observatoryHref } from '@/lib/platform-urls'
+import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { DECISION_PATTERNS, decisionPattern, type DecisionPatternId } from '@/product/experience'
 import { MarketingTrackedLink } from './marketing-analytics'
 import type { MarketingLocale } from './qdip-copy'
@@ -49,7 +49,7 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
       title: c[7],
       question: c[8],
       body: c[9],
-      href: observatoryHref('gas-forecast', locale),
+      href: `${marketingLocaleHref(locale)}/decision`,
       cta: c[10],
     },
     prioritize: {
