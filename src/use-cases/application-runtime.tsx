@@ -7,29 +7,19 @@ import { ObservatoryDecisionNarrative } from '@/components/observatory/decision-
 import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
 export type ApplicationFrontendProps = { locale: Locale }
-
-const ResourceAllocation = dynamic<ApplicationFrontendProps>(() =>
-  import('@/features/resource-allocation').then((m) => ({ default: m.ResourceAllocationWorkspace }))
-)
-const GtmLab = dynamic<ApplicationFrontendProps>(() =>
-  import('@/features/gtm-lab').then((m) => ({ default: m.GtmLabWorkspace }))
-)
+const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import('@/features/resource-allocation').then((m) => ({ default: m.ResourceAllocationWorkspace })))
+const SupplyNetworkResilience = dynamic<ApplicationFrontendProps>(() => import('@/features/supply-network-resilience').then((m) => ({ default: m.SupplyNetworkResilienceWorkspace })))
+const GtmLab = dynamic<ApplicationFrontendProps>(() => import('@/features/gtm-lab').then((m) => ({ default: m.GtmLabWorkspace })))
 
 const frontends = {
   'resource-allocation': ResourceAllocation,
+  'supply-network-resilience': SupplyNetworkResilience,
   'gtm-lab': GtmLab,
 } satisfies Record<UseCaseId, ComponentType<ApplicationFrontendProps>>
 
 export function ApplicationFrontend({ id, locale }: { id: UseCaseId; locale: Locale }) {
   const Frontend = frontends[id]
   const useCase = findUseCaseById(id)
-  return (
-    <>
-      {useCase ? <ObservatoryDecisionNarrative locale={locale} useCase={useCase} /> : null}
-      <Frontend locale={locale} />
-    </>
-  )
+  return <>{useCase ? <ObservatoryDecisionNarrative locale={locale} useCase={useCase} /> : null}<Frontend locale={locale} /></>
 }
-export function hasApplicationFrontend(id: string): id is UseCaseId {
-  return id in frontends
-}
+export function hasApplicationFrontend(id: string): id is UseCaseId { return id in frontends }
