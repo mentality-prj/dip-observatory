@@ -44,20 +44,33 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   return element
 }
 
-function coordinate(network: SupplyNetwork, id: string): [number, number] | null {
+function coordinate(
+  network: SupplyNetwork,
+  id: string,
+  manualCandidate: CandidateWarehouse | null,
+  candidateAreas: CandidateResult[]
+): [number, number] | null {
   const warehouse = network.warehouses.find((item) => item.id === id)
   if (warehouse) return [warehouse.longitude, warehouse.latitude]
   const point = network.demand_points.find((item) => item.id === id)
   if (point) return [point.longitude, point.latitude]
+  if (manualCandidate?.id === id) return [manualCandidate.longitude, manualCandidate.latitude]
+  const candidate = candidateAreas.find((item) => item.candidate_id === id)
+  if (candidate) return [candidate.longitude, candidate.latitude]
   return null
 }
 
-function flows(network: SupplyNetwork, result: OptimizationResult | null) {
+function flows(
+  network: SupplyNetwork,
+  result: OptimizationResult | null,
+  manualCandidate: CandidateWarehouse | null,
+  candidateAreas: CandidateResult[]
+) {
   const features: Record<string, unknown>[] = []
   if (result) {
     for (const item of result.fulfillment) {
-      const from = coordinate(network, item.warehouse_id)
-      const to = coordinate(network, item.demand_point_id)
+      const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
+      const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
       if (!from || !to || item.units <= 0) continue
       features.push({
         type: 'Feature',
@@ -66,8 +79,8 @@ function flows(network: SupplyNetwork, result: OptimizationResult | null) {
       })
     }
     for (const item of result.transfers) {
-      const from = coordinate(network, item.from_warehouse_id)
-      const to = coordinate(network, item.to_warehouse_id)
+      const from = coordinate(network, item.from_warehouse_id, manualCandidate, candidateAreas)
+      const to = coordinate(network, item.to_warehouse_id, manualCandidate, candidateAreas)
       if (!from || !to || item.units <= 0) continue
       features.push({
         type: 'Feature',
@@ -77,8 +90,8 @@ function flows(network: SupplyNetwork, result: OptimizationResult | null) {
     }
   } else {
     for (const route of network.delivery_routes) {
-      const from = coordinate(network, route.from_node_id)
-      const to = coordinate(network, route.to_demand_point_id)
+      const from = coordinate(network, route.from_node_id, manualCandidate, candidateAreas)
+      const to = coordinate(network, route.to_demand_point_id, manualCandidate, candidateAreas)
       if (!from || !to) continue
       features.push({
         type: 'Feature',
@@ -201,7 +214,7 @@ export function NetworkMap({
         map.removeLayer('network-flows')
         map.removeSource('network-flows')
       }
-      map.addSource('network-flows', { type: 'geojson', data: flows(network, result) })
+      map.addSource('network-flows', { type: 'geojson', data: flows(network, result, manualCandidate, candidateAreas) })
       map.addLayer({
         id: 'network-flows',
         type: 'line',
