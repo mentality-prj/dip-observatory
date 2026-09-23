@@ -31,12 +31,6 @@ const studioUi = {
   pl: { heading: 'Przestrzeń decyzji', decisions: 'Decyzje' },
 } as const
 
-const footerLabels = {
-  en: ['How it works', 'Use cases', 'QDIP Core', 'Research'],
-  uk: ['Як це працює', 'Сценарії', 'QDIP Core', 'Дослідження'],
-  pl: ['Jak to działa', 'Przypadki użycia', 'QDIP Core', 'Badania'],
-} as const
-
 const observatoryFooterLabels = {
   en: ['Observatory overview', 'Open Studio', 'How it works', 'QDIP Core', 'Research'],
   uk: ['Огляд Observatory', 'Відкрити Studio', 'Як це працює', 'QDIP Core', 'Дослідження'],
@@ -100,11 +94,10 @@ test.describe('P1 Studio localization gate', () => {
       await expect(page.getByRole('heading', { level: 1, name: studioUi[locale].heading })).toBeVisible()
       await expect(page.getByRole('link', { name: studioUi[locale].decisions }).first()).toBeVisible()
 
-      const footer = page.locator('.studio-site-footer')
+      const footer = page.getByTestId('studio-footer')
       await expect(footer).toBeVisible()
-      for (const label of footerLabels[locale]) {
-        await expect(footer.getByRole('link', { name: label })).toBeVisible()
-      }
+      await expect(footer.getByRole('navigation')).toHaveCount(0)
+      await expect(footer.getByText(/© \d{4} QDIP/)).toBeVisible()
     })
   }
 })
