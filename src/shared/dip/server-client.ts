@@ -52,24 +52,20 @@ async function parseResponse<T>(response: Response, schema: z.ZodType<T>) {
   return schema.parse(await response.json())
 }
 
-export async function dipRequest<T>(
+async function executeRequest<T>(
   path: string,
   schema: z.ZodType<T>,
-  init?: RequestInit
+  init: RequestInit | undefined,
+  apiKey?: string
 ): Promise<T> {
-  const apiKey = getDipApiKey()
   const baseUrl = getDipBaseUrl()
-
-  if (!baseUrl || !apiKey) {
-    throw new DipApiError(
-      'DIP API is not configured. Set DIP_API_BASE_URL and DIP_API_KEY.',
-      503
-    )
+  if (!baseUrl) {
+    throw new DipApiError('DIP API is not configured. Set DIP_API_BASE_URL.', 503)
   }
 
   const headers = new Headers(init?.headers)
   headers.set('Content-Type', 'application/json')
-  headers.set('x-api-key', apiKey)
+  if (apiKey) headers.set('x-api-key', apiKey)
 
   const response = await fetch(buildDipUrl(path), {
     ...init,
@@ -78,6 +74,26 @@ export async function dipRequest<T>(
   })
 
   return parseResponse(response, schema)
+}
+
+export async function dipRequest<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init?: RequestInit
+): Promise<T> {
+  const apiKey = getDipApiKey()
+  if (!apiKey) {
+    throw new DipApiError('DIP API is not configured. Set DIP_API_BASE_URL and DIP_API_KEY.', 503)
+  }
+  return executeRequest(path, schema, init, apiKey)
+}
+
+export async function publicDipRequest<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init?: RequestInit
+): Promise<T> {
+  return executeRequest(path, schema, init)
 }
 
 export function getDipConnectionState() {
@@ -89,6 +105,18 @@ export function getDipConnectionState() {
   }
 }
 
+function pluginExecutionBody(capabilityId: string, input: Record<string, unknown>) {
+  return JSON.stringify({
+    capability_id: capabilityId,
+    input,
+    config: {},
+    metadata: { source: 'dip-observatory' },
+    features: input,
+  })
+}
+
+const pluginResultSchema = z.object({ result: z.record(z.string(), z.unknown()) })
+
 export async function runDipPlugin(
   pluginName: string,
   capabilityId: string,
@@ -96,18 +124,21 @@ export async function runDipPlugin(
 ): Promise<Record<string, unknown>> {
   const response = await dipRequest(
     `/api/v1/plugins/${pluginName}/execute`,
-    z.object({ result: z.record(z.string(), z.unknown()) }),
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        capability_id: capabilityId,
-        input,
-        config: {},
-        metadata: { source: 'dip-observatory' },
-        features: input,
-      }),
-    }
+    pluginResultSchema,
+    { method: 'POST', body: pluginExecutionBody(capabilityId, input) }
   )
+  return response.result
+}
 
+export async function runPublicDipPlugin(
+  pluginName: string,
+  capabilityId: string,
+  input: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const response = await publicDipRequest(
+    `/api/v1/plugins/${pluginName}/execute`,
+    pluginResultSchema,
+    { method: 'POST', body: pluginExecutionBody(capabilityId, input) }
+  )
   return response.result
 }
