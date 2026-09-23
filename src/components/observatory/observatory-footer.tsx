@@ -50,7 +50,7 @@ export function ObservatoryFooter({ locale }: { locale: Locale }) {
   const applications = observableUseCases()
 
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} data-testid="observatory-footer">
       <div className={styles.inner}>
         <div className={styles.identity}>
           <ProductLockup
