@@ -16,7 +16,7 @@ const routingContract = [
     route: '/supply-network-optimization',
     load: () =>
       import('../features/supply-network-optimization/workspace').then(
-        (module) => module.SupplyNetworkResilienceWorkspace
+        (module) => module.SupplyNetworkOptimizationWorkspace
       ),
   },
   {

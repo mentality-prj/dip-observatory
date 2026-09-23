@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type {
   CandidateResult,
   CandidateWarehouse,
+  CurrentFlow,
   DemandPoint,
   OptimizationResult,
   SupplyNetwork,
@@ -17,6 +18,7 @@ type Props = {
   unavailableWarehouseIds: string[]
   candidateAreas: CandidateResult[]
   manualCandidate: CandidateWarehouse | null
+  currentFlows: CurrentFlow[]
   onWarehouseSelect: (warehouse: Warehouse) => void
   onStoreSelect: (store: DemandPoint) => void
   onMapClick: (latitude: number, longitude: number) => void
@@ -60,19 +62,31 @@ function coordinate(
   return null
 }
 
-function flows(
+function flowCollection(
   network: SupplyNetwork,
+  currentFlows: CurrentFlow[],
   result: OptimizationResult | null,
   manualCandidate: CandidateWarehouse | null,
   candidateAreas: CandidateResult[]
 ) {
-  const features: Record<string, unknown>[] = []
+  const currentFeatures = currentFlows.flatMap((item) => {
+    const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
+    const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
+    return from && to
+      ? [{
+          type: 'Feature',
+          properties: { kind: 'current' },
+          geometry: { type: 'LineString', coordinates: [from, to] },
+        }]
+      : []
+  })
+  const recommendedFeatures: Record<string, unknown>[] = []
   if (result) {
     for (const item of result.fulfillment) {
       const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
       const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
       if (!from || !to || item.units <= 0) continue
-      features.push({
+      recommendedFeatures.push({
         type: 'Feature',
         properties: { kind: 'recommended', units: item.units },
         geometry: { type: 'LineString', coordinates: [from, to] },
@@ -82,25 +96,17 @@ function flows(
       const from = coordinate(network, item.from_warehouse_id, manualCandidate, candidateAreas)
       const to = coordinate(network, item.to_warehouse_id, manualCandidate, candidateAreas)
       if (!from || !to || item.units <= 0) continue
-      features.push({
+      recommendedFeatures.push({
         type: 'Feature',
         properties: { kind: 'transfer', units: item.units },
         geometry: { type: 'LineString', coordinates: [from, to] },
       })
     }
-  } else {
-    for (const route of network.delivery_routes) {
-      const from = coordinate(network, route.from_node_id, manualCandidate, candidateAreas)
-      const to = coordinate(network, route.to_demand_point_id, manualCandidate, candidateAreas)
-      if (!from || !to) continue
-      features.push({
-        type: 'Feature',
-        properties: { kind: 'current', units: 0 },
-        geometry: { type: 'LineString', coordinates: [from, to] },
-      })
-    }
   }
-  return { type: 'FeatureCollection', features }
+  return {
+    current: { type: 'FeatureCollection', features: currentFeatures },
+    recommended: { type: 'FeatureCollection', features: recommendedFeatures },
+  }
 }
 
 export function NetworkMap({
@@ -109,6 +115,7 @@ export function NetworkMap({
   unavailableWarehouseIds,
   candidateAreas,
   manualCandidate,
+  currentFlows,
   onWarehouseSelect,
   onStoreSelect,
   onMapClick,
@@ -213,25 +220,40 @@ export function NetworkMap({
         )
       }
 
-      if (map.getSource('network-flows')) {
-        map.removeLayer('network-flows')
-        map.removeSource('network-flows')
+      const collections = flowCollection(
+        network,
+        currentFlows,
+        result,
+        manualCandidate,
+        candidateAreas
+      )
+      for (const layerId of ['recommended-flows', 'current-flows']) {
+        if (map.getSource(layerId)) {
+          map.removeLayer(layerId)
+          map.removeSource(layerId)
+        }
       }
-      map.addSource('network-flows', { type: 'geojson', data: flows(network, result, manualCandidate, candidateAreas) })
+      map.addSource('current-flows', { type: 'geojson', data: collections.current })
       map.addLayer({
-        id: 'network-flows',
+        id: 'current-flows',
         type: 'line',
-        source: 'network-flows',
-        paint: {
-          'line-color': result ? '#22d3ee' : '#64748b',
-          'line-width': result ? 2.3 : 1,
-          'line-opacity': result ? 0.7 : 0.24,
-        },
+        source: 'current-flows',
+        paint: { 'line-color': '#64748b', 'line-width': 1.2, 'line-opacity': 0.32 },
       })
+      if (result) {
+        map.addSource('recommended-flows', { type: 'geojson', data: collections.recommended })
+        map.addLayer({
+          id: 'recommended-flows',
+          type: 'line',
+          source: 'recommended-flows',
+          paint: { 'line-color': '#22d3ee', 'line-width': 2.4, 'line-opacity': 0.78 },
+        })
+      }
     })
     return () => { cancelled = true }
   }, [
     mapReady,
+    currentFlows,
     candidateAreas,
     manualCandidate,
     network,
@@ -245,7 +267,7 @@ export function NetworkMap({
     <div className="relative min-h-[540px] overflow-hidden rounded-xl border border-white/10 bg-slate-950">
       <div ref={containerRef} className="absolute inset-0" data-testid="supply-network-map" />
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-slate-950/90 px-3 py-2 text-xs text-slate-300">
-        Warehouse · Store · Supplier · Candidate
+        Current flow · Recommended flow · Warehouse · Store · Supplier · Candidate
       </div>
     </div>
   )

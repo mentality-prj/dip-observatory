@@ -10,7 +10,7 @@ import {
   runOptimization,
   runUnavailableScenario,
 } from './api'
-import { SUPPLY_NETWORK_DEMO } from './demo-data'
+import { SUPPLY_NETWORK_CURRENT_FLOWS, SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import type {
   CandidateResult,
@@ -373,6 +373,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           unavailableWarehouseIds={unavailableIds}
           candidateAreas={candidateAreas}
           manualCandidate={manualCandidate}
+          currentFlows={SUPPLY_NETWORK_CURRENT_FLOWS}
           onWarehouseSelect={selectWarehouse}
           onStoreSelect={selectStore}
           onMapClick={selectMapLocation}

@@ -7,9 +7,9 @@ const heroCta = {
 } as const
 
 const demoNames = {
-  en: ['Resource Allocation', 'Supply Network Resilience', 'GTM Lab'],
-  uk: ['Resource Allocation', 'Supply Network Resilience', 'GTM Lab'],
-  pl: ['Resource Allocation', 'Supply Network Resilience', 'GTM Lab'],
+  en: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
+  uk: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
+  pl: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
 } as const
 
 const proofArtifacts = {
