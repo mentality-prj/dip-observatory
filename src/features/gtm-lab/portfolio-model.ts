@@ -147,7 +147,16 @@ function fromProspect(prospect: PipelineProspect): PortfolioItem[] {
         researchObjectives: decision.explanation_details?.research_objectives.length
           ? decision.explanation_details.research_objectives
           : decision.research_objectives,
-        evidence: [],
+        evidence: prospect.evidence.map((evidence) => ({
+          id: evidence.id,
+          kind: evidence.kind,
+          content: evidence.content,
+          source: evidence.source,
+          sourceType: evidence.source_type,
+          observedAt: evidence.observed_at ?? evidence.collected_at,
+          freshness: evidence.freshness,
+          confidence: evidence.confidence,
+        })),
         capability: fit
           ? {
               id: fit.capability_id,

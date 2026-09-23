@@ -40,6 +40,22 @@ export const pipelineDecisionSchema = z.enum(['PURSUE', 'RESEARCH', 'WATCH', 'SK
 export const evidenceKindSchema = z.enum(['FACT', 'SIGNAL', 'HYPOTHESIS', 'UNKNOWN'])
 export const nextActionTypeSchema = z.enum(['CONTACT', 'RESEARCH', 'WATCH', 'NONE'])
 
+const pipelineEvidenceSchema = z.object({
+  id: z.string(),
+  company_id: z.string(),
+  kind: evidenceKindSchema.default('SIGNAL'),
+  source: z.string(),
+  source_type: z.string(),
+  content: z.string(),
+  url: z.string().nullable().optional(),
+  observed_at: z.string().nullable().optional(),
+  collected_at: z.string().optional(),
+  credibility: z.number().min(0).max(1),
+  freshness: z.number().min(0).max(1),
+  relevance: z.number().min(0).max(1),
+  confidence: z.number().min(0).max(1),
+})
+
 const capabilityFitSchema = z.object({
   capability_id: z.string(),
   capability_name: z.string(),
@@ -155,6 +171,7 @@ export const pipelineProspectSchema = z.object({
   problems: z.array(problemSchema),
   opportunities: z.array(opportunitySchema),
   decisions: z.array(decisionSchema),
+  evidence: z.array(pipelineEvidenceSchema).default([]),
   evidence_count: z.number().int().nonnegative(),
   error: z.string().nullable().optional(),
 })

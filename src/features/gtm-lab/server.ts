@@ -31,12 +31,9 @@ export function validateGtmImport(rows: Record<string, unknown>[]) {
   })
 }
 
-export function runGtmPipeline(rows: ProspectSeed[]) {
-  return dipRequest('/api/v1/gtm-lab/pipeline/run', pipelineRunSchema, {
+export function runGtmPublicEvaluation(rows: ProspectSeed[]) {
+  return dipRequest('/api/v1/gtm-lab/public/evaluate', pipelineRunSchema, {
     method: 'POST',
-    body: JSON.stringify({
-      connector_ids: ['inline-prospects'],
-      ingestion_request: { rows },
-    }),
+    body: JSON.stringify({ rows }),
   })
 }
