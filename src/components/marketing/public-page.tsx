@@ -67,21 +67,21 @@ const copy: Record<MarketingLocale, Copy> = {
 const supplyCaseCopy = {
   en: {
     pattern: 'ALLOCATE',
-    question: 'How should inventory be distributed so one unavailable logistics node does not stop the network?',
-    body: 'Stress-test inventory placement, concentration exposure and executable transfers against node outages.',
-    cta: 'Open Supply Network Resilience',
+    question: 'Where should inventory be stored, how should demand be fulfilled, and how should the network adapt when capacity changes?',
+    body: 'Optimize inventory placement, inbound allocation and store fulfillment, then recalculate the network when a warehouse becomes unavailable or a candidate is added.',
+    cta: 'Open Supply Network Optimization',
   },
   uk: {
     pattern: 'РОЗПОДІЛИТИ',
-    question: 'Як розподілити запаси, щоб недоступність одного логістичного вузла не зупинила мережу?',
-    body: 'Перевіряйте розміщення запасів, концентрацію ризику та виконувані переміщення за недоступності вузлів.',
-    cta: 'Відкрити Supply Network Resilience',
+    question: 'Де зберігати запаси, як покривати попит і як перебудовувати мережу при зміні доступної складської потужності?',
+    body: 'Оптимізуйте розміщення запасів, вхідні поставки та постачання точок попиту, а потім перераховуйте мережу при недоступності або додаванні складу.',
+    cta: 'Відкрити Supply Network Optimization',
   },
   pl: {
     pattern: 'ALOKUJ',
-    question: 'Jak rozmieścić zapasy, aby niedostępność jednego węzła logistycznego nie zatrzymała sieci?',
-    body: 'Testuj rozmieszczenie zapasów, koncentrację ryzyka i wykonalne przesunięcia przy niedostępności węzłów.',
-    cta: 'Otwórz Supply Network Resilience',
+    question: 'Gdzie przechowywać zapasy, jak obsługiwać popyt i jak przebudować sieć po zmianie dostępnej przepustowości magazynowej?',
+    body: 'Optymalizuj rozmieszczenie zapasów, dostawy przychodzące i obsługę punktów popytu, a następnie przeliczaj sieć po niedostępności lub dodaniu magazynu.',
+    cta: 'Otwórz Supply Network Optimization',
   },
 } as const
 
@@ -120,7 +120,7 @@ function CoreNav({ l }: { l: MarketingLocale }) {
 export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: string }) {
   const x = copy[locale], c = marketingCopy[locale]
   if (slug === 'how-it-works') return <Shell locale={locale} slug={slug}><PageHero eyebrow={c.nav[0]} title={c.hero[1]} body={c.hero[3]} /><section className={styles.section}><div className={styles.valueGrid}>{[x.context,x.alternatives,x.objectives,x.effects,x.costs,x.risk,x.uncertainty,x.constraints,x.recommendation].map((label, i) => <article key={label}><span>0{i + 1}</span><h3>{label}</h3><p>{x.how[i]}</p></article>)}</div><div className={styles.centerAction}><Link className={styles.primaryButtonLarge} href={href(locale, 'use-cases')}>{x.see} <ArrowRight size={15} /></Link></div></section></Shell>
-  if (slug === 'use-cases') return <Shell locale={locale} slug={slug}><PageHero eyebrow={c.nav[1]} title={c.cases[0]} body={x.useIntro} /><section className={styles.section} id="demos"><div className={styles.caseGrid}><article className={styles.featuredCase}><span>{c.cases[1]}</span><h3>{c.cases[2]}</h3><strong>{c.cases[3]}</strong><p>{c.cases[4]}</p><Link href={observatoryHref('resource-allocation', locale)}>{c.cases[5]} <ArrowRight size={15} /></Link></article><article><span>{supplyCaseCopy[locale].pattern}</span><h3>{PUBLIC_DEMO_NAMES.supplyNetworkResilience}</h3><strong>{supplyCaseCopy[locale].question}</strong><p>{supplyCaseCopy[locale].body}</p><Link aria-label="Open Supply Network Resilience" href={observatoryHref('supply-network-resilience', locale)}>{supplyCaseCopy[locale].cta} <ArrowRight size={15} /></Link></article><article><span>{c.cases[6]}</span><h3>{c.cases[7]}</h3><strong>{c.cases[8]}</strong><p>{c.cases[9]}</p><Link href={href(locale, 'decision')}>{c.cases[10]} <ArrowRight size={15} /></Link></article><article><span>{c.cases[11]}</span><h3>{c.cases[12]}</h3><strong>{c.cases[13]}</strong><p className={styles.comingSoon}>{c.cases[14]}</p></article></div><div className={styles.embeddedSection}><InlineHeading eyebrow="QDIP" title={x.flow} body={x.flowBody} /><div className={styles.centerAction}><Link className={styles.primaryButtonLarge} href={href(locale, 'decision')}>{x.describe}</Link></div></div></section></Shell>
+  if (slug === 'use-cases') return <Shell locale={locale} slug={slug}><PageHero eyebrow={c.nav[1]} title={c.cases[0]} body={x.useIntro} /><section className={styles.section} id="demos"><div className={styles.caseGrid}><article className={styles.featuredCase}><span>{c.cases[1]}</span><h3>{c.cases[2]}</h3><strong>{c.cases[3]}</strong><p>{c.cases[4]}</p><Link href={observatoryHref('resource-allocation', locale)}>{c.cases[5]} <ArrowRight size={15} /></Link></article><article><span>{supplyCaseCopy[locale].pattern}</span><h3>{PUBLIC_DEMO_NAMES.supplyNetworkOptimization}</h3><strong>{supplyCaseCopy[locale].question}</strong><p>{supplyCaseCopy[locale].body}</p><Link aria-label="Open Supply Network Optimization" href={observatoryHref('supply-network-optimization', locale)}>{supplyCaseCopy[locale].cta} <ArrowRight size={15} /></Link></article><article><span>{c.cases[6]}</span><h3>{c.cases[7]}</h3><strong>{c.cases[8]}</strong><p>{c.cases[9]}</p><Link href={href(locale, 'decision')}>{c.cases[10]} <ArrowRight size={15} /></Link></article><article><span>{c.cases[11]}</span><h3>{c.cases[12]}</h3><strong>{c.cases[13]}</strong><p className={styles.comingSoon}>{c.cases[14]}</p></article></div><div className={styles.embeddedSection}><InlineHeading eyebrow="QDIP" title={x.flow} body={x.flowBody} /><div className={styles.centerAction}><Link className={styles.primaryButtonLarge} href={href(locale, 'decision')}>{x.describe}</Link></div></div></section></Shell>
   if (slug === 'decision') return <Shell locale={locale} slug={slug}><div className={styles.decisionInquiry}><PageHero eyebrow="QDIP" title={c.conversion[0]} body={c.conversion[1]} /><section className={`${styles.section} ${styles.decisionFormSection}`}><DecisionInquiryForm locale={locale} /></section></div></Shell>
   if (slug === 'core') return <Shell locale={locale} slug={slug}><PageHero eyebrow={x.core} title="QDIP Core" body={x.coreIntro} /><section className={styles.section}><p className={styles.coreLead}>{x.coreBody}</p><div className={styles.coreProof}>{x.lifecycle.map(v => <span key={v}>{v}</span>)}</div><div className={styles.valueGrid}>{x.sections.map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}</div><CoreNav l={locale} /></section></Shell>
   if (slug.startsWith('core/')) { const sub = slug.slice(5) as keyof Copy['subs'], content = x.subs[sub]; if (content) return <Shell locale={locale} slug={slug}><PageHero eyebrow={x.core} title={content[0]} body={content[1]} /><section className={styles.section}><p className={styles.coreLead}>{content[2]}</p><CoreNav l={locale} /></section></Shell> }
