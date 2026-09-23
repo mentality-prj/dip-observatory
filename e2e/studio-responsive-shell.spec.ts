@@ -48,6 +48,13 @@ test.describe('Studio responsive shell', () => {
       const footerBox = await footer.boundingBox()
       expect(footerBox).not.toBeNull()
       expect(Math.abs((footerBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(2)
+      await expect(footer.getByRole('navigation')).toHaveCount(0)
+
+      const footerBrandBox = await footer.locator('.studio-site-footer-brand').boundingBox()
+      const footerCopyrightBox = await footer.locator('.studio-site-footer-copyright').boundingBox()
+      expect(footerBrandBox).not.toBeNull()
+      expect(footerCopyrightBox).not.toBeNull()
+      expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
 
       const lockupBox = await lockup.boundingBox()
       const wordmarkFrameBox = await wordmarkFrame.boundingBox()
