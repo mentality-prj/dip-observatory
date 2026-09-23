@@ -156,6 +156,20 @@ const en: Record<DepthPageKey, DepthContent> = {
         href: '/resource-allocation',
       },
       {
+        pattern: 'ALLOCATE',
+        title: 'Supply Network Resilience',
+        question: 'How should inventory be distributed so one unavailable logistics node does not stop the network?',
+        problem:
+          'Inventory concentrated in too few logistics nodes can turn one interruption into a network-wide service failure.',
+        inputs:
+          'Inventory by node and product class, regional demand, node and route capacity, compatibility, lead time and logistics cost.',
+        evaluation:
+          'QDIP stress-tests normal and single-node-unavailable scenarios, compares feasible allocations and evaluates executable transfers.',
+        output:
+          'Recommended allocation, executable transfers, baseline comparison, scenario service levels, exposure and worst-case business loss.',
+        href: '/supply-network-resilience',
+      },
+      {
         pattern: 'PRIORITIZE',
         title: 'GTM Lab',
         question: 'Which opportunities deserve attention first?',
