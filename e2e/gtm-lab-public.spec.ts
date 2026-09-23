@@ -153,7 +153,7 @@ test('GTM Lab public CSV workflow is available and Ukrainian UI is localized', a
   await expect(page.getByText('1 компаній перевірено. Можна запускати оцінювання.')).toBeVisible()
   await page.getByRole('button', { name: 'Запустити оцінювання (1)' }).click()
   await expect(page.getByText('NorthRoute Logistics').first()).toBeVisible()
-  await expect(page.getByText('Дослідити').first()).toBeVisible()
+  await expect(page.locator('strong').filter({ hasText: 'Дослідити' })).toBeVisible()
   await expect(page.getByText('Сигнал')).toBeVisible()
   await expect(page.getByText('GTM Lab production data requires INTERNAL mode')).toHaveCount(0)
 })
