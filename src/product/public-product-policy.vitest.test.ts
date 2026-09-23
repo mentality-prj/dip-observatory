@@ -19,7 +19,7 @@ describe('public product naming policy', () => {
   it('keeps canonical demo names unchanged across locales', () => {
     const expected = {
       'resource-allocation': PUBLIC_DEMO_NAMES.resourceAllocation,
-      'supply-network-resilience': PUBLIC_DEMO_NAMES.supplyNetworkResilience,
+      'supply-network-optimization': PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
       'gtm-lab': PUBLIC_DEMO_NAMES.gtmLab,
     } as const
 
