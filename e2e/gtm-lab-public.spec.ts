@@ -10,7 +10,7 @@ test('GTM Lab explains context before evaluating public CSV', async ({ page }) =
   await page.goto('/uk/gtm-lab')
   await expect(page.getByRole('heading', { name: 'Розкажіть GTM Lab, що ви продаєте' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Як QDIP оцінює потенційних клієнтів' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Завантажити шаблон CSV' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Скачати шаблон CSV' })).toBeVisible()
 
   await page.getByLabel('Що ви продаєте?').fill('ПЗ для підтримки рішень щодо розподілу ресурсів')
   await page.getByLabel('Які проблеми ви вирішуєте?').fill('ручний розподіл ресурсів, планування персоналу')
