@@ -549,7 +549,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <div>
                   <h3 className="text-sm font-medium text-slate-200">Binding constraints</h3>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {visibleResult.binding_constraints.slice(0, 8).map((item) => <Badge key={item} variant="slate">{item}</Badge>)}
+                    {visibleResult.binding_constraints.slice(0, 8).map((item) => <Badge key={item} variant="neutral">{item}</Badge>)}
                   </div>
                 </div>
               </div>
