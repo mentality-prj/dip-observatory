@@ -41,10 +41,10 @@ const copy = {
     note: 'Demos are preconfigured decision applications. Studio configures the decision model; QDIP Core evaluates it; Observatory makes the result inspectable.',
   },
   uk: {
-    eyebrow: 'QDIP OBSERVATORY · РОЗУМІТИ',
-    title: 'Розумійте рекомендацію, а не лише результат.',
+    eyebrow: 'QDIP OBSERVATORY · ПЕРЕВІРКА РІШЕНЬ',
+    title: 'Перевіряйте не лише результат, а й обґрунтування рекомендації.',
     subtitle:
-      'Observatory — простір перевірки рішень QDIP. Кожен застосунок має однакову логіку: спочатку рекомендація, потім альтернативи, докази та історія рішення.',
+      'Observatory — простір для перевірки рішень QDIP. У кожному застосунку ви бачите рекомендацію, альтернативи, докази та історію рішення.',
     inspectLabel: 'Розподіл ресурсів · preview рішення',
     recommendation: 'Рекомендація',
     recommended: 'Рекомендований план розподілу',
@@ -75,10 +75,10 @@ const copy = {
     note: 'Демо — попередньо налаштовані застосунки для рішень. Studio конфігурує модель рішення, QDIP Core її оцінює, а Observatory робить результат доступним для перевірки.',
   },
   pl: {
-    eyebrow: 'QDIP OBSERVATORY · ZROZUMIEĆ',
-    title: 'Zrozum rekomendację, nie tylko wynik.',
+    eyebrow: 'QDIP OBSERVATORY · WERYFIKACJA DECYZJI',
+    title: 'Sprawdzaj nie tylko wynik, ale też uzasadnienie rekomendacji.',
     subtitle:
-      'Observatory to warstwa inspekcji decyzji QDIP. Każda aplikacja ma tę samą narrację: najpierw rekomendacja, potem alternatywy, dowody i ślad decyzji.',
+      'Observatory to przestrzeń do weryfikacji decyzji QDIP. W każdej aplikacji zobaczysz rekomendację, alternatywy, dowody i ślad decyzji.',
     inspectLabel: 'Resource Allocation · podgląd decyzji',
     recommendation: 'Rekomendacja',
     recommended: 'Rekomendowany plan alokacji',
