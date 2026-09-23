@@ -42,7 +42,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       {navItems.map((item) => {
         const active = isActive(item.route)
         return (
-          <Link
+          <a
             ref={active ? activeNavRef : undefined}
             key={item.id}
             href={buildLocalePath(item.route, locale)}
@@ -50,7 +50,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             className={styles.navLink}
           >
             {item.title[locale]}
-          </Link>
+          </a>
         )
       })}
     </nav>

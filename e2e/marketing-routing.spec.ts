@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 const locales = ['en', 'uk', 'pl'] as const
 const demos = [
   ['Resource Allocation', '/resource-allocation'],
+  ['Supply Network Resilience', '/supply-network-resilience'],
   ['GTM Lab', '/gtm-lab'],
 ] as const
 
