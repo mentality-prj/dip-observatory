@@ -1,10 +1,12 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { CheckCircle2, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
+import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { ResourceAllocationInput } from '../contracts'
 import {
+  buildResourceAllocationExampleCsv,
+  buildResourceAllocationTemplateCsv,
   importResourceAllocationFile,
   RESOURCE_ALLOCATION_IMPORT_COLUMNS,
   summarizeResourceAllocationImport,
@@ -22,6 +24,12 @@ const copy = {
     dropActive: 'Відпустіть файл для імпорту',
     or: 'або',
     template: 'Поля шаблону',
+    starterTitle: 'Почніть з готового CSV',
+    starterBody: 'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
+    downloadTemplate: 'Завантажити CSV шаблон',
+    downloadExample: 'Завантажити демо CSV',
+    templateHint: 'Мінімальний валідний файл',
+    exampleHint: 'Повний 5-денний приклад',
     reading: 'Читаю файл…',
     validating: 'Перевіряю структуру та зв’язки…',
     ready: 'Дані активовані',
@@ -44,6 +52,12 @@ const copy = {
     dropActive: 'Drop the file to import',
     or: 'or',
     template: 'Template columns',
+    starterTitle: 'Start from a ready CSV',
+    starterBody: 'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
+    downloadTemplate: 'Download CSV template',
+    downloadExample: 'Download example CSV',
+    templateHint: 'Minimal valid file',
+    exampleHint: 'Complete five-day example',
     reading: 'Reading file…',
     validating: 'Validating structure and references…',
     ready: 'Dataset activated',
@@ -66,6 +80,12 @@ const copy = {
     dropActive: 'Upuść plik, aby go zaimportować',
     or: 'lub',
     template: 'Kolumny szablonu',
+    starterTitle: 'Zacznij od gotowego CSV',
+    starterBody: 'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
+    downloadTemplate: 'Pobierz szablon CSV',
+    downloadExample: 'Pobierz przykładowy CSV',
+    templateHint: 'Minimalny poprawny plik',
+    exampleHint: 'Pełny przykład na pięć dni',
     reading: 'Odczytuję plik…',
     validating: 'Sprawdzam strukturę i odwołania…',
     ready: 'Zestaw danych aktywowany',
@@ -86,6 +106,18 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function downloadCsv(content: string, fileName: string) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = fileName
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
 }
 
 export function ResourceAllocationImport({
@@ -165,6 +197,41 @@ export function ResourceAllocationImport({
         <div className="min-w-0">
           <b className="block">{t.title}</b>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.body}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-4">
+        <b className="block text-sm">{t.starterTitle}</b>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.starterBody}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            data-testid="resource-download-template"
+            onClick={() =>
+              downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')
+            }
+            className="flex items-center gap-3 border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
+          >
+            <Download className="h-4 w-4 shrink-0 text-rose-300" />
+            <span className="min-w-0">
+              <b className="block text-xs text-slate-200">{t.downloadTemplate}</b>
+              <span className="mt-0.5 block text-[10px] text-slate-500">{t.templateHint}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            data-testid="resource-download-example"
+            onClick={() =>
+              downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')
+            }
+            className="flex items-center gap-3 border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
+          >
+            <Download className="h-4 w-4 shrink-0 text-rose-300" />
+            <span className="min-w-0">
+              <b className="block text-xs text-rose-100">{t.downloadExample}</b>
+              <span className="mt-0.5 block text-[10px] text-slate-500">{t.exampleHint}</span>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -284,7 +351,8 @@ export function ResourceAllocationImport({
         <summary className="cursor-pointer text-slate-400">{t.template}</summary>
         <code className="mt-2 block whitespace-normal break-words">{RESOURCE_ALLOCATION_IMPORT_COLUMNS}</code>
         <p className="mt-2">
-          Use record_type values: community, demand, team, travel, settings. Separate multiple skills/days with |.
+          Use record_type values: settings, community, community_day, demand, team, team_day, travel, baseline.
+          Separate multiple skills/days with |.
         </p>
       </details>
     </section>
