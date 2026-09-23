@@ -23,28 +23,9 @@ const visible = (order: number) => ({ visible: true, order }) as const
 
 const useCases = [
   {
-    id: 'gas-forecast',
-    route: '/gas-forecast',
-    navigation: visible(10),
-    decisionPattern: 'decide',
-    title: {
-      en: PUBLIC_DEMO_NAMES.gasDecision,
-      uk: PUBLIC_DEMO_NAMES.gasDecision,
-      pl: PUBLIC_DEMO_NAMES.gasDecision,
-    },
-    description: {
-      en: 'Market inputs, data providers and gas forecasting decision support in one workspace.',
-      uk: 'Ринкові дані, провайдери та підтримка рішень на основі прогнозу газового ринку в одному середовищі.',
-      pl: 'Dane rynkowe, dostawcy danych i wsparcie decyzji oparte na prognozie rynku gazu w jednym środowisku.',
-    },
-    tag: { en: 'ENERGY', uk: 'ЕНЕРГЕТИКА', pl: 'ENERGIA' },
-    presentation: { icon: 'sparkles', theme: 'cyan', studioRenderer: 'gas-forecast' },
-    plugin: { id: 'gas-forecast', capability: 'gas.forecast' },
-  },
-  {
     id: 'resource-allocation',
     route: '/resource-allocation',
-    navigation: visible(20),
+    navigation: visible(10),
     decisionPattern: 'allocate',
     title: {
       en: PUBLIC_DEMO_NAMES.resourceAllocation,
@@ -63,7 +44,7 @@ const useCases = [
   {
     id: 'gtm-lab',
     route: '/gtm-lab',
-    navigation: visible(30),
+    navigation: visible(20),
     decisionPattern: 'prioritize',
     title: {
       en: PUBLIC_DEMO_NAMES.gtmLab,
