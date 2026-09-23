@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 const locales = ['en', 'uk', 'pl'] as const
 const demos = [
   ['Resource Allocation', '/resource-allocation'],
-  ['Supply Network Resilience', '/supply-network-resilience'],
+  ['Supply Network Optimization', '/supply-network-optimization'],
   ['GTM Lab', '/gtm-lab'],
 ] as const
 
@@ -16,15 +16,15 @@ const openLabels = {
 const useCaseLocalization = {
   en: {
     heading: 'One Decision Engine. Reusable decision patterns.',
-    body: 'Resource Allocation, Supply Network Resilience and GTM Lab are working applications.',
+    body: 'Resource Allocation, Supply Network Optimization and GTM Lab are working applications.',
   },
   uk: {
     heading: 'Один рушій рішень. Багаторазові патерни рішень.',
-    body: 'Resource Allocation, Supply Network Resilience і GTM Lab — робочі застосунки.',
+    body: 'Resource Allocation, Supply Network Optimization і GTM Lab — робочі застосунки.',
   },
   pl: {
     heading: 'Jeden silnik decyzyjny. Wielokrotnego użytku wzorce decyzji.',
-    body: 'Resource Allocation, Supply Network Resilience i GTM Lab to działające aplikacje.',
+    body: 'Resource Allocation, Supply Network Optimization i GTM Lab to działające aplikacje.',
   },
 } as const
 
