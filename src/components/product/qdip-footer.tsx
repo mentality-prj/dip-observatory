@@ -2,13 +2,13 @@ import Link from 'next/link'
 
 import { marketingHref } from '@/lib/platform-urls'
 import { footerI18n, sharedI18n } from '@/lib/product-i18n'
-import type { MarketingLocale } from '@/components/marketing/qdip-copy'
+import type { Locale } from '@/lib/observatory-i18n'
 import { QdipLogo } from '@/components/marketing/qdip-logo'
 import styles from './qdip-footer.module.css'
 
 export type QdipFooterVariant = 'marketing' | 'observatory'
 
-const path = (locale: MarketingLocale, slug: string) => `${marketingHref(locale)}/${slug}`
+const path = (locale: Locale, slug: string) => `${marketingHref(locale)}/${slug}`
 
 export function QdipFooter({
   locale,
@@ -17,7 +17,7 @@ export function QdipFooter({
   testId,
   className,
 }: {
-  locale: MarketingLocale
+  locale: Locale
   variant?: QdipFooterVariant
   showNavigation?: boolean
   testId?: string
