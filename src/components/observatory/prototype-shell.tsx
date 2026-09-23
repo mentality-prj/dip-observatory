@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useTransition } from 'react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import { ChevronRight, Globe2, Home, Menu, SlidersHorizontal } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
@@ -24,8 +24,6 @@ const STUDIO_LABEL: Record<Locale, string> = {
 
 export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeShellProps) {
   const pathname = usePathname()
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
   const activeNavRef = useRef<HTMLAnchorElement>(null)
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), '') || '/'
   const navItems = observableUseCases()
@@ -33,10 +31,11 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
   const observatory = observatoryI18n[locale]
   const isActive = (href: string) => normalizedPath === href || normalizedPath.startsWith(`${href}/`)
   const activeItem = navItems.find((item) => isActive(item.route))
+
   useEffect(() => activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' }), [normalizedPath])
-  const changeLocale = (next: Locale) => {
-    if (next !== locale) startTransition(() => router.replace(buildLocalePath(normalizedPath, next)))
-  }
+
+  const localeHref = (next: Locale) => buildLocalePath(normalizedPath, next)
+
   const nav = (
     <nav className={styles.navigation} aria-label={observatory.applications}>
       {navItems.map((item) => {
@@ -55,25 +54,31 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       })}
     </nav>
   )
+
   const utilities = (
     <div className={styles.localeControls}>
       <div className={styles.locale} aria-label={a11y.language}>
         {LOCALES.map((option) => (
-          <button
+          <a
             key={option}
-            type="button"
-            disabled={pending}
-            onClick={() => changeLocale(option)}
+            href={localeHref(option)}
             aria-current={option === locale ? 'page' : undefined}
+            data-locale={option}
           >
             {LABEL[option]}
-          </button>
+          </a>
         ))}
       </div>
       <label className={styles.localeSelect}>
         <Globe2 aria-hidden />
         <span className="sr-only">{a11y.language}</span>
-        <select value={locale} disabled={pending} onChange={(event) => changeLocale(event.target.value as Locale)}>
+        <select
+          value={locale}
+          onChange={(event) => {
+            const next = event.target.value as Locale
+            if (next !== locale) window.location.assign(localeHref(next))
+          }}
+        >
           {LOCALES.map((option) => (
             <option key={option} value={option}>
               {LABEL[option]}
@@ -83,6 +88,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       </label>
     </div>
   )
+
   return (
     <ProductShell
       theme={theme as DesignTheme}
