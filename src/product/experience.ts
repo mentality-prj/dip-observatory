@@ -123,7 +123,7 @@ export const PRODUCT_SURFACE_COPY: Record<
     },
     {
       id: 'observatory',
-      verb: 'ЗРОЗУМІТИ',
+      verb: 'ПЕРЕВІРКА',
       title: 'QDIP Observatory',
       body: 'Перевірте рекомендацію, альтернативи, докази та те, що змінилося.',
       cta: 'Відкрити Observatory',
@@ -153,7 +153,7 @@ export const PRODUCT_SURFACE_COPY: Record<
     },
     {
       id: 'observatory',
-      verb: 'ZROZUM',
+      verb: 'WERYFIKACJA',
       title: 'QDIP Observatory',
       body: 'Sprawdź rekomendację, alternatywy, dowody i to, co się zmieniło.',
       cta: 'Otwórz Observatory',
