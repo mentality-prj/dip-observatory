@@ -4,7 +4,7 @@ import type { ComponentType } from 'react'
 import { ObservatoryDecisionNarrative } from '@/components/observatory/decision-narrative'
 import { GtmLabWorkspace } from '@/features/gtm-lab/components/gtm-lab-workspace'
 import { ResourceAllocationWorkspace } from '@/features/resource-allocation/components/resource-allocation-workspace'
-import { SupplyNetworkResilienceWorkspace } from '@/features/supply-network-resilience/workspace'
+import { SupplyNetworkOptimizationWorkspace } from '@/features/supply-network-optimization/workspace'
 import type { Locale } from '@/lib/observatory-i18n'
 import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
@@ -12,7 +12,7 @@ export type ApplicationFrontendProps = { locale: Locale }
 
 const frontends = {
   'resource-allocation': ResourceAllocationWorkspace,
-  'supply-network-resilience': SupplyNetworkResilienceWorkspace,
+  'supply-network-optimization': SupplyNetworkOptimizationWorkspace,
   'gtm-lab': GtmLabWorkspace,
 } satisfies Record<UseCaseId, ComponentType<ApplicationFrontendProps>>
 
