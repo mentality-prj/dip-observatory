@@ -103,8 +103,8 @@ const en: Record<DepthPageKey, DepthContent> = {
     nav: ['How it works', 'Solutions', 'Technology', 'Research'],
     hero: [
       'SOLUTIONS',
-      'One Decision Engine. Three working decision patterns.',
-      'Resource Allocation, Gas Decision and GTM Lab solve different business problems but share the same structure: explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
+      'One Decision Engine. Reusable decision patterns.',
+      'Resource Allocation and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
     ],
     sections: [
       {
@@ -154,18 +154,6 @@ const en: Record<DepthPageKey, DepthContent> = {
           'QDIP compares feasible allocations under the same configured criteria and evaluates the current plan through the same decision path.',
         output: 'Recommended allocation, comparison with the current plan and evidence for review.',
         href: '/resource-allocation',
-      },
-      {
-        pattern: 'DECIDE',
-        title: 'Gas Decision',
-        question: 'Act now, wait, or choose another strategy?',
-        problem:
-          'A market decision changes as prices, market context, evidence and uncertainty change. A forecast alone does not tell the responsible person what action to take.',
-        inputs: 'Market context, available actions, evidence, uncertainty, risk and decision constraints.',
-        evaluation:
-          'QDIP separates context from the action decision and evaluates feasible alternatives under the configured decision model.',
-        output: 'Inspectable action recommendation with the context and evidence kept visible.',
-        href: '/gas-forecast',
       },
       {
         pattern: 'PRIORITIZE',
@@ -275,9 +263,9 @@ const en: Record<DepthPageKey, DepthContent> = {
         ],
       },
       {
-        eyebrow: 'GAS EXPERIMENT',
-        title: 'A negative result is still a result.',
-        body: 'In the current gas-forecast research, a roll-adjusted continuation is the canonical series and a last-value baseline has outperformed the tested Ridge forecast on the forecasting task. The experiment therefore does not claim predictive superiority; it motivates task refinement, including direction classification and decision-oriented evaluation.',
+        eyebrow: 'CLOSED EXPERIMENT',
+        title: 'A failed gate closes a product hypothesis.',
+        body: 'The Gas Forecast research program was closed after the frozen out-of-sample economic gate failed. Its code and artifacts remain an R&D record, but Gas Forecast is not a public QDIP application or commercial demo.',
       },
       {
         eyebrow: 'RESOURCE ALLOCATION',
