@@ -30,13 +30,7 @@ export function SupplyNetworkResilienceWorkspace({ locale }: { locale: Locale })
   const [result, setResult] = useState<SupplyResilienceResult | null>(null)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const allocationByNode = useMemo(() => {
-    if (!result) return {}
-    return result.recommended.allocation.reduce<Record<string, typeof result.recommended.allocation>>((groups, item) => {
-      ;(groups[item.node_id] ??= []).push(item)
-      return groups
-    }, {})
-  }, [result])
+  const allocationByNode = useMemo(() => result ? Object.groupBy(result.recommended.allocation, (item) => item.node_id) : {}, [result])
 
   async function run() {
     setRunning(true); setError(null)
