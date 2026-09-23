@@ -1,6 +1,5 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { useCallback, useMemo, useState } from 'react'
 import { AlertTriangle, MapPin, Network, Play, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
@@ -12,6 +11,7 @@ import {
   runUnavailableScenario,
 } from './api'
 import { SUPPLY_NETWORK_DEMO } from './demo-data'
+import { LazyNetworkMap } from './lazy-map'
 import type {
   CandidateResult,
   CandidateWarehouse,
@@ -22,18 +22,6 @@ import type {
   SupplyNetwork,
   Warehouse,
 } from './domain'
-
-const NetworkMap = dynamic(
-  () => import('./network-map').then((module) => module.NetworkMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-[540px] animate-pulse rounded-xl border border-white/10 bg-white/[.025]" data-testid="map-loading">
-        <p className="p-5 text-sm text-slate-500">Loading geographic network…</p>
-      </div>
-    ),
-  }
-)
 
 const copy = {
   en: {
@@ -379,7 +367,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
-        <NetworkMap
+        <LazyNetworkMap
           network={activeNetwork}
           result={visibleResult}
           unavailableWarehouseIds={unavailableIds}
