@@ -75,7 +75,7 @@ const useCases = [
       uk: 'Оцінка комерційних можливостей за неповних ринкових даних: опрацювати, дослідити або відхилити.',
       pl: 'Ocena możliwości komercyjnych przy niepełnych danych rynkowych: rozwijać, zbadać lub pominąć.',
     },
-    tag: { en: 'GO-TO-MARKET', uk: 'GO-TO-MARKET', pl: 'GO-TO-MARKET' },
+    tag: { en: 'GO-TO-MARKET', uk: 'ВИХІД НА РИНОК', pl: 'WEJŚCIE NA RYNEK' },
     presentation: { icon: 'sparkles', theme: 'emerald' },
     plugin: { id: 'gtm-lab', capability: 'gtm.demo.run' },
   },
