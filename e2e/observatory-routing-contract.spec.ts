@@ -102,3 +102,16 @@ test.describe('Observatory production routing contract', () => {
     expect(errors.map((error) => error.message)).toEqual([])
   })
 })
+
+
+test.describe('Supply Network Optimization legacy route', () => {
+  for (const locale of locales) {
+    test(`${locale} redirects the retired resilience route to the canonical optimization route`, async ({ page }) => {
+      await page.goto(`http://observatory.localhost:3000/${locale}/supply-network-resilience`)
+      await expect(page).toHaveURL(
+        new RegExp(`observatory\\.localhost:3000/${locale}/supply-network-optimization$`)
+      )
+      await expect(page.getByText('QDIP OBSERVATORY · SUPPLY NETWORK OPTIMIZATION')).toBeVisible()
+    })
+  }
+})
