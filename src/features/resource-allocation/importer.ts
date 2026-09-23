@@ -130,7 +130,7 @@ function parseCsv(text: string): Row[] {
   row.push(cell)
   if (row.some((value) => value.trim())) rows.push(row)
   if (rows.length < 2) return []
-  const headers = rows[0].map((value) => value.trim().toLowerCase())
+  const headers = rows[0].map((value) => value.trim().toLowerCase().replace(/^\uFEFF/, ''))
   return rows
     .slice(1)
     .map((values) => Object.fromEntries(headers.map((header, index) => [header, clean(values[index])])))
@@ -623,5 +623,293 @@ export async function importResourceAllocationFile(file: File): Promise<Resource
   throw new Error('Supported formats: CSV, XML and XLSX.')
 }
 
-export const RESOURCE_ALLOCATION_IMPORT_COLUMNS =
-  'record_type,id,day,community,service,units,priority,program,current_community,skills,capacity,available,accessible,max_teams,allowed_communities,allowed_programs,programs,max_daily_capacity,max_travel_cost,max_travel_minutes,cost_per_capacity,from,to,cost,minutes,days,budget,target_priority_coverage,planning_unit'
+export const RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST = [
+  'record_type',
+  'id',
+  'day',
+  'community',
+  'service',
+  'units',
+  'priority',
+  'program',
+  'current_community',
+  'skills',
+  'capacity',
+  'available',
+  'accessible',
+  'max_teams',
+  'allowed_communities',
+  'allowed_programs',
+  'programs',
+  'max_daily_capacity',
+  'max_travel_cost',
+  'max_travel_minutes',
+  'cost_per_capacity',
+  'from',
+  'to',
+  'cost',
+  'minutes',
+  'days',
+  'budget',
+  'target_priority_coverage',
+  'planning_unit',
+  'team',
+] as const
+
+export const RESOURCE_ALLOCATION_IMPORT_COLUMNS = RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.join(',')
+
+type ResourceAllocationImportColumn = (typeof RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST)[number]
+type ResourceAllocationCsvRow = Partial<
+  Record<ResourceAllocationImportColumn, string | number | boolean | null>
+>
+
+function csvCell(value: unknown): string {
+  const raw = value == null ? '' : String(value)
+  return /[",\n\r]/.test(raw) ? `"${raw.replaceAll('"', '""')}"` : raw
+}
+
+function buildImportCsv(rows: ResourceAllocationCsvRow[]): string {
+  return (
+    '\uFEFF' +
+    [
+      RESOURCE_ALLOCATION_IMPORT_COLUMNS,
+      ...rows.map((row) =>
+        RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.map((column) => csvCell(row[column])).join(',')
+      ),
+    ].join('\n')
+  )
+}
+
+/**
+ * Minimal valid, directly importable CSV. Clients can replace the sample values
+ * while retaining the canonical Resource Allocation import contract.
+ */
+export function buildResourceAllocationTemplateCsv(): string {
+  return buildImportCsv([
+    {
+      record_type: 'settings',
+      days: 'Mon|Tue',
+      target_priority_coverage: 0.9,
+      planning_unit: 'service-visit',
+    },
+    { record_type: 'community', community: 'Location A', accessible: true, max_teams: 2 },
+    { record_type: 'community', community: 'Location B', accessible: true, max_teams: 2 },
+    {
+      record_type: 'demand',
+      community: 'Location A',
+      service: 'psychosocial',
+      units: 10,
+      priority: 'critical',
+    },
+    {
+      record_type: 'demand',
+      community: 'Location B',
+      service: 'legal',
+      units: 8,
+      priority: 'high',
+    },
+    {
+      record_type: 'team',
+      id: 'Team A',
+      current_community: 'Location A',
+      skills: 'psychosocial|legal',
+      capacity: 8,
+      max_travel_minutes: 120,
+    },
+    {
+      record_type: 'team',
+      id: 'Team B',
+      current_community: 'Location B',
+      skills: 'legal',
+      capacity: 7,
+      max_travel_minutes: 120,
+    },
+    { record_type: 'travel', from: 'Location A', to: 'Location B', cost: 4, minutes: 35 },
+    { record_type: 'travel', from: 'Location B', to: 'Location A', cost: 4, minutes: 35 },
+    { record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Location A' },
+    { record_type: 'baseline', day: 'Mon', team: 'Team B', community: 'Location B' },
+    { record_type: 'baseline', day: 'Tue', team: 'Team A', community: 'Location A' },
+    { record_type: 'baseline', day: 'Tue', team: 'Team B', community: 'Location B' },
+  ])
+}
+
+/**
+ * Fictional five-day dataset intentionally unrelated to the default Responsible
+ * Citizens profile. It exercises daily demand, availability, accessibility,
+ * travel constraints and a complete baseline so a prospect can edit and re-upload it.
+ */
+export function buildResourceAllocationExampleCsv(): string {
+  const rows: ResourceAllocationCsvRow[] = [
+    {
+      record_type: 'settings',
+      days: 'Mon|Tue|Wed|Thu|Fri',
+      budget: 360,
+      target_priority_coverage: 0.9,
+      planning_unit: 'service-session',
+    },
+    { record_type: 'community', community: 'North Hub', accessible: true, max_teams: 2 },
+    { record_type: 'community', community: 'East Outreach', accessible: true, max_teams: 2 },
+    { record_type: 'community', community: 'Central Centre', accessible: true, max_teams: 3 },
+    { record_type: 'community', community: 'West Point', accessible: true, max_teams: 2 },
+    {
+      record_type: 'community_day',
+      community: 'West Point',
+      day: 'Thu',
+      accessible: false,
+    },
+    {
+      record_type: 'demand',
+      community: 'North Hub',
+      service: 'psychosocial',
+      units: 34,
+      priority: 'critical',
+    },
+    {
+      record_type: 'demand',
+      community: 'North Hub',
+      service: 'legal',
+      units: 16,
+      priority: 'high',
+    },
+    {
+      record_type: 'demand',
+      community: 'East Outreach',
+      service: 'legal',
+      units: 28,
+      priority: 'critical',
+    },
+    {
+      record_type: 'demand',
+      community: 'East Outreach',
+      service: 'case-management',
+      units: 22,
+      priority: 'high',
+    },
+    {
+      record_type: 'demand',
+      community: 'Central Centre',
+      service: 'case-management',
+      units: 24,
+      priority: 'normal',
+    },
+    {
+      record_type: 'demand',
+      community: 'West Point',
+      service: 'child-support',
+      units: 26,
+      priority: 'high',
+    },
+    {
+      record_type: 'demand',
+      day: 'Wed',
+      community: 'North Hub',
+      service: 'psychosocial',
+      units: 9,
+      priority: 'critical',
+    },
+    {
+      record_type: 'demand',
+      day: 'Fri',
+      community: 'East Outreach',
+      service: 'legal',
+      units: 7,
+      priority: 'high',
+    },
+    {
+      record_type: 'team',
+      id: 'Field Team Alpha',
+      current_community: 'Central Centre',
+      skills: 'psychosocial|case-management',
+      capacity: 16,
+      max_travel_minutes: 160,
+      cost_per_capacity: 0.5,
+    },
+    {
+      record_type: 'team',
+      id: 'Field Team Beta',
+      current_community: 'North Hub',
+      skills: 'legal|case-management',
+      capacity: 15,
+      max_travel_minutes: 160,
+      cost_per_capacity: 0.5,
+    },
+    {
+      record_type: 'team',
+      id: 'Field Team Gamma',
+      current_community: 'West Point',
+      skills: 'child-support|psychosocial',
+      capacity: 14,
+      max_travel_minutes: 180,
+      cost_per_capacity: 0.45,
+    },
+    {
+      record_type: 'team',
+      id: 'Field Team Delta',
+      current_community: 'East Outreach',
+      skills: 'legal|child-support',
+      capacity: 15,
+      max_travel_minutes: 180,
+      cost_per_capacity: 0.55,
+    },
+    {
+      record_type: 'team_day',
+      id: 'Field Team Delta',
+      day: 'Fri',
+      available: false,
+      capacity: 0,
+    },
+    { record_type: 'travel', from: 'Central Centre', to: 'North Hub', cost: 7, minutes: 70 },
+    { record_type: 'travel', from: 'North Hub', to: 'Central Centre', cost: 7, minutes: 70 },
+    { record_type: 'travel', from: 'Central Centre', to: 'East Outreach', cost: 6, minutes: 60 },
+    { record_type: 'travel', from: 'East Outreach', to: 'Central Centre', cost: 6, minutes: 60 },
+    { record_type: 'travel', from: 'Central Centre', to: 'West Point', cost: 5, minutes: 50 },
+    { record_type: 'travel', from: 'West Point', to: 'Central Centre', cost: 5, minutes: 50 },
+    { record_type: 'travel', from: 'North Hub', to: 'East Outreach', cost: 8, minutes: 85 },
+    { record_type: 'travel', from: 'East Outreach', to: 'North Hub', cost: 8, minutes: 85 },
+    { record_type: 'travel', from: 'North Hub', to: 'West Point', cost: 10, minutes: 110 },
+    { record_type: 'travel', from: 'West Point', to: 'North Hub', cost: 10, minutes: 110 },
+    { record_type: 'travel', from: 'East Outreach', to: 'West Point', cost: 9, minutes: 100 },
+    { record_type: 'travel', from: 'West Point', to: 'East Outreach', cost: 9, minutes: 100 },
+  ]
+
+  const baseline: Record<string, Record<string, string | null>> = {
+    Mon: {
+      'Field Team Alpha': 'Central Centre',
+      'Field Team Beta': 'North Hub',
+      'Field Team Gamma': 'West Point',
+      'Field Team Delta': 'East Outreach',
+    },
+    Tue: {
+      'Field Team Alpha': 'North Hub',
+      'Field Team Beta': 'East Outreach',
+      'Field Team Gamma': 'West Point',
+      'Field Team Delta': 'East Outreach',
+    },
+    Wed: {
+      'Field Team Alpha': 'North Hub',
+      'Field Team Beta': 'East Outreach',
+      'Field Team Gamma': 'West Point',
+      'Field Team Delta': 'Central Centre',
+    },
+    Thu: {
+      'Field Team Alpha': 'North Hub',
+      'Field Team Beta': 'East Outreach',
+      'Field Team Gamma': 'Central Centre',
+      'Field Team Delta': 'Central Centre',
+    },
+    Fri: {
+      'Field Team Alpha': 'North Hub',
+      'Field Team Beta': 'East Outreach',
+      'Field Team Gamma': 'West Point',
+      'Field Team Delta': null,
+    },
+  }
+
+  for (const [day, assignments] of Object.entries(baseline)) {
+    for (const [team, community] of Object.entries(assignments)) {
+      rows.push({ record_type: 'baseline', day, team, community })
+    }
+  }
+
+  return buildImportCsv(rows)
+}
