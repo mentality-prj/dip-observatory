@@ -42,6 +42,7 @@
 }
 .localeControls {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
 }
 .locale {
@@ -70,10 +71,11 @@
 }
 .localeSelect {
   display: none;
-  min-height: var(--ds-header-control-height);
+  min-height: 44px;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
-  padding: 0 8px;
+  padding: 0 10px;
   border: 1px solid var(--ds-border);
   border-radius: var(--ds-radius-action);
   color: var(--ds-text-muted);

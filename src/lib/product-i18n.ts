@@ -50,3 +50,28 @@ export const marketingA11yI18n = {
   uk: { evidence: 'Докази та надійність QDIP', technicalEvidence: 'Технічні докази' },
   pl: { evidence: 'Dowody i wiarygodność QDIP', technicalEvidence: 'Dowody techniczne' },
 } as const satisfies Localized<Record<string, string>>
+
+
+export const footerI18n = {
+  en: {
+    how: 'How it works',
+    useCases: 'Use cases',
+    core: 'QDIP Core',
+    research: 'Research',
+    disclaimer: 'Your team makes the final decision.',
+  },
+  uk: {
+    how: 'Як це працює',
+    useCases: 'Сценарії',
+    core: 'QDIP Core',
+    research: 'Дослідження',
+    disclaimer: 'Остаточне рішення приймає ваша команда.',
+  },
+  pl: {
+    how: 'Jak to działa',
+    useCases: 'Przypadki użycia',
+    core: 'QDIP Core',
+    research: 'Badania',
+    disclaimer: 'Ostateczną decyzję podejmuje Twój zespół.',
+  },
+} as const satisfies Localized<Record<string, string>>
