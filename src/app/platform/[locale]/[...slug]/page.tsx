@@ -29,7 +29,7 @@ const seo: Record<MarketingLocale, SeoCopy> = {
     'use-cases': {
       title: 'QDIP Solutions & Decision Demos',
       description:
-        'Explore Resource Allocation, Gas Decision and GTM Lab as three working decision patterns powered by one QDIP Decision Engine.',
+        'Explore Resource Allocation and GTM Lab as working applications, plus reusable QDIP decision patterns for new domains.',
     },
     decision: {
       title: 'Describe Your Decision',
@@ -67,7 +67,7 @@ const seo: Record<MarketingLocale, SeoCopy> = {
     },
     'use-cases': {
       title: 'Рішення та демо QDIP',
-      description: 'Resource Allocation, Gas Decision і GTM Lab — три робочі патерни рішень одного рушія QDIP.',
+      description: 'Resource Allocation і GTM Lab — діючі застосунки QDIP; патерни рішень можна повторно використовувати в нових доменах.',
     },
     decision: {
       title: 'Опишіть ваше рішення',
@@ -104,7 +104,7 @@ const seo: Record<MarketingLocale, SeoCopy> = {
     'use-cases': {
       title: 'Rozwiązania i dema QDIP',
       description:
-        'Resource Allocation, Gas Decision i GTM Lab jako trzy działające wzorce decyzji jednego silnika QDIP.',
+        'Resource Allocation i GTM Lab to działające aplikacje QDIP; wzorce decyzyjne można wykorzystywać w nowych domenach.',
     },
     decision: {
       title: 'Opisz swoją decyzję',
