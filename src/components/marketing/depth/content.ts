@@ -1,4 +1,5 @@
 import type { MarketingLocale } from '../qdip-copy'
+import { useCasesI18n } from './i18n'
 
 export type DepthPageKey = 'how-it-works' | 'use-cases' | 'core' | 'core/research'
 export type ContentSection = {
@@ -18,7 +19,7 @@ export type CaseStudy = {
   href: string
 }
 
-type DepthContent = {
+export type DepthContent = {
   nav: readonly [string, string, string, string]
   hero: readonly [string, string, string]
   sections: readonly ContentSection[]
@@ -99,95 +100,7 @@ const en: Record<DepthPageKey, DepthContent> = {
       'Describe your decision',
     ],
   },
-  'use-cases': {
-    nav: ['How it works', 'Solutions', 'Technology', 'Research'],
-    hero: [
-      'SOLUTIONS',
-      'One Decision Engine. Reusable decision patterns.',
-      'Resource Allocation and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
-    ],
-    sections: [
-      {
-        eyebrow: 'THE FIT',
-        title: 'QDIP is useful where comparison repeats and judgment still matters.',
-        body: 'The strongest fit is a recurring decision where people repeatedly collect information, compare several viable options, apply rules or priorities, work within constraints and need to explain the choice afterwards.',
-        items: [
-          { title: 'Repeated', body: 'The same class of decision appears often enough that consistency matters.' },
-          {
-            title: 'Constrained',
-            body: 'Budget, capacity, policy, timing or operational rules limit the feasible choices.',
-          },
-          { title: 'Explainable', body: 'Someone needs to understand and defend why one alternative was preferred.' },
-        ],
-      },
-      {
-        eyebrow: 'WHAT CHANGES',
-        title: 'From manual comparison to a governed decision path.',
-        body: 'QDIP does not require replacing the people who know the domain. It gives their decision criteria an explicit structure, evaluates alternatives consistently and preserves the evidence behind the recommendation.',
-        items: [
-          { title: 'Before', body: 'Information is spread across spreadsheets, messages and individual judgment.' },
-          {
-            title: 'With QDIP',
-            body: 'Inputs, alternatives, priorities and constraints enter one repeatable evaluation path.',
-          },
-          {
-            title: 'After',
-            body: 'The responsible person receives a recommendation, evidence and visible trade-offs.',
-          },
-        ],
-      },
-      {
-        eyebrow: 'BEYOND THE DEMOS',
-        title: 'The demos are patterns, not the product boundary.',
-        body: 'ALLOCATE applies where scarce resources compete. DECIDE applies where several actions must be compared under changing conditions. PRIORITIZE applies where many opportunities compete for limited attention. A new domain can reuse these patterns without redefining QDIP Core.',
-      },
-    ],
-    cases: [
-      {
-        pattern: 'ALLOCATE',
-        title: 'Resource Allocation',
-        question: 'Where should limited resources go?',
-        problem:
-          'Teams and NGOs often compare requests manually while budgets, eligibility rules, urgency and program priorities compete.',
-        inputs: 'Requests, available capacity, priorities, eligibility, constraints and supporting evidence.',
-        evaluation:
-          'QDIP compares feasible allocations under the same configured criteria and evaluates the current plan through the same decision path.',
-        output: 'Recommended allocation, comparison with the current plan and evidence for review.',
-        href: '/resource-allocation',
-      },
-      {
-        pattern: 'ALLOCATE',
-        title: 'Supply Network Resilience',
-        question: 'How should inventory be distributed so one unavailable logistics node does not stop the network?',
-        problem:
-          'Inventory concentrated in too few logistics nodes can turn one interruption into a network-wide service failure.',
-        inputs:
-          'Inventory by node and product class, regional demand, node and route capacity, compatibility, lead time and logistics cost.',
-        evaluation:
-          'QDIP stress-tests normal and single-node-unavailable scenarios, compares feasible allocations and evaluates executable transfers.',
-        output:
-          'Recommended allocation, executable transfers, baseline comparison, scenario service levels, exposure and worst-case business loss.',
-        href: '/supply-network-resilience',
-      },
-      {
-        pattern: 'PRIORITIZE',
-        title: 'GTM Lab',
-        question: 'Which opportunities deserve attention first?',
-        problem:
-          'Small commercial teams can spend significant time comparing opportunities with incomplete evidence and competing priorities.',
-        inputs: 'Opportunity evidence, fit signals, uncertainty, missing information and prioritization criteria.',
-        evaluation:
-          'QDIP evaluates opportunities consistently and distinguishes pursue, research, watch and skip outcomes.',
-        output: 'Prioritized portfolio with rationale, risks, missing information, next action and provenance.',
-        href: '/gtm-lab',
-      },
-    ],
-    cta: [
-      'Which of your decisions matches these patterns?',
-      'If your exact domain is not shown, start from the decision structure rather than the industry label. Describe the repeated choice and we can determine whether ALLOCATE, DECIDE or PRIORITIZE is a useful starting point.',
-      'Describe your decision',
-    ],
-  },
+  'use-cases': useCasesI18n.en,
   core: {
     nav: ['How it works', 'Solutions', 'Technology', 'Research'],
     hero: [
@@ -321,6 +234,7 @@ const en: Record<DepthPageKey, DepthContent> = {
 
 const translate = (locale: MarketingLocale): Record<DepthPageKey, DepthContent> => {
   if (locale === 'en') return en
+
   const uk = locale === 'uk'
   const labels = uk
     ? ['ЯК ПРАЦЮЄ QDIP', 'РІШЕННЯ', 'QDIP CORE', 'ДОСЛІДЖЕННЯ QDIP']
@@ -339,17 +253,19 @@ const translate = (locale: MarketingLocale): Record<DepthPageKey, DepthContent> 
         'Pokaż nam jeden powtarzalny wybór, dane i ograniczenia — ocenimy, czy QDIP do niego pasuje.',
         'Opisz decyzję',
       ] as const)
-  const localize = (page: DepthContent, i: number): DepthContent => ({
+
+  const localizeFallback = (page: DepthContent, i: number): DepthContent => ({
     ...page,
     nav,
     hero: [labels[i], page.hero[1], page.hero[2]],
     cta,
   })
+
   return {
-    'how-it-works': localize(en['how-it-works'], 0),
-    'use-cases': localize(en['use-cases'], 1),
-    core: localize(en.core, 2),
-    'core/research': localize(en['core/research'], 3),
+    'how-it-works': localizeFallback(en['how-it-works'], 0),
+    'use-cases': useCasesI18n[locale],
+    core: localizeFallback(en.core, 2),
+    'core/research': localizeFallback(en['core/research'], 3),
   }
 }
 

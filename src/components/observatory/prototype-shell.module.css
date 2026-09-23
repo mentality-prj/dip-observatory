@@ -50,7 +50,7 @@
   align-items: center;
   gap: 4px;
 }
-.locale button {
+.locale a {
   min-width: 32px;
   min-height: 32px;
   padding: 0 8px;
@@ -61,11 +61,11 @@
   font: 600 var(--ds-text-xs)/1 var(--ds-font-sans);
   cursor: pointer;
 }
-.locale button:hover {
+.locale a:hover {
   color: var(--ds-text);
   background: var(--ds-hover);
 }
-.locale button[aria-current='page'] {
+.locale a[aria-current='page'] {
   color: var(--ds-accent);
   background: rgb(var(--ds-accent-rgb) / 0.08);
 }
@@ -92,7 +92,7 @@
   background: transparent;
   font: 600 var(--ds-text-xs)/1 var(--ds-font-sans);
 }
-.locale button:focus-visible,
+.locale a:focus-visible,
 .localeSelect:focus-within,
 .navLink:focus-visible {
   outline: 3px solid var(--ds-focus);

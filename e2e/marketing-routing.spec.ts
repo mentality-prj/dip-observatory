@@ -7,6 +7,27 @@ const demos = [
   ['GTM Lab', '/gtm-lab'],
 ] as const
 
+const openLabels = {
+  en: 'Open',
+  uk: 'Відкрити',
+  pl: 'Otwórz',
+} as const
+
+const useCaseLocalization = {
+  en: {
+    heading: 'One Decision Engine. Reusable decision patterns.',
+    body: 'Resource Allocation, Supply Network Resilience and GTM Lab are working applications.',
+  },
+  uk: {
+    heading: 'Один рушій рішень. Багаторазові патерни рішень.',
+    body: 'Resource Allocation, Supply Network Resilience і GTM Lab — робочі застосунки.',
+  },
+  pl: {
+    heading: 'Jeden silnik decyzyjny. Wielokrotnego użytku wzorce decyzji.',
+    body: 'Resource Allocation, Supply Network Resilience i GTM Lab to działające aplikacje.',
+  },
+} as const
+
 const heroHeadlines = {
   en: 'Make complex decisions repeatable',
   uk: 'Приймайте складні рішення послідовно',
@@ -36,11 +57,16 @@ test.describe('current marketing routing', () => {
       expect(response?.status()).toBeLessThan(400)
 
       for (const [title, path] of demos) {
-        await expect(page.getByRole('link', { name: `Open ${title}` })).toHaveAttribute(
+        await expect(page.getByRole('link', { name: `${openLabels[locale]} ${title}` })).toHaveAttribute(
           'href',
           `https://observatory.qdip.ai/${locale}${path}`
         )
       }
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: useCaseLocalization[locale].heading })
+      ).toBeVisible()
+      await expect(page.getByText(useCaseLocalization[locale].body, { exact: false })).toBeVisible()
     })
   }
 })
