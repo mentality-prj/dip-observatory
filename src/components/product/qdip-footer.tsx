@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { marketingLocaleHref } from '@/lib/platform-urls'
+import { marketingHref } from '@/lib/platform-urls'
 import { sharedI18n } from '@/lib/product-i18n'
 import { marketingCopy, type MarketingLocale } from '@/components/marketing/qdip-copy'
 import { QdipLogo } from '@/components/marketing/qdip-logo'
@@ -8,7 +8,7 @@ import styles from './qdip-footer.module.css'
 
 export type QdipFooterVariant = 'marketing' | 'observatory'
 
-const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
+const path = (locale: MarketingLocale, slug: string) => `${marketingHref(locale)}/${slug}`
 
 export function QdipFooter({
   locale,
@@ -28,7 +28,7 @@ export function QdipFooter({
   return (
     <footer className={styles.footer} data-variant={variant} data-testid={testId}>
       <div className={styles.inner}>
-        <Link className={styles.brand} href={marketingLocaleHref(locale)} aria-label={a11y.home}>
+        <Link className={styles.brand} data-footer-brand href={marketingHref(locale)} aria-label={a11y.home}>
           <QdipLogo inverse />
         </Link>
 
@@ -42,7 +42,7 @@ export function QdipFooter({
         ) : null}
 
         <div className={styles.meta}>
-          <span className={styles.copyright}>© {new Date().getFullYear()} QDIP</span>
+          <span className={styles.copyright} data-footer-copyright>© {new Date().getFullYear()} QDIP</span>
           <span className={styles.disclaimer}>{c.hero[4]}</span>
         </div>
       </div>
