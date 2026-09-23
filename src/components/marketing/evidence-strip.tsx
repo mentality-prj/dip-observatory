@@ -9,7 +9,7 @@ const copy = {
   en: {
     items: [
       ['Audit trace', 'Open an inspectable recommendation with alternatives, evidence and decision trace.', 'Inspect a decision'],
-      ['Baseline comparison', 'Review Gas Decision experiments against an explicit baseline instead of model output in isolation.', 'Open Gas Decision'],
+      ['Baseline comparison', 'Compare a QDIP recommendation with the current resource-allocation plan through the same evaluation path.', 'Open Resource Allocation'],
       ['Deterministic replay', 'Review the research and reproducibility layer used to keep decision paths inspectable across runs.', 'Review research'],
     ],
     links: ['Architecture', 'Explainability', 'Research'],
@@ -17,7 +17,7 @@ const copy = {
   uk: {
     items: [
       ['Аудит рішення', 'Відкрийте рекомендацію з альтернативами, доказами та історією рішення для перевірки.', 'Перевірити рішення'],
-      ['Порівняння з базовим сценарієм', 'Перегляньте експерименти Gas Decision у порівнянні з явним базовим сценарієм, а не ізольованим результатом моделі.', 'Відкрити Gas Decision'],
+      ['Порівняння з базовим сценарієм', 'Порівняйте рекомендацію QDIP з поточним планом розподілу ресурсів через той самий шлях оцінювання.', 'Відкрити Resource Allocation'],
       ['Детерміноване відтворення', 'Перегляньте дослідження та шар відтворюваності, який зберігає шлях рішення відтворюваним між запусками.', 'Переглянути дослідження'],
     ],
     links: ['Архітектура', 'Пояснюваність', 'Дослідження'],
@@ -25,7 +25,7 @@ const copy = {
   pl: {
     items: [
       ['Ślad audytowy decyzji', 'Otwórz rekomendację z alternatywami, dowodami i śladem decyzji do inspekcji.', 'Sprawdź decyzję'],
-      ['Porównanie ze scenariuszem bazowym', 'Przejrzyj eksperymenty Gas Decision względem jawnego scenariusza bazowego zamiast izolowanego wyniku modelu.', 'Otwórz Gas Decision'],
+      ['Porównanie ze scenariuszem bazowym', 'Porównaj rekomendację QDIP z bieżącym planem alokacji zasobów w tej samej ścieżce oceny.', 'Otwórz Resource Allocation'],
       ['Deterministyczne odtworzenie', 'Przejrzyj warstwę badań i odtwarzalności, która zachowuje ścieżkę decyzji między przebiegami.', 'Przejrzyj badania'],
     ],
     links: ['Architektura', 'Wyjaśnialność', 'Badania'],
@@ -38,7 +38,7 @@ export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
   const base = marketingLocaleHref(locale)
   const destinations = [
     observatoryHref('', locale),
-    observatoryHref('gas-forecast', locale),
+    observatoryHref('resource-allocation', locale),
     `${base}/core/research`,
   ] as const
   const c = copy[locale]
