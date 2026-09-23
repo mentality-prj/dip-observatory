@@ -11,13 +11,13 @@ import { gtmDemoSchema } from './contracts'
 import {
   DipApiError,
   dipRequest,
-  runDipPlugin,
+  runPublicDipPlugin,
 } from '@/shared/dip/server-client'
 
 export { DipApiError }
 
 export async function runGtmDemo() {
-  const result = await runDipPlugin('gtm-lab', 'gtm.demo.run', {})
+  const result = await runPublicDipPlugin('gtm-lab', 'gtm.demo.run', {})
   return gtmDemoSchema.parse(result)
 }
 
