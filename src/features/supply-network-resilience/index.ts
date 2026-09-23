@@ -2,3 +2,5 @@ export type { DemandPoint, InventoryAllocation, Money, ProductClass, ScenarioOut
 export { SUPPLY_RESILIENCE_DEMO } from './demo-data'
 export { createBaselineAllocation, evaluateBaseline } from './baseline-evaluator'
 export type { BaselineId } from './baseline-evaluator'
+export { createRecommendedCandidate, evaluateDecision, validateAlternative } from './decision-service'
+export type { ConstraintViolation, ValidationGate } from './decision-service'
