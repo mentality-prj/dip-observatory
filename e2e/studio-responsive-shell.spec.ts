@@ -35,7 +35,7 @@ test.describe('Studio responsive shell', () => {
       const lockup = page.locator('.ds-product-lockup')
       const wordmarkFrame = page.locator('.ds-product-lockup-wordmark-frame')
       const status = page.locator('.studio-core-status')
-      const footer = page.locator('.studio-site-footer')
+      const footer = page.getByTestId('studio-footer')
 
       await expect(shell).toBeVisible()
       await expect(lockup).toBeVisible()
@@ -50,11 +50,13 @@ test.describe('Studio responsive shell', () => {
       expect(Math.abs((footerBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(2)
       await expect(footer.getByRole('navigation')).toHaveCount(0)
 
-      const footerBrandBox = await footer.locator('.studio-site-footer-brand').boundingBox()
-      const footerCopyrightBox = await footer.locator('.studio-site-footer-copyright').boundingBox()
+      const footerBrandBox = await footer.locator('[data-footer-brand]').boundingBox()
+      const footerCopyrightBox = await footer.locator('[data-footer-copyright]').boundingBox()
       expect(footerBrandBox).not.toBeNull()
       expect(footerCopyrightBox).not.toBeNull()
       expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
+      expect(footerLogoFilter).not.toBe('none')
 
       const lockupBox = await lockup.boundingBox()
       const wordmarkFrameBox = await wordmarkFrame.boundingBox()
