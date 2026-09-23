@@ -19,7 +19,6 @@ describe('public product naming policy', () => {
   it('keeps canonical demo names unchanged across locales', () => {
     const expected = {
       'resource-allocation': PUBLIC_DEMO_NAMES.resourceAllocation,
-      'gas-forecast': PUBLIC_DEMO_NAMES.gasDecision,
       'gtm-lab': PUBLIC_DEMO_NAMES.gtmLab,
     } as const
 
@@ -34,7 +33,6 @@ describe('public product naming policy', () => {
   it('keeps marketing application titles canonical', () => {
     const titleIndexes = [
       [2, PUBLIC_DEMO_NAMES.resourceAllocation],
-      [7, PUBLIC_DEMO_NAMES.gasDecision],
       [12, PUBLIC_DEMO_NAMES.gtmLab],
     ] as const
 
@@ -43,6 +41,13 @@ describe('public product naming policy', () => {
         expect(marketingCopy[locale].cases[index]).toBe(expected)
       }
     }
+  })
+})
+
+describe('retired public demos', () => {
+  it('keeps Gas Forecast out of the public use-case registry', () => {
+    expect(DIP_USE_CASES.some((useCase) => useCase.id === 'gas-forecast')).toBe(false)
+    expect(DIP_USE_CASES.some((useCase) => useCase.route === '/gas-forecast')).toBe(false)
   })
 })
 

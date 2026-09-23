@@ -3,7 +3,6 @@ import { expect, test } from '@playwright/test'
 const locales = ['en', 'uk', 'pl'] as const
 const demos = [
   ['Resource Allocation', '/resource-allocation'],
-  ['Gas Decision', '/gas-forecast'],
   ['GTM Lab', '/gtm-lab'],
 ] as const
 
@@ -43,4 +42,10 @@ test.describe('current marketing routing', () => {
       }
     })
   }
+})
+
+
+test('retired Gas Forecast demo is not publicly routable', async ({ page }) => {
+  const response = await page.goto('http://observatory.localhost:3000/en/gas-forecast')
+  expect(response?.status()).toBe(404)
 })
