@@ -9,9 +9,19 @@ function isSurfaceHost(h: string, s: 'studio' | 'observatory') {
   return !!h && !LOCAL_HOSTS.has(h) && (h === `${s}.qdip.ai` || h.startsWith(`${s}.`))
 }
 function isMarketingHost(h: string) {
-  return h === 'qdip.ai' || h === 'www.qdip.ai'
+  return h === 'qdip.ai' || h === 'www.qdip.ai' || h === 'qdip.localhost'
+}
+const INTERNAL_REWRITE_HEADER = 'x-qdip-internal-rewrite'
+
+function rewriteInternal(request: NextRequest, url: URL, extraHeaders?: Record<string, string>) {
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set(INTERNAL_REWRITE_HEADER, '1')
+  for (const [name, value] of Object.entries(extraHeaders ?? {})) requestHeaders.set(name, value)
+  return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
 }
 export function proxy(request: NextRequest) {
+  if (request.headers.get(INTERNAL_REWRITE_HEADER) === '1') return NextResponse.next()
+
   const host = requestHost(request),
     pathname = request.nextUrl.pathname
   if (isSurfaceHost(host, 'studio') && !pathname.startsWith('/api/')) {
@@ -25,9 +35,9 @@ export function proxy(request: NextRequest) {
       const u = request.nextUrl.clone()
       u.pathname = localizedStudio[2] ? `/studio${localizedStudio[2]}` : '/studio'
       u.searchParams.set('lang', localizedStudio[1])
-      const requestHeaders = new Headers(request.headers)
-      requestHeaders.set('x-qdip-studio-locale', localizedStudio[1])
-      const response = NextResponse.rewrite(u, { request: { headers: requestHeaders } })
+      const response = rewriteInternal(request, u, {
+        'x-qdip-studio-locale': localizedStudio[1],
+      })
       response.cookies.set('qdip-studio-locale', localizedStudio[1], {
         path: '/',
         sameSite: 'lax',
@@ -49,12 +59,12 @@ export function proxy(request: NextRequest) {
     if (pathname === '/') {
       const u = request.nextUrl.clone()
       u.pathname = '/en'
-      return NextResponse.rewrite(u)
+      return rewriteInternal(request, u)
     }
     if (pathname === '/decisions') {
       const u = request.nextUrl.clone()
       u.pathname = '/observatory/decisions'
-      return NextResponse.rewrite(u)
+      return rewriteInternal(request, u)
     }
   }
   const explicit = pathname.match(/^\/platform\/(en|uk|pl)(\/.*)?$/)
@@ -67,7 +77,7 @@ export function proxy(request: NextRequest) {
   if (isMarketingHost(host) && marketing && MARKETING_LOCALES.has(marketing[1])) {
     const u = request.nextUrl.clone()
     u.pathname = `/platform/${marketing[1]}${marketing[2] ?? ''}`
-    return NextResponse.rewrite(u)
+    return rewriteInternal(request, u)
   }
   return NextResponse.next()
 }

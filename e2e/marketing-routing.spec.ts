@@ -20,11 +20,9 @@ const whyLabels = {
 } as const
 
 test.describe('current marketing routing', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'qdip.ai' } })
-
   for (const locale of locales) {
     test(`${locale} homepage keeps buyer navigation and headline semantics intact`, async ({ page }) => {
-      const response = await page.goto(`/${locale}`)
+      const response = await page.goto(`http://qdip.localhost:3000/${locale}`)
       expect(response?.status()).toBeLessThan(400)
 
       await expect(page.getByRole('heading', { level: 1, name: heroHeadlines[locale] })).toBeVisible()
@@ -34,7 +32,7 @@ test.describe('current marketing routing', () => {
     })
 
     test(`${locale} use-case demos route to Observatory`, async ({ page }) => {
-      const response = await page.goto(`/${locale}/use-cases#demos`)
+      const response = await page.goto(`http://qdip.localhost:3000/${locale}/use-cases#demos`)
       expect(response?.status()).toBeLessThan(400)
 
       for (const [title, path] of demos) {

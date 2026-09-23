@@ -1082,7 +1082,7 @@ body:has(.studio-shell)::-webkit-scrollbar-thumb {
   }
 
   .studio-shell .ds-product-header-brand-status {
-    margin-left: 0;
+    margin-left: -34px;
     transform: translateY(-6px);
   }
 

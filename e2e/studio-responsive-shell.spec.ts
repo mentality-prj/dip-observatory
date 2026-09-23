@@ -9,10 +9,9 @@ const viewports = [
 ] as const
 
 const PRODUCT_WORDMARK_FRAME_WIDTH = 124
+const MOBILE_WORDMARK_OPTICAL_INSET = 34
 
 test.describe('Studio responsive shell', () => {
-  test.use({ extraHTTPHeaders: { 'x-forwarded-host': 'studio.qdip.ai' } })
-
   for (const viewport of viewports) {
     test(`${viewport.name} keeps header, navigation and footer on one viewport grid`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -20,8 +19,17 @@ test.describe('Studio responsive shell', () => {
         await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
       })
 
-      const response = await page.goto('/en')
+      const response = await page.goto('http://studio.localhost:3000/en')
       expect(response?.status()).toBeLessThan(400)
+      expect(new URL(page.url()).origin).toBe('http://studio.localhost:3000')
+
+      const stylesheetOrigins = await page.evaluate(() =>
+        Array.from(document.styleSheets)
+          .map((sheet) => sheet.href)
+          .filter((href): href is string => Boolean(href))
+          .map((href) => new URL(href).origin)
+      )
+      expect(stylesheetOrigins.every((origin) => origin === 'http://studio.localhost:3000')).toBe(true)
 
       const shell = page.locator('.studio-shell')
       const lockup = page.locator('.ds-product-lockup')
@@ -48,19 +56,22 @@ test.describe('Studio responsive shell', () => {
       expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
 
-      // Frozen brand geometry: assert the accepted shared ProductLockup contract.
-      // The frame is intentionally 124px so the QDIP wordmark is not clipped.
+      // The shared frame remains wide enough to avoid clipping the QDIP artwork.
       expect(Math.abs((wordmarkFrameBox?.width ?? 0) - PRODUCT_WORDMARK_FRAME_WIDTH)).toBeLessThanOrEqual(1)
       const expectedLeft = viewport.width <= 760 ? 14 : 22
       expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
 
+      // Phones compensate for the transparent right-side whitespace inside the
+      // wordmark asset while tablet/desktop keep the shared ProductHeader geometry.
       const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
-      expect(brandGap).toBeGreaterThanOrEqual(0)
-      expect(brandGap).toBeLessThanOrEqual(2)
+      if (viewport.width <= 760) {
+        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
+        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
+      } else {
+        expect(brandGap).toBeGreaterThanOrEqual(0)
+        expect(brandGap).toBeLessThanOrEqual(2)
+      }
 
-      // The status is vertically centered against the accepted lockup and then lifted by
-      // the Studio-specific transform. Guard the rendered geometry instead of the obsolete
-      // pre-wordmark-resize offsets.
       const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
       const expectedStatusTop = viewport.width <= 760
         ? { min: 20, max: 22 }

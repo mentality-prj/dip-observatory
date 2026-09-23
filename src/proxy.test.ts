@@ -46,3 +46,26 @@ test('routes localized marketing URLs and nested public pages', () => {
   assert.equal(isRewrite(preview), false)
   assert.equal(isRewrite(observatory), false)
 })
+
+test('supports localhost product subdomains for local and CI routing', () => {
+  const studio = proxy(request('studio.localhost', '/en'))
+  const observatory = proxy(request('observatory.localhost', '/decisions'))
+  const marketing = proxy(request('qdip.localhost', '/en'))
+
+  assert.equal(new URL(getRewrittenUrl(studio)!).pathname, '/studio')
+  assert.equal(new URL(getRewrittenUrl(observatory)!).pathname, '/observatory/decisions')
+  assert.equal(new URL(getRewrittenUrl(marketing)!).pathname, '/platform/en')
+})
+
+test('does not canonicalize an already rewritten internal route', () => {
+  const internal = new NextRequest('http://studio.localhost:3000/studio', {
+    headers: {
+      host: 'studio.localhost:3000',
+      'x-qdip-internal-rewrite': '1',
+      'x-qdip-studio-locale': 'en',
+    },
+  })
+
+  assert.equal(isRewrite(proxy(internal)), false)
+  assert.equal(proxy(internal).status, 200)
+})
