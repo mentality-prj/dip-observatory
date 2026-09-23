@@ -69,6 +69,11 @@ export type InboundSupply = {
   }[]
 }
 
+export type CurrentFlow = {
+  warehouse_id: string
+  demand_point_id: string
+}
+
 export type SupplyNetwork = {
   product_classes: ProductClass[]
   demand_points: DemandPoint[]
