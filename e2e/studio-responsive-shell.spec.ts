@@ -36,6 +36,7 @@ test.describe('Studio responsive shell', () => {
       const wordmarkFrame = page.locator('.ds-product-lockup-wordmark-frame')
       const status = page.locator('.studio-core-status')
       const footer = page.getByTestId('studio-footer')
+      const mobileLocale = page.locator('.studio-language-select')
 
       await expect(shell).toBeVisible()
       await expect(lockup).toBeVisible()
@@ -87,6 +88,13 @@ test.describe('Studio responsive shell', () => {
         : { min: 18, max: 20 }
       expect(statusTopOffset).toBeGreaterThanOrEqual(expectedStatusTop.min)
       expect(statusTopOffset).toBeLessThanOrEqual(expectedStatusTop.max)
+
+      if (viewport.width <= 760) {
+        await expect(mobileLocale).toBeVisible()
+        const localeBox = await mobileLocale.boundingBox()
+        expect(localeBox).not.toBeNull()
+        expect(localeBox?.height).toBeGreaterThanOrEqual(44)
+      }
 
       if (viewport.width <= 980) {
         await expect(page.getByText('Workspace', { exact: true })).toBeVisible()
