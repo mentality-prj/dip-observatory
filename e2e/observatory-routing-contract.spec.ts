@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 const locales = ['en', 'uk', 'pl'] as const
 const routes = [
   { id: 'resource-allocation', path: '/resource-allocation', title: 'Resource Allocation' },
-  { id: 'supply-network-resilience', path: '/supply-network-resilience', title: 'Supply Network Resilience' },
+  { id: 'supply-network-optimization', path: '/supply-network-optimization', title: 'Supply Network Optimization' },
   { id: 'gtm-lab', path: '/gtm-lab', title: 'GTM Lab' },
 ] as const
 
