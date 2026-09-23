@@ -1,6 +1,5 @@
 export const PUBLIC_DEMO_NAMES = {
   resourceAllocation: 'Resource Allocation',
-  gasDecision: 'Gas Decision',
   gtmLab: 'GTM Lab',
 } as const
 
@@ -10,7 +9,6 @@ export const PUBLIC_PRODUCT_NAMES = [
   'Observatory',
   'Core',
   PUBLIC_DEMO_NAMES.resourceAllocation,
-  PUBLIC_DEMO_NAMES.gasDecision,
   PUBLIC_DEMO_NAMES.gtmLab,
 ] as const
 
