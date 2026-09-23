@@ -152,7 +152,8 @@ test.describe('Observatory production routing contract', () => {
       )
       expect(response?.status()).toBeLessThan(400)
 
-      const localeSelect = page.locator('.localeSelect select')
+      const localeSelect = page.getByRole('combobox').first()
+      await expect(localeSelect).toBeVisible()
       await localeSelect.selectOption('uk')
       await expect(page).toHaveURL(
         new RegExp(`observatory\\.localhost:3000/uk${route.path}import { expect, test, type Page } from '@playwright/test'
