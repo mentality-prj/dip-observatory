@@ -55,7 +55,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
     <main className="relative min-h-[calc(100vh-8rem)] overflow-hidden px-4 py-6 md:px-6 xl:px-10">
       <div className="mx-auto flex w-full max-w-[1700px] flex-col gap-6">
         <header className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] ds-text-accent">
             <Activity className="h-3.5 w-3.5" aria-hidden="true" />
             {t.eyebrow}
           </div>
@@ -65,7 +65,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
               <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">{t.body}</p>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-slate-400">
-              <FlaskConical className="h-3.5 w-3.5 text-cyan-300" />
+              <FlaskConical className="h-3.5 w-3.5 ds-text-accent" />
               {t.badge}
             </div>
           </div>
@@ -86,7 +86,7 @@ export function GasForecastWorkspace({ locale = 'en' }: { locale?: Locale }) {
                     : 'border border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200'
                 )}
               >
-                <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'text-cyan-300' : 'text-slate-500')} />
+                <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'ds-text-accent' : 'text-slate-500')} />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">{tab.label}</span>
                   <span className="mt-0.5 block text-xs leading-5 text-slate-500">{tab.description}</span>

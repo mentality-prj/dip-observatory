@@ -1,7 +1,8 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+
+import { parseStudioLocale } from '@/features/studio'
 import { studioHref } from '@/lib/platform-urls'
-import { parseStudioLocale } from '@/studio/studio-locale'
 
 function isStudioSurfaceHost(host: string) {
   const hostname = host.split(':')[0].toLowerCase()
@@ -14,9 +15,16 @@ export default async function StudioHome({
   searchParams: Promise<{ lang?: string | string[] }>
 }) {
   const [params, requestHeaders] = await Promise.all([searchParams, headers()])
-  const rawLocale = Array.isArray(params.lang) ? params.lang[0] : params.lang
-  const locale = parseStudioLocale(rawLocale)
-  const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? ''
+  const rawQueryLocale = Array.isArray(params.lang) ? params.lang[0] : params.lang
+  const locale = parseStudioLocale(
+    requestHeaders.get('x-qdip-studio-locale') ?? rawQueryLocale
+  )
+  const host =
+    requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? ''
 
-  redirect(isStudioSurfaceHost(host) ? `/${locale}/profiles` : studioHref('profiles', locale))
+  redirect(
+    isStudioSurfaceHost(host)
+      ? `/${locale}/profiles`
+      : studioHref('profiles', locale)
+  )
 }

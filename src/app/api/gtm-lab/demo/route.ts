@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { gtmDemoSchema } from '@/features/gtm-lab/contracts'
-import { DipApiError, runDipPlugin } from '@/lib/dip-api'
+import { DipApiError, runGtmDemo } from '@/features/gtm-lab/server'
 
 export async function POST() {
   try {
-    const result = await runDipPlugin('gtm-lab', 'gtm.demo.run', {})
-    return NextResponse.json(gtmDemoSchema.parse(result))
+    return NextResponse.json(await runGtmDemo())
   } catch (error) {
     if (error instanceof z.ZodError)
       return NextResponse.json(

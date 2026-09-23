@@ -1,8 +1,11 @@
 'use client'
 
-import type { Audit, DimensionResult } from '@/studio/contracts'
-import { studioCopy } from '@/studio/studio-copy'
-import { useStudioLocale } from '@/studio/use-studio-locale'
+import {
+  studioCopy,
+  useStudioLocale,
+  type Audit,
+  type DimensionResult,
+} from '@/features/studio'
 
 type GasSignals = {
   current_price_eur_mwh?: number

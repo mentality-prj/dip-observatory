@@ -154,3 +154,39 @@ export type ResourceAllocationInput = {
   marginal_team_capacity?: number
   target_priority_coverage?: number
 }
+
+export type ResourceAllocationManualMetrics = {
+  priority_coverage?: number
+  total_coverage?: number
+  travel_cost?: number
+  capacity_utilization?: number
+  operating_cost?: number
+}
+
+export type ResourceAllocationManualEvaluation = {
+  status?: string
+  daily?: Array<{
+    day: string
+    status?: string
+    recommended?: {
+      metrics?: ResourceAllocationManualMetrics
+      violations?: string[]
+    }
+    demand?: {
+      served?: number
+      closing_unmet?: number
+    }
+  }>
+  aggregate_metrics?: ResourceAllocationManualMetrics
+  demand_summary?: {
+    served?: number
+    closing_unmet?: number
+  }
+  violations?: string[]
+}
+
+export type EvaluatedManualAllocation = {
+  actual_allocation: Record<string, Record<string, string | null>>
+  metrics: Record<string, number>
+  evaluation: ResourceAllocationManualEvaluation
+}

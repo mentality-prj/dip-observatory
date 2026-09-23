@@ -20,13 +20,14 @@ features/<feature>/
   services/     DIP/API adapters and external I/O.
   utils/        Pure transformations and formatters.
   config/       Feature constants and declarative configuration.
-  index.ts      The only public import surface.
+  index.ts      Browser-safe public import surface.
+  server.ts     Optional server-only public boundary for route handlers.\n  server-actions.ts Optional public Server Actions boundary when Client Components invoke server logic.
 ```
 
 ## Rules
 
 - `app/**` contains routing, metadata and composition only.
-- Feature consumers import from `features/<feature>`, never feature internals.
+- UI consumers import from `features/<feature>`. Server routes import from `features/<feature>/server` when server-only capabilities are required; Client Components may import explicit `server-actions.ts` exports. Neither may import feature internals.
 - `components/**` are presentational: props in, JSX out. They do not call APIs or decision engines and do not own domain orchestration.
 - Hooks own client-side orchestration and expose view-model shaped data/actions.
 - Services isolate I/O and framework/external API adapters.

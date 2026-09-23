@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { DipApiError, runDipPlugin } from '@/lib/dip-api'
+import { DipApiError, runResourceAllocationCapacityGap } from '@/features/resource-allocation/server'
 
 export const maxDuration = 60
 
@@ -8,10 +8,7 @@ export async function POST(request: Request) {
   try {
     const input = (await request.json()) as Record<string, unknown>
     return NextResponse.json(
-      await runDipPlugin('resource-allocation', 'humanitarian.resource-allocation.optimize', {
-        ...input,
-        operation: 'capacity_gap',
-      })
+      await runResourceAllocationCapacityGap(input)
     )
   } catch (error) {
     if (error instanceof DipApiError) return NextResponse.json({ error: error.message }, { status: error.status })

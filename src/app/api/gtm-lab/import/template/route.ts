@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { DipApiError, getGtmImportTemplate } from '@/lib/dip-api'
+import { DipApiError, getGtmImportTemplate } from '@/features/gtm-lab/server'
 
 export async function GET() {
   try {

@@ -1,8 +1,7 @@
 import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
-import { DecisionStudio } from '@/features/studio'
+import { DecisionStudio, parseStudioLocale } from '@/features/studio'
 import { studioHref } from '@/lib/platform-urls'
-import { parseStudioLocale } from '@/studio/studio-locale'
 
 function isStudioSurfaceHost(host: string) {
   const hostname = host.split(':')[0].toLowerCase()

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { DipApiError, validateGtmImport } from '@/lib/dip-api'
+import { DipApiError, validateGtmImport } from '@/features/gtm-lab/server'
 
 const requestSchema = z.object({ rows: z.array(z.record(z.string(), z.unknown())).max(5000) })
 

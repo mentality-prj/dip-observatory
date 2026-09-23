@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { DipApiError, runDipPlugin } from '@/lib/dip-api'
+import { DipApiError, runDipPlugin } from '@/shared/dip/server-client'
 
 const priority = z.enum(['critical', 'high', 'normal'])
 const demand = z

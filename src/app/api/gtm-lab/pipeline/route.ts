@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prospectSeedSchema } from '@/features/gtm-lab/import-contracts'
-import { DipApiError, runGtmPipeline } from '@/lib/dip-api'
+import { prospectSeedSchema } from '@/features/gtm-lab'
+import { DipApiError, runGtmPipeline } from '@/features/gtm-lab/server'
 
 const requestSchema = z.object({ rows: z.array(prospectSeedSchema).min(1).max(5000) })
 
