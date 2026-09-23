@@ -37,6 +37,12 @@ const footerLabels = {
   pl: ['Jak to działa', 'Przypadki użycia', 'QDIP Core', 'Badania'],
 } as const
 
+const observatoryFooterLabels = {
+  en: ['Observatory overview', 'Open Studio', 'How it works', 'QDIP Core', 'Research'],
+  uk: ['Огляд Observatory', 'Відкрити Studio', 'Як це працює', 'QDIP Core', 'Дослідження'],
+  pl: ['Przegląd Observatory', 'Otwórz Studio', 'Jak to działa', 'QDIP Core', 'Badania'],
+} as const
+
 const locales = ['en', 'uk', 'pl'] as const
 
 test.describe('P1 marketing conversion gate', () => {
@@ -71,6 +77,15 @@ test.describe('P1 Observatory consistency gate', () => {
 
       await expect(page.getByText(decisionPreview[locale], { exact: true })).toBeVisible()
       await expect(page.locator('[data-use-case="resource-allocation"]')).toBeVisible()
+
+      const footer = page.getByTestId('observatory-footer')
+      await expect(footer).toBeVisible()
+      for (const label of observatoryFooterLabels[locale]) {
+        await expect(footer.getByRole('link', { name: label })).toBeVisible()
+      }
+      for (const name of demoNames[locale]) {
+        await expect(footer.getByRole('link', { name })).toBeVisible()
+      }
     })
   }
 })
