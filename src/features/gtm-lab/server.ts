@@ -4,6 +4,7 @@ import {
   importTemplateSchema,
   importValidationSchema,
   pipelineRunSchema,
+  type CommercialContext,
   type ProspectSeed,
 } from './import-contracts'
 import { gtmDemoSchema } from './contracts'
@@ -31,9 +32,9 @@ export function validateGtmImport(rows: Record<string, unknown>[]) {
   })
 }
 
-export function runGtmPublicEvaluation(rows: ProspectSeed[]) {
+export function runGtmPublicEvaluation(rows: ProspectSeed[], commercialContext: CommercialContext) {
   return dipRequest('/api/v1/gtm-lab/public/evaluate', pipelineRunSchema, {
     method: 'POST',
-    body: JSON.stringify({ rows }),
+    body: JSON.stringify({ rows, commercial_context: commercialContext }),
   })
 }
