@@ -3,6 +3,7 @@ import { ArrowRight, BarChart3, BrainCircuit, Check, ChevronDown, Route } from '
 
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
+import { decisionPatternLabel } from '@/product/experience'
 import { observableUseCases } from '@/use-cases/registry'
 
 export const observatoryHomeCopy = {
@@ -219,7 +220,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                       <Icon className="h-5 w-5 text-cyan-200" />
                     </span>
                     <span className="flex items-center gap-2 text-[10px] font-semibold tracking-[.14em] text-slate-500">
-                      <b className="text-cyan-300">{useCase.decisionPattern.toUpperCase()}</b>
+                      <b className="text-cyan-300">{decisionPatternLabel(useCase.decisionPattern, locale)}</b>
                       <span>·</span>
                       {useCase.tag[locale]}
                     </span>
