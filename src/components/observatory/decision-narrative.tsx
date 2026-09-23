@@ -1,28 +1,35 @@
 import type { Locale } from '@/lib/observatory-i18n'
 import type { DipUseCase } from '@/use-cases/registry'
+import { decisionPatternLabel } from '@/product/experience'
 
 const labels = {
   en: ['Situation', 'Alternatives', 'Evaluation', 'Risk / uncertainty', 'Recommendation', 'Evidence', 'Trace'],
-  uk: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази', 'Trace'],
-  pl: ['Sytuacja', 'Alternatywy', 'Ocena', 'Ryzyko / niepewność', 'Rekomendacja', 'Dowody', 'Trace'],
+  uk: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази', 'Історія рішення'],
+  pl: ['Sytuacja', 'Alternatywy', 'Ocena', 'Ryzyko / niepewność', 'Rekomendacja', 'Dowody', 'Ślad decyzji'],
 } as const
 
 const helper = {
   en: 'One inspection grammar across every QDIP application.',
   uk: 'Одна логіка перевірки для кожного застосунку QDIP.',
-  pl: 'Jedna logika inspekcji dla każdej aplikacji QDIP.',
+  pl: 'Jedna logika weryfikacji dla każdej aplikacji QDIP.',
+} as const
+
+const ariaLabel = {
+  en: 'Decision narrative',
+  uk: 'Логіка рішення',
+  pl: 'Logika decyzji',
 } as const
 
 export function ObservatoryDecisionNarrative({ locale, useCase }: { locale: Locale; useCase: DipUseCase }) {
   return (
     <section
       className="mx-auto w-full max-w-[1540px] px-4 pt-5 sm:px-5 md:px-8 lg:px-10"
-      aria-label="Decision narrative"
+      aria-label={ariaLabel[locale]}
     >
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">
-            {useCase.decisionPattern} · {useCase.tag[locale]}
+            {decisionPatternLabel(useCase.decisionPattern, locale)} · {useCase.tag[locale]}
           </span>
           <p className="mt-1 text-xs text-slate-500">{helper[locale]}</p>
         </div>
