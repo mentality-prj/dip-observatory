@@ -5,7 +5,7 @@ import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { observableUseCases } from '@/use-cases/registry'
 
-const copy = {
+export const observatoryHomeCopy = {
   en: {
     eyebrow: 'QDIP OBSERVATORY · UNDERSTAND',
     title: 'Understand the recommendation, not just the output.',
@@ -45,7 +45,7 @@ const copy = {
     title: 'Перевіряйте не лише результат, а й обґрунтування рекомендації.',
     subtitle:
       'Observatory — простір для перевірки рішень QDIP. У кожному застосунку ви бачите рекомендацію, альтернативи, докази та історію рішення.',
-    inspectLabel: 'Розподіл ресурсів · preview рішення',
+    inspectLabel: 'Розподіл ресурсів · попередній перегляд рішення',
     recommendation: 'Рекомендація',
     recommended: 'Рекомендований план розподілу',
     confidence: 'Сформовано з налаштованого сценарію та операційних обмежень',
@@ -55,13 +55,13 @@ const copy = {
     alternatives: 'Альтернативи',
     alternativeItems: [
       ['Поточний розподіл', 'Зберегти поточне розміщення команд'],
-      ['Ручний override', 'Відповідальна людина змінює запропонований план'],
+      ['Ручне коригування', 'Відповідальна людина змінює запропонований план'],
     ],
     trace: 'Відкрити історію рішення',
     traceBody:
       'Потреби й доступні команди → допустимі розподіли → перевірка обмежень → оцінка пріоритетів → рекомендований розподіл.',
     previewCta: 'Відкрити Resource Allocation',
-    demos: 'Робочі decision applications',
+    demos: 'Діючі застосунки для прийняття рішень',
     demosBody:
       'Різні домени, однакова логіка перевірки. Відкрийте застосунок, щоб дослідити реальну рекомендацію та докази.',
     open: 'Дослідити рішення',
@@ -79,7 +79,7 @@ const copy = {
     title: 'Sprawdzaj nie tylko wynik, ale też uzasadnienie rekomendacji.',
     subtitle:
       'Observatory to przestrzeń do weryfikacji decyzji QDIP. W każdej aplikacji zobaczysz rekomendację, alternatywy, dowody i ślad decyzji.',
-    inspectLabel: 'Resource Allocation · podgląd decyzji',
+    inspectLabel: 'Alokacja zasobów · podgląd decyzji',
     recommendation: 'Rekomendacja',
     recommended: 'Rekomendowany plan alokacji',
     confidence: 'Wygenerowany z konfiguracji scenariusza i ograniczeń operacyjnych',
@@ -97,7 +97,7 @@ const copy = {
     previewCta: 'Otwórz Resource Allocation',
     demos: 'Działające aplikacje decyzyjne',
     demosBody:
-      'Różne domeny, ta sama logika inspekcji. Otwórz aplikację, aby zbadać rzeczywistą rekomendację i stojące za nią dowody.',
+      'Różne domeny, ta sama logika weryfikacji. Otwórz aplikację, aby przeanalizować rzeczywistą rekomendację i stojące za nią dowody.',
     open: 'Przeanalizuj decyzję',
     inspect: 'Cztery pytania, na które powinno odpowiadać Observatory',
     questions: [
@@ -113,7 +113,7 @@ const copy = {
 const demoIcons = { 'gas-forecast': BarChart3, 'resource-allocation': Route } as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
-  const t = copy[locale]
+  const t = observatoryHomeCopy[locale]
   const useCases = observableUseCases()
   return (
     <main className="observatory-home relative min-h-[calc(100vh-6.5rem)] overflow-hidden px-4 pb-20 pt-8 text-white md:px-6 md:pt-12 xl:px-10">
