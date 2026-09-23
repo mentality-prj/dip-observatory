@@ -36,7 +36,7 @@ test.describe('Observatory production routing contract', () => {
   }
 
   for (const locale of locales) {
-    test(`${locale} SPA navigation can visit every registered use case without page errors`, async ({ page }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
       const first = routes[0]
       const response = await page.goto(
