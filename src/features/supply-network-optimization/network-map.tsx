@@ -118,7 +118,10 @@ export function NetworkMap({
   const [mapReady, setMapReady] = useState(false)
   const markersRef = useRef<MapLibreMarker[]>([])
   const clickRef = useRef(onMapClick)
-  clickRef.current = onMapClick
+
+  useEffect(() => {
+    clickRef.current = onMapClick
+  }, [onMapClick])
 
   useEffect(() => {
     let cancelled = false
