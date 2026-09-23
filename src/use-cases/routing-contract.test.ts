@@ -12,10 +12,10 @@ const routingContract = [
       ),
   },
   {
-    id: 'supply-network-resilience',
-    route: '/supply-network-resilience',
+    id: 'supply-network-optimization',
+    route: '/supply-network-optimization',
     load: () =>
-      import('../features/supply-network-resilience/workspace').then(
+      import('../features/supply-network-optimization/workspace').then(
         (module) => module.SupplyNetworkResilienceWorkspace
       ),
   },
