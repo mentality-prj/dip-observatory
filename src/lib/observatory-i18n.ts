@@ -35,11 +35,11 @@ const metadata = {
   },
   uk: {
     title: 'QDIP Observatory | Український інтерфейс',
-    description: 'Досліджуйте прикладні рішення QDIP, їхні вхідні дані, альтернативи та докази рішень.',
+    description: 'Досліджуйте застосунки QDIP для прийняття рішень, їхні вхідні дані, альтернативи та обґрунтування.'
   },
   pl: {
     title: 'QDIP Observatory | Polski interfejs',
-    description: 'Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i dowody decyzji.',
+    description: 'Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i uzasadnienia decyzji.'
   },
 } as const
 
