@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type {
   CandidateResult,
   CandidateWarehouse,
@@ -102,6 +102,7 @@ export function NetworkMap({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const [mapReady, setMapReady] = useState(false)
   const markersRef = useRef<MapLibreMarker[]>([])
   const clickRef = useRef(onMapClick)
   clickRef.current = onMapClick
@@ -119,6 +120,7 @@ export function NetworkMap({
         attributionControl: true,
       })
       mapRef.current = localMap
+      setMapReady(true)
       localMap.on('click', (event) => {
         const target = event.originalEvent?.target
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
@@ -133,6 +135,7 @@ export function NetworkMap({
       markersRef.current = []
       localMap?.remove()
       mapRef.current = null
+      setMapReady(false)
     }
   }, [])
 
@@ -212,6 +215,7 @@ export function NetworkMap({
     })
     return () => { cancelled = true }
   }, [
+    mapReady,
     candidateAreas,
     manualCandidate,
     network,
