@@ -1,4 +1,14 @@
-import type { SupplyNetwork } from './domain'
+import type { CurrentFlow, SupplyNetwork } from './domain'
+
+export const SUPPLY_NETWORK_CURRENT_FLOWS: CurrentFlow[] = [
+  { warehouse_id: 'north-hub', demand_point_id: 'north-coast' },
+  { warehouse_id: 'north-hub', demand_point_id: 'north-east' },
+  { warehouse_id: 'west-hub', demand_point_id: 'west' },
+  { warehouse_id: 'central-hub', demand_point_id: 'central' },
+  { warehouse_id: 'central-hub', demand_point_id: 'south-east' },
+  { warehouse_id: 'south-hub', demand_point_id: 'south' },
+  { warehouse_id: 'south-hub', demand_point_id: 'south-east' },
+]
 
 export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   product_classes: [
