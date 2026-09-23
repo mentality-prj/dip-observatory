@@ -7,9 +7,9 @@ const heroCta = {
 } as const
 
 const demoNames = {
-  en: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
-  uk: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
-  pl: ['Resource Allocation', 'Gas Decision', 'GTM Lab'],
+  en: ['Resource Allocation', 'GTM Lab'],
+  uk: ['Resource Allocation', 'GTM Lab'],
+  pl: ['Resource Allocation', 'GTM Lab'],
 } as const
 
 const proofArtifacts = {
