@@ -41,7 +41,15 @@ export const DECISION_PATTERNS: Record<DecisionPatternId, DecisionPatternDefinit
   },
 }
 
+export const DECISION_PATTERN_LABELS: Record<DecisionPatternId, Localized<string>> = {
+  allocate: { en: 'ALLOCATE', uk: 'РОЗПОДІЛ', pl: 'ALOKACJA' },
+  decide: { en: 'DECIDE', uk: 'ВИБІР ДІЇ', pl: 'WYBÓR DZIAŁANIA' },
+  prioritize: { en: 'PRIORITIZE', uk: 'ПРІОРИТЕТИ', pl: 'PRIORYTETY' },
+}
+
 export const decisionPattern = (id: DecisionPatternId) => DECISION_PATTERNS[id]
+export const decisionPatternLabel = (id: DecisionPatternId, locale: Locale) =>
+  DECISION_PATTERN_LABELS[id][locale]
 
 export const DECISION_WORKFLOW_COPY: Record<Locale, readonly { id: DecisionStageId; label: string; detail: string }[]> =
   {
@@ -103,8 +111,8 @@ export const PRODUCT_SURFACE_COPY: Record<
     {
       id: 'demo',
       verb: 'СПРОБУВАТИ',
-      title: 'Decision demos',
-      body: 'Почніть із робочого патерну рішення та змініть реальне обмеження.',
+      title: 'Демонстраційні рішення',
+      body: 'Почніть із готової моделі рішення та змініть реальне обмеження.',
       cta: 'Спробувати демо',
     },
     {
@@ -123,7 +131,7 @@ export const PRODUCT_SURFACE_COPY: Record<
     },
     {
       id: 'observatory',
-      verb: 'ЗРОЗУМІТИ',
+      verb: 'ПЕРЕВІРКА',
       title: 'QDIP Observatory',
       body: 'Перевірте рекомендацію, альтернативи, докази та те, що змінилося.',
       cta: 'Відкрити Observatory',
@@ -133,8 +141,8 @@ export const PRODUCT_SURFACE_COPY: Record<
     {
       id: 'demo',
       verb: 'SPRAWDŹ',
-      title: 'Decision demos',
-      body: 'Zacznij od działającego wzorca decyzji i zmień rzeczywiste ograniczenie.',
+      title: 'Dema decyzyjne',
+      body: 'Zacznij od gotowego modelu decyzyjnego i zmień rzeczywiste ograniczenie.',
       cta: 'Wypróbuj demo',
     },
     {
@@ -153,7 +161,7 @@ export const PRODUCT_SURFACE_COPY: Record<
     },
     {
       id: 'observatory',
-      verb: 'ZROZUM',
+      verb: 'WERYFIKACJA',
       title: 'QDIP Observatory',
       body: 'Sprawdź rekomendację, alternatywy, dowody i to, co się zmieniło.',
       cta: 'Otwórz Observatory',
