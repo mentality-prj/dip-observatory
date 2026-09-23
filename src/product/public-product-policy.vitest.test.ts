@@ -44,6 +44,13 @@ describe('public product naming policy', () => {
   })
 })
 
+describe('retired public demos', () => {
+  it('keeps Gas Forecast out of the public use-case registry', () => {
+    expect(DIP_USE_CASES.some((useCase) => useCase.id === 'gas-forecast')).toBe(false)
+    expect(DIP_USE_CASES.some((useCase) => useCase.route === '/gas-forecast')).toBe(false)
+  })
+})
+
 describe('localized Studio terminology policy', () => {
   const forbiddenEnglishUiTerms = [
     /\bdimensions?\b/i,
