@@ -84,6 +84,26 @@ test.describe('P1 Observatory consistency gate', () => {
   }
 })
 
+test('P1 Observatory mobile navigation aligns with the content grid', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const response = await page.goto('http://observatory.localhost:3000/en/gtm-lab')
+  expect(response?.status()).toBeLessThan(400)
+
+  const menuSummary = page.locator('.ds-product-mobile-navigation summary')
+  const breadcrumbHome = page
+    .locator('[aria-label="Breadcrumb"]')
+    .getByRole('link', { name: 'QDIP home' })
+
+  await expect(menuSummary).toBeVisible()
+  await expect(breadcrumbHome).toBeVisible()
+
+  const menuBox = await menuSummary.boundingBox()
+  const homeBox = await breadcrumbHome.boundingBox()
+  expect(menuBox).not.toBeNull()
+  expect(homeBox).not.toBeNull()
+  expect(Math.abs((menuBox?.x ?? 0) - (homeBox?.x ?? 0))).toBeLessThanOrEqual(1)
+})
+
 test.describe('P1 Studio localization gate', () => {
   for (const locale of locales) {
     test(`${locale} footer uses the active Studio locale`, async ({ page }) => {
