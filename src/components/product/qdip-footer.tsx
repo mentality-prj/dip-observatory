@@ -15,18 +15,20 @@ export function QdipFooter({
   variant = 'marketing',
   showNavigation = true,
   testId,
+  className,
 }: {
   locale: MarketingLocale
   variant?: QdipFooterVariant
   showNavigation?: boolean
   testId?: string
+  className?: string
 }) {
   const c = marketingCopy[locale]
   const a11y = sharedI18n[locale]
   const research = locale === 'en' ? 'Research' : locale === 'uk' ? 'Дослідження' : 'Badania'
 
   return (
-    <footer className={styles.footer} data-variant={variant} data-testid={testId}>
+    <footer className={`${styles.footer}${className ? ` ${className}` : ``}`} data-variant={variant} data-testid={testId}>
       <div className={styles.inner}>
         <Link className={styles.brand} data-footer-brand href={marketingHref(locale)} aria-label={a11y.home}>
           <QdipLogo inverse />
