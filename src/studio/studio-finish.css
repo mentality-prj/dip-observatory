@@ -59,6 +59,7 @@
 .studio-language-controls {
   order: 2;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
 }
 .studio-language-switcher {
@@ -99,10 +100,11 @@
 
 .studio-language-select {
   display: none;
-  min-height: var(--ds-header-control-height);
+  min-height: 44px;
+  flex: 0 0 auto;
   align-items: center;
   gap: 6px;
-  padding: 0 8px;
+  padding: 0 10px;
   border: 1px solid #d7e3db;
   border-radius: var(--ds-radius-action);
   color: #607269;
