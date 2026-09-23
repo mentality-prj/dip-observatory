@@ -1,55 +1,16 @@
 # Supply Network Resilience — decision contract
 
-## Buyer question
+**Question:** how should inventory be distributed across logistics nodes so losing any single node does not create unacceptable interruption while service level, working capital and logistics cost stay within policy?
 
-How should inventory be distributed across available logistics nodes so that loss of any single node does not create unacceptable business interruption, while additional logistics and holding cost remain bounded?
+Generic multi-region specialty retailer/distributor; fixtures are synthetic and contain no customer/personal identifiers. Model **node unavailability**, not cause/probability.
 
-## Scope
+## Model
+Recommend `product class × node` allocation plus executable node-to-node transfers. Objective: **minimize worst-case business loss across node-unavailable scenarios**, constrained by service level, node/route capacity, storage compatibility, inventory/working-capital envelope, concentration exposure and incremental logistics cost. Loss decomposes into explicit unserved demand, inventory-at-risk, logistics/holding cost and recovery assumptions.
 
-The public demo is intentionally generic. It models a multi-region specialty retailer/distributor with imported inventory, several domestic logistics nodes and regional demand. No customer, partner or personal names belong in source code, fixtures, UI copy, analytics or documentation.
+Inputs: product classes (value/holding/storage), regional demand, nodes (capacity/storage/inventory), delivery routes and transfer routes (lead time/throughput/cost), normal + single-node-unavailable scenarios.
 
-## Decision
+## Validation
+Compare `centralized-baseline`, `equal-decentralization`, `recommended`. Each exposes actual allocation/transfers and per-scenario service level, unserved demand, inventory-at-risk, recovery time and logistics cost, plus worst-case loss and incremental cost. Before UI expansion, recommended must show material Pareto improvement over **both** baselines without constraint violations. Never claim global optimum unless solver guarantees it.
 
-QDIP evaluates feasible inventory-distribution alternatives and recommends a resilient allocation under normal operation and single-node-unavailable scenarios.
-
-### Inputs
-
-- inventory value and demand by product class and region;
-- node capacity and current concentration;
-- replenishment lead time and transfer paths;
-- service-level target;
-- maximum acceptable exposure at one node;
-- incremental logistics and holding cost.
-
-### Alternatives
-
-At minimum the experiment compares:
-
-1. centralized baseline;
-2. naive/equal decentralization;
-3. QDIP recommended allocation.
-
-### Constraints
-
-- node capacity;
-- minimum service level;
-- product/storage compatibility;
-- available transfer paths;
-- working-capital/inventory limits;
-- maximum concentration exposure.
-
-### Outcomes
-
-- inventory value exposed to one node;
-- service level after a node becomes unavailable;
-- affected demand/locations;
-- recovery time;
-- incremental logistics and holding cost.
-
-## Architecture boundary
-
-`src/features/supply-network-resilience/domain.ts` owns frontend domain contracts only. UI components depend on `SupplyResilienceDecisionPort`, not HTTP or a concrete solver. Optimization belongs to a QDIP capability/plugin. Presentation must reuse Observatory primitives and the existing decision workflow rather than create a parallel design system.
-
-## Validation gate
-
-Do not claim a global optimum unless the solver provides that guarantee. The demo must expose the trade-off against both baselines and show the assumptions used by the recommendation. Production integrations, customer-specific connectors and ML are out of scope until the experiment demonstrates a material Pareto improvement.
+## Boundary
+`SupplyResilienceDecisionPort` isolates UI from transport/solver; optimization belongs to QDIP and Observatory reuses existing decision patterns. Repository placement conventions conflict (`src/use-cases` docs vs existing `src/features`), so keep this package behind its public API and normalize placement separately. Production connectors, customer-specific integrations and ML remain out of scope until validation passes.
