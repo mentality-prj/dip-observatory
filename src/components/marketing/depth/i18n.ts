@@ -37,7 +37,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'SOLUTIONS',
       'One Decision Engine. Reusable decision patterns.',
-      'Resource Allocation, Supply Network Resilience and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
+      'Resource Allocation, Supply Network Optimization and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
     ],
     sections: [
       {
@@ -90,7 +90,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'ALLOCATE',
-        title: 'Supply Network Resilience',
+        title: 'Supply Network Optimization',
         question: 'How should inventory be distributed so one unavailable logistics node does not stop the network?',
         problem:
           'Inventory concentrated in too few logistics nodes can turn one interruption into a network-wide service failure.',
@@ -100,7 +100,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
           'QDIP stress-tests normal and single-node-unavailable scenarios, compares feasible allocations and evaluates executable transfers.',
         output:
           'Recommended allocation, executable transfers, baseline comparison, scenario service levels, exposure and worst-case business loss.',
-        href: '/supply-network-resilience',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'PRIORITIZE',
@@ -126,7 +126,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'РІШЕННЯ',
       'Один рушій рішень. Багаторазові патерни рішень.',
-      'Resource Allocation, Supply Network Resilience і GTM Lab — робочі застосунки. РОЗПОДІЛИТИ, ВИРІШИТИ та ПРІОРИТЕЗУВАТИ залишаються багаторазовими патернами для нових доменів із явними альтернативами, пріоритетами, обмеженнями, невизначеністю, доказами та перевірюваною рекомендацією.',
+      'Resource Allocation, Supply Network Optimization і GTM Lab — робочі застосунки. РОЗПОДІЛИТИ, ВИРІШИТИ та ПРІОРИТЕЗУВАТИ залишаються багаторазовими патернами для нових доменів із явними альтернативами, пріоритетами, обмеженнями, невизначеністю, доказами та перевірюваною рекомендацією.',
     ],
     sections: [
       {
@@ -168,13 +168,13 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'РОЗПОДІЛИТИ',
-        title: 'Supply Network Resilience',
+        title: 'Supply Network Optimization',
         question: 'Як розподілити запаси, щоб недоступність одного логістичного вузла не зупинила мережу?',
         problem: 'Надмірна концентрація запасів у кількох вузлах може перетворити одну локальну відмову на збій обслуговування всієї мережі.',
         inputs: 'Запаси за вузлами та класами товарів, регіональний попит, потужність вузлів і маршрутів, сумісність, строки та логістична вартість.',
         evaluation: 'QDIP тестує нормальні сценарії та сценарії недоступності одного вузла, порівнює допустимі розподіли й оцінює виконувані переміщення.',
         output: 'Рекомендований розподіл, виконувані переміщення, порівняння з базовими варіантами, рівень обслуговування, експозиція та найгірші бізнес-втрати.',
-        href: '/supply-network-resilience',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'ПРІОРИТЕЗУВАТИ',
@@ -198,7 +198,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'ROZWIĄZANIA',
       'Jeden silnik decyzyjny. Wielokrotnego użytku wzorce decyzji.',
-      'Resource Allocation, Supply Network Resilience i GTM Lab to działające aplikacje. ALOKUJ, DECYDUJ i PRIORYTETYZUJ pozostają wzorcami wielokrotnego użytku dla nowych domen z jawnymi alternatywami, priorytetami, ograniczeniami, niepewnością, dowodami i możliwą do zweryfikowania rekomendacją.',
+      'Resource Allocation, Supply Network Optimization i GTM Lab to działające aplikacje. ALOKUJ, DECYDUJ i PRIORYTETYZUJ pozostają wzorcami wielokrotnego użytku dla nowych domen z jawnymi alternatywami, priorytetami, ograniczeniami, niepewnością, dowodami i możliwą do zweryfikowania rekomendacją.',
     ],
     sections: [
       {
@@ -240,13 +240,13 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'ALOKUJ',
-        title: 'Supply Network Resilience',
+        title: 'Supply Network Optimization',
         question: 'Jak rozmieścić zapasy, aby niedostępność jednego węzła logistycznego nie zatrzymała sieci?',
         problem: 'Nadmierna koncentracja zapasów w kilku węzłach może zamienić pojedyncze zakłócenie w problem obsługi całej sieci.',
         inputs: 'Zapasy według węzła i klasy produktu, popyt regionalny, przepustowość węzłów i tras, kompatybilność, czas oraz koszt logistyki.',
         evaluation: 'QDIP testuje scenariusz normalny i scenariusze niedostępności pojedynczego węzła, porównuje wykonalne alokacje i ocenia możliwe przesunięcia.',
         output: 'Rekomendowana alokacja, wykonalne przesunięcia, porównanie z wariantami bazowymi, poziom obsługi, ekspozycja i najgorsza strata biznesowa.',
-        href: '/supply-network-resilience',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'PRIORYTETYZUJ',
