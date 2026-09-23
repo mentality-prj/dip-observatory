@@ -3,15 +3,13 @@ import { z } from 'zod'
 
 import {
   assertSameOriginMutation,
-  ResourceAllocationAccessError,
-} from '@/features/resource-allocation/server/access'
-import { normalizeResourceAllocationBusinessMetrics } from '@/features/resource-allocation/server/normalize-business-metrics'
-import {
+  DipApiError,
+  normalizeResourceAllocationBusinessMetrics,
   resourceAllocationRequestSchema,
+  ResourceAllocationAccessError,
   runResourceAllocation,
   type UiLocale,
-} from '@/features/resource-allocation/server/run-resource-allocation'
-import { DipApiError } from '@/lib/dip-api'
+} from '@/features/resource-allocation/server'
 
 export const maxDuration = 60
 

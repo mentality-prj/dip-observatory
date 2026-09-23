@@ -48,6 +48,7 @@
 }
 .ds-product-lockup {
   display: inline-flex;
+  gap: 0;
   min-height: 44px;
   align-items: center;
   flex-shrink: 0;
@@ -62,21 +63,31 @@
   opacity: 0.82;
 }
 .ds-product-lockup-brand {
+  display: inline-flex;
+  align-items: center;
+  margin-left: -12px;
+  transform: translateY(-2px);
   font-weight: 450;
 }
 .ds-product-lockup-wordmark-frame {
   display: inline-flex;
-  width: 90px;
-  flex: 0 0 90px;
+  width: 124px;
+  flex: 0 0 124px;
   align-items: center;
   overflow: hidden;
 }
 .ds-product-lockup-wordmark {
+  width: 156px;
+  height: auto;
+  margin-inline: -16px;
   flex: 0 0 auto;
+  clip-path: inset(0 10%);
 }
 .ds-product-lockup-product {
   color: var(--ds-accent);
-  font-weight: 350;
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 400;
 }
 .ds-product-header-center {
   min-width: 0;
@@ -137,6 +148,35 @@
   outline: 3px solid var(--ds-focus);
   outline-offset: 2px;
 }
+
+.ds-text-accent {
+  color: var(--ds-accent);
+}
+.ds-text-muted {
+  color: var(--ds-text-muted);
+}
+.ds-accent-background {
+  border-color: rgb(var(--ds-accent-rgb) / 0.3);
+  background: var(--ds-accent);
+  color: var(--ds-accent-contrast);
+}
+.ds-accent-surface {
+  border-color: rgb(var(--ds-accent-rgb) / 0.28);
+  background: rgb(var(--ds-accent-rgb) / 0.08);
+  color: var(--ds-text);
+}
+.ds-selection-surface {
+  border-color: rgb(var(--ds-accent-rgb) / 0.42) !important;
+  background: rgb(var(--ds-accent-rgb) / 0.12) !important;
+  color: var(--ds-text);
+}
+.ds-accent-control {
+  accent-color: var(--ds-accent);
+}
+.ds-accent-border-left {
+  border-left-color: rgb(var(--ds-accent-rgb) / 0.4) !important;
+}
+
 .ds-surface,
 .ds-card {
   border: 1px solid var(--ds-border);
@@ -218,13 +258,13 @@
   color: var(--ds-text-muted);
 }
 .ds-button-danger {
-  border-color: rgb(190 24 93/0.3);
-  background: rgb(190 24 93/0.12);
-  color: #be185d;
+  border-color: rgb(var(--ds-semantic-danger-rgb) / 0.3);
+  background: rgb(var(--ds-semantic-danger-rgb) / 0.12);
+  color: var(--ds-semantic-danger);
 }
 .ds-button-danger:hover {
-  border-color: rgb(190 24 93/0.58);
-  background: rgb(190 24 93/0.18);
+  border-color: rgb(var(--ds-semantic-danger-rgb) / 0.58);
+  background: rgb(var(--ds-semantic-danger-rgb) / 0.18);
 }
 .ds-button-sm {
   min-height: 2.25rem;

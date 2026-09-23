@@ -1,15 +1,17 @@
 import { Suspense, type ReactNode } from 'react'
 import { headers } from 'next/headers'
-import '@/studio/studio.css'
-import '@/studio/studio-finish.css'
+import '@/features/studio/styles.css'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
-import { StudioNav } from '@/features/studio'
-import { StudioFooter } from '@/studio/studio-footer'
-import { parseStudioLocale } from '@/studio/studio-locale'
-import { studioCopy } from '@/studio/studio-copy'
-import { StudioCoreStatus, StudioProductHeader } from '@/studio/studio-product-header'
-import { StudioMobileNavigation } from '@/studio/studio-mobile-navigation'
-import { StudioLocaleProvider } from '@/studio/use-studio-locale'
+import {
+  parseStudioLocale,
+  StudioCoreStatus,
+  StudioFooter,
+  StudioLocaleProvider,
+  StudioMobileNavigation,
+  StudioNav,
+  StudioProductHeader,
+  studioCopy,
+} from '@/features/studio'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 
 export const metadata = {

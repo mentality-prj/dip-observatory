@@ -2,6 +2,7 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 
 const defaultStudioOrigin = isDevelopment ? '/studio' : 'https://studio.qdip.ai'
 const defaultObservatoryOrigin = isDevelopment ? '' : 'https://observatory.qdip.ai'
+
 export type PlatformLocale = 'en' | 'uk' | 'pl'
 
 export const PLATFORM_URLS = {
@@ -10,8 +11,13 @@ export const PLATFORM_URLS = {
   observatory: process.env.NEXT_PUBLIC_OBSERVATORY_URL ?? defaultObservatoryOrigin,
 } as const
 
+function normalizePath(path: string) {
+  const clean = path.replace(/^\/+|\/+$/g, '')
+  return clean ? `/${clean}` : ''
+}
+
 export function studioHref(path = '', locale: PlatformLocale = 'en') {
-  const suffix = path ? `/${path.replace(/^\/+/, '')}` : ''
+  const suffix = normalizePath(path)
   if (isDevelopment) {
     const query = locale === 'en' ? '' : `?lang=${locale}`
     return `/studio${suffix}${query}`
@@ -24,8 +30,7 @@ export function observatoryHref(path = '', locale?: PlatformLocale) {
   const explicitLocale = cleanPath.match(/^(en|uk|pl)(?:\/(.*))?$/)
   const resolvedLocale = locale ?? (explicitLocale?.[1] as PlatformLocale | undefined) ?? 'en'
   const localizedPath = explicitLocale ? (explicitLocale[2] ?? '') : cleanPath
-  const suffix = localizedPath ? `/${localizedPath}` : ''
-  return `${PLATFORM_URLS.observatory}/${resolvedLocale}${suffix}`
+  return `${PLATFORM_URLS.observatory}/${resolvedLocale}${normalizePath(localizedPath)}`
 }
 
 export function marketingHref(locale: PlatformLocale) {
@@ -34,5 +39,5 @@ export function marketingHref(locale: PlatformLocale) {
 }
 
 export function marketingLocaleHref(locale: PlatformLocale) {
-  return `/platform/${locale}`
+  return isDevelopment ? `/platform/${locale}` : `/${locale}`
 }

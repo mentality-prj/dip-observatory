@@ -1,84 +1,149 @@
-import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-const MARKETING_LOCALES = new Set(['en', 'uk', 'pl'])
+import { NextResponse } from 'next/server'
+
+const SUPPORTED_LOCALE_PATTERN = '(en|uk|pl)'
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1'])
-function requestHost(r: NextRequest) {
-  return (r.headers.get('x-forwarded-host') ?? r.headers.get('host') ?? '').split(':')[0].toLowerCase()
-}
-function isSurfaceHost(h: string, s: 'studio' | 'observatory') {
-  return !!h && !LOCAL_HOSTS.has(h) && (h === `${s}.qdip.ai` || h.startsWith(`${s}.`))
-}
-function isMarketingHost(h: string) {
-  return h === 'qdip.ai' || h === 'www.qdip.ai' || h === 'qdip.localhost'
-}
 const INTERNAL_REWRITE_HEADER = 'x-qdip-internal-rewrite'
 
-function rewriteInternal(request: NextRequest, url: URL, extraHeaders?: Record<string, string>) {
+type Surface = 'site' | 'studio' | 'observatory' | 'local'
+
+function requestHost(request: NextRequest) {
+  return (
+    request.headers.get('x-forwarded-host') ??
+    request.headers.get('host') ??
+    ''
+  )
+    .split(':')[0]
+    .toLowerCase()
+}
+
+function resolveSurface(host: string): Surface {
+  if (!host || LOCAL_HOSTS.has(host)) return 'local'
+  if (host === 'qdip.ai' || host === 'www.qdip.ai' || host === 'qdip.localhost') {
+    return 'site'
+  }
+  if (host === 'studio.qdip.ai' || host.startsWith('studio.')) return 'studio'
+  if (host === 'observatory.qdip.ai' || host.startsWith('observatory.')) {
+    return 'observatory'
+  }
+  return 'local'
+}
+
+function redirectPath(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone()
+  url.pathname = pathname
+  return NextResponse.redirect(url, 308)
+}
+
+function rewritePath(
+  request: NextRequest,
+  pathname: string,
+  extraHeaders?: Record<string, string>,
+  query?: Record<string, string>
+) {
+  const url = request.nextUrl.clone()
+  url.pathname = pathname
+  for (const [name, value] of Object.entries(query ?? {})) {
+    url.searchParams.set(name, value)
+  }
+
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(INTERNAL_REWRITE_HEADER, '1')
-  for (const [name, value] of Object.entries(extraHeaders ?? {})) requestHeaders.set(name, value)
+  for (const [name, value] of Object.entries(extraHeaders ?? {})) {
+    requestHeaders.set(name, value)
+  }
+
   return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
 }
-export function proxy(request: NextRequest) {
-  if (request.headers.get(INTERNAL_REWRITE_HEADER) === '1') return NextResponse.next()
 
-  const host = requestHost(request),
-    pathname = request.nextUrl.pathname
-  if (isSurfaceHost(host, 'studio') && !pathname.startsWith('/api/')) {
-    if (pathname === '/') {
-      const u = request.nextUrl.clone()
-      u.pathname = '/en'
-      return NextResponse.redirect(u, 308)
-    }
-    const localizedStudio = pathname.match(/^\/(en|uk|pl)(\/.*)?$/)
-    if (localizedStudio && MARKETING_LOCALES.has(localizedStudio[1])) {
-      const u = request.nextUrl.clone()
-      u.pathname = localizedStudio[2] ? `/studio${localizedStudio[2]}` : '/studio'
-      u.searchParams.set('lang', localizedStudio[1])
-      const response = rewriteInternal(request, u, {
-        'x-qdip-studio-locale': localizedStudio[1],
-      })
-      response.cookies.set('qdip-studio-locale', localizedStudio[1], {
-        path: '/',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365,
-      })
-      return response
-    }
-    if (pathname.startsWith('/studio')) {
-      const suffix = pathname.slice('/studio'.length)
-      const u = request.nextUrl.clone()
-      u.pathname = `/en${suffix}`
-      return NextResponse.redirect(u, 308)
-    }
-    const u = request.nextUrl.clone()
-    u.pathname = `/en${pathname}`
-    return NextResponse.redirect(u, 308)
+function routeStudio(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  if (pathname === '/') return redirectPath(request, '/en')
+
+  const localized = pathname.match(
+    new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
+  )
+  if (localized) {
+    const locale = localized[1]
+    const suffix = localized[2] ?? ''
+
+    const response = rewritePath(
+      request,
+      suffix ? `/studio${suffix}` : '/studio',
+      { 'x-qdip-studio-locale': locale },
+      { lang: locale }
+    )
+    response.cookies.set('qdip-studio-locale', locale, {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365,
+    })
+    return response
   }
-  if (isSurfaceHost(host, 'observatory') && !pathname.startsWith('/api/')) {
-    if (pathname === '/') {
-      const u = request.nextUrl.clone()
-      u.pathname = '/en'
-      return rewriteInternal(request, u)
-    }
-    if (pathname === '/decisions') {
-      const u = request.nextUrl.clone()
-      u.pathname = '/observatory/decisions'
-      return rewriteInternal(request, u)
-    }
+
+  if (pathname.startsWith('/studio')) {
+    return redirectPath(request, `/en${pathname.slice('/studio'.length)}`)
   }
-  const explicit = pathname.match(/^\/platform\/(en|uk|pl)(\/.*)?$/)
-  if (isMarketingHost(host) && explicit && MARKETING_LOCALES.has(explicit[1])) {
-    const u = request.nextUrl.clone()
-    u.pathname = `/${explicit[1]}${explicit[2] ?? ''}`
-    return NextResponse.redirect(u, 308)
-  }
-  const marketing = pathname.match(/^\/(en|uk|pl)(\/.*)?$/)
-  if (isMarketingHost(host) && marketing && MARKETING_LOCALES.has(marketing[1])) {
-    const u = request.nextUrl.clone()
-    u.pathname = `/platform/${marketing[1]}${marketing[2] ?? ''}`
-    return rewriteInternal(request, u)
+
+  return redirectPath(request, `/en${pathname}`)
+}
+
+function routeObservatory(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  if (pathname === '/') return rewritePath(request, '/en')
+  if (pathname === '/decisions') {
+    return rewritePath(request, '/observatory/decisions')
   }
   return NextResponse.next()
 }
-export const config = { matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'] }
+
+function routeSite(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  if (pathname === '/') return NextResponse.next()
+
+  const internalPlatformPath = pathname.match(
+    new RegExp(`^/platform/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
+  )
+  if (internalPlatformPath) {
+    return redirectPath(
+      request,
+      `/${internalPlatformPath[1]}${internalPlatformPath[2] ?? ''}`
+    )
+  }
+
+  const publicPath = pathname.match(
+    new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
+  )
+  if (publicPath) {
+    return rewritePath(
+      request,
+      `/platform/${publicPath[1]}${publicPath[2] ?? ''}`
+    )
+  }
+
+  return NextResponse.next()
+}
+
+export function proxy(request: NextRequest) {
+  if (request.headers.get(INTERNAL_REWRITE_HEADER) === '1') {
+    return NextResponse.next()
+  }
+  if (request.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
+
+  switch (resolveSurface(requestHost(request))) {
+    case 'studio':
+      return routeStudio(request)
+    case 'observatory':
+      return routeObservatory(request)
+    case 'site':
+      return routeSite(request)
+    default:
+      return NextResponse.next()
+  }
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'],
+}

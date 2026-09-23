@@ -3,35 +3,16 @@
 import { useMemo, useState } from 'react'
 import { Pencil, RefreshCw } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
+import type {
+  EvaluatedManualAllocation,
+  ResourceAllocationManualEvaluation as Evaluation,
+  ResourceAllocationManualMetrics as ManualMetrics,
+} from '../contracts'
 import { ResourceAllocationNetwork } from './resource-allocation-network'
 import { localizePlanningDay, trackResourceAllocation } from '../presentation'
 
 type DayPlan = { day: string; recommended: { assignments: Record<string, string | null> } }
-type ManualMetrics = {
-  priority_coverage?: number
-  total_coverage?: number
-  travel_cost?: number
-  capacity_utilization?: number
-  operating_cost?: number
-}
-type Evaluation = {
-  status?: string
-  daily?: Array<{
-    day: string
-    status?: string
-    recommended?: { metrics?: ManualMetrics; violations?: string[] }
-    demand?: { served?: number; closing_unmet?: number }
-  }>
-  aggregate_metrics?: ManualMetrics
-  demand_summary?: { served?: number; closing_unmet?: number }
-  violations?: string[]
-}
 type InputTeam = { id: string; current_community: string }
-export type EvaluatedManualAllocation = {
-  actual_allocation: Record<string, Record<string, string | null>>
-  metrics: Record<string, number>
-  evaluation: Evaluation
-}
 const copy = {
   uk: {
     section: 'ПЕРЕВІРТЕ ВЛАСНЕ РІШЕННЯ',

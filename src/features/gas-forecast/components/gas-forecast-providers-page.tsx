@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Activity, AlertTriangle, Check, CheckCircle2, ChevronDown, Home, PlugZap } from 'lucide-react'
 import Link from 'next/link'
 
-import { testGasForecastProviderAction } from '@/app/admin/plugins/gas-forecast/providers/actions'
+import { testGasForecastProviderAction } from '@/features/gas-forecast/server-actions'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@/design-system'
 import {
   getEntsogDatePickerBounds,

@@ -305,7 +305,7 @@ export function GtmLabWorkspace({ locale }: { locale: Locale }) {
       <div className="mx-auto max-w-[1540px] px-5 py-8 md:px-10 lg:py-12">
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs font-semibold tracking-[.18em] text-emerald-300">QDIP · GTM LAB</span>
+            <span className="text-xs font-semibold tracking-[.18em] ds-text-accent">QDIP · GTM LAB</span>
             {model && (
               <span className="border border-amber-300/30 px-3 py-1 text-xs font-bold text-amber-200">
                 {model.source === 'DEMO' ? t.demo : t.imported}
@@ -335,7 +335,7 @@ export function GtmLabWorkspace({ locale }: { locale: Locale }) {
         {!model && !error && (
           <div className="mt-7 flex min-h-[300px] items-center justify-center border border-dashed border-white/15 bg-white/[.03] text-center">
             <div className="max-w-lg">
-              <FlaskConical className="mx-auto h-10 w-10 text-emerald-300" />
+              <FlaskConical className="mx-auto h-10 w-10 ds-text-accent" />
               <p className="mt-4 text-slate-400">{t.empty}</p>
             </div>
           </div>

@@ -1,9 +1,2 @@
-import * as React from 'react'
-
-import { cn } from '@/lib/utils'
-
-function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn('ds-label-control', className)} {...props} />
-}
-
-export { Label }
+// Compatibility facade. New code imports from '@/design-system'.
+export { Label } from '@/design-system/controls'

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { Check, CircleAlert, Clipboard, Download, Flag, History, X } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { importResourceAllocationFile } from '../importer'
-import type { EvaluatedManualAllocation } from './resource-allocation-manual-editor'
+import type { EvaluatedManualAllocation } from '../contracts'
 import { trackResourceAllocation } from '../presentation'
 
 type Feedback = {

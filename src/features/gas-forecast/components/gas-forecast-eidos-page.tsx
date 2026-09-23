@@ -4,7 +4,7 @@ import { Check, Copy, Download, FlaskConical, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRef, useState, useTransition } from 'react'
 
-import { runGasForecastExperimentAction } from '@/app/admin/plugins/gas-forecast/eidos/actions'
+import { runGasForecastExperimentAction } from '@/features/gas-forecast/server-actions'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@/design-system'
 import { GasProcurementDecisionDemo } from '@/features/gas-forecast/components/gas-procurement-decision-demo'
 import { GasForecastResearchEvidence } from '@/features/gas-forecast/components/gas-forecast-research-evidence'

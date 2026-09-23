@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 
 import {
   assertSameOriginMutation,
+  createResourceAllocationDecision,
+  DipApiError,
   ResourceAllocationAccessError,
-} from '@/features/resource-allocation/server/access'
-import { createResourceAllocationDecision, DipApiError } from '@/lib/dip-api'
+} from '@/features/resource-allocation/server'
 
 export const maxDuration = 60
 

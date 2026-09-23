@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 
 import {
   assertSameOriginMutation,
+  DipApiError,
+  recordResourceAllocationOutcome,
   ResourceAllocationAccessError,
-} from '@/features/resource-allocation/server/access'
-import { DipApiError, recordResourceAllocationOutcome } from '@/lib/dip-api'
+} from '@/features/resource-allocation/server'
 
 export async function POST(request: Request, context: { params: Promise<{ decisionId: string }> }) {
   try {
