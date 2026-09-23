@@ -7,9 +7,9 @@ import { ObservatoryDecisionNarrative } from '@/components/observatory/decision-
 import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
 export type ApplicationFrontendProps = { locale: Locale }
-const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import('@/features/resource-allocation').then((m) => ({ default: m.ResourceAllocationWorkspace })))
-const SupplyNetworkResilience = dynamic<ApplicationFrontendProps>(() => import('@/features/supply-network-resilience').then((m) => ({ default: m.SupplyNetworkResilienceWorkspace })))
-const GtmLab = dynamic<ApplicationFrontendProps>(() => import('@/features/gtm-lab').then((m) => ({ default: m.GtmLabWorkspace })))
+const ResourceAllocation = dynamic<ApplicationFrontendProps>(() => import('@/features/resource-allocation/components/resource-allocation-workspace').then((m) => ({ default: m.ResourceAllocationWorkspace })))
+const SupplyNetworkResilience = dynamic<ApplicationFrontendProps>(() => import('@/features/supply-network-resilience/workspace').then((m) => ({ default: m.SupplyNetworkResilienceWorkspace })))
+const GtmLab = dynamic<ApplicationFrontendProps>(() => import('@/features/gtm-lab/components/gtm-lab-workspace').then((m) => ({ default: m.GtmLabWorkspace })))
 
 const frontends = {
   'resource-allocation': ResourceAllocation,
