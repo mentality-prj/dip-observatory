@@ -1,6 +1,7 @@
 export {
   DesignSystemProvider,
   ProductHeader,
+  ProductLockup,
   ProductShell,
   ProductSwitchLink,
   Surface,

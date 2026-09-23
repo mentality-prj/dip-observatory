@@ -9,6 +9,7 @@ import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { observatoryI18n, sharedI18n } from '@/lib/product-i18n'
 import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
+import { ObservatoryFooter } from './observatory-footer'
 import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
@@ -123,6 +124,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
           {children}
         </div>
       </div>
+      <ObservatoryFooter locale={locale} />
     </ProductShell>
   )
 }

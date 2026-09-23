@@ -31,10 +31,10 @@ const studioUi = {
   pl: { heading: 'Przestrzeń decyzji', decisions: 'Decyzje' },
 } as const
 
-const footerLabels = {
-  en: ['How it works', 'Use cases', 'QDIP Core', 'Research'],
-  uk: ['Як це працює', 'Сценарії', 'QDIP Core', 'Дослідження'],
-  pl: ['Jak to działa', 'Przypadki użycia', 'QDIP Core', 'Badania'],
+const observatoryFooterLabels = {
+  en: ['Observatory overview', 'Open Studio', 'How it works', 'QDIP Core', 'Research'],
+  uk: ['Огляд Observatory', 'Відкрити Studio', 'Як це працює', 'QDIP Core', 'Дослідження'],
+  pl: ['Przegląd Observatory', 'Otwórz Studio', 'Jak to działa', 'QDIP Core', 'Badania'],
 } as const
 
 const locales = ['en', 'uk', 'pl'] as const
@@ -71,8 +71,37 @@ test.describe('P1 Observatory consistency gate', () => {
 
       await expect(page.getByText(decisionPreview[locale], { exact: true })).toBeVisible()
       await expect(page.locator('[data-use-case="resource-allocation"]')).toBeVisible()
+
+      const footer = page.getByTestId('observatory-footer')
+      await expect(footer).toBeVisible()
+      for (const label of observatoryFooterLabels[locale]) {
+        await expect(footer.getByRole('link', { name: label })).toBeVisible()
+      }
+      for (const name of demoNames[locale]) {
+        await expect(footer.getByRole('link', { name })).toBeVisible()
+      }
     })
   }
+})
+
+test('P1 Observatory mobile navigation aligns with the content grid', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const response = await page.goto('http://observatory.localhost:3000/en/gtm-lab')
+  expect(response?.status()).toBeLessThan(400)
+
+  const menuSummary = page.locator('.ds-product-mobile-navigation summary')
+  const breadcrumbHome = page
+    .locator('[aria-label="Breadcrumb"]')
+    .getByRole('link', { name: 'QDIP home' })
+
+  await expect(menuSummary).toBeVisible()
+  await expect(breadcrumbHome).toBeVisible()
+
+  const menuBox = await menuSummary.boundingBox()
+  const homeBox = await breadcrumbHome.boundingBox()
+  expect(menuBox).not.toBeNull()
+  expect(homeBox).not.toBeNull()
+  expect(Math.abs((menuBox?.x ?? 0) - (homeBox?.x ?? 0))).toBeLessThanOrEqual(1)
 })
 
 test.describe('P1 Studio localization gate', () => {
@@ -85,11 +114,10 @@ test.describe('P1 Studio localization gate', () => {
       await expect(page.getByRole('heading', { level: 1, name: studioUi[locale].heading })).toBeVisible()
       await expect(page.getByRole('link', { name: studioUi[locale].decisions }).first()).toBeVisible()
 
-      const footer = page.locator('.studio-site-footer')
+      const footer = page.getByTestId('studio-footer')
       await expect(footer).toBeVisible()
-      for (const label of footerLabels[locale]) {
-        await expect(footer.getByRole('link', { name: label })).toBeVisible()
-      }
+      await expect(footer.getByRole('navigation')).toHaveCount(0)
+      await expect(footer.getByText(/© \d{4} QDIP/)).toBeVisible()
     })
   }
 })
