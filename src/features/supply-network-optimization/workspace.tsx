@@ -353,7 +353,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
 
       <div className="mb-5 flex flex-wrap gap-2">
         {stages.map((stage, index) => (
-          <Badge key={stage.label} variant={stage.active ? 'cyan' : 'slate'}>
+          <Badge key={stage.label} variant={stage.active ? 'cyan' : 'neutral'}>
             {index + 1}. {stage.label}
           </Badge>
         ))}
@@ -509,6 +509,30 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
               </div>
             </CardContent>
           </Card>
+        </section>
+      ) : null}
+
+      {scenario ? (
+        <section className="mt-8">
+          <h2 className="ds-h2 mb-4">Scenario comparison</h2>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {[
+              { label: t.optimized, result: scenario.baseline },
+              { label: t.reallocated, result: scenario.disrupted },
+              ...(manualResult ? [{ label: t.newWarehouse, result: manualResult }] : []),
+            ].map((item) => (
+              <Card key={item.label}>
+                <CardHeader><CardTitle>{item.label}</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid gap-2">
+                    <Metric label={t.service} value={pct(item.result.kpis.service_level)} />
+                    <Metric label={t.unserved} value={number(item.result.kpis.unserved_demand_units)} />
+                    <Metric label={t.logistics} value={number(item.result.kpis.logistics_cost)} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </section>
       ) : null}
 
