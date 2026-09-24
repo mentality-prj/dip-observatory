@@ -235,10 +235,8 @@ export function NetworkMap({
         candidateAreas
       )
       for (const layerId of ['recommended-flows', 'current-flows']) {
-        if (map.getSource(layerId)) {
-          map.removeLayer(layerId)
-          map.removeSource(layerId)
-        }
+        if (map.getLayer(layerId)) map.removeLayer(layerId)
+        if (map.getSource(layerId)) map.removeSource(layerId)
       }
       map.addSource('current-flows', { type: 'geojson', data: collections.current })
       map.addLayer({

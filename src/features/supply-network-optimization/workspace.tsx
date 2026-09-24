@@ -73,6 +73,13 @@ const copy = {
     pareto: 'Pareto-efficient',
     peakReceiving: 'Peak receiving / day',
     peakDispatch: 'Peak dispatch / day',
+    scenarioComparison: 'Scenario comparison',
+    endingInventory: 'Ending inventory',
+    inboundAllocation: 'Inbound allocation',
+    bindingConstraints: 'Binding constraints',
+    none: 'None',
+    used: 'used',
+    notUsed: 'not used',
   },
   uk: {
     title: 'Оптимізуйте, де зберігати запаси та з яких складів постачати магазини.',
@@ -123,6 +130,13 @@ const copy = {
     pareto: 'Парето-ефективний',
     peakReceiving: 'Пік приймання / день',
     peakDispatch: 'Пік відвантаження / день',
+    scenarioComparison: 'Порівняння сценаріїв',
+    endingInventory: 'Кінцевий запас',
+    inboundAllocation: 'Розподіл вхідних поставок',
+    bindingConstraints: 'Активні обмеження',
+    none: 'Немає',
+    used: 'використовується',
+    notUsed: 'не використовується',
   },
   pl: {
     title: 'Optymalizuj, gdzie przechowywać zapasy i z których magazynów obsługiwać sklepy.',
@@ -173,6 +187,13 @@ const copy = {
     pareto: 'Efektywny Pareto',
     peakReceiving: 'Szczyt przyjęć / dzień',
     peakDispatch: 'Szczyt wysyłek / dzień',
+    scenarioComparison: 'Porównanie scenariuszy',
+    endingInventory: 'Zapas końcowy',
+    inboundAllocation: 'Alokacja dostaw przychodzących',
+    bindingConstraints: 'Aktywne ograniczenia',
+    none: 'Brak',
+    used: 'używany',
+    notUsed: 'nieużywany',
   },
 } as const
 
@@ -537,7 +558,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {scenario.affected_demand_point_ids.map((id) => <Badge key={id} variant="amber">{id}</Badge>)}
-                {scenario.affected_demand_point_ids.length === 0 ? <span className="text-sm text-slate-500">None</span> : null}
+                {scenario.affected_demand_point_ids.length === 0 ? <span className="text-sm text-slate-500">{t.none}</span> : null}
               </div>
             </CardContent>
           </Card>
@@ -559,7 +580,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <div key={candidate.candidate_id} className="flex items-center justify-between rounded-md border border-white/10 p-2 text-sm">
                     <span>{candidate.label ?? candidate.candidate_id}</span>
                     <span className={candidate.pareto_efficient ? 'text-cyan-300' : candidate.used ? 'text-emerald-300' : 'text-slate-500'}>
-                      {candidate.pareto_efficient ? t.pareto : candidate.used ? 'used' : 'not used'}
+                      {candidate.pareto_efficient ? t.pareto : candidate.used ? t.used : t.notUsed}
                     </span>
                   </div>
                 ))}
@@ -571,7 +592,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
 
       {scenario ? (
         <section className="mt-8">
-          <h2 className="ds-h2 mb-4">Scenario comparison</h2>
+          <h2 className="ds-h2 mb-4">{t.scenarioComparison}</h2>
           <div className="grid gap-4 lg:grid-cols-3">
             {[
               { label: t.optimized, result: scenario.baseline },
@@ -600,15 +621,15 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             <CardContent>
               <div className="grid gap-4 lg:grid-cols-3">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-200">Inventory placement</h3>
+                  <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
                   <div className="mt-2 space-y-1 text-xs text-slate-400">
-                    {visibleResult.inventory_placement.slice(0, 8).map((item) => (
+                    {visibleResult.ending_inventory.slice(0, 8).map((item) => (
                       <p key={`${item.warehouse_id}-${item.product_class_id}`}>{item.product_class_id} → {item.warehouse_id}: {number(item.units)}</p>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-200">Inbound allocation</h3>
+                  <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
                   <div className="mt-2 space-y-1 text-xs text-slate-400">
                     {visibleResult.inbound_allocation.map((item) => (
                       <p key={`${item.supply_id}-${item.warehouse_id}`}>{item.product_class_id} → {item.warehouse_id}: {number(item.units)}</p>
@@ -616,7 +637,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-200">Binding constraints</h3>
+                  <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {visibleResult.binding_constraints.slice(0, 8).map((item) => <Badge key={item} variant="neutral">{item}</Badge>)}
                   </div>
