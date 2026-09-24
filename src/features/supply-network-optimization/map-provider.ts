@@ -69,9 +69,15 @@ export function loadMapLibre(): Promise<MapLibreApi> {
     }
     script.addEventListener('load', () => {
       if (window.maplibregl) resolve(window.maplibregl)
-      else reject(new Error('MapLibre loaded without a global API.'))
+      else {
+        loader = null
+        reject()
+      }
     }, { once: true })
-    script.addEventListener('error', () => reject(new Error('MapLibre failed to load.')), { once: true })
+    script.addEventListener('error', () => {
+      loader = null
+      reject()
+    }, { once: true })
   })
   return loader
 }
