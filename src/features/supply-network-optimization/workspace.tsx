@@ -12,6 +12,7 @@ import {
 } from './api'
 import { SUPPLY_NETWORK_CURRENT_FLOWS, SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
+import { ExecutiveDecisionSummary } from './executive-decision-summary'
 import type {
   CandidateResult,
   CandidateWarehouse,
@@ -216,21 +217,6 @@ function highestUtilization(result: OptimizationResult) {
   return Math.max(0, ...result.warehouse_utilization.filter((item) => item.used).map((item) => item.capacity_utilization))
 }
 
-function Kpis({ result, locale }: { result: OptimizationResult; locale: Locale }) {
-  const t = copy[locale]
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-      <Metric label={t.service} value={pct(result.kpis.service_level)} />
-      <Metric label={t.unserved} value={number(result.kpis.unserved_demand_units)} />
-      <Metric label={t.logistics} value={number(result.kpis.logistics_cost)} />
-      <Metric label={t.risk} value={number(result.kpis.inventory_value_at_risk)} />
-      <Metric label={t.utilization} value={pct(highestUtilization(result))} />
-      <Metric label={t.businessLoss} value={number(result.kpis.estimated_business_impact)} />
-    </div>
-  )
-}
-
-
 function humanizeConstraint(value: string, locale: Locale) {
   const [kind, ...parts] = value.split(':')
   const labels: Record<Locale, Record<string, string>> = {
@@ -245,6 +231,7 @@ function humanizeConstraint(value: string, locale: Locale) {
       'point-service-level': 'Demand-point service level',
       'minimum-service-level': 'Network minimum service level',
       'inventory-exposure': 'Inventory exposure limit',
+      'concentration-target': 'Inventory concentration target',
     },
     uk: {
       'inventory-balance': 'Баланс запасів',
@@ -257,6 +244,7 @@ function humanizeConstraint(value: string, locale: Locale) {
       'point-service-level': 'Рівень сервісу точки попиту',
       'minimum-service-level': 'Мінімальний рівень сервісу мережі',
       'inventory-exposure': 'Ліміт концентрації запасів',
+      'concentration-target': 'Цільова концентрація запасів',
     },
     pl: {
       'inventory-balance': 'Bilans zapasów',
@@ -269,6 +257,7 @@ function humanizeConstraint(value: string, locale: Locale) {
       'point-service-level': 'Poziom obsługi punktu popytu',
       'minimum-service-level': 'Minimalny poziom obsługi sieci',
       'inventory-exposure': 'Limit koncentracji zapasów',
+      'concentration-target': 'Docelowa koncentracja zapasów',
     },
   }
   const label = labels[locale][kind]
@@ -338,12 +327,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     ? visibleResult.warehouse_utilization.find((item) => item.warehouse_id === selectedWarehouse.id)
     : null
    const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
-  const scenarioDeltas = scenario ? {
-    service: scenario.disrupted.kpis.service_level - scenario.baseline.kpis.service_level,
-    unserved: scenario.disrupted.kpis.unserved_demand_units - scenario.baseline.kpis.unserved_demand_units,
-    logistics: scenario.disrupted.kpis.logistics_cost - scenario.baseline.kpis.logistics_cost,
-  } : null
-
   const optimize = useCallback(async () => {
     if (pending) return
     setPending(true)
@@ -464,6 +447,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </div>
       ) : null}
 
+      {visibleResult ? (
+        <ExecutiveDecisionSummary result={visibleResult} baseline={scenario?.baseline ?? null} hasDisruption={Boolean(scenario)} locale={locale} network={activeNetwork} />
+      ) : null}
+
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
         <LazyNetworkMap
           network={activeNetwork}
@@ -573,30 +560,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </div>
       </section>
 
-      {visibleResult ? (
-        <section className="mt-6">
-          <Kpis result={visibleResult} locale={locale} />
-        </section>
-      ) : null}
-
-      {scenario && scenarioDeltas ? (
-        <section className="mt-8">
-          <Card>
-            <CardHeader><CardTitle>{t.decisionSummary}</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <Metric label={t.serviceChange} value={`${scenarioDeltas.service >= 0 ? '+' : ''}${(scenarioDeltas.service * 100).toFixed(1)} pp`} />
-                <Metric label={t.unservedChange} value={`${scenarioDeltas.unserved >= 0 ? '+' : ''}${number(scenarioDeltas.unserved)}`} />
-                <Metric label={t.costChange} value={`${scenarioDeltas.logistics >= 0 ? '+' : ''}${number(scenarioDeltas.logistics)}`} />
-                <Metric label={t.paretoAlternatives} value={String(paretoCandidates.length)} />
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
-
       {scenario ? (
-        <section className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <section id="supply-alternatives" className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
           <Card>
             <CardHeader><CardTitle>{t.affected}</CardTitle></CardHeader>
             <CardContent>
@@ -661,8 +626,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       {visibleResult ? (
         <section className="mt-8">
           <Card>
-            <CardHeader><CardTitle>{t.evidence}</CardTitle></CardHeader>
-            <CardContent>
+            <details>
+              <summary className="cursor-pointer list-none p-6 text-base font-medium text-slate-200">{t.evidence} · Technical evidence</summary>
+              <CardContent>
               <div className="grid gap-4 lg:grid-cols-3">
                 <div>
                   <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
@@ -687,7 +653,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   </div>
                 </div>
               </div>
-            </CardContent>
+              </CardContent>
+            </details>
           </Card>
         </section>
       ) : null}

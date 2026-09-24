@@ -149,6 +149,7 @@ export function NetworkMap({
   useEffect(() => {
     let cancelled = false
     let localMap: MapLibreMap | null = null
+    let resizeObserver: ResizeObserver | null = null
     setMapUnavailable(false)
     void loadMapLibre().then((maplibre) => {
       if (cancelled) return
@@ -173,6 +174,11 @@ export function NetworkMap({
       }
       if (localMap.isStyleLoaded()) markReady()
       else localMap.on('style.load', markReady)
+      const resize = () => localMap?.resize()
+      requestAnimationFrame(resize)
+      window.setTimeout(resize, 120)
+      resizeObserver = new ResizeObserver(resize)
+      resizeObserver.observe(containerRef.current)
       localMap.on('click', (event) => {
         const target = event.originalEvent?.target
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
@@ -183,6 +189,7 @@ export function NetworkMap({
       cancelled = true
       markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
+      resizeObserver?.disconnect()
       localMap?.remove()
       mapRef.current = null
       setMapReady(false)
@@ -289,8 +296,8 @@ export function NetworkMap({
   ])
 
   return (
-    <div className="relative min-h-[540px] overflow-hidden rounded-xl border border-white/10 bg-slate-950">
-      <div ref={containerRef} className="absolute inset-0" data-testid="supply-network-map" />
+    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950">
+      <div ref={containerRef} className="h-[420px] w-full sm:h-[540px]" data-testid="supply-network-map" />
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
