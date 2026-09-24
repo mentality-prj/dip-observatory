@@ -32,7 +32,7 @@ function errorKind(status: number): SupplyNetworkRequestErrorKind {
   return 'request'
 }
 
-async function run<T>(input: Action): Promise<T> {
+async function run<T>(input: Action): Promise<{ result: T; decisionValue?: EconomicComparison }> {
   let response: Response
   try {
     response = await fetch('/api/supply-network/run', {
