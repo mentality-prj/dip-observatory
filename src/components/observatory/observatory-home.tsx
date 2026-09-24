@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, BrainCircuit, Check, ChevronDown, Route } from 'lucide-react'
+import { ArrowRight, BrainCircuit, Check, ChevronDown, Network, Route } from 'lucide-react'
 
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
@@ -111,7 +111,7 @@ export const observatoryHomeCopy = {
   },
 } as const
 
-const demoIcons = { 'resource-allocation': Route } as const
+const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
   const t = observatoryHomeCopy[locale]
