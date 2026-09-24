@@ -14,6 +14,7 @@ import type {
 import { loadMapLibre, OSM_RASTER_STYLE, type MapLibreMap, type MapLibreMarker } from './map-provider'
 
 type Props = {
+  locale: 'en' | 'uk' | 'pl'
   network: SupplyNetwork
   result: OptimizationResult | null
   unavailableWarehouseIds: string[]
@@ -138,6 +139,7 @@ function flowCollection(
 }
 
 export function NetworkMap({
+  locale,
   network,
   result,
   unavailableWarehouseIds,
@@ -314,13 +316,13 @@ export function NetworkMap({
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
-            <p className="text-sm font-medium text-slate-200">Geographic map unavailable</p>
-            <p className="mt-1 text-xs text-slate-400">Network analysis remains available. Reload to retry the map provider.</p>
+            <p className="text-sm font-medium text-slate-200">{locale === 'uk' ? 'Мапа тимчасово недоступна' : locale === 'pl' ? 'Mapa jest chwilowo niedostępna' : 'Map temporarily unavailable'}</p>
+            <p className="mt-1 text-xs text-slate-400">{locale === 'uk' ? 'Розрахунок мережі доступний. Оновіть сторінку, щоб повторити завантаження мапи.' : locale === 'pl' ? 'Analiza sieci jest dostępna. Odśwież stronę, aby ponownie załadować mapę.' : 'Network analysis remains available. Reload to retry the map.'}</p>
           </div>
         </div>
       ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-slate-950/90 px-3 py-2 text-xs text-slate-300">
-        Current flow · Recommended flow · Warehouse · Store · Supplier · Candidate
+        {locale === 'uk' ? 'Поточні маршрути · Новий план · Склад · Регіон попиту · Постачальник · Варіант складу' : locale === 'pl' ? 'Bieżące trasy · Nowy plan · Magazyn · Region popytu · Dostawca · Wariant magazynu' : 'Current routes · New plan · Warehouse · Demand region · Supplier · Warehouse option'}
       </div>
     </div>
   )

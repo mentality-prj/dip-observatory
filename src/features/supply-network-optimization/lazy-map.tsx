@@ -13,7 +13,7 @@ const NetworkMap = dynamic(
         className="min-h-[540px] animate-pulse rounded-xl border border-white/10 bg-white/[.025]"
         data-testid="map-loading"
       >
-        <p className="p-5 text-sm text-slate-500">Loading geographic network…</p>
+        <p className="p-5 text-sm text-slate-500">Loading map…</p>
       </div>
     ),
   }

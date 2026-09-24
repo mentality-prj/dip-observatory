@@ -82,14 +82,16 @@ const copy = {
     none: 'None',
     used: 'used',
     notUsed: 'not used',
+    technicalDetails: 'Technical details',
+    demoNotice: 'Demo model · synthetic data · calculations are performed by QDIP',
   },
   uk: {
-    title: 'Оптимізуйте, де зберігати запаси та з яких складів постачати магазини.',
-    intro: 'QDIP розподіляє запаси, вхідні поставки та виконання попиту в географічній мережі з урахуванням місткості, сумісності, маршрутів і рівня сервісу.',
-    optimize: 'Оптимізувати поточну мережу',
+    title: 'Перевірте, як мережа впорається зі збоєм і як зберегти постачання.',
+    intro: 'QDIP показує, що станеться при втраті складу, як можна перенаправити товар і які варіанти допоможуть зменшити втрати.',
+    optimize: 'Розрахувати поточний план',
     optimizing: 'Оптимізація…',
     current: 'Поточна мережа',
-    optimized: 'Оптимізована база',
+    optimized: 'Поточний план',
     unavailable: 'Склад недоступний',
     reallocated: 'Перерозподілена мережа',
     newWarehouse: 'Новий склад',
@@ -97,49 +99,51 @@ const copy = {
     confirmUnavailable: 'Підтвердити недоступність складу',
     cancel: 'Скасувати',
     addHere: 'Додати склад тут',
-    candidateArea: 'Альтернативи розміщення складу',
+    candidateArea: 'Варіанти покращення',
     decisionSummary: 'Підсумок рішення',
     serviceChange: 'Зміна рівня сервісу',
     unservedChange: 'Зміна непокритого попиту',
     costChange: 'Зміна вартості логістики',
-    paretoAlternatives: 'Парето-ефективні альтернативи',
-    frontierHint: 'Єдиного переможця не визначено. Ці альтернативи недоміновані за вартістю, сервісом і стійкістю.',
+    paretoAlternatives: 'Варіанти покращення',
+    frontierHint: 'Кожен варіант має свій баланс між виконанням попиту та витратами. Порівняйте їх перед рішенням.',
     disruptionReallocated: 'Збій + перерозподіл',
-    noCandidate: 'Жоден кандидат не покращує ціль достатньо, щоб виправдати його вартість.',
-    service: 'Рівень сервісу',
+    noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
+    service: 'Виконано попиту',
     unserved: 'Непокритий попит',
     logistics: 'Вартість логістики',
     risk: 'Запаси під ризиком',
     utilization: 'Найвище завантаження складу',
-    businessLoss: 'Бізнес-втрати',
-    affected: 'Зачеплені точки попиту',
+    businessLoss: 'Оцінений вплив на бізнес',
+    affected: 'Регіони, яких торкнувся збій',
     evidence: 'Обґрунтування рішення',
     capacity: 'Місткість',
     receiving: 'Приймання / день',
     dispatch: 'Відвантаження / день',
-    operating: 'Операційна вартість',
-    storage: 'Класи зберігання',
-    evaluate: 'Оцінити кандидата',
-    candidateNotUsed: 'Оптимізатор не використовує цей склад за поточної цільової функції.',
-    candidateUsed: 'Оптимізатор використовує цей склад у перерахованому плані.',
+    operating: 'Витрати на роботу складу',
+    storage: 'Умови зберігання',
+    evaluate: 'Перевірити цей склад',
+    candidateNotUsed: 'Додавати склад у цій точці недоцільно. За поточних умов він не покращує результат мережі, тому QDIP знаходить кращий план без його використання.',
+    candidateUsed: 'Цей склад покращує роботу мережі. QDIP включив його до нового плану постачання.',
     demand: 'Попит',
     source: 'Склад-постачальник',
     status: 'Статус обслуговування',
     served: 'обслуговано',
     pending: 'Виконується розрахунок.',
-    clickHint: 'Клікніть у вільне місце на мапі, щоб перевірити власний варіант складу.',
-    improvement: 'Покращення цільової функції',
-    requiredCapacity: 'Призначений запас',
-    pareto: 'Парето-ефективний',
+    clickHint: 'Натисніть на будь-яке місце на мапі, щоб перевірити, чи допоможе новий склад у цій точці.',
+    improvement: 'Покращення плану',
+    requiredCapacity: 'Запас на складі',
+    pareto: 'Вартий розгляду',
     peakReceiving: 'Пік приймання / день',
     peakDispatch: 'Пік відвантаження / день',
-    scenarioComparison: 'Порівняння сценаріїв',
+    scenarioComparison: 'До і після збою',
     endingInventory: 'Кінцевий запас',
     inboundAllocation: 'Розподіл вхідних поставок',
-    bindingConstraints: 'Активні обмеження',
+    bindingConstraints: 'Що обмежує результат',
     none: 'Немає',
     used: 'використовується',
-    notUsed: 'не використовується',
+    notUsed: 'не потрібен у цьому плані',
+    technicalDetails: 'Технічні деталі',
+    demoNotice: 'Демонстраційна модель · синтетичні дані · розрахунок виконує QDIP',
   },
   pl: {
     title: 'Optymalizuj, gdzie przechowywać zapasy i z których magazynów obsługiwać sklepy.',
@@ -198,6 +202,8 @@ const copy = {
     none: 'Brak',
     used: 'używany',
     notUsed: 'nieużywany',
+    technicalDetails: 'Szczegóły techniczne',
+    demoNotice: 'Model demonstracyjny · dane syntetyczne · obliczenia wykonuje QDIP',
   },
 } as const
 
@@ -215,6 +221,19 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function highestUtilization(result: OptimizationResult) {
   return Math.max(0, ...result.warehouse_utilization.filter((item) => item.used).map((item) => item.capacity_utilization))
+}
+
+function productLabel(id: string, locale: Locale) {
+  const labels: Record<Locale, Record<string, string>> = {
+    en: { core: 'Everyday assortment', premium: 'Premium assortment', gift: 'Gift assortment' },
+    uk: { core: 'Основний асортимент', premium: 'Преміальний асортимент', gift: 'Подарунковий асортимент' },
+    pl: { core: 'Asortyment podstawowy', premium: 'Asortyment premium', gift: 'Asortyment prezentowy' },
+  }
+  return labels[locale][id] ?? id
+}
+
+function warehouseLabel(id: string) {
+  return SUPPLY_NETWORK_DEMO.warehouses.find((item) => item.id === id)?.label ?? id
 }
 
 function humanizeConstraint(value: string, locale: Locale) {
@@ -415,6 +434,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       <section className="grid gap-6 py-8 xl:grid-cols-[1.5fr_.7fr] xl:items-end">
         <div>
           <Badge variant="cyan">QDIP OBSERVATORY · SUPPLY NETWORK OPTIMIZATION</Badge>
+          <p className="mt-3 text-xs text-slate-500">{t.demoNotice}</p>
           <h1 className="ds-h1 mt-4 max-w-5xl">{t.title}</h1>
           <p className="ds-lead mt-4 max-w-4xl text-slate-300">{t.intro}</p>
         </div>
@@ -566,7 +586,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             <CardHeader><CardTitle>{t.affected}</CardTitle></CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {scenario.affected_demand_point_ids.map((id) => <Badge key={id} variant="amber">{id}</Badge>)}
+                {scenario.affected_demand_point_ids.map((id) => {
+                  const point = SUPPLY_NETWORK_DEMO.demand_points.find((item) => item.id === id)
+                  return <Badge key={id} variant="amber">{point?.label ?? id}</Badge>
+                })}
                 {scenario.affected_demand_point_ids.length === 0 ? <span className="text-sm text-slate-500">{t.none}</span> : null}
               </div>
             </CardContent>
@@ -614,7 +637,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <div className="grid gap-2">
                     <Metric label={t.service} value={pct(item.result.kpis.service_level)} />
                     <Metric label={t.unserved} value={number(item.result.kpis.unserved_demand_units)} />
-                    <Metric label={t.logistics} value={number(item.result.kpis.logistics_cost)} />
+                    <Metric label={t.logistics} value={`${number(item.result.kpis.logistics_cost)} UAH`} />
                   </div>
                 </CardContent>
               </Card>
@@ -627,14 +650,14 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         <section className="mt-8">
           <Card>
             <details>
-              <summary className="cursor-pointer list-none p-6 text-base font-medium text-slate-200">{t.evidence} · Technical evidence</summary>
+              <summary className="cursor-pointer list-none p-6 text-base font-medium text-slate-200">{t.evidence} · {t.technicalDetails}</summary>
               <CardContent>
               <div className="grid gap-4 lg:grid-cols-3">
                 <div>
                   <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
                   <div className="mt-2 space-y-1 text-xs text-slate-400">
                     {visibleResult.ending_inventory.slice(0, 8).map((item) => (
-                      <p key={`${item.warehouse_id}-${item.product_class_id}`}>{item.product_class_id} → {item.warehouse_id}: {number(item.units)}</p>
+                      <p key={`${item.warehouse_id}-${item.product_class_id}`}>{productLabel(item.product_class_id, locale)} → {warehouseLabel(item.warehouse_id)}: {number(item.units)}</p>
                     ))}
                   </div>
                 </div>
@@ -642,7 +665,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
                   <div className="mt-2 space-y-1 text-xs text-slate-400">
                     {visibleResult.inbound_allocation.map((item) => (
-                      <p key={`${item.supply_id}-${item.warehouse_id}`}>{item.product_class_id} → {item.warehouse_id}: {number(item.units)}</p>
+                      <p key={`${item.supply_id}-${item.warehouse_id}`}>{productLabel(item.product_class_id, locale)} → {warehouseLabel(item.warehouse_id)}: {number(item.units)}</p>
                     ))}
                   </div>
                 </div>

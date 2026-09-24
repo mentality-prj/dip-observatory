@@ -12,9 +12,9 @@ export const SUPPLY_NETWORK_CURRENT_FLOWS: CurrentFlow[] = [
 
 export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   product_classes: [
-    { id: 'core', unit_value: 120, holding_cost_per_unit_day: 0.18, storage_class: 'ambient' },
-    { id: 'premium', unit_value: 310, holding_cost_per_unit_day: 0.42, storage_class: 'controlled' },
-    { id: 'gift', unit_value: 190, holding_cost_per_unit_day: 0.27, storage_class: 'ambient' },
+    { id: 'core', unit_value: 4800, holding_cost_per_unit_day: 7.2, storage_class: 'ambient' },
+    { id: 'premium', unit_value: 12400, holding_cost_per_unit_day: 16.8, storage_class: 'controlled' },
+    { id: 'gift', unit_value: 7600, holding_cost_per_unit_day: 10.8, storage_class: 'ambient' },
   ],
   warehouses: [
     {
@@ -57,36 +57,36 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     {
       id: 'incoming-core', supplier_id: 'supplier-main', product_class_id: 'core', available_units: 520,
       routes: [
-        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 8.4, lead_time_days: 2, capacity_units: 300 },
-        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 5.2, lead_time_days: 1, capacity_units: 360 },
-        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 6.8, lead_time_days: 1, capacity_units: 390 },
-        { to_warehouse_id: 'south-hub', transport_cost_per_unit: 4.4, lead_time_days: 1, capacity_units: 260 },
+        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 336, lead_time_days: 2, capacity_units: 300 },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 208, lead_time_days: 1, capacity_units: 360 },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 272, lead_time_days: 1, capacity_units: 390 },
+        { to_warehouse_id: 'south-hub', transport_cost_per_unit: 176, lead_time_days: 1, capacity_units: 260 },
       ],
     },
     {
       id: 'incoming-premium', supplier_id: 'supplier-main', product_class_id: 'premium', available_units: 170,
       routes: [
-        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 9.3, lead_time_days: 2, capacity_units: 150 },
-        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 6.4, lead_time_days: 1, capacity_units: 150 },
-        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 7.1, lead_time_days: 1, capacity_units: 170 },
+        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 372, lead_time_days: 2, capacity_units: 150 },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 256, lead_time_days: 1, capacity_units: 150 },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 284, lead_time_days: 1, capacity_units: 170 },
       ],
     },
   ],
   delivery_routes: [
-    ['north-hub','north-coast',0,180,8.2], ['north-hub','north-east',0,120,15.5], ['north-hub','central',2,120,17.8],
-    ['west-hub','west',0,175,7.5], ['west-hub','central',2,140,14.2], ['west-hub','south',2,105,15.6],
-    ['central-hub','central',0,230,6.8], ['central-hub','north-east',2,125,13.9], ['central-hub','south-east',0,125,14.7], ['central-hub','south',2,150,12.8],
-    ['south-hub','south',0,190,7.1], ['south-hub','south-east',1,155,9.4], ['south-hub','central',2,115,13.6],
-    ['north-hub','west',2,80,20.0], ['west-hub','north-coast',3,70,22.5], ['central-hub','west',2,95,16.1],
+    ['north-hub','north-coast',0,180,328], ['north-hub','north-east',0,120,620], ['north-hub','central',2,120,712],
+    ['west-hub','west',0,175,300], ['west-hub','central',2,140,568], ['west-hub','south',2,105,624],
+    ['central-hub','central',0,230,272], ['central-hub','north-east',2,125,556], ['central-hub','south-east',0,125,588], ['central-hub','south',2,150,512],
+    ['south-hub','south',0,190,284], ['south-hub','south-east',1,155,376], ['south-hub','central',2,115,544],
+    ['north-hub','west',2,80,800], ['west-hub','north-coast',3,70,900], ['central-hub','west',2,95,644],
   ].map(([from_node_id,to_demand_point_id,lead_time_days,capacity_units_per_day,cost_per_unit]) => ({
     from_node_id: String(from_node_id), to_demand_point_id: String(to_demand_point_id),
     lead_time_days: Number(lead_time_days), capacity_units_per_day: Number(capacity_units_per_day), cost_per_unit: Number(cost_per_unit),
   })),
   transfer_routes: [
-    ['north-hub','central-hub',2,180,5.8], ['central-hub','north-hub',2,180,5.8],
-    ['west-hub','central-hub',1,210,4.9], ['central-hub','west-hub',1,210,4.9],
-    ['south-hub','central-hub',1,170,4.5], ['central-hub','south-hub',1,170,4.5],
-    ['west-hub','south-hub',2,120,6.2], ['south-hub','west-hub',2,120,6.2],
+    ['north-hub','central-hub',2,180,232], ['central-hub','north-hub',2,180,232],
+    ['west-hub','central-hub',1,210,196], ['central-hub','west-hub',1,210,196],
+    ['south-hub','central-hub',1,170,180], ['central-hub','south-hub',1,170,180],
+    ['west-hub','south-hub',2,120,248], ['south-hub','west-hub',2,120,248],
   ].map(([from_node_id,to_node_id,lead_time_days,capacity_units_per_day,cost_per_unit]) => ({
     from_node_id: String(from_node_id), to_node_id: String(to_node_id),
     lead_time_days: Number(lead_time_days), capacity_units_per_day: Number(capacity_units_per_day), cost_per_unit: Number(cost_per_unit),
@@ -98,8 +98,8 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     maximum_node_inventory_exposure: 0.55,
     solver_time_limit_seconds: 10,
     stockout_penalty_multiplier: 2,
-    concentration_penalty_per_unit: 0.45,
+    concentration_penalty_per_unit: 18,
     concentration_target_share: 0.38,
-    lead_time_penalty_per_unit_day: 0.08,
+    lead_time_penalty_per_unit_day: 3.2,
   },
 }
