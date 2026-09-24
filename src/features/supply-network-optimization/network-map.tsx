@@ -168,9 +168,11 @@ export function NetworkMap({
       // The style is inline; network tile availability must not gate the
       // interactive overlay. In particular, iOS can keep MapLibre's broader
       // "load" lifecycle pending while raster tiles are still in flight.
-      localMap.on('style.load', () => {
+      const markReady = () => {
         if (!cancelled) setMapReady(true)
-      })
+      }
+      if (localMap.isStyleLoaded()) markReady()
+      else localMap.on('style.load', markReady)
       localMap.on('click', (event) => {
         const target = event.originalEvent?.target
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
@@ -191,7 +193,7 @@ export function NetworkMap({
     let cancelled = false
     void loadMapLibre().then((maplibre) => {
       const map = mapRef.current
-      if (cancelled || !maplibre || !map) return
+      if (cancelled || !mapReady || !maplibre || !map) return
       markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
 
