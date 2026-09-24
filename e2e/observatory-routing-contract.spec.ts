@@ -29,8 +29,7 @@ test.describe('Observatory production routing contract', () => {
           'aria-current',
           'page'
         )
-        await page.waitForLoadState('networkidle')
-        expect(errors.map((error) => error.message)).toEqual([])
+        await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
       })
     }
   }
@@ -50,8 +49,7 @@ test.describe('Observatory production routing contract', () => {
         await expect(page.locator('#main-content')).toBeVisible()
       }
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
   }
 
@@ -71,8 +69,7 @@ test.describe('Observatory production routing contract', () => {
         await expect(page.locator(`a[data-locale="${locale}"]`)).toHaveAttribute('aria-current', 'page')
       }
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
 
     test(`${route.id} mobile locale navigation preserves route and runtime`, async ({ page }) => {
@@ -90,8 +87,7 @@ test.describe('Observatory production routing contract', () => {
       await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/uk${route.path}$`))
       await expect(page.locator('#main-content')).toBeVisible()
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
   }
 
