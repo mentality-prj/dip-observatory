@@ -18,40 +18,40 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   ],
   warehouses: [
     {
-      id: 'north-hub', label: 'North Hub', latitude: 54.12, longitude: 18.58,
+      id: 'north-hub', label: 'Kyiv Hub', latitude: 50.4501, longitude: 30.5234,
       capacity_units: 2300, receiving_capacity_units_per_day: 420, dispatch_capacity_units_per_day: 470,
       supported_storage_classes: ['ambient', 'controlled'],
       current_inventory: { core: 620, premium: 210, gift: 260 },
     },
     {
-      id: 'west-hub', label: 'West Hub', latitude: 52.36, longitude: 16.82,
+      id: 'west-hub', label: 'Lviv Hub', latitude: 49.8397, longitude: 24.0297,
       capacity_units: 1900, receiving_capacity_units_per_day: 360, dispatch_capacity_units_per_day: 400,
       supported_storage_classes: ['ambient', 'controlled'],
       current_inventory: { core: 520, premium: 170, gift: 240 },
     },
     {
-      id: 'central-hub', label: 'Central Hub', latitude: 52.08, longitude: 21.18,
+      id: 'central-hub', label: 'Dnipro Hub', latitude: 48.4647, longitude: 35.0462,
       capacity_units: 2500, receiving_capacity_units_per_day: 480, dispatch_capacity_units_per_day: 520,
       supported_storage_classes: ['ambient', 'controlled'],
       current_inventory: { core: 700, premium: 230, gift: 300 },
     },
     {
-      id: 'south-hub', label: 'South Hub', latitude: 50.05, longitude: 19.78,
+      id: 'south-hub', label: 'Odesa Hub', latitude: 46.4825, longitude: 30.7233,
       capacity_units: 1550, receiving_capacity_units_per_day: 300, dispatch_capacity_units_per_day: 340,
       supported_storage_classes: ['ambient'],
       current_inventory: { core: 430, gift: 210 },
     },
   ],
   demand_points: [
-    { id: 'north-coast', latitude: 54.36, longitude: 18.64, region: 'North', label: 'North Coast cluster', demand_per_day: { core: 92, premium: 42, gift: 35 } },
-    { id: 'north-east', latitude: 53.12, longitude: 23.12, region: 'North East', label: 'North East cluster', demand_per_day: { core: 63, premium: 18, gift: 29 } },
-    { id: 'west', latitude: 51.12, longitude: 17.04, region: 'West', label: 'West cluster', demand_per_day: { core: 86, premium: 31, gift: 46 } },
-    { id: 'central', latitude: 52.23, longitude: 21.01, region: 'Central', label: 'Central cluster', demand_per_day: { core: 130, premium: 58, gift: 71 }, minimum_service_level: 0.92 },
-    { id: 'south', latitude: 50.06, longitude: 19.94, region: 'South', label: 'South cluster', demand_per_day: { core: 104, premium: 39, gift: 48 } },
-    { id: 'south-east', latitude: 50.04, longitude: 22.00, region: 'South East', label: 'South East cluster', demand_per_day: { core: 77, premium: 22, gift: 34 } },
+    { id: 'north-coast', latitude: 50.4501, longitude: 30.5234, region: 'Kyiv', label: 'Kyiv demand cluster', demand_per_day: { core: 92, premium: 42, gift: 35 } },
+    { id: 'north-east', latitude: 49.9935, longitude: 36.2304, region: 'Kharkiv', label: 'Kharkiv demand cluster', demand_per_day: { core: 63, premium: 18, gift: 29 } },
+    { id: 'west', latitude: 49.8397, longitude: 24.0297, region: 'West', label: 'Lviv demand cluster', demand_per_day: { core: 86, premium: 31, gift: 46 } },
+    { id: 'central', latitude: 48.4647, longitude: 35.0462, region: 'Central East', label: 'Dnipro demand cluster', demand_per_day: { core: 130, premium: 58, gift: 71 }, minimum_service_level: 0.92 },
+    { id: 'south', latitude: 46.4825, longitude: 30.7233, region: 'South', label: 'Odesa demand cluster', demand_per_day: { core: 104, premium: 39, gift: 48 } },
+    { id: 'south-east', latitude: 49.2331, longitude: 28.4682, region: 'Central West', label: 'Vinnytsia demand cluster', demand_per_day: { core: 77, premium: 22, gift: 34 } },
   ],
   suppliers: [
-    { id: 'supplier-main', label: 'Inbound supplier', latitude: 50.30, longitude: 18.65 },
+    { id: 'supplier-main', label: 'Western inbound supplier', latitude: 48.6208, longitude: 22.2879 },
   ],
   inbound_supply: [
     {

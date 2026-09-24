@@ -29,8 +29,21 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   const element = document.createElement('button')
   element.type = 'button'
   element.setAttribute('aria-label', kind)
-  element.style.width = kind === 'store' ? '13px' : '18px'
-  element.style.height = kind === 'store' ? '13px' : '18px'
+  const size = kind === 'store' ? '13px' : '18px'
+  // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
+  element.style.width = size
+  element.style.height = size
+  element.style.minWidth = size
+  element.style.minHeight = size
+  element.style.maxWidth = size
+  element.style.maxHeight = size
+  element.style.padding = '0'
+  element.style.margin = '0'
+  element.style.display = 'block'
+  element.style.flex = '0 0 auto'
+  element.style.lineHeight = '0'
+  element.style.boxSizing = 'border-box'
+  element.style.appearance = 'none'
   element.style.borderRadius = kind === 'store' ? '50%' : '5px'
   element.style.border = '2px solid rgba(255,255,255,.9)'
   element.style.boxShadow = '0 1px 8px rgba(0,0,0,.45)'
@@ -161,8 +174,8 @@ export function NetworkMap({
       localMap = new maplibre.Map({
         container: containerRef.current,
         style: OSM_RASTER_STYLE,
-        center: [19.2, 52.0],
-        zoom: 5.3,
+        center: [31.2, 49.0],
+        zoom: 4.7,
         attributionControl: true,
       })
       mapRef.current = localMap

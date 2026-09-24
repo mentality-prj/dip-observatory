@@ -74,8 +74,8 @@ export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, loca
           <p className="mt-3 text-sm text-slate-300"><strong className="text-slate-100">{number(result.kpis.unserved_demand_units)}</strong> {t.unserved}.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric label={t.service} value={pct(result.kpis.service_level)} delta={serviceDelta === null ? null : signed(serviceDelta, ' pp')} deltaLabel={t.delta} />
-            <Metric label={t.logistics} value={`${number(result.kpis.logistics_cost)} PLN`} delta={logisticsDelta === null ? null : `${signed(logisticsDelta)} PLN`} deltaLabel={t.delta} />
-            <Metric label={t.impact} value={`${number(result.kpis.estimated_business_impact)} PLN`} note={t.impactNote} />
+            <Metric label={t.logistics} value={`${number(result.kpis.logistics_cost)} UAH`} delta={logisticsDelta === null ? null : `${signed(logisticsDelta)} UAH`} deltaLabel={t.delta} />
+            <Metric label={t.impact} value={`${number(result.kpis.estimated_business_impact)} UAH`} note={t.impactNote} />
             <Metric label={t.utilization} value={pct(utilization)} delta={unservedDelta === null ? null : `${signed(unservedDelta)} ${t.unservedDelta}`} deltaLabel={t.delta} />
           </div>
           <div className="mt-6 rounded-lg border border-amber-300/15 bg-amber-300/[.035] p-4">
