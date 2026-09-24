@@ -180,6 +180,9 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
     expect(screen.getByText('Central demand area')).toBeVisible()
     expect(screen.getByText('north-coast')).toBeVisible()
+    expect(screen.getByText('Decision summary')).toBeVisible()
+    expect(screen.getByText('Pareto-efficient alternatives')).toBeVisible()
+    expect(screen.getByText('Preferred under the current decision policy')).toBeVisible()
   })
 
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {

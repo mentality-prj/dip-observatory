@@ -123,6 +123,7 @@ export function NetworkMap({
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
+  const [mapUnavailable, setMapUnavailable] = useState(false)
   const markersRef = useRef<MapLibreMarker[]>([])
   const clickRef = useRef(onMapClick)
 
@@ -133,6 +134,7 @@ export function NetworkMap({
   useEffect(() => {
     let cancelled = false
     let localMap: MapLibreMap | null = null
+    setMapUnavailable(false)
     void loadMapLibre().then((maplibre) => {
       if (cancelled || !containerRef.current) return
       localMap = new maplibre.Map({
@@ -152,7 +154,7 @@ export function NetworkMap({
         clickRef.current(event.lngLat.lat, event.lngLat.lng)
       })
     }).catch(() => {
-      // The surrounding workspace remains fully usable if the external map asset fails.
+      if (!cancelled) setMapUnavailable(true)
     })
     return () => {
       cancelled = true
@@ -268,6 +270,14 @@ export function NetworkMap({
   return (
     <div className="relative min-h-[540px] overflow-hidden rounded-xl border border-white/10 bg-slate-950">
       <div ref={containerRef} className="absolute inset-0" data-testid="supply-network-map" />
+      {mapUnavailable ? (
+        <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
+          <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
+            <p className="text-sm font-medium text-slate-200">Geographic map unavailable</p>
+            <p className="mt-1 text-xs text-slate-400">Network analysis remains available. Reload to retry the map provider.</p>
+          </div>
+        </div>
+      ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-slate-950/90 px-3 py-2 text-xs text-slate-300">
         Current flow · Recommended flow · Warehouse · Store · Supplier · Candidate
       </div>

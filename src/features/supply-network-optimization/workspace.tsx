@@ -38,7 +38,13 @@ const copy = {
     confirmUnavailable: 'Confirm warehouse unavailability',
     cancel: 'Cancel',
     addHere: 'Add warehouse here',
-    candidateArea: 'Recommended warehouse area',
+    candidateArea: 'Warehouse alternatives',
+    decisionSummary: 'Decision summary',
+    serviceChange: 'Service change',
+    unservedChange: 'Unserved demand change',
+    costChange: 'Logistics cost change',
+    paretoAlternatives: 'Pareto-efficient alternatives',
+    policyPreferred: 'Preferred under the current decision policy',
     noCandidate: 'No candidate improves the objective enough to justify its cost.',
     service: 'Service level',
     unserved: 'Unserved demand',
@@ -82,7 +88,13 @@ const copy = {
     confirmUnavailable: 'Підтвердити недоступність складу',
     cancel: 'Скасувати',
     addHere: 'Додати склад тут',
-    candidateArea: 'Рекомендована зона для складу',
+    candidateArea: 'Альтернативи розміщення складу',
+    decisionSummary: 'Підсумок рішення',
+    serviceChange: 'Зміна рівня сервісу',
+    unservedChange: 'Зміна непокритого попиту',
+    costChange: 'Зміна вартості логістики',
+    paretoAlternatives: 'Парето-ефективні альтернативи',
+    policyPreferred: 'Перевага за поточною політикою рішення',
     noCandidate: 'Жоден кандидат не покращує ціль достатньо, щоб виправдати його вартість.',
     service: 'Рівень сервісу',
     unserved: 'Непокритий попит',
@@ -126,7 +138,13 @@ const copy = {
     confirmUnavailable: 'Potwierdź niedostępność magazynu',
     cancel: 'Anuluj',
     addHere: 'Dodaj magazyn tutaj',
-    candidateArea: 'Rekomendowany obszar magazynu',
+    candidateArea: 'Alternatywy lokalizacji magazynu',
+    decisionSummary: 'Podsumowanie decyzji',
+    serviceChange: 'Zmiana poziomu obsługi',
+    unservedChange: 'Zmiana niezaspokojonego popytu',
+    costChange: 'Zmiana kosztu logistyki',
+    paretoAlternatives: 'Alternatywy efektywne Pareto',
+    policyPreferred: 'Preferowany według bieżącej polityki decyzyjnej',
     noCandidate: 'Żaden kandydat nie poprawia celu na tyle, aby uzasadnić jego koszt.',
     service: 'Poziom obsługi',
     unserved: 'Niezaspokojony popyt',
@@ -251,6 +269,12 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     ? visibleResult.warehouse_utilization.find((item) => item.warehouse_id === selectedWarehouse.id)
     : null
   const recommendedCandidate = candidateAreas.find((item) => item.candidate_id === recommendedCandidateId) ?? null
+  const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
+  const scenarioDeltas = scenario ? {
+    service: scenario.disrupted.kpis.service_level - scenario.baseline.kpis.service_level,
+    unserved: scenario.disrupted.kpis.unserved_demand_units - scenario.baseline.kpis.unserved_demand_units,
+    logistics: scenario.disrupted.kpis.logistics_cost - scenario.baseline.kpis.logistics_cost,
+  } : null
 
   const optimize = useCallback(async () => {
     if (pending) return
@@ -490,6 +514,22 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </section>
       ) : null}
 
+      {scenario && scenarioDeltas ? (
+        <section className="mt-8">
+          <Card>
+            <CardHeader><CardTitle>{t.decisionSummary}</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Metric label={t.serviceChange} value={`${scenarioDeltas.service >= 0 ? '+' : ''}${(scenarioDeltas.service * 100).toFixed(1)} pp`} />
+                <Metric label={t.unservedChange} value={`${scenarioDeltas.unserved >= 0 ? '+' : ''}${number(scenarioDeltas.unserved)}`} />
+                <Metric label={t.costChange} value={`${scenarioDeltas.logistics >= 0 ? '+' : ''}${number(scenarioDeltas.logistics)}`} />
+                <Metric label={t.paretoAlternatives} value={String(paretoCandidates.length)} />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
+
       {scenario ? (
         <section className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
           <Card>
@@ -505,10 +545,13 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             <CardHeader><CardTitle>{t.candidateArea}</CardTitle></CardHeader>
             <CardContent>
               {recommendedCandidate ? (
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <Metric label={t.improvement} value={number(recommendedCandidate.objective_improvement ?? 0)} />
-                  <Metric label={t.requiredCapacity} value={number(recommendedCandidate.required_capacity_units ?? 0)} />
-                  <Metric label={t.service} value={pct(recommendedCandidate.service_level ?? 0)} />
+                <div>
+                  <p className="mb-3 text-xs uppercase tracking-wide text-cyan-300">{t.policyPreferred}</p>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Metric label={t.improvement} value={number(recommendedCandidate.objective_improvement ?? 0)} />
+                    <Metric label={t.requiredCapacity} value={number(recommendedCandidate.required_capacity_units ?? 0)} />
+                    <Metric label={t.service} value={pct(recommendedCandidate.service_level ?? 0)} />
+                  </div>
                 </div>
               ) : <p className="text-sm text-slate-400">{t.noCandidate}</p>}
               <div className="mt-4 space-y-2">
