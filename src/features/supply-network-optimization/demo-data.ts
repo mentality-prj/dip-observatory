@@ -73,10 +73,10 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     },
   ],
   delivery_routes: [
-    ['north-hub','north-coast',1,180,8.2], ['north-hub','north-east',2,120,15.5], ['north-hub','central',2,120,17.8],
-    ['west-hub','west',1,175,7.5], ['west-hub','central',2,140,14.2], ['west-hub','south',2,105,15.6],
-    ['central-hub','central',1,230,6.8], ['central-hub','north-east',2,125,13.9], ['central-hub','south-east',2,125,14.7], ['central-hub','south',2,150,12.8],
-    ['south-hub','south',1,190,7.1], ['south-hub','south-east',1,155,9.4], ['south-hub','central',2,115,13.6],
+    ['north-hub','north-coast',0,180,8.2], ['north-hub','north-east',0,120,15.5], ['north-hub','central',2,120,17.8],
+    ['west-hub','west',0,175,7.5], ['west-hub','central',2,140,14.2], ['west-hub','south',2,105,15.6],
+    ['central-hub','central',0,230,6.8], ['central-hub','north-east',2,125,13.9], ['central-hub','south-east',0,125,14.7], ['central-hub','south',2,150,12.8],
+    ['south-hub','south',0,190,7.1], ['south-hub','south-east',1,155,9.4], ['south-hub','central',2,115,13.6],
     ['north-hub','west',2,80,20.0], ['west-hub','north-coast',3,70,22.5], ['central-hub','west',2,95,16.1],
   ].map(([from_node_id,to_demand_point_id,lead_time_days,capacity_units_per_day,cost_per_unit]) => ({
     from_node_id: String(from_node_id), to_demand_point_id: String(to_demand_point_id),

@@ -165,7 +165,10 @@ export function NetworkMap({
         attributionControl: true,
       })
       mapRef.current = localMap
-      localMap.on('load', () => {
+      // The style is inline; network tile availability must not gate the
+      // interactive overlay. In particular, iOS can keep MapLibre's broader
+      // "load" lifecycle pending while raster tiles are still in flight.
+      localMap.on('style.load', () => {
         if (!cancelled) setMapReady(true)
       })
       localMap.on('click', (event) => {

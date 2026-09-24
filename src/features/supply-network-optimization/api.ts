@@ -12,6 +12,17 @@ type Action =
   | { action: 'candidates'; network: SupplyNetwork }
   | { action: 'candidate'; network: SupplyNetwork; candidate: CandidateWarehouse }
 
+function normalizeError(message: string) {
+  const pythonMessage = message.match(/['"]message['"]\s*:\s*['"]([^'"]+)['"]/)
+  const pythonCauses = message.match(/['"]causes['"]\s*:\s*\[([^\]]*)\]/)
+  if (!pythonMessage) return message
+  const causes = pythonCauses?.[1]
+    ?.split(',')
+    .map((value) => value.trim().replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean)
+  return `${pythonMessage[1]}${causes?.length ? ` (${causes.join(', ')})` : ''}`
+}
+
 async function run<T>(input: Action): Promise<T> {
   const response = await fetch('/api/supply-network/run', {
     method: 'POST',
@@ -21,7 +32,7 @@ async function run<T>(input: Action): Promise<T> {
   const payload = (await response.json()) as { result?: unknown; error?: string; causes?: string[] }
   if (!response.ok || payload.result === undefined) {
     const details = payload.causes?.length ? ` (${payload.causes.join(', ')})` : ''
-    throw new Error((payload.error ?? 'Supply network optimization failed') + details)
+    throw new Error(normalizeError(payload.error ?? 'Supply network optimization failed') + details)
   }
   return payload.result as T
 }

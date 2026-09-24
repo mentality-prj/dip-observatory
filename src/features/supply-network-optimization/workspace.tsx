@@ -436,7 +436,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           <p className="ds-lead mt-4 max-w-4xl text-slate-300">{t.intro}</p>
         </div>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent style={{ paddingTop: 'var(--ds-space-6)' }}>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div><WarehouseIcon className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.warehouses.length}</strong><p className="text-xs text-slate-500">warehouses</p></div>
               <div><MapPin className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.demand_points.length}</strong><p className="text-xs text-slate-500">demand clusters</p></div>
