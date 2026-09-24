@@ -97,12 +97,14 @@ export type SupplyNetwork = {
 
 export type OptimizationResult = {
   inventory_placement: { warehouse_id: string; product_class_id: string; units: number }[]
+  ending_inventory: { warehouse_id: string; product_class_id: string; units: number }[]
   fulfillment: {
     warehouse_id: string
     demand_point_id: string
     product_class_id: string
     units: number
     lead_time_days: number
+    departure_period: number
     cost: number
   }[]
   inbound_allocation: {
@@ -120,6 +122,7 @@ export type OptimizationResult = {
     product_class_id: string
     units: number
     lead_time_days: number
+    departure_period: number
     cost: number
   }[]
   warehouse_utilization: {
@@ -130,8 +133,12 @@ export type OptimizationResult = {
     capacity_utilization: number
     receiving_units: number
     receiving_capacity_units: number
+    peak_receiving_units_per_day: number
+    receiving_capacity_units_per_day: number
     dispatch_units: number
     dispatch_capacity_units: number
+    peak_dispatch_units_per_day: number
+    dispatch_capacity_units_per_day: number
   }[]
   demand_service: {
     demand_point_id: string
@@ -148,6 +155,7 @@ export type OptimizationResult = {
     holding_cost: number
     inventory_value_at_risk: number
     objective_value: number
+    estimated_business_impact: number
     business_loss: number
   }
   objective_components: Record<string, number>
@@ -178,7 +186,7 @@ export type CandidateResult = {
   longitude: number
   feasible: boolean
   used: boolean
-  rank?: number
+  pareto_efficient?: boolean
   objective_value?: number
   objective_improvement?: number
   required_capacity_units?: number
@@ -189,6 +197,41 @@ export type CandidateResult = {
   service_level?: number
   residual_concentration_risk?: number
   causes?: string[]
+  resilience?: ResilienceReport
+  resilience_delta?: {
+    worst_case_service_loss: number | null
+    worst_case_unserved_demand_units: number | null
+    worst_case_economic_loss: number | null
+  }
+}
+
+export type WorstCaseMetric = {
+  scenario_type: string
+  scenario_id: string
+  value: number
+}
+
+export type ResilienceReport = {
+  baseline: OptimizationResult
+  scenarios: {
+    scenario_type: string
+    scenario_id: string
+    feasible: boolean
+    service_level?: number
+    service_loss?: number
+    unserved_demand_units?: number
+    economic_loss?: number
+    causes?: string[]
+  }[]
+  all_scenarios_feasible: boolean
+  infeasible_scenarios: {
+    scenario_type: string
+    scenario_id: string
+    causes: string[]
+  }[]
+  worst_case_service_loss: WorstCaseMetric | null
+  worst_case_unserved_demand_units: WorstCaseMetric | null
+  worst_case_economic_loss: WorstCaseMetric | null
 }
 
 export type ScenarioComparison = {

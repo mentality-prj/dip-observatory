@@ -64,6 +64,9 @@ const copy = {
     clickHint: 'Click an empty map location to test your own warehouse candidate.',
     improvement: 'Objective improvement',
     requiredCapacity: 'Assigned inventory',
+    pareto: 'Pareto-efficient',
+    peakReceiving: 'Peak receiving / day',
+    peakDispatch: 'Peak dispatch / day',
   },
   uk: {
     title: 'Оптимізуйте, де зберігати запаси та з яких складів постачати магазини.',
@@ -105,6 +108,9 @@ const copy = {
     clickHint: 'Клікніть у вільне місце на мапі, щоб перевірити власний варіант складу.',
     improvement: 'Покращення цільової функції',
     requiredCapacity: 'Призначений запас',
+    pareto: 'Парето-ефективний',
+    peakReceiving: 'Пік приймання / день',
+    peakDispatch: 'Пік відвантаження / день',
   },
   pl: {
     title: 'Optymalizuj, gdzie przechowywać zapasy i z których magazynów obsługiwać sklepy.',
@@ -146,6 +152,9 @@ const copy = {
     clickHint: 'Kliknij pusty punkt na mapie, aby sprawdzić własny wariant magazynu.',
     improvement: 'Poprawa funkcji celu',
     requiredCapacity: 'Przypisany zapas',
+    pareto: 'Efektywny Pareto',
+    peakReceiving: 'Szczyt przyjęć / dzień',
+    peakDispatch: 'Szczyt wysyłek / dzień',
   },
 } as const
 
@@ -174,7 +183,7 @@ function Kpis({ result, locale }: { result: OptimizationResult; locale: Locale }
       <Metric label={t.logistics} value={number(result.kpis.logistics_cost)} />
       <Metric label={t.risk} value={number(result.kpis.inventory_value_at_risk)} />
       <Metric label={t.utilization} value={pct(highestUtilization(result))} />
-      <Metric label={t.businessLoss} value={number(result.kpis.business_loss)} />
+      <Metric label={t.businessLoss} value={number(result.kpis.estimated_business_impact)} />
     </div>
   )
 }
@@ -387,6 +396,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <div className="grid grid-cols-2 gap-2">
                   <Metric label={t.capacity} value={number(selectedWarehouse.capacity_units)} />
                   <Metric label={t.utilization} value={selectedUtilization ? pct(selectedUtilization.capacity_utilization) : '—'} />
+                  <Metric label={t.peakReceiving} value={selectedUtilization ? number(selectedUtilization.peak_receiving_units_per_day) : '—'} />
+                  <Metric label={t.peakDispatch} value={selectedUtilization ? number(selectedUtilization.peak_dispatch_units_per_day) : '—'} />
                 </div>
                 {!unavailableIds.includes(selectedWarehouse.id) ? (
                   confirmWarehouseId === selectedWarehouse.id ? (
@@ -503,8 +514,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
               <div className="mt-4 space-y-2">
                 {candidateAreas.filter((item) => item.feasible).slice(0, 5).map((candidate) => (
                   <div key={candidate.candidate_id} className="flex items-center justify-between rounded-md border border-white/10 p-2 text-sm">
-                    <span>{candidate.rank ? `#${candidate.rank} · ` : ''}{candidate.label ?? candidate.candidate_id}</span>
-                    <span className={candidate.used ? 'text-emerald-300' : 'text-slate-500'}>{candidate.used ? 'used' : 'not used'}</span>
+                    <span>{candidate.label ?? candidate.candidate_id}</span>
+                    <span className={candidate.pareto_efficient ? 'text-cyan-300' : candidate.used ? 'text-emerald-300' : 'text-slate-500'}>
+                      {candidate.pareto_efficient ? t.pareto : candidate.used ? 'used' : 'not used'}
+                    </span>
                   </div>
                 ))}
               </div>

@@ -143,7 +143,9 @@ export function NetworkMap({
         attributionControl: true,
       })
       mapRef.current = localMap
-      setMapReady(true)
+      localMap.on('load', () => {
+        if (!cancelled) setMapReady(true)
+      })
       localMap.on('click', (event) => {
         const target = event.originalEvent?.target
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
