@@ -157,9 +157,9 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     expect(screen.getByTestId('mock-map')).toBeVisible()
-    expect(screen.getByText(/Optimize where inventory should be stored/)).toBeVisible()
+    expect(screen.getByText(/See how the network handles a disruption/)).toBeVisible()
 
-    await user.click(screen.getByRole('button', { name: 'Optimize current network' }))
+    await user.click(screen.getByRole('button', { name: 'Calculate current plan' }))
     await waitFor(() => expect(api.runOptimization).toHaveBeenCalledTimes(1))
     expect(screen.getByText('95%')).toBeVisible()
   })
@@ -174,13 +174,11 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
 
     await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalledWith(expect.anything(), 'north-hub'))
     await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
-    expect(screen.getByText('Central demand area')).toBeVisible()
-    expect(screen.getByText('north-coast')).toBeVisible()
+    expect(screen.getByText('Warehouse option 1')).toBeVisible()
+    expect(screen.getByText('Kyiv region')).toBeVisible()
     expect(screen.getByText('Decision summary')).toBeVisible()
-    expect(screen.getByText('Pareto-efficient alternatives')).toBeVisible()
-    expect(screen.getByText(/No single winner is implied/)).toBeVisible()
-    expect(screen.getByText('Ending storage capacity · north-hub')).toBeVisible()
-    expect(screen.getByText('Disruption + reallocation')).toBeVisible()
+        expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
+    expect(screen.getByText('Disruption + new plan')).toBeVisible()
   })
 
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {
@@ -192,10 +190,10 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
 
     const capacity = screen.getByRole('spinbutton', { name: 'Capacity' })
     fireEvent.change(capacity, { target: { value: '0' } })
-    await user.click(screen.getByRole('button', { name: 'Evaluate candidate' }))
+    await user.click(screen.getByRole('button', { name: 'Check this warehouse' }))
 
     expect(api.runManualCandidate).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert')).toHaveTextContent(/Capacity fields must be positive/)
+    expect(screen.getByRole('alert')).toHaveTextContent(/Enter positive capacity values/)
   })
 
   it('submits a valid manual candidate and renders a not-used decision', async () => {
@@ -203,17 +201,40 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     await user.click(screen.getByRole('button', { name: 'select map location' }))
-    await user.click(screen.getByRole('button', { name: 'Evaluate candidate' }))
+    await user.click(screen.getByRole('button', { name: 'Check this warehouse' }))
 
     await waitFor(() => expect(api.runManualCandidate).toHaveBeenCalledTimes(1))
-    expect(screen.getByText(/does not use this warehouse/)).toBeVisible()
+    expect(screen.getByText(/Adding a warehouse at this location is not worthwhile/)).toBeVisible()
   })
 
   it.each([
-    ['uk', 'Оптимізуйте, де зберігати запаси'],
-    ['pl', 'Optymalizuj, gdzie przechowywać zapasy'],
+    ['uk', 'Перевірте, як мережа впорається зі збоєм'],
+    ['pl', 'Sprawdź, jak sieć poradzi sobie z zakłóceniem'],
   ] as const)('renders localized %s copy', (locale, heading) => {
     render(<SupplyNetworkOptimizationWorkspace locale={locale} />)
     expect(screen.getByText(new RegExp(heading))).toBeVisible()
+  })
+
+  it('uses business-facing Ukrainian labels instead of internal dataset labels', async () => {
+    const user = userEvent.setup()
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'select store' }))
+
+    expect(screen.getByText('Київський регіон')).toBeVisible()
+    expect(screen.getByText('Основний асортимент')).toBeVisible()
+    expect(screen.queryByText('Kyiv demand cluster')).not.toBeInTheDocument()
+    expect(screen.queryByText('core')).not.toBeInTheDocument()
+  })
+
+  it('shows a localized safe message instead of a backend error', async () => {
+    const user = userEvent.setup()
+    api.runOptimization.mockRejectedValueOnce({ kind: 'unavailable', message: 'DIP request failed with status 503' })
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'Розрахувати поточний план' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Сервіс розрахунку тимчасово недоступний'))
+    expect(screen.getByRole('alert')).not.toHaveTextContent('DIP request failed')
   })
 })

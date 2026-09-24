@@ -12,28 +12,46 @@ type Action =
   | { action: 'candidates'; network: SupplyNetwork }
   | { action: 'candidate'; network: SupplyNetwork; candidate: CandidateWarehouse }
 
-function normalizeError(message: string) {
-  const pythonMessage = message.match(/['"]message['"]\s*:\s*['"]([^'"]+)['"]/)
-  const pythonCauses = message.match(/['"]causes['"]\s*:\s*\[([^\]]*)\]/)
-  if (!pythonMessage) return message
-  const causes = pythonCauses?.[1]
-    ?.split(',')
-    .map((value) => value.trim().replace(/^['"]|['"]$/g, ''))
-    .filter(Boolean)
-  return `${pythonMessage[1]}${causes?.length ? ` (${causes.join(', ')})` : ''}`
+export type SupplyNetworkRequestErrorKind = 'invalid' | 'infeasible' | 'unavailable' | 'request'
+
+export class SupplyNetworkRequestError extends Error {
+  kind: SupplyNetworkRequestErrorKind
+
+  constructor(kind: SupplyNetworkRequestErrorKind) {
+    super(kind)
+    this.name = 'SupplyNetworkRequestError'
+    this.kind = kind
+  }
+}
+
+function errorKind(status: number): SupplyNetworkRequestErrorKind {
+  if (status === 400 || status === 403) return 'invalid'
+  if (status === 409 || status === 422) return 'infeasible'
+  if (status === 502 || status === 503 || status === 504) return 'unavailable'
+  return 'request'
 }
 
 async function run<T>(input: Action): Promise<T> {
-  const response = await fetch('/api/supply-network/run', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  })
-  const payload = (await response.json()) as { result?: unknown; error?: string; causes?: string[] }
-  if (!response.ok || payload.result === undefined) {
-    const details = payload.causes?.length ? ` (${payload.causes.join(', ')})` : ''
-    throw new Error(normalizeError(payload.error ?? 'Supply network optimization failed') + details)
+  let response: Response
+  try {
+    response = await fetch('/api/supply-network/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    throw new SupplyNetworkRequestError('unavailable')
   }
+
+  let payload: { result?: unknown }
+  try {
+    payload = (await response.json()) as { result?: unknown }
+  } catch {
+    throw new SupplyNetworkRequestError(response.ok ? 'request' : errorKind(response.status))
+  }
+
+  if (!response.ok) throw new SupplyNetworkRequestError(errorKind(response.status))
+  if (payload.result === undefined) throw new SupplyNetworkRequestError('request')
   return payload.result as T
 }
 
@@ -47,7 +65,7 @@ export const runCandidateAreas = (network: SupplyNetwork) =>
   run<{
     disrupted_network: OptimizationResult
     candidates: CandidateResult[]
-     pareto_frontier_candidate_ids: string[]
+    pareto_frontier_candidate_ids: string[]
     connectivity_rule: string
   }>({ action: 'candidates', network })
 

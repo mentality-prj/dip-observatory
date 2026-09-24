@@ -12,6 +12,7 @@ import type {
   Warehouse,
 } from './domain'
 import { loadMapLibre, OSM_RASTER_STYLE, type MapLibreMap, type MapLibreMarker } from './map-provider'
+import { candidateOptionLabel, demandDisplayLabel, supplierDisplayLabel, warehouseDisplayLabel } from './presentation'
 
 type Props = {
   locale: 'en' | 'uk' | 'pl'
@@ -223,7 +224,7 @@ export function NetworkMap({
         const unavailable = unavailableWarehouseIds.includes(warehouse.id)
         const element = markerStyle(unavailable ? 'unavailable' : 'warehouse')
         element.dataset.networkMarker = 'warehouse'
-        element.title = warehouse.label ?? warehouse.id
+        element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           onWarehouseSelect(warehouse)
@@ -235,7 +236,7 @@ export function NetworkMap({
       for (const store of network.demand_points) {
         const element = markerStyle('store')
         element.dataset.networkMarker = 'store'
-        element.title = store.label
+        element.title = demandDisplayLabel(store.id, locale, store.label)
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           onStoreSelect(store)
@@ -247,15 +248,15 @@ export function NetworkMap({
       for (const supplier of network.suppliers) {
         const element = markerStyle('supplier')
         element.dataset.networkMarker = 'supplier'
-        element.title = supplier.label ?? supplier.id
+        element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
         markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
         )
       }
-      for (const candidate of candidateAreas.filter((item) => item.feasible)) {
+      for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
         const element = markerStyle('candidate')
         element.dataset.networkMarker = 'candidate'
-        element.title = candidate.label ?? candidate.candidate_id
+        element.title = candidateOptionLabel(index, locale)
         markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map)
         )

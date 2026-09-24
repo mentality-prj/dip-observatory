@@ -19,8 +19,8 @@ const NetworkMap = dynamic(
   }
 )
 
-export type LazyNetworkMapProps = ComponentProps<typeof NetworkMapComponent> & { loadingLabel: string }
+export type LazyNetworkMapProps = ComponentProps<typeof NetworkMapComponent>
 
-export function LazyNetworkMap({ loadingLabel: _loadingLabel, ...props }: LazyNetworkMapProps) {
+export function LazyNetworkMap(props: LazyNetworkMapProps) {
   return <NetworkMap {...props} />
 }

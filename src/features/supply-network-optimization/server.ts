@@ -32,7 +32,7 @@ export function evaluateCandidateAreas(network: SupplyNetwork) {
       receiving_capacity_units_per_day: 340,
       dispatch_capacity_units_per_day: 380,
       supported_storage_classes: ['ambient', 'controlled'],
-      operating_cost: 2200,
+      operating_cost: 88000,
       maximum_candidates: 5,
     }),
   })
