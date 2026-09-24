@@ -32,7 +32,7 @@ Platform URLs have production-safe defaults and can be overridden:
 Backend integration uses:
 
 - `DIP_API_BASE_URL` — DIP backend base URL
-- `DIP_API_KEY` — API key for Observatory and futures requests
+- `DIP_API_KEY` — API key for server-side QDIP requests
 
 ### Decision inquiry email delivery
 
@@ -47,7 +47,6 @@ The SMTP connection is created only from the Node.js server route. Credentials a
 
 Zoho supports authenticated SMTP over SSL on port 465. If the account uses a data-center-specific SMTP hostname, use the exact value shown in the Zoho Mail account/Admin Console rather than changing application code.
 
-Gas Forecast is retained only as an archived R&D case. It is not registered as a public Observatory demo or marketing use case.
 
 ## Deployment
 

@@ -70,9 +70,3 @@ test.describe('current marketing routing', () => {
     })
   }
 })
-
-
-test('retired Gas Forecast demo is not publicly routable', async ({ page }) => {
-  const response = await page.goto('http://observatory.localhost:3000/en/gas-forecast')
-  expect(response?.status()).toBe(404)
-})

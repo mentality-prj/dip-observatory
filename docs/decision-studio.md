@@ -31,7 +31,6 @@ changes require a new binding version. Validation errors appear on profile cards
 be incomplete; active profiles must pass backend validation. JSON Schema generates dimension
 forms and runtime-context forms; there is no executable plugin UI.
 
-Import the backend's `docs/examples/gas-procurement-v1.json` for the complete gas example.
 Plugin capability input is separate from runtime context and business configuration. The
 backend's `docs/decision-dimensions.md` documents the APIs, scoring semantics, lifecycle,
 storage and versioned evaluator retention needed for replay across deployments.

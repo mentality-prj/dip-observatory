@@ -11,7 +11,6 @@ These names are product identifiers and are never translated:
 - Observatory
 - Core
 - Resource Allocation
-- Gas Decision
 - GTM Lab
 
 Descriptions, questions, CTA verbs and explanatory copy around these names are localized.
@@ -22,8 +21,6 @@ The following tokens are data formats, standards or domain identifiers and may r
 
 - JSON
 - GDPR
-- TTF
-- P10 / P90
 
 Backend IDs, plugin IDs, capability IDs, schema property names and raw API values are data, not UI copy, and are not translated.
 

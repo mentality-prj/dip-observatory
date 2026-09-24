@@ -190,11 +190,6 @@ const en: Record<DepthPageKey, DepthContent> = {
         ],
       },
       {
-        eyebrow: 'CLOSED EXPERIMENT',
-        title: 'A failed gate closes a product hypothesis.',
-        body: 'The Gas Forecast research program was closed after the frozen out-of-sample economic gate failed. Its code and artifacts remain an R&D record, but Gas Forecast is not a public QDIP application or commercial demo.',
-      },
-      {
         eyebrow: 'RESOURCE ALLOCATION',
         title: 'Compare recommendations against the same evaluation path.',
         body: 'Resource Allocation evaluates a current/manual allocation through the same backend decision capability used for the recommendation. This avoids presenting a frontend-only comparison formula as scientific evidence and makes Current → QDIP → Δ meaningful only when both plans are feasible and evaluated consistently.',

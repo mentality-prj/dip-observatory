@@ -851,21 +851,13 @@
   border-radius: var(--ds-radius-input);
   background: #f6faf7;
 }
-.gas-metric-grid > div,
-.gas-range {
-  border-color: #d7e3db;
-  border-radius: var(--ds-radius-panel);
-  background: #f6faf7;
-}
-
 .studio-success {
   border-color: rgb(var(--ds-semantic-success-rgb) / 0.28);
   color: var(--ds-semantic-success);
   background: rgb(var(--ds-semantic-success-rgb) / 0.07);
 }
 
-.studio-error,
-.gas-blocked {
+.studio-error {
   color: var(--ds-semantic-danger);
 }
 

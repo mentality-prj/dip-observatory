@@ -5,7 +5,6 @@ import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 export type LocalizedText = Record<Locale, string>
 export type UseCaseIcon = 'heart' | 'sparkles'
 export type UseCaseTheme = 'cyan' | 'violet' | 'amber' | 'emerald' | 'rose'
-export type StudioRendererId = 'gas-forecast'
 export type DipUseCase = {
   id: string
   route: string
@@ -14,7 +13,7 @@ export type DipUseCase = {
   title: LocalizedText
   description: LocalizedText
   tag: LocalizedText
-  presentation: { icon: UseCaseIcon; theme: UseCaseTheme; studioRenderer?: StudioRendererId }
+  presentation: { icon: UseCaseIcon; theme: UseCaseTheme }
   plugin: { id: string; capability: string }
 }
 const visible = (order: number) => ({ visible: true, order }) as const
