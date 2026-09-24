@@ -15,6 +15,7 @@ let loader: Promise<MapLibreApi | null> | null = null
 
 export type MapLibreMap = {
   on: (event: string, handler: (event: { lngLat: { lng: number; lat: number }; originalEvent?: MouseEvent }) => void) => void
+  isStyleLoaded: () => boolean
   addSource: (id: string, source: unknown) => void
   addLayer: (layer: unknown) => void
   getSource: (id: string) => unknown
