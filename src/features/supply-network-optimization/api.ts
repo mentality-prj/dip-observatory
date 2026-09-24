@@ -1,6 +1,7 @@
 import type {
   CandidateResult,
   CandidateWarehouse,
+  EconomicComparison,
   OptimizationResult,
   ScenarioComparison,
   SupplyNetwork,
@@ -43,31 +44,31 @@ async function run<T>(input: Action): Promise<T> {
     throw new SupplyNetworkRequestError('unavailable')
   }
 
-  let payload: { result?: unknown }
+  let payload: { result?: unknown; decision_value?: unknown }
   try {
-    payload = (await response.json()) as { result?: unknown }
+    payload = (await response.json()) as { result?: unknown; decision_value?: unknown }
   } catch {
     throw new SupplyNetworkRequestError(response.ok ? 'request' : errorKind(response.status))
   }
 
   if (!response.ok) throw new SupplyNetworkRequestError(errorKind(response.status))
   if (payload.result === undefined) throw new SupplyNetworkRequestError('request')
-  return payload.result as T
+  return { result: payload.result as T, decisionValue: payload.decision_value as EconomicComparison | undefined }
 }
 
-export const runOptimization = (network: SupplyNetwork) =>
-  run<OptimizationResult>({ action: 'optimize', network })
+export const runOptimization = async (network: SupplyNetwork) =>
+  (await run<OptimizationResult>({ action: 'optimize', network })).result
 
 export const runUnavailableScenario = (network: SupplyNetwork, warehouseId: string) =>
   run<ScenarioComparison>({ action: 'unavailable', network, warehouseId })
 
-export const runCandidateAreas = (network: SupplyNetwork) =>
-  run<{
+export const runCandidateAreas = async (network: SupplyNetwork) =>
+  (await run<{
     disrupted_network: OptimizationResult
     candidates: CandidateResult[]
     pareto_frontier_candidate_ids: string[]
     connectivity_rule: string
-  }>({ action: 'candidates', network })
+  }>({ action: 'candidates', network })).result
 
 export const runManualCandidate = (network: SupplyNetwork, candidate: CandidateWarehouse) =>
   run<{
