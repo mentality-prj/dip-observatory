@@ -1,6 +1,6 @@
 export const PUBLIC_DEMO_NAMES = {
   resourceAllocation: 'Resource Allocation',
-  supplyNetworkResilience: 'Supply Network Resilience',
+  supplyNetworkOptimization: 'Supply Network Optimization',
   gtmLab: 'GTM Lab',
 } as const
 
@@ -10,7 +10,7 @@ export const PUBLIC_PRODUCT_NAMES = [
   'Observatory',
   'Core',
   PUBLIC_DEMO_NAMES.resourceAllocation,
-  PUBLIC_DEMO_NAMES.supplyNetworkResilience,
+  PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
   PUBLIC_DEMO_NAMES.gtmLab,
 ] as const
 

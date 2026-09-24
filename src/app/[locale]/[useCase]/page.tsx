@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 
 import { PrototypeShell } from '@/components/observatory/prototype-shell'
 import { isSupportedLocale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
@@ -69,6 +69,9 @@ export default async function UseCasePage({
 }) {
   const { locale, useCase: routeSegment } = await params
   if (!isSupportedLocale(locale)) notFound()
+  if (routeSegment === 'supply-network-resilience') {
+    permanentRedirect(`/${locale}/supply-network-optimization`)
+  }
 
   const application = resolveUseCase(routeSegment)
   if (!application) notFound()

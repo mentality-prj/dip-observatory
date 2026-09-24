@@ -37,7 +37,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'SOLUTIONS',
       'One Decision Engine. Reusable decision patterns.',
-      'Resource Allocation, Supply Network Resilience and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
+      'Resource Allocation, Supply Network Optimization and GTM Lab are working applications. ALLOCATE, DECIDE and PRIORITIZE remain reusable decision patterns for new domains with explicit alternatives, priorities, constraints, uncertainty, evidence and an inspectable recommendation.',
     ],
     sections: [
       {
@@ -90,17 +90,17 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'ALLOCATE',
-        title: 'Supply Network Resilience',
-        question: 'How should inventory be distributed so one unavailable logistics node does not stop the network?',
+        title: 'Supply Network Optimization',
+        question: 'Where should inventory be stored, how should demand be fulfilled, and how should the network adapt when warehouse capacity changes?',
         problem:
-          'Inventory concentrated in too few logistics nodes can turn one interruption into a network-wide service failure.',
+          'Inventory, inbound supply and fulfillment are often planned separately, which can increase logistics cost, create capacity bottlenecks and amplify disruption risk.',
         inputs:
-          'Inventory by node and product class, regional demand, node and route capacity, compatibility, lead time and logistics cost.',
+          'Inventory by warehouse and product class, geographically differentiated demand, inbound supply, warehouse and route capacity, storage compatibility, lead time and logistics cost.',
         evaluation:
-          'QDIP stress-tests normal and single-node-unavailable scenarios, compares feasible allocations and evaluates executable transfers.',
+          'QDIP optimizes inventory placement, inbound allocation and fulfillment under hard network constraints, then re-runs the same model for unavailable and candidate warehouse scenarios.',
         output:
-          'Recommended allocation, executable transfers, baseline comparison, scenario service levels, exposure and worst-case business loss.',
-        href: '/supply-network-resilience',
+          'Recommended inventory placement, fulfillment and inbound allocation, executable transfers, scenario KPIs and candidate warehouse areas with traceable optimizer evidence.',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'PRIORITIZE',
@@ -126,7 +126,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'РІШЕННЯ',
       'Один рушій рішень. Багаторазові патерни рішень.',
-      'Resource Allocation, Supply Network Resilience і GTM Lab — робочі застосунки. РОЗПОДІЛИТИ, ВИРІШИТИ та ПРІОРИТЕЗУВАТИ залишаються багаторазовими патернами для нових доменів із явними альтернативами, пріоритетами, обмеженнями, невизначеністю, доказами та перевірюваною рекомендацією.',
+      'Resource Allocation, Supply Network Optimization і GTM Lab — робочі застосунки. РОЗПОДІЛИТИ, ВИРІШИТИ та ПРІОРИТЕЗУВАТИ залишаються багаторазовими патернами для нових доменів із явними альтернативами, пріоритетами, обмеженнями, невизначеністю, доказами та перевірюваною рекомендацією.',
     ],
     sections: [
       {
@@ -168,13 +168,13 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'РОЗПОДІЛИТИ',
-        title: 'Supply Network Resilience',
-        question: 'Як розподілити запаси, щоб недоступність одного логістичного вузла не зупинила мережу?',
-        problem: 'Надмірна концентрація запасів у кількох вузлах може перетворити одну локальну відмову на збій обслуговування всієї мережі.',
-        inputs: 'Запаси за вузлами та класами товарів, регіональний попит, потужність вузлів і маршрутів, сумісність, строки та логістична вартість.',
-        evaluation: 'QDIP тестує нормальні сценарії та сценарії недоступності одного вузла, порівнює допустимі розподіли й оцінює виконувані переміщення.',
-        output: 'Рекомендований розподіл, виконувані переміщення, порівняння з базовими варіантами, рівень обслуговування, експозиція та найгірші бізнес-втрати.',
-        href: '/supply-network-resilience',
+        title: 'Supply Network Optimization',
+        question: 'Де зберігати запаси, як покривати попит і як перебудовувати мережу при зміні доступної складської потужності?',
+        problem: 'Окреме планування запасів, вхідних поставок і виконання попиту може збільшувати логістичні витрати, створювати вузькі місця потужності та посилювати ризик збоїв.',
+        inputs: 'Запаси за складами й класами товарів, географічно різний попит, вхідні поставки, потужність складів і маршрутів, сумісність зберігання, строки та логістична вартість.',
+        evaluation: 'QDIP оптимізує розміщення запасів, вхідні поставки та покриття попиту з жорсткими мережевими обмеженнями, а потім повторює той самий розрахунок для недоступного або нового складу.',
+        output: 'Рекомендоване розміщення запасів, постачання точок попиту, вхідний розподіл, переміщення, сценарні KPI та рекомендовані зони нового складу з перевірюваним обґрунтуванням.',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'ПРІОРИТЕЗУВАТИ',
@@ -198,7 +198,7 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     hero: [
       'ROZWIĄZANIA',
       'Jeden silnik decyzyjny. Wielokrotnego użytku wzorce decyzji.',
-      'Resource Allocation, Supply Network Resilience i GTM Lab to działające aplikacje. ALOKUJ, DECYDUJ i PRIORYTETYZUJ pozostają wzorcami wielokrotnego użytku dla nowych domen z jawnymi alternatywami, priorytetami, ograniczeniami, niepewnością, dowodami i możliwą do zweryfikowania rekomendacją.',
+      'Resource Allocation, Supply Network Optimization i GTM Lab to działające aplikacje. ALOKUJ, DECYDUJ i PRIORYTETYZUJ pozostają wzorcami wielokrotnego użytku dla nowych domen z jawnymi alternatywami, priorytetami, ograniczeniami, niepewnością, dowodami i możliwą do zweryfikowania rekomendacją.',
     ],
     sections: [
       {
@@ -240,13 +240,13 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       },
       {
         pattern: 'ALOKUJ',
-        title: 'Supply Network Resilience',
-        question: 'Jak rozmieścić zapasy, aby niedostępność jednego węzła logistycznego nie zatrzymała sieci?',
-        problem: 'Nadmierna koncentracja zapasów w kilku węzłach może zamienić pojedyncze zakłócenie w problem obsługi całej sieci.',
-        inputs: 'Zapasy według węzła i klasy produktu, popyt regionalny, przepustowość węzłów i tras, kompatybilność, czas oraz koszt logistyki.',
-        evaluation: 'QDIP testuje scenariusz normalny i scenariusze niedostępności pojedynczego węzła, porównuje wykonalne alokacje i ocenia możliwe przesunięcia.',
-        output: 'Rekomendowana alokacja, wykonalne przesunięcia, porównanie z wariantami bazowymi, poziom obsługi, ekspozycja i najgorsza strata biznesowa.',
-        href: '/supply-network-resilience',
+        title: 'Supply Network Optimization',
+        question: 'Gdzie przechowywać zapasy, jak obsługiwać popyt i jak przebudować sieć po zmianie dostępnej przepustowości magazynowej?',
+        problem: 'Oddzielne planowanie zapasów, dostaw przychodzących i realizacji popytu może zwiększać koszty logistyki, tworzyć wąskie gardła przepustowości i wzmacniać ryzyko zakłóceń.',
+        inputs: 'Zapasy według magazynu i klasy produktu, geograficznie zróżnicowany popyt, dostawy przychodzące, przepustowość magazynów i tras, zgodność składowania, czas oraz koszt logistyki.',
+        evaluation: 'QDIP optymalizuje rozmieszczenie zapasów, dostawy przychodzące i realizację popytu przy twardych ograniczeniach sieciowych, a następnie uruchamia ten sam model dla niedostępnego lub nowego magazynu.',
+        output: 'Rekomendowane rozmieszczenie zapasów, realizacja popytu, alokacja dostaw przychodzących, przesunięcia, KPI scenariuszy i rekomendowane obszary nowego magazynu z weryfikowalnym uzasadnieniem.',
+        href: '/supply-network-optimization',
       },
       {
         pattern: 'PRIORYTETYZUJ',

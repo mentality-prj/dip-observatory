@@ -36,13 +36,17 @@ async function parseResponse<T>(response: Response, schema: z.ZodType<T>) {
     let message = `DIP request failed with status ${response.status}`
     try {
       const payload = (await response.json()) as {
-        detail?: string | { code?: string }
+        detail?: string | { code?: string; message?: string; causes?: string[] }
         error?: { message?: string }
       }
       message =
         typeof payload.detail === 'string'
           ? payload.detail
-          : (payload.detail?.code ?? payload.error?.message ?? message)
+          : (
+              payload.detail?.message
+                ? `${payload.detail.message}${payload.detail.causes?.length ? ` (${payload.detail.causes.join(', ')})` : ''}`
+                : (payload.detail?.code ?? payload.error?.message ?? message)
+            )
     } catch {
       // Preserve the HTTP-derived fallback when the upstream payload is not JSON.
     }

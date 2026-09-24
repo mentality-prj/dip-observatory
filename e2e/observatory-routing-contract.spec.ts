@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 const locales = ['en', 'uk', 'pl'] as const
 const routes = [
   { id: 'resource-allocation', path: '/resource-allocation', title: 'Resource Allocation' },
-  { id: 'supply-network-resilience', path: '/supply-network-resilience', title: 'Supply Network Resilience' },
+  { id: 'supply-network-optimization', path: '/supply-network-optimization', title: 'Supply Network Optimization' },
   { id: 'gtm-lab', path: '/gtm-lab', title: 'GTM Lab' },
 ] as const
 
@@ -29,8 +29,7 @@ test.describe('Observatory production routing contract', () => {
           'aria-current',
           'page'
         )
-        await page.waitForLoadState('networkidle')
-        expect(errors.map((error) => error.message)).toEqual([])
+        await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
       })
     }
   }
@@ -50,8 +49,7 @@ test.describe('Observatory production routing contract', () => {
         await expect(page.locator('#main-content')).toBeVisible()
       }
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
   }
 
@@ -71,8 +69,7 @@ test.describe('Observatory production routing contract', () => {
         await expect(page.locator(`a[data-locale="${locale}"]`)).toHaveAttribute('aria-current', 'page')
       }
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
 
     test(`${route.id} mobile locale navigation preserves route and runtime`, async ({ page }) => {
@@ -90,8 +87,7 @@ test.describe('Observatory production routing contract', () => {
       await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/uk${route.path}$`))
       await expect(page.locator('#main-content')).toBeVisible()
 
-      await page.waitForLoadState('networkidle')
-      expect(errors.map((error) => error.message)).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
   }
 
@@ -101,4 +97,17 @@ test.describe('Observatory production routing contract', () => {
     expect(response?.status()).toBe(404)
     expect(errors.map((error) => error.message)).toEqual([])
   })
+})
+
+
+test.describe('Supply Network Optimization legacy route', () => {
+  for (const locale of locales) {
+    test(`${locale} redirects the retired resilience route to the canonical optimization route`, async ({ page }) => {
+      await page.goto(`http://observatory.localhost:3000/${locale}/supply-network-resilience`)
+      await expect(page).toHaveURL(
+        new RegExp(`observatory\\.localhost:3000/${locale}/supply-network-optimization$`)
+      )
+      await expect(page.getByText('QDIP OBSERVATORY · SUPPLY NETWORK OPTIMIZATION')).toBeVisible()
+    })
+  }
 })
