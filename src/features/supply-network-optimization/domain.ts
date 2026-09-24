@@ -96,7 +96,6 @@ export type SupplyNetwork = {
 }
 
 export type OptimizationResult = {
-  inventory_placement: { warehouse_id: string; product_class_id: string; units: number }[]
   ending_inventory: { warehouse_id: string; product_class_id: string; units: number }[]
   fulfillment: {
     warehouse_id: string
@@ -191,7 +190,7 @@ export type CandidateResult = {
   objective_improvement?: number
   required_capacity_units?: number
   configured_capacity_units?: number
-  inventory_allocation?: OptimizationResult['inventory_placement']
+  inventory_allocation?: OptimizationResult['ending_inventory']
   stores_served?: string[]
   logistics_cost?: number
   service_level?: number

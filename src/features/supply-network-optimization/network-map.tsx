@@ -82,23 +82,37 @@ function flowCollection(
   })
   const recommendedFeatures: Record<string, unknown>[] = []
   if (result) {
+    const aggregated = new Map<string, {
+      kind: 'recommended' | 'transfer'
+      fromId: string
+      toId: string
+      units: number
+    }>()
+    const addFlow = (
+      kind: 'recommended' | 'transfer',
+      fromId: string,
+      toId: string,
+      units: number
+    ) => {
+      if (units <= 0) return
+      const key = `${kind}:${fromId}:${toId}`
+      const existing = aggregated.get(key)
+      if (existing) existing.units += units
+      else aggregated.set(key, { kind, fromId, toId, units })
+    }
     for (const item of result.fulfillment) {
-      const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
-      const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
-      if (!from || !to || item.units <= 0) continue
-      recommendedFeatures.push({
-        type: 'Feature',
-        properties: { kind: 'recommended', units: item.units },
-        geometry: { type: 'LineString', coordinates: [from, to] },
-      })
+      addFlow('recommended', item.warehouse_id, item.demand_point_id, item.units)
     }
     for (const item of result.transfers) {
-      const from = coordinate(network, item.from_warehouse_id, manualCandidate, candidateAreas)
-      const to = coordinate(network, item.to_warehouse_id, manualCandidate, candidateAreas)
-      if (!from || !to || item.units <= 0) continue
+      addFlow('transfer', item.from_warehouse_id, item.to_warehouse_id, item.units)
+    }
+    for (const flow of aggregated.values()) {
+      const from = coordinate(network, flow.fromId, manualCandidate, candidateAreas)
+      const to = coordinate(network, flow.toId, manualCandidate, candidateAreas)
+      if (!from || !to) continue
       recommendedFeatures.push({
         type: 'Feature',
-        properties: { kind: 'transfer', units: item.units },
+        properties: { kind: flow.kind, units: flow.units },
         geometry: { type: 'LineString', coordinates: [from, to] },
       })
     }
