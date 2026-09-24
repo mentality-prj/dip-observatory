@@ -71,12 +71,12 @@ export function loadMapLibre(): Promise<MapLibreApi> {
       if (window.maplibregl) resolve(window.maplibregl)
       else {
         loader = null
-        reject()
+        reject(new Error('Map provider unavailable'))
       }
     }, { once: true })
     script.addEventListener('error', () => {
       loader = null
-      reject()
+      reject(new Error('Map provider unavailable'))
     }, { once: true })
   })
   return loader
