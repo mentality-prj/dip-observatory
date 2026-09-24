@@ -6,28 +6,28 @@ import type { OptimizationResult, SupplyNetwork } from './domain'
 
 const copy = {
   en: {
-    title: 'Decision summary', baselineHeadline: (s: string) => `The optimized network can fulfill ${s} of demand`, disruptionHeadline: (s: string) => `After the disruption, the network can fulfill ${s} of demand`,
+    title: 'Decision summary', baselineHeadline: (s: string) => `The current plan can fulfill ${s} of demand`, disruptionHeadline: (s: string) => `After the disruption, the network can fulfill ${s} of demand`,
     unserved: 'units of demand remain unserved', service: 'Demand fulfilled', logistics: 'Logistics cost', impact: 'Estimated economic impact', utilization: 'Peak warehouse utilization',
-    constraintTitle: 'What limits the result', routeEvidence: (r: string, c: number, h: number) => `${r} reaches its delivery capacity in ${c} of ${h} planning days.`,
-    routeVsStorage: (u: string) => `Peak warehouse utilization is only ${u}; the evidence points to route throughput rather than storage capacity as the limiting factor.`,
-    genericConstraint: 'The optimizer is operating against active network constraints. Review the technical evidence below for the binding limits.',
-    impactNote: 'Model-based estimate from configured demand and cost assumptions; not an accounting forecast.', delta: 'vs baseline', improve: 'Test improvement options', unservedDelta: 'unserved',
+    constraintTitle: 'What is preventing a better result', routeEvidence: (r: string, c: number, h: number) => `${r} is already at its delivery limit on ${c} of ${h} days.`,
+    routeVsStorage: (u: string) => `Warehouses reach only ${u} utilization, so storage space is not the main problem. Delivery capacity is.`,
+    genericConstraint: 'The current network limits a better result. Open the technical details below to see which limits are reached.',
+    impactNote: 'Estimate based on the demo demand and cost assumptions; not an accounting forecast.', delta: 'vs baseline', improve: 'Test improvement options', unservedDelta: 'unserved',
   },
   uk: {
     title: 'Підсумок рішення', baselineHeadline: (s: string) => `Оптимізована мережа може виконати ${s} попиту`, disruptionHeadline: (s: string) => `Після збою мережа може виконати ${s} попиту`,
     unserved: 'од. попиту залишаються непокритими', service: 'Виконання попиту', logistics: 'Вартість логістики', impact: 'Оцінений економічний вплив', utilization: 'Максимальне завантаження складів',
-    constraintTitle: 'Що обмежує результат', routeEvidence: (r: string, c: number, h: number) => `${r} досягає ліміту доставки у ${c} з ${h} днів планування.`,
-    routeVsStorage: (u: string) => `Максимальне завантаження складів — лише ${u}; наявні докази вказують на пропускну здатність маршрутів, а не на місткість складів як основне обмеження.`,
-    genericConstraint: 'Оптимізатор працює на межі активних обмежень мережі. Детальні обмеження наведені нижче в технічному обґрунтуванні.',
-    impactNote: 'Модельна оцінка на основі заданого попиту та параметрів вартості; це не бухгалтерський прогноз збитків.', delta: 'проти базового сценарію', improve: 'Перевірити варіанти покращення', unservedDelta: 'непокрито',
+    constraintTitle: 'Що заважає отримати кращий результат', routeEvidence: (r: string, c: number, h: number) => `${r} уже працює на межі пропускної здатності у ${c} з ${h} днів.`,
+    routeVsStorage: (u: string) => `Склади завантажені максимум на ${u}, тому проблема не в нестачі місця. Обмеження виникає на доставці.`,
+    genericConstraint: 'Поточна конфігурація мережі не дозволяє отримати кращий результат. У технічних деталях нижче можна побачити, які саме ліміти досягнуті.',
+    impactNote: 'Оцінка на основі демонстраційного попиту та заданих витрат; це не бухгалтерський прогноз.', delta: 'проти базового сценарію', improve: 'Перевірити варіанти покращення', unservedDelta: 'непокрито',
   },
   pl: {
     title: 'Podsumowanie decyzji', baselineHeadline: (s: string) => `Zoptymalizowana sieć może zrealizować ${s} popytu`, disruptionHeadline: (s: string) => `Po zakłóceniu sieć może zrealizować ${s} popytu`,
     unserved: 'jedn. popytu pozostaje niezaspokojonych', service: 'Realizacja popytu', logistics: 'Koszt logistyki', impact: 'Szacowany wpływ ekonomiczny', utilization: 'Maksymalne wykorzystanie magazynów',
-    constraintTitle: 'Co ogranicza wynik', routeEvidence: (r: string, c: number, h: number) => `${r} osiąga limit przepustowości w ${c} z ${h} dni planowania.`,
-    routeVsStorage: (u: string) => `Maksymalne wykorzystanie magazynów wynosi tylko ${u}; dostępne dowody wskazują na przepustowość tras, a nie pojemność magazynów jako główne ograniczenie.`,
-    genericConstraint: 'Optymalizator działa przy aktywnych ograniczeniach sieci. Szczegóły znajdują się niżej w dowodach technicznych.',
-    impactNote: 'Szacunek modelowy oparty na skonfigurowanym popycie i założeniach kosztowych; nie jest prognozą księgową.', delta: 'względem bazowego scenariusza', improve: 'Sprawdź warianty poprawy', unservedDelta: 'niezaspokojone',
+    constraintTitle: 'Co nie pozwala uzyskać lepszego wyniku', routeEvidence: (r: string, c: number, h: number) => `${r} wykorzystuje pełną dostępną przepustowość przez ${c} z ${h} dni.`,
+    routeVsStorage: (u: string) => `Magazyny są wykorzystane maksymalnie w ${u}, więc problemem nie jest brak miejsca. Ograniczeniem jest przepustowość dostaw.`,
+    genericConstraint: 'Obecna konfiguracja sieci nie pozwala uzyskać lepszego wyniku. W szczegółach technicznych poniżej można sprawdzić, które limity zostały osiągnięte.',
+    impactNote: 'Szacunek oparty na demonstracyjnym popycie i przyjętych kosztach; nie jest prognozą księgową.', delta: 'względem bazowego scenariusza', improve: 'Sprawdź warianty poprawy', unservedDelta: 'niezaspokojone',
   },
 } as const
 
@@ -74,8 +74,8 @@ export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, loca
           <p className="mt-3 text-sm text-slate-300"><strong className="text-slate-100">{number(result.kpis.unserved_demand_units)}</strong> {t.unserved}.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric label={t.service} value={pct(result.kpis.service_level)} delta={serviceDelta === null ? null : signed(serviceDelta, ' pp')} deltaLabel={t.delta} />
-            <Metric label={t.logistics} value={`${number(result.kpis.logistics_cost)} UAH`} delta={logisticsDelta === null ? null : `${signed(logisticsDelta)} UAH`} deltaLabel={t.delta} />
-            <Metric label={t.impact} value={`${number(result.kpis.estimated_business_impact)} UAH`} note={t.impactNote} />
+            <Metric label={t.logistics} value={`${number(result.kpis.logistics_cost)} ₴`} delta={logisticsDelta === null ? null : `${signed(logisticsDelta)} ₴`} deltaLabel={t.delta} />
+            <Metric label={t.impact} value={`${number(result.kpis.estimated_business_impact)} ₴`} note={t.impactNote} />
             <Metric label={t.utilization} value={pct(utilization)} delta={unservedDelta === null ? null : `${signed(unservedDelta)} ${t.unservedDelta}`} deltaLabel={t.delta} />
           </div>
           <div className="mt-6 rounded-lg border border-amber-300/15 bg-amber-300/[.035] p-4">

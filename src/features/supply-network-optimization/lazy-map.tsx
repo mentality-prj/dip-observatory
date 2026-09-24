@@ -13,14 +13,14 @@ const NetworkMap = dynamic(
         className="min-h-[540px] animate-pulse rounded-xl border border-white/10 bg-white/[.025]"
         data-testid="map-loading"
       >
-        <p className="p-5 text-sm text-slate-500">Loading map…</p>
+        
       </div>
     ),
   }
 )
 
-export type LazyNetworkMapProps = ComponentProps<typeof NetworkMapComponent>
+export type LazyNetworkMapProps = ComponentProps<typeof NetworkMapComponent> & { loadingLabel: string }
 
-export function LazyNetworkMap(props: LazyNetworkMapProps) {
+export function LazyNetworkMap({ loadingLabel: _loadingLabel, ...props }: LazyNetworkMapProps) {
   return <NetworkMap {...props} />
 }

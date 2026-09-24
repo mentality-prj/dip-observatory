@@ -26,184 +26,82 @@ import type {
 
 const copy = {
   en: {
-    title: 'Optimize where inventory should be stored and how stores should be supplied.',
-    intro: 'QDIP allocates inventory, inbound supply and fulfillment across a geographic network under capacity, compatibility, route and service constraints.',
-    optimize: 'Optimize current network',
-    optimizing: 'Optimizing…',
-    current: 'Current network',
-    optimized: 'Baseline optimized',
-    unavailable: 'Warehouse unavailable',
-    reallocated: 'Reallocated network',
-    newWarehouse: 'New warehouse',
-    makeUnavailable: 'Make warehouse unavailable',
-    confirmUnavailable: 'Confirm warehouse unavailability',
-    cancel: 'Cancel',
-    addHere: 'Add warehouse here',
-    candidateArea: 'Warehouse alternatives',
-    decisionSummary: 'Decision summary',
-    serviceChange: 'Service change',
-    unservedChange: 'Unserved demand change',
-    costChange: 'Logistics cost change',
-    paretoAlternatives: 'Pareto-efficient alternatives',
-    frontierHint: 'No single winner is implied. These alternatives are nondominated across cost, service and resilience.',
-    disruptionReallocated: 'Disruption + reallocation',
-    noCandidate: 'No candidate improves the objective enough to justify its cost.',
-    service: 'Service level',
-    unserved: 'Unserved demand',
-    logistics: 'Logistics cost',
-    risk: 'Inventory at risk',
-    utilization: 'Highest warehouse utilization',
-    businessLoss: 'Business loss',
-    affected: 'Affected demand points',
-    evidence: 'Decision evidence',
-    capacity: 'Capacity',
-    receiving: 'Receiving / day',
-    dispatch: 'Dispatch / day',
-    operating: 'Operating cost',
-    storage: 'Storage classes',
-    evaluate: 'Evaluate candidate',
-    candidateNotUsed: 'The optimizer does not use this warehouse under the current objective.',
-    candidateUsed: 'The optimizer uses this warehouse in the recalculated plan.',
-    demand: 'Demand',
-    source: 'Source warehouse',
-    status: 'Service status',
-    served: 'served',
-    pending: 'Optimization request in progress.',
-    clickHint: 'Click an empty map location to test your own warehouse candidate.',
-    improvement: 'Objective improvement',
-    requiredCapacity: 'Assigned inventory',
-    pareto: 'Pareto-efficient',
-    peakReceiving: 'Peak receiving / day',
-    peakDispatch: 'Peak dispatch / day',
-    scenarioComparison: 'Scenario comparison',
-    endingInventory: 'Ending inventory',
-    inboundAllocation: 'Inbound allocation',
-    bindingConstraints: 'Binding constraints',
-    none: 'None',
-    used: 'used',
-    notUsed: 'not used',
-    technicalDetails: 'Technical details',
-    demoNotice: 'Demo model · synthetic data · calculations are performed by QDIP',
+    title: 'See how the network handles a disruption and how supply can be protected.',
+    intro: 'QDIP shows what happens when a warehouse becomes unavailable, how goods can be rerouted and which options can reduce the impact.',
+    optimize: 'Calculate current plan', optimizing: 'Calculating…', current: 'Current network', optimized: 'Current plan',
+    unavailable: 'Warehouse unavailable', reallocated: 'Updated network', newWarehouse: 'New warehouse',
+    makeUnavailable: 'Make warehouse unavailable', confirmUnavailable: 'Confirm that this warehouse is unavailable', cancel: 'Cancel', addHere: 'Add warehouse here',
+    candidateArea: 'Improvement options', decisionSummary: 'Decision summary', serviceChange: 'Change in demand fulfilled',
+    unservedChange: 'Change in unfulfilled demand', costChange: 'Change in logistics cost', paretoAlternatives: 'Improvement options',
+    frontierHint: 'Each option offers a different balance between demand fulfilled and cost. Compare them before deciding.',
+    disruptionReallocated: 'Disruption + new plan', noCandidate: 'None of the locations tested materially improves the network under the current conditions.',
+    service: 'Demand fulfilled', unserved: 'Unfulfilled demand', logistics: 'Logistics cost', risk: 'Inventory at risk',
+    utilization: 'Peak warehouse utilization', businessLoss: 'Estimated business impact', affected: 'Regions affected by the disruption',
+    evidence: 'Why this result', capacity: 'Capacity', receiving: 'Receiving per day', dispatch: 'Dispatch per day',
+    operating: 'Warehouse operating cost', storage: 'Storage requirements', evaluate: 'Check this warehouse',
+    candidateNotUsed: 'Adding a warehouse at this location is not worthwhile. Under the current conditions it does not improve the network, so QDIP finds a better plan without using it.',
+    candidateUsed: 'This warehouse improves the network. QDIP included it in the updated supply plan.',
+    demand: 'Demand', source: 'Supplying warehouse', status: 'Demand coverage', served: 'fulfilled', pending: 'Calculating the plan…',
+    clickHint: 'Click anywhere on the map to check whether a new warehouse at that location would help.',
+    improvement: 'Plan improvement', requiredCapacity: 'Inventory at warehouse', pareto: 'Worth considering',
+    peakReceiving: 'Peak receiving per day', peakDispatch: 'Peak dispatch per day', scenarioComparison: 'Before and after the disruption',
+    endingInventory: 'Remaining inventory', inboundAllocation: 'Incoming supply allocation', bindingConstraints: 'What limits the result',
+    none: 'None', used: 'included in plan', notUsed: 'not needed in this plan', technicalDetails: 'Technical details',
+    demoNotice: 'Demo model · synthetic data · calculations are performed by QDIP', warehouses: 'warehouses', demandClusters: 'demand regions',
+    productClasses: 'product groups', manualCandidate: 'Selected location', validationError: 'Enter positive capacity values and select at least one storage option.',
+    requestFailed: 'The calculation could not be completed. Please try again.', loadingMap: 'Loading map…',
   },
   uk: {
     title: 'Перевірте, як мережа впорається зі збоєм і як зберегти постачання.',
     intro: 'QDIP показує, що станеться при втраті складу, як можна перенаправити товар і які варіанти допоможуть зменшити втрати.',
-    optimize: 'Розрахувати поточний план',
-    optimizing: 'Оптимізація…',
-    current: 'Поточна мережа',
-    optimized: 'Поточний план',
-    unavailable: 'Склад недоступний',
-    reallocated: 'Перерозподілена мережа',
-    newWarehouse: 'Новий склад',
-    makeUnavailable: 'Зробити склад недоступним',
-    confirmUnavailable: 'Підтвердити недоступність складу',
-    cancel: 'Скасувати',
-    addHere: 'Додати склад тут',
-    candidateArea: 'Варіанти покращення',
-    decisionSummary: 'Підсумок рішення',
-    serviceChange: 'Зміна рівня сервісу',
-    unservedChange: 'Зміна непокритого попиту',
-    costChange: 'Зміна вартості логістики',
-    paretoAlternatives: 'Варіанти покращення',
+    optimize: 'Розрахувати поточний план', optimizing: 'Розраховуємо…', current: 'Поточна мережа', optimized: 'Поточний план',
+    unavailable: 'Склад недоступний', reallocated: 'Оновлена мережа', newWarehouse: 'Новий склад',
+    makeUnavailable: 'Позначити склад недоступним', confirmUnavailable: 'Підтвердити, що склад недоступний', cancel: 'Скасувати', addHere: 'Додати склад тут',
+    candidateArea: 'Варіанти покращення', decisionSummary: 'Підсумок рішення', serviceChange: 'Зміна виконаного попиту',
+    unservedChange: 'Зміна непокритого попиту', costChange: 'Зміна вартості логістики', paretoAlternatives: 'Варіанти покращення',
     frontierHint: 'Кожен варіант має свій баланс між виконанням попиту та витратами. Порівняйте їх перед рішенням.',
-    disruptionReallocated: 'Збій + перерозподіл',
-    noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
-    service: 'Виконано попиту',
-    unserved: 'Непокритий попит',
-    logistics: 'Вартість логістики',
-    risk: 'Запаси під ризиком',
-    utilization: 'Найвище завантаження складу',
-    businessLoss: 'Оцінений вплив на бізнес',
-    affected: 'Регіони, яких торкнувся збій',
-    evidence: 'Обґрунтування рішення',
-    capacity: 'Місткість',
-    receiving: 'Приймання / день',
-    dispatch: 'Відвантаження / день',
-    operating: 'Витрати на роботу складу',
-    storage: 'Умови зберігання',
-    evaluate: 'Перевірити цей склад',
-    candidateNotUsed: 'Додавати склад у цій точці недоцільно. За поточних умов він не покращує результат мережі, тому QDIP знаходить кращий план без його використання.',
-    candidateUsed: 'Цей склад покращує роботу мережі. QDIP включив його до нового плану постачання.',
-    demand: 'Попит',
-    source: 'Склад-постачальник',
-    status: 'Статус обслуговування',
-    served: 'обслуговано',
-    pending: 'Виконується розрахунок.',
+    disruptionReallocated: 'Збій + новий план', noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
+    service: 'Виконано попиту', unserved: 'Непокритий попит', logistics: 'Вартість логістики', risk: 'Запаси під ризиком',
+    utilization: 'Максимальне завантаження складів', businessLoss: 'Оцінений вплив на бізнес', affected: 'Регіони, яких торкнувся збій',
+    evidence: 'Чому отримано такий результат', capacity: 'Місткість', receiving: 'Приймання за день', dispatch: 'Відвантаження за день',
+    operating: 'Витрати на роботу складу', storage: 'Умови зберігання', evaluate: 'Перевірити цей склад',
+    candidateNotUsed: 'Додавати склад у цій точці недоцільно. За поточних умов він не покращує роботу мережі, тому QDIP знаходить кращий план без нього.',
+    candidateUsed: 'Цей склад покращує роботу мережі. QDIP включив його до оновленого плану постачання.',
+    demand: 'Попит', source: 'Склад, з якого постачаємо', status: 'Виконання попиту', served: 'виконано', pending: 'Розраховуємо план…',
     clickHint: 'Натисніть на будь-яке місце на мапі, щоб перевірити, чи допоможе новий склад у цій точці.',
-    improvement: 'Покращення плану',
-    requiredCapacity: 'Запас на складі',
-    pareto: 'Вартий розгляду',
-    peakReceiving: 'Пік приймання / день',
-    peakDispatch: 'Пік відвантаження / день',
-    scenarioComparison: 'До і після збою',
-    endingInventory: 'Кінцевий запас',
-    inboundAllocation: 'Розподіл вхідних поставок',
-    bindingConstraints: 'Що обмежує результат',
-    none: 'Немає',
-    used: 'використовується',
-    notUsed: 'не потрібен у цьому плані',
-    technicalDetails: 'Технічні деталі',
-    demoNotice: 'Демонстраційна модель · синтетичні дані · розрахунок виконує QDIP',
+    improvement: 'Покращення плану', requiredCapacity: 'Запас на складі', pareto: 'Вартий розгляду',
+    peakReceiving: 'Максимальне приймання за день', peakDispatch: 'Максимальне відвантаження за день', scenarioComparison: 'До і після збою',
+    endingInventory: 'Залишок запасів', inboundAllocation: 'Куди спрямувати нові поставки', bindingConstraints: 'Що обмежує результат',
+    none: 'Немає', used: 'включено до плану', notUsed: 'не потрібен у цьому плані', technicalDetails: 'Технічні деталі',
+    demoNotice: 'Демонстраційна модель · синтетичні дані · розрахунок виконує QDIP', warehouses: 'склади', demandClusters: 'регіони попиту',
+    productClasses: 'групи товарів', manualCandidate: 'Обрана точка', validationError: 'Вкажіть додатні значення місткості та виберіть хоча б одну умову зберігання.',
+    requestFailed: 'Не вдалося виконати розрахунок. Спробуйте ще раз.', loadingMap: 'Завантажуємо мапу…',
   },
   pl: {
-    title: 'Optymalizuj, gdzie przechowywać zapasy i z których magazynów obsługiwać sklepy.',
-    intro: 'QDIP alokuje zapasy, dostawy przychodzące i realizację popytu w sieci geograficznej z ograniczeniami pojemności, zgodności, tras i poziomu obsługi.',
-    optimize: 'Optymalizuj bieżącą sieć',
-    optimizing: 'Optymalizacja…',
-    current: 'Bieżąca sieć',
-    optimized: 'Zoptymalizowana baza',
-    unavailable: 'Magazyn niedostępny',
-    reallocated: 'Sieć po realokacji',
-    newWarehouse: 'Nowy magazyn',
-    makeUnavailable: 'Ustaw magazyn jako niedostępny',
-    confirmUnavailable: 'Potwierdź niedostępność magazynu',
-    cancel: 'Anuluj',
-    addHere: 'Dodaj magazyn tutaj',
-    candidateArea: 'Alternatywy lokalizacji magazynu',
-    decisionSummary: 'Podsumowanie decyzji',
-    serviceChange: 'Zmiana poziomu obsługi',
-    unservedChange: 'Zmiana niezaspokojonego popytu',
-    costChange: 'Zmiana kosztu logistyki',
-    paretoAlternatives: 'Alternatywy efektywne Pareto',
-    frontierHint: 'Nie wskazujemy jednego zwycięzcy. Te alternatywy są niezdominowane pod względem kosztu, obsługi i odporności.',
-    disruptionReallocated: 'Zakłócenie + realokacja',
-    noCandidate: 'Żaden kandydat nie poprawia celu na tyle, aby uzasadnić jego koszt.',
-    service: 'Poziom obsługi',
-    unserved: 'Niezaspokojony popyt',
-    logistics: 'Koszt logistyki',
-    risk: 'Zapasy narażone na ryzyko',
-    utilization: 'Najwyższe wykorzystanie magazynu',
-    businessLoss: 'Strata biznesowa',
-    affected: 'Dotknięte punkty popytu',
-    evidence: 'Uzasadnienie decyzji',
-    capacity: 'Pojemność',
-    receiving: 'Przyjęcie / dzień',
-    dispatch: 'Wysyłka / dzień',
-    operating: 'Koszt operacyjny',
-    storage: 'Klasy składowania',
-    evaluate: 'Oceń kandydata',
-    candidateNotUsed: 'Optymalizator nie wykorzystuje tego magazynu przy bieżącej funkcji celu.',
-    candidateUsed: 'Optymalizator wykorzystuje ten magazyn w przeliczonym planie.',
-    demand: 'Popyt',
-    source: 'Magazyn źródłowy',
-    status: 'Status obsługi',
-    served: 'obsłużono',
-    pending: 'Trwa optymalizacja.',
-    clickHint: 'Kliknij pusty punkt na mapie, aby sprawdzić własny wariant magazynu.',
-    improvement: 'Poprawa funkcji celu',
-    requiredCapacity: 'Przypisany zapas',
-    pareto: 'Efektywny Pareto',
-    peakReceiving: 'Szczyt przyjęć / dzień',
-    peakDispatch: 'Szczyt wysyłek / dzień',
-    scenarioComparison: 'Porównanie scenariuszy',
-    endingInventory: 'Zapas końcowy',
-    inboundAllocation: 'Alokacja dostaw przychodzących',
-    bindingConstraints: 'Aktywne ograniczenia',
-    none: 'Brak',
-    used: 'używany',
-    notUsed: 'nieużywany',
-    technicalDetails: 'Szczegóły techniczne',
-    demoNotice: 'Model demonstracyjny · dane syntetyczne · obliczenia wykonuje QDIP',
+    title: 'Sprawdź, jak sieć poradzi sobie z zakłóceniem i jak utrzymać dostawy.',
+    intro: 'QDIP pokazuje, co stanie się po utracie magazynu, jak przekierować towar i które warianty mogą ograniczyć skutki zakłócenia.',
+    optimize: 'Oblicz bieżący plan', optimizing: 'Obliczamy…', current: 'Bieżąca sieć', optimized: 'Bieżący plan',
+    unavailable: 'Magazyn niedostępny', reallocated: 'Zaktualizowana sieć', newWarehouse: 'Nowy magazyn',
+    makeUnavailable: 'Oznacz magazyn jako niedostępny', confirmUnavailable: 'Potwierdź, że magazyn jest niedostępny', cancel: 'Anuluj', addHere: 'Dodaj magazyn tutaj',
+    candidateArea: 'Warianty poprawy', decisionSummary: 'Podsumowanie decyzji', serviceChange: 'Zmiana zrealizowanego popytu',
+    unservedChange: 'Zmiana niezaspokojonego popytu', costChange: 'Zmiana kosztu logistyki', paretoAlternatives: 'Warianty poprawy',
+    frontierHint: 'Każdy wariant oznacza inny kompromis między realizacją popytu a kosztami. Porównaj je przed podjęciem decyzji.',
+    disruptionReallocated: 'Zakłócenie + nowy plan', noCandidate: 'Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.',
+    service: 'Zrealizowany popyt', unserved: 'Niezaspokojony popyt', logistics: 'Koszt logistyki', risk: 'Zapasy zagrożone',
+    utilization: 'Maksymalne wykorzystanie magazynów', businessLoss: 'Szacowany wpływ na biznes', affected: 'Regiony dotknięte zakłóceniem',
+    evidence: 'Dlaczego otrzymaliśmy taki wynik', capacity: 'Pojemność', receiving: 'Przyjęcia dziennie', dispatch: 'Wysyłki dziennie',
+    operating: 'Koszt działania magazynu', storage: 'Warunki składowania', evaluate: 'Sprawdź ten magazyn',
+    candidateNotUsed: 'Dodanie magazynu w tej lokalizacji nie jest opłacalne. W obecnych warunkach nie poprawia działania sieci, dlatego QDIP znajduje lepszy plan bez jego wykorzystania.',
+    candidateUsed: 'Ten magazyn poprawia działanie sieci. QDIP uwzględnił go w zaktualizowanym planie dostaw.',
+    demand: 'Popyt', source: 'Magazyn realizujący dostawy', status: 'Realizacja popytu', served: 'zrealizowano', pending: 'Obliczamy plan…',
+    clickHint: 'Kliknij dowolne miejsce na mapie, aby sprawdzić, czy nowy magazyn w tej lokalizacji pomoże.',
+    improvement: 'Poprawa planu', requiredCapacity: 'Zapas w magazynie', pareto: 'Warto rozważyć',
+    peakReceiving: 'Maksymalne przyjęcia dziennie', peakDispatch: 'Maksymalne wysyłki dziennie', scenarioComparison: 'Przed i po zakłóceniu',
+    endingInventory: 'Pozostały zapas', inboundAllocation: 'Gdzie skierować nowe dostawy', bindingConstraints: 'Co ogranicza wynik',
+    none: 'Brak', used: 'uwzględniony w planie', notUsed: 'niepotrzebny w tym planie', technicalDetails: 'Szczegóły techniczne',
+    demoNotice: 'Model demonstracyjny · dane syntetyczne · obliczenia wykonuje QDIP', warehouses: 'magazyny', demandClusters: 'regiony popytu',
+    productClasses: 'grupy produktów', manualCandidate: 'Wybrana lokalizacja', validationError: 'Podaj dodatnie wartości pojemności i wybierz co najmniej jeden warunek składowania.',
+    requestFailed: 'Nie udało się wykonać obliczenia. Spróbuj ponownie.', loadingMap: 'Ładowanie mapy…',
   },
 } as const
 
@@ -281,7 +179,12 @@ function humanizeConstraint(value: string, locale: Locale) {
   }
   const label = labels[locale][kind]
   if (!label) return value.replaceAll(':', ' · ')
-  return parts.length ? `${label} · ${parts.join(' · ')}` : label
+  const readableParts = parts.map((part) =>
+    SUPPLY_NETWORK_DEMO.warehouses.find((item) => item.id === part)?.label
+    ?? SUPPLY_NETWORK_DEMO.demand_points.find((item) => item.id === part)?.label
+    ?? part
+  )
+  return readableParts.length ? `${label} · ${readableParts.join(' · ')}` : label
 }
 
 function withUnavailable(network: SupplyNetwork, warehouseId: string): SupplyNetwork {
@@ -321,7 +224,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     if (!candidateLocation) return null
     return {
       id: 'manual-candidate',
-      label: 'User candidate',
+      label: t.manualCandidate,
       latitude: candidateLocation.latitude,
       longitude: candidateLocation.longitude,
       capacity_units: candidateCapacity,
@@ -357,7 +260,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
        setManualResult(null)
       setManualEvaluation(null)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Request failed')
+      setError(reason instanceof Error ? reason.message : t.requestFailed)
     } finally {
       setPending(false)
     }
@@ -378,7 +281,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       const candidates = await runCandidateAreas(disruptedNetwork)
       setCandidateAreas(candidates.candidates)
      } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Request failed')
+      setError(reason instanceof Error ? reason.message : t.requestFailed)
     } finally {
       setPending(false)
     }
@@ -392,7 +295,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       manualCandidate.dispatch_capacity_units_per_day <= 0 ||
       manualCandidate.supported_storage_classes.length === 0
     ) {
-      setError('Capacity fields must be positive and at least one storage class is required.')
+      setError(t.validationError)
       return
     }
     setPending(true)
@@ -402,7 +305,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       setManualEvaluation(result.candidate)
       setManualResult(result.optimized_network)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Request failed')
+      setError(reason instanceof Error ? reason.message : t.requestFailed)
     } finally {
       setPending(false)
     }
@@ -441,9 +344,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         <Card>
           <CardContent style={{ paddingTop: 'var(--ds-space-6)' }}>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div><WarehouseIcon className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.warehouses.length}</strong><p className="text-xs text-slate-500">warehouses</p></div>
-              <div><MapPin className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.demand_points.length}</strong><p className="text-xs text-slate-500">demand clusters</p></div>
-              <div><Network className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.product_classes.length}</strong><p className="text-xs text-slate-500">product classes</p></div>
+              <div><WarehouseIcon className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.warehouses.length}</strong><p className="text-xs text-slate-500">{t.warehouses}</p></div>
+              <div><MapPin className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.demand_points.length}</strong><p className="text-xs text-slate-500">{t.demandClusters}</p></div>
+              <div><Network className="mx-auto mb-2 h-5 w-5 text-[var(--ds-accent)]" /><strong>{SUPPLY_NETWORK_DEMO.product_classes.length}</strong><p className="text-xs text-slate-500">{t.productClasses}</p></div>
             </div>
             <Button className="mt-6 w-full" onClick={optimize} disabled={pending}>
               <Play className="h-4 w-4" /> {pending ? t.optimizing : t.optimize}
@@ -473,6 +376,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
         <LazyNetworkMap
+          locale={locale}
+          loadingLabel={t.loadingMap}
           network={activeNetwork}
           result={visibleResult}
           unavailableWarehouseIds={unavailableIds}
@@ -637,7 +542,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <div className="grid gap-2">
                     <Metric label={t.service} value={pct(item.result.kpis.service_level)} />
                     <Metric label={t.unserved} value={number(item.result.kpis.unserved_demand_units)} />
-                    <Metric label={t.logistics} value={`${number(item.result.kpis.logistics_cost)} UAH`} />
+                    <Metric label={t.logistics} value={`${number(item.result.kpis.logistics_cost)} ₴`} />
                   </div>
                 </CardContent>
               </Card>
