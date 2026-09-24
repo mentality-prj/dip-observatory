@@ -33,9 +33,9 @@ import type {
 const copy = {
   en: {
     featureName: 'Supply Network Optimization',
-    title: 'See how the network handles a disruption and how supply can be protected.',
+    title: 'Optimize where inventory is stored and how stores are supplied.',
     intro:
-      'QDIP shows what happens when a warehouse becomes unavailable, how goods can be rerouted and which options can reduce the impact.',
+      'QDIP calculates supply flows across the network, then lets you test warehouse loss or a new warehouse and immediately compare the updated plan.',
     optimize: 'Calculate current plan',
     optimizing: 'Calculating…',
     current: 'Current network',
@@ -119,12 +119,14 @@ const copy = {
       'No workable plan meets all of the current limits. Check warehouse availability, capacities and the required demand coverage.',
     unavailableError: 'The calculation service is temporarily unavailable. Please try again.',
     perDay: 'per day',
+    warehouseList: 'Warehouses',
+    chooseWarehouse: 'Choose a warehouse from the list or tap it on the map.',
   },
   uk: {
     featureName: 'Оптимізація мережі постачання',
-    title: 'Перевірте, як мережа впорається зі збоєм і як зберегти постачання.',
+    title: 'Оптимізуйте розміщення запасів і постачання магазинів.',
     intro:
-      'QDIP показує, що станеться при втраті складу, як можна перенаправити товар і які варіанти допоможуть зменшити втрати.',
+      'QDIP розраховує потоки товару в мережі, а потім дозволяє перевірити втрату складу або нову локацію й одразу порівняти оновлений план.',
     optimize: 'Розрахувати поточний план',
     optimizing: 'Розраховуємо…',
     current: 'Поточна мережа',
@@ -207,12 +209,14 @@ const copy = {
       'За поточних умов неможливо побудувати план, який виконує всі обмеження. Перевірте доступність складів, потужності та потрібний рівень виконання попиту.',
     unavailableError: 'Сервіс розрахунку тимчасово недоступний. Спробуйте ще раз.',
     perDay: 'за день',
+    warehouseList: 'Склади',
+    chooseWarehouse: 'Оберіть склад зі списку або натисніть на нього на мапі.',
   },
   pl: {
     featureName: 'Optymalizacja sieci dostaw',
-    title: 'Sprawdź, jak sieć poradzi sobie z zakłóceniem i jak utrzymać dostawy.',
+    title: 'Optymalizuj rozmieszczenie zapasów i zaopatrzenie sklepów.',
     intro:
-      'QDIP pokazuje, co stanie się po utracie magazynu, jak przekierować towar i które warianty mogą ograniczyć skutki zakłócenia.',
+      'QDIP oblicza przepływy towarów w sieci, a następnie pozwala sprawdzić utratę magazynu lub nową lokalizację i od razu porównać zaktualizowany plan.',
     optimize: 'Oblicz bieżący plan',
     optimizing: 'Obliczamy…',
     current: 'Bieżąca sieć',
@@ -296,6 +300,8 @@ const copy = {
       'Przy obecnych warunkach nie da się zbudować planu spełniającego wszystkie ograniczenia. Sprawdź dostępność magazynów, przepustowość i wymagany poziom realizacji popytu.',
     unavailableError: 'Usługa obliczeniowa jest chwilowo niedostępna. Spróbuj ponownie.',
     perDay: 'dziennie',
+    warehouseList: 'Magazyny',
+    chooseWarehouse: 'Wybierz magazyn z listy lub dotknij go na mapie.',
   },
 } as const
 
@@ -541,13 +547,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     setManualEvaluation(null)
   }, [])
 
-  const stages = [
-    { label: t.current, active: !baseline },
-    { label: t.optimized, active: Boolean(baseline && !scenario) },
-    { label: t.disruptionReallocated, active: Boolean(scenario && !manualResult) },
-    { label: t.newWarehouse, active: Boolean(manualResult) },
-  ]
-
   return (
     <main className="mx-auto w-full max-w-[1640px] px-4 pb-20 sm:px-5 md:px-8 lg:px-10">
       <section className="grid gap-6 py-8 xl:grid-cols-[1.5fr_.7fr] xl:items-end">
@@ -582,14 +581,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           </CardContent>
         </Card>
       </section>
-
-      <div className="mb-5 flex flex-wrap gap-2">
-        {stages.map((stage, index) => (
-          <Badge key={stage.label} variant={stage.active ? 'cyan' : 'neutral'}>
-            {index + 1}. {stage.label}
-          </Badge>
-        ))}
-      </div>
 
       {pending ? (
         <p className="mb-4 text-sm text-slate-400" role="status">
@@ -688,6 +679,36 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         />
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.warehouseList}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-3 text-sm text-slate-400">{t.chooseWarehouse}</p>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                {activeNetwork.warehouses.map((warehouse) => {
+                  const unavailable = unavailableIds.includes(warehouse.id)
+                  const selected = selectedWarehouse?.id === warehouse.id
+                  return (
+                    <button
+                      key={warehouse.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => selectWarehouse(warehouse)}
+                      className={`min-h-11 rounded-lg border px-3 py-2 text-left text-sm transition ${selected ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-100' : 'border-white/10 bg-white/[.02] text-slate-200 hover:border-white/20'}`}
+                    >
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="font-medium">{warehouseDisplayLabel(warehouse.id, locale, warehouse.label)}</span>
+                        {unavailable ? <Badge variant="amber">{t.unavailable}</Badge> : null}
+                      </span>
+                      <span className="mt-1 block text-xs text-slate-500">{t.capacity}: {number(warehouse.capacity_units)}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
           {selectedWarehouse ? (
             <Card>
               <CardHeader>
@@ -972,12 +993,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       {visibleResult ? (
         <section className="mt-8">
           <Card>
-            <details>
-              <summary className="cursor-pointer list-none p-6 text-base font-medium text-slate-200">
-                {t.evidence} · {t.technicalDetails}
-              </summary>
-              <CardContent>
-                <div className="grid gap-4 lg:grid-cols-3">
+            <CardHeader>
+              <CardTitle>{t.evidence}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 lg:grid-cols-3">
                   <div>
                     <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
                     <div className="mt-2 space-y-1 text-xs text-slate-400">
@@ -1010,9 +1030,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       ))}
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </details>
+              </div>
+            </CardContent>
           </Card>
         </section>
       ) : null}

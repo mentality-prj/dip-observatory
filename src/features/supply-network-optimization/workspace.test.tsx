@@ -168,7 +168,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     expect(screen.getByTestId('mock-map')).toBeVisible()
-    expect(screen.getByText(/See how the network handles a disruption/)).toBeVisible()
+    expect(screen.getByText(/Optimize where inventory is stored/)).toBeVisible()
 
     await user.click(screen.getByRole('button', { name: 'Calculate current plan' }))
     await waitFor(() => expect(api.runOptimization).toHaveBeenCalledTimes(1))
@@ -198,6 +198,24 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('Warehouse option 1')).toBeVisible()
   })
 
+  it('lets the user select a warehouse from the list without using the map', async () => {
+    const user = userEvent.setup()
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: /Львівський склад/ }))
+    expect(screen.getByText(/якщо цей склад стане повністю недоступним/)).toBeVisible()
+  })
+
+  it('keeps decision evidence visible without a disclosure control', async () => {
+    const user = userEvent.setup()
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'Розрахувати поточний план' }))
+    await waitFor(() => expect(api.runOptimization).toHaveBeenCalledTimes(1))
+    expect(screen.getByText('Чому отримано такий результат')).toBeVisible()
+    expect(screen.queryByText('Технічні деталі')).not.toBeInTheDocument()
+  })
+
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {
     const user = userEvent.setup()
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
@@ -225,8 +243,8 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
   })
 
   it.each([
-    ['uk', 'Перевірте, як мережа впорається зі збоєм'],
-    ['pl', 'Sprawdź, jak sieć poradzi sobie z zakłóceniem'],
+    ['uk', 'Оптимізуйте розміщення запасів'],
+    ['pl', 'Optymalizuj rozmieszczenie zapasów'],
   ] as const)('renders localized %s copy', (locale, heading) => {
     render(<SupplyNetworkOptimizationWorkspace locale={locale} />)
     expect(screen.getByText(new RegExp(heading))).toBeVisible()

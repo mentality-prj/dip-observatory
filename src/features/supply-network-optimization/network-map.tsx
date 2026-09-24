@@ -31,7 +31,7 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   const element = document.createElement('button')
   element.type = 'button'
   element.setAttribute('aria-label', kind)
-  const size = kind === 'store' ? '13px' : '18px'
+  const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'unavailable' ? '34px' : '20px'
   // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
   element.style.width = size
   element.style.height = size
@@ -50,10 +50,12 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   element.style.border = '2px solid rgba(255,255,255,.9)'
   element.style.boxShadow = '0 1px 8px rgba(0,0,0,.45)'
   element.style.cursor = 'pointer'
+  element.style.touchAction = 'manipulation'
+  element.style.setProperty('-webkit-tap-highlight-color', 'transparent')
   // Warehouses are actionable network nodes. Keep them above demand/store
   // markers when geographic coordinates overlap so the warehouse action
   // remains reachable (for example Kyiv warehouse + Kyiv demand region).
-  element.style.zIndex = kind === 'warehouse' || kind === 'unavailable' ? '3' : kind === 'candidate' ? '2' : '1'
+  element.style.zIndex = kind === 'warehouse' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
   element.style.background =
     kind === 'unavailable' ? '#ef4444'
       : kind === 'candidate' ? '#f59e0b'
@@ -83,6 +85,8 @@ function coordinate(
   if (warehouse) return [warehouse.longitude, warehouse.latitude]
   const point = network.demand_points.find((item) => item.id === id)
   if (point) return [point.longitude, point.latitude]
+  const supplier = network.suppliers.find((item) => item.id === id)
+  if (supplier) return [supplier.longitude, supplier.latitude]
   if (manualCandidate?.id === id) return [manualCandidate.longitude, manualCandidate.latitude]
   const candidate = candidateAreas.find((item) => item.candidate_id === id)
   if (candidate) return [candidate.longitude, candidate.latitude]
@@ -133,6 +137,9 @@ function flowCollection(
     }
     for (const item of result.transfers) {
       addFlow('transfer', item.from_warehouse_id, item.to_warehouse_id, item.units)
+    }
+    for (const item of result.inbound_allocation) {
+      addFlow('recommended', item.supplier_id, item.warehouse_id, item.units)
     }
     for (const flow of aggregated.values()) {
       const from = coordinate(network, flow.fromId, manualCandidate, candidateAreas)
@@ -257,13 +264,15 @@ export function NetworkMap({
           new maplibre.Marker({ element }).setLngLat([store.longitude, store.latitude]).addTo(map)
         )
       }
-      for (const supplier of network.suppliers) {
-        const element = markerStyle('supplier')
-        element.dataset.networkMarker = 'supplier'
-        element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
-        markersRef.current.push(
-          new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
-        )
+      if (result?.inbound_allocation.some((item) => item.units > 0)) {
+        for (const supplier of network.suppliers) {
+          const element = markerStyle('supplier')
+          element.dataset.networkMarker = 'supplier'
+          element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
+          markersRef.current.push(
+            new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
+          )
+        }
       }
       for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
         const element = markerStyle('candidate')
@@ -289,16 +298,33 @@ export function NetworkMap({
         manualCandidate,
         candidateAreas
       )
-      for (const layerId of ['recommended-flows', 'current-flows']) {
+      for (const layerId of ['recommended-flow-arrows', 'recommended-flows', 'current-flow-arrows', 'current-flows']) {
         if (map.getLayer(layerId)) map.removeLayer(layerId)
-        if (map.getSource(layerId)) map.removeSource(layerId)
+      }
+      for (const sourceId of ['recommended-flows', 'current-flows']) {
+        if (map.getSource(sourceId)) map.removeSource(sourceId)
       }
       map.addSource('current-flows', { type: 'geojson', data: collections.current })
       map.addLayer({
         id: 'current-flows',
         type: 'line',
         source: 'current-flows',
-        paint: { 'line-color': '#64748b', 'line-width': 1.2, 'line-opacity': 0.32 },
+        paint: { 'line-color': '#94a3b8', 'line-width': 2, 'line-opacity': 0.52 },
+      })
+      map.addLayer({
+        id: 'current-flow-arrows',
+        type: 'symbol',
+        source: 'current-flows',
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 90,
+          'text-field': '›',
+          'text-size': 20,
+          'text-rotation-alignment': 'map',
+          'text-keep-upright': false,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#cbd5e1', 'text-opacity': 0.7 },
       })
       if (result) {
         map.addSource('recommended-flows', { type: 'geojson', data: collections.recommended })
@@ -306,7 +332,22 @@ export function NetworkMap({
           id: 'recommended-flows',
           type: 'line',
           source: 'recommended-flows',
-          paint: { 'line-color': '#22d3ee', 'line-width': 2.4, 'line-opacity': 0.78 },
+          paint: { 'line-color': '#22d3ee', 'line-width': 3, 'line-opacity': 0.9 },
+        })
+        map.addLayer({
+          id: 'recommended-flow-arrows',
+          type: 'symbol',
+          source: 'recommended-flows',
+          layout: {
+            'symbol-placement': 'line',
+            'symbol-spacing': 80,
+            'text-field': '›',
+            'text-size': 24,
+            'text-rotation-alignment': 'map',
+            'text-keep-upright': false,
+            'text-allow-overlap': true,
+          },
+          paint: { 'text-color': '#67e8f9', 'text-opacity': 0.95 },
         })
       }
     })
@@ -334,8 +375,13 @@ export function NetworkMap({
           </div>
         </div>
       ) : null}
-      <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-slate-950/90 px-3 py-2 text-xs text-slate-300">
-        {locale === 'uk' ? 'Поточні маршрути · Новий план · Склад · Регіон попиту · Постачальник · Варіант складу' : locale === 'pl' ? 'Bieżące trasy · Nowy plan · Magazyn · Region popytu · Dostawca · Wariant magazynu' : 'Current routes · New plan · Warehouse · Demand region · Supplier · Warehouse option'}
+      <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5 text-[11px] text-slate-200 sm:right-auto sm:max-w-[80%]">
+        <span className="rounded bg-slate-950/90 px-2 py-1">▰ {locale === 'uk' ? 'Склад' : locale === 'pl' ? 'Magazyn' : 'Warehouse'}</span>
+        <span className="rounded bg-slate-950/90 px-2 py-1">● {locale === 'uk' ? 'Регіон попиту' : locale === 'pl' ? 'Region popytu' : 'Demand region'}</span>
+        {currentFlows.length > 0 ? <span className="rounded bg-slate-950/90 px-2 py-1">→ {locale === 'uk' ? 'Поточні потоки' : locale === 'pl' ? 'Bieżące przepływy' : 'Current flows'}</span> : null}
+        {result ? <span className="rounded bg-slate-950/90 px-2 py-1 text-cyan-200">→ {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}</span> : null}
+        {result?.inbound_allocation.some((item) => item.units > 0) ? <span className="rounded bg-slate-950/90 px-2 py-1">◆ {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}</span> : null}
+        {candidateAreas.some((item) => item.feasible) || manualCandidate ? <span className="rounded bg-slate-950/90 px-2 py-1">◇ {locale === 'uk' ? 'Варіант складу' : locale === 'pl' ? 'Wariant magazynu' : 'Warehouse option'}</span> : null}
       </div>
     </div>
   )
