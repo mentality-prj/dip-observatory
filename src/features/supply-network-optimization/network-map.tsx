@@ -12,8 +12,10 @@ import type {
   Warehouse,
 } from './domain'
 import { loadMapLibre, OSM_RASTER_STYLE, type MapLibreMap, type MapLibreMarker } from './map-provider'
+import { candidateOptionLabel, demandDisplayLabel, supplierDisplayLabel, warehouseDisplayLabel } from './presentation'
 
 type Props = {
+  locale: 'en' | 'uk' | 'pl'
   network: SupplyNetwork
   result: OptimizationResult | null
   unavailableWarehouseIds: string[]
@@ -138,6 +140,7 @@ function flowCollection(
 }
 
 export function NetworkMap({
+  locale,
   network,
   result,
   unavailableWarehouseIds,
@@ -221,7 +224,7 @@ export function NetworkMap({
         const unavailable = unavailableWarehouseIds.includes(warehouse.id)
         const element = markerStyle(unavailable ? 'unavailable' : 'warehouse')
         element.dataset.networkMarker = 'warehouse'
-        element.title = warehouse.label ?? warehouse.id
+        element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           onWarehouseSelect(warehouse)
@@ -233,7 +236,7 @@ export function NetworkMap({
       for (const store of network.demand_points) {
         const element = markerStyle('store')
         element.dataset.networkMarker = 'store'
-        element.title = store.label
+        element.title = demandDisplayLabel(store.id, locale, store.label)
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           onStoreSelect(store)
@@ -245,15 +248,15 @@ export function NetworkMap({
       for (const supplier of network.suppliers) {
         const element = markerStyle('supplier')
         element.dataset.networkMarker = 'supplier'
-        element.title = supplier.label ?? supplier.id
+        element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
         markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
         )
       }
-      for (const candidate of candidateAreas.filter((item) => item.feasible)) {
+      for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
         const element = markerStyle('candidate')
         element.dataset.networkMarker = 'candidate'
-        element.title = candidate.label ?? candidate.candidate_id
+        element.title = candidateOptionLabel(index, locale)
         markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map)
         )
@@ -314,13 +317,13 @@ export function NetworkMap({
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
-            <p className="text-sm font-medium text-slate-200">Geographic map unavailable</p>
-            <p className="mt-1 text-xs text-slate-400">Network analysis remains available. Reload to retry the map provider.</p>
+            <p className="text-sm font-medium text-slate-200">{locale === 'uk' ? 'Мапа тимчасово недоступна' : locale === 'pl' ? 'Mapa jest chwilowo niedostępna' : 'Map temporarily unavailable'}</p>
+            <p className="mt-1 text-xs text-slate-400">{locale === 'uk' ? 'Розрахунок мережі доступний. Оновіть сторінку, щоб повторити завантаження мапи.' : locale === 'pl' ? 'Analiza sieci jest dostępna. Odśwież stronę, aby ponownie załadować mapę.' : 'Network analysis remains available. Reload to retry the map.'}</p>
           </div>
         </div>
       ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-slate-950/90 px-3 py-2 text-xs text-slate-300">
-        Current flow · Recommended flow · Warehouse · Store · Supplier · Candidate
+        {locale === 'uk' ? 'Поточні маршрути · Новий план · Склад · Регіон попиту · Постачальник · Варіант складу' : locale === 'pl' ? 'Bieżące trasy · Nowy plan · Magazyn · Region popytu · Dostawca · Wariant magazynu' : 'Current routes · New plan · Warehouse · Demand region · Supplier · Warehouse option'}
       </div>
     </div>
   )
