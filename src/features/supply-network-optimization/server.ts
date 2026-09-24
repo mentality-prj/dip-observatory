@@ -7,6 +7,7 @@ import type { CandidateWarehouse, SupplyNetwork } from './domain'
 const payloadSchema = z.object({
   result: z.record(z.string(), z.unknown()),
   evidence: z.record(z.string(), z.unknown()),
+  decision_value: z.unknown().optional(),
 })
 
 export function optimizeSupplyNetwork(network: SupplyNetwork) {

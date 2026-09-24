@@ -26,6 +26,7 @@ import { ExecutiveDecisionSummary } from './executive-decision-summary'
 import type {
   CandidateResult,
   CandidateWarehouse,
+  EconomicComparison,
   DemandPoint,
   OptimizationResult,
   ScenarioComparison,
@@ -41,8 +42,8 @@ const copy = {
     intro: 'QDIP shows what happens when a warehouse becomes unavailable, how goods can be rerouted and which options can reduce the impact.',
     optimize: 'Calculate current plan', optimizing: 'Calculating…', current: 'Current network', optimized: 'Current plan',
     unavailable: 'Warehouse unavailable', reallocated: 'Updated network', newWarehouse: 'New warehouse',
-    makeUnavailable: 'Make warehouse unavailable', confirmUnavailable: 'Confirm that this warehouse is unavailable', cancel: 'Cancel', addHere: 'Add warehouse here',
-    candidateArea: 'Improvement options', decisionSummary: 'Decision summary', serviceChange: 'Change in demand fulfilled',
+    makeUnavailable: 'Simulate warehouse loss', confirmUnavailable: 'Simulate this warehouse becoming completely unavailable?', disruptionHelp: 'Check what happens to supply if this warehouse becomes completely unavailable.', disruptionDone: 'Warehouse unavailable. QDIP rebuilt the supply plan.', disruptionDoneHelp: 'The map shows the rerouted flows. The results below show how much demand is protected, the cost change and the remaining bottlenecks.', cancel: 'Cancel', addHere: 'Add warehouse here',
+    candidateArea: 'Improvement options', findImprovements: 'Find options to strengthen the network', findingImprovements: 'Finding improvement options…', decisionSummary: 'Decision summary', serviceChange: 'Change in demand fulfilled',
     unservedChange: 'Change in unfulfilled demand', costChange: 'Change in logistics cost', paretoAlternatives: 'Improvement options',
     frontierHint: 'Each option offers a different balance between demand fulfilled and cost. Compare them before deciding.',
     disruptionReallocated: 'Disruption + new plan', noCandidate: 'None of the locations tested materially improves the network under the current conditions.',
@@ -60,7 +61,7 @@ const copy = {
     none: 'None', used: 'included in plan', notUsed: 'not needed in this plan', technicalDetails: 'Technical details',
     demoNotice: 'Demo model · synthetic data · calculations are performed by QDIP', warehouses: 'warehouses', demandClusters: 'demand regions',
     productClasses: 'product groups', manualCandidate: 'Selected location', validationError: 'Enter positive capacity values and select at least one storage option.',
-    requestFailed: 'The calculation could not be completed. Please try again.', invalidError: 'Some input values are invalid. Check the warehouse parameters and try again.', infeasibleError: 'No workable plan meets all of the current limits. Check warehouse availability, capacities and the required demand coverage.', unavailableError: 'The calculation service is temporarily unavailable. Please try again.', perDay: 'per day',
+    economicValue: 'Estimated economic value', nominalAdvantage: 'Estimated advantage', downsideAdvantage: 'Advantage under observed stress', worstObservedAdvantage: 'Worst observed advantage', observedRegret: 'Observed regret', valueStability: 'Advantage remains positive', economicNote: 'Model estimate, not realized savings. Stress scenarios are deterministic and do not imply probability.', requestFailed: 'The calculation could not be completed. Please try again.', invalidError: 'Some input values are invalid. Check the warehouse parameters and try again.', infeasibleError: 'No workable plan meets all of the current limits. Check warehouse availability, capacities and the required demand coverage.', unavailableError: 'The calculation service is temporarily unavailable. Please try again.', perDay: 'per day',
   },
   uk: {
     featureName: 'Оптимізація мережі постачання',
@@ -68,8 +69,8 @@ const copy = {
     intro: 'QDIP показує, що станеться при втраті складу, як можна перенаправити товар і які варіанти допоможуть зменшити втрати.',
     optimize: 'Розрахувати поточний план', optimizing: 'Розраховуємо…', current: 'Поточна мережа', optimized: 'Поточний план',
     unavailable: 'Склад недоступний', reallocated: 'Оновлена мережа', newWarehouse: 'Новий склад',
-    makeUnavailable: 'Позначити склад недоступним', confirmUnavailable: 'Підтвердити, що склад недоступний', cancel: 'Скасувати', addHere: 'Додати склад тут',
-    candidateArea: 'Варіанти покращення', decisionSummary: 'Підсумок рішення', serviceChange: 'Зміна виконаного попиту',
+    makeUnavailable: 'Змоделювати втрату складу', confirmUnavailable: 'Змоделювати повну недоступність цього складу?', disruptionHelp: 'Перевірте, що станеться з постачанням, якщо цей склад стане повністю недоступним.', disruptionDone: 'Склад недоступний. QDIP перебудував план постачання.', disruptionDoneHelp: 'На мапі показано перенаправлені потоки, а нижче — який попит вдалося зберегти, як змінилися витрати та де залишилися обмеження.', cancel: 'Скасувати', addHere: 'Додати склад тут',
+    candidateArea: 'Варіанти покращення', findImprovements: 'Знайти варіанти посилення мережі', findingImprovements: 'Шукаємо варіанти посилення…', decisionSummary: 'Підсумок рішення', serviceChange: 'Зміна виконаного попиту',
     unservedChange: 'Зміна непокритого попиту', costChange: 'Зміна вартості логістики', paretoAlternatives: 'Варіанти покращення',
     frontierHint: 'Кожен варіант має свій баланс між виконанням попиту та витратами. Порівняйте їх перед рішенням.',
     disruptionReallocated: 'Збій + новий план', noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
@@ -87,7 +88,7 @@ const copy = {
     none: 'Немає', used: 'включено до плану', notUsed: 'не потрібен у цьому плані', technicalDetails: 'Технічні деталі',
     demoNotice: 'Демонстраційна модель · синтетичні дані · розрахунок виконує QDIP', warehouses: 'склади', demandClusters: 'регіони попиту',
     productClasses: 'групи товарів', manualCandidate: 'Обрана точка', validationError: 'Вкажіть додатні значення місткості та виберіть хоча б одну умову зберігання.',
-    requestFailed: 'Не вдалося виконати розрахунок. Спробуйте ще раз.', invalidError: 'Деякі введені значення некоректні. Перевірте параметри складу та повторіть спробу.', infeasibleError: 'За поточних умов неможливо побудувати план, який виконує всі обмеження. Перевірте доступність складів, потужності та потрібний рівень виконання попиту.', unavailableError: 'Сервіс розрахунку тимчасово недоступний. Спробуйте ще раз.', perDay: 'за день',
+    economicValue: 'Оцінена економічна цінність', nominalAdvantage: 'Оцінена перевага', downsideAdvantage: 'Перевага за досліджених стрес-умов', worstObservedAdvantage: 'Найгірша спостережена перевага', observedRegret: 'Спостережений regret', valueStability: 'Перевага зберігається', economicNote: 'Модельна оцінка, а не фактично отримана економія. Стрес-сценарії детерміновані й не означають імовірність.', requestFailed: 'Не вдалося виконати розрахунок. Спробуйте ще раз.', invalidError: 'Деякі введені значення некоректні. Перевірте параметри складу та повторіть спробу.', infeasibleError: 'За поточних умов неможливо побудувати план, який виконує всі обмеження. Перевірте доступність складів, потужності та потрібний рівень виконання попиту.', unavailableError: 'Сервіс розрахунку тимчасово недоступний. Спробуйте ще раз.', perDay: 'за день',
   },
   pl: {
     featureName: 'Optymalizacja sieci dostaw',
@@ -95,8 +96,8 @@ const copy = {
     intro: 'QDIP pokazuje, co stanie się po utracie magazynu, jak przekierować towar i które warianty mogą ograniczyć skutki zakłócenia.',
     optimize: 'Oblicz bieżący plan', optimizing: 'Obliczamy…', current: 'Bieżąca sieć', optimized: 'Bieżący plan',
     unavailable: 'Magazyn niedostępny', reallocated: 'Zaktualizowana sieć', newWarehouse: 'Nowy magazyn',
-    makeUnavailable: 'Oznacz magazyn jako niedostępny', confirmUnavailable: 'Potwierdź, że magazyn jest niedostępny', cancel: 'Anuluj', addHere: 'Dodaj magazyn tutaj',
-    candidateArea: 'Warianty poprawy', decisionSummary: 'Podsumowanie decyzji', serviceChange: 'Zmiana zrealizowanego popytu',
+    makeUnavailable: 'Zasymuluj utratę magazynu', confirmUnavailable: 'Zasymulować całkowitą niedostępność tego magazynu?', disruptionHelp: 'Sprawdź, co stanie się z dostawami, jeśli ten magazyn stanie się całkowicie niedostępny.', disruptionDone: 'Magazyn niedostępny. QDIP przebudował plan dostaw.', disruptionDoneHelp: 'Mapa pokazuje przekierowane przepływy, a poniżej widać, jaki popyt udało się zabezpieczyć, zmianę kosztów i pozostałe ograniczenia.', cancel: 'Anuluj', addHere: 'Dodaj magazyn tutaj',
+    candidateArea: 'Warianty poprawy', findImprovements: 'Znajdź warianty wzmocnienia sieci', findingImprovements: 'Szukamy wariantów wzmocnienia…', decisionSummary: 'Podsumowanie decyzji', serviceChange: 'Zmiana zrealizowanego popytu',
     unservedChange: 'Zmiana niezaspokojonego popytu', costChange: 'Zmiana kosztu logistyki', paretoAlternatives: 'Warianty poprawy',
     frontierHint: 'Każdy wariant oznacza inny kompromis między realizacją popytu a kosztami. Porównaj je przed podjęciem decyzji.',
     disruptionReallocated: 'Zakłócenie + nowy plan', noCandidate: 'Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.',
@@ -114,7 +115,7 @@ const copy = {
     none: 'Brak', used: 'uwzględniony w planie', notUsed: 'niepotrzebny w tym planie', technicalDetails: 'Szczegóły techniczne',
     demoNotice: 'Model demonstracyjny · dane syntetyczne · obliczenia wykonuje QDIP', warehouses: 'magazyny', demandClusters: 'regiony popytu',
     productClasses: 'grupy produktów', manualCandidate: 'Wybrana lokalizacja', validationError: 'Podaj dodatnie wartości pojemności i wybierz co najmniej jeden warunek składowania.',
-    requestFailed: 'Nie udało się wykonać obliczenia. Spróbuj ponownie.', invalidError: 'Niektóre wartości są nieprawidłowe. Sprawdź parametry magazynu i spróbuj ponownie.', infeasibleError: 'Przy obecnych warunkach nie da się zbudować planu spełniającego wszystkie ograniczenia. Sprawdź dostępność magazynów, przepustowość i wymagany poziom realizacji popytu.', unavailableError: 'Usługa obliczeniowa jest chwilowo niedostępna. Spróbuj ponownie.', perDay: 'dziennie',
+    economicValue: 'Szacowana wartość ekonomiczna', nominalAdvantage: 'Szacowana przewaga', downsideAdvantage: 'Przewaga w badanych warunkach stresowych', worstObservedAdvantage: 'Najgorsza zaobserwowana przewaga', observedRegret: 'Zaobserwowany regret', valueStability: 'Przewaga pozostaje dodatnia', economicNote: 'Wartość modelowa, a nie zrealizowana oszczędność. Scenariusze stresowe są deterministyczne i nie oznaczają prawdopodobieństwa.', requestFailed: 'Nie udało się wykonać obliczenia. Spróbuj ponownie.', invalidError: 'Niektóre wartości są nieprawidłowe. Sprawdź parametry magazynu i spróbuj ponownie.', infeasibleError: 'Przy obecnych warunkach nie da się zbudować planu spełniającego wszystkie ograniczenia. Sprawdź dostępność magazynów, przepustowość i wymagany poziom realizacji popytu.', unavailableError: 'Usługa obliczeniowa jest chwilowo niedostępna. Spróbuj ponownie.', perDay: 'dziennie',
   },
 } as const
 
@@ -217,6 +218,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [candidateOperatingCost, setCandidateOperatingCost] = useState(88000)
   const [candidateStorage, setCandidateStorage] = useState<StorageClass[]>(['ambient', 'controlled'])
   const [pending, setPending] = useState(false)
+  const [candidatePending, setCandidatePending] = useState(false)
+  const [decisionValue, setDecisionValue] = useState<EconomicComparison | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const unavailableIds = scenario ? [scenario.unavailable_warehouse_id] : []
@@ -262,6 +265,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     try {
       setBaseline(await runOptimization(SUPPLY_NETWORK_DEMO))
       setScenario(null)
+      setDecisionValue(null)
       setCandidateAreas([])
        setManualResult(null)
       setManualEvaluation(null)
@@ -278,20 +282,35 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     setError(null)
     setConfirmWarehouseId(null)
     try {
-      const comparison = await runUnavailableScenario(SUPPLY_NETWORK_DEMO, warehouseId)
+      const response = await runUnavailableScenario(SUPPLY_NETWORK_DEMO, warehouseId)
+      const comparison = response.result
       setBaseline(comparison.baseline)
       setScenario(comparison)
+      setDecisionValue(response.decisionValue ?? null)
       setManualResult(null)
       setManualEvaluation(null)
-      const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, warehouseId)
-      const candidates = await runCandidateAreas(disruptedNetwork)
-      setCandidateAreas(candidates.candidates)
+      setCandidateAreas([])
      } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
       setPending(false)
     }
   }, [pending])
+
+  const findImprovementOptions = useCallback(async () => {
+    if (!scenario || candidatePending) return
+    setCandidatePending(true)
+    setError(null)
+    try {
+      const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, scenario.unavailable_warehouse_id)
+      const candidates = await runCandidateAreas(disruptedNetwork)
+      setCandidateAreas(candidates.candidates)
+    } catch (reason) {
+      setError(t[requestErrorKey(reason)])
+    } finally {
+      setCandidatePending(false)
+    }
+  }, [candidatePending, scenario])
 
   const evaluateManual = useCallback(async () => {
     if (pending || !manualCandidate) return
@@ -307,9 +326,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     setPending(true)
     setError(null)
     try {
-      const result = await runManualCandidate(activeNetwork, manualCandidate)
+      const response = await runManualCandidate(activeNetwork, manualCandidate)
+      const result = response.result
       setManualEvaluation(result.candidate)
       setManualResult(result.optimized_network)
+      setDecisionValue(response.decisionValue ?? null)
     } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
@@ -320,6 +341,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const selectWarehouse = useCallback((warehouse: Warehouse) => {
     setSelectedWarehouse(warehouse)
     setSelectedStore(null)
+    setConfirmWarehouseId(null)
   }, [])
   const selectStore = useCallback((store: DemandPoint) => {
     setSelectedStore(store)
@@ -376,8 +398,42 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </div>
       ) : null}
 
+      {scenario ? (
+        <div className="mb-5 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4" role="status">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+            <div>
+              <p className="font-medium text-slate-100">{t.disruptionDone}</p>
+              <p className="mt-1 text-sm text-slate-300">{t.disruptionDoneHelp}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {visibleResult ? (
         <ExecutiveDecisionSummary result={visibleResult} baseline={scenario?.baseline ?? null} hasDisruption={Boolean(scenario)} locale={locale} network={activeNetwork} />
+      ) : null}
+
+      {decisionValue ? (
+        <section className="mb-5" aria-label={t.economicValue}>
+          <Card>
+            <CardHeader><CardTitle>{t.economicValue}</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Metric label={t.nominalAdvantage} value={formatMoney(decisionValue.delta.nominal_delta, locale)} />
+                <Metric label={t.downsideAdvantage} value={decisionValue.delta.downside_delta == null ? '—' : formatMoney(decisionValue.delta.downside_delta, locale)} />
+                <Metric label={t.worstObservedAdvantage} value={decisionValue.value_stability?.minimum_observed_advantage == null ? '—' : formatMoney(decisionValue.value_stability.minimum_observed_advantage, locale)} />
+                <Metric label={t.observedRegret} value={decisionValue.regret?.max_observed_regret == null ? '—' : formatMoney(decisionValue.regret.max_observed_regret, locale)} />
+              </div>
+              {decisionValue.value_stability?.positive_advantage_frequency != null ? (
+                <p className="mt-4 text-sm text-slate-300">
+                  {t.valueStability}: <strong className="text-slate-100">{pct(decisionValue.value_stability.positive_advantage_frequency)}</strong>
+                </p>
+              ) : null}
+              <p className="mt-2 text-xs leading-5 text-slate-500">{t.economicNote}</p>
+            </CardContent>
+          </Card>
+        </section>
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
@@ -406,7 +462,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <Metric label={t.peakDispatch} value={selectedUtilization ? number(selectedUtilization.peak_dispatch_units_per_day) : '—'} />
                 </div>
                 {!unavailableIds.includes(selectedWarehouse.id) ? (
-                  confirmWarehouseId === selectedWarehouse.id ? (
+                  <>
+                    <p className="mt-4 text-sm text-slate-300">{t.disruptionHelp}</p>
+                    {confirmWarehouseId === selectedWarehouse.id ? (
                     <div className="mt-4 space-y-2 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3">
                       <p className="text-sm text-slate-200">{t.confirmUnavailable}</p>
                       <div className="flex gap-2">
@@ -415,11 +473,17 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       </div>
                     </div>
                   ) : (
-                    <Button className="mt-4 w-full" variant="secondary" onClick={() => setConfirmWarehouseId(selectedWarehouse.id)} disabled={pending}>
-                      {t.makeUnavailable}
+                    <Button className="mt-4 w-full" onClick={() => setConfirmWarehouseId(selectedWarehouse.id)} disabled={pending}>
+                      <AlertTriangle className="h-4 w-4" /> {t.makeUnavailable}
                     </Button>
-                  )
-                ) : <Badge variant="amber">{t.unavailable}</Badge>}
+                  )}
+                  </>
+                ) : (
+                  <div className="mt-4 rounded-lg border border-red-400/30 bg-red-500/10 p-3">
+                    <Badge variant="amber">{t.unavailable}</Badge>
+                    <p className="mt-2 text-sm text-slate-300">{t.disruptionDoneHelp}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : null}
@@ -507,7 +571,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           <Card>
             <CardHeader><CardTitle>{t.candidateArea}</CardTitle></CardHeader>
             <CardContent>
-              {paretoCandidates.length ? (
+              {candidateAreas.length === 0 ? (
+                <Button className="w-full" variant="secondary" onClick={findImprovementOptions} disabled={candidatePending}>
+                  <Plus className="h-4 w-4" /> {candidatePending ? t.findingImprovements : t.findImprovements}
+                </Button>
+              ) : paretoCandidates.length ? (
                 <div>
                   <p className="mb-3 text-sm text-slate-400">{t.frontierHint}</p>
                   <div className="space-y-2">

@@ -107,6 +107,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     vi.clearAllMocks()
     api.runOptimization.mockResolvedValue(optimized)
     api.runUnavailableScenario.mockResolvedValue({
+      result: {
       baseline: optimized,
       disrupted: {
         ...optimized,
@@ -115,6 +116,13 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
       unavailable_warehouse_id: 'north-hub',
       affected_demand_point_ids: ['north-coast'],
       kpi_change: { service_level: -0.05 },
+      },
+      decisionValue: {
+        baseline: { nominal_value: 15400 }, candidate: { nominal_value: 18000 },
+        delta: { nominal_delta: -2600, expected_delta: null, downside_delta: -4000, worst_case_observed_delta: -4000, worst_case_delta: null, realized_delta: null },
+        regret: { max_observed_regret: 4000, mean_observed_regret: 2500, expected_regret: null, max_regret: null },
+        value_stability: { nominal_advantage: -2600, minimum_observed_advantage: -4000, maximum_observed_advantage: -1200, positive_advantage_frequency: 0, positive_advantage_probability: null, economically_material_threshold: null, materially_positive_frequency: null },
+      },
     })
     api.runCandidateAreas.mockResolvedValue({
       disrupted_network: optimized,
@@ -133,22 +141,25 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
           service_level: 0.96,
         },
       ],
-       pareto_frontier_candidate_ids: ['recommended-central'],
+      pareto_frontier_candidate_ids: ['recommended-central'],
       connectivity_rule: 'demo-geographic-v1',
     })
     api.runManualCandidate.mockResolvedValue({
-      baseline: optimized,
-      candidate: {
-        candidate_id: 'manual-candidate',
-        latitude: 51.5,
-        longitude: 20.2,
-        feasible: true,
-        used: false,
-        objective_value: optimized.kpis.objective_value,
-        objective_improvement: 0,
+      result: {
+        baseline: optimized,
+        candidate: {
+          candidate_id: 'manual-candidate',
+          latitude: 51.5,
+          longitude: 20.2,
+          feasible: true,
+          used: false,
+          objective_value: optimized.kpis.objective_value,
+          objective_improvement: 0,
+        },
+        optimized_network: optimized,
+        connectivity_rule: 'demo-geographic-v1',
       },
-      optimized_network: optimized,
-      connectivity_rule: 'demo-geographic-v1',
+      decisionValue: undefined,
     })
   })
 
@@ -164,21 +175,27 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('95%')).toBeVisible()
   })
 
-  it('selects a warehouse, confirms unavailability and requests reoptimization plus candidate search', async () => {
+  it('shows the disruption result before candidate analysis and runs improvements only on request', async () => {
     const user = userEvent.setup()
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     await user.click(screen.getByRole('button', { name: 'select warehouse' }))
-    await user.click(screen.getByRole('button', { name: 'Make warehouse unavailable' }))
-    await user.click(screen.getByRole('button', { name: 'Make warehouse unavailable' }))
+    await user.click(screen.getByRole('button', { name: 'Simulate warehouse loss' }))
+    await user.click(screen.getByRole('button', { name: 'Simulate warehouse loss' }))
 
     await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalledWith(expect.anything(), 'north-hub'))
-    await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
-    expect(screen.getByText('Warehouse option 1')).toBeVisible()
+    expect(api.runCandidateAreas).not.toHaveBeenCalled()
     expect(screen.getByText('Kyiv region')).toBeVisible()
     expect(screen.getByText('Decision summary')).toBeVisible()
-        expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
+    expect(screen.getByText('Estimated economic value')).toBeVisible()
+    expect(screen.getByText('Advantage under observed stress')).toBeVisible()
+    expect(screen.getByText('Model estimate, not realized savings. Stress scenarios are deterministic and do not imply probability.')).toBeVisible()
+    expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
     expect(screen.getByText('Disruption + new plan')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Find options to strengthen the network' }))
+    await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
+    expect(screen.getByText('Warehouse option 1')).toBeVisible()
   })
 
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {
@@ -237,4 +254,20 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Сервіс розрахунку тимчасово недоступний'))
     expect(screen.getByRole('alert')).not.toHaveTextContent('DIP request failed')
   })
+
+  it('makes the warehouse-loss scenario explicit in the primary interaction', async () => {
+    const user = userEvent.setup()
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'select warehouse' }))
+    expect(screen.getByText(/якщо цей склад стане повністю недоступним/)).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Змоделювати втрату складу' }))
+    expect(screen.getByText('Змоделювати повну недоступність цього складу?')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Змоделювати втрату складу' }))
+    await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalled())
+    expect(await screen.findByText('Склад недоступний. QDIP перебудував план постачання.')).toBeVisible()
+  })
+
 })

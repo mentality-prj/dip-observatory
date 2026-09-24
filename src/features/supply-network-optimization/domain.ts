@@ -240,3 +240,55 @@ export type ScenarioComparison = {
   affected_demand_point_ids: string[]
   kpi_change: Record<string, number>
 }
+
+
+export type EconomicStateOutcome = {
+  state_id: string
+  value: number
+  probability: number | null
+  evidence_refs: string[]
+}
+
+export type EconomicOutcome = {
+  policy_id: string
+  policy_version: string
+  decision_id: string
+  nominal_value: number
+  expected_value: number | null
+  downside_value: number | null
+  downside_measure_id: string | null
+  worst_case_observed_value: number | null
+  worst_case_value: number | null
+  realized_value: number | null
+  state_outcomes: EconomicStateOutcome[]
+  scenario_set_id: string | null
+  probability_model_id: string | null
+}
+
+export type EconomicComparison = {
+  baseline: EconomicOutcome
+  candidate: EconomicOutcome
+  delta: {
+    nominal_delta: number
+    expected_delta: number | null
+    downside_delta: number | null
+    worst_case_observed_delta: number | null
+    worst_case_delta: number | null
+    realized_delta: number | null
+  }
+  regret: {
+    max_observed_regret: number | null
+    mean_observed_regret: number | null
+    expected_regret: number | null
+    max_regret: number | null
+  } | null
+  value_stability: {
+    nominal_advantage: number
+    minimum_observed_advantage: number | null
+    maximum_observed_advantage: number | null
+    positive_advantage_frequency: number | null
+    positive_advantage_probability: number | null
+    economically_material_threshold: number | null
+    materially_positive_frequency: number | null
+  } | null
+}

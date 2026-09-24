@@ -57,7 +57,14 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
           : kind === 'supplier' ? '#a78bfa'
             : '#e2e8f0'
   if (kind === 'unavailable') {
-    element.style.transform = 'rotate(45deg)'
+    element.style.borderRadius = '50%'
+    element.style.transform = 'none'
+    element.style.setProperty('font-size', '15px')
+    element.style.setProperty('font-weight', '800')
+    element.style.setProperty('line-height', size)
+    element.style.setProperty('text-align', 'center')
+    element.style.setProperty('color', '#fff')
+    element.textContent = '×'
   }
   return element
 }
@@ -86,6 +93,7 @@ function flowCollection(
   candidateAreas: CandidateResult[]
 ) {
   const currentFeatures = currentFlows.flatMap((item) => {
+    if (network.unavailable_warehouse_ids.includes(item.warehouse_id)) return []
     const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
     const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
     return from && to
