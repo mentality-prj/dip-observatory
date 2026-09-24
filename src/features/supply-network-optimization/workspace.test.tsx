@@ -169,8 +169,8 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     await user.click(screen.getByRole('button', { name: 'select warehouse' }))
-    await user.click(screen.getByRole('button', { name: 'Make warehouse unavailable' }))
-    await user.click(screen.getByRole('button', { name: 'Make warehouse unavailable' }))
+    await user.click(screen.getByRole('button', { name: 'Simulate warehouse loss' }))
+    await user.click(screen.getByRole('button', { name: 'Simulate warehouse loss' }))
 
     await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalledWith(expect.anything(), 'north-hub'))
     await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
@@ -237,4 +237,20 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Сервіс розрахунку тимчасово недоступний'))
     expect(screen.getByRole('alert')).not.toHaveTextContent('DIP request failed')
   })
+
+  it('makes the warehouse-loss scenario explicit in the primary interaction', async () => {
+    const user = userEvent.setup()
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'select warehouse' }))
+    expect(screen.getByText(/якщо цей склад стане повністю недоступним/)).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Змоделювати втрату складу' }))
+    expect(screen.getByText('Змоделювати повну недоступність цього складу?')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Змоделювати втрату складу' }))
+    await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalled())
+    expect(await screen.findByText('Склад недоступний. QDIP перебудував план постачання.')).toBeVisible()
+  })
+
 })
