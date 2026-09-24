@@ -3,7 +3,7 @@ import type { DecisionPatternId } from '@/product/experience'
 import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 
 export type LocalizedText = Record<Locale, string>
-export type UseCaseIcon = 'heart' | 'sparkles'
+export type UseCaseIcon = 'heart' | 'sparkles' | 'network'
 export type UseCaseTheme = 'cyan' | 'violet' | 'amber' | 'emerald' | 'rose'
 export type DipUseCase = {
   id: string
@@ -50,7 +50,7 @@ const useCases = [
       pl: 'Optymalizacja rozmieszczenia zapasów, dostaw przychodzących i obsługi punktów popytu z ponownym przeliczeniem sieci po zmianie dostępnej przepustowości.',
     },
     tag: { en: 'SUPPLY NETWORK', uk: 'МЕРЕЖА ПОСТАЧАННЯ', pl: 'SIEĆ DOSTAW' },
-    presentation: { icon: 'sparkles', theme: 'amber' },
+    presentation: { icon: 'network', theme: 'amber' },
     plugin: { id: 'supply-network', capability: 'supply.network.optimize' },
   },
   {
