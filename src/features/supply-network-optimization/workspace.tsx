@@ -26,6 +26,7 @@ import { ExecutiveDecisionSummary } from './executive-decision-summary'
 import type {
   CandidateResult,
   CandidateWarehouse,
+  EconomicComparison,
   DemandPoint,
   OptimizationResult,
   ScenarioComparison,
@@ -218,6 +219,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [candidateStorage, setCandidateStorage] = useState<StorageClass[]>(['ambient', 'controlled'])
   const [pending, setPending] = useState(false)
   const [candidatePending, setCandidatePending] = useState(false)
+  const [decisionValue, setDecisionValue] = useState<EconomicComparison | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const unavailableIds = scenario ? [scenario.unavailable_warehouse_id] : []
@@ -263,6 +265,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     try {
       setBaseline(await runOptimization(SUPPLY_NETWORK_DEMO))
       setScenario(null)
+      setDecisionValue(null)
       setCandidateAreas([])
        setManualResult(null)
       setManualEvaluation(null)
@@ -279,9 +282,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     setError(null)
     setConfirmWarehouseId(null)
     try {
-      const comparison = await runUnavailableScenario(SUPPLY_NETWORK_DEMO, warehouseId)
+      const response = await runUnavailableScenario(SUPPLY_NETWORK_DEMO, warehouseId)
+      const comparison = response.result
       setBaseline(comparison.baseline)
       setScenario(comparison)
+      setDecisionValue(response.decisionValue ?? null)
       setManualResult(null)
       setManualEvaluation(null)
       setCandidateAreas([])
@@ -321,9 +326,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     setPending(true)
     setError(null)
     try {
-      const result = await runManualCandidate(activeNetwork, manualCandidate)
+      const response = await runManualCandidate(activeNetwork, manualCandidate)
+      const result = response.result
       setManualEvaluation(result.candidate)
       setManualResult(result.optimized_network)
+      setDecisionValue(response.decisionValue ?? null)
     } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
@@ -405,6 +412,28 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
 
       {visibleResult ? (
         <ExecutiveDecisionSummary result={visibleResult} baseline={scenario?.baseline ?? null} hasDisruption={Boolean(scenario)} locale={locale} network={activeNetwork} />
+      ) : null}
+
+      {decisionValue ? (
+        <section className="mb-5" aria-label={t.economicValue}>
+          <Card>
+            <CardHeader><CardTitle>{t.economicValue}</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Metric label={t.nominalAdvantage} value={formatMoney(decisionValue.delta.nominal_delta, locale)} />
+                <Metric label={t.downsideAdvantage} value={decisionValue.delta.downside_delta == null ? '—' : formatMoney(decisionValue.delta.downside_delta, locale)} />
+                <Metric label={t.worstObservedAdvantage} value={decisionValue.value_stability?.minimum_observed_advantage == null ? '—' : formatMoney(decisionValue.value_stability.minimum_observed_advantage, locale)} />
+                <Metric label={t.observedRegret} value={decisionValue.regret?.max_observed_regret == null ? '—' : formatMoney(decisionValue.regret.max_observed_regret, locale)} />
+              </div>
+              {decisionValue.value_stability?.positive_advantage_frequency != null ? (
+                <p className="mt-4 text-sm text-slate-300">
+                  {t.valueStability}: <strong className="text-slate-100">{pct(decisionValue.value_stability.positive_advantage_frequency)}</strong>
+                </p>
+              ) : null}
+              <p className="mt-2 text-xs leading-5 text-slate-500">{t.economicNote}</p>
+            </CardContent>
+          </Card>
+        </section>
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
