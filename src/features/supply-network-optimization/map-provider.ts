@@ -23,6 +23,7 @@ export type MapLibreMap = {
   addSource: (id: string, source: unknown) => void
   addLayer: (layer: unknown) => void
   getSource: (id: string) => unknown
+  getLayer: (id: string) => unknown
   removeLayer: (id: string) => void
   removeSource: (id: string) => void
   remove: () => void
@@ -57,7 +58,7 @@ function ensureStylesheet() {
 export function loadMapLibre(): Promise<MapLibreApi | null> {
   if (window.maplibregl) return Promise.resolve(window.maplibregl)
   if (loader) return loader
-  loader = new Promise((resolve, reject) => {
+  loader = new Promise((resolve) => {
     ensureStylesheet()
     const existing = document.querySelector<HTMLScriptElement>('script[data-qpid-maplibre]')
     const script = existing ?? document.createElement('script')
