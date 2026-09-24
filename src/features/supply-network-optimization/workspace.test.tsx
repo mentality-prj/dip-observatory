@@ -32,6 +32,7 @@ vi.mock('./lazy-map', () => ({
 }))
 
 const optimized: OptimizationResult = {
+  ending_inventory: [],
   inventory_placement: [
     { warehouse_id: 'north-hub', product_class_id: 'core', units: 500 },
   ],
