@@ -99,15 +99,11 @@ test.describe('Observatory production routing contract', () => {
   })
 })
 
-
-test.describe('Supply Network Optimization legacy route', () => {
+test('retired Supply Network Resilience route is not publicly routable', async ({ page }) => {
   for (const locale of locales) {
-    test(`${locale} redirects the retired resilience route to the canonical optimization route`, async ({ page }) => {
-      await page.goto(`http://observatory.localhost:3000/${locale}/supply-network-resilience`)
-      await expect(page).toHaveURL(
-        new RegExp(`observatory\\.localhost:3000/${locale}/supply-network-optimization$`)
-      )
-      await expect(page.getByText('QDIP OBSERVATORY · SUPPLY NETWORK OPTIMIZATION')).toBeVisible()
-    })
+    const response = await page.goto(
+      `http://observatory.localhost:3000/${locale}/supply-network-resilience`
+    )
+    expect(response?.status()).toBe(404)
   }
 })
