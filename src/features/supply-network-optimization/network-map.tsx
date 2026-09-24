@@ -50,6 +50,10 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   element.style.border = '2px solid rgba(255,255,255,.9)'
   element.style.boxShadow = '0 1px 8px rgba(0,0,0,.45)'
   element.style.cursor = 'pointer'
+  // Warehouses are actionable network nodes. Keep them above demand/store
+  // markers when geographic coordinates overlap so the warehouse action
+  // remains reachable (for example Kyiv warehouse + Kyiv demand region).
+  element.style.zIndex = kind === 'warehouse' || kind === 'unavailable' ? '3' : kind === 'candidate' ? '2' : '1'
   element.style.background =
     kind === 'unavailable' ? '#ef4444'
       : kind === 'candidate' ? '#f59e0b'
