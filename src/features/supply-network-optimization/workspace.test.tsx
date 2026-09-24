@@ -164,7 +164,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('95%')).toBeVisible()
   })
 
-  it('selects a warehouse, confirms unavailability and requests reoptimization plus candidate search', async () => {
+  it('shows the disruption result before candidate analysis and runs improvements only on request', async () => {
     const user = userEvent.setup()
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
@@ -173,12 +173,15 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await user.click(screen.getByRole('button', { name: 'Simulate warehouse loss' }))
 
     await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalledWith(expect.anything(), 'north-hub'))
-    await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
-    expect(screen.getByText('Warehouse option 1')).toBeVisible()
+    expect(api.runCandidateAreas).not.toHaveBeenCalled()
     expect(screen.getByText('Kyiv region')).toBeVisible()
     expect(screen.getByText('Decision summary')).toBeVisible()
-        expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
+    expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
     expect(screen.getByText('Disruption + new plan')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Find options to strengthen the network' }))
+    await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
+    expect(screen.getByText('Warehouse option 1')).toBeVisible()
   })
 
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {

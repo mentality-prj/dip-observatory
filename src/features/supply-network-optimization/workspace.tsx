@@ -42,7 +42,7 @@ const copy = {
     optimize: 'Calculate current plan', optimizing: 'Calculating…', current: 'Current network', optimized: 'Current plan',
     unavailable: 'Warehouse unavailable', reallocated: 'Updated network', newWarehouse: 'New warehouse',
     makeUnavailable: 'Simulate warehouse loss', confirmUnavailable: 'Simulate this warehouse becoming completely unavailable?', disruptionHelp: 'Check what happens to supply if this warehouse becomes completely unavailable.', disruptionDone: 'Warehouse unavailable. QDIP rebuilt the supply plan.', disruptionDoneHelp: 'The map shows the rerouted flows. The results below show how much demand is protected, the cost change and the remaining bottlenecks.', cancel: 'Cancel', addHere: 'Add warehouse here',
-    candidateArea: 'Improvement options', decisionSummary: 'Decision summary', serviceChange: 'Change in demand fulfilled',
+    candidateArea: 'Improvement options', findImprovements: 'Find options to strengthen the network', findingImprovements: 'Finding improvement options…', decisionSummary: 'Decision summary', serviceChange: 'Change in demand fulfilled',
     unservedChange: 'Change in unfulfilled demand', costChange: 'Change in logistics cost', paretoAlternatives: 'Improvement options',
     frontierHint: 'Each option offers a different balance between demand fulfilled and cost. Compare them before deciding.',
     disruptionReallocated: 'Disruption + new plan', noCandidate: 'None of the locations tested materially improves the network under the current conditions.',
@@ -69,7 +69,7 @@ const copy = {
     optimize: 'Розрахувати поточний план', optimizing: 'Розраховуємо…', current: 'Поточна мережа', optimized: 'Поточний план',
     unavailable: 'Склад недоступний', reallocated: 'Оновлена мережа', newWarehouse: 'Новий склад',
     makeUnavailable: 'Змоделювати втрату складу', confirmUnavailable: 'Змоделювати повну недоступність цього складу?', disruptionHelp: 'Перевірте, що станеться з постачанням, якщо цей склад стане повністю недоступним.', disruptionDone: 'Склад недоступний. QDIP перебудував план постачання.', disruptionDoneHelp: 'На мапі показано перенаправлені потоки, а нижче — який попит вдалося зберегти, як змінилися витрати та де залишилися обмеження.', cancel: 'Скасувати', addHere: 'Додати склад тут',
-    candidateArea: 'Варіанти покращення', decisionSummary: 'Підсумок рішення', serviceChange: 'Зміна виконаного попиту',
+    candidateArea: 'Варіанти покращення', findImprovements: 'Знайти варіанти посилення мережі', findingImprovements: 'Шукаємо варіанти посилення…', decisionSummary: 'Підсумок рішення', serviceChange: 'Зміна виконаного попиту',
     unservedChange: 'Зміна непокритого попиту', costChange: 'Зміна вартості логістики', paretoAlternatives: 'Варіанти покращення',
     frontierHint: 'Кожен варіант має свій баланс між виконанням попиту та витратами. Порівняйте їх перед рішенням.',
     disruptionReallocated: 'Збій + новий план', noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
@@ -96,7 +96,7 @@ const copy = {
     optimize: 'Oblicz bieżący plan', optimizing: 'Obliczamy…', current: 'Bieżąca sieć', optimized: 'Bieżący plan',
     unavailable: 'Magazyn niedostępny', reallocated: 'Zaktualizowana sieć', newWarehouse: 'Nowy magazyn',
     makeUnavailable: 'Zasymuluj utratę magazynu', confirmUnavailable: 'Zasymulować całkowitą niedostępność tego magazynu?', disruptionHelp: 'Sprawdź, co stanie się z dostawami, jeśli ten magazyn stanie się całkowicie niedostępny.', disruptionDone: 'Magazyn niedostępny. QDIP przebudował plan dostaw.', disruptionDoneHelp: 'Mapa pokazuje przekierowane przepływy, a poniżej widać, jaki popyt udało się zabezpieczyć, zmianę kosztów i pozostałe ograniczenia.', cancel: 'Anuluj', addHere: 'Dodaj magazyn tutaj',
-    candidateArea: 'Warianty poprawy', decisionSummary: 'Podsumowanie decyzji', serviceChange: 'Zmiana zrealizowanego popytu',
+    candidateArea: 'Warianty poprawy', findImprovements: 'Znajdź warianty wzmocnienia sieci', findingImprovements: 'Szukamy wariantów wzmocnienia…', decisionSummary: 'Podsumowanie decyzji', serviceChange: 'Zmiana zrealizowanego popytu',
     unservedChange: 'Zmiana niezaspokojonego popytu', costChange: 'Zmiana kosztu logistyki', paretoAlternatives: 'Warianty poprawy',
     frontierHint: 'Każdy wariant oznacza inny kompromis między realizacją popytu a kosztami. Porównaj je przed podjęciem decyzji.',
     disruptionReallocated: 'Zakłócenie + nowy plan', noCandidate: 'Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.',
@@ -217,6 +217,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [candidateOperatingCost, setCandidateOperatingCost] = useState(88000)
   const [candidateStorage, setCandidateStorage] = useState<StorageClass[]>(['ambient', 'controlled'])
   const [pending, setPending] = useState(false)
+  const [candidatePending, setCandidatePending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const unavailableIds = scenario ? [scenario.unavailable_warehouse_id] : []
@@ -283,15 +284,28 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       setScenario(comparison)
       setManualResult(null)
       setManualEvaluation(null)
-      const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, warehouseId)
-      const candidates = await runCandidateAreas(disruptedNetwork)
-      setCandidateAreas(candidates.candidates)
+      setCandidateAreas([])
      } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
       setPending(false)
     }
   }, [pending])
+
+  const findImprovementOptions = useCallback(async () => {
+    if (!scenario || candidatePending) return
+    setCandidatePending(true)
+    setError(null)
+    try {
+      const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, scenario.unavailable_warehouse_id)
+      const candidates = await runCandidateAreas(disruptedNetwork)
+      setCandidateAreas(candidates.candidates)
+    } catch (reason) {
+      setError(t[requestErrorKey(reason)])
+    } finally {
+      setCandidatePending(false)
+    }
+  }, [candidatePending, scenario])
 
   const evaluateManual = useCallback(async () => {
     if (pending || !manualCandidate) return
@@ -528,7 +542,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           <Card>
             <CardHeader><CardTitle>{t.candidateArea}</CardTitle></CardHeader>
             <CardContent>
-              {paretoCandidates.length ? (
+              {candidateAreas.length === 0 ? (
+                <Button className="w-full" variant="secondary" onClick={findImprovementOptions} disabled={candidatePending}>
+                  <Plus className="h-4 w-4" /> {candidatePending ? t.findingImprovements : t.findImprovements}
+                </Button>
+              ) : paretoCandidates.length ? (
                 <div>
                   <p className="mb-3 text-sm text-slate-400">{t.frontierHint}</p>
                   <div className="space-y-2">
