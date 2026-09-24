@@ -4,7 +4,7 @@ Measure behavior needed to validate the buyer journey, not vanity traffic.
 
 1. Public homepage visit.
 2. Demo section reached.
-3. Working demo opened (Resource Allocation, Gas Decision or GTM Lab).
+3. Working demo opened (Resource Allocation, Supply Network Optimization or GTM Lab).
 4. Decision intake opened.
 5. Decision intake successfully submitted.
 

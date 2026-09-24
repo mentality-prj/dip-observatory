@@ -22,7 +22,6 @@ Findings:
 Implemented:
 
 - Resource Allocation now preserves EN/UA/PL locale from the marketing site;
-- Gas keeps its current Ukrainian → English fallback because that workspace is not localized yet;
 - the impact panel now explicitly says `QDIP recommendation` when baseline data is absent and does not imply an unmeasured improvement;
 - added localized Resource Allocation title, description, canonical URL and hreflang metadata.
 

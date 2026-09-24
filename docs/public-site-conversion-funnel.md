@@ -6,7 +6,7 @@ The public QDIP site is optimized for a small-company or NGO decision owner who 
 
 1. Recognize a recurring decision problem.
 2. Understand how QDIP evaluates alternatives, priorities, constraints and uncertainty.
-3. Explore a concrete working demo: Resource Allocation, Gas Decision or GTM Lab.
+3. Explore a concrete working demo: Resource Allocation, Supply Network Optimization or GTM Lab.
 4. Map the demo pattern to the visitor's own recurring decision.
 5. Start with one scoped pilot rather than a platform-wide rollout.
 6. Compare QDIP recommendations and evidence with the current decision process.
@@ -22,4 +22,4 @@ The public QDIP site is optimized for a small-company or NGO decision owner who 
 
 ## Demo policy
 
-Resource Allocation, Gas Decision and GTM Lab are the three canonical public demo names. All three are live and must resolve to working Observatory applications.
+Resource Allocation, Supply Network Optimization and GTM Lab are the three canonical public demo names. All three are live and must resolve to working Observatory applications.

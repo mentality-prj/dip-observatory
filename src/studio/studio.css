@@ -375,46 +375,6 @@
 .studio-table-wrap {
   overflow-x: auto;
 }
-.gas-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--ds-space-3);
-  margin: var(--ds-space-5) 0;
-}
-.gas-metric-grid > div,
-.gas-range {
-  padding: var(--ds-space-4);
-  border: 1px solid var(--ds-border);
-  border-radius: var(--ds-radius-action);
-  background: var(--ds-surface);
-}
-.gas-metric-grid > div {
-  display: grid;
-  gap: var(--ds-space-1);
-}
-.gas-metric-grid span,
-.gas-metric-grid small,
-.gas-range small {
-  color: var(--ds-text-muted);
-}
-.gas-metric-grid strong {
-  font-size: var(--ds-text-lead);
-}
-.gas-range div {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--ds-space-4);
-  margin: var(--ds-space-3) 0;
-}
-.gas-selected {
-  background: rgb(var(--ds-accent-rgb) / 0.09);
-}
-.gas-blocked {
-  display: block;
-  margin-top: var(--ds-space-1);
-  color: var(--ds-danger, #8b2533);
-  font-weight: 650;
-}
 .studio-main :focus-visible {
   outline: 3px solid var(--ds-focus);
   outline-offset: 3px;
@@ -425,9 +385,6 @@
   }
   .studio-workspace:before {
     inset: var(--ds-header-height) 0 0;
-  }
-  .gas-range div {
-    display: grid;
   }
 }
 @media (max-width: 620px) {

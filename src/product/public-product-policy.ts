@@ -14,4 +14,4 @@ export const PUBLIC_PRODUCT_NAMES = [
   PUBLIC_DEMO_NAMES.gtmLab,
 ] as const
 
-export const LOCALIZATION_ALLOWED_TECHNICAL_TOKENS = ['JSON', 'GDPR', 'TTF', 'P10', 'P90'] as const
+export const LOCALIZATION_ALLOWED_TECHNICAL_TOKENS = ['JSON', 'GDPR'] as const
