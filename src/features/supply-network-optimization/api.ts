@@ -36,8 +36,7 @@ export const runCandidateAreas = (network: SupplyNetwork) =>
   run<{
     disrupted_network: OptimizationResult
     candidates: CandidateResult[]
-    recommended_candidate_id: string | null
-    pareto_frontier_candidate_ids: string[]
+     pareto_frontier_candidate_ids: string[]
     connectivity_rule: string
   }>({ action: 'candidates', network })
 

@@ -136,8 +136,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
           service_level: 0.96,
         },
       ],
-      recommended_candidate_id: 'recommended-central',
-      pareto_frontier_candidate_ids: ['recommended-central'],
+       pareto_frontier_candidate_ids: ['recommended-central'],
       connectivity_rule: 'demo-geographic-v1',
     })
     api.runManualCandidate.mockResolvedValue({
@@ -182,7 +181,9 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('north-coast')).toBeVisible()
     expect(screen.getByText('Decision summary')).toBeVisible()
     expect(screen.getByText('Pareto-efficient alternatives')).toBeVisible()
-    expect(screen.getByText('Preferred under the current decision policy')).toBeVisible()
+    expect(screen.getByText(/No single winner is implied/)).toBeVisible()
+    expect(screen.getByText('Ending storage capacity · north-hub')).toBeVisible()
+    expect(screen.getByText('Disruption + reallocation')).toBeVisible()
   })
 
   it('opens the add-warehouse workflow and validates capacity fields before solving', async () => {

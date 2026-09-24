@@ -44,7 +44,8 @@ const copy = {
     unservedChange: 'Unserved demand change',
     costChange: 'Logistics cost change',
     paretoAlternatives: 'Pareto-efficient alternatives',
-    policyPreferred: 'Preferred under the current decision policy',
+    frontierHint: 'No single winner is implied. These alternatives are nondominated across cost, service and resilience.',
+    disruptionReallocated: 'Disruption + reallocation',
     noCandidate: 'No candidate improves the objective enough to justify its cost.',
     service: 'Service level',
     unserved: 'Unserved demand',
@@ -101,7 +102,8 @@ const copy = {
     unservedChange: 'Зміна непокритого попиту',
     costChange: 'Зміна вартості логістики',
     paretoAlternatives: 'Парето-ефективні альтернативи',
-    policyPreferred: 'Перевага за поточною політикою рішення',
+    frontierHint: 'Єдиного переможця не визначено. Ці альтернативи недоміновані за вартістю, сервісом і стійкістю.',
+    disruptionReallocated: 'Збій + перерозподіл',
     noCandidate: 'Жоден кандидат не покращує ціль достатньо, щоб виправдати його вартість.',
     service: 'Рівень сервісу',
     unserved: 'Непокритий попит',
@@ -158,7 +160,8 @@ const copy = {
     unservedChange: 'Zmiana niezaspokojonego popytu',
     costChange: 'Zmiana kosztu logistyki',
     paretoAlternatives: 'Alternatywy efektywne Pareto',
-    policyPreferred: 'Preferowany według bieżącej polityki decyzyjnej',
+    frontierHint: 'Nie wskazujemy jednego zwycięzcy. Te alternatywy są niezdominowane pod względem kosztu, obsługi i odporności.',
+    disruptionReallocated: 'Zakłócenie + realokacja',
     noCandidate: 'Żaden kandydat nie poprawia celu na tyle, aby uzasadnić jego koszt.',
     service: 'Poziom obsługi',
     unserved: 'Niezaspokojony popyt',
@@ -227,6 +230,52 @@ function Kpis({ result, locale }: { result: OptimizationResult; locale: Locale }
   )
 }
 
+
+function humanizeConstraint(value: string, locale: Locale) {
+  const [kind, ...parts] = value.split(':')
+  const labels: Record<Locale, Record<string, string>> = {
+    en: {
+      'inventory-balance': 'Inventory balance',
+      'available-capacity': 'Available storage capacity',
+      'warehouse-capacity': 'Ending storage capacity',
+      'receiving-capacity': 'Receiving capacity',
+      'dispatch-capacity': 'Dispatch capacity',
+      'delivery-route-capacity': 'Delivery route capacity',
+      'transfer-route-capacity': 'Transfer route capacity',
+      'point-service-level': 'Demand-point service level',
+      'minimum-service-level': 'Network minimum service level',
+      'inventory-exposure': 'Inventory exposure limit',
+    },
+    uk: {
+      'inventory-balance': 'Баланс запасів',
+      'available-capacity': 'Доступна місткість зберігання',
+      'warehouse-capacity': 'Кінцева місткість складу',
+      'receiving-capacity': 'Потужність приймання',
+      'dispatch-capacity': 'Потужність відвантаження',
+      'delivery-route-capacity': 'Пропускна здатність маршруту доставки',
+      'transfer-route-capacity': 'Пропускна здатність міжскладського маршруту',
+      'point-service-level': 'Рівень сервісу точки попиту',
+      'minimum-service-level': 'Мінімальний рівень сервісу мережі',
+      'inventory-exposure': 'Ліміт концентрації запасів',
+    },
+    pl: {
+      'inventory-balance': 'Bilans zapasów',
+      'available-capacity': 'Dostępna pojemność składowania',
+      'warehouse-capacity': 'Końcowa pojemność magazynu',
+      'receiving-capacity': 'Przepustowość przyjęć',
+      'dispatch-capacity': 'Przepustowość wysyłek',
+      'delivery-route-capacity': 'Przepustowość trasy dostawy',
+      'transfer-route-capacity': 'Przepustowość trasy między magazynami',
+      'point-service-level': 'Poziom obsługi punktu popytu',
+      'minimum-service-level': 'Minimalny poziom obsługi sieci',
+      'inventory-exposure': 'Limit koncentracji zapasów',
+    },
+  }
+  const label = labels[locale][kind]
+  if (!label) return value.replaceAll(':', ' · ')
+  return parts.length ? `${label} · ${parts.join(' · ')}` : label
+}
+
 function withUnavailable(network: SupplyNetwork, warehouseId: string): SupplyNetwork {
   return {
     ...network,
@@ -239,8 +288,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [baseline, setBaseline] = useState<OptimizationResult | null>(null)
   const [scenario, setScenario] = useState<ScenarioComparison | null>(null)
   const [candidateAreas, setCandidateAreas] = useState<CandidateResult[]>([])
-  const [recommendedCandidateId, setRecommendedCandidateId] = useState<string | null>(null)
-  const [manualResult, setManualResult] = useState<OptimizationResult | null>(null)
+   const [manualResult, setManualResult] = useState<OptimizationResult | null>(null)
   const [manualEvaluation, setManualEvaluation] = useState<CandidateResult | null>(null)
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null)
   const [selectedStore, setSelectedStore] = useState<DemandPoint | null>(null)
@@ -289,8 +337,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const selectedUtilization = selectedWarehouse && visibleResult
     ? visibleResult.warehouse_utilization.find((item) => item.warehouse_id === selectedWarehouse.id)
     : null
-  const recommendedCandidate = candidateAreas.find((item) => item.candidate_id === recommendedCandidateId) ?? null
-  const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
+   const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
   const scenarioDeltas = scenario ? {
     service: scenario.disrupted.kpis.service_level - scenario.baseline.kpis.service_level,
     unserved: scenario.disrupted.kpis.unserved_demand_units - scenario.baseline.kpis.unserved_demand_units,
@@ -305,8 +352,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       setBaseline(await runOptimization(SUPPLY_NETWORK_DEMO))
       setScenario(null)
       setCandidateAreas([])
-      setRecommendedCandidateId(null)
-      setManualResult(null)
+       setManualResult(null)
       setManualEvaluation(null)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Request failed')
@@ -329,8 +375,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, warehouseId)
       const candidates = await runCandidateAreas(disruptedNetwork)
       setCandidateAreas(candidates.candidates)
-      setRecommendedCandidateId(candidates.recommended_candidate_id)
-    } catch (reason) {
+     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Request failed')
     } finally {
       setPending(false)
@@ -378,8 +423,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const stages = [
     { label: t.current, active: !baseline },
     { label: t.optimized, active: Boolean(baseline && !scenario) },
-    { label: t.unavailable, active: Boolean(scenario && !manualResult) },
-    { label: t.reallocated, active: Boolean(scenario && !manualResult) },
+    { label: t.disruptionReallocated, active: Boolean(scenario && !manualResult) },
     { label: t.newWarehouse, active: Boolean(manualResult) },
   ]
 
@@ -565,26 +609,26 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           <Card>
             <CardHeader><CardTitle>{t.candidateArea}</CardTitle></CardHeader>
             <CardContent>
-              {recommendedCandidate ? (
+              {paretoCandidates.length ? (
                 <div>
-                  <p className="mb-3 text-xs uppercase tracking-wide text-cyan-300">{t.policyPreferred}</p>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <Metric label={t.improvement} value={number(recommendedCandidate.objective_improvement ?? 0)} />
-                    <Metric label={t.requiredCapacity} value={number(recommendedCandidate.required_capacity_units ?? 0)} />
-                    <Metric label={t.service} value={pct(recommendedCandidate.service_level ?? 0)} />
+                  <p className="mb-3 text-sm text-slate-400">{t.frontierHint}</p>
+                  <div className="space-y-2">
+                    {paretoCandidates.slice(0, 5).map((candidate) => (
+                      <div key={candidate.candidate_id} className="rounded-md border border-cyan-400/15 p-3 text-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>{candidate.label ?? candidate.candidate_id}</span>
+                          <span className="text-cyan-300">{t.pareto}</span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-slate-400">
+                          <span>{t.improvement}: {number(candidate.objective_improvement ?? 0)}</span>
+                          <span>{t.requiredCapacity}: {number(candidate.required_capacity_units ?? 0)}</span>
+                          <span>{t.service}: {pct(candidate.service_level ?? 0)}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : <p className="text-sm text-slate-400">{t.noCandidate}</p>}
-              <div className="mt-4 space-y-2">
-                {candidateAreas.filter((item) => item.feasible).slice(0, 5).map((candidate) => (
-                  <div key={candidate.candidate_id} className="flex items-center justify-between rounded-md border border-white/10 p-2 text-sm">
-                    <span>{candidate.label ?? candidate.candidate_id}</span>
-                    <span className={candidate.pareto_efficient ? 'text-cyan-300' : candidate.used ? 'text-emerald-300' : 'text-slate-500'}>
-                      {candidate.pareto_efficient ? t.pareto : candidate.used ? t.used : t.notUsed}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </CardContent>
           </Card>
         </section>
@@ -639,7 +683,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <div>
                   <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {visibleResult.binding_constraints.slice(0, 8).map((item) => <Badge key={item} variant="neutral">{item}</Badge>)}
+                    {visibleResult.binding_constraints.slice(0, 8).map((item) => <Badge key={item} variant="neutral">{humanizeConstraint(item, locale)}</Badge>)}
                   </div>
                 </div>
               </div>
