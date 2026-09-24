@@ -141,25 +141,25 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
           service_level: 0.96,
         },
       ],
-       pareto_frontier_candidate_ids: ['recommended-central'],
+      pareto_frontier_candidate_ids: ['recommended-central'],
       connectivity_rule: 'demo-geographic-v1',
-      },
-      decisionValue: undefined,
     })
     api.runManualCandidate.mockResolvedValue({
       result: {
-      baseline: optimized,
-      candidate: {
-        candidate_id: 'manual-candidate',
-        latitude: 51.5,
-        longitude: 20.2,
-        feasible: true,
-        used: false,
-        objective_value: optimized.kpis.objective_value,
-        objective_improvement: 0,
+        baseline: optimized,
+        candidate: {
+          candidate_id: 'manual-candidate',
+          latitude: 51.5,
+          longitude: 20.2,
+          feasible: true,
+          used: false,
+          objective_value: optimized.kpis.objective_value,
+          objective_improvement: 0,
+        },
+        optimized_network: optimized,
+        connectivity_rule: 'demo-geographic-v1',
       },
-      optimized_network: optimized,
-      connectivity_rule: 'demo-geographic-v1',
+      decisionValue: undefined,
     })
   })
 
