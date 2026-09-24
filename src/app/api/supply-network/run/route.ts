@@ -28,19 +28,19 @@ export async function POST(request: Request) {
 
     if (body.action === 'optimize') {
       const payload = await optimizeSupplyNetwork(body.network)
-      return NextResponse.json({ result: payload.result })
+      return NextResponse.json({ result: payload.result, decision_value: payload.decision_value })
     }
     if (body.action === 'unavailable' && body.warehouseId) {
       const payload = await makeWarehouseUnavailable(body.network, body.warehouseId)
-      return NextResponse.json({ result: payload.result })
+      return NextResponse.json({ result: payload.result, decision_value: payload.decision_value })
     }
     if (body.action === 'candidates') {
       const payload = await evaluateCandidateAreas(body.network)
-      return NextResponse.json({ result: payload.result })
+      return NextResponse.json({ result: payload.result, decision_value: payload.decision_value })
     }
     if (body.action === 'candidate' && body.candidate) {
       const payload = await evaluateManualCandidate(body.network, body.candidate)
-      return NextResponse.json({ result: payload.result })
+      return NextResponse.json({ result: payload.result, decision_value: payload.decision_value })
     }
     return NextResponse.json({ error: 'Unsupported supply-network action.' }, { status: 400 })
   } catch (reason) {
