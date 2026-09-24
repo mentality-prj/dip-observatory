@@ -16,7 +16,7 @@ export const OSM_RASTER_STYLE = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 } as const
 
-let loader: Promise<MapLibreApi> | null = null
+let loader: Promise<MapLibreApi | null> | null = null
 
 export type MapLibreMap = {
   on: (event: string, handler: (event: { lngLat: { lng: number; lat: number }; originalEvent?: MouseEvent }) => void) => void
@@ -54,7 +54,7 @@ function ensureStylesheet() {
   document.head.appendChild(link)
 }
 
-export function loadMapLibre(): Promise<MapLibreApi> {
+export function loadMapLibre(): Promise<MapLibreApi | null> {
   if (window.maplibregl) return Promise.resolve(window.maplibregl)
   if (loader) return loader
   loader = new Promise((resolve, reject) => {
@@ -71,12 +71,12 @@ export function loadMapLibre(): Promise<MapLibreApi> {
       if (window.maplibregl) resolve(window.maplibregl)
       else {
         loader = null
-        reject(new Error('Map provider unavailable'))
+        resolve(null)
       }
     }, { once: true })
     script.addEventListener('error', () => {
       loader = null
-      reject(new Error('Map provider unavailable'))
+      resolve(null)
     }, { once: true })
   })
   return loader

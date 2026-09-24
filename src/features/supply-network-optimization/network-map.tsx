@@ -136,7 +136,12 @@ export function NetworkMap({
     let localMap: MapLibreMap | null = null
     setMapUnavailable(false)
     void loadMapLibre().then((maplibre) => {
-      if (cancelled || !containerRef.current) return
+      if (cancelled) return
+      if (!maplibre) {
+        setMapUnavailable(true)
+        return
+      }
+      if (!containerRef.current) return
       localMap = new maplibre.Map({
         container: containerRef.current,
         style: OSM_RASTER_STYLE,
@@ -153,8 +158,6 @@ export function NetworkMap({
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
         clickRef.current(event.lngLat.lat, event.lngLat.lng)
       })
-    }).catch(() => {
-      if (!cancelled) setMapUnavailable(true)
     })
     return () => {
       cancelled = true
@@ -170,7 +173,7 @@ export function NetworkMap({
     let cancelled = false
     void loadMapLibre().then((maplibre) => {
       const map = mapRef.current
-      if (cancelled || !map) return
+      if (cancelled || !maplibre || !map) return
       markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
 
