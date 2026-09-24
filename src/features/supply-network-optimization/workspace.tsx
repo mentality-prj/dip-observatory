@@ -549,7 +549,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
               </CardContent>
             </Card>
           ) : (
-            <Card><CardContent className="pt-6 text-sm text-slate-400">{t.clickHint}</CardContent></Card>
+            <Card>
+              <CardContent className="flex min-h-[80px] items-center py-5 text-sm text-slate-400">
+                {t.clickHint}
+              </CardContent>
+            </Card>
           )}
         </div>
       </section>
