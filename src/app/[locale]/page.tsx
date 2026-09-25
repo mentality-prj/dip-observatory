@@ -1,7 +1,15 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { ObservatoryHome, PrototypeShell } from '@/features/observatory'
-import { isSupportedLocale, type Locale } from '@/lib/observatory-i18n'
+import { getLocaleMetadata, isSupportedLocale, type Locale } from '@/lib/observatory-i18n'
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params
+  const resolvedLocale = isSupportedLocale(locale) ? locale : 'en'
+  const metadata = getLocaleMetadata(resolvedLocale)
+  return { ...metadata, title: { absolute: metadata.title } }
+}
 
 export default async function LocalizedHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params

@@ -18,9 +18,9 @@ export async function generateMetadata({
   if (!isSupportedLocale(locale)) return {}
   const title =
     locale === 'uk'
-      ? 'Decision Challenge — QDIP Observatory'
+      ? 'Виклик рішень — QDIP Observatory'
       : locale === 'pl'
-        ? 'Decision Challenge — QDIP Observatory'
+        ? 'Wyzwanie decyzyjne — QDIP Observatory'
         : 'Decision Challenge — QDIP Observatory'
   const description =
     locale === 'uk'
