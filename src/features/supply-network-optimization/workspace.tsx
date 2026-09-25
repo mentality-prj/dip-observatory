@@ -779,19 +779,78 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
-        <LazyNetworkMap
-          locale={locale}
-          network={activeNetwork}
-          result={visibleResult}
-          unavailableWarehouseIds={unavailableIds}
-          candidateAreas={candidateAreas}
-          manualCandidate={manualCandidate}
-          currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
-          selectedWarehouseId={selectedWarehouse?.id ?? null}
-          onWarehouseSelect={selectWarehouse}
-          onStoreSelect={selectStore}
-          onMapClick={selectMapLocation}
-        />
+        <div className="min-w-0 space-y-5">
+          <LazyNetworkMap
+            locale={locale}
+            network={activeNetwork}
+            result={visibleResult}
+            unavailableWarehouseIds={unavailableIds}
+            candidateAreas={candidateAreas}
+            manualCandidate={manualCandidate}
+            currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
+            selectedWarehouseId={selectedWarehouse?.id ?? null}
+            onWarehouseSelect={selectWarehouse}
+            onStoreSelect={selectStore}
+            onMapClick={selectMapLocation}
+          />
+
+          {visibleResult ? (
+            <section className="mt-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t.evidence}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 lg:grid-cols-3">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          {visibleResult.ending_inventory.slice(0, 8).map((item) => (
+                            <p key={`${item.warehouse_id}-${item.product_class_id}`}>
+                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          {visibleResult.inbound_allocation.map((item) => (
+                            <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
+                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                              {item.transport_mode ? ` · ${item.transport_mode}` : ''}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {visibleResult.binding_constraints.slice(0, 8).map((item) => (
+                            <Badge key={item} variant="neutral">
+                              {humanizeConstraint(item, locale)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.costBreakdown}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          <p>{t.logistics}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
+                          <p>{t.stockoutCost}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
+                          <p>{t.reallocationCost}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
+                          <p>{t.facilityCost}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
+                          <p>{t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
+                        </div>
+                      </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          ) : null}
+        </div>
 
         <div className="space-y-4">
           <Card>
@@ -1085,62 +1144,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </div>
       </section>
 
-      {visibleResult ? (
-        <section className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.evidence}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 lg:grid-cols-3">
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      {visibleResult.ending_inventory.slice(0, 8).map((item) => (
-                        <p key={`${item.warehouse_id}-${item.product_class_id}`}>
-                          {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                          {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      {visibleResult.inbound_allocation.map((item) => (
-                        <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
-                          {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                          {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                          {item.transport_mode ? ` · ${item.transport_mode}` : ''}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {visibleResult.binding_constraints.slice(0, 8).map((item) => (
-                        <Badge key={item} variant="neutral">
-                          {humanizeConstraint(item, locale)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.costBreakdown}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      <p>{t.logistics}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
-                      <p>{t.stockoutCost}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
-                      <p>{t.reallocationCost}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
-                      <p>{t.facilityCost}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
-                      <p>{t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
-                    </div>
-                  </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
+
 
       {scenario ? (
         <section id="supply-alternatives" className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
