@@ -30,7 +30,9 @@ type Props = {
   manualCandidate: CandidateWarehouse | null
   currentFlows: BaselineFulfillment[]
   selectedWarehouseId: string | null
+  selectedCandidateId: string | null
   onWarehouseSelect: (warehouse: Warehouse) => void
+  onCandidateSelect: (candidateId: string) => void
   onStoreSelect: (store: DemandPoint) => void
   onMapClick: (latitude: number, longitude: number) => void
 }
@@ -38,7 +40,8 @@ type Props = {
 const markerStyle = (
   kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable',
   selected = false,
-  ariaLabel: string = kind
+  ariaLabel: string = kind,
+  candidateStatus: 'pareto' | 'dominated' | 'infeasible' = 'pareto'
 ) => {
   const element = document.createElement('button')
   element.type = 'button'
@@ -91,13 +94,19 @@ const markerStyle = (
   element.style.background =
     kind === 'unavailable'
       ? '#ef4444'
-      : kind === 'candidate' || kind === 'manual-candidate'
-        ? '#f59e0b'
-        : kind === 'warehouse'
-          ? '#22d3ee'
-          : kind === 'supplier'
-            ? '#a78bfa'
-            : '#e2e8f0'
+      : kind === 'candidate'
+        ? candidateStatus === 'infeasible'
+          ? '#ef4444'
+          : candidateStatus === 'dominated'
+            ? '#64748b'
+            : '#f59e0b'
+        : kind === 'manual-candidate'
+          ? '#f59e0b'
+          : kind === 'warehouse'
+            ? '#22d3ee'
+            : kind === 'supplier'
+              ? '#a78bfa'
+              : '#e2e8f0'
   if (kind === 'unavailable') {
     element.style.borderRadius = '50%'
     element.style.transform = 'none'
@@ -227,7 +236,9 @@ export function NetworkMap({
   manualCandidate,
   currentFlows,
   selectedWarehouseId,
+  selectedCandidateId,
   onWarehouseSelect,
+  onCandidateSelect,
   onStoreSelect,
   onMapClick,
 }: Props) {
@@ -348,10 +359,26 @@ export function NetworkMap({
           new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
         )
       }
-      for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
-        const element = markerStyle('candidate', false, t.warehouseOption)
+      for (const [index, candidate] of candidateAreas.entries()) {
+        const status = !candidate.feasible ? 'infeasible' : candidate.pareto_efficient ? 'pareto' : 'dominated'
+        const statusLabel =
+          status === 'pareto'
+            ? t.candidateRecommended
+            : status === 'dominated'
+              ? t.candidateDominated
+              : t.candidateInfeasible
+        const element = markerStyle(
+          'candidate',
+          selectedCandidateId === candidate.candidate_id,
+          t.warehouseOption,
+          status
+        )
         element.dataset.networkMarker = 'candidate'
-        element.title = candidateOptionLabel(index, locale)
+        element.title = `${candidateOptionLabel(index, locale)} · ${statusLabel}`
+        element.addEventListener('click', (event) => {
+          event.stopPropagation()
+          onCandidateSelect(candidate.candidate_id)
+        })
         markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map)
         )
@@ -369,9 +396,7 @@ export function NetworkMap({
         ...network.warehouses.map((item) => [item.longitude, item.latitude] as [number, number]),
         ...network.demand_points.map((item) => [item.longitude, item.latitude] as [number, number]),
         ...network.suppliers.map((item) => [item.longitude, item.latitude] as [number, number]),
-        ...candidateAreas
-          .filter((item) => item.feasible)
-          .map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...candidateAreas.map((item) => [item.longitude, item.latitude] as [number, number]),
         ...(manualCandidate ? [[manualCandidate.longitude, manualCandidate.latitude] as [number, number]] : []),
       ]
       const boundsKey = visibleCoordinates.map((item) => item.join(',')).join('|')
@@ -416,9 +441,11 @@ export function NetworkMap({
     candidateAreas,
     manualCandidate,
     network,
+    onCandidateSelect,
     onStoreSelect,
     onWarehouseSelect,
     result,
+    selectedCandidateId,
     selectedWarehouseId,
     unavailableWarehouseIds,
     flowView,
@@ -426,6 +453,9 @@ export function NetworkMap({
     t.supplier,
     t.warehouse,
     t.warehouseOption,
+    t.candidateRecommended,
+    t.candidateDominated,
+    t.candidateInfeasible,
   ])
 
   const maxOptimizedFlowUnits = Math.max(
@@ -611,10 +641,22 @@ export function NetworkMap({
             {t.inboundSupply}
           </span>
         ) : null}
-        {candidateAreas.some((item) => item.feasible) || manualCandidate ? (
+        {candidateAreas.some((item) => item.feasible && item.pareto_efficient) || manualCandidate ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-amber-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-            {t.warehouseOption}
+            {t.candidateRecommended}
+          </span>
+        ) : null}
+        {candidateAreas.some((item) => item.feasible && !item.pareto_efficient) ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="h-3 w-3 bg-slate-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
+            {t.candidateDominated}
+          </span>
+        ) : null}
+        {candidateAreas.some((item) => !item.feasible) ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="h-3 w-3 bg-red-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
+            {t.candidateInfeasible}
           </span>
         ) : null}
       </div>

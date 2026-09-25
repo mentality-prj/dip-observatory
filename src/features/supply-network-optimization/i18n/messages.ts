@@ -30,7 +30,11 @@ export const supplyNetworkWorkspaceMessages = {
     costChange: 'Change in logistics cost',
     paretoAlternatives: 'Improvement options',
     frontierHint:
-      'These are nondominated options across economic impact, service and tested resilience. Compare the trade-offs before deciding.',
+      'All tested locations are shown. Worth considering marks nondominated options; dominated and infeasible options remain visible for auditability.',
+    evaluatedCandidates: 'Locations tested',
+    recommendedCandidates: 'Worth considering',
+    dominatedCandidate: 'Dominated',
+    infeasibleCandidate: 'Infeasible',
     disruptionReallocated: 'Disruption + new plan',
     noCandidate: 'None of the locations tested materially improves the network under the current conditions.',
     service: 'Demand fulfilled',
@@ -144,7 +148,11 @@ export const supplyNetworkWorkspaceMessages = {
     costChange: 'Зміна вартості логістики',
     paretoAlternatives: 'Варіанти покращення',
     frontierHint:
-      'Це недоміновані варіанти за економічним впливом, сервісом і перевіреною стійкістю. Порівняйте компроміси перед рішенням.',
+      'Показано всі перевірені локації. «Вартий розгляду» означає недомінований варіант; доміновані та нездійсненні варіанти залишаються видимими для перевірки.',
+    evaluatedCandidates: 'Перевірено локацій',
+    recommendedCandidates: 'Вартих розгляду',
+    dominatedCandidate: 'Домінований',
+    infeasibleCandidate: 'Нездійсненний',
     disruptionReallocated: 'Збій + новий план',
     noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
     service: 'Виконано попиту',
@@ -258,7 +266,11 @@ export const supplyNetworkWorkspaceMessages = {
     costChange: 'Zmiana kosztu logistyki',
     paretoAlternatives: 'Warianty poprawy',
     frontierHint:
-      'To warianty niezdominowane pod względem wpływu ekonomicznego, obsługi i testowanej odporności. Porównaj kompromisy przed decyzją.',
+      'Pokazano wszystkie sprawdzone lokalizacje. „Warto rozważyć” oznacza wariant niezdominowany; warianty zdominowane i niewykonalne pozostają widoczne do weryfikacji.',
+    evaluatedCandidates: 'Sprawdzone lokalizacje',
+    recommendedCandidates: 'Warte rozważenia',
+    dominatedCandidate: 'Zdominowany',
+    infeasibleCandidate: 'Niewykonalny',
     disruptionReallocated: 'Zakłócenie + nowy plan',
     noCandidate: 'Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.',
     service: 'Zrealizowany popyt',
@@ -430,6 +442,9 @@ export const supplyNetworkMapMessages = {
     supplier: 'Supplier',
     inboundSupply: 'Inbound supply',
     warehouseOption: 'Warehouse option',
+    candidateRecommended: 'Worth considering',
+    candidateDominated: 'Dominated option',
+    candidateInfeasible: 'Infeasible option',
   },
   uk: {
     modeBefore: 'До збою',
@@ -445,6 +460,9 @@ export const supplyNetworkMapMessages = {
     supplier: 'Постачальник',
     inboundSupply: 'Вхідні поставки',
     warehouseOption: 'Варіант складу',
+    candidateRecommended: 'Вартий розгляду',
+    candidateDominated: 'Домінований варіант',
+    candidateInfeasible: 'Нездійсненний варіант',
   },
   pl: {
     modeBefore: 'Przed zakłóceniem',
@@ -460,6 +478,9 @@ export const supplyNetworkMapMessages = {
     supplier: 'Dostawca',
     inboundSupply: 'Dostawy przychodzące',
     warehouseOption: 'Wariant magazynu',
+    candidateRecommended: 'Warto rozważyć',
+    candidateDominated: 'Wariant zdominowany',
+    candidateInfeasible: 'Wariant niewykonalny',
   },
 } as const
 
