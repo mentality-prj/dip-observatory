@@ -7122,13 +7122,11 @@ snapshots:
       quickselect: 3.0.0
       tinyqueue: 3.0.0
 
-  math-intrinsics@1.1.0: {}
 
   media-typer@1.1.0: {}
 
   merge-descriptors@2.0.0: {}
 
-  merge2@1.4.1: {}
 
 
   '@mapbox/vector-tile@3.0.0':
@@ -7169,9 +7167,7 @@ snapshots:
     dependencies:
       resolve-protobuf-schema: 2.1.0
 
-  picocolors@1.1.1: {}
 
-  picomatch@2.3.2: {}
 
   picomatch@4.0.4: {}
 
