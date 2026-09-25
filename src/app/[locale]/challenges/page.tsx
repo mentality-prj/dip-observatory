@@ -32,7 +32,7 @@ export default async function DecisionChallengePage({
   const { locale } = await params
   if (!isSupportedLocale(locale)) notFound()
   return (
-    <PrototypeShell locale={locale as Locale} theme="cyan">
+    <PrototypeShell locale={locale as Locale} activeRoute="/challenges" theme="cyan">
       <DecisionChallengeWorkspace locale={locale as Locale} />
     </PrototypeShell>
   )
