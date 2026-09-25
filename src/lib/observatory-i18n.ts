@@ -4,6 +4,12 @@ export const DEFAULT_LOCALE: Locale = 'en'
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
 
+export const LOCALE_TAGS: Record<Locale, string> = {
+  en: 'en-GB',
+  uk: 'uk-UA',
+  pl: 'pl-PL',
+}
+
 export function isSupportedLocale(value: string): value is Locale {
   return SUPPORTED_LOCALES.includes(value as Locale)
 }
@@ -15,17 +21,20 @@ export function detectLocaleFromHeader(value?: string | null): Locale {
     .filter(Boolean) as string[]
 
   for (const candidate of candidates) {
-    if (candidate.startsWith('uk')) return 'uk'
-    if (candidate.startsWith('pl')) return 'pl'
-    if (candidate.startsWith('en')) return 'en'
+    const locale = SUPPORTED_LOCALES.find((item) =>
+      candidate.toLowerCase().startsWith(item),
+    )
+    if (locale) return locale
   }
   return DEFAULT_LOCALE
 }
 
 export function buildLocalePath(pathname: string, locale: Locale) {
-  const normalizedPath = pathname || '/'
-  const stripped = normalizedPath.replace(/^\/(en|uk|pl)(?=\/|$)/, '') || '/'
-  return stripped === '/' ? `/${locale}` : `/${locale}${stripped}`
+  const segments = (pathname || '/').split('/').filter(Boolean)
+  if (segments[0] && isSupportedLocale(segments[0])) segments.shift()
+  return segments.length
+    ? `/${locale}/${segments.join('/')}`
+    : `/${locale}`
 }
 
 const metadata = {

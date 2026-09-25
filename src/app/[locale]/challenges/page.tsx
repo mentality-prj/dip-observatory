@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { PrototypeShell } from '@/components/observatory/prototype-shell'
 import { DecisionChallengeWorkspace } from '@/features/decision-challenge'
+import { decisionChallengeMetadataI18n } from '@/features/decision-challenge/i18n'
 import { isSupportedLocale, type Locale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 
 export function generateStaticParams() {
@@ -16,19 +17,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   if (!isSupportedLocale(locale)) return {}
-  const title =
-    locale === 'uk'
-      ? 'Виклик рішень — QDIP Observatory'
-      : locale === 'pl'
-        ? 'Wyzwanie decyzyjne — QDIP Observatory'
-        : 'Decision Challenge — QDIP Observatory'
-  const description =
-    locale === 'uk'
-      ? 'Прийміть власне рішення та порівняйте його з рекомендацією QDIP для тієї самої задачі.'
-      : locale === 'pl'
-        ? 'Podejmij własną decyzję i porównaj ją z rekomendacją QDIP dla tego samego problemu.'
-        : 'Make your own decision and compare it with QDIP on the exact same decision problem.'
-  return { title: { absolute: title }, description }
+  const metadata = decisionChallengeMetadataI18n[locale]
+  return {
+    title: { absolute: metadata.title },
+    description: metadata.description,
+  }
 }
 
 export default async function DecisionChallengePage({

@@ -5,34 +5,22 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { ChevronRight, FlaskConical, Globe2, Home, Menu, Network, Scale, SlidersHorizontal, UsersRound } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
-import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
+import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
-import { observatoryI18n, sharedI18n } from '@/lib/product-i18n'
+import { localeLabels, observatoryI18n, sharedI18n } from '@/lib/product-i18n'
 import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
 import { ObservatoryFooter } from './observatory-footer'
 import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
-const LOCALES: Locale[] = ['en', 'uk', 'pl']
-const LABEL: Record<Locale, string> = { en: 'EN', pl: 'PL', uk: 'UA' }
-const CHALLENGE_LABEL: Record<Locale, string> = {
-  en: 'Decision Challenge',
-  uk: 'Виклик рішень',
-  pl: 'Wyzwanie decyzyjne',
-}
+const LOCALES = SUPPORTED_LOCALES
 const NAV_ICONS = {
   challenge: Scale,
   'resource-allocation': UsersRound,
   'supply-network-optimization': Network,
   'gtm-lab': FlaskConical,
 } as const
-
-const STUDIO_LABEL: Record<Locale, string> = {
-  en: 'Open Studio',
-  uk: 'Відкрити Studio',
-  pl: 'Otwórz Studio',
-}
 
 export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeShellProps) {
   const pathname = usePathname()
@@ -58,7 +46,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
         className={styles.navLink}
       >
         <Scale className={styles.navIcon} aria-hidden />
-        <span>{CHALLENGE_LABEL[locale]}</span>
+        <span>{observatory.challenge}</span>
       </a>
       {navItems.map((item) => {
         const active = isActive(item.route)
@@ -89,7 +77,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             aria-current={option === locale ? 'page' : undefined}
             data-locale={option}
           >
-            {LABEL[option]}
+            {localeLabels[option]}
           </a>
         ))}
       </div>
@@ -105,7 +93,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
         >
           {LOCALES.map((option) => (
             <option key={option} value={option}>
-              {LABEL[option]}
+              {localeLabels[option]}
             </option>
           ))}
         </select>
@@ -120,6 +108,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       href={buildLocalePath('/', locale)}
       brandHref={marketingHref(locale)}
       product="Observatory"
+      nativeProductNavigation
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={
         <details className={styles.mobileMenu}>
@@ -130,14 +119,14 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             {nav}
             <Link className={styles.mobileProductLink} href={studioHref('', locale)}>
               <SlidersHorizontal size={15} aria-hidden />
-              {STUDIO_LABEL[locale]}
+              {observatory.openStudio}
             </Link>
           </div>
         </details>
       }
       productSwitch={{
         href: studioHref('', locale),
-        label: STUDIO_LABEL[locale],
+        label: observatory.openStudio,
         icon: <SlidersHorizontal size={15} />,
       }}
       utilities={utilities}
@@ -148,7 +137,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             <Home />
           </Link>
           <ChevronRight />
-          <span>{challengeActive ? CHALLENGE_LABEL[locale] : (activeItem?.title[locale] ?? 'Observatory')}</span>
+          <span>{challengeActive ? observatory.challenge : (activeItem?.title[locale] ?? 'Observatory')}</span>
         </div>
         <div className={styles.content} id="main-content" tabIndex={-1}>
           {children}

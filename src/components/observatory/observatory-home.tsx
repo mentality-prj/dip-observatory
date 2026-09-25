@@ -1,120 +1,17 @@
-import Link from 'next/link'
 import { ArrowRight, BrainCircuit, Check, ChevronDown, Network, Route } from 'lucide-react'
 
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
+import { observatoryHomeI18n } from '@/lib/product-i18n'
 import { decisionPatternLabel } from '@/product/experience'
 import { observableUseCases } from '@/use-cases/registry'
 
-export const observatoryHomeCopy = {
-  en: {
-    eyebrow: 'QDIP OBSERVATORY · UNDERSTAND',
-    title: 'Understand the recommendation, not just the output.',
-    subtitle:
-      'Observatory is the inspection surface for QDIP decisions. Every application follows the same narrative: recommendation first, then alternatives, evidence and trace.',
-    inspectLabel: 'Resource Allocation · decision preview',
-    recommendation: 'Recommendation',
-    recommended: 'Recommended allocation plan',
-    confidence: 'Generated from the configured scenario and operational constraints',
-    recommendedLabel: 'QDIP recommendation',
-    evidence: 'Evidence',
-    evidenceItems: ['Capacity and skill constraints checked', 'Priority coverage compared', 'Team movements and trade-offs exposed'],
-    alternatives: 'Alternatives',
-    alternativeItems: [
-      ['Current allocation', 'Keep the existing team placement'],
-      ['Manual override', 'Responsible person changes the proposed plan'],
-    ],
-    trace: 'Open decision trace',
-    traceBody:
-      'Needs and available teams → feasible allocations → constraint checks → priority evaluation → recommended allocation.',
-    previewCta: 'Open Resource Allocation',
-    demos: 'Live decision applications',
-    demosBody:
-      'Different domains, the same inspection grammar. Open an application to examine a real recommendation and the evidence behind it.',
-    open: 'Inspect decision',
-    inspect: 'The four questions Observatory should answer',
-    questions: [
-      ['What is recommended?', 'See the selected action and viable alternatives.'],
-      ['Why?', 'Inspect evidence, priorities, constraints and trade-offs.'],
-      ['What changed?', 'Compare the state and scenario that produced a different result.'],
-      ['What would change it?', 'Explore which constraints or evidence can move the recommendation.'],
-    ],
-    note: 'Demos are preconfigured decision applications. Studio configures the decision model; QDIP Core evaluates it; Observatory makes the result inspectable.',
-  },
-  uk: {
-    eyebrow: 'QDIP OBSERVATORY · ПЕРЕВІРКА РІШЕНЬ',
-    title: 'Перевіряйте не лише результат, а й обґрунтування рекомендації.',
-    subtitle:
-      'Observatory — простір для перевірки рішень QDIP. У кожному застосунку ви бачите рекомендацію, альтернативи, докази та історію рішення.',
-    inspectLabel: 'Розподіл ресурсів · попередній перегляд рішення',
-    recommendation: 'Рекомендація',
-    recommended: 'Рекомендований план розподілу',
-    confidence: 'Сформовано з налаштованого сценарію та операційних обмежень',
-    recommendedLabel: 'Рекомендація QDIP',
-    evidence: 'Докази',
-    evidenceItems: ['Перевірено обмеження спроможності та навичок', 'Порівняно покриття пріоритетних потреб', 'Показано переміщення команд і компроміси'],
-    alternatives: 'Альтернативи',
-    alternativeItems: [
-      ['Поточний розподіл', 'Зберегти поточне розміщення команд'],
-      ['Ручне коригування', 'Відповідальна людина змінює запропонований план'],
-    ],
-    trace: 'Відкрити історію рішення',
-    traceBody:
-      'Потреби й доступні команди → допустимі розподіли → перевірка обмежень → оцінка пріоритетів → рекомендований розподіл.',
-    previewCta: 'Відкрити Resource Allocation',
-    demos: 'Діючі застосунки для прийняття рішень',
-    demosBody:
-      'Різні домени, однакова логіка перевірки. Відкрийте застосунок, щоб дослідити реальну рекомендацію та докази.',
-    open: 'Дослідити рішення',
-    inspect: 'Чотири питання, на які має відповідати Observatory',
-    questions: [
-      ['Що рекомендовано?', 'Побачте обрану дію та допустимі альтернативи.'],
-      ['Чому?', 'Перевірте докази, пріоритети, обмеження й компроміси.'],
-      ['Що змінилося?', 'Порівняйте стан і сценарій, які привели до іншого результату.'],
-      ['Що змінить рішення?', 'Дослідіть, які обмеження або докази можуть змінити рекомендацію.'],
-    ],
-    note: 'Демо — попередньо налаштовані застосунки для рішень. Studio конфігурує модель рішення, QDIP Core її оцінює, а Observatory робить результат доступним для перевірки.',
-  },
-  pl: {
-    eyebrow: 'QDIP OBSERVATORY · WERYFIKACJA DECYZJI',
-    title: 'Sprawdzaj nie tylko wynik, ale też uzasadnienie rekomendacji.',
-    subtitle:
-      'Observatory to przestrzeń do weryfikacji decyzji QDIP. W każdej aplikacji zobaczysz rekomendację, alternatywy, dowody i ślad decyzji.',
-    inspectLabel: 'Alokacja zasobów · podgląd decyzji',
-    recommendation: 'Rekomendacja',
-    recommended: 'Rekomendowany plan alokacji',
-    confidence: 'Wygenerowany z konfiguracji scenariusza i ograniczeń operacyjnych',
-    recommendedLabel: 'Rekomendacja QDIP',
-    evidence: 'Dowody',
-    evidenceItems: ['Sprawdzono ograniczenia pojemności i kompetencji', 'Porównano pokrycie potrzeb priorytetowych', 'Pokazano przeniesienia zespołów i kompromisy'],
-    alternatives: 'Alternatywy',
-    alternativeItems: [
-      ['Bieżąca alokacja', 'Zachowaj obecne rozmieszczenie zespołów'],
-      ['Ręczne nadpisanie', 'Osoba odpowiedzialna zmienia proponowany plan'],
-    ],
-    trace: 'Otwórz ślad decyzji',
-    traceBody:
-      'Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.',
-    previewCta: 'Otwórz Resource Allocation',
-    demos: 'Działające aplikacje decyzyjne',
-    demosBody:
-      'Różne domeny, ta sama logika weryfikacji. Otwórz aplikację, aby przeanalizować rzeczywistą rekomendację i stojące za nią dowody.',
-    open: 'Przeanalizuj decyzję',
-    inspect: 'Cztery pytania, na które powinno odpowiadać Observatory',
-    questions: [
-      ['Co jest rekomendowane?', 'Zobacz wybrane działanie i wykonalne alternatywy.'],
-      ['Dlaczego?', 'Sprawdź dowody, priorytety, ograniczenia i kompromisy.'],
-      ['Co się zmieniło?', 'Porównaj stan i scenariusz, które doprowadziły do innego wyniku.'],
-      ['Co zmieni decyzję?', 'Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację.'],
-    ],
-    note: 'Dema są wstępnie skonfigurowanymi aplikacjami decyzyjnymi. Studio konfiguruje model, QDIP Core go ocenia, a Observatory udostępnia wynik do inspekcji.',
-  },
-} as const
+
 
 const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
-  const t = observatoryHomeCopy[locale]
+  const t = observatoryHomeI18n[locale]
   const useCases = observableUseCases()
   return (
     <main className="observatory-home relative min-h-[calc(100vh-6.5rem)] overflow-hidden px-4 pb-20 pt-8 text-white md:px-6 md:pt-12 xl:px-10">
@@ -170,13 +67,13 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                 </summary>
                 <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-500">{t.traceBody}</p>
               </details>
-              <Link
+              <a
                 className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
                 href={buildLocalePath('/resource-allocation', locale)}
               >
                 {t.previewCta}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </a>
             </div>
             <aside className="bg-white/[.018] p-6 md:p-8" aria-label={t.evidence}>
               <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">{t.evidence}</span>
@@ -208,7 +105,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
             {useCases.map((useCase) => {
               const Icon = demoIcons[useCase.id as keyof typeof demoIcons] ?? BrainCircuit
               return (
-                <Link
+                <a
                   key={useCase.id}
                   href={buildLocalePath(useCase.route, locale)}
                   data-use-case={useCase.id}
@@ -231,7 +128,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                     {t.open}
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                   </div>
-                </Link>
+                </a>
               )
             })}
           </div>

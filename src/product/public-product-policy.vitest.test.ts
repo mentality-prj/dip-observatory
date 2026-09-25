@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { marketingCopy } from '@/components/marketing/qdip-copy'
-import { observatoryHomeCopy } from '@/components/observatory/observatory-home'
+import { observatoryHomeI18n } from '@/lib/product-i18n'
 import { DECISION_PATTERN_LABELS, PRODUCT_SURFACE_COPY } from '@/product/experience'
 import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 import { studioCopy } from '@/studio/studio-copy'
@@ -102,7 +102,7 @@ describe('localized Observatory terminology policy', () => {
   for (const locale of ['uk', 'pl'] as const) {
     it(`${locale} does not mix ordinary English UI terminology into Observatory copy`, () => {
       const values = collectStrings([
-        observatoryHomeCopy[locale],
+        observatoryHomeI18n[locale],
         PRODUCT_SURFACE_COPY[locale],
         Object.values(DECISION_PATTERN_LABELS).map((labels) => labels[locale]),
         DIP_USE_CASES.map((useCase) => ({
