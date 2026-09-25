@@ -91,7 +91,8 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
       {
         pattern: 'ALLOCATE',
         title: 'Supply Network Optimization',
-        question: 'Where should inventory be stored, how should demand be fulfilled, and how should the network adapt when warehouse capacity changes?',
+        question:
+          'Where should inventory be stored, how should demand be fulfilled, and how should the network adapt when warehouse capacity changes?',
         problem:
           'Inventory, inbound supply and fulfillment are often planned separately, which can increase logistics cost, create capacity bottlenecks and amplify disruption risk.',
         inputs:
@@ -134,9 +135,18 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         title: 'QDIP корисний там, де порівняння повторюється, а професійне судження залишається важливим.',
         body: 'Найкращий сценарій — регулярне рішення, для якого люди щоразу збирають інформацію, порівнюють кілька реальних варіантів, застосовують правила або пріоритети, працюють у межах обмежень і мають пояснити вибір після рішення.',
         items: [
-          { title: 'Повторюваність', body: 'Той самий клас рішень виникає достатньо часто, щоб послідовність мала значення.' },
-          { title: 'Обмеження', body: 'Бюджет, потужність, політики, строки або операційні правила звужують допустимі варіанти.' },
-          { title: 'Пояснюваність', body: 'Відповідальна людина має розуміти й обґрунтовувати, чому одна альтернатива була кращою.' },
+          {
+            title: 'Повторюваність',
+            body: 'Той самий клас рішень виникає достатньо часто, щоб послідовність мала значення.',
+          },
+          {
+            title: 'Обмеження',
+            body: 'Бюджет, потужність, політики, строки або операційні правила звужують допустимі варіанти.',
+          },
+          {
+            title: 'Пояснюваність',
+            body: 'Відповідальна людина має розуміти й обґрунтовувати, чому одна альтернатива була кращою.',
+          },
         ],
       },
       {
@@ -145,8 +155,14 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         body: 'QDIP не замінює людей, які знають предметну область. Він робить критерії рішення явними, послідовно оцінює альтернативи та зберігає обґрунтування рекомендації.',
         items: [
           { title: 'До QDIP', body: 'Інформація розпорошена між таблицями, повідомленнями та особистими судженнями.' },
-          { title: 'З QDIP', body: 'Вхідні дані, альтернативи, пріоритети й обмеження проходять один повторюваний шлях оцінювання.' },
-          { title: 'Після оцінювання', body: 'Відповідальна людина отримує рекомендацію, докази та видимі компроміси.' },
+          {
+            title: 'З QDIP',
+            body: 'Вхідні дані, альтернативи, пріоритети й обмеження проходять один повторюваний шлях оцінювання.',
+          },
+          {
+            title: 'Після оцінювання',
+            body: 'Відповідальна людина отримує рекомендацію, докази та видимі компроміси.',
+          },
         ],
       },
       {
@@ -160,30 +176,41 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         pattern: 'РОЗПОДІЛИТИ',
         title: 'Resource Allocation',
         question: 'Куди спрямувати обмежені ресурси?',
-        problem: 'Команди та організації часто порівнюють запити вручну, коли одночасно конкурують бюджет, правила допуску, терміновість і програмні пріоритети.',
+        problem:
+          'Команди та організації часто порівнюють запити вручну, коли одночасно конкурують бюджет, правила допуску, терміновість і програмні пріоритети.',
         inputs: 'Запити, доступна спроможність, пріоритети, правила допуску, обмеження та підтвердні дані.',
-        evaluation: 'QDIP порівнює допустимі варіанти розподілу за однаковими налаштованими критеріями та оцінює поточний план через той самий шлях рішення.',
+        evaluation:
+          'QDIP порівнює допустимі варіанти розподілу за однаковими налаштованими критеріями та оцінює поточний план через той самий шлях рішення.',
         output: 'Рекомендований розподіл, порівняння з поточним планом та обґрунтування для перевірки.',
         href: '/resource-allocation',
       },
       {
         pattern: 'РОЗПОДІЛИТИ',
         title: 'Supply Network Optimization',
-        question: 'Де зберігати запаси, як покривати попит і як перебудовувати мережу при зміні доступної складської потужності?',
-        problem: 'Окреме планування запасів, вхідних поставок і виконання попиту може збільшувати логістичні витрати, створювати вузькі місця потужності та посилювати ризик збоїв.',
-        inputs: 'Запаси за складами й класами товарів, географічно різний попит, вхідні поставки, потужність складів і маршрутів, сумісність зберігання, строки та логістична вартість.',
-        evaluation: 'QDIP оптимізує розміщення запасів, вхідні поставки та покриття попиту з жорсткими мережевими обмеженнями, а потім повторює той самий розрахунок для недоступного або нового складу.',
-        output: 'Рекомендоване розміщення запасів, постачання точок попиту, вхідний розподіл, переміщення, сценарні KPI та рекомендовані зони нового складу з перевірюваним обґрунтуванням.',
+        question:
+          'Де зберігати запаси, як покривати попит і як перебудовувати мережу при зміні доступної складської потужності?',
+        problem:
+          'Окреме планування запасів, вхідних поставок і виконання попиту може збільшувати логістичні витрати, створювати вузькі місця потужності та посилювати ризик збоїв.',
+        inputs:
+          'Запаси за складами й класами товарів, географічно різний попит, вхідні поставки, потужність складів і маршрутів, сумісність зберігання, строки та логістична вартість.',
+        evaluation:
+          'QDIP оптимізує розміщення запасів, вхідні поставки та покриття попиту з жорсткими мережевими обмеженнями, а потім повторює той самий розрахунок для недоступного або нового складу.',
+        output:
+          'Рекомендоване розміщення запасів, постачання точок попиту, вхідний розподіл, переміщення, сценарні KPI та рекомендовані зони нового складу з перевірюваним обґрунтуванням.',
         href: '/supply-network-optimization',
       },
       {
         pattern: 'ПРІОРИТЕЗУВАТИ',
         title: 'GTM Lab',
         question: 'Які можливості потребують уваги першими?',
-        problem: 'Невеликі комерційні команди можуть витрачати багато часу на порівняння можливостей за неповних даних і конкуруючих пріоритетів.',
-        inputs: 'Докази щодо можливості, сигнали відповідності, невизначеність, відсутня інформація та критерії пріоритезації.',
-        evaluation: 'QDIP послідовно оцінює можливості та розрізняє результати: опрацьовувати, дослідити, спостерігати або відхилити.',
-        output: 'Пріоритезований портфель з обґрунтуванням, ризиками, відсутньою інформацією, наступною дією та походженням даних.',
+        problem:
+          'Невеликі комерційні команди можуть витрачати багато часу на порівняння можливостей за неповних даних і конкуруючих пріоритетів.',
+        inputs:
+          'Докази щодо можливості, сигнали відповідності, невизначеність, відсутня інформація та критерії пріоритезації.',
+        evaluation:
+          'QDIP послідовно оцінює можливості та розрізняє результати: опрацьовувати, дослідити, спостерігати або відхилити.',
+        output:
+          'Пріоритезований портфель з обґрунтуванням, ризиками, відсутньою інформацією, наступною дією та походженням даних.',
         href: '/gtm-lab',
       },
     ],
@@ -206,9 +233,18 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         title: 'QDIP jest użyteczny tam, gdzie porównanie się powtarza, a profesjonalna ocena nadal ma znaczenie.',
         body: 'Najlepszym zastosowaniem jest powtarzalna decyzja, przy której ludzie regularnie zbierają informacje, porównują kilka realnych opcji, stosują reguły lub priorytety, działają w ramach ograniczeń i muszą później uzasadnić wybór.',
         items: [
-          { title: 'Powtarzalność', body: 'Ten sam typ decyzji pojawia się wystarczająco często, aby spójność miała znaczenie.' },
-          { title: 'Ograniczenia', body: 'Budżet, przepustowość, polityki, terminy lub zasady operacyjne ograniczają możliwe wybory.' },
-          { title: 'Wyjaśnialność', body: 'Odpowiedzialna osoba musi rozumieć i uzasadniać, dlaczego wybrano jedną alternatywę.' },
+          {
+            title: 'Powtarzalność',
+            body: 'Ten sam typ decyzji pojawia się wystarczająco często, aby spójność miała znaczenie.',
+          },
+          {
+            title: 'Ograniczenia',
+            body: 'Budżet, przepustowość, polityki, terminy lub zasady operacyjne ograniczają możliwe wybory.',
+          },
+          {
+            title: 'Wyjaśnialność',
+            body: 'Odpowiedzialna osoba musi rozumieć i uzasadniać, dlaczego wybrano jedną alternatywę.',
+          },
         ],
       },
       {
@@ -216,8 +252,14 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         title: 'Od ręcznego porównania do kontrolowanej ścieżki decyzji.',
         body: 'QDIP nie zastępuje osób znających domenę. Nadaje kryteriom decyzji jawną strukturę, spójnie ocenia alternatywy i zachowuje uzasadnienie rekomendacji.',
         items: [
-          { title: 'Przed QDIP', body: 'Informacje są rozproszone między arkuszami, wiadomościami i indywidualną oceną.' },
-          { title: 'Z QDIP', body: 'Dane wejściowe, alternatywy, priorytety i ograniczenia trafiają do jednej powtarzalnej ścieżki oceny.' },
+          {
+            title: 'Przed QDIP',
+            body: 'Informacje są rozproszone między arkuszami, wiadomościami i indywidualną oceną.',
+          },
+          {
+            title: 'Z QDIP',
+            body: 'Dane wejściowe, alternatywy, priorytety i ograniczenia trafiają do jednej powtarzalnej ścieżki oceny.',
+          },
           { title: 'Po ocenie', body: 'Odpowiedzialna osoba otrzymuje rekomendację, dowody i widoczne kompromisy.' },
         ],
       },
@@ -232,30 +274,40 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
         pattern: 'ALOKUJ',
         title: 'Resource Allocation',
         question: 'Gdzie skierować ograniczone zasoby?',
-        problem: 'Zespoły i organizacje często porównują zgłoszenia ręcznie, gdy jednocześnie konkurują budżety, reguły kwalifikacji, pilność i priorytety programu.',
+        problem:
+          'Zespoły i organizacje często porównują zgłoszenia ręcznie, gdy jednocześnie konkurują budżety, reguły kwalifikacji, pilność i priorytety programu.',
         inputs: 'Zgłoszenia, dostępna przepustowość, priorytety, kwalifikacja, ograniczenia i dane wspierające.',
-        evaluation: 'QDIP porównuje wykonalne alokacje według tych samych skonfigurowanych kryteriów i ocenia bieżący plan przez tę samą ścieżkę decyzyjną.',
+        evaluation:
+          'QDIP porównuje wykonalne alokacje według tych samych skonfigurowanych kryteriów i ocenia bieżący plan przez tę samą ścieżkę decyzyjną.',
         output: 'Rekomendowana alokacja, porównanie z bieżącym planem i uzasadnienie do weryfikacji.',
         href: '/resource-allocation',
       },
       {
         pattern: 'ALOKUJ',
         title: 'Supply Network Optimization',
-        question: 'Gdzie przechowywać zapasy, jak obsługiwać popyt i jak przebudować sieć po zmianie dostępnej przepustowości magazynowej?',
-        problem: 'Oddzielne planowanie zapasów, dostaw przychodzących i realizacji popytu może zwiększać koszty logistyki, tworzyć wąskie gardła przepustowości i wzmacniać ryzyko zakłóceń.',
-        inputs: 'Zapasy według magazynu i klasy produktu, geograficznie zróżnicowany popyt, dostawy przychodzące, przepustowość magazynów i tras, zgodność składowania, czas oraz koszt logistyki.',
-        evaluation: 'QDIP optymalizuje rozmieszczenie zapasów, dostawy przychodzące i realizację popytu przy twardych ograniczeniach sieciowych, a następnie uruchamia ten sam model dla niedostępnego lub nowego magazynu.',
-        output: 'Rekomendowane rozmieszczenie zapasów, realizacja popytu, alokacja dostaw przychodzących, przesunięcia, KPI scenariuszy i rekomendowane obszary nowego magazynu z weryfikowalnym uzasadnieniem.',
+        question:
+          'Gdzie przechowywać zapasy, jak obsługiwać popyt i jak przebudować sieć po zmianie dostępnej przepustowości magazynowej?',
+        problem:
+          'Oddzielne planowanie zapasów, dostaw przychodzących i realizacji popytu może zwiększać koszty logistyki, tworzyć wąskie gardła przepustowości i wzmacniać ryzyko zakłóceń.',
+        inputs:
+          'Zapasy według magazynu i klasy produktu, geograficznie zróżnicowany popyt, dostawy przychodzące, przepustowość magazynów i tras, zgodność składowania, czas oraz koszt logistyki.',
+        evaluation:
+          'QDIP optymalizuje rozmieszczenie zapasów, dostawy przychodzące i realizację popytu przy twardych ograniczeniach sieciowych, a następnie uruchamia ten sam model dla niedostępnego lub nowego magazynu.',
+        output:
+          'Rekomendowane rozmieszczenie zapasów, realizacja popytu, alokacja dostaw przychodzących, przesunięcia, KPI scenariuszy i rekomendowane obszary nowego magazynu z weryfikowalnym uzasadnieniem.',
         href: '/supply-network-optimization',
       },
       {
         pattern: 'PRIORYTETYZUJ',
         title: 'GTM Lab',
         question: 'Które możliwości wymagają uwagi w pierwszej kolejności?',
-        problem: 'Małe zespoły komercyjne mogą poświęcać dużo czasu na porównywanie możliwości przy niepełnych danych i konkurujących priorytetach.',
-        inputs: 'Dowody dotyczące możliwości, sygnały dopasowania, niepewność, brakujące informacje i kryteria priorytetyzacji.',
+        problem:
+          'Małe zespoły komercyjne mogą poświęcać dużo czasu na porównywanie możliwości przy niepełnych danych i konkurujących priorytetach.',
+        inputs:
+          'Dowody dotyczące możliwości, sygnały dopasowania, niepewność, brakujące informacje i kryteria priorytetyzacji.',
         evaluation: 'QDIP spójnie ocenia możliwości i rozróżnia wyniki: rozwijać, zbadać, obserwować lub pominąć.',
-        output: 'Priorytetyzowany portfel z uzasadnieniem, ryzykami, brakującymi informacjami, kolejnym działaniem i pochodzeniem danych.',
+        output:
+          'Priorytetyzowany portfel z uzasadnieniem, ryzykami, brakującymi informacjami, kolejnym działaniem i pochodzeniem danych.',
         href: '/gtm-lab',
       },
     ],
@@ -266,4 +318,3 @@ export const useCasesI18n: Record<MarketingLocale, DepthContent> = {
     ],
   },
 }
-

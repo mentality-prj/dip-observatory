@@ -80,7 +80,9 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
       <div className="studio-title-row">
         <div>
           <h1>{profile.name}</h1>
-          <p>{c.version} {profile.version}</p>
+          <p>
+            {c.version} {profile.version}
+          </p>
         </div>
         <Badge variant={profile.active ? 'emerald' : 'neutral'}>{profile.active ? c.active : c.draft}</Badge>
       </div>
@@ -99,24 +101,46 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         ))}
       </nav>
 
-      {error && <p role="alert" className="studio-error">{error}</p>}
-      {message && <p role="status" className="studio-success">{message}</p>}
+      {error && (
+        <p role="alert" className="studio-error">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p role="status" className="studio-success">
+          {message}
+        </p>
+      )}
       {profile.validation.errors.map((validationError) => (
-        <p key={validationError} className="studio-error">{validationError}</p>
+        <p key={validationError} className="studio-error">
+          {validationError}
+        </p>
       ))}
 
       {section === 'overview' && (
         <>
           <Card>
-            <CardHeader><CardTitle>{c.overview}</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>{c.overview}</CardTitle>
+            </CardHeader>
             <CardContent>
               <dl>
-                <dt>{c.profile}</dt><dd>{profile.name}</dd>
-                <dt>ID</dt><dd>{profile.id}</dd>
-                <dt>{c.version}</dt><dd>{profile.version}</dd>
-                <dt>{c.status}</dt><dd>{profile.active ? c.active : c.draft}</dd>
-                <dt>{c.plugin}</dt><dd>{pluginName} @ {profile.plugin_version}</dd>
-                <dt>{c.capability}</dt><dd>{profile.capability_id} @ {profile.capability_version}</dd>
+                <dt>{c.profile}</dt>
+                <dd>{profile.name}</dd>
+                <dt>ID</dt>
+                <dd>{profile.id}</dd>
+                <dt>{c.version}</dt>
+                <dd>{profile.version}</dd>
+                <dt>{c.status}</dt>
+                <dd>{profile.active ? c.active : c.draft}</dd>
+                <dt>{c.plugin}</dt>
+                <dd>
+                  {pluginName} @ {profile.plugin_version}
+                </dd>
+                <dt>{c.capability}</dt>
+                <dd>
+                  {profile.capability_id} @ {profile.capability_version}
+                </dd>
               </dl>
               <h3>{c.executionModel}</h3>
               <p className="studio-flow">
@@ -138,7 +162,9 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
 
       {section === 'dimensions' && (
         <Card>
-          <CardHeader><CardTitle>{c.enabledDimensions}</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>{c.enabledDimensions}</CardTitle>
+          </CardHeader>
           <CardContent>
             <Table>
               <thead>
@@ -205,7 +231,9 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
             plugins={plugins}
             dimensions={dimensions}
             section={section}
-            filter={section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined}
+            filter={
+              section === 'policies' ? 'policy' : ['constraints', 'compliance'].includes(section) ? section : undefined
+            }
             onSave={async (next) => {
               const saved = await studioRequest<ProfileView>(`decision-profiles/${encodeURIComponent(id)}`, {
                 method: 'PATCH',
@@ -220,11 +248,16 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         <aside className="studio-context-inspector" aria-label={c.context}>
           <h2>{c.context}</h2>
           <dl>
-            <dt>{c.profile}</dt><dd>{profile.name}</dd>
-            <dt>{c.version}</dt><dd>{profile.version}</dd>
-            <dt>{c.section}</dt><dd>{sectionLabel(section, locale)}</dd>
-            <dt>{c.plugin}</dt><dd>{pluginName}</dd>
-            <dt>{c.validation}</dt><dd>{profile.validation.status}</dd>
+            <dt>{c.profile}</dt>
+            <dd>{profile.name}</dd>
+            <dt>{c.version}</dt>
+            <dd>{profile.version}</dd>
+            <dt>{c.section}</dt>
+            <dd>{sectionLabel(section, locale)}</dd>
+            <dt>{c.plugin}</dt>
+            <dd>{pluginName}</dd>
+            <dt>{c.validation}</dt>
+            <dd>{profile.validation.status}</dd>
           </dl>
           <p>{c.contextHelp}</p>
         </aside>

@@ -15,7 +15,14 @@ export function MobileMenu({ items, locale }: { items: readonly Item[]; locale: 
   const a11y = sharedI18n[locale]
   return (
     <div className={styles.mobileMenu}>
-      <button aria-controls="mobile-navigation" aria-expanded={open} aria-label={open ? a11y.closeNavigation : a11y.openNavigation} className={styles.menuButton} onClick={() => setOpen((v) => !v)} type="button">
+      <button
+        aria-controls="mobile-navigation"
+        aria-expanded={open}
+        aria-label={open ? a11y.closeNavigation : a11y.openNavigation}
+        className={styles.menuButton}
+        onClick={() => setOpen((v) => !v)}
+        type="button"
+      >
         {open ? <X aria-hidden="true" size={22} /> : <Menu aria-hidden="true" size={22} />}
       </button>
       {open && (

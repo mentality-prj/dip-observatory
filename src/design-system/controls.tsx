@@ -26,63 +26,41 @@ const buttonVariants = cva('ds-button', {
 })
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
   }
 )
 Button.displayName = 'Button'
 
-export const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('ds-card', className)} {...props} />
-))
+export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('ds-card', className)} {...props} />
+)
 Card.displayName = 'Card'
 
-export const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('ds-card-header', className)} {...props} />
-))
+export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('ds-card-header', className)} {...props} />
+)
 CardHeader.displayName = 'CardHeader'
 
-export const CardTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h2 ref={ref} className={cn('ds-card-title', className)} {...props} />
-))
+export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => <h2 ref={ref} className={cn('ds-card-title', className)} {...props} />
+)
 CardTitle.displayName = 'CardTitle'
 
-export const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('ds-card-description', className)} {...props} />
-))
+export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => <p ref={ref} className={cn('ds-card-description', className)} {...props} />
+)
 CardDescription.displayName = 'CardDescription'
 
-export const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('ds-card-content', className)} {...props} />
-))
+export const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('ds-card-content', className)} {...props} />
+)
 CardContent.displayName = 'CardContent'
 
 const badgeVariants = cva('ds-badge', {
@@ -103,28 +81,18 @@ export function Badge({
   className,
   variant,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof badgeVariants>) {
+}: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
-export const Input = React.forwardRef<
-  HTMLInputElement,
-  React.ComponentProps<'input'>
->(({ className, type, ...props }, ref) => (
-  <input
-    type={type}
-    className={cn('ds-input', className)}
-    ref={ref}
-    {...props}
-  />
-))
+export const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
+  ({ className, type, ...props }, ref) => (
+    <input type={type} className={cn('ds-input', className)} ref={ref} {...props} />
+  )
+)
 Input.displayName = 'Input'
 
-export function Label({
-  className,
-  ...props
-}: React.LabelHTMLAttributes<HTMLLabelElement>) {
+export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return <label className={cn('ds-label-control', className)} {...props} />
 }
 

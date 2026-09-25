@@ -356,7 +356,11 @@ export function ProfileEditor({
                         value={item.version}
                         onChange={(e) => changeDimension(index, { version: e.target.value })}
                       >
-                        {!definition && <option value={item.version}>{item.version} ({copy.unavailable})</option>}
+                        {!definition && (
+                          <option value={item.version}>
+                            {item.version} ({copy.unavailable})
+                          </option>
+                        )}
                         {dimensions
                           .filter((d) => d.id === item.dimension_id)
                           .map((d) => (

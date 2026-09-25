@@ -13,8 +13,20 @@ const run = {
     problem: {
       budget: 100,
       teams: [
-        { id: 'alpha', current_community: 'north', allowed_communities: ['north', 'south'], skills: ['medical'], capacity: 10 },
-        { id: 'bravo', current_community: 'south', allowed_communities: ['north', 'south'], skills: ['food'], capacity: 10 },
+        {
+          id: 'alpha',
+          current_community: 'north',
+          allowed_communities: ['north', 'south'],
+          skills: ['medical'],
+          capacity: 10,
+        },
+        {
+          id: 'bravo',
+          current_community: 'south',
+          allowed_communities: ['north', 'south'],
+          skills: ['food'],
+          capacity: 10,
+        },
       ],
       communities: [
         { id: 'north', max_teams: 2, demand: [{ service: 'medical', units: 20, priority: 'critical' }] },
@@ -35,7 +47,16 @@ const run = {
 test('locks the human choice before revealing QDIP comparison', async ({ page }) => {
   await page.route('**/api/decision-challenge', (route) =>
     route.fulfill({
-      json: [{ id: 'resource-allocation-v1', version: '1', title: 'Resource Allocation', description: 'Allocate teams', scenario: {}, limitations: ['Simulated nominal value.'] }],
+      json: [
+        {
+          id: 'resource-allocation-v1',
+          version: '1',
+          title: 'Resource Allocation',
+          description: 'Allocate teams',
+          scenario: {},
+          limitations: ['Simulated nominal value.'],
+        },
+      ],
     })
   )
   await page.route('**/api/decision-challenge/runs', (route) => route.fulfill({ json: run }))
@@ -57,16 +78,66 @@ test('locks the human choice before revealing QDIP comparison', async ({ page })
           human_action_hash: 'human-hash',
           qdip_action: { alpha: 'south', bravo: 'north' },
           qdip_action_hash: 'qdip-hash',
-          human_evaluation: { feasible: true, metrics: {}, economic_inputs: {}, constraint_violations: [], evidence: [], data_quality_warnings: [] },
-          qdip_evaluation: { feasible: true, metrics: {}, economic_inputs: {}, constraint_violations: [], evidence: [], data_quality_warnings: [] },
+          human_evaluation: {
+            feasible: true,
+            metrics: {},
+            economic_inputs: {},
+            constraint_violations: [],
+            evidence: [],
+            data_quality_warnings: [],
+          },
+          qdip_evaluation: {
+            feasible: true,
+            metrics: {},
+            economic_inputs: {},
+            constraint_violations: [],
+            evidence: [],
+            data_quality_warnings: [],
+          },
           optimizer_score: 1,
-          human_economic_outcome: { policy_id: 'human', policy_version: '1', decision_id: 'run-1', objective: { objective_id: 'value', metric_id: 'nominal', direction: 'maximize', unit: 'EUR', currency: 'EUR' }, nominal_value: 1200 },
-          qdip_economic_outcome: { policy_id: 'qdip', policy_version: '1', decision_id: 'run-1', objective: { objective_id: 'value', metric_id: 'nominal', direction: 'maximize', unit: 'EUR', currency: 'EUR' }, nominal_value: 1100 },
+          human_economic_outcome: {
+            policy_id: 'human',
+            policy_version: '1',
+            decision_id: 'run-1',
+            objective: {
+              objective_id: 'value',
+              metric_id: 'nominal',
+              direction: 'maximize',
+              unit: 'EUR',
+              currency: 'EUR',
+            },
+            nominal_value: 1200,
+          },
+          qdip_economic_outcome: {
+            policy_id: 'qdip',
+            policy_version: '1',
+            decision_id: 'run-1',
+            objective: {
+              objective_id: 'value',
+              metric_id: 'nominal',
+              direction: 'maximize',
+              unit: 'EUR',
+              currency: 'EUR',
+            },
+            nominal_value: 1100,
+          },
           economic_comparison: { delta: { nominal_delta: -100 } },
           available_economic_metrics: ['nominal_value'],
           explanation: [],
-          reproducibility: { solver: 'exact', solver_version: '1', solver_config: {}, solver_config_hash: 'config', deterministic: true, reproducibility_token: 'replay' },
-          evaluation_reproducibility: { evaluator_id: 'shared', evaluator_version: '1', context_hash: 'evaluation-context', common_random_numbers: false },
+          reproducibility: {
+            solver: 'exact',
+            solver_version: '1',
+            solver_config: {},
+            solver_config_hash: 'config',
+            deterministic: true,
+            reproducibility_token: 'replay',
+          },
+          evaluation_reproducibility: {
+            evaluator_id: 'shared',
+            evaluator_version: '1',
+            context_hash: 'evaluation-context',
+            common_random_numbers: false,
+          },
           data_quality_warnings: [],
         },
       },
@@ -82,7 +153,6 @@ test('locks the human choice before revealing QDIP comparison', async ({ page })
   await expect(page.getByText('Your decision has the higher modeled value.')).toBeVisible()
   await expect(page.getByText('Expected value and probability risk are not shown')).toBeVisible()
 })
-
 
 test('rejects oversized challenge uploads at the public proxy boundary', async ({ request }) => {
   const response = await request.post('/api/decision-challenge/runs', {

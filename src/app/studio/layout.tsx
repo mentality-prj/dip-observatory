@@ -38,7 +38,9 @@ export default async function StudioLayout({ children }: { children: ReactNode }
               brandStatus={coreStatus}
               utilities={
                 <div className="studio-language-switcher" aria-hidden>
-                  <span>EN</span><span>UA</span><span>PL</span>
+                  <span>EN</span>
+                  <span>UA</span>
+                  <span>PL</span>
                 </div>
               }
             />
@@ -48,7 +50,9 @@ export default async function StudioLayout({ children }: { children: ReactNode }
         </Suspense>
 
         <div className="studio-mobile-nav-wrap">
-          <Suspense fallback={null}><StudioMobileNavigation /></Suspense>
+          <Suspense fallback={null}>
+            <StudioMobileNavigation />
+          </Suspense>
         </div>
 
         <aside className="studio-sidebar" aria-label={c.nav.workspace}>
@@ -57,14 +61,20 @@ export default async function StudioLayout({ children }: { children: ReactNode }
             <h2>{c.shell.motto}</h2>
             <p>{c.decisionStudio.descriptions.profiles}</p>
           </div>
-          <Suspense fallback={null}><StudioNav /></Suspense>
+          <Suspense fallback={null}>
+            <StudioNav />
+          </Suspense>
         </aside>
 
         <div className="studio-workspace">
-          <main className="studio-main ds-page" id="main-content" tabIndex={-1}>{children}</main>
+          <main className="studio-main ds-page" id="main-content" tabIndex={-1}>
+            {children}
+          </main>
         </div>
 
-        <Suspense fallback={null}><StudioFooter /></Suspense>
+        <Suspense fallback={null}>
+          <StudioFooter />
+        </Suspense>
       </DesignSystemProvider>
     </StudioLocaleProvider>
   )

@@ -47,7 +47,6 @@ The SMTP connection is created only from the Node.js server route. Credentials a
 
 Zoho supports authenticated SMTP over SSL on port 465. If the account uses a data-center-specific SMTP hostname, use the exact value shown in the Zoho Mail account/Admin Console rather than changing application code.
 
-
 ## Deployment
 
 Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. The application selects the correct surface from the request host; no separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Zoho SMTP environment variables above.

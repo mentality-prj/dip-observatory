@@ -72,7 +72,6 @@ export const marketingA11yI18n = {
   pl: { evidence: 'Dowody i wiarygodność QDIP', technicalEvidence: 'Dowody techniczne' },
 } as const satisfies Localized<Record<string, string>>
 
-
 export const footerI18n = {
   en: {
     how: 'How it works',
@@ -97,7 +96,6 @@ export const footerI18n = {
   },
 } as const satisfies Localized<Record<string, string>>
 
-
 export const observatoryHomeI18n = {
   en: {
     eyebrow: 'QDIP OBSERVATORY · UNDERSTAND',
@@ -110,7 +108,11 @@ export const observatoryHomeI18n = {
     confidence: 'Generated from the configured scenario and operational constraints',
     recommendedLabel: 'QDIP recommendation',
     evidence: 'Evidence',
-    evidenceItems: ['Capacity and skill constraints checked', 'Priority coverage compared', 'Team movements and trade-offs exposed'],
+    evidenceItems: [
+      'Capacity and skill constraints checked',
+      'Priority coverage compared',
+      'Team movements and trade-offs exposed',
+    ],
     alternatives: 'Alternatives',
     alternativeItems: [
       ['Current allocation', 'Keep the existing team placement'],
@@ -144,7 +146,11 @@ export const observatoryHomeI18n = {
     confidence: 'Сформовано з налаштованого сценарію та операційних обмежень',
     recommendedLabel: 'Рекомендація QDIP',
     evidence: 'Докази',
-    evidenceItems: ['Перевірено обмеження спроможності та навичок', 'Порівняно покриття пріоритетних потреб', 'Показано переміщення команд і компроміси'],
+    evidenceItems: [
+      'Перевірено обмеження спроможності та навичок',
+      'Порівняно покриття пріоритетних потреб',
+      'Показано переміщення команд і компроміси',
+    ],
     alternatives: 'Альтернативи',
     alternativeItems: [
       ['Поточний розподіл', 'Зберегти поточне розміщення команд'],
@@ -178,7 +184,11 @@ export const observatoryHomeI18n = {
     confidence: 'Wygenerowany z konfiguracji scenariusza i ograniczeń operacyjnych',
     recommendedLabel: 'Rekomendacja QDIP',
     evidence: 'Dowody',
-    evidenceItems: ['Sprawdzono ograniczenia pojemności i kompetencji', 'Porównano pokrycie potrzeb priorytetowych', 'Pokazano przeniesienia zespołów i kompromisy'],
+    evidenceItems: [
+      'Sprawdzono ograniczenia pojemności i kompetencji',
+      'Porównano pokrycie potrzeb priorytetowych',
+      'Pokazano przeniesienia zespołów i kompromisy',
+    ],
     alternatives: 'Alternatywy',
     alternativeItems: [
       ['Bieżąca alokacja', 'Zachowaj obecne rozmieszczenie zespołów'],
@@ -203,7 +213,6 @@ export const observatoryHomeI18n = {
   },
 } as const
 
-
 export const observatoryDecisionNarrativeI18n = {
   en: {
     labels: ['Situation', 'Alternatives', 'Evaluation', 'Risk / uncertainty', 'Recommendation', 'Evidence', 'Trace'],
@@ -211,7 +220,15 @@ export const observatoryDecisionNarrativeI18n = {
     ariaLabel: 'Decision narrative',
   },
   uk: {
-    labels: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази', 'Історія рішення'],
+    labels: [
+      'Ситуація',
+      'Альтернативи',
+      'Оцінювання',
+      'Ризик / невизначеність',
+      'Рекомендація',
+      'Докази',
+      'Історія рішення',
+    ],
     helper: 'Одна логіка перевірки для кожного застосунку QDIP.',
     ariaLabel: 'Логіка рішення',
   },

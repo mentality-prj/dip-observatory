@@ -276,7 +276,6 @@ export type ScenarioComparison = {
   kpi_change: Record<string, number>
 }
 
-
 export type EconomicStateOutcome = {
   state_id: string
   value: number

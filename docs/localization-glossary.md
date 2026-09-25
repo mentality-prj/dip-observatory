@@ -30,19 +30,19 @@ Ordinary user-facing terminology must be localized. Do not mix English UI nouns 
 
 Examples:
 
-| English | Ukrainian | Polish |
-| --- | --- | --- |
-| dimension / criterion | критерій | kryterium |
-| dimensions / criteria | критерії | kryteria |
-| runtime | під час виконання | w czasie wykonania |
-| score | оцінка | ocena |
-| framework / ruleset | набір правил | zestaw reguł |
-| evaluator | модуль оцінювання | moduł oceny |
-| baseline | базовий сценарій / базова модель | scenariusz bazowy / model bazowy |
-| audit trace | аудит / історія рішення | ślad audytowy / ślad decyzji |
-| deterministic replay | детерміноване відтворення | deterministyczne odtworzenie |
-| research | дослідження | badania |
-| plugin | плагін | wtyczka |
+| English               | Ukrainian                        | Polish                           |
+| --------------------- | -------------------------------- | -------------------------------- |
+| dimension / criterion | критерій                         | kryterium                        |
+| dimensions / criteria | критерії                         | kryteria                         |
+| runtime               | під час виконання                | w czasie wykonania               |
+| score                 | оцінка                           | ocena                            |
+| framework / ruleset   | набір правил                     | zestaw reguł                     |
+| evaluator             | модуль оцінювання                | moduł oceny                      |
+| baseline              | базовий сценарій / базова модель | scenariusz bazowy / model bazowy |
+| audit trace           | аудит / історія рішення          | ślad audytowy / ślad decyzji     |
+| deterministic replay  | детерміноване відтворення        | deterministyczne odtworzenie     |
+| research              | дослідження                      | badania                          |
+| plugin                | плагін                           | wtyczka                          |
 
 ## Release rule
 

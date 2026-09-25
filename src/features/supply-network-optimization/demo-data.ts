@@ -65,7 +65,7 @@ const WAREHOUSES: Warehouse[] = [
 
 const STORE_REGION_FOOTPRINT = [
   { region: 'Kyiv City', count: 14, latitude: 50.4501, longitude: 30.5234 },
-  { region: 'Kyiv Oblast', count: 3, latitude: 50.3400, longitude: 30.4800 },
+  { region: 'Kyiv Oblast', count: 3, latitude: 50.34, longitude: 30.48 },
   { region: 'Dnipro', count: 2, latitude: 48.4647, longitude: 35.0462 },
   { region: 'Chernihiv', count: 1, latitude: 51.4982, longitude: 31.2893 },
   { region: 'Uzhhorod', count: 1, latitude: 48.6208, longitude: 22.2879 },
@@ -75,7 +75,7 @@ const STORE_REGION_FOOTPRINT = [
   { region: 'Ivano-Frankivsk', count: 3, latitude: 48.9226, longitude: 24.7111 },
   { region: 'Khmelnytskyi', count: 1, latitude: 49.4229, longitude: 26.9871 },
   { region: 'Poltava', count: 1, latitude: 49.5883, longitude: 34.5514 },
-  { region: 'Poltava', count: 1, latitude: 49.0680, longitude: 33.4204 },
+  { region: 'Poltava', count: 1, latitude: 49.068, longitude: 33.4204 },
   { region: 'Rivne', count: 2, latitude: 50.6199, longitude: 26.2516 },
   { region: 'Ternopil', count: 1, latitude: 49.5535, longitude: 25.5948 },
   { region: 'Vinnytsia', count: 2, latitude: 49.2331, longitude: 28.4682 },
@@ -106,36 +106,23 @@ function buildRetailStores(): DemandPoint[] {
   )
 }
 
-function distanceKm(
-  latitudeA: number,
-  longitudeA: number,
-  latitudeB: number,
-  longitudeB: number,
-): number {
+function distanceKm(latitudeA: number, longitudeA: number, latitudeB: number, longitudeB: number): number {
   const toRadians = (value: number) => (value * Math.PI) / 180
   const earthRadiusKm = 6371
   const latitudeDelta = toRadians(latitudeB - latitudeA)
   const longitudeDelta = toRadians(longitudeB - longitudeA)
   const a =
     Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(toRadians(latitudeA)) *
-      Math.cos(toRadians(latitudeB)) *
-      Math.sin(longitudeDelta / 2) ** 2
+    Math.cos(toRadians(latitudeA)) * Math.cos(toRadians(latitudeB)) * Math.sin(longitudeDelta / 2) ** 2
   return 2 * earthRadiusKm * Math.asin(Math.sqrt(a))
 }
 
 function buildDeliveryRoutes(stores: DemandPoint[]): DeliveryRoute[] {
   return stores.flatMap((store) =>
-    WAREHOUSES
-      .map((warehouse) => ({
-        warehouse,
-        distanceKm: distanceKm(
-          warehouse.latitude,
-          warehouse.longitude,
-          store.latitude,
-          store.longitude,
-        ),
-      }))
+    WAREHOUSES.map((warehouse) => ({
+      warehouse,
+      distanceKm: distanceKm(warehouse.latitude, warehouse.longitude, store.latitude, store.longitude),
+    }))
       .sort((a, b) => a.distanceKm - b.distanceKm)
       .slice(0, 2)
       .map(({ warehouse, distanceKm: routeDistanceKm }, optionIndex) => ({
@@ -149,10 +136,7 @@ function buildDeliveryRoutes(stores: DemandPoint[]): DeliveryRoute[] {
   )
 }
 
-function buildCurrentStorePlan(
-  stores: DemandPoint[],
-  routes: DeliveryRoute[],
-): BaselineFulfillment[] {
+function buildCurrentStorePlan(stores: DemandPoint[], routes: DeliveryRoute[]): BaselineFulfillment[] {
   const dispatchByWarehouse = new Map<string, number>()
   const productById = new Map(PRODUCT_CLASSES.map((product) => [product.id, product]))
 
@@ -165,7 +149,7 @@ function buildCurrentStorePlan(
       const storageCompatible = Object.entries(store.demand_per_day).every(
         ([productId, units]) =>
           units <= 0 ||
-          warehouse.supported_storage_classes.includes(productById.get(productId)?.storage_class ?? 'ambient'),
+          warehouse.supported_storage_classes.includes(productById.get(productId)?.storage_class ?? 'ambient')
       )
       const allocated = dispatchByWarehouse.get(warehouse.id) ?? 0
       return storageCompatible && allocated + dailyUnits <= warehouse.dispatch_capacity_units_per_day
@@ -175,7 +159,7 @@ function buildCurrentStorePlan(
     }
     dispatchByWarehouse.set(
       primaryRoute.from_node_id,
-      (dispatchByWarehouse.get(primaryRoute.from_node_id) ?? 0) + dailyUnits,
+      (dispatchByWarehouse.get(primaryRoute.from_node_id) ?? 0) + dailyUnits
     )
     return Object.entries(store.demand_per_day).map(([product_class_id, units_per_day]) => ({
       warehouse_id: primaryRoute.from_node_id,
@@ -201,12 +185,48 @@ const INBOUND_SUPPLY: InboundSupply[] = [
     product_class_id: 'core',
     available_units: 520,
     routes: [
-      { to_warehouse_id: 'north-hub', transport_cost_per_unit: 336, lead_time_days: 2, capacity_units: 300, transport_mode: 'road' },
-      { to_warehouse_id: 'west-hub', transport_cost_per_unit: 208, lead_time_days: 1, capacity_units: 360, transport_mode: 'road' },
-      { to_warehouse_id: 'west-hub', transport_cost_per_unit: 154, lead_time_days: 2, capacity_units: 240, transport_mode: 'rail' },
-      { to_warehouse_id: 'central-hub', transport_cost_per_unit: 272, lead_time_days: 1, capacity_units: 390, transport_mode: 'road' },
-      { to_warehouse_id: 'central-hub', transport_cost_per_unit: 205, lead_time_days: 2, capacity_units: 260, transport_mode: 'rail' },
-      { to_warehouse_id: 'south-hub', transport_cost_per_unit: 176, lead_time_days: 1, capacity_units: 260, transport_mode: 'road' },
+      {
+        to_warehouse_id: 'north-hub',
+        transport_cost_per_unit: 336,
+        lead_time_days: 2,
+        capacity_units: 300,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'west-hub',
+        transport_cost_per_unit: 208,
+        lead_time_days: 1,
+        capacity_units: 360,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'west-hub',
+        transport_cost_per_unit: 154,
+        lead_time_days: 2,
+        capacity_units: 240,
+        transport_mode: 'rail',
+      },
+      {
+        to_warehouse_id: 'central-hub',
+        transport_cost_per_unit: 272,
+        lead_time_days: 1,
+        capacity_units: 390,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'central-hub',
+        transport_cost_per_unit: 205,
+        lead_time_days: 2,
+        capacity_units: 260,
+        transport_mode: 'rail',
+      },
+      {
+        to_warehouse_id: 'south-hub',
+        transport_cost_per_unit: 176,
+        lead_time_days: 1,
+        capacity_units: 260,
+        transport_mode: 'road',
+      },
     ],
   },
   {
@@ -215,11 +235,41 @@ const INBOUND_SUPPLY: InboundSupply[] = [
     product_class_id: 'premium',
     available_units: 170,
     routes: [
-      { to_warehouse_id: 'north-hub', transport_cost_per_unit: 372, lead_time_days: 2, capacity_units: 150, transport_mode: 'road' },
-      { to_warehouse_id: 'west-hub', transport_cost_per_unit: 256, lead_time_days: 1, capacity_units: 150, transport_mode: 'road' },
-      { to_warehouse_id: 'west-hub', transport_cost_per_unit: 198, lead_time_days: 2, capacity_units: 100, transport_mode: 'rail' },
-      { to_warehouse_id: 'central-hub', transport_cost_per_unit: 284, lead_time_days: 1, capacity_units: 170, transport_mode: 'road' },
-      { to_warehouse_id: 'central-hub', transport_cost_per_unit: 218, lead_time_days: 2, capacity_units: 110, transport_mode: 'rail' },
+      {
+        to_warehouse_id: 'north-hub',
+        transport_cost_per_unit: 372,
+        lead_time_days: 2,
+        capacity_units: 150,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'west-hub',
+        transport_cost_per_unit: 256,
+        lead_time_days: 1,
+        capacity_units: 150,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'west-hub',
+        transport_cost_per_unit: 198,
+        lead_time_days: 2,
+        capacity_units: 100,
+        transport_mode: 'rail',
+      },
+      {
+        to_warehouse_id: 'central-hub',
+        transport_cost_per_unit: 284,
+        lead_time_days: 1,
+        capacity_units: 170,
+        transport_mode: 'road',
+      },
+      {
+        to_warehouse_id: 'central-hub',
+        transport_cost_per_unit: 218,
+        lead_time_days: 2,
+        capacity_units: 110,
+        transport_mode: 'rail',
+      },
     ],
   },
 ]
@@ -257,7 +307,7 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     minimum_service_level: 0.88,
     maximum_node_inventory_exposure: 0.55,
     maximum_node_fulfillment_share: 0.55,
-    emergency_maximum_node_fulfillment_share: 0.80,
+    emergency_maximum_node_fulfillment_share: 0.8,
     service_objective_mode: 'economic-with-service-floor',
     reallocation_cost_per_unit: 140,
     inbound_cancellation_penalty_per_unit: 90,

@@ -67,7 +67,8 @@ const seo: Record<MarketingLocale, SeoCopy> = {
     },
     'use-cases': {
       title: 'Рішення та демо QDIP',
-      description: 'Resource Allocation і GTM Lab — діючі застосунки QDIP; патерни рішень можна повторно використовувати в нових доменах.',
+      description:
+        'Resource Allocation і GTM Lab — діючі застосунки QDIP; патерни рішень можна повторно використовувати в нових доменах.',
     },
     decision: {
       title: 'Опишіть ваше рішення',

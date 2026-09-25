@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  actionValidationSchema,
-  challengeDefinitionSchema,
-  challengeRunSchema,
-} from './contracts'
+import { actionValidationSchema, challengeDefinitionSchema, challengeRunSchema } from './contracts'
 
 describe('Decision Challenge contracts', () => {
   it('accepts the sanitized pre-lock backend view without economic hints', () => {

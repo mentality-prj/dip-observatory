@@ -30,29 +30,75 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
             <p>{c.hero[3]}</p>
             <strong className={styles.human}>{c.hero[4]}</strong>
             <div className={styles.heroActions}>
-              <MarketingTrackedLink event="marketing_hero_observatory_click" locale={locale} placement="hero" className={styles.primaryButtonLarge} href={observatoryHref('', locale)}><Play size={16} />{c.hero[5]}</MarketingTrackedLink>
-              <MarketingTrackedLink event="marketing_hero_explainer_click" locale={locale} placement="hero" className={styles.secondaryButton} href={path(locale, 'how-it-works')}>{c.nav[0]} <ArrowRight size={15} /></MarketingTrackedLink>
+              <MarketingTrackedLink
+                event="marketing_hero_observatory_click"
+                locale={locale}
+                placement="hero"
+                className={styles.primaryButtonLarge}
+                href={observatoryHref('', locale)}
+              >
+                <Play size={16} />
+                {c.hero[5]}
+              </MarketingTrackedLink>
+              <MarketingTrackedLink
+                event="marketing_hero_explainer_click"
+                locale={locale}
+                placement="hero"
+                className={styles.secondaryButton}
+                href={path(locale, 'how-it-works')}
+              >
+                {c.nav[0]} <ArrowRight size={15} />
+              </MarketingTrackedLink>
             </div>
           </div>
           <SignatureDecisionVisual locale={locale} labels={c.diagram} />
         </section>
         <EvidenceStrip locale={locale} />
         <section className={`${styles.section} ${styles.editorialSection}`}>
-          <div className={styles.sectionIntro}><h2>{c.problem[0]}</h2></div>
-          <div className={styles.questionGrid}>{c.problem.slice(1, 5).map((x) => <article key={x}>{x}</article>)}</div>
-          <p className={styles.centerCopy}>{c.problem[5]} <strong>{c.problem[6]}</strong></p>
+          <div className={styles.sectionIntro}>
+            <h2>{c.problem[0]}</h2>
+          </div>
+          <div className={styles.questionGrid}>
+            {c.problem.slice(1, 5).map((x) => (
+              <article key={x}>{x}</article>
+            ))}
+          </div>
+          <p className={styles.centerCopy}>
+            {c.problem[5]} <strong>{c.problem[6]}</strong>
+          </p>
           <p className={styles.businessBridge}>{c.bridge}</p>
         </section>
         <DecisionPlayground locale={locale} />
         <section className={`${styles.section} ${styles.patternSection}`} id="demos">
-          <div className={styles.sectionIntro}><div className={styles.eyebrow}>ALLOCATE · DECIDE · PRIORITIZE</div><h2>{c.cases[0]}</h2></div>
+          <div className={styles.sectionIntro}>
+            <div className={styles.eyebrow}>ALLOCATE · DECIDE · PRIORITIZE</div>
+            <h2>{c.cases[0]}</h2>
+          </div>
           <DecisionPatterns locale={locale} cases={c.cases} />
-          <div className={styles.demoBridge}><span>{conversionBridgeCopy[locale].question}</span><MarketingTrackedLink event="marketing_decision_intake_click" locale={locale} placement="demo_bridge" href={decisionHref}>{c.conversion[2]} <ArrowRight size={14} /></MarketingTrackedLink></div>
+          <div className={styles.demoBridge}>
+            <span>{conversionBridgeCopy[locale].question}</span>
+            <MarketingTrackedLink
+              event="marketing_decision_intake_click"
+              locale={locale}
+              placement="demo_bridge"
+              href={decisionHref}
+            >
+              {c.conversion[2]} <ArrowRight size={14} />
+            </MarketingTrackedLink>
+          </div>
         </section>
         <section className={styles.finalCta}>
           <h2>{c.conversion[0]}</h2>
           <p>{c.conversion[1]}</p>
-          <MarketingTrackedLink event="marketing_decision_intake_click" locale={locale} placement="final_cta" className={styles.primaryButtonLarge} href={decisionHref}>{c.conversion[2]} <ArrowRight size={16} /></MarketingTrackedLink>
+          <MarketingTrackedLink
+            event="marketing_decision_intake_click"
+            locale={locale}
+            placement="final_cta"
+            className={styles.primaryButtonLarge}
+            href={decisionHref}
+          >
+            {c.conversion[2]} <ArrowRight size={16} />
+          </MarketingTrackedLink>
         </section>
         <MarketingFooter locale={locale} />
       </main>

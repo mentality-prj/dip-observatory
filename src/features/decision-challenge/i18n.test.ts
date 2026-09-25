@@ -1,20 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import {
-  decisionChallengeI18n,
-  decisionChallengeMetadataI18n,
-} from './i18n'
+import { decisionChallengeI18n, decisionChallengeMetadataI18n } from './i18n'
 
 function deepKeys(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) {
-    return value.flatMap((item, index) =>
-      deepKeys(item, `${prefix}[${index}]`),
-    ).sort()
+    return value.flatMap((item, index) => deepKeys(item, `${prefix}[${index}]`)).sort()
   }
   if (typeof value !== 'object' || value === null) return [prefix]
   return Object.entries(value)
-    .flatMap(([key, child]) =>
-      deepKeys(child, prefix ? `${prefix}.${key}` : key),
-    )
+    .flatMap(([key, child]) => deepKeys(child, prefix ? `${prefix}.${key}` : key))
     .sort()
 }
 
@@ -31,10 +24,7 @@ function assertStringLeaves(value: unknown): void {
 }
 
 describe('Decision Challenge i18n contract', () => {
-  for (const resources of [
-    decisionChallengeI18n,
-    decisionChallengeMetadataI18n,
-  ]) {
+  for (const resources of [decisionChallengeI18n, decisionChallengeMetadataI18n]) {
     it('keeps EN/UK/PL resource shapes aligned and string-only', () => {
       expect(deepKeys(resources.uk)).toEqual(deepKeys(resources.en))
       expect(deepKeys(resources.pl)).toEqual(deepKeys(resources.en))

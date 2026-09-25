@@ -41,10 +41,10 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
       }}
     >
       <CardHeader>
-        <CardTitle>{copy.evaluate} {profile.name}</CardTitle>
-        <CardDescription>
-          {copy.description}
-        </CardDescription>
+        <CardTitle>
+          {copy.evaluate} {profile.name}
+        </CardTitle>
+        <CardDescription>{copy.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <SchemaField

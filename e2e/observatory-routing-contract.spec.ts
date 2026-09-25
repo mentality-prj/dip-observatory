@@ -30,10 +30,9 @@ test.describe('Observatory production routing contract', () => {
     for (const route of routes) {
       test(`${locale}${route.path} renders without client runtime errors`, async ({ page }) => {
         const errors = capturePageErrors(page)
-        const response = await page.goto(
-          `http://observatory.localhost:3000/${locale}${route.path}`,
-          { waitUntil: 'domcontentloaded' }
-        )
+        const response = await page.goto(`http://observatory.localhost:3000/${locale}${route.path}`, {
+          waitUntil: 'domcontentloaded',
+        })
 
         expect(response?.status()).toBeLessThan(400)
         await expect(page.locator('#main-content')).toBeVisible()
@@ -47,12 +46,13 @@ test.describe('Observatory production routing contract', () => {
   }
 
   for (const locale of locales) {
-    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({
+      page,
+    }) => {
       const errors = capturePageErrors(page)
-      const response = await page.goto(
-        `http://observatory.localhost:3000/${locale}${routes[0].path}`,
-        { waitUntil: 'domcontentloaded' }
-      )
+      const response = await page.goto(`http://observatory.localhost:3000/${locale}${routes[0].path}`, {
+        waitUntil: 'domcontentloaded',
+      })
       expect(response?.status()).toBeLessThan(400)
 
       for (const route of routes.slice(1)) {
@@ -68,10 +68,9 @@ test.describe('Observatory production routing contract', () => {
   for (const route of routes) {
     test(`${route.id} desktop locale navigation preserves route and runtime`, async ({ page }) => {
       const errors = capturePageErrors(page)
-      const response = await page.goto(
-        `http://observatory.localhost:3000/en${route.path}`,
-        { waitUntil: 'domcontentloaded' }
-      )
+      const response = await page.goto(`http://observatory.localhost:3000/en${route.path}`, {
+        waitUntil: 'domcontentloaded',
+      })
       expect(response?.status()).toBeLessThan(400)
 
       for (const locale of ['uk', 'pl', 'en'] as const) {
@@ -87,10 +86,9 @@ test.describe('Observatory production routing contract', () => {
     test(`${route.id} mobile locale navigation preserves route and runtime`, async ({ page }) => {
       const errors = capturePageErrors(page)
       await page.setViewportSize({ width: 390, height: 844 })
-      const response = await page.goto(
-        `http://observatory.localhost:3000/en${route.path}`,
-        { waitUntil: 'domcontentloaded' }
-      )
+      const response = await page.goto(`http://observatory.localhost:3000/en${route.path}`, {
+        waitUntil: 'domcontentloaded',
+      })
       expect(response?.status()).toBeLessThan(400)
 
       const localeSelect = page.getByRole('combobox').first()
@@ -113,22 +111,18 @@ test.describe('Observatory production routing contract', () => {
 
 test('retired Supply Network Resilience route is not publicly routable', async ({ page }) => {
   for (const locale of locales) {
-    const response = await page.goto(
-      `http://observatory.localhost:3000/${locale}/supply-network-resilience`
-    )
+    const response = await page.goto(`http://observatory.localhost:3000/${locale}/supply-network-resilience`)
     expect(response?.status()).toBe(404)
   }
 })
-
 
 test.describe('Observatory product-home routing regression', () => {
   for (const locale of locales) {
     test(`${locale} product lockup returns to Observatory home without client runtime errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
-      const response = await page.goto(
-        `http://observatory.localhost:3000/${locale}/supply-network-optimization`,
-        { waitUntil: 'domcontentloaded' }
-      )
+      const response = await page.goto(`http://observatory.localhost:3000/${locale}/supply-network-optimization`, {
+        waitUntil: 'domcontentloaded',
+      })
       expect(response?.status()).toBeLessThan(400)
 
       await page.locator('a.ds-product-lockup-product').first().click()
@@ -139,38 +133,24 @@ test.describe('Observatory product-home routing regression', () => {
   }
 })
 
-
 test.describe('Observatory repeated navigation regression', () => {
   for (const locale of locales) {
     test(`${locale} repeatedly navigates home and applications without runtime errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
-      const response = await page.goto(
-        `http://observatory.localhost:3000/${locale}`,
-        { waitUntil: 'domcontentloaded' }
-      )
+      const response = await page.goto(`http://observatory.localhost:3000/${locale}`, { waitUntil: 'domcontentloaded' })
       expect(response?.status()).toBeLessThan(400)
 
       for (const route of routes) {
-        await page
-          .getByRole('link', { name: route.title[locale], exact: true })
-          .first()
-          .click()
-        await expect(page).toHaveURL(
-          new RegExp(`observatory\\.localhost:3000/${locale}${route.path}$`)
-        )
+        await page.getByRole('link', { name: route.title[locale], exact: true }).first().click()
+        await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/${locale}${route.path}$`))
         await expect(page.locator('#main-content')).toBeVisible()
 
         await page.locator('a.ds-product-lockup-product').first().click()
-        await expect(page).toHaveURL(
-          new RegExp(`observatory\\.localhost:3000/${locale}/?$`)
-        )
+        await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/${locale}/?$`))
         await expect(page.locator('#main-content')).toBeVisible()
       }
 
-      await expect.poll(
-        () => errors.map((error) => error.message),
-        { timeout: 1_500 }
-      ).toEqual([])
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
     })
   }
 })

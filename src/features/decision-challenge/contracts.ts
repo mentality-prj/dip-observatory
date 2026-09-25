@@ -57,16 +57,18 @@ const economicOutcomeSchema = z.object({
   realized_value: z.number().nullable().optional(),
 })
 
-const comparisonSchema = z.object({
-  delta: z.object({
-    nominal_delta: z.number(),
-    expected_delta: z.number().nullable().optional(),
-    downside_delta: z.number().nullable().optional(),
-    worst_case_observed_delta: z.number().nullable().optional(),
-    worst_case_delta: z.number().nullable().optional(),
-    realized_delta: z.number().nullable().optional(),
-  }),
-}).passthrough()
+const comparisonSchema = z
+  .object({
+    delta: z.object({
+      nominal_delta: z.number(),
+      expected_delta: z.number().nullable().optional(),
+      downside_delta: z.number().nullable().optional(),
+      worst_case_observed_delta: z.number().nullable().optional(),
+      worst_case_delta: z.number().nullable().optional(),
+      realized_delta: z.number().nullable().optional(),
+    }),
+  })
+  .passthrough()
 
 const resultSchema = z.object({
   snapshot_id: z.string(),

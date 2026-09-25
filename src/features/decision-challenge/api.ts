@@ -18,7 +18,7 @@ async function request<T>(path: string, schema: { parse(value: unknown): T }, in
         ? payload.error
         : typeof payload.detail === 'string'
           ? payload.detail
-          : payload.detail?.message ?? 'Decision Challenge request failed'
+          : (payload.detail?.message ?? 'Decision Challenge request failed')
     throw new Error(message)
   }
   return schema.parse(payload)
@@ -28,10 +28,7 @@ export function loadChallenges() {
   return request('', challengeDefinitionSchema.array())
 }
 
-export function startChallenge(
-  challengeId: string,
-  scenario?: Record<string, unknown>
-) {
+export function startChallenge(challengeId: string, scenario?: Record<string, unknown>) {
   return request('/runs', challengeRunSchema, {
     method: 'POST',
     body: JSON.stringify({ challenge_id: challengeId, ...(scenario ? { scenario } : {}) }),

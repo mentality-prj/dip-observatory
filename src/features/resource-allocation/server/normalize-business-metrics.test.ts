@@ -28,7 +28,7 @@ describe('normalizeResourceAllocationBusinessMetrics', () => {
       operation: 'simulate',
       result: { ...plan, alternatives: [plan] },
     }) as {
-      result: typeof plan & { alternatives: typeof plan[] }
+      result: typeof plan & { alternatives: (typeof plan)[] }
     }
 
     expect(normalized.result.aggregate_metrics.priority_coverage).toBe(0.952206)

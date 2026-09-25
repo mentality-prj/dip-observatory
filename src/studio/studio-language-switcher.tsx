@@ -4,12 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { studioHref } from '@/lib/platform-urls'
 import { useTransition } from 'react'
 import { Globe2 } from 'lucide-react'
-import {
-  STUDIO_LOCALES,
-  STUDIO_LOCALE_LABEL,
-  studioSectionFromPath,
-  type StudioLocale,
-} from './studio-locale'
+import { STUDIO_LOCALES, STUDIO_LOCALE_LABEL, studioSectionFromPath, type StudioLocale } from './studio-locale'
 import { studioCopy } from './studio-copy'
 import { useStudioLocale } from './use-studio-locale'
 

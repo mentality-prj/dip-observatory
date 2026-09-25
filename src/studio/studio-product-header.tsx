@@ -41,13 +41,7 @@ export function StudioCoreStatus() {
 
   const copy = studioCopy(locale).headerStatus[status]
   return (
-    <span
-      className="studio-core-status"
-      data-state={status}
-      role="status"
-      aria-live="polite"
-      aria-label={copy.full}
-    >
+    <span className="studio-core-status" data-state={status} role="status" aria-live="polite" aria-label={copy.full}>
       <span className="studio-core-status-dot" aria-hidden />
       <span className="studio-core-status-label-full">{copy.full}</span>
       <span className="studio-core-status-label-compact">{copy.compact}</span>

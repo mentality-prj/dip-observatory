@@ -63,12 +63,14 @@ export const runUnavailableScenario = (network: SupplyNetwork, warehouseId: stri
   run<ScenarioComparison>({ action: 'unavailable', network, warehouseId })
 
 export const runCandidateAreas = async (network: SupplyNetwork) =>
-  (await run<{
-    disrupted_network: OptimizationResult
-    candidates: CandidateResult[]
-    pareto_frontier_candidate_ids: string[]
-    connectivity_rule: string
-  }>({ action: 'candidates', network })).result
+  (
+    await run<{
+      disrupted_network: OptimizationResult
+      candidates: CandidateResult[]
+      pareto_frontier_candidate_ids: string[]
+      connectivity_rule: string
+    }>({ action: 'candidates', network })
+  ).result
 
 export const runManualCandidate = (network: SupplyNetwork, candidate: CandidateWarehouse) =>
   run<{
