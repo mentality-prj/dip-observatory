@@ -177,6 +177,7 @@ export type OptimizationResult = {
     facility_fixed_cost: number
     handling_cost: number
     reallocation_cost: number
+    concentration_penalty?: number
     lead_time_penalty: number
     inbound_cancellation_cost: number
     inventory_value_at_risk: number
@@ -187,6 +188,7 @@ export type OptimizationResult = {
   objective_components: Record<string, number>
   candidate_warehouse_ids_used: string[]
   binding_constraints: string[]
+  binding_preferences?: string[]
   solver_status: string
   solve_time_ms: number
   mip_gap: number | null

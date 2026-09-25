@@ -79,6 +79,10 @@ export const supplyNetworkWorkspaceMessages = {
     reallocationCost: 'Reallocation',
     facilityCost: 'New-facility fixed cost',
     handlingCostResult: 'Handling',
+    concentrationPenalty: 'Inventory concentration penalty (model)',
+    policyPenaltyNote:
+      'Policy penalties steer the optimizer but are not operating expenses or realized business losses.',
+    softPreferences: 'Soft policy preferences',
     pareto: 'Worth considering',
     peakReceiving: 'Peak receiving per day',
     peakDispatch: 'Peak dispatch per day',
@@ -197,6 +201,10 @@ export const supplyNetworkWorkspaceMessages = {
     reallocationCost: 'Перерозподіл',
     facilityCost: 'Фіксовані витрати нового складу',
     handlingCostResult: 'Обробка товару',
+    concentrationPenalty: 'Штраф за концентрацію запасів (модельний)',
+    policyPenaltyNote:
+      'Штрафи за відхилення від м’яких правил спрямовують оптимізатор, але не є операційними витратами чи фактичною втратою бізнесу.',
+    softPreferences: 'М’які правила моделі',
     pareto: 'Вартий розгляду',
     peakReceiving: 'Максимальне приймання за день',
     peakDispatch: 'Максимальне відвантаження за день',
@@ -315,6 +323,10 @@ export const supplyNetworkWorkspaceMessages = {
     reallocationCost: 'Realokacja',
     facilityCost: 'Stały koszt nowego magazynu',
     handlingCostResult: 'Obsługa towaru',
+    concentrationPenalty: 'Kara za koncentrację zapasów (modelowa)',
+    policyPenaltyNote:
+      'Kary polityki sterują wyborem optymalizatora, ale nie są kosztami operacyjnymi ani zrealizowaną stratą biznesową.',
+    softPreferences: 'Miękkie preferencje polityki',
     pareto: 'Warto rozważyć',
     peakReceiving: 'Maksymalne przyjęcia dziennie',
     peakDispatch: 'Maksymalne wysyłki dziennie',
