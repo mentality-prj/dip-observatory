@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
+import { resourceAllocationImportI18n } from '../i18n'
 import type { ResourceAllocationInput } from '../contracts'
 import {
   buildResourceAllocationExampleCsv,
@@ -15,137 +16,7 @@ import {
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
 
-const copy = {
-  uk: {
-    title: 'Дані клієнта',
-    body: 'Завантажте агреговані операційні дані. Не додавайте ПІБ, телефони, адреси чи інші персональні дані бенефіціарів.',
-    choose: 'Вибрати CSV / XML / XLSX',
-    drop: 'Перетягніть файл сюди',
-    dropActive: 'Відпустіть файл для імпорту',
-    or: 'або',
-    template: 'Поля шаблону',
-    templateIntro: 'CSV містить кілька типів рядків. Поле record_type визначає, які дані описує рядок. Заповнюйте лише поля, що стосуються цього типу запису; решта можуть залишатися порожніми.',
-    recordTypesTitle: 'Типи записів',
-    recordTypes: {
-      settings: 'загальні параметри планування: бюджет, цільове покриття та одиниця планування',
-      community: 'локація та її постійні обмеження',
-      community_day: 'доступність і обмеження локації для конкретного дня',
-      demand: 'потреба в певній послузі, локації та дні',
-      team: 'команда, її навички, потужність і дозволені локації',
-      team_day: 'доступність або потужність команди для конкретного дня',
-      travel: 'вартість і час переміщення між двома локаціями',
-      baseline: 'ручний план для порівняння з рекомендацією QDIP',
-    },
-    columnsTitle: 'Колонки CSV',
-    multiValueHint: 'Якщо поле містить кілька значень, наприклад skills, days або allowed_communities, розділяйте їх символом |.',
 
-    starterTitle: 'Почніть з готового CSV',
-    starterBody: 'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
-    downloadTemplate: 'Завантажити CSV шаблон',
-    downloadExample: 'Завантажити демо CSV',
-    templateHint: 'Мінімальний валідний файл',
-    exampleHint: 'Повний 5-денний приклад',
-    reading: 'Читаю файл…',
-    validating: 'Перевіряю структуру та зв’язки…',
-    ready: 'Дані активовані',
-    communities: 'громад/локацій',
-    teams: 'команд',
-    demand: 'од. потреб',
-    replace: 'Замінити файл',
-    days: 'днів',
-    baseline: 'Ручний baseline',
-    baselineYes: 'надано',
-    baselineNo: 'не надано',
-    scheduled: 'майбутніх потреб',
-    rules: 'денних правил доступності',
-  },
-  en: {
-    title: 'Client data',
-    body: 'Upload aggregated operational data only. Do not include beneficiary names, phones, addresses or other personal data.',
-    choose: 'Choose CSV / XML / XLSX',
-    drop: 'Drag and drop a file here',
-    dropActive: 'Drop the file to import',
-    or: 'or',
-    template: 'Template columns',
-    templateIntro: 'The CSV contains several row types. The record_type field determines what each row describes. Fill only the columns relevant to that record type; the remaining columns may stay empty.',
-    recordTypesTitle: 'Record types',
-    recordTypes: {
-      settings: 'global planning settings: budget, target coverage and planning unit',
-      community: 'a location and its persistent constraints',
-      community_day: 'location availability and constraints for a specific day',
-      demand: 'service demand for a location and day',
-      team: 'a team, its skills, capacity and allowed locations',
-      team_day: 'team availability or capacity for a specific day',
-      travel: 'travel cost and time between two locations',
-      baseline: 'manual plan used for comparison with the QDIP recommendation',
-    },
-    columnsTitle: 'CSV columns',
-    multiValueHint: 'For fields with multiple values, such as skills, days or allowed_communities, separate values with |.',
-
-    starterTitle: 'Start from a ready CSV',
-    starterBody: 'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
-    downloadTemplate: 'Download CSV template',
-    downloadExample: 'Download example CSV',
-    templateHint: 'Minimal valid file',
-    exampleHint: 'Complete five-day example',
-    reading: 'Reading file…',
-    validating: 'Validating structure and references…',
-    ready: 'Dataset activated',
-    communities: 'communities / locations',
-    teams: 'teams',
-    demand: 'demand units',
-    replace: 'Replace file',
-    days: 'days',
-    baseline: 'Manual baseline',
-    baselineYes: 'provided',
-    baselineNo: 'not provided',
-    scheduled: 'scheduled demand',
-    rules: 'daily availability rules',
-  },
-  pl: {
-    title: 'Dane klienta',
-    body: 'Prześlij wyłącznie zagregowane dane operacyjne. Nie dodawaj danych osobowych beneficjentów.',
-    choose: 'Wybierz CSV / XML / XLSX',
-    drop: 'Przeciągnij i upuść plik tutaj',
-    dropActive: 'Upuść plik, aby go zaimportować',
-    or: 'lub',
-    template: 'Kolumny szablonu',
-    templateIntro: 'CSV zawiera kilka typów wierszy. Pole record_type określa, jakie dane opisuje dany wiersz. Wypełniaj tylko kolumny dotyczące danego typu rekordu; pozostałe mogą pozostać puste.',
-    recordTypesTitle: 'Typy rekordów',
-    recordTypes: {
-      settings: 'ogólne parametry planowania: budżet, docelowe pokrycie i jednostka planowania',
-      community: 'lokalizacja i jej stałe ograniczenia',
-      community_day: 'dostępność i ograniczenia lokalizacji dla konkretnego dnia',
-      demand: 'zapotrzebowanie na usługę w lokalizacji i dniu',
-      team: 'zespół, jego kompetencje, zdolność i dozwolone lokalizacje',
-      team_day: 'dostępność lub zdolność zespołu dla konkretnego dnia',
-      travel: 'koszt i czas przejazdu między lokalizacjami',
-      baseline: 'plan ręczny używany do porównania z rekomendacją QDIP',
-    },
-    columnsTitle: 'Kolumny CSV',
-    multiValueHint: 'Jeśli pole zawiera kilka wartości, np. skills, days lub allowed_communities, rozdzielaj je znakiem |.',
-
-    starterTitle: 'Zacznij od gotowego CSV',
-    starterBody: 'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
-    downloadTemplate: 'Pobierz szablon CSV',
-    downloadExample: 'Pobierz przykładowy CSV',
-    templateHint: 'Minimalny poprawny plik',
-    exampleHint: 'Pełny przykład na pięć dni',
-    reading: 'Odczytuję plik…',
-    validating: 'Sprawdzam strukturę i odwołania…',
-    ready: 'Zestaw danych aktywowany',
-    communities: 'społeczności / lokalizacji',
-    teams: 'zespołów',
-    demand: 'jedn. potrzeb',
-    replace: 'Zastąp plik',
-    days: 'dni',
-    baseline: 'Plan ręczny',
-    baselineYes: 'dostarczony',
-    baselineNo: 'brak',
-    scheduled: 'przyszłych potrzeb',
-    rules: 'dziennych reguł dostępności',
-  },
-} as const
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -172,7 +43,7 @@ export function ResourceAllocationImport({
   locale: Locale
   onImported: (input: ResourceAllocationInput, fileName: string) => void
 }) {
-  const t = copy[locale]
+  const t = resourceAllocationImportI18n[locale]
   const inputRef = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
   const [stage, setStage] = useState<ImportStage>('idle')
