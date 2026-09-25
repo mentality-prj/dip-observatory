@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/observatory-i18n'
+import { LOCALE_TAGS, type Locale } from '@/lib/observatory-i18n'
 import type { StorageClass } from '../domain'
 import {
   supplyNetworkEntityMessages,
@@ -6,12 +6,6 @@ import {
   supplyNetworkSummaryMessages,
   supplyNetworkWorkspaceMessages,
 } from './messages'
-
-const localeTags: Record<Locale, string> = {
-  en: 'en-GB',
-  uk: 'uk-UA',
-  pl: 'pl-PL',
-}
 
 type MessageValue = string | number
 
@@ -36,13 +30,13 @@ export function getSupplyNetworkI18n(locale: Locale) {
 }
 
 export function formatNumber(value: number, locale: Locale) {
-  return new Intl.NumberFormat(localeTags[locale], {
+  return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     maximumFractionDigits: 1,
   }).format(value)
 }
 
 export function formatMoney(value: number, locale: Locale) {
-  return new Intl.NumberFormat(localeTags[locale], {
+  return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: 'currency',
     currency: 'UAH',
     currencyDisplay: 'narrowSymbol',
