@@ -120,6 +120,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
       href={buildLocalePath('/', locale)}
       brandHref={marketingHref(locale)}
       product="Observatory"
+      nativeProductNavigation
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={
         <details className={styles.mobileMenu}>
