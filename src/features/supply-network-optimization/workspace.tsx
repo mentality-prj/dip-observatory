@@ -5,6 +5,7 @@ import { AlertTriangle, MapPin, Network, Plus, Warehouse as WarehouseIcon } from
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
 import { runCandidateAreas, runManualCandidate, runUnavailableScenario } from './api'
+import { hardConstraintEvidence, softPreferenceEvidence } from './constraint-evidence'
 import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import {
@@ -103,6 +104,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     [scenario]
   )
   const visibleResult = manualResult ?? scenario?.disrupted ?? baseline
+  const hardConstraints = visibleResult ? hardConstraintEvidence(visibleResult, activeNetwork) : []
+  const softPreferences = visibleResult ? softPreferenceEvidence(visibleResult) : []
 
   const manualCandidate = useMemo<CandidateWarehouse | null>(() => {
     if (!candidateLocation) return null
@@ -423,8 +426,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                     <div>
                       <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {visibleResult.binding_constraints.length ? (
-                          visibleResult.binding_constraints.slice(0, 8).map((item) => (
+                        {hardConstraints.length ? (
+                          hardConstraints.slice(0, 8).map((item) => (
                             <Badge key={item} variant="neutral">
                               {constraintDisplayLabel(item, locale)}
                             </Badge>
@@ -437,8 +440,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                     <div>
                       <h3 className="text-sm font-medium text-slate-200">{t.softPreferences}</h3>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {(visibleResult.binding_preferences ?? []).length ? (
-                          (visibleResult.binding_preferences ?? []).slice(0, 8).map((item) => (
+                        {softPreferences.length ? (
+                          softPreferences.slice(0, 8).map((item) => (
                             <Badge key={item} variant="neutral">
                               {constraintDisplayLabel(item, locale)}
                             </Badge>
