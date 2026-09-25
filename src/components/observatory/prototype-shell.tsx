@@ -15,6 +15,12 @@ import styles from './prototype-shell.module.css'
 export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
 const LOCALES = SUPPORTED_LOCALES
+const NAV_ICONS = {
+  challenge: Scale,
+  'resource-allocation': UsersRound,
+  'supply-network-optimization': Network,
+  'gtm-lab': FlaskConical,
+} as const
 
 export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeShellProps) {
   const pathname = usePathname()
