@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 const MAX_BODY_BYTES = 1_100_000
-const REQUEST_TIMEOUT_MS = 25_000
-
 import {
   getDecisionChallenge,
   listDecisionChallenges,
@@ -35,7 +33,7 @@ async function handler(
 
   try {
     const contentLength = Number(request.headers.get('content-length') ?? '0')
-    if (contentLength > MAX_BODY_BYTES) {
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
       return NextResponse.json({ error: 'payload_too_large' }, { status: 413 })
     }
     if (request.method === 'GET' && path.length === 0) {
@@ -44,7 +42,11 @@ async function handler(
       })
     }
     if (request.method === 'POST' && path.length === 1 && path[0] === 'runs') {
-      const body = (await request.json()) as { challenge_id?: string; scenario?: Record<string, unknown> }
+      const raw = await request.text()
+      if (Buffer.byteLength(raw, 'utf8') > MAX_BODY_BYTES) {
+        return NextResponse.json({ error: 'payload_too_large' }, { status: 413 })
+      }
+      const body = JSON.parse(raw) as { challenge_id?: string; scenario?: Record<string, unknown> }
       if (!body.challenge_id) {
         return NextResponse.json({ error: 'challenge_id is required' }, { status: 422 })
       }
