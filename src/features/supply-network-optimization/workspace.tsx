@@ -423,11 +423,29 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                     <div>
                       <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {visibleResult.binding_constraints.slice(0, 8).map((item) => (
-                          <Badge key={item} variant="neutral">
-                            {constraintDisplayLabel(item, locale)}
-                          </Badge>
-                        ))}
+                        {visibleResult.binding_constraints.length ? (
+                          visibleResult.binding_constraints.slice(0, 8).map((item) => (
+                            <Badge key={item} variant="neutral">
+                              {constraintDisplayLabel(item, locale)}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-500">{t.none}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200">{t.softPreferences}</h3>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {(visibleResult.binding_preferences ?? []).length ? (
+                          (visibleResult.binding_preferences ?? []).slice(0, 8).map((item) => (
+                            <Badge key={item} variant="neutral">
+                              {constraintDisplayLabel(item, locale)}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-500">{t.none}</span>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -448,6 +466,16 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                         <p>
                           {t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}
                         </p>
+                        <p>
+                          {t.concentrationPenalty}:{' '}
+                          {formatMoney(
+                            visibleResult.kpis.concentration_penalty ??
+                              visibleResult.objective_components.concentration_penalty ??
+                              0,
+                            locale
+                          )}
+                        </p>
+                        <p className="pt-1 text-[11px] leading-4 text-slate-500">{t.policyPenaltyNote}</p>
                       </div>
                     </div>
                   </div>
