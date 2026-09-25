@@ -149,7 +149,7 @@
       "stockoutCost": "Вплив непокритого попиту",
       "reallocationCost": "Перерозподіл",
       "facilityCost": "Фіксовані витрати нового складу",
-      "handlingCostResult":       "handlingCostResult": "Обробка товару",
+      "handlingCostResult": "Обробка товару",
       "concentrationPenalty": "Штраф за концентрацію запасів (модельний)",
       "policyPenaltyNote": "Штрафи за відхилення від м’яких правил спрямовують оптимізатор, але не є операційними витратами чи фактичною втратою бізнесу.",
       "softPreferences": "М’які правила моделі",

@@ -141,7 +141,7 @@
       "stockoutCost": "Wpływ niezaspokojonego popytu",
       "reallocationCost": "Realokacja",
       "facilityCost": "Stały koszt nowego magazynu",
-      "handlingCostResult":       "handlingCostResult": "Obsługa towaru",
+      "handlingCostResult": "Obsługa towaru",
       "concentrationPenalty": "Kara za koncentrację zapasów (modelowa)",
       "policyPenaltyNote": "Kary polityki sterują wyborem optymalizatora, ale nie są kosztami operacyjnymi ani zrealizowaną stratą biznesową.",
       "softPreferences": "Miękkie preferencje polityki",

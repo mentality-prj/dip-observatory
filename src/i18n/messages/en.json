@@ -141,7 +141,7 @@
       "stockoutCost": "Stockout impact",
       "reallocationCost": "Reallocation",
       "facilityCost": "New-facility fixed cost",
-      "handlingCostResult":       "handlingCostResult": "Handling",
+      "handlingCostResult": "Handling",
       "concentrationPenalty": "Inventory concentration penalty (model)",
       "policyPenaltyNote": "Policy penalties steer the optimizer but are not operating expenses or realized business losses.",
       "softPreferences": "Soft policy preferences",
