@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   supplyNetworkConstraintMessages,
@@ -40,21 +41,24 @@ describe('Supply Network i18n contract', () => {
     })
   }
 
-  it('keeps translations out of render components', () => {
-    const sources = [
-      new URL('../workspace.tsx', import.meta.url),
-      new URL('../network-map.tsx', import.meta.url),
-      new URL('../executive-decision-summary.tsx', import.meta.url),
-      new URL('../../../components/observatory/prototype-shell.tsx', import.meta.url),
-      new URL('../../../components/observatory/observatory-home.tsx', import.meta.url),
-      new URL('../../../components/observatory/decision-narrative.tsx', import.meta.url),
-    ].map((url) => readFileSync(url, 'utf8'))
+  it('keeps translations out of Observatory render components', () => {
+    const componentDirectories = [
+      new URL('../', import.meta.url),
+      new URL('../../../components/observatory/', import.meta.url),
+    ]
 
-    for (const source of sources) {
-      expect(source).not.toContain('const copy =')
-      expect(source).not.toContain("locale === 'uk'")
-      expect(source).not.toContain("locale === 'pl'")
-      expect(source).not.toMatch(/[\u0400-\u04FF]/)
+    const sourceFiles = componentDirectories.flatMap((directory) =>
+      readdirSync(fileURLToPath(directory), { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.tsx'))
+        .map((entry) => new URL(entry.name, directory)),
+    )
+
+    for (const file of sourceFiles) {
+      const source = readFileSync(file, 'utf8')
+      expect(source, file.pathname).not.toContain('const copy =')
+      expect(source, file.pathname).not.toContain("locale === 'uk'")
+      expect(source, file.pathname).not.toContain("locale === 'pl'")
+      expect(source, file.pathname).not.toMatch(/[\u0400-\u04FF]/)
     }
   })
 })
