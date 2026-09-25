@@ -7,7 +7,7 @@ export default async function LocalizedHome({ params }: { params: Promise<{ loca
   const { locale } = await params
   if (!isSupportedLocale(locale)) notFound()
   return (
-    <PrototypeShell locale={locale as Locale}>
+    <PrototypeShell locale={locale as Locale} activeRoute="/">
       <ObservatoryHome locale={locale as Locale} />
     </PrototypeShell>
   )

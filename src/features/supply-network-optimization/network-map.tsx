@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { useTranslations } from '@/i18n/provider'
 import type { Locale } from '@/lib/observatory-i18n'
 import type {
   CandidateResult,
@@ -13,13 +14,7 @@ import type {
   Warehouse,
 } from './domain'
 import { loadMapLibre, OSM_RASTER_STYLE, type MapLibreMap, type MapLibreMarker } from './map-provider'
-import {
-  candidateOptionLabel,
-  demandDisplayLabel,
-  getSupplyNetworkI18n,
-  supplierDisplayLabel,
-  warehouseDisplayLabel,
-} from './i18n'
+import { candidateOptionLabel, demandDisplayLabel, supplierDisplayLabel, warehouseDisplayLabel } from './i18n'
 
 type Props = {
   locale: Locale
@@ -242,13 +237,13 @@ export function NetworkMap({
   onStoreSelect,
   onMapClick,
 }: Props) {
-  const t = getSupplyNetworkI18n(locale).map
+  const t = useTranslations('supplyNetwork.map')
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
-  const [selectedFlowView, setSelectedFlowView] = useState<'current' | 'qdip' | 'compare'>('qdip')
-  const flowView = result ? selectedFlowView : 'current'
+  const [flowViewOverride, setFlowViewOverride] = useState<'current' | 'qdip' | 'compare' | null>(null)
+  const flowView = flowViewOverride ?? (result ? 'qdip' : 'current')
   const [projectedFlows, setProjectedFlows] = useState<
     Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>
   >([])
@@ -327,7 +322,7 @@ export function NetworkMap({
         const element = markerStyle(
           unavailable ? 'unavailable' : 'warehouse',
           selectedWarehouseId === warehouse.id,
-          t.warehouse
+          t('warehouse')
         )
         element.dataset.networkMarker = 'warehouse'
         element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
@@ -340,7 +335,7 @@ export function NetworkMap({
         )
       }
       for (const store of network.demand_points) {
-        const element = markerStyle('store', false, t.store)
+        const element = markerStyle('store', false, t('store'))
         element.dataset.networkMarker = 'store'
         element.title = demandDisplayLabel(store.id, locale, store.label)
         element.addEventListener('click', (event) => {
@@ -352,7 +347,7 @@ export function NetworkMap({
         )
       }
       for (const supplier of network.suppliers) {
-        const element = markerStyle('supplier', false, t.supplier)
+        const element = markerStyle('supplier', false, t('supplier'))
         element.dataset.networkMarker = 'supplier'
         element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
         markersRef.current.push(
@@ -363,14 +358,14 @@ export function NetworkMap({
         const status = !candidate.feasible ? 'infeasible' : candidate.pareto_efficient ? 'pareto' : 'dominated'
         const statusLabel =
           status === 'pareto'
-            ? t.candidateRecommended
+            ? t('candidateRecommended')
             : status === 'dominated'
-              ? t.candidateDominated
-              : t.candidateInfeasible
+              ? t('candidateDominated')
+              : t('candidateInfeasible')
         const element = markerStyle(
           'candidate',
           selectedCandidateId === candidate.candidate_id,
-          t.warehouseOption,
+          t('warehouseOption'),
           status
         )
         element.dataset.networkMarker = 'candidate'
@@ -384,7 +379,7 @@ export function NetworkMap({
         )
       }
       if (manualCandidate) {
-        const element = markerStyle('manual-candidate', false, t.warehouseOption)
+        const element = markerStyle('manual-candidate', false, t('warehouseOption'))
         element.dataset.networkMarker = 'manual-candidate'
         element.title = manualCandidate.label ?? manualCandidate.id
         markersRef.current.push(
@@ -449,13 +444,7 @@ export function NetworkMap({
     selectedWarehouseId,
     unavailableWarehouseIds,
     flowView,
-    t.store,
-    t.supplier,
-    t.warehouse,
-    t.warehouseOption,
-    t.candidateRecommended,
-    t.candidateDominated,
-    t.candidateInfeasible,
+    t,
   ])
 
   const maxOptimizedFlowUnits = Math.max(
@@ -473,7 +462,7 @@ export function NetworkMap({
       {result ? (
         <div className="absolute left-3 top-3 z-30 flex rounded-lg border border-white/10 bg-slate-950/90 p-1 text-xs shadow-lg">
           {(['current', 'qdip', 'compare'] as const).map((mode) => {
-            const label = mode === 'current' ? t.modeBefore : mode === 'qdip' ? t.modeQdip : t.modeCompare
+            const label = mode === 'current' ? t('modeBefore') : mode === 'qdip' ? t('modeQdip') : t('modeCompare')
             return (
               <button
                 key={mode}
@@ -482,7 +471,7 @@ export function NetworkMap({
                   flowView === mode ? 'bg-white text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
                 aria-pressed={flowView === mode}
-                onClick={() => setSelectedFlowView(mode)}
+                onClick={() => setFlowViewOverride(mode)}
               >
                 {label}
               </button>
@@ -604,59 +593,59 @@ export function NetworkMap({
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
-            <p className="text-sm font-medium text-slate-200">{t.mapUnavailable}</p>
-            <p className="mt-1 text-xs text-slate-400">{t.mapUnavailableHelp}</p>
+            <p className="text-sm font-medium text-slate-200">{t('mapUnavailable')}</p>
+            <p className="mt-1 text-xs text-slate-400">{t('mapUnavailableHelp')}</p>
           </div>
         </div>
       ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5 text-[11px] text-slate-200 sm:right-auto sm:max-w-[80%]">
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 rounded-[2px] border border-white bg-cyan-400" />
-          {t.warehouse}
+          {t('warehouse')}
         </span>
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 rounded-full border border-white bg-slate-200" />
-          {t.store}
+          {t('store')}
         </span>
         {currentFlows.length > 0 && flowView !== 'qdip' ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-blue-800">→</span>
-            {network.unavailable_warehouse_ids.length > 0 ? t.baselineFlowsBeforeDisruption : t.currentFlows}
+            {network.unavailable_warehouse_ids.length > 0 ? t('baselineFlowsBeforeDisruption') : t('currentFlows')}
           </span>
         ) : null}
         {flowView !== 'current' &&
         projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-teal-600">→</span>
-            {t.qdipPlan}
+            {t('qdipPlan')}
           </span>
         ) : null}
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 bg-violet-700" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-          {t.supplier}
+          {t('supplier')}
         </span>
         {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'inbound') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-violet-700">→</span>
-            {t.inboundSupply}
+            {t('inboundSupply')}
           </span>
         ) : null}
         {candidateAreas.some((item) => item.feasible && item.pareto_efficient) || manualCandidate ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-amber-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-            {t.candidateRecommended}
+            {t('candidateRecommended')}
           </span>
         ) : null}
         {candidateAreas.some((item) => item.feasible && !item.pareto_efficient) ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-slate-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-            {t.candidateDominated}
+            {t('candidateDominated')}
           </span>
         ) : null}
         {candidateAreas.some((item) => !item.feasible) ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-red-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-            {t.candidateInfeasible}
+            {t('candidateInfeasible')}
           </span>
         ) : null}
       </div>

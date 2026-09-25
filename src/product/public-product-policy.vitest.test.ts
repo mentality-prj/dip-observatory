@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { marketingCopy } from '@/components/marketing/qdip-copy'
 import { observatoryHomeI18n } from '@/lib/product-i18n'
+import { createTranslator } from '@/i18n/runtime'
 import { DECISION_PATTERN_LABELS, PRODUCT_SURFACE_COPY } from '@/product/experience'
 import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 import { studioCopy } from '@/studio/studio-copy'
@@ -37,9 +38,10 @@ describe('public product naming policy', () => {
 
     for (const useCase of DIP_USE_CASES) {
       const titles = expected[useCase.id as keyof typeof expected]
-      expect(useCase.title.en).toBe(titles.en)
-      expect(useCase.title.uk).toBe(titles.uk)
-      expect(useCase.title.pl).toBe(titles.pl)
+      for (const locale of ['en', 'uk', 'pl'] as const) {
+        const messages = createTranslator(locale, `useCases.${useCase.id}`)
+        expect(messages('title')).toBe(titles[locale])
+      }
     }
   })
 
@@ -101,10 +103,13 @@ describe('localized Observatory terminology policy', () => {
         observatoryHomeI18n[locale],
         PRODUCT_SURFACE_COPY[locale],
         Object.values(DECISION_PATTERN_LABELS).map((labels) => labels[locale]),
-        DIP_USE_CASES.map((useCase) => ({
-          description: useCase.description[locale],
-          tag: useCase.tag[locale],
-        })),
+        DIP_USE_CASES.map((useCase) => {
+          const messages = createTranslator(locale, `useCases.${useCase.id}`)
+          return {
+            description: messages('description'),
+            tag: messages('tag'),
+          }
+        }),
       ])
       const violations = values.filter((value) => forbiddenEnglishUiTerms.some((pattern) => pattern.test(value)))
       expect(violations).toEqual([])

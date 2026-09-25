@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-
-const SUPPORTED_LOCALE_PATTERN = '(en|uk|pl)'
+import { SUPPORTED_LOCALE_PATTERN } from '@/i18n/config'
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1'])
 const INTERNAL_REWRITE_HEADER = 'x-qdip-internal-rewrite'
 

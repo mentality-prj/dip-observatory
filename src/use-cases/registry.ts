@@ -1,8 +1,5 @@
-import type { Locale } from '@/lib/observatory-i18n'
 import type { DecisionPatternId } from '@/product/experience'
-import { PUBLIC_DEMO_NAMES } from '@/product/public-product-policy'
 
-export type LocalizedText = Record<Locale, string>
 export type UseCaseIcon = 'heart' | 'sparkles' | 'network'
 export type UseCaseTheme = 'cyan' | 'violet' | 'amber' | 'emerald' | 'rose'
 export type DipUseCase = {
@@ -10,12 +7,10 @@ export type DipUseCase = {
   route: string
   navigation: { visible: boolean; order: number }
   decisionPattern: DecisionPatternId
-  title: LocalizedText
-  description: LocalizedText
-  tag: LocalizedText
   presentation: { icon: UseCaseIcon; theme: UseCaseTheme }
   plugin: { id: string; capability: string }
 }
+
 const visible = (order: number) => ({ visible: true, order }) as const
 
 const useCases = [
@@ -24,13 +19,6 @@ const useCases = [
     route: '/resource-allocation',
     navigation: visible(10),
     decisionPattern: 'allocate',
-    title: { en: PUBLIC_DEMO_NAMES.resourceAllocation, uk: 'Розподіл ресурсів', pl: 'Alokacja zasobów' },
-    description: {
-      en: 'Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.',
-      uk: 'Розподіл гуманітарних мобільних команд з урахуванням пропускної здатності, навичок, доступності та обмежень на переміщення.',
-      pl: 'Alokacja mobilnych zespołów humanitarnych z uwzględnieniem przepustowości, kompetencji, dostępności i ograniczeń związanych z przejazdami.',
-    },
-    tag: { en: 'HUMANITARIAN', uk: 'ГУМАНІТАРНИЙ', pl: 'HUMANITARNY' },
     presentation: { icon: 'heart', theme: 'rose' },
     plugin: { id: 'resource-allocation', capability: 'humanitarian.resource-allocation.optimize' },
   },
@@ -39,17 +27,6 @@ const useCases = [
     route: '/supply-network-optimization',
     navigation: visible(20),
     decisionPattern: 'allocate',
-    title: {
-      en: PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
-      uk: 'Оптимізація мережі постачання',
-      pl: 'Optymalizacja sieci dostaw',
-    },
-    description: {
-      en: 'Optimize inventory placement, inbound allocation and store fulfillment, then recalculate the network when capacity changes.',
-      uk: 'Оптимізація розміщення запасів, вхідних поставок і постачання точок попиту з перерахунком мережі при зміні доступної потужності.',
-      pl: 'Optymalizacja rozmieszczenia zapasów, dostaw przychodzących i obsługi punktów popytu z ponownym przeliczeniem sieci po zmianie dostępnej przepustowości.',
-    },
-    tag: { en: 'SUPPLY NETWORK', uk: 'МЕРЕЖА ПОСТАЧАННЯ', pl: 'SIEĆ DOSTAW' },
     presentation: { icon: 'network', theme: 'amber' },
     plugin: { id: 'supply-network', capability: 'supply.network.optimize' },
   },
@@ -58,13 +35,6 @@ const useCases = [
     route: '/gtm-lab',
     navigation: visible(30),
     decisionPattern: 'prioritize',
-    title: { en: PUBLIC_DEMO_NAMES.gtmLab, uk: 'Лабораторія виходу на ринок', pl: 'Laboratorium wejścia na rynek' },
-    description: {
-      en: 'Evaluate commercial opportunities under incomplete market evidence and decide whether to pursue, research or skip.',
-      uk: 'Оцінка комерційних можливостей за неповних ринкових даних: опрацювати, дослідити або відхилити.',
-      pl: 'Ocena możliwości komercyjnych przy niepełnych danych rynkowych: rozwijać, zbadać lub pominąć.',
-    },
-    tag: { en: 'GO-TO-MARKET', uk: 'ВИХІД НА РИНОК', pl: 'WEJŚCIE NA RYNEK' },
     presentation: { icon: 'sparkles', theme: 'emerald' },
     plugin: { id: 'gtm-lab', capability: 'gtm.demo.run' },
   },

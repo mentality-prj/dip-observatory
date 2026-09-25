@@ -8,13 +8,14 @@ type PrototypeRouteLayoutProps = {
   children: ReactNode
   params: Promise<{ locale: string }>
   theme: PrototypeTheme
+  activeRoute: string
 }
 
-export async function PrototypeRouteLayout({ children, params, theme }: PrototypeRouteLayoutProps) {
+export async function PrototypeRouteLayout({ children, params, theme, activeRoute }: PrototypeRouteLayoutProps) {
   const { locale } = await params
   if (!isSupportedLocale(locale)) notFound()
   return (
-    <PrototypeShell locale={locale} theme={theme}>
+    <PrototypeShell locale={locale} activeRoute={activeRoute} theme={theme}>
       {children}
     </PrototypeShell>
   )
