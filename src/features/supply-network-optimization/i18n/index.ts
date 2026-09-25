@@ -1,6 +1,7 @@
 import { LOCALE_TAGS, type Locale } from '@/lib/observatory-i18n'
 import type { StorageClass } from '../domain'
 import {
+  supplyNetworkConstraintMessages,
   supplyNetworkEntityMessages,
   supplyNetworkMapMessages,
   supplyNetworkSummaryMessages,
@@ -26,6 +27,7 @@ export function getSupplyNetworkI18n(locale: Locale) {
     summary: supplyNetworkSummaryMessages[locale],
     map: supplyNetworkMapMessages[locale],
     entities: supplyNetworkEntityMessages[locale],
+    constraints: supplyNetworkConstraintMessages[locale],
   }
 }
 
@@ -114,4 +116,18 @@ export function candidateOptionLabel(index: number, locale: Locale) {
   return interpolate(supplyNetworkEntityMessages[locale].candidateOption, {
     number: index + 1,
   })
+}
+
+
+export function constraintDisplayLabel(value: string, locale: Locale) {
+  const [kind, ...parts] = value.split(':')
+  const labels = supplyNetworkConstraintMessages[locale]
+  const label = labels[kind as keyof typeof labels]
+  if (!label) return value.replaceAll(':', ' · ')
+  const readableParts = parts.map((part) =>
+    entityDisplayLabel(part, locale),
+  )
+  return readableParts.length
+    ? `${label} · ${readableParts.join(' · ')}`
+    : label
 }
