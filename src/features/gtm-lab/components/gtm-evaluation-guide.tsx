@@ -35,7 +35,11 @@ export function GtmEvaluationGuide({ locale }: { locale: Locale }) {
         <h2 className="text-lg font-medium">{t.csvTitle}</h2>
         <p className="mt-2 text-sm leading-6 text-slate-400">{t.csvDescription}</p>
         <p className="mt-4 text-xs leading-5 text-slate-500">{t.templateColumns}</p>
-        <a href={href} download="gtm-lab-template.csv" className="mt-4 inline-block border border-white/20 px-4 py-2 text-sm font-bold hover:bg-white/[.05]">
+        <a
+          href={href}
+          download="gtm-lab-template.csv"
+          className="mt-4 inline-block border border-white/20 px-4 py-2 text-sm font-bold hover:bg-white/[.05]"
+        >
           {t.downloadTemplate}
         </a>
       </div>

@@ -12,7 +12,10 @@ const workflowAriaLabel: Record<Locale, string> = {
 
 export function DecisionWorkflow({ locale, compact = false, className }: Props) {
   return (
-    <ol aria-label={workflowAriaLabel[locale]} className={cn('ds-workflow', compact && 'ds-workflow-compact', className)}>
+    <ol
+      aria-label={workflowAriaLabel[locale]}
+      className={cn('ds-workflow', compact && 'ds-workflow-compact', className)}
+    >
       {DECISION_WORKFLOW_COPY[locale].map((step, index) => (
         <li key={step.id} className="ds-workflow-step">
           <div className="ds-workflow-index">0{index + 1}</div>

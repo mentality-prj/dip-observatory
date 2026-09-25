@@ -38,12 +38,17 @@ type Props = {
 const markerStyle = (
   kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable',
   selected = false,
-  ariaLabel: string = kind,
+  ariaLabel: string = kind
 ) => {
   const element = document.createElement('button')
   element.type = 'button'
   element.setAttribute('aria-label', ariaLabel)
-  const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '34px' : '20px'
+  const size =
+    kind === 'store'
+      ? '14px'
+      : kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable'
+        ? '34px'
+        : '20px'
   // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
   element.style.width = size
   element.style.height = size
@@ -75,12 +80,23 @@ const markerStyle = (
   // Warehouses are actionable network nodes. Keep them above demand/store
   // markers when geographic coordinates overlap so the warehouse action
   // remains reachable (for example Kyiv warehouse + Kyiv demand region).
-  element.style.zIndex = kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
+  element.style.zIndex =
+    kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable'
+      ? '20'
+      : kind === 'candidate'
+        ? '10'
+        : kind === 'supplier'
+          ? '5'
+          : '1'
   element.style.background =
-    kind === 'unavailable' ? '#ef4444'
-      : kind === 'candidate' || kind === 'manual-candidate' ? '#f59e0b'
-        : kind === 'warehouse' ? '#22d3ee'
-          : kind === 'supplier' ? '#a78bfa'
+    kind === 'unavailable'
+      ? '#ef4444'
+      : kind === 'candidate' || kind === 'manual-candidate'
+        ? '#f59e0b'
+        : kind === 'warehouse'
+          ? '#22d3ee'
+          : kind === 'supplier'
+            ? '#a78bfa'
             : '#e2e8f0'
   if (kind === 'unavailable') {
     element.style.borderRadius = '50%'
@@ -159,18 +175,16 @@ export function buildFlowSegments(
 
   if (!result) return segments
 
-  const aggregated = new Map<string, {
-    kind: 'recommended' | 'transfer' | 'inbound'
-    fromId: string
-    toId: string
-    units: number
-  }>()
-  const addFlow = (
-    kind: 'recommended' | 'transfer' | 'inbound',
-    fromId: string,
-    toId: string,
-    units: number
-  ) => {
+  const aggregated = new Map<
+    string,
+    {
+      kind: 'recommended' | 'transfer' | 'inbound'
+      fromId: string
+      toId: string
+      units: number
+    }
+  >()
+  const addFlow = (kind: 'recommended' | 'transfer' | 'inbound', fromId: string, toId: string, units: number) => {
     if (units <= 0) return
     const key = `${kind}:${fromId}:${toId}`
     const existing = aggregated.get(key)
@@ -222,8 +236,11 @@ export function NetworkMap({
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
-  const [flowView, setFlowView] = useState<'current' | 'qdip' | 'compare'>('current')
-  const [projectedFlows, setProjectedFlows] = useState<Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>>([])
+  const [selectedFlowView, setSelectedFlowView] = useState<'current' | 'qdip' | 'compare'>('qdip')
+  const flowView = result ? selectedFlowView : 'current'
+  const [projectedFlows, setProjectedFlows] = useState<
+    Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>
+  >([])
   const projectFlowsRef = useRef<() => void>(() => undefined)
   const markersRef = useRef<MapLibreMarker[]>([])
   const boundsKeyRef = useRef('')
@@ -232,10 +249,6 @@ export function NetworkMap({
   useEffect(() => {
     clickRef.current = onMapClick
   }, [onMapClick])
-
-  useEffect(() => {
-    setFlowView(result ? 'qdip' : 'current')
-  }, [result])
 
   useEffect(() => {
     let cancelled = false
@@ -303,7 +316,7 @@ export function NetworkMap({
         const element = markerStyle(
           unavailable ? 'unavailable' : 'warehouse',
           selectedWarehouseId === warehouse.id,
-          t.warehouse,
+          t.warehouse
         )
         element.dataset.networkMarker = 'warehouse'
         element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
@@ -356,7 +369,9 @@ export function NetworkMap({
         ...network.warehouses.map((item) => [item.longitude, item.latitude] as [number, number]),
         ...network.demand_points.map((item) => [item.longitude, item.latitude] as [number, number]),
         ...network.suppliers.map((item) => [item.longitude, item.latitude] as [number, number]),
-        ...candidateAreas.filter((item) => item.feasible).map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...candidateAreas
+          .filter((item) => item.feasible)
+          .map((item) => [item.longitude, item.latitude] as [number, number]),
         ...(manualCandidate ? [[manualCandidate.longitude, manualCandidate.latitude] as [number, number]] : []),
       ]
       const boundsKey = visibleCoordinates.map((item) => item.join(',')).join('|')
@@ -380,16 +395,20 @@ export function NetworkMap({
         return segment.kind !== 'current'
       })
       const projectFlows = () => {
-        setProjectedFlows(visibleFlowSegments.map((segment, index) => {
-          const from = map.project(segment.from)
-          const to = map.project(segment.to)
-          return { ...segment, index, x1: from.x, y1: from.y, x2: to.x, y2: to.y }
-        }))
+        setProjectedFlows(
+          visibleFlowSegments.map((segment, index) => {
+            const from = map.project(segment.from)
+            const to = map.project(segment.to)
+            return { ...segment, index, x1: from.x, y1: from.y, x2: to.x, y2: to.y }
+          })
+        )
       }
       projectFlowsRef.current = projectFlows
       projectFlows()
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [
     mapReady,
     locale,
@@ -403,8 +422,11 @@ export function NetworkMap({
     selectedWarehouseId,
     unavailableWarehouseIds,
     flowView,
+    t.store,
+    t.supplier,
+    t.warehouse,
+    t.warehouseOption,
   ])
-
 
   const maxOptimizedFlowUnits = Math.max(
     0,
@@ -421,23 +443,16 @@ export function NetworkMap({
       {result ? (
         <div className="absolute left-3 top-3 z-30 flex rounded-lg border border-white/10 bg-slate-950/90 p-1 text-xs shadow-lg">
           {(['current', 'qdip', 'compare'] as const).map((mode) => {
-            const label =
-              mode === 'current'
-                ? t.modeBefore
-                : mode === 'qdip'
-                  ? t.modeQdip
-                  : t.modeCompare
+            const label = mode === 'current' ? t.modeBefore : mode === 'qdip' ? t.modeQdip : t.modeCompare
             return (
               <button
                 key={mode}
                 type="button"
                 className={`rounded-md px-2.5 py-1.5 transition ${
-                  flowView === mode
-                    ? 'bg-white text-slate-950'
-                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                  flowView === mode ? 'bg-white text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
                 aria-pressed={flowView === mode}
-                onClick={() => setFlowView(mode)}
+                onClick={() => setSelectedFlowView(mode)}
               >
                 {label}
               </button>
@@ -446,15 +461,43 @@ export function NetworkMap({
         </div>
       ) : null}
       {projectedFlows.length > 0 ? (
-        <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-testid="supply-network-flow-overlay">
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          aria-hidden="true"
+          data-testid="supply-network-flow-overlay"
+        >
           <defs>
-            <marker id="flow-arrow-current" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+            <marker
+              id="flow-arrow-current"
+              markerWidth="8"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
               <path d="M0,0 L8,4 L0,8 z" fill="#1e3a8a" />
             </marker>
-            <marker id="flow-arrow-qdip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+            <marker
+              id="flow-arrow-qdip"
+              markerWidth="8"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
               <path d="M0,0 L8,4 L0,8 z" fill="#0f766e" />
             </marker>
-            <marker id="flow-arrow-inbound" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+            <marker
+              id="flow-arrow-inbound"
+              markerWidth="8"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
               <path d="M0,0 L8,4 L0,8 z" fill="#6d28d9" />
             </marker>
           </defs>
@@ -462,14 +505,16 @@ export function NetworkMap({
             const isCurrent = flow.kind === 'current'
             const isInbound = flow.kind === 'inbound'
             const stroke = isCurrent ? '#1e3a8a' : isInbound ? '#6d28d9' : '#0f766e'
-            const marker = isCurrent ? 'url(#flow-arrow-current)' : isInbound ? 'url(#flow-arrow-inbound)' : 'url(#flow-arrow-qdip)'
+            const marker = isCurrent
+              ? 'url(#flow-arrow-current)'
+              : isInbound
+                ? 'url(#flow-arrow-inbound)'
+                : 'url(#flow-arrow-qdip)'
             const dash = isCurrent ? '7 5' : undefined
-            const optimizedWidth = maxOptimizedFlowUnits > 0 && flow.units
-              ? 2.5 + 4 * Math.sqrt(flow.units / maxOptimizedFlowUnits)
-              : 4.5
-            const currentWidth = maxCurrentFlowUnits > 0 && flow.units
-              ? 2.5 + 3 * Math.sqrt(flow.units / maxCurrentFlowUnits)
-              : 3.5
+            const optimizedWidth =
+              maxOptimizedFlowUnits > 0 && flow.units ? 2.5 + 4 * Math.sqrt(flow.units / maxOptimizedFlowUnits) : 4.5
+            const currentWidth =
+              maxCurrentFlowUnits > 0 && flow.units ? 2.5 + 3 * Math.sqrt(flow.units / maxCurrentFlowUnits) : 3.5
             const flowWidth = isCurrent ? currentWidth : optimizedWidth
             if (flow.local) {
               return (
@@ -546,12 +591,11 @@ export function NetworkMap({
         {currentFlows.length > 0 && flowView !== 'qdip' ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-blue-800">→</span>
-            {network.unavailable_warehouse_ids.length > 0
-              ? t.baselineFlowsBeforeDisruption
-              : t.currentFlows}
+            {network.unavailable_warehouse_ids.length > 0 ? t.baselineFlowsBeforeDisruption : t.currentFlows}
           </span>
         ) : null}
-        {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
+        {flowView !== 'current' &&
+        projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-teal-600">→</span>
             {t.qdipPlan}

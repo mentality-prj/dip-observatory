@@ -31,7 +31,7 @@ async function main() {
       },
     }),
   })
-  
+
   const raw = await response.text()
   let payload: Record<string, unknown>
   try {
@@ -39,9 +39,9 @@ async function main() {
   } catch {
     throw new Error(`Live Resource Allocation returned non-JSON HTTP ${response.status}: ${raw.slice(0, 240)}`)
   }
-  
+
   assert(response.ok, `Live Resource Allocation failed HTTP ${response.status}: ${raw.slice(0, 400)}`)
-  
+
   const result = payload.result as
     | {
         status?: string
@@ -50,15 +50,15 @@ async function main() {
         engine_version?: string
       }
     | undefined
-  
+
   assert(result?.status === 'ok', 'Live Core did not return an ok Resource Allocation result.')
   assert(result.baseline?.kind === 'canonical-plan', 'Live response did not evaluate the canonical manual baseline.')
-  
+
   const baseline = result.baseline?.summary
   const optimized = result.demand_summary
   assert(baseline, 'Live response is missing baseline.summary.')
   assert(optimized, 'Live response is missing demand_summary.')
-  
+
   assert(baseline.total_available === 320, `Baseline total_available drifted: ${baseline.total_available}`)
   assert(baseline.served === 239, `Baseline served drifted: ${baseline.served}`)
   assert(baseline.closing_unmet === 81, `Baseline closing_unmet drifted: ${baseline.closing_unmet}`)
@@ -66,11 +66,8 @@ async function main() {
     Math.abs((baseline.priority_coverage ?? -1) - 0.702206) < 1e-6,
     `Baseline priority_coverage drifted: ${baseline.priority_coverage}`
   )
-  
-  assert(
-    (optimized.served ?? -Infinity) >= 249,
-    `Optimized served no longer clears +10 gate: ${optimized.served}`
-  )
+
+  assert((optimized.served ?? -Infinity) >= 249, `Optimized served no longer clears +10 gate: ${optimized.served}`)
   assert(
     (optimized.closing_unmet ?? Infinity) <= 71,
     `Optimized unmet no longer clears -10 gate: ${optimized.closing_unmet}`
@@ -79,7 +76,7 @@ async function main() {
     (optimized.priority_coverage ?? -Infinity) >= 0.802206,
     `Optimized priority coverage no longer clears +10pp gate: ${optimized.priority_coverage}`
   )
-  
+
   console.log(
     JSON.stringify(
       {
@@ -100,7 +97,6 @@ async function main() {
       2
     )
   )
-  
 }
 
 main().catch((error) => {

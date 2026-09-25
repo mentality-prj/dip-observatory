@@ -4,11 +4,13 @@ export const decisionChallengeI18n = {
   en: {
     eyebrow: 'DECISION CHALLENGE',
     title: 'Make the decision before QDIP does',
-    intro: 'Allocate the same constrained resources QDIP will receive. Your choice is locked before the recommendation is calculated.',
+    intro:
+      'Allocate the same constrained resources QDIP will receive. Your choice is locked before the recommendation is calculated.',
     loading: 'Preparing the decision…',
     howTitle: 'How it works',
     howIntro: 'You control 4 teams that must be assigned across 5 competing locations.',
-    howGoal: 'Goal: make the best allocation you can using each location’s demand, team skills and capacity, the budget and hard constraints.',
+    howGoal:
+      'Goal: make the best allocation you can using each location’s demand, team skills and capacity, the budget and hard constraints.',
     howSteps: [
       'Review the teams and the demand at each location.',
       'In “Your decision”, choose one allowed location for each team.',
@@ -19,13 +21,15 @@ export const decisionChallengeI18n = {
     ],
     howImportant: 'QDIP’s recommendation stays hidden until you lock your own decision.',
     ownData: 'Use your own data',
-    ownDataHelp: 'Upload aggregated Resource Allocation data (CSV / XML / XLSX). The file is validated before a new frozen challenge is created.',
+    ownDataHelp:
+      'Upload aggregated Resource Allocation data (CSV / XML / XLSX). The file is validated before a new frozen challenge is created.',
     upload: 'Upload data',
     demoData: 'Use example data',
     imported: 'Customer dataset loaded',
     scenario: 'Business situation',
     scenarioTitle: 'Resource Allocation Decision Challenge',
-    scenarioDescription: 'Allocate constrained teams across five competing locations before seeing the QDIP recommendation.',
+    scenarioDescription:
+      'Allocate constrained teams across five competing locations before seeing the QDIP recommendation.',
     snapshot: 'snapshot',
     resources: 'Available teams',
     targets: 'Competing locations',
@@ -50,7 +54,8 @@ export const decisionChallengeI18n = {
     limitations: 'What this result means',
     ctaTitle: 'Test the same decision pattern on your data',
     cta: 'Describe your decision',
-    ctaText: 'This was a simulated decision. QDIP can evaluate the same type of decision using your real constraints, costs and operational data.',
+    ctaText:
+      'This was a simulated decision. QDIP can evaluate the same type of decision using your real constraints, costs and operational data.',
     unavailable: 'Decision Challenge is temporarily unavailable.',
     budget: 'Budget',
     demand: 'Demand',
@@ -71,7 +76,8 @@ export const decisionChallengeI18n = {
     loading: 'Готуємо рішення…',
     howTitle: 'Як це працює',
     howIntro: 'Ви керуєте 4 командами, які потрібно розподілити між 5 конкуруючими локаціями.',
-    howGoal: 'Мета: скласти найкращий, на вашу думку, розподіл з урахуванням потреб локацій, навичок і потужності команд, бюджету та жорстких обмежень.',
+    howGoal:
+      'Мета: скласти найкращий, на вашу думку, розподіл з урахуванням потреб локацій, навичок і потужності команд, бюджету та жорстких обмежень.',
     howSteps: [
       'Перегляньте команди та потреби кожної локації.',
       'У блоці «Ваше рішення» виберіть для кожної команди одну з дозволених локацій.',
@@ -82,13 +88,15 @@ export const decisionChallengeI18n = {
     ],
     howImportant: 'Рекомендація QDIP прихована, доки ви не зафіксуєте власне рішення.',
     ownData: 'Використати власні дані',
-    ownDataHelp: 'Завантажте агреговані дані Resource Allocation (CSV / XML / XLSX). Файл перевіряється до створення нового frozen challenge.',
+    ownDataHelp:
+      'Завантажте агреговані дані Resource Allocation (CSV / XML / XLSX). Файл перевіряється до створення нового frozen challenge.',
     upload: 'Завантажити дані',
     demoData: 'Використати демо-дані',
     imported: 'Дані клієнта завантажено',
     scenario: 'Бізнес-ситуація',
     scenarioTitle: 'Виклик з розподілу ресурсів',
-    scenarioDescription: 'Розподіліть обмежені команди між п’ятьма конкуруючими локаціями до того, як побачите рекомендацію QDIP.',
+    scenarioDescription:
+      'Розподіліть обмежені команди між п’ятьма конкуруючими локаціями до того, як побачите рекомендацію QDIP.',
     snapshot: 'знімок',
     resources: 'Доступні команди',
     targets: 'Конкуруючі локації',
@@ -113,7 +121,8 @@ export const decisionChallengeI18n = {
     limitations: 'Що означає цей результат',
     ctaTitle: 'Перевірте такий самий тип рішення на своїх даних',
     cta: 'Описати своє рішення',
-    ctaText: 'Це було симульоване рішення. QDIP може оцінити такий самий тип рішення з вашими реальними обмеженнями, витратами та операційними даними.',
+    ctaText:
+      'Це було симульоване рішення. QDIP може оцінити такий самий тип рішення з вашими реальними обмеженнями, витратами та операційними даними.',
     unavailable: 'Decision Challenge тимчасово недоступний.',
     budget: 'Бюджет',
     demand: 'Потреба',
@@ -130,11 +139,13 @@ export const decisionChallengeI18n = {
   pl: {
     eyebrow: 'DECISION CHALLENGE',
     title: 'Podejmij decyzję, zanim zrobi to QDIP',
-    intro: 'Przydziel te same ograniczone zasoby, które otrzyma QDIP. Twój wybór zostaje zablokowany przed obliczeniem rekomendacji.',
+    intro:
+      'Przydziel te same ograniczone zasoby, które otrzyma QDIP. Twój wybór zostaje zablokowany przed obliczeniem rekomendacji.',
     loading: 'Przygotowywanie decyzji…',
     howTitle: 'Jak to działa',
     howIntro: 'Zarządzasz 4 zespołami, które trzeba przydzielić między 5 konkurujących lokalizacji.',
-    howGoal: 'Cel: przygotuj najlepszy według Ciebie przydział, uwzględniając popyt lokalizacji, kompetencje i zdolność zespołów, budżet oraz twarde ograniczenia.',
+    howGoal:
+      'Cel: przygotuj najlepszy według Ciebie przydział, uwzględniając popyt lokalizacji, kompetencje i zdolność zespołów, budżet oraz twarde ograniczenia.',
     howSteps: [
       'Przejrzyj zespoły oraz zapotrzebowanie każdej lokalizacji.',
       'W sekcji „Twoja decyzja” wybierz dla każdego zespołu jedną z dozwolonych lokalizacji.',
@@ -145,13 +156,15 @@ export const decisionChallengeI18n = {
     ],
     howImportant: 'Rekomendacja QDIP pozostaje ukryta, dopóki nie zablokujesz własnej decyzji.',
     ownData: 'Użyj własnych danych',
-    ownDataHelp: 'Prześlij zagregowane dane Resource Allocation (CSV / XML / XLSX). Plik jest walidowany przed utworzeniem nowego zamrożonego Challenge.',
+    ownDataHelp:
+      'Prześlij zagregowane dane Resource Allocation (CSV / XML / XLSX). Plik jest walidowany przed utworzeniem nowego zamrożonego Challenge.',
     upload: 'Prześlij dane',
     demoData: 'Użyj danych demonstracyjnych',
     imported: 'Dane klienta zostały wczytane',
     scenario: 'Sytuacja biznesowa',
     scenarioTitle: 'Wyzwanie alokacji zasobów',
-    scenarioDescription: 'Przydziel ograniczone zespoły między pięć konkurujących lokalizacji, zanim zobaczysz rekomendację QDIP.',
+    scenarioDescription:
+      'Przydziel ograniczone zespoły między pięć konkurujących lokalizacji, zanim zobaczysz rekomendację QDIP.',
     snapshot: 'migawka',
     resources: 'Dostępne zespoły',
     targets: 'Konkurujące lokalizacje',
@@ -170,13 +183,15 @@ export const decisionChallengeI18n = {
     qdip: 'Rekomendacja QDIP',
     value: 'Symulowana wartość nominalna',
     delta: 'QDIP − Człowiek',
-    noExpected: 'Expected value i ryzyko probabilistyczne nie są pokazywane, ponieważ ten Challenge nie ma modelu probabilistycznego.',
+    noExpected:
+      'Expected value i ryzyko probabilistyczne nie są pokazywane, ponieważ ten Challenge nie ma modelu probabilistycznego.',
     explanation: 'Dlaczego QDIP wybrał ten przydział',
     evidence: 'Dowody decyzji',
     limitations: 'Co oznacza ten wynik',
     ctaTitle: 'Sprawdź ten sam typ decyzji na własnych danych',
     cta: 'Opisz swoją decyzję',
-    ctaText: 'To była decyzja symulowana. QDIP może ocenić ten sam typ decyzji z użyciem Twoich rzeczywistych ograniczeń, kosztów i danych operacyjnych.',
+    ctaText:
+      'To była decyzja symulowana. QDIP może ocenić ten sam typ decyzji z użyciem Twoich rzeczywistych ograniczeń, kosztów i danych operacyjnych.',
     unavailable: 'Decision Challenge jest chwilowo niedostępny.',
     budget: 'Budżet',
     demand: 'Popyt',
@@ -207,11 +222,7 @@ export const decisionChallengeMetadataI18n = {
   },
 } as const
 
-export function formatChallengeMoney(
-  value: number,
-  currency: string,
-  locale: Locale,
-) {
+export function formatChallengeMoney(value: number, currency: string, locale: Locale) {
   return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: 'currency',
     currency,

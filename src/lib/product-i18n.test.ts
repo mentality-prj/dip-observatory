@@ -11,9 +11,7 @@ import { SUPPORTED_LOCALES } from './observatory-i18n'
 function deepKeys(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null) return [prefix]
   return Object.entries(value)
-    .flatMap(([key, child]) =>
-      deepKeys(child, prefix ? `${prefix}.${key}` : key),
-    )
+    .flatMap(([key, child]) => deepKeys(child, prefix ? `${prefix}.${key}` : key))
     .sort()
 }
 
@@ -27,17 +25,10 @@ function assertStringLeaves(value: unknown): void {
 
 describe('Observatory product i18n contract', () => {
   it('keeps all supported locale labels defined', () => {
-    expect(Object.keys(localeLabels).sort()).toEqual(
-      [...SUPPORTED_LOCALES].sort(),
-    )
+    expect(Object.keys(localeLabels).sort()).toEqual([...SUPPORTED_LOCALES].sort())
   })
 
-  for (const resources of [
-    sharedI18n,
-    observatoryI18n,
-    observatoryHomeI18n,
-    observatoryDecisionNarrativeI18n,
-  ]) {
+  for (const resources of [sharedI18n, observatoryI18n, observatoryHomeI18n, observatoryDecisionNarrativeI18n]) {
     it('keeps locale message shapes aligned and string-only', () => {
       expect(deepKeys(resources.uk)).toEqual(deepKeys(resources.en))
       expect(deepKeys(resources.pl)).toEqual(deepKeys(resources.en))

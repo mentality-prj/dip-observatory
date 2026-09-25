@@ -21,9 +21,7 @@ export function detectLocaleFromHeader(value?: string | null): Locale {
     .filter(Boolean) as string[]
 
   for (const candidate of candidates) {
-    const locale = SUPPORTED_LOCALES.find((item) =>
-      candidate.toLowerCase().startsWith(item),
-    )
+    const locale = SUPPORTED_LOCALES.find((item) => candidate.toLowerCase().startsWith(item))
     if (locale) return locale
   }
   return DEFAULT_LOCALE
@@ -32,9 +30,7 @@ export function detectLocaleFromHeader(value?: string | null): Locale {
 export function buildLocalePath(pathname: string, locale: Locale) {
   const segments = (pathname || '/').split('/').filter(Boolean)
   if (segments[0] && isSupportedLocale(segments[0])) segments.shift()
-  return segments.length
-    ? `/${locale}/${segments.join('/')}`
-    : `/${locale}`
+  return segments.length ? `/${locale}/${segments.join('/')}` : `/${locale}`
 }
 
 const metadata = {
@@ -44,11 +40,11 @@ const metadata = {
   },
   uk: {
     title: 'QDIP Observatory | Український інтерфейс',
-    description: 'Досліджуйте застосунки QDIP для прийняття рішень, їхні вхідні дані, альтернативи та обґрунтування.'
+    description: 'Досліджуйте застосунки QDIP для прийняття рішень, їхні вхідні дані, альтернативи та обґрунтування.',
   },
   pl: {
     title: 'QDIP Observatory | Polski interfejs',
-    description: 'Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i uzasadnienia decyzji.'
+    description: 'Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i uzasadnienia decyzji.',
   },
 } as const
 

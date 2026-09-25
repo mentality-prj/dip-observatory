@@ -24,12 +24,14 @@ const labels = {
     compareTitle: 'Що дає рекомендація QDIP у цьому сценарії',
     recommendationKicker: '02 · ОЧІКУВАНИЙ ЕФЕКТ',
     recommendationTitle: 'Очікуваний результат рекомендованого плану',
-    recommendationSubtitle: 'Референсний план не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
+    recommendationSubtitle:
+      'Референсний план не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
     current: 'Поточний план',
     canonicalBaseline: 'Референсний ручний план',
     recommended: 'План QDIP',
     syntheticBaseline: 'Синтетичний допустимий план для порівняння. Це не фактичний план вашої організації.',
-    priorityHelp: 'Частка пріоритетних одиниць потреб, які модельований план дозволяє обслужити протягом усього планового періоду.',
+    priorityHelp:
+      'Частка пріоритетних одиниць потреб, які модельований план дозволяє обслужити протягом усього планового періоду.',
     moveEvents: 'Переміщень за весь період',
     scenario: 'Модельована оцінка синтетичного планового сценарію.',
     unavailable: 'референсний план не оцінено',
@@ -47,7 +49,8 @@ const labels = {
     compareTitle: 'What the QDIP recommendation changes in this scenario',
     recommendationKicker: '02 · EXPECTED IMPACT',
     recommendationTitle: 'Expected result of the recommended plan',
-    recommendationSubtitle: 'The reference plan could not be evaluated under the same scenario, so only the recommended plan is shown.',
+    recommendationSubtitle:
+      'The reference plan could not be evaluated under the same scenario, so only the recommended plan is shown.',
     current: 'Current plan',
     canonicalBaseline: 'Reference manual plan',
     recommended: 'QDIP plan',
@@ -70,12 +73,14 @@ const labels = {
     compareTitle: 'Co zmienia rekomendacja QDIP w tym scenariuszu',
     recommendationKicker: '02 · OCZEKIWANY EFEKT',
     recommendationTitle: 'Oczekiwany wynik rekomendowanego planu',
-    recommendationSubtitle: 'Planu referencyjnego nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
+    recommendationSubtitle:
+      'Planu referencyjnego nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
     current: 'Bieżący plan',
     canonicalBaseline: 'Referencyjny plan ręczny',
     recommended: 'Plan QDIP',
     syntheticBaseline: 'Syntetyczny wykonalny plan porównawczy. Nie jest to rzeczywisty plan Państwa organizacji.',
-    priorityHelp: 'Udział priorytetowych jednostek potrzeb, które modelowany plan może obsłużyć w całym horyzoncie planowania.',
+    priorityHelp:
+      'Udział priorytetowych jednostek potrzeb, które modelowany plan może obsłużyć w całym horyzoncie planowania.',
     moveEvents: 'Przemieszczenia w całym horyzoncie',
     scenario: 'Modelowana ocena syntetycznego scenariusza planowania.',
     unavailable: 'plan referencyjny nieoceniony',
@@ -105,12 +110,12 @@ export function ResourceAllocationImpact({
   const baselineLabel = baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
   const currentPriority = baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
   const recommendedPriority = summary.priority_coverage ?? metrics.priority_coverage
-  const currentTotalCoverage = baseline && baseline.summary.total_available > 0
-    ? baseline.summary.served / baseline.summary.total_available
-    : baseline?.metrics.total_coverage
-  const recommendedTotalCoverage = summary.total_available > 0
-    ? summary.served / summary.total_available
-    : metrics.total_coverage
+  const currentTotalCoverage =
+    baseline && baseline.summary.total_available > 0
+      ? baseline.summary.served / baseline.summary.total_available
+      : baseline?.metrics.total_coverage
+  const recommendedTotalCoverage =
+    summary.total_available > 0 ? summary.served / summary.total_available : metrics.total_coverage
   const servedDelta = baseline ? Math.round(summary.served - baseline.summary.served) : null
 
   return (
@@ -136,29 +141,81 @@ export function ResourceAllocationImpact({
 
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl text-xs leading-relaxed text-slate-500">
-          <p>{t.scenario}{planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}</p>
+          <p>
+            {t.scenario}
+            {planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}
+          </p>
           {baseline?.kind === 'canonical-plan' && <p className="mt-1">{t.syntheticBaseline}</p>}
         </div>
         <div className="text-left sm:text-right">
           <div className="text-xs text-slate-500">{t.moved}</div>
-          <div className="text-xl font-bold">{teamsMoved} <span className="text-sm font-medium text-slate-500">{t.of} {totalTeams}</span></div>
-          <div className="mt-1 text-xs text-slate-500">{t.moveEvents}: <b className="text-slate-300">{moveEvents}</b></div>
+          <div className="text-xl font-bold">
+            {teamsMoved}{' '}
+            <span className="text-sm font-medium text-slate-500">
+              {t.of} {totalTeams}
+            </span>
+          </div>
+          <div className="mt-1 text-xs text-slate-500">
+            {t.moveEvents}: <b className="text-slate-300">{moveEvents}</b>
+          </div>
         </div>
       </div>
 
       {!compared && <p className="mt-4 max-w-4xl text-sm text-slate-500">{t.recommendationSubtitle}</p>}
 
       <div className="mt-6 grid gap-px bg-white/5 sm:grid-cols-2 xl:grid-cols-4">
-        <Impact label={t.priority} help={t.priorityHelp} current={currentPriority} recommended={recommendedPriority} format="pct" unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.total} current={currentTotalCoverage} recommended={recommendedTotalCoverage} format="pct" unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.served} current={baseline?.summary.served} recommended={summary.served} unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.unmet} current={baseline?.summary.closing_unmet} recommended={summary.closing_unmet} inverse unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
+        <Impact
+          label={t.priority}
+          help={t.priorityHelp}
+          current={currentPriority}
+          recommended={recommendedPriority}
+          format="pct"
+          unavailable={t.unavailable}
+          currentLabel={baselineLabel}
+          recommendedLabel={t.recommended}
+        />
+        <Impact
+          label={t.total}
+          current={currentTotalCoverage}
+          recommended={recommendedTotalCoverage}
+          format="pct"
+          unavailable={t.unavailable}
+          currentLabel={baselineLabel}
+          recommendedLabel={t.recommended}
+        />
+        <Impact
+          label={t.served}
+          current={baseline?.summary.served}
+          recommended={summary.served}
+          unavailable={t.unavailable}
+          currentLabel={baselineLabel}
+          recommendedLabel={t.recommended}
+        />
+        <Impact
+          label={t.unmet}
+          current={baseline?.summary.closing_unmet}
+          recommended={summary.closing_unmet}
+          inverse
+          unavailable={t.unavailable}
+          currentLabel={baselineLabel}
+          recommendedLabel={t.recommended}
+        />
       </div>
     </section>
   )
 }
 
-function Impact({ label, current, recommended, help, format, inverse = false, unavailable, currentLabel, recommendedLabel }: {
+function Impact({
+  label,
+  current,
+  recommended,
+  help,
+  format,
+  inverse = false,
+  unavailable,
+  currentLabel,
+  recommendedLabel,
+}: {
   label: string
   help?: string
   current?: number
@@ -170,29 +227,46 @@ function Impact({ label, current, recommended, help, format, inverse = false, un
   recommendedLabel: string
 }) {
   const render = (value: number) => (format === 'pct' ? `${Math.round(value * 100)}%` : value.toFixed(0))
-  if (current === undefined) return (
-    <div className="bg-white/[0.04] p-4">
-      <MetricLabel label={label} help={help} />
-      <div className="mt-4 text-2xl font-black">{render(recommended)}</div>
-      <div className="mt-2 text-xs text-slate-500">{unavailable}</div>
-    </div>
-  )
+  if (current === undefined)
+    return (
+      <div className="bg-white/[0.04] p-4">
+        <MetricLabel label={label} help={help} />
+        <div className="mt-4 text-2xl font-black">{render(recommended)}</div>
+        <div className="mt-2 text-xs text-slate-500">{unavailable}</div>
+      </div>
+    )
   const delta = recommended - current
   const favorable = Math.abs(delta) < 0.0001 ? null : inverse ? delta < 0 : delta > 0
   const Icon = delta >= 0 ? ArrowUp : ArrowDown
-  const deltaText = format === 'pct'
-    ? `${delta > 0 ? '+' : ''}${Math.round(delta * 100)} pp`
-    : `${delta > 0 ? '+' : ''}${delta.toFixed(0)} units`
+  const deltaText =
+    format === 'pct'
+      ? `${delta > 0 ? '+' : ''}${Math.round(delta * 100)} pp`
+      : `${delta > 0 ? '+' : ''}${delta.toFixed(0)} units`
   return (
     <div className="bg-white/[0.04] p-4">
       <MetricLabel label={label} help={help} />
       <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-        <div><div className="text-[10px] leading-tight text-slate-600">{currentLabel}</div><span className="text-sm text-slate-400">{render(current)}</span></div>
+        <div>
+          <div className="text-[10px] leading-tight text-slate-600">{currentLabel}</div>
+          <span className="text-sm text-slate-400">{render(current)}</span>
+        </div>
         <span className="pb-0.5 text-slate-600">→</span>
-        <div><div className="text-[10px] leading-tight text-rose-300/70">{recommendedLabel}</div><b className="text-2xl">{render(recommended)}</b></div>
+        <div>
+          <div className="text-[10px] leading-tight text-rose-300/70">{recommendedLabel}</div>
+          <b className="text-2xl">{render(recommended)}</b>
+        </div>
       </div>
-      <div className={`mt-2 flex items-center gap-1 text-xs font-bold ${favorable === true ? 'text-emerald-300' : favorable === false ? 'text-rose-200' : 'text-slate-500'}`}>
-        {Math.abs(delta) < 0.0001 ? <span>0</span> : <><Icon className="h-3.5 w-3.5" />{deltaText}</>}
+      <div
+        className={`mt-2 flex items-center gap-1 text-xs font-bold ${favorable === true ? 'text-emerald-300' : favorable === false ? 'text-rose-200' : 'text-slate-500'}`}
+      >
+        {Math.abs(delta) < 0.0001 ? (
+          <span>0</span>
+        ) : (
+          <>
+            <Icon className="h-3.5 w-3.5" />
+            {deltaText}
+          </>
+        )}
       </div>
     </div>
   )
@@ -205,7 +279,9 @@ function MetricLabel({ label, help }: { label: string; help?: string }) {
       {help && (
         <span className="group relative inline-flex" tabIndex={0} aria-label={help}>
           <CircleHelp className="h-3.5 w-3.5" />
-          <span className="pointer-events-none absolute left-0 top-5 z-20 hidden w-64 border border-white/10 bg-slate-950 p-2 text-[11px] leading-relaxed text-slate-300 shadow-xl group-hover:block group-focus:block">{help}</span>
+          <span className="pointer-events-none absolute left-0 top-5 z-20 hidden w-64 border border-white/10 bg-slate-950 p-2 text-[11px] leading-relaxed text-slate-300 shadow-xl group-hover:block group-focus:block">
+            {help}
+          </span>
         </span>
       )}
     </div>

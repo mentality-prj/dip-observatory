@@ -132,7 +132,9 @@ export function ProfileDashboard({
 
       {!profiles.length ? (
         <div className="studio-empty-panel">
-          <div className="studio-empty-icon"><Database size={22} aria-hidden /></div>
+          <div className="studio-empty-icon">
+            <Database size={22} aria-hidden />
+          </div>
           <h2>{c.noProfiles}</h2>
           <p>{c.noProfilesHelp}</p>
           <Button type="button" onClick={onCreate}>
@@ -146,7 +148,9 @@ export function ProfileDashboard({
             <div className="studio-panel-heading">
               <div>
                 <h2>{c.decisionProfiles}</h2>
-                <span>{filtered.length} / {profiles.length}</span>
+                <span>
+                  {filtered.length} / {profiles.length}
+                </span>
               </div>
             </div>
 
@@ -160,7 +164,9 @@ export function ProfileDashboard({
                     <th>{c.status}</th>
                     <th>{c.alternatives}</th>
                     <th>{c.dimensions}</th>
-                    <th><span className="sr-only">{c.inspect}</span></th>
+                    <th>
+                      <span className="sr-only">{c.inspect}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -170,7 +176,11 @@ export function ProfileDashboard({
                     return (
                       <tr key={profile.id} data-selected={active ? 'true' : undefined}>
                         <td>
-                          <button type="button" className="studio-profile-name" onClick={() => setSelectedId(profile.id)}>
+                          <button
+                            type="button"
+                            className="studio-profile-name"
+                            onClick={() => setSelectedId(profile.id)}
+                          >
                             {profile.name}
                           </button>
                           <small>{profile.capability_id}</small>
@@ -178,7 +188,11 @@ export function ProfileDashboard({
                         <td>{profileDomain(profile, plugins)}</td>
                         <td>{profile.version}</td>
                         <td>
-                          <Badge variant={currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'rose' : 'neutral'}>
+                          <Badge
+                            variant={
+                              currentStatus === 'ACTIVE' ? 'emerald' : currentStatus === 'INVALID' ? 'rose' : 'neutral'
+                            }
+                          >
                             {statusLabel(currentStatus)}
                           </Badge>
                         </td>
@@ -231,13 +245,22 @@ export function ProfileDashboard({
               </p>
 
               <div className="studio-overview-metrics">
-                <div><strong>{selected.alternatives.length}</strong><span>{c.alternatives}</span></div>
-                <div><strong>{selected.dimensions.length}</strong><span>{c.dimensions}</span></div>
+                <div>
+                  <strong>{selected.alternatives.length}</strong>
+                  <span>{c.alternatives}</span>
+                </div>
+                <div>
+                  <strong>{selected.dimensions.length}</strong>
+                  <span>{c.dimensions}</span>
+                </div>
                 <div>
                   <strong>{selected.dimensions.filter((dimension) => dimension.binding_id).length}</strong>
                   <span>{c.boundInputs}</span>
                 </div>
-                <div><strong>{selected.validation.warnings.length}</strong><span>{c.warnings}</span></div>
+                <div>
+                  <strong>{selected.validation.warnings.length}</strong>
+                  <span>{c.warnings}</span>
+                </div>
               </div>
 
               {selected.validation.errors.length > 0 && (

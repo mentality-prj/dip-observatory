@@ -18,11 +18,7 @@ export async function POST(request: Request) {
         { error: 'Invalid GTM public evaluation payload.', issues: error.issues },
         { status: 400 }
       )
-    if (error instanceof DipApiError)
-      return NextResponse.json({ error: error.message }, { status: error.status })
-    return NextResponse.json(
-      { error: 'The GTM public evaluation could not be executed.' },
-      { status: 500 }
-    )
+    if (error instanceof DipApiError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: 'The GTM public evaluation could not be executed.' }, { status: 500 })
   }
 }

@@ -24,7 +24,8 @@ const copy = {
     dropActive: 'Відпустіть файл для імпорту',
     or: 'або',
     template: 'Поля шаблону',
-    templateIntro: 'CSV містить кілька типів рядків. Поле record_type визначає, які дані описує рядок. Заповнюйте лише поля, що стосуються цього типу запису; решта можуть залишатися порожніми.',
+    templateIntro:
+      'CSV містить кілька типів рядків. Поле record_type визначає, які дані описує рядок. Заповнюйте лише поля, що стосуються цього типу запису; решта можуть залишатися порожніми.',
     recordTypesTitle: 'Типи записів',
     recordTypes: {
       settings: 'загальні параметри планування: бюджет, цільове покриття та одиниця планування',
@@ -37,10 +38,12 @@ const copy = {
       baseline: 'ручний план для порівняння з рекомендацією QDIP',
     },
     columnsTitle: 'Колонки CSV',
-    multiValueHint: 'Якщо поле містить кілька значень, наприклад skills, days або allowed_communities, розділяйте їх символом |.',
+    multiValueHint:
+      'Якщо поле містить кілька значень, наприклад skills, days або allowed_communities, розділяйте їх символом |.',
 
     starterTitle: 'Почніть з готового CSV',
-    starterBody: 'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
+    starterBody:
+      'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
     downloadTemplate: 'Завантажити CSV шаблон',
     downloadExample: 'Завантажити демо CSV',
     templateHint: 'Мінімальний валідний файл',
@@ -67,7 +70,8 @@ const copy = {
     dropActive: 'Drop the file to import',
     or: 'or',
     template: 'Template columns',
-    templateIntro: 'The CSV contains several row types. The record_type field determines what each row describes. Fill only the columns relevant to that record type; the remaining columns may stay empty.',
+    templateIntro:
+      'The CSV contains several row types. The record_type field determines what each row describes. Fill only the columns relevant to that record type; the remaining columns may stay empty.',
     recordTypesTitle: 'Record types',
     recordTypes: {
       settings: 'global planning settings: budget, target coverage and planning unit',
@@ -80,10 +84,12 @@ const copy = {
       baseline: 'manual plan used for comparison with the QDIP recommendation',
     },
     columnsTitle: 'CSV columns',
-    multiValueHint: 'For fields with multiple values, such as skills, days or allowed_communities, separate values with |.',
+    multiValueHint:
+      'For fields with multiple values, such as skills, days or allowed_communities, separate values with |.',
 
     starterTitle: 'Start from a ready CSV',
-    starterBody: 'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
+    starterBody:
+      'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
     downloadTemplate: 'Download CSV template',
     downloadExample: 'Download example CSV',
     templateHint: 'Minimal valid file',
@@ -110,7 +116,8 @@ const copy = {
     dropActive: 'Upuść plik, aby go zaimportować',
     or: 'lub',
     template: 'Kolumny szablonu',
-    templateIntro: 'CSV zawiera kilka typów wierszy. Pole record_type określa, jakie dane opisuje dany wiersz. Wypełniaj tylko kolumny dotyczące danego typu rekordu; pozostałe mogą pozostać puste.',
+    templateIntro:
+      'CSV zawiera kilka typów wierszy. Pole record_type określa, jakie dane opisuje dany wiersz. Wypełniaj tylko kolumny dotyczące danego typu rekordu; pozostałe mogą pozostać puste.',
     recordTypesTitle: 'Typy rekordów',
     recordTypes: {
       settings: 'ogólne parametry planowania: budżet, docelowe pokrycie i jednostka planowania',
@@ -123,10 +130,12 @@ const copy = {
       baseline: 'plan ręczny używany do porównania z rekomendacją QDIP',
     },
     columnsTitle: 'Kolumny CSV',
-    multiValueHint: 'Jeśli pole zawiera kilka wartości, np. skills, days lub allowed_communities, rozdzielaj je znakiem |.',
+    multiValueHint:
+      'Jeśli pole zawiera kilka wartości, np. skills, days lub allowed_communities, rozdzielaj je znakiem |.',
 
     starterTitle: 'Zacznij od gotowego CSV',
-    starterBody: 'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
+    starterBody:
+      'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
     downloadTemplate: 'Pobierz szablon CSV',
     downloadExample: 'Pobierz przykładowy CSV',
     templateHint: 'Minimalny poprawny plik',
@@ -252,23 +261,21 @@ export function ResourceAllocationImport({
           <button
             type="button"
             data-testid="resource-download-template"
-            onClick={() =>
-              downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')
-            }
+            onClick={() => downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')}
             className="flex min-w-0 items-start gap-2 overflow-hidden border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
               <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t.downloadTemplate}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
+                {t.templateHint}
+              </span>
             </span>
           </button>
           <button
             type="button"
             data-testid="resource-download-example"
-            onClick={() =>
-              downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')
-            }
+            onClick={() => downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')}
             className="flex min-w-0 items-start gap-2 overflow-hidden border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
@@ -400,8 +407,13 @@ export function ResourceAllocationImport({
             <b className="text-slate-300">{t.recordTypesTitle}</b>
             <dl className="mt-3 grid gap-2">
               {Object.entries(t.recordTypes).map(([type, description]) => (
-                <div key={type} className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3">
-                  <dt><code className="text-rose-200">{type}</code></dt>
+                <div
+                  key={type}
+                  className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3"
+                >
+                  <dt>
+                    <code className="text-rose-200">{type}</code>
+                  </dt>
                   <dd className="leading-relaxed">{description}</dd>
                 </div>
               ))}
@@ -411,7 +423,10 @@ export function ResourceAllocationImport({
             <b className="text-slate-300">{t.columnsTitle}</b>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => (
-                <code key={column} className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400">
+                <code
+                  key={column}
+                  className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400"
+                >
                   {column}
                 </code>
               ))}

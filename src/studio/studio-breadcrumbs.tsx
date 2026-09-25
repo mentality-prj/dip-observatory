@@ -27,7 +27,12 @@ export function StudioBreadcrumbs({ items }: { items: { label: string; href?: st
 
   return (
     <nav aria-label={c.breadcrumbs.label} className="studio-breadcrumbs">
-      <Link className="studio-breadcrumb-home" href={marketingHref(locale)} aria-label={c.breadcrumbs.home} title={c.breadcrumbs.home}>
+      <Link
+        className="studio-breadcrumb-home"
+        href={marketingHref(locale)}
+        aria-label={c.breadcrumbs.home}
+        title={c.breadcrumbs.home}
+      >
         <Home size={14} aria-hidden />
       </Link>
       <span aria-hidden="true"> / </span>

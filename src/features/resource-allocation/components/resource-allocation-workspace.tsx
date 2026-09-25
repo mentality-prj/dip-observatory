@@ -2,19 +2,12 @@
 
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
-import {
-  RESOURCE_ALLOCATION_PROFILES,
-  type ResourceAllocationProfileId,
-} from '../demo-data'
+import { RESOURCE_ALLOCATION_PROFILES, type ResourceAllocationProfileId } from '../demo-data'
 import { ResourceAllocationDecisionPanel } from './resource-allocation-decision-panel'
 import { ResourceAllocationImpact } from './resource-allocation-impact'
 import { ResourceAllocationImport } from './resource-allocation-import'
 import { ResourceAllocationManualEditor } from './resource-allocation-manual-editor'
-import {
-  localizePlanningDay,
-  summarizeMovements,
-  trackResourceAllocation,
-} from '../presentation'
+import { localizePlanningDay, summarizeMovements, trackResourceAllocation } from '../presentation'
 import { useResourceAllocationWorkspace } from '../hooks/use-resource-allocation-workspace'
 import { ResourceAllocationAssignmentExplanation } from './resource-allocation-assignment-explanation'
 
@@ -38,7 +31,12 @@ const COUNT_FORMS: Record<Locale, Record<CountKind, Record<string, string>>> = {
   pl: {
     teams: { one: 'zespół', few: 'zespoły', many: 'zespołów', other: 'zespołu' },
     communities: { one: 'społeczność', few: 'społeczności', many: 'społeczności', other: 'społeczności' },
-    demand: { one: 'jednostka potrzeb', few: 'jednostki potrzeb', many: 'jednostek potrzeb', other: 'jednostki potrzeb' },
+    demand: {
+      one: 'jednostka potrzeb',
+      few: 'jednostki potrzeb',
+      many: 'jednostek potrzeb',
+      other: 'jednostki potrzeb',
+    },
     days: { one: 'dzień', few: 'dni', many: 'dni', other: 'dnia' },
   },
 }
@@ -299,7 +297,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4">
-            <details id="resource-import" className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
+            <details
+              id="resource-import"
+              className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4"
+            >
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t.tryOwnData}</summary>
               <div className="mt-3">
                 <ResourceAllocationImport locale={locale} onImported={useImportedData} />
@@ -439,11 +440,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                             recommendedAlternative?.demand_summary.priority_coverage ??
                             recommendedAlternative?.aggregate_metrics.priority_coverage ??
                             alternativePriority
-                          const coverageDeltaPp = Math.round(
-                            (alternativePriority - recommendedPriority) * 100
-                          )
-                          const moveDelta =
-                            alternativeMovement.moveEvents - recommendedMovement.moveEvents
+                          const coverageDeltaPp = Math.round((alternativePriority - recommendedPriority) * 100)
+                          const moveDelta = alternativeMovement.moveEvents - recommendedMovement.moveEvents
                           return (
                             <button
                               type="button"
@@ -585,9 +583,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                                 key={team}
                                 onClick={() => selectExplanationTeam(team)}
                                 className={`w-full break-words px-2 py-1 text-left text-xs font-semibold [overflow-wrap:anywhere] ${
-                                  activeExplanationTeam === team
-                                    ? 'ds-selection-surface'
-                                    : 'bg-slate-950/70 text-white'
+                                  activeExplanationTeam === team ? 'ds-selection-surface' : 'bg-slate-950/70 text-white'
                                 }`}
                               >
                                 {team}
@@ -726,8 +722,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 </details>
 
-
-
                 {lastInput && (
                   <details className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.03]">
                     <summary className="cursor-pointer p-6 text-lg font-medium">{t.testOwnPlan}</summary>
@@ -768,43 +762,43 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       locale={locale}
                     />
 
-                  <section
-                    data-testid="resource-pilot-cta"
-                    className="rounded-[var(--ds-radius-panel)] border border-emerald-300/20 bg-emerald-300/[0.05] p-6"
-                  >
-                    <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                      {locale === 'uk'
-                        ? '07 · ПЕРЕВІРИТИ НА ВАШИХ ДАНИХ'
-                        : locale === 'pl'
-                          ? '07 · SPRAWDŹ NA WŁASNYCH DANYCH'
-                          : '07 · TEST ON YOUR DATA'}
-                    </div>
-                    <h2 className="mt-2 text-2xl font-medium">
-                      {locale === 'uk'
-                        ? 'Перевірте QDIP на одному реальному тижні'
-                        : locale === 'pl'
-                          ? 'Sprawdź QDIP na jednym rzeczywistym tygodniu'
-                          : 'Test QDIP on one real week'}
-                    </h2>
-                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-                      {locale === 'uk'
-                        ? 'Достатньо агрегованих даних: локації, потреби за видами послуг, команди, їх компетенції та потужність, доступність і маршрути. Персональні дані бенефіціарів не потрібні.'
-                        : locale === 'pl'
-                          ? 'Wystarczą dane zagregowane: lokalizacje, potrzeby według usług, zespoły, ich kompetencje i zdolność, dostępność oraz trasy. Dane osobowe beneficjentów nie są potrzebne.'
-                          : 'Aggregated data is enough: locations, demand by service, teams, skills and capacity, availability and routes. Beneficiary personal data is not required.'}
-                    </p>
-                    <a
-                      href="#resource-import"
-                      onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
-                      className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
+                    <section
+                      data-testid="resource-pilot-cta"
+                      className="rounded-[var(--ds-radius-panel)] border border-emerald-300/20 bg-emerald-300/[0.05] p-6"
                     >
-                      {locale === 'uk'
-                        ? 'Завантажити агреговані дані'
-                        : locale === 'pl'
-                          ? 'Wczytaj dane zagregowane'
-                          : 'Upload aggregated data'}
-                    </a>
-                  </section>
+                      <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        {locale === 'uk'
+                          ? '07 · ПЕРЕВІРИТИ НА ВАШИХ ДАНИХ'
+                          : locale === 'pl'
+                            ? '07 · SPRAWDŹ NA WŁASNYCH DANYCH'
+                            : '07 · TEST ON YOUR DATA'}
+                      </div>
+                      <h2 className="mt-2 text-2xl font-medium">
+                        {locale === 'uk'
+                          ? 'Перевірте QDIP на одному реальному тижні'
+                          : locale === 'pl'
+                            ? 'Sprawdź QDIP na jednym rzeczywistym tygodniu'
+                            : 'Test QDIP on one real week'}
+                      </h2>
+                      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+                        {locale === 'uk'
+                          ? 'Достатньо агрегованих даних: локації, потреби за видами послуг, команди, їх компетенції та потужність, доступність і маршрути. Персональні дані бенефіціарів не потрібні.'
+                          : locale === 'pl'
+                            ? 'Wystarczą dane zagregowane: lokalizacje, potrzeby według usług, zespoły, ich kompetencje i zdolność, dostępność oraz trasy. Dane osobowe beneficjentów nie są potrzebne.'
+                            : 'Aggregated data is enough: locations, demand by service, teams, skills and capacity, availability and routes. Beneficiary personal data is not required.'}
+                      </p>
+                      <a
+                        href="#resource-import"
+                        onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
+                        className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
+                      >
+                        {locale === 'uk'
+                          ? 'Завантажити агреговані дані'
+                          : locale === 'pl'
+                            ? 'Wczytaj dane zagregowane'
+                            : 'Upload aggregated data'}
+                      </a>
+                    </section>
                   </>
                 )}
               </>

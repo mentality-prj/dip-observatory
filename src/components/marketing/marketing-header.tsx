@@ -9,7 +9,9 @@ import { QdipLogo } from './qdip-logo'
 import styles from './qdip-site.module.css'
 import shellStyles from './marketing-shell.module.css'
 
-function marketingPath(locale: MarketingLocale, slug: string) { return `${marketingLocaleHref(locale)}/${slug}` }
+function marketingPath(locale: MarketingLocale, slug: string) {
+  return `${marketingLocaleHref(locale)}/${slug}`
+}
 
 export function MarketingHeader({ locale, currentPath }: { locale: MarketingLocale; currentPath?: string }) {
   const c = marketingCopy[locale]
@@ -26,17 +28,36 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
     { href: observatoryHref('', locale), label: 'Observatory', icon: <Telescope size={15} /> },
     { href: studioHref('', locale), label: 'Studio', icon: <SlidersHorizontal size={15} /> },
   ]
-  const hrefForLocale = (target: MarketingLocale) => currentPath ? marketingPath(target, currentPath) : marketingLocaleHref(target)
+  const hrefForLocale = (target: MarketingLocale) =>
+    currentPath ? marketingPath(target, currentPath) : marketingLocaleHref(target)
 
   return (
     <header className={styles.header}>
       <div className={styles.headerInner}>
-        <Link className={`${styles.brand} ${shellStyles.headerBrand}`} href={marketingLocaleHref(locale)} aria-label={a11y.home}><QdipLogo /></Link>
-        <nav aria-label={a11y.primaryNavigation} className={styles.nav}>{items.map((item) => <Link href={item.href} key={`${item.href}-${item.label}`}>{item.label}</Link>)}</nav>
+        <Link
+          className={`${styles.brand} ${shellStyles.headerBrand}`}
+          href={marketingLocaleHref(locale)}
+          aria-label={a11y.home}
+        >
+          <QdipLogo />
+        </Link>
+        <nav aria-label={a11y.primaryNavigation} className={styles.nav}>
+          {items.map((item) => (
+            <Link href={item.href} key={`${item.href}-${item.label}`}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <div className={styles.headerTools}>
           <div className={styles.productLinks} aria-label={a11y.products}>
-            <Link href={observatoryHref('', locale)}><Telescope size={15} aria-hidden />Observatory</Link>
-            <Link href={studioHref('', locale)}><SlidersHorizontal size={15} aria-hidden />Studio</Link>
+            <Link href={observatoryHref('', locale)}>
+              <Telescope size={15} aria-hidden />
+              Observatory
+            </Link>
+            <Link href={studioHref('', locale)}>
+              <SlidersHorizontal size={15} aria-hidden />
+              Studio
+            </Link>
           </div>
           <LanguageSwitcher locale={locale} hrefForLocale={hrefForLocale} />
           <MobileMenu items={mobileItems} locale={locale} />

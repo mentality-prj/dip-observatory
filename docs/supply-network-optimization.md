@@ -51,7 +51,6 @@ names, customer locations, customer identifiers or customer branding.
 The canonical route is `/supply-network-optimization`.
 The old `/supply-network-resilience` route permanently redirects to it.
 
-
 ## Model semantics used by the demo
 
 The current-flow layer is quantitative input evidence, not a hand-drawn connectivity diagram.
@@ -72,7 +71,6 @@ mode in the evidence panel is the mode returned by QDIP, not a browser-side choi
 Local warehouse-to-demand flows whose coordinates coincide are rendered as rings around the
 location instead of being silently dropped or displaced to fake coordinates. The map fits all
 visible warehouses, demand regions, suppliers and candidate locations.
-
 
 ## Reverse-analysis corrections
 

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildLocalePath,
-  detectLocaleFromHeader,
-  SUPPORTED_LOCALES,
-} from './observatory-i18n'
+import { buildLocalePath, detectLocaleFromHeader, SUPPORTED_LOCALES } from './observatory-i18n'
 
 describe('Observatory locale routing', () => {
   it.each(SUPPORTED_LOCALES)('builds a canonical %s home path', (locale) => {
@@ -13,15 +9,11 @@ describe('Observatory locale routing', () => {
   })
 
   it.each(SUPPORTED_LOCALES)('replaces an existing locale exactly once for %s', (locale) => {
-    expect(
-      buildLocalePath('/pl/supply-network-optimization', locale),
-    ).toBe(`/${locale}/supply-network-optimization`)
+    expect(buildLocalePath('/pl/supply-network-optimization', locale)).toBe(`/${locale}/supply-network-optimization`)
   })
 
   it('preserves an unlocalized application route', () => {
-    expect(
-      buildLocalePath('/supply-network-optimization', 'uk'),
-    ).toBe('/uk/supply-network-optimization')
+    expect(buildLocalePath('/supply-network-optimization', 'uk')).toBe('/uk/supply-network-optimization')
   })
 
   it('uses the same canonical locale registry for Accept-Language detection', () => {

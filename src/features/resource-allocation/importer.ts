@@ -28,10 +28,8 @@ function parseNumber(
   const parsed = Number(raw.replace(',', '.'))
   if (!Number.isFinite(parsed)) throw new Error(`${label} must be a valid number; received "${raw}".`)
   if (options.integer && !Number.isInteger(parsed)) throw new Error(`${label} must be an integer.`)
-  if (options.min !== undefined && parsed < options.min)
-    throw new Error(`${label} must be at least ${options.min}.`)
-  if (options.max !== undefined && parsed > options.max)
-    throw new Error(`${label} must be at most ${options.max}.`)
+  if (options.min !== undefined && parsed < options.min) throw new Error(`${label} must be at least ${options.min}.`)
+  if (options.max !== undefined && parsed > options.max) throw new Error(`${label} must be at most ${options.max}.`)
   return parsed
 }
 
@@ -62,7 +60,10 @@ function parsePriority(value: unknown, label: string): ResourceAllocationPriorit
 
 function sanitizeSourceFileName(fileName: string): string {
   const leaf = fileName.split(/[\\/]/).pop() ?? 'import'
-  const sanitized = leaf.replace(/[\u0000-\u001f\u007f]/g, '').replace(/[^\p{L}\p{N}._ -]/gu, '_').trim()
+  const sanitized = leaf
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[^\p{L}\p{N}._ -]/gu, '_')
+    .trim()
   return (sanitized || 'import').slice(0, 120)
 }
 
@@ -130,7 +131,12 @@ function parseCsv(text: string): Row[] {
   row.push(cell)
   if (row.some((value) => value.trim())) rows.push(row)
   if (rows.length < 2) return []
-  const headers = rows[0].map((value) => value.trim().toLowerCase().replace(/^\uFEFF/, ''))
+  const headers = rows[0].map((value) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/^\uFEFF/, '')
+  )
   return rows
     .slice(1)
     .map((values) => Object.fromEntries(headers.map((header, index) => [header, clean(values[index])])))
@@ -306,7 +312,9 @@ async function parseXlsx(buffer: ArrayBuffer): Promise<SheetRows[]> {
 }
 
 function rowType(sheet: string, row: Row): string {
-  const explicit = clean(row.record_type || row.type || row.kind).toLowerCase().replace(/[ -]/g, '_')
+  const explicit = clean(row.record_type || row.type || row.kind)
+    .toLowerCase()
+    .replace(/[ -]/g, '_')
   if (explicit) return explicit
   const normalizedSheet = sheet.toLowerCase().replace(/[ _-]/g, '')
   if (normalizedSheet.startsWith('communit') && normalizedSheet.includes('day')) return 'community_day'
@@ -345,9 +353,21 @@ function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationIn
       const type = rowType(sheet.sheet, row)
       if (!type) throw new Error(`Unable to determine record_type in sheet "${sheet.sheet}".`)
       if (
-        !['community', 'communities', 'demand', 'need', 'team', 'teams', 'team_day', 'community_day', 'travel', 'route', 'baseline', 'settings', 'config'].includes(
-          type
-        )
+        ![
+          'community',
+          'communities',
+          'demand',
+          'need',
+          'team',
+          'teams',
+          'team_day',
+          'community_day',
+          'travel',
+          'route',
+          'baseline',
+          'settings',
+          'config',
+        ].includes(type)
       )
         throw new Error(`Unsupported record_type "${type}".`)
       const normalized =
@@ -530,9 +550,9 @@ function buildInput(sheets: SheetRows[], fileName: string): ResourceAllocationIn
       baselinePlan[day][teamId] = destination
     }
     const missing = days.flatMap((day) =>
-      teams.filter((team) => !Object.prototype.hasOwnProperty.call(baselinePlan?.[day] ?? {}, team.id)).map(
-        (team) => `${day}/${team.id}`
-      )
+      teams
+        .filter((team) => !Object.prototype.hasOwnProperty.call(baselinePlan?.[day] ?? {}, team.id))
+        .map((team) => `${day}/${team.id}`)
     )
     if (missing.length > 0)
       throw new Error(
@@ -659,9 +679,7 @@ export const RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST = [
 export const RESOURCE_ALLOCATION_IMPORT_COLUMNS = RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.join(',')
 
 type ResourceAllocationImportColumn = (typeof RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST)[number]
-type ResourceAllocationCsvRow = Partial<
-  Record<ResourceAllocationImportColumn, string | number | boolean | null>
->
+type ResourceAllocationCsvRow = Partial<Record<ResourceAllocationImportColumn, string | number | boolean | null>>
 
 function csvCell(value: unknown): string {
   const raw = value == null ? '' : String(value)
@@ -673,9 +691,7 @@ function buildImportCsv(rows: ResourceAllocationCsvRow[]): string {
     '\uFEFF' +
     [
       RESOURCE_ALLOCATION_IMPORT_COLUMNS,
-      ...rows.map((row) =>
-        RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.map((column) => csvCell(row[column])).join(',')
-      ),
+      ...rows.map((row) => RESOURCE_ALLOCATION_IMPORT_COLUMN_LIST.map((column) => csvCell(row[column])).join(',')),
     ].join('\n')
   )
 }

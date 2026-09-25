@@ -8,11 +8,7 @@ import {
   type ProspectSeed,
 } from './import-contracts'
 import { gtmDemoSchema } from './contracts'
-import {
-  DipApiError,
-  dipRequest,
-  runPublicDipPlugin,
-} from '@/shared/dip/server-client'
+import { DipApiError, dipRequest, runPublicDipPlugin } from '@/shared/dip/server-client'
 
 export { DipApiError }
 

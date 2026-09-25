@@ -83,9 +83,7 @@ test.describe('Studio responsive shell', () => {
       }
 
       const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
-      const expectedStatusTop = viewport.width <= 760
-        ? { min: 20, max: 22 }
-        : { min: 18, max: 20 }
+      const expectedStatusTop = viewport.width <= 760 ? { min: 20, max: 22 } : { min: 18, max: 20 }
       expect(statusTopOffset).toBeGreaterThanOrEqual(expectedStatusTop.min)
       expect(statusTopOffset).toBeLessThanOrEqual(expectedStatusTop.max)
 

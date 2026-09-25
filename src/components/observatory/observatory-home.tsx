@@ -6,8 +6,6 @@ import { observatoryHomeI18n } from '@/lib/product-i18n'
 import { decisionPatternLabel } from '@/product/experience'
 import { observableUseCases } from '@/use-cases/registry'
 
-
-
 const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {

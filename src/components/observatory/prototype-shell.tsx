@@ -3,7 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import { ChevronRight, FlaskConical, Globe2, Home, Menu, Network, Scale, SlidersHorizontal, UsersRound } from 'lucide-react'
+import {
+  ChevronRight,
+  FlaskConical,
+  Globe2,
+  Home,
+  Menu,
+  Network,
+  Scale,
+  SlidersHorizontal,
+  UsersRound,
+} from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'

@@ -143,7 +143,8 @@ export const supplyNetworkWorkspaceMessages = {
     unservedChange: 'Зміна непокритого попиту',
     costChange: 'Зміна вартості логістики',
     paretoAlternatives: 'Варіанти покращення',
-    frontierHint: 'Це недоміновані варіанти за економічним впливом, сервісом і перевіреною стійкістю. Порівняйте компроміси перед рішенням.',
+    frontierHint:
+      'Це недоміновані варіанти за економічним впливом, сервісом і перевіреною стійкістю. Порівняйте компроміси перед рішенням.',
     disruptionReallocated: 'Збій + новий план',
     noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
     service: 'Виконано попиту',
@@ -341,7 +342,7 @@ export const supplyNetworkWorkspaceMessages = {
     step3: '3 · Porównaj plan odbudowy i warianty nowego magazynu',
     prospectOutcome: 'Co pokazuje ten scenariusz',
     prospectOutcomeText:
-      'QDIP zamienia te same dane o popycie, zapasach, przepustowości i trasach w audytowalną decyzję: co przekierować, jaki popyt pozostanie niezaspokojony, ile to kosztuje i czy dodatkowa pojemność magazynowa poprawia ekonomikę.'
+      'QDIP zamienia te same dane o popycie, zapasach, przepustowości i trasach w audytowalną decyzję: co przekierować, jaki popyt pozostanie niezaspokojony, ile to kosztuje i czy dodatkowa pojemność magazynowa poprawia ekonomikę.',
   },
 } as const
 
@@ -358,9 +359,12 @@ export const supplyNetworkSummaryMessages = {
     utilization: 'Peak warehouse utilization',
     constraintTitle: 'What is preventing a better result',
     routeEvidence: '{route} is already at its delivery limit on {count} of {horizon} days.',
-    routeVsStorage: 'Warehouses reach only {utilization} utilization, so storage space is not the main problem. Delivery capacity is.',
-    genericConstraint: 'The current network limits a better result. Open the technical details below to see which limits are reached.',
-    impactNote: 'Model estimate based on synthetic demo demand and cost assumptions; not realized savings or an accounting forecast.',
+    routeVsStorage:
+      'Warehouses reach only {utilization} utilization, so storage space is not the main problem. Delivery capacity is.',
+    genericConstraint:
+      'The current network limits a better result. Open the technical details below to see which limits are reached.',
+    impactNote:
+      'Model estimate based on synthetic demo demand and cost assumptions; not realized savings or an accounting forecast.',
     delta: 'vs baseline',
     improve: 'Test recovery options',
     unservedDelta: 'unserved',
@@ -377,9 +381,12 @@ export const supplyNetworkSummaryMessages = {
     utilization: 'Максимальне завантаження складів',
     constraintTitle: 'Що заважає отримати кращий результат',
     routeEvidence: '{route} уже працює на межі пропускної здатності у {count} з {horizon} днів.',
-    routeVsStorage: 'Склади завантажені максимум на {utilization}, тому проблема не в нестачі місця. Обмеження виникає на доставці.',
-    genericConstraint: 'Поточна конфігурація мережі не дозволяє отримати кращий результат. У технічних деталях нижче можна побачити, які саме ліміти досягнуті.',
-    impactNote: 'Модельна оцінка на синтетичних демонстраційних даних про попит і витрати; це не фактично отримана економія і не бухгалтерський прогноз.',
+    routeVsStorage:
+      'Склади завантажені максимум на {utilization}, тому проблема не в нестачі місця. Обмеження виникає на доставці.',
+    genericConstraint:
+      'Поточна конфігурація мережі не дозволяє отримати кращий результат. У технічних деталях нижче можна побачити, які саме ліміти досягнуті.',
+    impactNote:
+      'Модельна оцінка на синтетичних демонстраційних даних про попит і витрати; це не фактично отримана економія і не бухгалтерський прогноз.',
     delta: 'проти базового сценарію',
     improve: 'Перевірити варіанти відновлення',
     unservedDelta: 'непокрито',
@@ -396,9 +403,12 @@ export const supplyNetworkSummaryMessages = {
     utilization: 'Maksymalne wykorzystanie magazynów',
     constraintTitle: 'Co nie pozwala uzyskać lepszego wyniku',
     routeEvidence: '{route} wykorzystuje pełną dostępną przepustowość przez {count} z {horizon} dni.',
-    routeVsStorage: 'Magazyny są wykorzystane maksymalnie w {utilization}, więc problemem nie jest brak miejsca. Ograniczeniem jest przepustowość dostaw.',
-    genericConstraint: 'Obecna konfiguracja sieci nie pozwala uzyskać lepszego wyniku. W szczegółach technicznych poniżej można sprawdzić, które limity zostały osiągnięte.',
-    impactNote: 'Estymacja modelu oparta na syntetycznych danych demonstracyjnych o popycie i kosztach; nie oznacza zrealizowanych oszczędności ani prognozy księgowej.',
+    routeVsStorage:
+      'Magazyny są wykorzystane maksymalnie w {utilization}, więc problemem nie jest brak miejsca. Ograniczeniem jest przepustowość dostaw.',
+    genericConstraint:
+      'Obecna konfiguracja sieci nie pozwala uzyskać lepszego wyniku. W szczegółach technicznych poniżej można sprawdzić, które limity zostały osiągnięte.',
+    impactNote:
+      'Estymacja modelu oparta na syntetycznych danych demonstracyjnych o popycie i kosztach; nie oznacza zrealizowanych oszczędności ani prognozy księgowej.',
     delta: 'względem bazowego scenariusza',
     improve: 'Sprawdź warianty odbudowy planu',
     unservedDelta: 'niezaspokojone',
@@ -515,7 +525,6 @@ export const supplyNetworkEntityMessages = {
     candidateOption: 'Wariant magazynu {number}',
   },
 } as const satisfies Record<Locale, unknown>
-
 
 export const supplyNetworkConstraintMessages = {
   en: {

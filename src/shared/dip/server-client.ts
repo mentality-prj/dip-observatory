@@ -15,11 +15,7 @@ export class DipApiError extends Error {
 }
 
 function getDipBaseUrl() {
-  const raw =
-    process.env.DIP_API_BASE_URL ??
-    process.env.DIP_URL ??
-    process.env.NEXT_PUBLIC_DIP_API_BASE_URL ??
-    ''
+  const raw = process.env.DIP_API_BASE_URL ?? process.env.DIP_URL ?? process.env.NEXT_PUBLIC_DIP_API_BASE_URL ?? ''
   return normalizeDipBaseUrl(raw)
 }
 
@@ -42,11 +38,9 @@ async function parseResponse<T>(response: Response, schema: z.ZodType<T>) {
       message =
         typeof payload.detail === 'string'
           ? payload.detail
-          : (
-              payload.detail?.message
-                ? `${payload.detail.message}${payload.detail.causes?.length ? ` (${payload.detail.causes.join(', ')})` : ''}`
-                : (payload.detail?.code ?? payload.error?.message ?? message)
-            )
+          : payload.detail?.message
+            ? `${payload.detail.message}${payload.detail.causes?.length ? ` (${payload.detail.causes.join(', ')})` : ''}`
+            : (payload.detail?.code ?? payload.error?.message ?? message)
     } catch {
       // Preserve the HTTP-derived fallback when the upstream payload is not JSON.
     }
@@ -80,11 +74,7 @@ async function executeRequest<T>(
   return parseResponse(response, schema)
 }
 
-export async function dipRequest<T>(
-  path: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit
-): Promise<T> {
+export async function dipRequest<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
   const apiKey = getDipApiKey()
   if (!apiKey) {
     throw new DipApiError('DIP API is not configured. Set DIP_API_BASE_URL and DIP_API_KEY.', 503)
@@ -92,11 +82,7 @@ export async function dipRequest<T>(
   return executeRequest(path, schema, init, apiKey)
 }
 
-export async function publicDipRequest<T>(
-  path: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit
-): Promise<T> {
+export async function publicDipRequest<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
   return executeRequest(path, schema, init)
 }
 
@@ -126,11 +112,10 @@ export async function runDipPlugin(
   capabilityId: string,
   input: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
-  const response = await dipRequest(
-    `/api/v1/plugins/${pluginName}/execute`,
-    pluginResultSchema,
-    { method: 'POST', body: pluginExecutionBody(capabilityId, input) }
-  )
+  const response = await dipRequest(`/api/v1/plugins/${pluginName}/execute`, pluginResultSchema, {
+    method: 'POST',
+    body: pluginExecutionBody(capabilityId, input),
+  })
   return response.result
 }
 
@@ -139,10 +124,9 @@ export async function runPublicDipPlugin(
   capabilityId: string,
   input: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
-  const response = await publicDipRequest(
-    `/api/v1/plugins/${pluginName}/execute`,
-    pluginResultSchema,
-    { method: 'POST', body: pluginExecutionBody(capabilityId, input) }
-  )
+  const response = await publicDipRequest(`/api/v1/plugins/${pluginName}/execute`, pluginResultSchema, {
+    method: 'POST',
+    body: pluginExecutionBody(capabilityId, input),
+  })
   return response.result
 }

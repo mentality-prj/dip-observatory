@@ -66,10 +66,7 @@ const demoEvaluationSchema = z
   })
   .passthrough()
 
-const demoOutreachSchema = z
-  .object({ subject: z.string(), body: z.string() })
-  .passthrough()
-  .nullable()
+const demoOutreachSchema = z.object({ subject: z.string(), body: z.string() }).passthrough().nullable()
 
 export const gtmDemoProspectSchema = z
   .object({
