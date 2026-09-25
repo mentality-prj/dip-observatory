@@ -72,8 +72,12 @@ const copy = {
     affected: 'Regions affected by the disruption',
     evidence: 'Why this result',
     capacity: 'Capacity',
-    receiving: 'Receiving per day',
-    dispatch: 'Dispatch per day',
+    currentInventory: 'Current inventory',
+    receiving: 'Receiving capacity per day',
+    dispatch: 'Dispatch capacity per day',
+    utilizationAfterPlan: 'Capacity utilization after calculation',
+    actualPeakReceiving: 'Planned peak receiving per day',
+    actualPeakDispatch: 'Planned peak dispatch per day',
     operating: 'Warehouse operating cost, ₴',
     storage: 'Storage requirements',
     evaluate: 'Check this warehouse',
@@ -162,8 +166,12 @@ const copy = {
     affected: 'Регіони, яких торкнувся збій',
     evidence: 'Чому отримано такий результат',
     capacity: 'Місткість',
-    receiving: 'Приймання за день',
-    dispatch: 'Відвантаження за день',
+    currentInventory: 'Поточний запас',
+    receiving: 'Максимальна потужність приймання за день',
+    dispatch: 'Максимальна потужність відвантаження за день',
+    utilizationAfterPlan: 'Завантаження місткості після розрахунку',
+    actualPeakReceiving: 'Планове пікове приймання за день',
+    actualPeakDispatch: 'Планове пікове відвантаження за день',
     operating: 'Витрати на роботу складу, ₴',
     storage: 'Умови зберігання',
     evaluate: 'Перевірити цей склад',
@@ -253,8 +261,12 @@ const copy = {
     affected: 'Regiony dotknięte zakłóceniem',
     evidence: 'Dlaczego otrzymaliśmy taki wynik',
     capacity: 'Pojemność',
-    receiving: 'Przyjęcia dziennie',
-    dispatch: 'Wysyłki dziennie',
+    currentInventory: 'Bieżący zapas',
+    receiving: 'Maksymalna przepustowość przyjęć dziennie',
+    dispatch: 'Maksymalna przepustowość wysyłek dziennie',
+    utilizationAfterPlan: 'Wykorzystanie pojemności po obliczeniu',
+    actualPeakReceiving: 'Planowany szczyt przyjęć dziennie',
+    actualPeakDispatch: 'Planowany szczyt wysyłek dziennie',
     operating: 'Koszt działania magazynu, ₴',
     storage: 'Warunki składowania',
     evaluate: 'Sprawdź ten magazyn',
@@ -313,13 +325,6 @@ function Metric({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-slate-500">{label}</div>
       <div className="mt-1 text-lg font-medium text-slate-100">{value}</div>
     </div>
-  )
-}
-
-function highestUtilization(result: OptimizationResult) {
-  return Math.max(
-    0,
-    ...result.warehouse_utilization.filter((item) => item.used).map((item) => item.capacity_utilization)
   )
 }
 
@@ -438,6 +443,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     candidateOperatingCost,
     candidateReceiving,
     candidateStorage,
+    t.manualCandidate,
   ])
 
   const selectedService =
@@ -465,7 +471,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     } finally {
       setPending(false)
     }
-  }, [pending])
+  }, [pending, t])
 
   const makeUnavailable = useCallback(
     async (warehouseId: string) => {
@@ -488,7 +494,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         setPending(false)
       }
     },
-    [pending]
+    [pending, t]
   )
 
   const findImprovementOptions = useCallback(async () => {
@@ -504,7 +510,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     } finally {
       setCandidatePending(false)
     }
-  }, [candidatePending, scenario])
+  }, [candidatePending, scenario, t])
 
   const evaluateManual = useCallback(async () => {
     if (pending || !manualCandidate) return
@@ -530,7 +536,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     } finally {
       setPending(false)
     }
-  }, [activeNetwork, manualCandidate, pending])
+  }, [activeNetwork, manualCandidate, pending, t])
 
   const selectWarehouse = useCallback((warehouse: Warehouse) => {
     setSelectedWarehouse(warehouse)
@@ -718,17 +724,24 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <div className="grid grid-cols-2 gap-2">
                   <Metric label={t.capacity} value={number(selectedWarehouse.capacity_units)} />
                   <Metric
-                    label={t.utilization}
-                    value={selectedUtilization ? pct(selectedUtilization.capacity_utilization) : '—'}
+                    label={t.currentInventory}
+                    value={number(Object.values(selectedWarehouse.current_inventory).reduce((sum, units) => sum + units, 0))}
                   />
-                  <Metric
-                    label={t.peakReceiving}
-                    value={selectedUtilization ? number(selectedUtilization.peak_receiving_units_per_day) : '—'}
-                  />
-                  <Metric
-                    label={t.peakDispatch}
-                    value={selectedUtilization ? number(selectedUtilization.peak_dispatch_units_per_day) : '—'}
-                  />
+                  <Metric label={t.receiving} value={number(selectedWarehouse.receiving_capacity_units_per_day)} />
+                  <Metric label={t.dispatch} value={number(selectedWarehouse.dispatch_capacity_units_per_day)} />
+                  <div className="col-span-2 rounded-lg border border-white/10 bg-white/[.02] p-3">
+                    <div className="text-xs text-slate-500">{t.storage}</div>
+                    <div className="mt-1 text-sm text-slate-200">
+                      {selectedWarehouse.supported_storage_classes.map((storageClass) => storageClassDisplayLabel(storageClass, locale)).join(' · ')}
+                    </div>
+                  </div>
+                  {selectedUtilization ? (
+                    <>
+                      <Metric label={t.utilizationAfterPlan} value={pct(selectedUtilization.capacity_utilization)} />
+                      <Metric label={t.actualPeakReceiving} value={number(selectedUtilization.peak_receiving_units_per_day)} />
+                      <Metric label={t.actualPeakDispatch} value={number(selectedUtilization.peak_dispatch_units_per_day)} />
+                    </>
+                  ) : null}
                 </div>
                 {!unavailableIds.includes(selectedWarehouse.id) ? (
                   <>

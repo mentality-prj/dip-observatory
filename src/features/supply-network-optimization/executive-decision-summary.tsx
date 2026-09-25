@@ -34,7 +34,7 @@ const copy = {
 
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
-function routeBottleneck(result: OptimizationResult, network: SupplyNetwork) {
+function routeBottleneck(result: OptimizationResult) {
   const counts = new Map<string, number>()
   for (const constraint of result.binding_constraints) {
     const [kind, from, to] = constraint.split(':')
@@ -59,7 +59,7 @@ function peakUtilization(result: OptimizationResult) {
 export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, locale, network }: {
   result: OptimizationResult; baseline: OptimizationResult | null; hasDisruption: boolean; locale: Locale; network: SupplyNetwork
 }) {
-  const t = copy[locale], route = routeBottleneck(result, network), utilization = peakUtilization(result)
+  const t = copy[locale], route = routeBottleneck(result), utilization = peakUtilization(result)
   const baselineUtilization = baseline ? peakUtilization(baseline) : null
   const number = (value: number) => formatNumber(value, locale)
   const signed = (value: number, suffix = '') => `${value > 0 ? '+' : ''}${number(value)}${suffix}`

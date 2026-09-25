@@ -28,8 +28,8 @@ const productLabels: Record<string, Record<Locale, string>> = {
 }
 
 const storageLabels: Record<StorageClass, Record<Locale, string>> = {
-  ambient: { en: 'Standard storage', uk: 'Звичайне зберігання', pl: 'Standardowe składowanie' },
-  controlled: { en: 'Controlled storage', uk: 'Контрольовані умови', pl: 'Kontrolowane warunki' },
+  ambient: { en: 'Ambient-temperature storage', uk: 'Зберігання за звичайної температури', pl: 'Składowanie w temperaturze otoczenia' },
+  controlled: { en: 'Temperature-controlled storage', uk: 'Температурно-контрольоване зберігання', pl: 'Składowanie w kontrolowanej temperaturze' },
 }
 
 const localeTag: Record<Locale, string> = { en: 'en-GB', uk: 'uk-UA', pl: 'pl-PL' }

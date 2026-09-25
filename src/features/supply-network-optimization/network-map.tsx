@@ -27,11 +27,11 @@ type Props = {
   onMapClick: (latitude: number, longitude: number) => void
 }
 
-const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'unavailable') => {
+const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable') => {
   const element = document.createElement('button')
   element.type = 'button'
   element.setAttribute('aria-label', kind)
-  const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'unavailable' ? '34px' : '20px'
+  const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '34px' : '20px'
   // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
   element.style.width = size
   element.style.height = size
@@ -41,9 +41,11 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   element.style.maxHeight = size
   element.style.padding = '0'
   element.style.margin = '0'
-  element.style.display = 'block'
+  element.style.display = 'flex'
+  element.style.alignItems = 'center'
+  element.style.justifyContent = 'center'
   element.style.flex = '0 0 auto'
-  element.style.lineHeight = '0'
+  element.style.lineHeight = '1'
   element.style.boxSizing = 'border-box'
   element.style.appearance = 'none'
   element.style.borderRadius = kind === 'store' ? '50%' : '5px'
@@ -55,10 +57,10 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
   // Warehouses are actionable network nodes. Keep them above demand/store
   // markers when geographic coordinates overlap so the warehouse action
   // remains reachable (for example Kyiv warehouse + Kyiv demand region).
-  element.style.zIndex = kind === 'warehouse' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
+  element.style.zIndex = kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
   element.style.background =
     kind === 'unavailable' ? '#ef4444'
-      : kind === 'candidate' ? '#f59e0b'
+      : kind === 'candidate' || kind === 'manual-candidate' ? '#f59e0b'
         : kind === 'warehouse' ? '#22d3ee'
           : kind === 'supplier' ? '#a78bfa'
             : '#e2e8f0'
@@ -67,7 +69,7 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'u
     element.style.transform = 'none'
     element.style.setProperty('font-size', '15px')
     element.style.setProperty('font-weight', '800')
-    element.style.setProperty('line-height', size)
+    element.style.setProperty('line-height', '1')
     element.style.setProperty('text-align', 'center')
     element.style.setProperty('color', '#fff')
     element.textContent = '×'
@@ -93,69 +95,70 @@ function coordinate(
   return null
 }
 
-function flowCollection(
+type FlowSegment = {
+  kind: 'current' | 'recommended' | 'transfer' | 'inbound'
+  from: [number, number]
+  to: [number, number]
+  units?: number
+}
+
+export function buildFlowSegments(
   network: SupplyNetwork,
   currentFlows: CurrentFlow[],
   result: OptimizationResult | null,
   manualCandidate: CandidateWarehouse | null,
   candidateAreas: CandidateResult[]
-) {
-  const currentFeatures = currentFlows.flatMap((item) => {
-    if (network.unavailable_warehouse_ids.includes(item.warehouse_id)) return []
+): FlowSegment[] {
+  const segments: FlowSegment[] = []
+
+  for (const item of currentFlows) {
+    if (network.unavailable_warehouse_ids.includes(item.warehouse_id)) continue
     const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
     const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
-    return from && to
-      ? [{
-          type: 'Feature',
-          properties: { kind: 'current' },
-          geometry: { type: 'LineString', coordinates: [from, to] },
-        }]
-      : []
-  })
-  const recommendedFeatures: Record<string, unknown>[] = []
-  if (result) {
-    const aggregated = new Map<string, {
-      kind: 'recommended' | 'transfer'
-      fromId: string
-      toId: string
-      units: number
-    }>()
-    const addFlow = (
-      kind: 'recommended' | 'transfer',
-      fromId: string,
-      toId: string,
-      units: number
-    ) => {
-      if (units <= 0) return
-      const key = `${kind}:${fromId}:${toId}`
-      const existing = aggregated.get(key)
-      if (existing) existing.units += units
-      else aggregated.set(key, { kind, fromId, toId, units })
-    }
-    for (const item of result.fulfillment) {
-      addFlow('recommended', item.warehouse_id, item.demand_point_id, item.units)
-    }
-    for (const item of result.transfers) {
-      addFlow('transfer', item.from_warehouse_id, item.to_warehouse_id, item.units)
-    }
-    for (const item of result.inbound_allocation) {
-      addFlow('recommended', item.supplier_id, item.warehouse_id, item.units)
-    }
-    for (const flow of aggregated.values()) {
-      const from = coordinate(network, flow.fromId, manualCandidate, candidateAreas)
-      const to = coordinate(network, flow.toId, manualCandidate, candidateAreas)
-      if (!from || !to) continue
-      recommendedFeatures.push({
-        type: 'Feature',
-        properties: { kind: flow.kind, units: flow.units },
-        geometry: { type: 'LineString', coordinates: [from, to] },
-      })
+    if (from && to && (from[0] !== to[0] || from[1] !== to[1])) {
+      segments.push({ kind: 'current', from, to })
     }
   }
-  return {
-    current: { type: 'FeatureCollection', features: currentFeatures },
-    recommended: { type: 'FeatureCollection', features: recommendedFeatures },
+
+  if (!result) return segments
+
+  const aggregated = new Map<string, {
+    kind: 'recommended' | 'transfer' | 'inbound'
+    fromId: string
+    toId: string
+    units: number
+  }>()
+  const addFlow = (
+    kind: 'recommended' | 'transfer' | 'inbound',
+    fromId: string,
+    toId: string,
+    units: number
+  ) => {
+    if (units <= 0) return
+    const key = `${kind}:${fromId}:${toId}`
+    const existing = aggregated.get(key)
+    if (existing) existing.units += units
+    else aggregated.set(key, { kind, fromId, toId, units })
   }
+
+  for (const item of result.fulfillment) {
+    addFlow('recommended', item.warehouse_id, item.demand_point_id, item.units)
+  }
+  for (const item of result.transfers) {
+    addFlow('transfer', item.from_warehouse_id, item.to_warehouse_id, item.units)
+  }
+  for (const item of result.inbound_allocation) {
+    addFlow('inbound', item.supplier_id, item.warehouse_id, item.units)
+  }
+
+  for (const flow of aggregated.values()) {
+    const from = coordinate(network, flow.fromId, manualCandidate, candidateAreas)
+    const to = coordinate(network, flow.toId, manualCandidate, candidateAreas)
+    if (from && to && (from[0] !== to[0] || from[1] !== to[1])) {
+      segments.push({ kind: flow.kind, from, to, units: flow.units })
+    }
+  }
+  return segments
 }
 
 export function NetworkMap({
@@ -174,6 +177,8 @@ export function NetworkMap({
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
+  const [projectedFlows, setProjectedFlows] = useState<Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>>([])
+  const projectFlowsRef = useRef<() => void>(() => undefined)
   const markersRef = useRef<MapLibreMarker[]>([])
   const clickRef = useRef(onMapClick)
 
@@ -185,7 +190,6 @@ export function NetworkMap({
     let cancelled = false
     let localMap: MapLibreMap | null = null
     let resizeObserver: ResizeObserver | null = null
-    setMapUnavailable(false)
     void loadMapLibre().then((maplibre) => {
       if (cancelled) return
       if (!maplibre) {
@@ -219,6 +223,10 @@ export function NetworkMap({
         if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
         clickRef.current(event.lngLat.lat, event.lngLat.lng)
       })
+      const refreshOverlay = () => projectFlowsRef.current()
+      localMap.on('move', refreshOverlay)
+      localMap.on('zoom', refreshOverlay)
+      localMap.on('resize', refreshOverlay)
     })
     return () => {
       cancelled = true
@@ -264,15 +272,13 @@ export function NetworkMap({
           new maplibre.Marker({ element }).setLngLat([store.longitude, store.latitude]).addTo(map)
         )
       }
-      if (result?.inbound_allocation.some((item) => item.units > 0)) {
-        for (const supplier of network.suppliers) {
-          const element = markerStyle('supplier')
-          element.dataset.networkMarker = 'supplier'
-          element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
-          markersRef.current.push(
-            new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
-          )
-        }
+      for (const supplier of network.suppliers) {
+        const element = markerStyle('supplier')
+        element.dataset.networkMarker = 'supplier'
+        element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
+        markersRef.current.push(
+          new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
+        )
       }
       for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
         const element = markerStyle('candidate')
@@ -283,7 +289,7 @@ export function NetworkMap({
         )
       }
       if (manualCandidate) {
-        const element = markerStyle('candidate')
+        const element = markerStyle('manual-candidate')
         element.dataset.networkMarker = 'manual-candidate'
         element.title = manualCandidate.label ?? manualCandidate.id
         markersRef.current.push(
@@ -291,69 +297,21 @@ export function NetworkMap({
         )
       }
 
-      const collections = flowCollection(
-        network,
-        currentFlows,
-        result,
-        manualCandidate,
-        candidateAreas
-      )
-      for (const layerId of ['recommended-flow-arrows', 'recommended-flows', 'current-flow-arrows', 'current-flows']) {
-        if (map.getLayer(layerId)) map.removeLayer(layerId)
+      const flowSegments = buildFlowSegments(network, currentFlows, result, manualCandidate, candidateAreas)
+      const projectFlows = () => {
+        setProjectedFlows(flowSegments.map((segment, index) => {
+          const from = map.project(segment.from)
+          const to = map.project(segment.to)
+          return { ...segment, index, x1: from.x, y1: from.y, x2: to.x, y2: to.y }
+        }))
       }
-      for (const sourceId of ['recommended-flows', 'current-flows']) {
-        if (map.getSource(sourceId)) map.removeSource(sourceId)
-      }
-      map.addSource('current-flows', { type: 'geojson', data: collections.current })
-      map.addLayer({
-        id: 'current-flows',
-        type: 'line',
-        source: 'current-flows',
-        paint: { 'line-color': '#94a3b8', 'line-width': 2, 'line-opacity': 0.52 },
-      })
-      map.addLayer({
-        id: 'current-flow-arrows',
-        type: 'symbol',
-        source: 'current-flows',
-        layout: {
-          'symbol-placement': 'line',
-          'symbol-spacing': 90,
-          'text-field': '›',
-          'text-size': 20,
-          'text-rotation-alignment': 'map',
-          'text-keep-upright': false,
-          'text-allow-overlap': true,
-        },
-        paint: { 'text-color': '#cbd5e1', 'text-opacity': 0.7 },
-      })
-      if (result) {
-        map.addSource('recommended-flows', { type: 'geojson', data: collections.recommended })
-        map.addLayer({
-          id: 'recommended-flows',
-          type: 'line',
-          source: 'recommended-flows',
-          paint: { 'line-color': '#22d3ee', 'line-width': 3, 'line-opacity': 0.9 },
-        })
-        map.addLayer({
-          id: 'recommended-flow-arrows',
-          type: 'symbol',
-          source: 'recommended-flows',
-          layout: {
-            'symbol-placement': 'line',
-            'symbol-spacing': 80,
-            'text-field': '›',
-            'text-size': 24,
-            'text-rotation-alignment': 'map',
-            'text-keep-upright': false,
-            'text-allow-overlap': true,
-          },
-          paint: { 'text-color': '#67e8f9', 'text-opacity': 0.95 },
-        })
-      }
+      projectFlowsRef.current = projectFlows
+      projectFlows()
     })
     return () => { cancelled = true }
   }, [
     mapReady,
+    locale,
     currentFlows,
     candidateAreas,
     manualCandidate,
@@ -364,9 +322,46 @@ export function NetworkMap({
     unavailableWarehouseIds,
   ])
 
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950">
       <div ref={containerRef} className="h-[420px] w-full sm:h-[540px]" data-testid="supply-network-map" />
+      {projectedFlows.length > 0 ? (
+        <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-testid="supply-network-flow-overlay">
+          <defs>
+            <marker id="flow-arrow-current" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 z" fill="#cbd5e1" />
+            </marker>
+            <marker id="flow-arrow-qdip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 z" fill="#22d3ee" />
+            </marker>
+            <marker id="flow-arrow-inbound" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 z" fill="#a78bfa" />
+            </marker>
+          </defs>
+          {projectedFlows.map((flow) => {
+            const isCurrent = flow.kind === 'current'
+            const isInbound = flow.kind === 'inbound'
+            const stroke = isCurrent ? '#cbd5e1' : isInbound ? '#a78bfa' : '#22d3ee'
+            const marker = isCurrent ? 'url(#flow-arrow-current)' : isInbound ? 'url(#flow-arrow-inbound)' : 'url(#flow-arrow-qdip)'
+            return (
+              <line
+                key={`${flow.kind}-${flow.index}`}
+                x1={flow.x1}
+                y1={flow.y1}
+                x2={flow.x2}
+                y2={flow.y2}
+                stroke={stroke}
+                strokeWidth={isCurrent ? 3 : 4}
+                strokeOpacity={isCurrent ? 0.8 : 0.95}
+                strokeDasharray={isCurrent ? '7 5' : undefined}
+                markerEnd={marker}
+                vectorEffect="non-scaling-stroke"
+              />
+            )
+          })}
+        </svg>
+      ) : null}
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
@@ -379,8 +374,8 @@ export function NetworkMap({
         <span className="rounded bg-slate-950/90 px-2 py-1">▰ {locale === 'uk' ? 'Склад' : locale === 'pl' ? 'Magazyn' : 'Warehouse'}</span>
         <span className="rounded bg-slate-950/90 px-2 py-1">● {locale === 'uk' ? 'Регіон попиту' : locale === 'pl' ? 'Region popytu' : 'Demand region'}</span>
         {currentFlows.length > 0 ? <span className="rounded bg-slate-950/90 px-2 py-1">→ {locale === 'uk' ? 'Поточні потоки' : locale === 'pl' ? 'Bieżące przepływy' : 'Current flows'}</span> : null}
-        {result ? <span className="rounded bg-slate-950/90 px-2 py-1 text-cyan-200">→ {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}</span> : null}
-        {result?.inbound_allocation.some((item) => item.units > 0) ? <span className="rounded bg-slate-950/90 px-2 py-1">◆ {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}</span> : null}
+        {projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? <span className="rounded bg-slate-950/90 px-2 py-1 text-cyan-200">→ {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}</span> : null}
+        <span className="rounded bg-slate-950/90 px-2 py-1 text-violet-200">◆ {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}</span>
         {candidateAreas.some((item) => item.feasible) || manualCandidate ? <span className="rounded bg-slate-950/90 px-2 py-1">◇ {locale === 'uk' ? 'Варіант складу' : locale === 'pl' ? 'Wariant magazynu' : 'Warehouse option'}</span> : null}
       </div>
     </div>
