@@ -21,8 +21,8 @@ const WIDTH = 1120,
   HEIGHT = 500,
   CENTER_X = WIDTH / 2,
   CENTER_Y = HEIGHT / 2,
-  RX = 455,
-  RY = 190
+  RX = 390,
+  RY = 160
 const copy = {
   uk: {
     network: 'Операційна мережа',
@@ -37,7 +37,7 @@ const copy = {
     moved: 'Переміщено',
     day: 'День',
     opening: 'ПОЧАТОК ДНЯ',
-    dipPlan: 'ПЛАН DIP',
+    dipPlan: 'ПЛАН QDIP',
     managerPlan: 'ПЛАН МЕНЕДЖЕРА',
     moves: 'ПЕРЕМІЩЕНЬ',
     currentLegend: 'Де команди знаходяться на початок вибраного дня за планом QDIP.',
@@ -48,7 +48,7 @@ const copy = {
   en: {
     network: 'Operational network',
     current: 'Start-of-day state',
-    dip: 'QQDIP plan',
+    dip: 'QDIP plan',
     manager: 'Manager plan',
     description:
       "Compare start-of-day team locations, the QDIP recommendation and an evaluated manager override. Tuesday–Friday movement for each plan starts from that plan's own previous-day assignment.",
@@ -61,8 +61,8 @@ const copy = {
     dipPlan: 'QDIP PLAN',
     managerPlan: 'MANAGER PLAN',
     moves: 'TEAM MOVES',
-    currentLegend: 'Team locations at the start of the selected day under the QQDIP plan.',
-    dipLegend: 'Recommended DIP allocation for the selected day.',
+    currentLegend: 'Team locations at the start of the selected day under the QDIP plan.',
+    dipLegend: 'Recommended QDIP allocation for the selected day.',
     managerReady: 'The evaluated manager override is compared with the previous day of the same manual plan.',
     managerWait: 'Appears after a feasible manual override is evaluated.',
   },
@@ -79,7 +79,7 @@ const copy = {
     moved: 'Przeniesiono',
     day: 'Dzień',
     opening: 'POCZĄTEK DNIA',
-    dipPlan: 'PLAN DIP',
+    dipPlan: 'PLAN QDIP',
     managerPlan: 'PLAN MENEDŻERA',
     moves: 'PRZEMIESZCZEŃ',
     currentLegend: 'Lokalizacje zespołów na początku wybranego dnia według planu QDIP.',
@@ -139,11 +139,11 @@ export function ResourceAllocationNetwork({
             <Network className="h-4 w-4 shrink-0" />
             {t.network}
           </div>
-          <h3 className="mt-2 max-w-full break-words text-lg font-black [overflow-wrap:anywhere] sm:text-2xl">
+          <h3 className="mt-2 max-w-full text-lg font-black sm:text-2xl">
             {t.current} <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> QDIP{' '}
             <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> {t.manager}
           </h3>
-          <p className="mt-2 max-w-full break-words text-sm text-white/50 [overflow-wrap:anywhere] sm:max-w-3xl">
+          <p className="mt-2 max-w-full text-sm leading-relaxed text-white/50 sm:max-w-3xl">
             {t.description}
           </p>
         </div>
@@ -282,7 +282,7 @@ export function ResourceAllocationNetwork({
                   strokeOpacity="0.25"
                 />
                 <text y="4" textAnchor="middle" fontSize="11" fontWeight="650" fill={changed ? '#111' : 'white'}>
-                  {community.replace('Громада ', '')}
+                  {community.length > 18 ? community.slice(0, 16) + '…' : community}
                 </text>
                 {here.length > 0 && (
                   <>
@@ -292,8 +292,8 @@ export function ResourceAllocationNetwork({
                     </text>
                   </>
                 )}
-                <text y="40" textAnchor="middle" fontSize="9" fill="white" opacity="0.48">
-                  {community}
+                <text y="42" textAnchor="middle" fontSize="9" fill="white" opacity="0.62">
+                  {community.length > 24 ? community.slice(0, 22) + '…' : community}
                 </text>
               </g>
             )
