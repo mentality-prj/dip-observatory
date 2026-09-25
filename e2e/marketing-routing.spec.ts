@@ -63,9 +63,7 @@ test.describe('current marketing routing', () => {
         )
       }
 
-      await expect(
-        page.getByRole('heading', { level: 1, name: useCaseLocalization[locale].heading })
-      ).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: useCaseLocalization[locale].heading })).toBeVisible()
       await expect(page.getByText(useCaseLocalization[locale].body, { exact: false })).toBeVisible()
     })
   }

@@ -312,18 +312,53 @@ export function ResourceAllocationDecisionPanel({
         <h3 className="mt-2 text-xl font-medium">{manualSelected ? t.staged : t.decisionTitle}</h3>
         <p className="mt-4 max-w-2xl text-sm text-slate-400">{t.decisionHelp}</p>
         <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5" data-testid="decision-summary">
-          <div className="border border-white/10 p-3"><div className="text-xs text-slate-500">{t.decisionCoverage}</div><b className="mt-1 block text-xl">{Math.round(priorityCoverage * 100)}%</b></div>
-          <div className="border border-white/10 p-3"><div className="text-xs text-slate-500">{t.decisionServed}</div><b className="mt-1 block text-xl">{served.toFixed(0)}</b></div>
-          <div className="border border-white/10 p-3"><div className="text-xs text-slate-500">{t.decisionUnmet}</div><b className="mt-1 block text-xl">{unmet.toFixed(0)}</b></div>
-          <div className="border border-white/10 p-3"><div className="text-xs text-slate-500">{t.decisionMoved}</div><b className="mt-1 block text-xl">{teamsMoved} / {totalTeams}</b></div>
           <div className="border border-white/10 p-3">
-            <div className="text-xs text-slate-500">{t.decisionMoveEvents}</div><b className="mt-1 block text-xl">{moveEvents}</b>
-            <div className="mt-1 text-[10px] text-slate-600">{planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}</div>
+            <div className="text-xs text-slate-500">{t.decisionCoverage}</div>
+            <b className="mt-1 block text-xl">{Math.round(priorityCoverage * 100)}%</b>
+          </div>
+          <div className="border border-white/10 p-3">
+            <div className="text-xs text-slate-500">{t.decisionServed}</div>
+            <b className="mt-1 block text-xl">{served.toFixed(0)}</b>
+          </div>
+          <div className="border border-white/10 p-3">
+            <div className="text-xs text-slate-500">{t.decisionUnmet}</div>
+            <b className="mt-1 block text-xl">{unmet.toFixed(0)}</b>
+          </div>
+          <div className="border border-white/10 p-3">
+            <div className="text-xs text-slate-500">{t.decisionMoved}</div>
+            <b className="mt-1 block text-xl">
+              {teamsMoved} / {totalTeams}
+            </b>
+          </div>
+          <div className="border border-white/10 p-3">
+            <div className="text-xs text-slate-500">{t.decisionMoveEvents}</div>
+            <b className="mt-1 block text-xl">{moveEvents}</b>
+            <div className="mt-1 text-[10px] text-slate-600">
+              {planningDays} {locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}
+            </div>
           </div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
-          {planCsv && <button type="button" onClick={downloadPlan} className="inline-flex items-center gap-2 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950"><Download className="h-4 w-4" />{t.exportCsv}</button>}
-          {planShortText && <button type="button" onClick={() => void copyPlan()} className="inline-flex items-center gap-2 border border-white/15 px-4 py-3 text-sm font-bold"><Clipboard className="h-4 w-4" />{copied ? t.copied : t.copyPlan}</button>}
+          {planCsv && (
+            <button
+              type="button"
+              onClick={downloadPlan}
+              className="inline-flex items-center gap-2 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950"
+            >
+              <Download className="h-4 w-4" />
+              {t.exportCsv}
+            </button>
+          )}
+          {planShortText && (
+            <button
+              type="button"
+              onClick={() => void copyPlan()}
+              className="inline-flex items-center gap-2 border border-white/15 px-4 py-3 text-sm font-bold"
+            >
+              <Clipboard className="h-4 w-4" />
+              {copied ? t.copied : t.copyPlan}
+            </button>
+          )}
         </div>
       </section>
     </div>

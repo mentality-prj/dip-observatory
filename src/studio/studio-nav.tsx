@@ -18,18 +18,38 @@ export function StudioNav() {
   ] as const
   const platformItems = [
     { section: 'plugins', label: c.nav.evidenceSources, description: c.nav.evidenceSourcesDescription, icon: Boxes },
-    { section: 'bindings', label: c.nav.evidenceMapping, description: c.nav.evidenceMappingDescription, icon: GitBranch },
-    { section: 'dimensions', label: c.nav.evaluationContracts, description: c.nav.evaluationContractsDescription, icon: Braces },
+    {
+      section: 'bindings',
+      label: c.nav.evidenceMapping,
+      description: c.nav.evidenceMappingDescription,
+      icon: GitBranch,
+    },
+    {
+      section: 'dimensions',
+      label: c.nav.evaluationContracts,
+      description: c.nav.evaluationContractsDescription,
+      icon: Braces,
+    },
   ] as const
 
   const isActive = (section: string) => {
     const activeSection = studioSectionFromPath(pathname)
     return activeSection === section || activeSection.startsWith(`${section}/`)
   }
-  const renderItem = ({ section, label, description, icon: Icon }: (typeof items)[number] | (typeof platformItems)[number]) => (
+  const renderItem = ({
+    section,
+    label,
+    description,
+    icon: Icon,
+  }: (typeof items)[number] | (typeof platformItems)[number]) => (
     <Link key={section} aria-current={isActive(section) ? 'page' : undefined} href={localizedHref(section)}>
-      <span className="studio-nav-icon" aria-hidden><Icon size={16} /></span>
-      <span className="studio-nav-copy"><strong>{label}</strong><small className="sr-only">{description}</small></span>
+      <span className="studio-nav-icon" aria-hidden>
+        <Icon size={16} />
+      </span>
+      <span className="studio-nav-copy">
+        <strong>{label}</strong>
+        <small className="sr-only">{description}</small>
+      </span>
     </Link>
   )
 
@@ -40,8 +60,12 @@ export function StudioNav() {
       <span className="studio-nav-label">{c.nav.advancedPlatform}</span>
       {platformItems.map(renderItem)}
       <Link href={observatoryHref('', locale)}>
-        <span className="studio-nav-icon" aria-hidden><Telescope size={16} /></span>
-        <span className="studio-nav-copy"><strong>{c.nav.openObservatory}</strong></span>
+        <span className="studio-nav-icon" aria-hidden>
+          <Telescope size={16} />
+        </span>
+        <span className="studio-nav-copy">
+          <strong>{c.nav.openObservatory}</strong>
+        </span>
       </Link>
     </nav>
   )

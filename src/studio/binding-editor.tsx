@@ -124,7 +124,11 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 >
                   {!dimensions.some(
                     (d) => d.id === binding.dimension_id && d.version === binding.dimension_version
-                  ) && <option value={binding.dimension_version}>{binding.dimension_version} ({copy.unavailable})</option>}
+                  ) && (
+                    <option value={binding.dimension_version}>
+                      {binding.dimension_version} ({copy.unavailable})
+                    </option>
+                  )}
                   {dimensions
                     .filter((d) => d.id === binding.dimension_id)
                     .map((d) => (

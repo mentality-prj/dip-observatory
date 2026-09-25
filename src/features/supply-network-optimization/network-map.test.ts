@@ -4,14 +4,16 @@ import { buildFlowSegments } from './network-map'
 import type { OptimizationResult } from './domain'
 
 const result = {
-  fulfillment: [
-    { warehouse_id: 'north-hub', demand_point_id: 'north-east', product_class_id: 'core', units: 120 },
-  ],
-  transfers: [
-    { from_warehouse_id: 'west-hub', to_warehouse_id: 'central-hub', product_class_id: 'core', units: 40 },
-  ],
+  fulfillment: [{ warehouse_id: 'north-hub', demand_point_id: 'north-east', product_class_id: 'core', units: 120 }],
+  transfers: [{ from_warehouse_id: 'west-hub', to_warehouse_id: 'central-hub', product_class_id: 'core', units: 40 }],
   inbound_allocation: [
-    { supply_id: 'incoming-core', supplier_id: 'supplier-main', warehouse_id: 'west-hub', product_class_id: 'core', units: 80 },
+    {
+      supply_id: 'incoming-core',
+      supplier_id: 'supplier-main',
+      warehouse_id: 'west-hub',
+      product_class_id: 'core',
+      units: 80,
+    },
   ],
 } as OptimizationResult
 

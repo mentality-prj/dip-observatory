@@ -143,9 +143,7 @@ export function ResourceAllocationNetwork({
             {t.current} <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> QDIP{' '}
             <ArrowRight className="mx-1 inline h-4 w-4 sm:h-5 sm:w-5" /> {t.manager}
           </h3>
-          <p className="mt-2 max-w-full text-sm leading-relaxed text-white/50 sm:max-w-3xl">
-            {t.description}
-          </p>
+          <p className="mt-2 max-w-full text-sm leading-relaxed text-white/50 sm:max-w-3xl">{t.description}</p>
         </div>
         <button
           type="button"

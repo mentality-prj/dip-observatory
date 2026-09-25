@@ -83,7 +83,12 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
           <span className={styles.kicker}>{current.title}</span>
           <h3>{current.question}</h3>
           <p>{current.body}</p>
-          <MarketingTrackedLink event="marketing_demo_click" locale={locale} placement={`demo_${active}`} href={current.href}>
+          <MarketingTrackedLink
+            event="marketing_demo_click"
+            locale={locale}
+            placement={`demo_${active}`}
+            href={current.href}
+          >
             {current.cta} <ArrowRight size={15} />
           </MarketingTrackedLink>
         </div>
@@ -96,9 +101,18 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
           <ArrowRight className={styles.arrow} aria-hidden="true" />
           <div className={styles.output}>
             <strong>{output}</strong>
-            <span><Check size={14} />{l.reason[0]}</span>
-            <span><Check size={14} />{l.reason[1]}</span>
-            <span><CircleSlash2 size={14} />{l.reason[2]}</span>
+            <span>
+              <Check size={14} />
+              {l.reason[0]}
+            </span>
+            <span>
+              <Check size={14} />
+              {l.reason[1]}
+            </span>
+            <span>
+              <CircleSlash2 size={14} />
+              {l.reason[2]}
+            </span>
             <small>{l.why}</small>
           </div>
         </div>

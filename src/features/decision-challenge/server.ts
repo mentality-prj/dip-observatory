@@ -1,7 +1,12 @@
 import 'server-only'
 
 import { z } from 'zod'
-import { actionValidationSchema, challengeDefinitionSchema, challengeRunSchema, type ChallengeAssignment } from './contracts'
+import {
+  actionValidationSchema,
+  challengeDefinitionSchema,
+  challengeRunSchema,
+  type ChallengeAssignment,
+} from './contracts'
 import { dipRequest } from '@/shared/dip/server-client'
 
 const base = '/api/v1/decision-challenge'
@@ -29,7 +34,12 @@ export function validateDecisionChallengeAction(runId: string, snapshotId: strin
   })
 }
 
-export function submitDecisionChallenge(runId: string, submissionId: string, snapshotId: string, humanAction: ChallengeAssignment) {
+export function submitDecisionChallenge(
+  runId: string,
+  submissionId: string,
+  snapshotId: string,
+  humanAction: ChallengeAssignment
+) {
   return dipRequest(`${base}/runs/${encodeURIComponent(runId)}/decision`, challengeRunSchema, {
     method: 'POST',
     signal: AbortSignal.timeout(25_000),

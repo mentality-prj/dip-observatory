@@ -118,20 +118,36 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     api.runOptimization.mockResolvedValue(optimized)
     api.runUnavailableScenario.mockResolvedValue({
       result: {
-      baseline: optimized,
-      disrupted: {
-        ...optimized,
-        kpis: { ...optimized.kpis, service_level: 0.9, inventory_value_at_risk: 28000 },
-      },
-      unavailable_warehouse_id: 'north-hub',
-      affected_demand_point_ids: ['north-coast'],
-      kpi_change: { service_level: -0.05 },
+        baseline: optimized,
+        disrupted: {
+          ...optimized,
+          kpis: { ...optimized.kpis, service_level: 0.9, inventory_value_at_risk: 28000 },
+        },
+        unavailable_warehouse_id: 'north-hub',
+        affected_demand_point_ids: ['north-coast'],
+        kpi_change: { service_level: -0.05 },
       },
       decisionValue: {
-        baseline: { nominal_value: 15400 }, candidate: { nominal_value: 18000 },
-        delta: { nominal_delta: -2600, expected_delta: null, downside_delta: -4000, worst_case_observed_delta: -4000, worst_case_delta: null, realized_delta: null },
+        baseline: { nominal_value: 15400 },
+        candidate: { nominal_value: 18000 },
+        delta: {
+          nominal_delta: -2600,
+          expected_delta: null,
+          downside_delta: -4000,
+          worst_case_observed_delta: -4000,
+          worst_case_delta: null,
+          realized_delta: null,
+        },
         regret: { max_observed_regret: 4000, mean_observed_regret: 2500, expected_regret: null, max_regret: null },
-        value_stability: { nominal_advantage: -2600, minimum_observed_advantage: -4000, maximum_observed_advantage: -1200, positive_advantage_frequency: 0, positive_advantage_probability: null, economically_material_threshold: null, materially_positive_frequency: null },
+        value_stability: {
+          nominal_advantage: -2600,
+          minimum_observed_advantage: -4000,
+          maximum_observed_advantage: -1200,
+          positive_advantage_frequency: 0,
+          positive_advantage_probability: null,
+          economically_material_threshold: null,
+          materially_positive_frequency: null,
+        },
       },
     })
     api.runCandidateAreas.mockResolvedValue({
@@ -201,7 +217,11 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('Decision summary')).toBeVisible()
     expect(screen.getByText('Estimated economic value')).toBeVisible()
     expect(screen.getByText('Advantage under observed stress')).toBeVisible()
-    expect(screen.getByText('Model estimate, not realized savings. Stress scenarios are deterministic and do not imply probability.')).toBeVisible()
+    expect(
+      screen.getByText(
+        'Model estimate, not realized savings. Stress scenarios are deterministic and do not imply probability.'
+      )
+    ).toBeVisible()
     expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
     expect(screen.getByText('Disruption + new plan')).toBeVisible()
 
@@ -341,5 +361,4 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await waitFor(() => expect(api.runUnavailableScenario).toHaveBeenCalled())
     expect(await screen.findByText('Склад недоступний. QDIP перебудував план постачання.')).toBeVisible()
   })
-
 })

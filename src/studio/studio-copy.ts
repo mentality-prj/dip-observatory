@@ -31,7 +31,8 @@ export const STUDIO_COPY = {
         bindings: 'Evidence Mapping',
       },
       descriptions: {
-        profiles: 'Model a decision from alternatives through evaluation, evidence and constraints, then validate and run it.',
+        profiles:
+          'Model a decision from alternatives through evaluation, evidence and constraints, then validate and run it.',
         plugins: 'Advanced: inspect the domain capabilities that supply evidence and decision inputs.',
         dimensions: 'Advanced: inspect reusable evaluation contracts and evaluator schemas.',
         bindings: 'Advanced: map evidence-source outputs into the evaluation model.',
@@ -70,7 +71,8 @@ export const STUDIO_COPY = {
       newModel: 'New model',
       validation: 'Validation',
       continuous: 'Continuous',
-      workflowHelp: 'Define alternatives, evaluation criteria, evidence and constraints. Validate the model before running it; platform contracts stay in Advanced configuration.',
+      workflowHelp:
+        'Define alternatives, evaluation criteria, evidence and constraints. Validate the model before running it; platform contracts stay in Advanced configuration.',
       deleted: 'Decision model deleted. Historical decisions are retained.',
       savedAtVersion: 'saved at version',
     },
@@ -143,11 +145,13 @@ export const STUDIO_COPY = {
       no: 'No',
       constraintsHelp: 'Rules for this profile determine whether each alternative is feasible. Blocking: Yes.',
       policiesHelp: 'Policies may require actions or approvals without necessarily making an alternative infeasible.',
-      complianceHelp: 'Frameworks and rules for this profile, including conditions, actions and severity. A framework such as GDPR is a ruleset, not a numeric score.',
+      complianceHelp:
+        'Frameworks and rules for this profile, including conditions, actions and severity. A framework such as GDPR is a ruleset, not a numeric score.',
       context: 'Decision model context',
       section: 'Section',
       validation: 'Validation',
-      contextHelp: 'This inspector stays secondary to the model canvas. Constraints, dimensions, policies and evidence bindings remain parts of one decision system rather than separate CRUD screens.',
+      contextHelp:
+        'This inspector stays secondary to the model canvas. Constraints, dimensions, policies and evidence bindings remain parts of one decision system rather than separate CRUD screens.',
       savedAtVersion: 'saved at version',
       businessConfigured: 'Business configured',
       dipCalculated: 'DIP calculated',
@@ -189,7 +193,8 @@ export const STUDIO_COPY = {
       configurationRuntime: 'Configuration / runtime input',
       required: 'Required',
       runtimeSchema: 'Runtime context schema',
-      runtimeSchemaHelp: 'Validate application-supplied context separately from business configuration and plugin inputs.',
+      runtimeSchemaHelp:
+        'Validate application-supplied context separately from business configuration and plugin inputs.',
       saving: 'Saving…',
       saveProfile: 'Save profile',
     },
@@ -286,7 +291,12 @@ export const STUDIO_COPY = {
       openObservatory: 'Відкрити Observatory',
       workspace: 'Робочий простір',
     },
-    breadcrumbs: { label: 'Навігаційний ланцюжок', home: 'Головна QDIP', studio: 'Decision Studio', advanced: 'Розширене' },
+    breadcrumbs: {
+      label: 'Навігаційний ланцюжок',
+      home: 'Головна QDIP',
+      studio: 'Decision Studio',
+      advanced: 'Розширене',
+    },
     decisionStudio: {
       titles: {
         profiles: 'Робочий простір рішень',
@@ -295,7 +305,8 @@ export const STUDIO_COPY = {
         bindings: 'Мапінг доказів',
       },
       descriptions: {
-        profiles: 'Змоделюйте рішення від альтернатив через оцінювання, докази й обмеження, а потім валідуйте та запустіть його.',
+        profiles:
+          'Змоделюйте рішення від альтернатив через оцінювання, докази й обмеження, а потім валідуйте та запустіть його.',
         plugins: 'Розширене: перегляд доменних можливостей, які постачають докази й вхідні дані рішення.',
         dimensions: 'Розширене: перегляд повторно використовуваних контрактів оцінювання та схем модулів оцінювання.',
         bindings: 'Розширене: мапінг виходів джерел доказів у модель оцінювання.',
@@ -334,7 +345,8 @@ export const STUDIO_COPY = {
       newModel: 'Нова модель',
       validation: 'Валідація',
       continuous: 'Безперервна',
-      workflowHelp: 'Визначте альтернативи, критерії оцінювання, докази та обмеження. Валідуйте модель перед запуском; контракти платформи залишаються у розширеній конфігурації.',
+      workflowHelp:
+        'Визначте альтернативи, критерії оцінювання, докази та обмеження. Валідуйте модель перед запуском; контракти платформи залишаються у розширеній конфігурації.',
       deleted: 'Модель рішення видалено. Історичні рішення збережено.',
       savedAtVersion: 'збережено у версії',
     },
@@ -407,11 +419,13 @@ export const STUDIO_COPY = {
       no: 'Ні',
       constraintsHelp: 'Правила цього профілю визначають, чи є кожна альтернатива допустимою. Блокування: так.',
       policiesHelp: 'Політики можуть вимагати дій або погоджень, не обов’язково роблячи альтернативу недопустимою.',
-      complianceHelp: 'Набори правил і правила профілю, включно з умовами, діями й серйозністю. Набір правил на кшталт GDPR не є числовою оцінкою.',
+      complianceHelp:
+        'Набори правил і правила профілю, включно з умовами, діями й серйозністю. Набір правил на кшталт GDPR не є числовою оцінкою.',
       context: 'Контекст моделі рішення',
       section: 'Розділ',
       validation: 'Валідація',
-      contextHelp: 'Цей інспектор залишається другорядним щодо полотна моделі. Обмеження, критерії, політики та зв’язки доказів є частинами однієї системи рішень, а не окремими екранами керування.',
+      contextHelp:
+        'Цей інспектор залишається другорядним щодо полотна моделі. Обмеження, критерії, політики та зв’язки доказів є частинами однієї системи рішень, а не окремими екранами керування.',
       savedAtVersion: 'збережено у версії',
       businessConfigured: 'Налаштовано бізнесом',
       dipCalculated: 'Обчислено DIP',
@@ -453,14 +467,16 @@ export const STUDIO_COPY = {
       configurationRuntime: 'Конфігурація / вхід під час виконання',
       required: 'Обов’язкове',
       runtimeSchema: 'Схема контексту виконання',
-      runtimeSchemaHelp: 'Валідуйте контекст, що надходить від застосунку, окремо від бізнес-конфігурації та входів плагіна.',
+      runtimeSchemaHelp:
+        'Валідуйте контекст, що надходить від застосунку, окремо від бізнес-конфігурації та входів плагіна.',
       saving: 'Збереження…',
       saveProfile: 'Зберегти профіль',
     },
     bindings: {
       loading: 'Завантаження зв’язків…',
       saved: 'Зв’язки збережено. Оновіть профілі, щоб вони посилалися на змінені версії зв’язків.',
-      intro: 'Зіставте оголошені виходи з входами критеріїв. Змінюйте версію зв’язку під час редагування його контракту.',
+      intro:
+        'Зіставте оголошені виходи з входами критеріїв. Змінюйте версію зв’язку під час редагування його контракту.',
       pinnedContracts: 'Закріплені контракти',
       useInstalledVersions: 'Використати встановлені версії контрактів',
       bindingId: 'ID зв’язку',
@@ -550,7 +566,12 @@ export const STUDIO_COPY = {
       openObservatory: 'Otwórz Observatory',
       workspace: 'Przestrzeń robocza',
     },
-    breadcrumbs: { label: 'Ścieżka nawigacji', home: 'Strona główna QDIP', studio: 'Decision Studio', advanced: 'Zaawansowane' },
+    breadcrumbs: {
+      label: 'Ścieżka nawigacji',
+      home: 'Strona główna QDIP',
+      studio: 'Decision Studio',
+      advanced: 'Zaawansowane',
+    },
     decisionStudio: {
       titles: {
         profiles: 'Przestrzeń decyzji',
@@ -559,7 +580,8 @@ export const STUDIO_COPY = {
         bindings: 'Mapowanie dowodów',
       },
       descriptions: {
-        profiles: 'Modeluj decyzję od alternatyw przez ocenę, dowody i ograniczenia, a następnie zweryfikuj i uruchom model.',
+        profiles:
+          'Modeluj decyzję od alternatyw przez ocenę, dowody i ograniczenia, a następnie zweryfikuj i uruchom model.',
         plugins: 'Zaawansowane: przeglądaj możliwości domenowe dostarczające dowody i dane wejściowe decyzji.',
         dimensions: 'Zaawansowane: przeglądaj kontrakty oceny wielokrotnego użytku oraz schematy modułów oceny.',
         bindings: 'Zaawansowane: mapuj wyniki źródeł dowodów do modelu oceny.',
@@ -598,7 +620,8 @@ export const STUDIO_COPY = {
       newModel: 'Nowy model',
       validation: 'Walidacja',
       continuous: 'Ciągła',
-      workflowHelp: 'Zdefiniuj alternatywy, kryteria oceny, dowody i ograniczenia. Zweryfikuj model przed uruchomieniem; kontrakty platformy pozostają w konfiguracji zaawansowanej.',
+      workflowHelp:
+        'Zdefiniuj alternatywy, kryteria oceny, dowody i ograniczenia. Zweryfikuj model przed uruchomieniem; kontrakty platformy pozostają w konfiguracji zaawansowanej.',
       deleted: 'Model decyzji usunięto. Historyczne decyzje zostały zachowane.',
       savedAtVersion: 'zapisano w wersji',
     },
@@ -670,12 +693,15 @@ export const STUDIO_COPY = {
       yes: 'Tak',
       no: 'Nie',
       constraintsHelp: 'Reguły tego profilu określają, czy każda alternatywa jest wykonalna. Blokowanie: tak.',
-      policiesHelp: 'Polityki mogą wymagać działań lub zatwierdzeń bez konieczności uznania alternatywy za niewykonalną.',
-      complianceHelp: 'Zestawy reguł i reguły profilu, w tym warunki, działania i poziom istotności. Zestaw reguł taki jak GDPR nie jest wynikiem liczbowym.',
+      policiesHelp:
+        'Polityki mogą wymagać działań lub zatwierdzeń bez konieczności uznania alternatywy za niewykonalną.',
+      complianceHelp:
+        'Zestawy reguł i reguły profilu, w tym warunki, działania i poziom istotności. Zestaw reguł taki jak GDPR nie jest wynikiem liczbowym.',
       context: 'Kontekst modelu decyzji',
       section: 'Sekcja',
       validation: 'Walidacja',
-      contextHelp: 'Inspektor pozostaje drugorzędny wobec modelu. Ograniczenia, kryteria, polityki i powiązania dowodów są elementami jednego systemu decyzji, a nie oddzielnymi ekranami zarządzania.',
+      contextHelp:
+        'Inspektor pozostaje drugorzędny wobec modelu. Ograniczenia, kryteria, polityki i powiązania dowodów są elementami jednego systemu decyzji, a nie oddzielnymi ekranami zarządzania.',
       savedAtVersion: 'zapisano w wersji',
       businessConfigured: 'Skonfigurowane biznesowo',
       dipCalculated: 'Obliczone przez DIP',
@@ -717,7 +743,8 @@ export const STUDIO_COPY = {
       configurationRuntime: 'Konfiguracja / wejście w czasie wykonania',
       required: 'Wymagane',
       runtimeSchema: 'Schemat kontekstu wykonania',
-      runtimeSchemaHelp: 'Waliduj kontekst dostarczony przez aplikację oddzielnie od konfiguracji biznesowej i wejść wtyczki.',
+      runtimeSchemaHelp:
+        'Waliduj kontekst dostarczony przez aplikację oddzielnie od konfiguracji biznesowej i wejść wtyczki.',
       saving: 'Zapisywanie…',
       saveProfile: 'Zapisz profil',
     },

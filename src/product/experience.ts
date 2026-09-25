@@ -48,8 +48,7 @@ export const DECISION_PATTERN_LABELS: Record<DecisionPatternId, Localized<string
 }
 
 export const decisionPattern = (id: DecisionPatternId) => DECISION_PATTERNS[id]
-export const decisionPatternLabel = (id: DecisionPatternId, locale: Locale) =>
-  DECISION_PATTERN_LABELS[id][locale]
+export const decisionPatternLabel = (id: DecisionPatternId, locale: Locale) => DECISION_PATTERN_LABELS[id][locale]
 
 export const DECISION_WORKFLOW_COPY: Record<Locale, readonly { id: DecisionStageId; label: string; detail: string }[]> =
   {

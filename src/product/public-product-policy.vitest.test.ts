@@ -57,7 +57,6 @@ describe('public product naming policy', () => {
   })
 })
 
-
 describe('localized Studio terminology policy', () => {
   const forbiddenEnglishUiTerms = [
     /\bdimensions?\b/i,
@@ -77,14 +76,11 @@ describe('localized Studio terminology policy', () => {
   for (const locale of ['uk', 'pl'] as const) {
     it(`${locale} does not mix ordinary English UI terminology into localized copy`, () => {
       const values = collectStrings(studioCopy(locale))
-      const violations = values.filter((value) =>
-        forbiddenEnglishUiTerms.some((pattern) => pattern.test(value))
-      )
+      const violations = values.filter((value) => forbiddenEnglishUiTerms.some((pattern) => pattern.test(value)))
       expect(violations).toEqual([])
     })
   }
 })
-
 
 describe('localized Observatory terminology policy', () => {
   const forbiddenEnglishUiTerms = [
@@ -110,9 +106,7 @@ describe('localized Observatory terminology policy', () => {
           tag: useCase.tag[locale],
         })),
       ])
-      const violations = values.filter((value) =>
-        forbiddenEnglishUiTerms.some((pattern) => pattern.test(value))
-      )
+      const violations = values.filter((value) => forbiddenEnglishUiTerms.some((pattern) => pattern.test(value)))
       expect(violations).toEqual([])
     })
   }

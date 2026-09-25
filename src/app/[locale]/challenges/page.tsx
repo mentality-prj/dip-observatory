@@ -10,11 +10,7 @@ export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }))
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
   if (!isSupportedLocale(locale)) return {}
   const metadata = decisionChallengeMetadataI18n[locale]
@@ -24,11 +20,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function DecisionChallengePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function DecisionChallengePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   if (!isSupportedLocale(locale)) notFound()
   return (

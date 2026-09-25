@@ -20,10 +20,7 @@ function sameOrigin(request: NextRequest) {
   return !origin || origin === request.nextUrl.origin
 }
 
-async function handler(
-  request: NextRequest,
-  context: { params: Promise<{ path?: string[] }> }
-) {
+async function handler(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
   const { path = [] } = await context.params
   if (!path.every((part) => token.test(part))) {
     return NextResponse.json({ error: 'Unsupported challenge resource' }, { status: 404 })
@@ -62,18 +59,11 @@ async function handler(
       }
       const body = request.method === 'POST' ? await request.json() : {}
       if (request.method === 'POST' && path[2] === 'validate' && path.length === 3) {
-        return NextResponse.json(
-          await validateDecisionChallengeAction(runId, body.snapshot_id, body.human_action)
-        )
+        return NextResponse.json(await validateDecisionChallengeAction(runId, body.snapshot_id, body.human_action))
       }
       if (request.method === 'POST' && path[2] === 'decision' && path.length === 3) {
         return NextResponse.json(
-          await submitDecisionChallenge(
-            runId,
-            body.submission_id,
-            body.snapshot_id,
-            body.human_action
-          )
+          await submitDecisionChallenge(runId, body.submission_id, body.snapshot_id, body.human_action)
         )
       }
       if (request.method === 'POST' && path[2] === 'cta' && path.length === 3) {
@@ -85,10 +75,7 @@ async function handler(
     if (error instanceof DipApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
-    return NextResponse.json(
-      { error: 'QDIP challenge is unavailable. Please retry.' },
-      { status: 502 }
-    )
+    return NextResponse.json({ error: 'QDIP challenge is unavailable. Please retry.' }, { status: 502 })
   }
 }
 

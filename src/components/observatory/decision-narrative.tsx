@@ -6,10 +6,7 @@ import { observatoryDecisionNarrativeI18n } from '@/lib/product-i18n'
 export function ObservatoryDecisionNarrative({ locale, useCase }: { locale: Locale; useCase: DipUseCase }) {
   const t = observatoryDecisionNarrativeI18n[locale]
   return (
-    <section
-      className="mx-auto w-full max-w-[1540px] px-4 pt-5 sm:px-5 md:px-8 lg:px-10"
-      aria-label={t.ariaLabel}
-    >
+    <section className="mx-auto w-full max-w-[1540px] px-4 pt-5 sm:px-5 md:px-8 lg:px-10" aria-label={t.ariaLabel}>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">

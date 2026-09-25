@@ -54,9 +54,9 @@ describe('Supply Network i18n contract', () => {
             entry.isFile() &&
             entry.name.endsWith('.tsx') &&
             !entry.name.includes('.test.') &&
-            !entry.name.includes('.spec.'),
+            !entry.name.includes('.spec.')
         )
-        .map((entry) => new URL(entry.name, directory)),
+        .map((entry) => new URL(entry.name, directory))
     )
 
     for (const file of sourceFiles) {

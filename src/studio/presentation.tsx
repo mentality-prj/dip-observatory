@@ -27,7 +27,8 @@ export function dimensionSource(item: ProfileDimension, locale: StudioLocale = '
   if (['constraints', 'policy', 'compliance'].includes(item.dimension_id)) return c.businessConfigured
   if (Array.isArray(config.components)) return c.dipCalculated
   if (item.binding_id) return c.pluginSupplied
-  if (typeof config.source_path === 'string' && /^(context|runtime)\./.test(config.source_path)) return c.runtimeSupplied
+  if (typeof config.source_path === 'string' && /^(context|runtime)\./.test(config.source_path))
+    return c.runtimeSupplied
   return c.businessConfigured
 }
 
@@ -61,7 +62,11 @@ export function RuleSummary({
             <CardTitle>{sectionLabel(readable(rule.id ?? `${c.rule} ${index + 1}`), locale)}</CardTitle>
           </CardHeader>
           <CardContent>
-            {rule.framework != null && <p>{c.framework}: {String(rule.framework)}</p>}
+            {rule.framework != null && (
+              <p>
+                {c.framework}: {String(rule.framework)}
+              </p>
+            )}
             <p>
               {readable(rule.path)} {operators[String(rule.operator)] ?? String(rule.operator)}{' '}
               {readable(rule.limit_path ?? rule.limit)}
@@ -72,14 +77,22 @@ export function RuleSummary({
                 {rule.required_action != null ? ` · ${readable(rule.required_action)}` : ''}
               </p>
             )}
-            {rule.severity != null && <p>{c.severity}: {readable(rule.severity)}</p>}
+            {rule.severity != null && (
+              <p>
+                {c.severity}: {readable(rule.severity)}
+              </p>
+            )}
           </CardContent>
         </Card>
       ))}
       {configuration.budget != null && (
         <Card>
-          <CardHeader><CardTitle>{c.budgetConstraint}</CardTitle></CardHeader>
-          <CardContent><p>{c.budgetHelp}</p></CardContent>
+          <CardHeader>
+            <CardTitle>{c.budgetConstraint}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{c.budgetHelp}</p>
+          </CardContent>
         </Card>
       )}
     </div>

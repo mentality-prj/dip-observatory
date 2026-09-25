@@ -93,7 +93,11 @@ export function DecisionStudio({ section }: { section: string }) {
           </Button>
         </div>
       )}
-      {message && <div role="status" className="studio-success">{message}</div>}
+      {message && (
+        <div role="status" className="studio-success">
+          {message}
+        </div>
+      )}
       {!data && !error && <p role="status">{c.loading}</p>}
 
       {data && (
@@ -112,10 +116,22 @@ export function DecisionStudio({ section }: { section: string }) {
                     </Badge>
                   </header>
                   <div className="studio-registry-meta">
-                    <span><small>{c.version}</small>{plugin.version}</span>
-                    <span><small>{c.category}</small>{plugin.ui?.category ?? c.general}</span>
-                    <span><small>{c.capabilities}</small>{plugin.capabilities.length}</span>
-                    <span><small>{c.outputs}</small>{plugin.dimension_outputs.length}</span>
+                    <span>
+                      <small>{c.version}</small>
+                      {plugin.version}
+                    </span>
+                    <span>
+                      <small>{c.category}</small>
+                      {plugin.ui?.category ?? c.general}
+                    </span>
+                    <span>
+                      <small>{c.capabilities}</small>
+                      {plugin.capabilities.length}
+                    </span>
+                    <span>
+                      <small>{c.outputs}</small>
+                      {plugin.dimension_outputs.length}
+                    </span>
                   </div>
                   <details className="studio-registry-disclosure">
                     <summary>{c.technicalDetails}</summary>
@@ -138,11 +154,14 @@ export function DecisionStudio({ section }: { section: string }) {
                             {plugin.dimension_outputs.map((output) => (
                               <li key={`${output.capability_id}-${output.dimension_id}-${output.source_path}`}>
                                 {outputLabel(output.capability_id, output.source_path)} →{' '}
-                                {data.dimensions.find((dimension) => dimension.id === output.dimension_id)?.name ?? output.dimension_id}
+                                {data.dimensions.find((dimension) => dimension.id === output.dimension_id)?.name ??
+                                  output.dimension_id}
                               </li>
                             ))}
                           </ul>
-                        ) : <p>{c.noOutputs}</p>}
+                        ) : (
+                          <p>{c.noOutputs}</p>
+                        )}
                       </div>
                     </div>
                   </details>
@@ -154,23 +173,52 @@ export function DecisionStudio({ section }: { section: string }) {
           {section === 'dimensions' && (
             <section className="studio-registry-list" aria-label={c.titles.dimensions}>
               {data.dimensions.map((dimension) => (
-                <article className="studio-registry-row studio-registry-row-compact" key={`${dimension.id}-${dimension.version}`}>
+                <article
+                  className="studio-registry-row studio-registry-row-compact"
+                  key={`${dimension.id}-${dimension.version}`}
+                >
                   <header className="studio-registry-row-heading">
-                    <div><h2>{dimension.name}</h2><p>{dimension.id}</p></div>
+                    <div>
+                      <h2>{dimension.name}</h2>
+                      <p>{dimension.id}</p>
+                    </div>
                     <Badge>{dimension.version}</Badge>
                   </header>
                   <div className="studio-registry-meta">
-                    <span><small>{c.type}</small>{dimension.type}</span>
-                    <span><small>{c.phase}</small>{dimension.phase ?? c.unavailable}</span>
-                    <span><small>{c.source}</small>{dimension.source}</span>
-                    <span><small>{c.blocking}</small>{dimension.blocking ? c.yes : c.no}</span>
+                    <span>
+                      <small>{c.type}</small>
+                      {dimension.type}
+                    </span>
+                    <span>
+                      <small>{c.phase}</small>
+                      {dimension.phase ?? c.unavailable}
+                    </span>
+                    <span>
+                      <small>{c.source}</small>
+                      {dimension.source}
+                    </span>
+                    <span>
+                      <small>{c.blocking}</small>
+                      {dimension.blocking ? c.yes : c.no}
+                    </span>
                   </div>
                   <details className="studio-registry-disclosure">
                     <summary>{c.evaluatorSchemas}</summary>
                     <div className="studio-registry-contracts">
-                      <div><h3>{c.evaluator}</h3><p>{dimension.evaluator_id}@{dimension.evaluator_version}</p></div>
-                      <div><h3>{c.configurationSchema}</h3><pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre></div>
-                      <div><h3>{c.valueSchema}</h3><pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre></div>
+                      <div>
+                        <h3>{c.evaluator}</h3>
+                        <p>
+                          {dimension.evaluator_id}@{dimension.evaluator_version}
+                        </p>
+                      </div>
+                      <div>
+                        <h3>{c.configurationSchema}</h3>
+                        <pre>{JSON.stringify(dimension.configuration_schema, null, 2)}</pre>
+                      </div>
+                      <div>
+                        <h3>{c.valueSchema}</h3>
+                        <pre>{JSON.stringify(dimension.value_schema, null, 2)}</pre>
+                      </div>
                     </div>
                   </details>
                 </article>
@@ -184,7 +232,11 @@ export function DecisionStudio({ section }: { section: string }) {
                 {c.evidenceSource}
                 <Select value={pluginId} onChange={(e) => setPluginId(e.target.value)}>
                   <option value="">{c.selectEvidenceSource}</option>
-                  {data.plugins.map((p) => <option key={p.name} value={p.name}>{p.ui?.label ?? p.name}</option>)}
+                  {data.plugins.map((p) => (
+                    <option key={p.name} value={p.name}>
+                      {p.ui?.label ?? p.name}
+                    </option>
+                  ))}
                 </Select>
               </label>
               {data.plugins.find((p) => p.name === pluginId) && (
@@ -205,7 +257,10 @@ export function DecisionStudio({ section }: { section: string }) {
                   plugins={data.plugins}
                   deleting={deleting}
                   onCreate={() => openProfile(emptyProfile(data.plugins.find((plugin) => plugin.enabled)), false)}
-                  onImport={(profile) => { openProfile(profile, false); setError('') }}
+                  onImport={(profile) => {
+                    openProfile(profile, false)
+                    setError('')
+                  }}
                   onError={setError}
                   onEvaluate={setRunningProfile}
                   onRequestDelete={setDeleting}
@@ -216,7 +271,9 @@ export function DecisionStudio({ section }: { section: string }) {
               {editor && (
                 <div className="studio-editor-workspace">
                   <div className="studio-editor-toolbar">
-                    <Button type="button" variant="secondary" onClick={() => setEditor(null)}>{c.backToDecisions}</Button>
+                    <Button type="button" variant="secondary" onClick={() => setEditor(null)}>
+                      {c.backToDecisions}
+                    </Button>
                   </div>
                   <div className="studio-editor-layout">
                     <ProfileEditor
@@ -238,17 +295,23 @@ export function DecisionStudio({ section }: { section: string }) {
                     <aside className="studio-context-inspector" aria-label={c.decisionWorkflow}>
                       <h2>{c.decisionWorkflow}</h2>
                       <dl>
-                        <dt>{c.decision}</dt><dd>{editor.profile.name || c.untitledDecision}</dd>
-                        <dt>{c.version}</dt><dd>{editor.profile.version}</dd>
-                        <dt>{c.mode}</dt><dd>{editor.existing ? c.editing : c.newModel}</dd>
-                        <dt>{c.validation}</dt><dd>{c.continuous}</dd>
+                        <dt>{c.decision}</dt>
+                        <dd>{editor.profile.name || c.untitledDecision}</dd>
+                        <dt>{c.version}</dt>
+                        <dd>{editor.profile.version}</dd>
+                        <dt>{c.mode}</dt>
+                        <dd>{editor.existing ? c.editing : c.newModel}</dd>
+                        <dt>{c.validation}</dt>
+                        <dd>{c.continuous}</dd>
                       </dl>
                       <p>{c.workflowHelp}</p>
                     </aside>
                   </div>
                 </div>
               )}
-              {runningProfile && <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />}
+              {runningProfile && (
+                <ProfileRunner key={`${runningProfile.id}-${runningProfile.version}`} profile={runningProfile} />
+              )}
             </>
           )}
         </>

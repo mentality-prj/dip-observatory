@@ -22,10 +22,7 @@ const routingContract = [
   {
     id: 'gtm-lab',
     route: '/gtm-lab',
-    load: () =>
-      import('../features/gtm-lab/components/gtm-lab-workspace').then(
-        (module) => module.GtmLabWorkspace
-      ),
+    load: () => import('../features/gtm-lab/components/gtm-lab-workspace').then((module) => module.GtmLabWorkspace),
   },
 ] as const
 

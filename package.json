@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",

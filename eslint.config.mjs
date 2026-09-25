@@ -46,8 +46,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/rules-of-hooks': 'error',
     },
   },
   {
@@ -67,7 +67,8 @@ const eslintConfig = defineConfig([
           patterns: [
             {
               group: ['@/app/**'],
-              message: 'Features must not depend on the Next app layer. Move the dependency behind a feature or shared boundary.',
+              message:
+                'Features must not depend on the Next app layer. Move the dependency behind a feature or shared boundary.',
             },
           ],
         },
