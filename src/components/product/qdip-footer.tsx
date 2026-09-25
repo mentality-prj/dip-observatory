@@ -17,17 +17,20 @@ function FooterLink({
   className,
   ariaLabel,
   native,
+  dataFooterBrand = false,
 }: {
   href: string
   children: ReactNode
   className?: string
   ariaLabel?: string
   native: boolean
+  dataFooterBrand?: boolean
 }) {
+  const brandAttribute = dataFooterBrand ? '' : undefined
   return native ? (
-    <a className={className} href={href} aria-label={ariaLabel}>{children}</a>
+    <a className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>{children}</a>
   ) : (
-    <Link className={className} href={href} aria-label={ariaLabel}>{children}</Link>
+    <Link className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>{children}</Link>
   )
 }
 
@@ -56,6 +59,7 @@ export function QdipFooter({
           href={marketingHref(locale)}
           ariaLabel={shared('home')}
           native={native}
+          dataFooterBrand
         >
           <QdipLogo inverse />
         </FooterLink>
