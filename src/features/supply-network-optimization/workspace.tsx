@@ -9,6 +9,7 @@ import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import {
   candidateOptionLabel,
+  constraintDisplayLabel,
   demandDisplayLabel,
   entityDisplayLabel,
   formatMoney,
@@ -54,55 +55,6 @@ function fulfillmentDistribution(result: OptimizationResult) {
   return [...byWarehouse.entries()]
     .map(([warehouseId, units]) => ({ warehouseId, units, share: units / total }))
     .sort((a, b) => b.units - a.units)
-}
-
-function humanizeConstraint(value: string, locale: Locale) {
-  const [kind, ...parts] = value.split(':')
-  const labels: Record<Locale, Record<string, string>> = {
-    en: {
-      'inventory-balance': 'Inventory balance',
-      'available-capacity': 'Available storage capacity',
-      'warehouse-capacity': 'Ending storage capacity',
-      'receiving-capacity': 'Receiving capacity',
-      'dispatch-capacity': 'Dispatch capacity',
-      'delivery-route-capacity': 'Delivery route capacity',
-      'transfer-route-capacity': 'Transfer route capacity',
-      'point-service-level': 'Demand-point service level',
-      'minimum-service-level': 'Network minimum service level',
-      'inventory-exposure': 'Inventory exposure limit',
-      'concentration-target': 'Inventory concentration target',
-    },
-    uk: {
-      'inventory-balance': 'Баланс запасів',
-      'available-capacity': 'Доступна місткість зберігання',
-      'warehouse-capacity': 'Кінцева місткість складу',
-      'receiving-capacity': 'Потужність приймання',
-      'dispatch-capacity': 'Потужність відвантаження',
-      'delivery-route-capacity': 'Пропускна здатність маршруту доставки',
-      'transfer-route-capacity': 'Пропускна здатність міжскладського маршруту',
-      'point-service-level': 'Рівень сервісу точки попиту',
-      'minimum-service-level': 'Мінімальний рівень сервісу мережі',
-      'inventory-exposure': 'Ліміт концентрації запасів',
-      'concentration-target': 'Цільова концентрація запасів',
-    },
-    pl: {
-      'inventory-balance': 'Bilans zapasów',
-      'available-capacity': 'Dostępna pojemność składowania',
-      'warehouse-capacity': 'Końcowa pojemność magazynu',
-      'receiving-capacity': 'Przepustowość przyjęć',
-      'dispatch-capacity': 'Przepustowość wysyłek',
-      'delivery-route-capacity': 'Przepustowość trasy dostawy',
-      'transfer-route-capacity': 'Przepustowość trasy między magazynami',
-      'point-service-level': 'Poziom obsługi punktu popytu',
-      'minimum-service-level': 'Minimalny poziom obsługi sieci',
-      'inventory-exposure': 'Limit koncentracji zapasów',
-      'concentration-target': 'Docelowa koncentracja zapasów',
-    },
-  }
-  const label = labels[locale][kind]
-  if (!label) return value.replaceAll(':', ' · ')
-  const readableParts = parts.map((part) => entityDisplayLabel(part, locale))
-  return readableParts.length ? `${label} · ${readableParts.join(' · ')}` : label
 }
 
 function requestErrorKey(reason: unknown): 'invalidError' | 'infeasibleError' | 'unavailableError' | 'requestFailed' {
@@ -747,7 +699,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           {t.fulfillmentExposure}:{' '}
                           <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
                           {' · '}
-                          {locale === 'uk' ? 'ліміт' : locale === 'pl' ? 'limit' : 'limit'}{' '}
+                          {t.limit}{' '}
                           <strong className="text-slate-200">{pct(
                             activeNetwork.unavailable_warehouse_ids.length
                               ? activeNetwork.policy.emergency_maximum_node_fulfillment_share
