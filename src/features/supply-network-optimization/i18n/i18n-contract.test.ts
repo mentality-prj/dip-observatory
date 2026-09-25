@@ -65,6 +65,9 @@ describe('Supply Network i18n contract', () => {
       expect(source, file.pathname).not.toContain("locale === 'uk'")
       expect(source, file.pathname).not.toContain("locale === 'pl'")
       expect(source, file.pathname).not.toMatch(/[\u0400-\u04FF]/)
+      expect(source, file.pathname).not.toMatch(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/)
+      expect(source, file.pathname).not.toMatch(/\b(?:en|uk|pl)\s*:/)
+      expect(source, file.pathname).not.toContain('Record<Locale')
     }
   })
 })
