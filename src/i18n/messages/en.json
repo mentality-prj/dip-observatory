@@ -504,7 +504,20 @@
       "rationaleCost": "Movement and cost",
       "rawEvidence": "Detailed model metrics",
       "technicalMethod": "Calculation method",
-      "heuristic": "Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum."
+      "heuristic": "Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum.",
+      "horizonDemand": "Horizon demand",
+      "expectedDuringHorizon": "expected during the horizon",
+      "demandUnitHelp": "A demand unit is a synthetic planning unit; in a pilot it is mapped to your case, consultation or other operational unit.",
+      "rationalePriorityBody": "QDIP prioritizes high-importance demand where the assigned team has the required skills.",
+      "rationaleHorizonBody": "QDIP evaluates all {days} days jointly: the end-of-day location changes what is feasible next.",
+      "rationaleConstraintsBody": "QDIP checks location availability, assignment eligibility, skill compatibility, movement feasibility and team limits.",
+      "rationaleCostBody": "Plan: {moved}/{total} teams change location, with {events} move events over {days} days.",
+      "movesToday": "Moves today",
+      "restoreBaseline": "Restore baseline scenario",
+      "pilotKicker": "07 · TEST ON YOUR DATA",
+      "pilotTitle": "Test QDIP on one real week",
+      "pilotBody": "Aggregated data is enough: locations, demand by service, teams, skills and capacity, availability and routes. Beneficiary personal data is not required.",
+      "pilotUpload": "Upload aggregated data"
     },
     "importer": {
       "title": "Client data",
@@ -668,7 +681,10 @@
       "feasible": "The manual plan is feasible under current constraints.",
       "qdip": "QDIP plan",
       "yours": "Your plan",
-      "difference": "Difference"
+      "difference": "Difference",
+      "coverageSame": "Your plan covers the same number of demand units as the QDIP plan.",
+      "coverageMore": "Your plan covers {delta} more demand units.",
+      "coverageLess": "Your plan covers {delta} fewer demand units."
     },
     "assignmentExplanation": {
       "title": "Why this location?",
