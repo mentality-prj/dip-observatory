@@ -41,6 +41,9 @@ const copy = {
     demoData: 'Use example data',
     imported: 'Customer dataset loaded',
     scenario: 'Business situation',
+    scenarioTitle: 'Resource Allocation Decision Challenge',
+    scenarioDescription: 'Allocate constrained teams across five competing locations before seeing the QDIP recommendation.',
+    snapshot: 'snapshot',
     resources: 'Available teams',
     targets: 'Competing locations',
     yourDecision: 'Your decision',
@@ -89,6 +92,9 @@ const copy = {
     demoData: 'Використати демо-дані',
     imported: 'Дані клієнта завантажено',
     scenario: 'Бізнес-ситуація',
+    scenarioTitle: 'Виклик з розподілу ресурсів',
+    scenarioDescription: 'Розподіліть обмежені команди між п’ятьма конкуруючими локаціями до того, як побачите рекомендацію QDIP.',
+    snapshot: 'знімок',
     resources: 'Доступні команди',
     targets: 'Конкуруючі локації',
     yourDecision: 'Ваше рішення',
@@ -137,6 +143,9 @@ const copy = {
     demoData: 'Użyj danych demonstracyjnych',
     imported: 'Dane klienta zostały wczytane',
     scenario: 'Sytuacja biznesowa',
+    scenarioTitle: 'Wyzwanie alokacji zasobów',
+    scenarioDescription: 'Przydziel ograniczone zespoły między pięć konkurujących lokalizacji, zanim zobaczysz rekomendację QDIP.',
+    snapshot: 'migawka',
     resources: 'Dostępne zespoły',
     targets: 'Konkurujące lokalizacje',
     yourDecision: 'Twoja decyzja',
@@ -385,10 +394,10 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">01 · {t.scenario}</div>
-            <h2 className="mt-2 text-2xl font-semibold">{definition.title}</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{definition.description}</p>
+            <h2 className="mt-2 text-2xl font-semibold">{t.scenarioTitle}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{t.scenarioDescription}</p>
           </div>
-          <div className="font-mono text-xs text-slate-500">snapshot {run.snapshot.snapshot_hash.slice(0, 12)}</div>
+          <div className="font-mono text-xs text-slate-500">{t.snapshot} {run.snapshot.snapshot_hash.slice(0, 12)}</div>
         </div>
         {scenario.budget != null && <div className="mt-5 ds-badge ds-badge-info">{t.budget}: {scenario.budget}</div>}
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
