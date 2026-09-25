@@ -4,6 +4,12 @@ export const DEFAULT_LOCALE: Locale = 'en'
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
 
+export const LOCALE_TAGS: Record<Locale, string> = {
+  en: 'en-GB',
+  uk: 'uk-UA',
+  pl: 'pl-PL',
+}
+
 export function isSupportedLocale(value: string): value is Locale {
   return SUPPORTED_LOCALES.includes(value as Locale)
 }
