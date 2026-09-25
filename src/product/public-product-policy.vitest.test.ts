@@ -16,18 +16,30 @@ function collectStrings(value: unknown): string[] {
 }
 
 describe('public product naming policy', () => {
-  it('keeps canonical demo names unchanged across locales', () => {
+  it('keeps canonical English demo names and localized Observatory titles', () => {
     const expected = {
-      'resource-allocation': PUBLIC_DEMO_NAMES.resourceAllocation,
-      'supply-network-optimization': PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
-      'gtm-lab': PUBLIC_DEMO_NAMES.gtmLab,
+      'resource-allocation': {
+        en: PUBLIC_DEMO_NAMES.resourceAllocation,
+        uk: 'Розподіл ресурсів',
+        pl: 'Alokacja zasobów',
+      },
+      'supply-network-optimization': {
+        en: PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
+        uk: 'Оптимізація мережі постачання',
+        pl: 'Optymalizacja sieci dostaw',
+      },
+      'gtm-lab': {
+        en: PUBLIC_DEMO_NAMES.gtmLab,
+        uk: 'Лабораторія виходу на ринок',
+        pl: 'Laboratorium wejścia na rynek',
+      },
     } as const
 
     for (const useCase of DIP_USE_CASES) {
-      const canonical = expected[useCase.id as keyof typeof expected]
-      expect(useCase.title.en).toBe(canonical)
-      expect(useCase.title.uk).toBe(canonical)
-      expect(useCase.title.pl).toBe(canonical)
+      const titles = expected[useCase.id as keyof typeof expected]
+      expect(useCase.title.en).toBe(titles.en)
+      expect(useCase.title.uk).toBe(titles.uk)
+      expect(useCase.title.pl).toBe(titles.pl)
     }
   })
 
