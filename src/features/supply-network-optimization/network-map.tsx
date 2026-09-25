@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { Locale } from '@/lib/observatory-i18n'
 import type {
   CandidateResult,
   CandidateWarehouse,
@@ -12,10 +13,16 @@ import type {
   Warehouse,
 } from './domain'
 import { loadMapLibre, OSM_RASTER_STYLE, type MapLibreMap, type MapLibreMarker } from './map-provider'
-import { candidateOptionLabel, demandDisplayLabel, supplierDisplayLabel, warehouseDisplayLabel } from './presentation'
+import {
+  candidateOptionLabel,
+  demandDisplayLabel,
+  getSupplyNetworkI18n,
+  supplierDisplayLabel,
+  warehouseDisplayLabel,
+} from './i18n'
 
 type Props = {
-  locale: 'en' | 'uk' | 'pl'
+  locale: Locale
   network: SupplyNetwork
   result: OptimizationResult | null
   unavailableWarehouseIds: string[]
@@ -209,6 +216,7 @@ export function NetworkMap({
   onStoreSelect,
   onMapClick,
 }: Props) {
+  const t = getSupplyNetworkI18n(locale).map
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
@@ -410,22 +418,10 @@ export function NetworkMap({
           {(['current', 'qdip', 'compare'] as const).map((mode) => {
             const label =
               mode === 'current'
-                ? locale === 'uk'
-                  ? 'До збою'
-                  : locale === 'pl'
-                    ? 'Przed zakłóceniem'
-                    : 'Before'
+                ? t.modeBefore
                 : mode === 'qdip'
-                  ? locale === 'uk'
-                    ? 'План QDIP'
-                    : locale === 'pl'
-                      ? 'Plan QDIP'
-                      : 'QDIP plan'
-                  : locale === 'uk'
-                    ? 'Порівняти'
-                    : locale === 'pl'
-                      ? 'Porównaj'
-                      : 'Compare'
+                  ? t.modeQdip
+                  : t.modeCompare
             return (
               <button
                 key={mode}
@@ -528,56 +524,48 @@ export function NetworkMap({
       {mapUnavailable ? (
         <div className="absolute inset-0 flex items-center justify-center p-6" role="status">
           <div className="max-w-md rounded-lg border border-amber-400/20 bg-slate-950/95 p-4 text-center">
-            <p className="text-sm font-medium text-slate-200">{locale === 'uk' ? 'Мапа тимчасово недоступна' : locale === 'pl' ? 'Mapa jest chwilowo niedostępna' : 'Map temporarily unavailable'}</p>
-            <p className="mt-1 text-xs text-slate-400">{locale === 'uk' ? 'Розрахунок мережі доступний. Оновіть сторінку, щоб повторити завантаження мапи.' : locale === 'pl' ? 'Analiza sieci jest dostępna. Odśwież stronę, aby ponownie załadować mapę.' : 'Network analysis remains available. Reload to retry the map.'}</p>
+            <p className="text-sm font-medium text-slate-200">{t.mapUnavailable}</p>
+            <p className="mt-1 text-xs text-slate-400">{t.mapUnavailableHelp}</p>
           </div>
         </div>
       ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5 text-[11px] text-slate-200 sm:right-auto sm:max-w-[80%]">
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 rounded-[2px] border border-white bg-cyan-400" />
-          {locale === 'uk' ? 'Склад' : locale === 'pl' ? 'Magazyn' : 'Warehouse'}
+          {t.warehouse}
         </span>
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 rounded-full border border-white bg-slate-200" />
-          {locale === 'uk' ? 'Магазин' : locale === 'pl' ? 'Sklep' : 'Store'}
+          {t.store}
         </span>
         {currentFlows.length > 0 && flowView !== 'qdip' ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-blue-800">→</span>
             {network.unavailable_warehouse_ids.length > 0
-              ? locale === 'uk'
-                ? 'Базові потоки до збою'
-                : locale === 'pl'
-                  ? 'Przepływy bazowe przed zakłóceniem'
-                  : 'Baseline flows before disruption'
-              : locale === 'uk'
-                ? 'Поточні потоки'
-                : locale === 'pl'
-                  ? 'Bieżące przepływy'
-                  : 'Current flows'}
+              ? t.baselineFlowsBeforeDisruption
+              : t.currentFlows}
           </span>
         ) : null}
         {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-teal-600">→</span>
-            {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}
+            {t.qdipPlan}
           </span>
         ) : null}
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 bg-violet-700" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-          {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}
+          {t.supplier}
         </span>
         {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'inbound') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-violet-700">→</span>
-            {locale === 'uk' ? 'Вхідні поставки' : locale === 'pl' ? 'Dostawy przychodzące' : 'Inbound supply'}
+            {t.inboundSupply}
           </span>
         ) : null}
         {candidateAreas.some((item) => item.feasible) || manualCandidate ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-amber-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
-            {locale === 'uk' ? 'Варіант складу' : locale === 'pl' ? 'Wariant magazynu' : 'Warehouse option'}
+            {t.warehouseOption}
           </span>
         ) : null}
       </div>
