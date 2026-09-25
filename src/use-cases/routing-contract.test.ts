@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { createTranslator } from '@/i18n/runtime'
 import { DIP_USE_CASES, findUseCaseById, findUseCaseByRoute } from './registry'
 
 const routingContract = [
@@ -57,9 +58,10 @@ describe('Observatory routing contract', () => {
   it('has complete localized navigation metadata for every route', () => {
     for (const item of DIP_USE_CASES) {
       for (const locale of ['en', 'uk', 'pl'] as const) {
-        expect(item.title[locale].trim()).not.toBe('')
-        expect(item.description[locale].trim()).not.toBe('')
-        expect(item.tag[locale].trim()).not.toBe('')
+        const messages = createTranslator(locale, `useCases.${item.id}`)
+        expect(messages('title').trim()).not.toBe('')
+        expect(messages('description').trim()).not.toBe('')
+        expect(messages('tag').trim()).not.toBe('')
       }
     }
   })
