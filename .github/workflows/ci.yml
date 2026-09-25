@@ -34,9 +34,7 @@ jobs:
         run: pnpm lint
 
       - name: Prettier
-        run: |
-          pnpm format
-          git diff -- . ':!pnpm-lock.yaml'
+        run: pnpm prettier
 
       - name: Typecheck
         run: pnpm typecheck
