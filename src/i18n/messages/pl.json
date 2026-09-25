@@ -45,14 +45,8 @@
     ],
     "alternatives": "Alternatywy",
     "alternativeItems": [
-      [
-        "Bieżąca alokacja",
-        "Zachowaj obecne rozmieszczenie zespołów"
-      ],
-      [
-        "Ręczne nadpisanie",
-        "Osoba odpowiedzialna zmienia proponowany plan"
-      ]
+      ["Bieżąca alokacja", "Zachowaj obecne rozmieszczenie zespołów"],
+      ["Ręczne nadpisanie", "Osoba odpowiedzialna zmienia proponowany plan"]
     ],
     "trace": "Otwórz ślad decyzji",
     "traceBody": "Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.",
@@ -62,35 +56,15 @@
     "open": "Przeanalizuj decyzję",
     "inspect": "Cztery pytania, na które powinno odpowiadać Observatory",
     "questions": [
-      [
-        "Co jest rekomendowane?",
-        "Zobacz wybrane działanie i wykonalne alternatywy."
-      ],
-      [
-        "Dlaczego?",
-        "Sprawdź dowody, priorytety, ograniczenia i kompromisy."
-      ],
-      [
-        "Co się zmieniło?",
-        "Porównaj stan i scenariusz, które doprowadziły do innego wyniku."
-      ],
-      [
-        "Co zmieni decyzję?",
-        "Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację."
-      ]
+      ["Co jest rekomendowane?", "Zobacz wybrane działanie i wykonalne alternatywy."],
+      ["Dlaczego?", "Sprawdź dowody, priorytety, ograniczenia i kompromisy."],
+      ["Co się zmieniło?", "Porównaj stan i scenariusz, które doprowadziły do innego wyniku."],
+      ["Co zmieni decyzję?", "Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację."]
     ],
     "note": "Dema są wstępnie skonfigurowanymi aplikacjami decyzyjnymi. Studio konfiguruje model, QDIP Core go ocenia, a Observatory udostępnia wynik do inspekcji."
   },
   "observatoryDecisionNarrative": {
-    "labels": [
-      "Sytuacja",
-      "Alternatywy",
-      "Ocena",
-      "Ryzyko / niepewność",
-      "Rekomendacja",
-      "Dowody",
-      "Ślad decyzji"
-    ],
+    "labels": ["Sytuacja", "Alternatywy", "Ocena", "Ryzyko / niepewność", "Rekomendacja", "Dowody", "Ślad decyzji"],
     "helper": "Jedna logika weryfikacji dla każdej aplikacji QDIP.",
     "ariaLabel": "Logika decyzji"
   },
@@ -121,6 +95,10 @@
       "costChange": "Zmiana kosztu logistyki",
       "paretoAlternatives": "Warianty poprawy",
       "frontierHint": "Pokazano wszystkie sprawdzone lokalizacje. „Warto rozważyć” oznacza wariant niezdominowany; warianty zdominowane i niewykonalne pozostają widoczne do weryfikacji.",
+      "evaluatedCandidates": "Sprawdzone lokalizacje",
+      "recommendedCandidates": "Warte rozważenia",
+      "dominatedCandidate": "Zdominowany",
+      "infeasibleCandidate": "Niewykonalny",
       "disruptionReallocated": "Zakłócenie + nowy plan",
       "noCandidate": "Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.",
       "service": "Zrealizowany popyt",
@@ -163,7 +141,10 @@
       "stockoutCost": "Wpływ niezaspokojonego popytu",
       "reallocationCost": "Realokacja",
       "facilityCost": "Stały koszt nowego magazynu",
-      "handlingCostResult": "Obsługa towaru",
+      "handlingCostResult":       "handlingCostResult": "Obsługa towaru",
+      "concentrationPenalty": "Kara za koncentrację zapasów (modelowa)",
+      "policyPenaltyNote": "Kary polityki sterują wyborem optymalizatora, ale nie są kosztami operacyjnymi ani zrealizowaną stratą biznesową.",
+      "softPreferences": "Miękkie preferencje polityki",
       "pareto": "Warto rozważyć",
       "peakReceiving": "Maksymalne przyjęcia dziennie",
       "peakDispatch": "Maksymalne wysyłki dziennie",
@@ -200,14 +181,7 @@
       "step2": "2 · Wybierz magazyn i wyłącz go z sieci",
       "step3": "3 · Porównaj plan odbudowy i warianty nowego magazynu",
       "prospectOutcome": "Co pokazuje ten scenariusz",
-      "prospectOutcomeText": "QDIP zamienia te same dane o popycie, zapasach, przepustowości i trasach w audytowalną decyzję: co przekierować, jaki popyt pozostanie niezaspokojony, ile to kosztuje i czy dodatkowa pojemność magazynowa poprawia ekonomikę.",
-      "evaluatedCandidates": "Sprawdzone lokalizacje",
-      "recommendedCandidates": "Warte rozważenia",
-      "dominatedCandidate": "Zdominowany",
-      "infeasibleCandidate": "Niewykonalny",
-      "concentrationPenalty": "Kara za koncentrację zapasów (modelowa)",
-      "policyPenaltyNote": "Kary polityki sterują wyborem optymalizatora, ale nie są kosztami operacyjnymi ani zrealizowaną stratą biznesową.",
-      "softPreferences": "Miękkie preferencje polityki"
+      "prospectOutcomeText": "QDIP zamienia te same dane o popycie, zapasach, przepustowości i trasach w audytowalną decyzję: co przekierować, jaki popyt pozostanie niezaspokojony, ile to kosztuje i czy dodatkowa pojemność magazynowa poprawia ekonomikę."
     },
     "summary": {
       "title": "Podsumowanie decyzji",

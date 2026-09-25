@@ -47,7 +47,9 @@ export function ResourceAllocationImpact({
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
         {compared ? t('compareKicker') : t('recommendationKicker')}
       </div>
-      <h2 className="mt-2 text-2xl font-medium sm:text-3xl">{compared ? t('compareTitle') : t('recommendationTitle')}</h2>
+      <h2 className="mt-2 text-2xl font-medium sm:text-3xl">
+        {compared ? t('compareTitle') : t('recommendationTitle')}
+      </h2>
 
       {baseline && servedDelta !== null && servedDelta > 0 && (
         <div className="mt-6 border border-emerald-300/20 bg-emerald-300/[0.06] p-5 sm:p-6">

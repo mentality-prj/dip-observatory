@@ -45,14 +45,8 @@
     ],
     "alternatives": "Alternatives",
     "alternativeItems": [
-      [
-        "Current allocation",
-        "Keep the existing team placement"
-      ],
-      [
-        "Manual override",
-        "Responsible person changes the proposed plan"
-      ]
+      ["Current allocation", "Keep the existing team placement"],
+      ["Manual override", "Responsible person changes the proposed plan"]
     ],
     "trace": "Open decision trace",
     "traceBody": "Needs and available teams → feasible allocations → constraint checks → priority evaluation → recommended allocation.",
@@ -62,35 +56,15 @@
     "open": "Inspect decision",
     "inspect": "The four questions Observatory should answer",
     "questions": [
-      [
-        "What is recommended?",
-        "See the selected action and viable alternatives."
-      ],
-      [
-        "Why?",
-        "Inspect evidence, priorities, constraints and trade-offs."
-      ],
-      [
-        "What changed?",
-        "Compare the state and scenario that produced a different result."
-      ],
-      [
-        "What would change it?",
-        "Explore which constraints or evidence can move the recommendation."
-      ]
+      ["What is recommended?", "See the selected action and viable alternatives."],
+      ["Why?", "Inspect evidence, priorities, constraints and trade-offs."],
+      ["What changed?", "Compare the state and scenario that produced a different result."],
+      ["What would change it?", "Explore which constraints or evidence can move the recommendation."]
     ],
     "note": "Demos are preconfigured decision applications. Studio configures the decision model; QDIP Core evaluates it; Observatory makes the result inspectable."
   },
   "observatoryDecisionNarrative": {
-    "labels": [
-      "Situation",
-      "Alternatives",
-      "Evaluation",
-      "Risk / uncertainty",
-      "Recommendation",
-      "Evidence",
-      "Trace"
-    ],
+    "labels": ["Situation", "Alternatives", "Evaluation", "Risk / uncertainty", "Recommendation", "Evidence", "Trace"],
     "helper": "One inspection grammar across every QDIP application.",
     "ariaLabel": "Decision narrative"
   },
@@ -121,6 +95,10 @@
       "costChange": "Change in logistics cost",
       "paretoAlternatives": "Improvement options",
       "frontierHint": "All tested locations are shown. Worth considering marks nondominated options; dominated and infeasible options remain visible for auditability.",
+      "evaluatedCandidates": "Locations tested",
+      "recommendedCandidates": "Worth considering",
+      "dominatedCandidate": "Dominated",
+      "infeasibleCandidate": "Infeasible",
       "disruptionReallocated": "Disruption + new plan",
       "noCandidate": "None of the locations tested materially improves the network under the current conditions.",
       "service": "Demand fulfilled",
@@ -163,7 +141,10 @@
       "stockoutCost": "Stockout impact",
       "reallocationCost": "Reallocation",
       "facilityCost": "New-facility fixed cost",
-      "handlingCostResult": "Handling",
+      "handlingCostResult":       "handlingCostResult": "Handling",
+      "concentrationPenalty": "Inventory concentration penalty (model)",
+      "policyPenaltyNote": "Policy penalties steer the optimizer but are not operating expenses or realized business losses.",
+      "softPreferences": "Soft policy preferences",
       "pareto": "Worth considering",
       "peakReceiving": "Peak receiving per day",
       "peakDispatch": "Peak dispatch per day",
@@ -200,14 +181,7 @@
       "step2": "2 · Choose a warehouse and take it offline",
       "step3": "3 · Compare the recovery plan and test warehouse options",
       "prospectOutcome": "What this demonstrates",
-      "prospectOutcomeText": "QDIP turns the same demand, inventory, capacity and route constraints into an auditable recovery decision: what to reroute, what remains uncovered, what it costs and whether extra warehouse capacity improves the economics.",
-      "evaluatedCandidates": "Locations tested",
-      "recommendedCandidates": "Worth considering",
-      "dominatedCandidate": "Dominated",
-      "infeasibleCandidate": "Infeasible",
-      "concentrationPenalty": "Inventory concentration penalty (model)",
-      "policyPenaltyNote": "Policy penalties steer the optimizer but are not operating expenses or realized business losses.",
-      "softPreferences": "Soft policy preferences"
+      "prospectOutcomeText": "QDIP turns the same demand, inventory, capacity and route constraints into an auditable recovery decision: what to reroute, what remains uncovered, what it costs and whether extra warehouse capacity improves the economics."
     },
     "summary": {
       "title": "Decision summary",
