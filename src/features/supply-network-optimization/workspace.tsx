@@ -181,7 +181,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, scenario.unavailable_warehouse_id)
       const candidates = await runCandidateAreas(disruptedNetwork)
       setCandidateAreas(candidates.candidates)
-      setSelectedCandidateId(candidates.candidates.find((item) => item.feasible && item.pareto_efficient)?.candidate_id ?? null)
+      setSelectedCandidateId(
+        candidates.candidates.find((item) => item.feasible && item.pareto_efficient)?.candidate_id ?? null
+      )
     } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
@@ -808,7 +810,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <div className="space-y-2">
                     {candidateAreas.map((candidate, index) => {
                       const selected = selectedCandidateId === candidate.candidate_id
-                      const status = !candidate.feasible ? t.infeasibleCandidate : candidate.pareto_efficient ? t.pareto : t.dominatedCandidate
+                      const status = !candidate.feasible
+                        ? t.infeasibleCandidate
+                        : candidate.pareto_efficient
+                          ? t.pareto
+                          : t.dominatedCandidate
                       return (
                         <button
                           key={candidate.candidate_id}
@@ -845,7 +851,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                             </span>
                             <span>
                               {t.requiredCapacity}:{' '}
-                              {candidate.required_capacity_units == null ? '—' : number(candidate.required_capacity_units)}
+                              {candidate.required_capacity_units == null
+                                ? '—'
+                                : number(candidate.required_capacity_units)}
                             </span>
                             <span>
                               {t.peakReceiving}:{' '}
