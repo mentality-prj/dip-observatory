@@ -49,7 +49,7 @@ function scenarioData(run: ChallengeRun | null) {
 
 export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
   const t = useTranslations('decisionChallenge')
-  const howSteps = t('raw')<string[]>('howSteps')
+  const howSteps = t.raw<string[]>('howSteps')
   const [definition, setDefinition] = useState<ChallengeDefinition | null>(null)
   const [run, setRun] = useState<ChallengeRun | null>(null)
   const [allocation, setAllocation] = useState<ChallengeAssignment>({})
@@ -81,10 +81,34 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
   }
 
   useEffect(() => {
-    void begin()
-    // One run is intentionally materialized once when this workspace mounts.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    let active = true
+
+    void loadChallenges()
+      .then(async (definitions) => {
+        const selected = definitions.find((item) => item.id === 'resource-allocation-v1') ?? definitions[0]
+        if (!selected) throw new Error(t('unavailable'))
+        const started = await startChallenge(selected.id)
+        return { selected, started }
+      })
+      .then(({ selected, started }) => {
+        if (!active) return
+        const { teams } = scenarioData(started)
+        setDefinition(selected)
+        setRun(started)
+        setAllocation(Object.fromEntries(teams.map((team) => [team.id, team.current_community ?? null])))
+        setSubmissionId(newSubmissionId())
+      })
+      .catch((reason) => {
+        if (active) setError(reason instanceof Error ? reason.message : t('unavailable'))
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [t])
 
   function restart() {
     setLoading(true)
