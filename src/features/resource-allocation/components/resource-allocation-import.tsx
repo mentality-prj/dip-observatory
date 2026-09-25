@@ -203,7 +203,7 @@ export function ResourceAllocationImport({
       <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-4">
         <b className="block text-sm">{t.starterTitle}</b>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.starterBody}</p>
-        <div className="mt-3 grid gap-2 lg:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-2">
           <button
             type="button"
             data-testid="resource-download-template"
@@ -214,8 +214,8 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-4 text-slate-200">{t.downloadTemplate}</b>
-              <span className="mt-1 block whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
+              <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t.downloadTemplate}</b>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
             </span>
           </button>
           <button
@@ -228,8 +228,8 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-4 text-rose-100">{t.downloadExample}</b>
-              <span className="mt-1 block whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
+              <b className="block whitespace-normal text-xs leading-5 text-rose-100">{t.downloadExample}</b>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
             </span>
           </button>
         </div>
