@@ -52,7 +52,8 @@ export function warehouseDisplayLabel(
   fallback?: string,
 ) {
   const messages = supplyNetworkEntityMessages[locale]
-  return messages.warehouses[id as keyof typeof messages.warehouses] ?? fallback ?? id
+  const warehouses = messages.warehouses as Readonly<Record<string, string>>
+  return warehouses[id] ?? fallback ?? id
 }
 
 export function demandDisplayLabel(
@@ -75,7 +76,8 @@ export function supplierDisplayLabel(
   fallback?: string,
 ) {
   const messages = supplyNetworkEntityMessages[locale]
-  return messages.suppliers[id as keyof typeof messages.suppliers] ?? fallback ?? id
+  const suppliers = messages.suppliers as Readonly<Record<string, string>>
+  return suppliers[id] ?? fallback ?? id
 }
 
 export function entityDisplayLabel(
@@ -84,8 +86,8 @@ export function entityDisplayLabel(
   fallback?: string,
 ) {
   const messages = supplyNetworkEntityMessages[locale]
-  const warehouse =
-    messages.warehouses[id as keyof typeof messages.warehouses]
+  const warehouses = messages.warehouses as Readonly<Record<string, string>>
+  const warehouse = warehouses[id]
   if (warehouse) return warehouse
 
   const storeMatch = /^store-(\d+)$/.exec(id)
@@ -95,14 +97,15 @@ export function entityDisplayLabel(
     })
   }
 
-  const supplier =
-    messages.suppliers[id as keyof typeof messages.suppliers]
+  const suppliers = messages.suppliers as Readonly<Record<string, string>>
+  const supplier = suppliers[id]
   return supplier ?? fallback ?? id
 }
 
 export function productClassDisplayLabel(id: string, locale: Locale) {
   const messages = supplyNetworkEntityMessages[locale]
-  return messages.products[id as keyof typeof messages.products] ?? id
+  const products = messages.products as Readonly<Record<string, string>>
+  return products[id] ?? id
 }
 
 export function storageClassDisplayLabel(
