@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { AlertTriangle, MapPin, Network, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
-import { runCandidateAreas, runManualCandidate, runOptimization, runUnavailableScenario } from './api'
+import { runCandidateAreas, runManualCandidate, runUnavailableScenario } from './api'
 import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import {
@@ -36,7 +36,6 @@ const copy = {
     title: 'When a warehouse drops out, see the least-cost way to keep stores supplied.',
     intro:
       'Start with a working retail network, take one warehouse offline, and see how QDIP reroutes inventory, protects demand and tests whether another warehouse would pay off.',
-    optimize: 'See current network plan',
     optimizing: 'Calculating…',
     current: 'Current network',
     optimized: 'Current plan',
@@ -150,7 +149,6 @@ const copy = {
     title: 'Якщо склад вибуває з мережі — знайдіть найвигідніший спосіб зберегти постачання магазинів.',
     intro:
       'Почніть із робочої роздрібної мережі, зробіть один склад недоступним і подивіться, як QDIP перенаправляє запаси, захищає попит та перевіряє, чи окупиться інша складська локація.',
-    optimize: 'Показати поточний план мережі',
     optimizing: 'Розраховуємо…',
     current: 'Поточна мережа',
     optimized: 'Поточний план',
@@ -263,7 +261,6 @@ const copy = {
     title: 'Gdy magazyn wypada z sieci, znajdź najtańszy sposób utrzymania dostaw do sklepów.',
     intro:
       'Zacznij od działającej sieci detalicznej, wyłącz jeden magazyn i zobacz, jak QDIP przekierowuje zapasy, chroni popyt oraz sprawdza, czy dodatkowa lokalizacja magazynu się opłaca.',
-    optimize: 'Pokaż bieżący plan sieci',
     optimizing: 'Obliczamy…',
     current: 'Bieżąca sieć',
     optimized: 'Bieżący plan',
