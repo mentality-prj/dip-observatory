@@ -87,13 +87,21 @@ export function entityDisplayLabel(
   locale: Locale,
   fallback?: string,
 ) {
-  return (
-    warehouseDisplayLabel(id, locale) ??
-    demandDisplayLabel(id, locale) ??
-    supplierDisplayLabel(id, locale) ??
-    fallback ??
-    id
-  )
+  const messages = supplyNetworkEntityMessages[locale]
+  const warehouse =
+    messages.warehouses[id as keyof typeof messages.warehouses]
+  if (warehouse) return warehouse
+
+  const storeMatch = /^store-(\d+)$/.exec(id)
+  if (storeMatch) {
+    return interpolate(messages.store, {
+      number: Number(storeMatch[1]),
+    })
+  }
+
+  const supplier =
+    messages.suppliers[id as keyof typeof messages.suppliers]
+  return supplier ?? fallback ?? id
 }
 
 export function productClassDisplayLabel(id: string, locale: Locale) {
