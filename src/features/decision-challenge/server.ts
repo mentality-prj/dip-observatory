@@ -13,6 +13,7 @@ export function listDecisionChallenges() {
 export function startDecisionChallenge(challengeId: string, scenario?: Record<string, unknown>) {
   return dipRequest(`${base}/runs`, challengeRunSchema, {
     method: 'POST',
+    signal: AbortSignal.timeout(25_000),
     body: JSON.stringify({ challenge_id: challengeId, ...(scenario ? { scenario } : {}) }),
   })
 }
@@ -31,6 +32,7 @@ export function validateDecisionChallengeAction(runId: string, snapshotId: strin
 export function submitDecisionChallenge(runId: string, submissionId: string, snapshotId: string, humanAction: ChallengeAssignment) {
   return dipRequest(`${base}/runs/${encodeURIComponent(runId)}/decision`, challengeRunSchema, {
     method: 'POST',
+    signal: AbortSignal.timeout(25_000),
     body: JSON.stringify({ submission_id: submissionId, snapshot_id: snapshotId, human_action: humanAction }),
   })
 }

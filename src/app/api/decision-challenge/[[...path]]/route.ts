@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const runtime = 'nodejs'
+const MAX_BODY_BYTES = 1_100_000
+const REQUEST_TIMEOUT_MS = 25_000
+
 import {
   getDecisionChallenge,
   listDecisionChallenges,
@@ -30,6 +34,10 @@ async function handler(
   }
 
   try {
+    const contentLength = Number(request.headers.get('content-length') ?? '0')
+    if (contentLength > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: 'payload_too_large' }, { status: 413 })
+    }
     if (request.method === 'GET' && path.length === 0) {
       return NextResponse.json(await listDecisionChallenges(), {
         headers: { 'Cache-Control': 'no-store' },

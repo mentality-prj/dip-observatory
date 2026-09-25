@@ -82,3 +82,12 @@ test('locks the human choice before revealing QDIP comparison', async ({ page })
   await expect(page.getByText('Your decision has the higher modeled value.')).toBeVisible()
   await expect(page.getByText('Expected value and probability risk are not shown')).toBeVisible()
 })
+
+
+test('rejects oversized challenge uploads at the public proxy boundary', async ({ request }) => {
+  const response = await request.post('/api/decision-challenge/runs', {
+    headers: { 'content-length': '1200000', 'content-type': 'application/json' },
+    data: { challenge_id: 'resource-allocation-v1' },
+  })
+  expect(response.status()).toBe(413)
+})
