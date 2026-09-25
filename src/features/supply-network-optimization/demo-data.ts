@@ -74,7 +74,8 @@ const STORE_REGION_FOOTPRINT = [
   { region: 'Lviv', count: 2, latitude: 49.8397, longitude: 24.0297 },
   { region: 'Ivano-Frankivsk', count: 3, latitude: 48.9226, longitude: 24.7111 },
   { region: 'Khmelnytskyi', count: 1, latitude: 49.4229, longitude: 26.9871 },
-  { region: 'Poltava', count: 2, latitude: 49.5883, longitude: 34.5514 },
+  { region: 'Poltava', count: 1, latitude: 49.5883, longitude: 34.5514 },
+  { region: 'Poltava', count: 1, latitude: 49.0680, longitude: 33.4204 },
   { region: 'Rivne', count: 2, latitude: 50.6199, longitude: 26.2516 },
   { region: 'Ternopil', count: 1, latitude: 49.5535, longitude: 25.5948 },
   { region: 'Vinnytsia', count: 2, latitude: 49.2331, longitude: 28.4682 },
@@ -105,24 +106,44 @@ function buildRetailStores(): DemandPoint[] {
   )
 }
 
+function distanceKm(
+  latitudeA: number,
+  longitudeA: number,
+  latitudeB: number,
+  longitudeB: number,
+): number {
+  const toRadians = (value: number) => (value * Math.PI) / 180
+  const earthRadiusKm = 6371
+  const latitudeDelta = toRadians(latitudeB - latitudeA)
+  const longitudeDelta = toRadians(longitudeB - longitudeA)
+  const a =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(toRadians(latitudeA)) *
+      Math.cos(toRadians(latitudeB)) *
+      Math.sin(longitudeDelta / 2) ** 2
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(a))
+}
+
 function buildDeliveryRoutes(stores: DemandPoint[]): DeliveryRoute[] {
   return stores.flatMap((store) =>
     WAREHOUSES
       .map((warehouse) => ({
         warehouse,
-        distance: Math.hypot(
-          warehouse.latitude - store.latitude,
-          warehouse.longitude - store.longitude,
+        distanceKm: distanceKm(
+          warehouse.latitude,
+          warehouse.longitude,
+          store.latitude,
+          store.longitude,
         ),
       }))
-      .sort((a, b) => a.distance - b.distance)
+      .sort((a, b) => a.distanceKm - b.distanceKm)
       .slice(0, 2)
-      .map(({ warehouse, distance }, optionIndex) => ({
+      .map(({ warehouse, distanceKm: routeDistanceKm }, optionIndex) => ({
         from_node_id: warehouse.id,
         to_demand_point_id: store.id,
         lead_time_days: optionIndex === 0 ? 0 : 1,
         capacity_units_per_day: 120,
-        cost_per_unit: Math.round(120 + distance * 95),
+        cost_per_unit: Math.round(120 + routeDistanceKm * 0.95),
         transport_mode: 'road',
       }))
   )
@@ -132,9 +153,30 @@ function buildCurrentStorePlan(
   stores: DemandPoint[],
   routes: DeliveryRoute[],
 ): BaselineFulfillment[] {
+  const dispatchByWarehouse = new Map<string, number>()
+  const productById = new Map(PRODUCT_CLASSES.map((product) => [product.id, product]))
+
   return stores.flatMap((store) => {
-    const primaryRoute = routes.find((route) => route.to_demand_point_id === store.id)
-    if (!primaryRoute) return []
+    const dailyUnits = Object.values(store.demand_per_day).reduce((sum, units) => sum + units, 0)
+    const candidates = routes.filter((route) => route.to_demand_point_id === store.id)
+    const primaryRoute = candidates.find((route) => {
+      const warehouse = WAREHOUSES.find((item) => item.id === route.from_node_id)
+      if (!warehouse) return false
+      const storageCompatible = Object.entries(store.demand_per_day).every(
+        ([productId, units]) =>
+          units <= 0 ||
+          warehouse.supported_storage_classes.includes(productById.get(productId)?.storage_class ?? 'ambient'),
+      )
+      const allocated = dispatchByWarehouse.get(warehouse.id) ?? 0
+      return storageCompatible && allocated + dailyUnits <= warehouse.dispatch_capacity_units_per_day
+    })
+    if (!primaryRoute) {
+      throw new Error(`No capacity-feasible baseline route for ${store.id}`)
+    }
+    dispatchByWarehouse.set(
+      primaryRoute.from_node_id,
+      (dispatchByWarehouse.get(primaryRoute.from_node_id) ?? 0) + dailyUnits,
+    )
     return Object.entries(store.demand_per_day).map(([product_class_id, units_per_day]) => ({
       warehouse_id: primaryRoute.from_node_id,
       demand_point_id: store.id,
