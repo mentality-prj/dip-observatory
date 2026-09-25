@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { AlertTriangle, MapPin, Network, Play, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
+import { AlertTriangle, MapPin, Network, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
 import { runCandidateAreas, runManualCandidate, runOptimization, runUnavailableScenario } from './api'
@@ -138,7 +138,7 @@ const copy = {
     warehouseList: 'Warehouses',
     chooseWarehouse: 'Choose a warehouse from the list or tap it on the map.',
     walkthrough: 'Try the disruption in 3 steps',
-    step1: '1 · Show the current plan',
+    step1: '1 · Review the current operational plan on the map',
     step2: '2 · Choose a warehouse and take it offline',
     step3: '3 · Compare the recovery plan and test warehouse options',
     prospectOutcome: 'What this demonstrates',
@@ -251,7 +251,7 @@ const copy = {
     warehouseList: 'Склади',
     chooseWarehouse: 'Оберіть склад зі списку або натисніть на нього на мапі.',
     walkthrough: 'Перевірте збій у 3 кроки',
-    step1: '1 · Покажіть поточний план',
+    step1: '1 · Перегляньте поточний операційний план на мапі',
     step2: '2 · Оберіть склад і зробіть його недоступним',
     step3: '3 · Порівняйте план відновлення та варіанти нового складу',
     prospectOutcome: 'Що демонструє цей сценарій',
@@ -365,7 +365,7 @@ const copy = {
     warehouseList: 'Magazyny',
     chooseWarehouse: 'Wybierz magazyn z listy lub dotknij go na mapie.',
     walkthrough: 'Sprawdź zakłócenie w 3 krokach',
-    step1: '1 · Pokaż bieżący plan',
+    step1: '1 · Sprawdź bieżący plan operacyjny na mapie',
     step2: '2 · Wybierz magazyn i wyłącz go z sieci',
     step3: '3 · Porównaj plan odbudowy i warianty nowego magazynu',
     prospectOutcome: 'Co pokazuje ten scenariusz',
@@ -538,23 +538,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const manualCandidateShare = manualCandidate
     ? manualFulfillmentDistribution.find((item) => item.warehouseId === manualCandidate.id)?.share ?? 0
     : 0
-  const optimize = useCallback(async () => {
-    if (pending) return
-    setPending(true)
-    setError(null)
-    try {
-      setBaseline(await runOptimization(SUPPLY_NETWORK_DEMO))
-      setScenario(null)
-      setDecisionValue(null)
-      setCandidateAreas([])
-      setManualResult(null)
-      setManualEvaluation(null)
-    } catch (reason) {
-      setError(t[requestErrorKey(reason)])
-    } finally {
-      setPending(false)
-    }
-  }, [pending, t])
+
 
   const makeUnavailable = useCallback(
     async (warehouseId: string) => {
@@ -668,9 +652,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <p className="text-xs text-slate-500">{t.productClasses}</p>
               </div>
             </div>
-            <Button className="mt-6 w-full" onClick={optimize} disabled={pending}>
-              <Play className="h-4 w-4" /> {pending ? t.optimizing : t.optimize}
-            </Button>
+
           </CardContent>
         </Card>
       </section>
