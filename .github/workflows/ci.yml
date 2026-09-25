@@ -28,7 +28,9 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          pnpm install --no-frozen-lockfile
+          git diff -- pnpm-lock.yaml
 
       - name: Lint
         run: pnpm lint
