@@ -335,6 +335,11 @@ export function NetworkMap({
   ])
 
 
+  const maxOptimizedFlowUnits = Math.max(
+    0,
+    ...projectedFlows.filter((item) => item.kind !== 'current').map((item) => item.units ?? 0)
+  )
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950">
       <div ref={containerRef} className="h-[420px] w-full sm:h-[540px]" data-testid="supply-network-map" />
@@ -357,6 +362,10 @@ export function NetworkMap({
             const stroke = isCurrent ? '#1e3a8a' : isInbound ? '#6d28d9' : '#0f766e'
             const marker = isCurrent ? 'url(#flow-arrow-current)' : isInbound ? 'url(#flow-arrow-inbound)' : 'url(#flow-arrow-qdip)'
             const dash = isCurrent ? '7 5' : undefined
+            const optimizedWidth = maxOptimizedFlowUnits > 0 && flow.units
+              ? 2.5 + 4 * Math.sqrt(flow.units / maxOptimizedFlowUnits)
+              : 4.5
+            const flowWidth = isCurrent ? 3.5 : optimizedWidth
             return (
               <g key={`${flow.kind}-${flow.index}`}>
                 <line
@@ -365,7 +374,7 @@ export function NetworkMap({
                   x2={flow.x2}
                   y2={flow.y2}
                   stroke="#ffffff"
-                  strokeWidth={isCurrent ? 6 : 7}
+                  strokeWidth={flowWidth + 3}
                   strokeOpacity={0.78}
                   strokeDasharray={dash}
                   vectorEffect="non-scaling-stroke"
@@ -376,7 +385,7 @@ export function NetworkMap({
                   x2={flow.x2}
                   y2={flow.y2}
                   stroke={stroke}
-                  strokeWidth={isCurrent ? 3.5 : 4.5}
+                  strokeWidth={flowWidth}
                   strokeOpacity={1}
                   strokeDasharray={dash}
                   markerEnd={marker}

@@ -234,6 +234,47 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/Enter positive capacity values/)
   })
 
+  it('shows the actual fulfillment share and warehouse distribution when a manual candidate is used', async () => {
+    const user = userEvent.setup()
+    api.runManualCandidate.mockResolvedValueOnce({
+      result: {
+        baseline: optimized,
+        candidate: {
+          candidate_id: 'manual-candidate',
+          latitude: 51.5,
+          longitude: 20.2,
+          feasible: true,
+          used: true,
+          objective_value: 14000,
+          objective_improvement: 1400,
+        },
+        optimized_network: {
+          ...optimized,
+          fulfillment: [
+            { ...optimized.fulfillment[0], warehouse_id: 'manual-candidate', units: 29 },
+            { ...optimized.fulfillment[0], warehouse_id: 'north-hub', units: 25 },
+            { ...optimized.fulfillment[0], warehouse_id: 'central-hub', units: 24 },
+            { ...optimized.fulfillment[0], warehouse_id: 'south-hub', units: 22 },
+          ],
+          kpis: { ...optimized.kpis, maximum_fulfillment_share: 0.29 },
+          candidate_warehouse_ids_used: ['manual-candidate'],
+        },
+        connectivity_rule: 'demo-geographic-v1',
+      },
+      decisionValue: undefined,
+    })
+    render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
+
+    await user.click(screen.getByRole('button', { name: 'select map location' }))
+    await user.click(screen.getByRole('button', { name: 'Перевірити цей склад' }))
+
+    expect(await screen.findByText('QDIP включив цей склад до оновленого плану.')).toBeVisible()
+    expect(screen.getByText('Частка виконаного попиту через цей склад:')).toBeVisible()
+    expect(screen.getByText('Розподіл виконаного попиту за складами')).toBeVisible()
+    expect(screen.getAllByText('29%').length).toBeGreaterThan(0)
+    expect(screen.queryByText(/зберігши розподіл постачання/)).not.toBeInTheDocument()
+  })
+
   it('submits a valid manual candidate and renders a not-used decision', async () => {
     const user = userEvent.setup()
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)

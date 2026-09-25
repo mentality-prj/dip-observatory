@@ -83,8 +83,10 @@ const copy = {
     evaluate: 'Check this warehouse',
     candidateNotUsed:
       'Adding a warehouse at this location is not worthwhile. Under the current conditions it does not improve the network, so QDIP finds a better plan without using it.',
-    candidateUsed: 'QDIP included this warehouse in the updated plan while keeping fulfillment distributed across the network.',
-    fulfillmentExposure: 'Largest share supplied by one warehouse',
+    candidateUsed: 'QDIP included this warehouse in the updated plan.',
+    candidateFulfillmentShare: 'Share of fulfilled demand routed through this warehouse',
+    fulfillmentExposure: 'Largest share of fulfilled demand routed through one warehouse',
+    fulfillmentDistribution: 'Fulfilled-demand distribution by warehouse',
     demand: 'Demand',
     source: 'Supplying warehouse',
     status: 'Demand coverage',
@@ -178,8 +180,10 @@ const copy = {
     evaluate: 'Перевірити цей склад',
     candidateNotUsed:
       'Додавати склад у цій точці недоцільно. За поточних умов він не покращує роботу мережі, тому QDIP знаходить кращий план без нього.',
-    candidateUsed: 'QDIP включив цей склад до оновленого плану, зберігши розподіл постачання між складами мережі.',
-    fulfillmentExposure: 'Найбільша частка постачання з одного складу',
+    candidateUsed: 'QDIP включив цей склад до оновленого плану.',
+    candidateFulfillmentShare: 'Частка виконаного попиту через цей склад',
+    fulfillmentExposure: 'Найбільша частка виконаного попиту через один склад',
+    fulfillmentDistribution: 'Розподіл виконаного попиту за складами',
     demand: 'Попит',
     source: 'Склад, з якого постачаємо',
     status: 'Виконання попиту',
@@ -274,8 +278,10 @@ const copy = {
     evaluate: 'Sprawdź ten magazyn',
     candidateNotUsed:
       'Dodanie magazynu w tej lokalizacji nie jest opłacalne. W obecnych warunkach nie poprawia działania sieci, dlatego QDIP znajduje lepszy plan bez jego wykorzystania.',
-    candidateUsed: 'QDIP uwzględnił ten magazyn w zaktualizowanym planie, zachowując rozproszenie dostaw między magazynami.',
-    fulfillmentExposure: 'Największy udział dostaw z jednego magazynu',
+    candidateUsed: 'QDIP uwzględnił ten magazyn w zaktualizowanym planie.',
+    candidateFulfillmentShare: 'Udział zrealizowanego popytu obsłużony przez ten magazyn',
+    fulfillmentExposure: 'Największy udział zrealizowanego popytu obsłużony przez jeden magazyn',
+    fulfillmentDistribution: 'Rozkład zrealizowanego popytu między magazynami',
     demand: 'Popyt',
     source: 'Magazyn realizujący dostawy',
     status: 'Realizacja popytu',
@@ -329,6 +335,18 @@ function Metric({ label, value }: { label: string; value: string }) {
       <div className="mt-1 text-lg font-medium text-slate-100">{value}</div>
     </div>
   )
+}
+
+function fulfillmentDistribution(result: OptimizationResult) {
+  const byWarehouse = new Map<string, number>()
+  for (const item of result.fulfillment) {
+    byWarehouse.set(item.warehouse_id, (byWarehouse.get(item.warehouse_id) ?? 0) + item.units)
+  }
+  const total = [...byWarehouse.values()].reduce((sum, units) => sum + units, 0)
+  if (total <= 0) return []
+  return [...byWarehouse.entries()]
+    .map(([warehouseId, units]) => ({ warehouseId, units, share: units / total }))
+    .sort((a, b) => b.units - a.units)
 }
 
 function humanizeConstraint(value: string, locale: Locale) {
@@ -458,6 +476,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       ? visibleResult.warehouse_utilization.find((item) => item.warehouse_id === selectedWarehouse.id)
       : null
   const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
+  const manualFulfillmentDistribution = manualResult ? fulfillmentDistribution(manualResult) : []
+  const manualCandidateShare = manualCandidate
+    ? manualFulfillmentDistribution.find((item) => item.warehouseId === manualCandidate.id)?.share ?? 0
+    : 0
   const optimize = useCallback(async () => {
     if (pending) return
     setPending(true)
@@ -900,13 +922,34 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       {manualEvaluation.used ? t.candidateUsed : t.candidateNotUsed}
                     </p>
                     {manualEvaluation.used && manualResult ? (
-                      <p className="text-xs text-slate-400">
-                        {t.fulfillmentExposure}:{' '}
-                        <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
-                        {' · '}
-                        {locale === 'uk' ? 'ліміт' : locale === 'pl' ? 'limit' : 'limit'}{' '}
-                        <strong className="text-slate-200">{pct(activeNetwork.policy.maximum_node_fulfillment_share)}</strong>
-                      </p>
+                      <div className="space-y-2 text-xs text-slate-400">
+                        <p>
+                          {t.candidateFulfillmentShare}:{' '}
+                          <strong className="text-slate-200">{pct(manualCandidateShare)}</strong>
+                        </p>
+                        <p>
+                          {t.fulfillmentExposure}:{' '}
+                          <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
+                          {' · '}
+                          {locale === 'uk' ? 'ліміт' : locale === 'pl' ? 'limit' : 'limit'}{' '}
+                          <strong className="text-slate-200">{pct(activeNetwork.policy.maximum_node_fulfillment_share)}</strong>
+                        </p>
+                        <div>
+                          <p className="mb-1 text-slate-500">{t.fulfillmentDistribution}</p>
+                          <div className="space-y-1">
+                            {manualFulfillmentDistribution.map((item) => (
+                              <div key={item.warehouseId} className="flex items-center justify-between gap-3">
+                                <span>
+                                  {item.warehouseId === manualCandidate?.id
+                                    ? t.manualCandidate
+                                    : warehouseDisplayLabel(item.warehouseId, locale)}
+                                </span>
+                                <strong className="text-slate-200">{pct(item.share)}</strong>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
