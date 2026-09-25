@@ -32,3 +32,31 @@ describe('retail-scale Supply Network demo topology', () => {
     }
   })
 })
+
+
+  it('keeps baseline dispatch within warehouse capacity', () => {
+    for (const warehouse of SUPPLY_NETWORK_DEMO.warehouses) {
+      const allocated = SUPPLY_NETWORK_DEMO.baseline_fulfillment
+        .filter((item) => item.warehouse_id === warehouse.id)
+        .reduce((sum, item) => sum + item.units_per_day, 0)
+
+      expect(allocated).toBeLessThanOrEqual(warehouse.dispatch_capacity_units_per_day)
+    }
+  })
+
+  it('never assigns a baseline product to an incompatible warehouse', () => {
+    const productById = new Map(
+      SUPPLY_NETWORK_DEMO.product_classes.map((product) => [product.id, product]),
+    )
+    const warehouseById = new Map(
+      SUPPLY_NETWORK_DEMO.warehouses.map((warehouse) => [warehouse.id, warehouse]),
+    )
+
+    for (const item of SUPPLY_NETWORK_DEMO.baseline_fulfillment) {
+      const product = productById.get(item.product_class_id)
+      const warehouse = warehouseById.get(item.warehouse_id)
+      expect(product).toBeDefined()
+      expect(warehouse).toBeDefined()
+      expect(warehouse?.supported_storage_classes).toContain(product?.storage_class)
+    }
+  })
