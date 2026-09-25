@@ -24,6 +24,21 @@ const copy = {
     dropActive: 'Відпустіть файл для імпорту',
     or: 'або',
     template: 'Поля шаблону',
+    templateIntro: 'CSV містить кілька типів рядків. Поле record_type визначає, які дані описує рядок. Заповнюйте лише поля, що стосуються цього типу запису; решта можуть залишатися порожніми.',
+    recordTypesTitle: 'Типи записів',
+    recordTypes: {
+      settings: 'загальні параметри планування: бюджет, цільове покриття та одиниця планування',
+      community: 'локація та її постійні обмеження',
+      community_day: 'доступність і обмеження локації для конкретного дня',
+      demand: 'потреба в певній послузі, локації та дні',
+      team: 'команда, її навички, потужність і дозволені локації',
+      team_day: 'доступність або потужність команди для конкретного дня',
+      travel: 'вартість і час переміщення між двома локаціями',
+      baseline: 'ручний план для порівняння з рекомендацією QDIP',
+    },
+    columnsTitle: 'Колонки CSV',
+    multiValueHint: 'Якщо поле містить кілька значень, наприклад skills, days або allowed_communities, розділяйте їх символом |.',
+
     starterTitle: 'Почніть з готового CSV',
     starterBody: 'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
     downloadTemplate: 'Завантажити CSV шаблон',
@@ -52,6 +67,21 @@ const copy = {
     dropActive: 'Drop the file to import',
     or: 'or',
     template: 'Template columns',
+    templateIntro: 'The CSV contains several row types. The record_type field determines what each row describes. Fill only the columns relevant to that record type; the remaining columns may stay empty.',
+    recordTypesTitle: 'Record types',
+    recordTypes: {
+      settings: 'global planning settings: budget, target coverage and planning unit',
+      community: 'a location and its persistent constraints',
+      community_day: 'location availability and constraints for a specific day',
+      demand: 'service demand for a location and day',
+      team: 'a team, its skills, capacity and allowed locations',
+      team_day: 'team availability or capacity for a specific day',
+      travel: 'travel cost and time between two locations',
+      baseline: 'manual plan used for comparison with the QDIP recommendation',
+    },
+    columnsTitle: 'CSV columns',
+    multiValueHint: 'For fields with multiple values, such as skills, days or allowed_communities, separate values with |.',
+
     starterTitle: 'Start from a ready CSV',
     starterBody: 'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
     downloadTemplate: 'Download CSV template',
@@ -80,6 +110,21 @@ const copy = {
     dropActive: 'Upuść plik, aby go zaimportować',
     or: 'lub',
     template: 'Kolumny szablonu',
+    templateIntro: 'CSV zawiera kilka typów wierszy. Pole record_type określa, jakie dane opisuje dany wiersz. Wypełniaj tylko kolumny dotyczące danego typu rekordu; pozostałe mogą pozostać puste.',
+    recordTypesTitle: 'Typy rekordów',
+    recordTypes: {
+      settings: 'ogólne parametry planowania: budżet, docelowe pokrycie i jednostka planowania',
+      community: 'lokalizacja i jej stałe ograniczenia',
+      community_day: 'dostępność i ograniczenia lokalizacji dla konkretnego dnia',
+      demand: 'zapotrzebowanie na usługę w lokalizacji i dniu',
+      team: 'zespół, jego kompetencje, zdolność i dozwolone lokalizacje',
+      team_day: 'dostępność lub zdolność zespołu dla konkretnego dnia',
+      travel: 'koszt i czas przejazdu między lokalizacjami',
+      baseline: 'plan ręczny używany do porównania z rekomendacją QDIP',
+    },
+    columnsTitle: 'Kolumny CSV',
+    multiValueHint: 'Jeśli pole zawiera kilka wartości, np. skills, days lub allowed_communities, rozdzielaj je znakiem |.',
+
     starterTitle: 'Zacznij od gotowego CSV',
     starterBody: 'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
     downloadTemplate: 'Pobierz szablon CSV',
@@ -348,12 +393,32 @@ export function ResourceAllocationImport({
       )}
 
       <details className="mt-4 text-xs text-slate-500">
-        <summary className="cursor-pointer text-slate-400">{t.template}</summary>
-        <code className="mt-2 block whitespace-normal break-words">{RESOURCE_ALLOCATION_IMPORT_COLUMNS}</code>
-        <p className="mt-2">
-          Use record_type values: settings, community, community_day, demand, team, team_day, travel, baseline.
-          Separate multiple skills/days with |.
-        </p>
+        <summary className="cursor-pointer font-semibold text-slate-400">{t.template}</summary>
+        <div className="mt-4 space-y-5 border-t border-white/10 pt-4">
+          <p className="leading-relaxed">{t.templateIntro}</p>
+          <div>
+            <b className="text-slate-300">{t.recordTypesTitle}</b>
+            <dl className="mt-3 grid gap-2">
+              {Object.entries(t.recordTypes).map(([type, description]) => (
+                <div key={type} className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3">
+                  <dt><code className="text-rose-200">{type}</code></dt>
+                  <dd className="leading-relaxed">{description}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div>
+            <b className="text-slate-300">{t.columnsTitle}</b>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => (
+                <code key={column} className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400">
+                  {column}
+                </code>
+              ))}
+            </div>
+          </div>
+          <p className="border-l-2 border-rose-300/30 pl-3 leading-relaxed">{t.multiValueHint}</p>
+        </div>
       </details>
     </section>
   )
