@@ -3,12 +3,6 @@
 import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
-  resourceAllocationCountPhrase,
-  resourceAllocationExtraI18n,
-  resourceAllocationInterpolate,
-  resourceAllocationWorkspaceI18n,
-} from '../i18n'
-import {
   RESOURCE_ALLOCATION_PROFILES,
   type ResourceAllocationProfileId,
 } from '../demo-data'
@@ -26,7 +20,196 @@ import { ResourceAllocationAssignmentExplanation } from './resource-allocation-a
 
 const pct = (value: number) => `${Math.round(value * 100)}%`
 
+type CountKind = 'teams' | 'communities' | 'demand' | 'days'
 
+const COUNT_FORMS: Record<Locale, Record<CountKind, Record<string, string>>> = {
+  uk: {
+    teams: { one: 'команда', few: 'команди', many: 'команд', other: 'команди' },
+    communities: { one: 'громада', few: 'громади', many: 'громад', other: 'громади' },
+    demand: { one: 'одиниця потреб', few: 'одиниці потреб', many: 'одиниць потреб', other: 'одиниці потреб' },
+    days: { one: 'день', few: 'дні', many: 'днів', other: 'дня' },
+  },
+  en: {
+    teams: { one: 'team', other: 'teams' },
+    communities: { one: 'community', other: 'communities' },
+    demand: { one: 'demand unit', other: 'demand units' },
+    days: { one: 'day', other: 'days' },
+  },
+  pl: {
+    teams: { one: 'zespół', few: 'zespoły', many: 'zespołów', other: 'zespołu' },
+    communities: { one: 'społeczność', few: 'społeczności', many: 'społeczności', other: 'społeczności' },
+    demand: { one: 'jednostka potrzeb', few: 'jednostki potrzeb', many: 'jednostek potrzeb', other: 'jednostki potrzeb' },
+    days: { one: 'dzień', few: 'dni', many: 'dni', other: 'dnia' },
+  },
+}
+
+function countPhrase(locale: Locale, count: number, kind: CountKind): string {
+  const category = new Intl.PluralRules(locale === 'uk' ? 'uk-UA' : locale === 'pl' ? 'pl-PL' : 'en').select(count)
+  const forms = COUNT_FORMS[locale][kind]
+  return `${count} ${forms[category] ?? forms.other}`
+}
+
+const copy = {
+  uk: {
+    title: 'План розподілу мобільних команд',
+    run: 'Розрахувати рекомендований розподіл',
+    running: 'Розрахунок…',
+    imported: 'Імпортовані дані',
+    capacity: 'Зміна доступної потужності від базового плану',
+    inaccessible: 'Локація недоступна для виїзду',
+    unavailableTeam: 'Команда тимчасово недоступна',
+    unavailableTeamHint: 'Перевірте, як зміниться план, якщо одна команда не зможе працювати в цьому горизонті.',
+    none: 'Немає',
+    state: 'ДАНІ ТА ПОТОЧНА СИТУАЦІЯ',
+    communities: 'Громади',
+    teams: 'Команди',
+    opening: 'Одиниці потреб',
+    services: 'Види послуг',
+    days: 'днів',
+    emptyText:
+      'QDIP врахує потреби, спеціалізації команд, їх поточне розташування, доступність локацій і переміщення на весь плановий період.',
+    valueProp:
+      'QDIP допомагає визначити, куди направити мобільні команди, щоб покрити більше пріоритетних потреб наявними ресурсами.',
+    heroQuestion: 'Чи можна покрити більше пріоритетних потреб тими самими командами?',
+    differentiation:
+      'На відміну від таблиці, QDIP оцінює наслідки розподілу на весь горизонт: де команда опиниться сьогодні впливає на доступні рішення завтра.',
+    simulate: 'Симулювати зміну ситуації',
+    recalculate: 'Перерахувати план',
+    scenarioChanged: 'СЦЕНАРІЙ ЗМІНЕНО',
+    technicalDetails: 'Технічні деталі',
+    weekly: 'РЕКОМЕНДОВАНИЙ ПЛАН',
+    weeklyTitle: 'Куди направити команди',
+    served: 'покрито сьогодні',
+    needsStart: 'Потреб на початку дня',
+    needsServed: 'Буде покрито',
+    needsUnmet: 'Залишок після дня',
+    alternatives: 'ІНШІ ДОПУСТИМІ ВАРІАНТИ',
+    recommended: 'Рекомендований план',
+    alternative: 'Альтернатива',
+    why: 'ЧОМУ QDIP РЕКОМЕНДУЄ ЦЕЙ ПЛАН',
+    whyTitle: 'Перевірте логіку рекомендації перед рішенням',
+    tryOwnData: 'Спробувати на своїх даних',
+    baselineCapacityHint: '100% — поточна запланована доступність; нижче або вище — сценарій зміни умов.',
+    unavailableHint: 'Симуляція ситуації, коли мобільні команди тимчасово не можуть працювати в обраній локації.',
+    testOwnPlan: 'Перевірити свій варіант',
+    moves: 'переміщень',
+    rationalePriority: 'Пріоритетні потреби',
+    rationaleHorizon: 'Планування всього горизонту',
+    rationaleConstraints: 'Компетенції та обмеження',
+    rationaleCost: 'Переміщення та вартість',
+    rawEvidence: 'Детальні показники моделі',
+    technicalMethod: 'Метод розрахунку',
+    heuristic:
+      'Для великих просторів рішень використовується детермінований branch-aware beam search; інтерфейс не називає евристичний результат математично гарантованим глобальним оптимумом.',
+  },
+  en: {
+    title: 'Mobile team allocation plan',
+    run: 'Calculate recommended allocation',
+    running: 'Calculating…',
+    imported: 'Imported data',
+    capacity: 'Available capacity versus the baseline plan',
+    inaccessible: 'Location unavailable for field work',
+    unavailableTeam: 'Team temporarily unavailable',
+    unavailableTeamHint: 'See how the plan changes if one team cannot work during this horizon.',
+    none: 'None',
+    state: 'DATA AND CURRENT SITUATION',
+    communities: 'Communities',
+    teams: 'Teams',
+    opening: 'Demand units',
+    services: 'Service types',
+    days: 'days',
+    emptyText:
+      'QDIP accounts for needs, team skills, current locations, location availability and movement across the full planning horizon.',
+    valueProp:
+      'QDIP helps decide where to send mobile teams so more priority needs are covered with the resources already available.',
+    heroQuestion: 'Can the same teams cover more priority demand?',
+    differentiation:
+      'Unlike a spreadsheet, QDIP evaluates consequences across the full horizon: where a team ends today changes what is feasible tomorrow.',
+    simulate: 'Simulate a change',
+    recalculate: 'Recalculate plan',
+    scenarioChanged: 'SCENARIO CHANGED',
+    technicalDetails: 'Technical details',
+    weekly: 'RECOMMENDED PLAN',
+    weeklyTitle: 'Where to send teams',
+    served: 'covered today',
+    needsStart: 'Needs at start of day',
+    needsServed: 'Expected covered',
+    needsUnmet: 'Remaining after the day',
+    alternatives: 'OTHER FEASIBLE OPTIONS',
+    recommended: 'Recommended plan',
+    alternative: 'Alternative',
+    why: 'WHY QDIP RECOMMENDS THIS PLAN',
+    whyTitle: 'Review the recommendation logic before deciding',
+    tryOwnData: 'Try your own data',
+    baselineCapacityHint:
+      '100% is the currently planned availability; lower or higher values simulate changed conditions.',
+    unavailableHint: 'Simulate a location that mobile teams temporarily cannot serve.',
+    testOwnPlan: 'Test your own plan',
+    moves: 'moves',
+    rationalePriority: 'Priority needs',
+    rationaleHorizon: 'Full-horizon planning',
+    rationaleConstraints: 'Skills and constraints',
+    rationaleCost: 'Movement and cost',
+    rawEvidence: 'Detailed model metrics',
+    technicalMethod: 'Calculation method',
+    heuristic:
+      'Large decision spaces use deterministic branch-aware beam search; the interface does not present a heuristic result as a mathematically guaranteed global optimum.',
+  },
+  pl: {
+    title: 'Plan alokacji zespołów mobilnych',
+    run: 'Oblicz rekomendowany przydział',
+    running: 'Obliczanie…',
+    imported: 'Dane importowane',
+    capacity: 'Zmiana dostępnej zdolności względem planu bazowego',
+    inaccessible: 'Lokalizacja niedostępna dla zespołów',
+    unavailableTeam: 'Zespół tymczasowo niedostępny',
+    unavailableTeamHint: 'Sprawdź zmianę planu, gdy jeden zespół nie może pracować w tym horyzoncie.',
+    none: 'Brak',
+    state: 'DANE I BIEŻĄCA SYTUACJA',
+    communities: 'Społeczności',
+    teams: 'Zespoły',
+    opening: 'Jednostki potrzeb',
+    services: 'Rodzaje usług',
+    days: 'dni',
+    emptyText:
+      'QDIP uwzględnia potrzeby, kompetencje zespołów, bieżące lokalizacje, dostępność i przemieszczenia w całym horyzoncie planowania.',
+    valueProp:
+      'QDIP pomaga zdecydować, dokąd skierować zespoły mobilne, aby pokryć więcej priorytetowych potrzeb przy dostępnych zasobach.',
+    heroQuestion: 'Czy te same zespoły mogą pokryć więcej potrzeb priorytetowych?',
+    differentiation:
+      'W przeciwieństwie do arkusza QDIP ocenia skutki w całym horyzoncie: miejsce zakończenia pracy dziś wpływa na możliwości jutro.',
+    simulate: 'Symuluj zmianę sytuacji',
+    recalculate: 'Przelicz plan',
+    scenarioChanged: 'SCENARIUSZ ZMIENIONY',
+    technicalDetails: 'Szczegóły techniczne',
+    weekly: 'REKOMENDOWANY PLAN',
+    weeklyTitle: 'Dokąd skierować zespoły',
+    served: 'pokryto dziś',
+    needsStart: 'Potrzeby na początku dnia',
+    needsServed: 'Zostanie pokryte',
+    needsUnmet: 'Pozostanie po dniu',
+    alternatives: 'INNE DOPUSZCZALNE WARIANTY',
+    recommended: 'Rekomendowany plan',
+    alternative: 'Alternatywa',
+    why: 'DLACZEGO QDIP REKOMENDUJE TEN PLAN',
+    whyTitle: 'Sprawdź logikę rekomendacji przed decyzją',
+    tryOwnData: 'Wypróbuj własne dane',
+    baselineCapacityHint:
+      '100% oznacza bieżącą planowaną dostępność; niższe lub wyższe wartości symulują zmianę warunków.',
+    unavailableHint:
+      'Symulacja sytuacji, w której zespoły mobilne tymczasowo nie mogą obsługiwać wybranej lokalizacji.',
+    testOwnPlan: 'Sprawdź własny wariant',
+    moves: 'przemieszczeń',
+    rationalePriority: 'Potrzeby priorytetowe',
+    rationaleHorizon: 'Planowanie całego horyzontu',
+    rationaleConstraints: 'Kompetencje i ograniczenia',
+    rationaleCost: 'Przemieszczenia i koszt',
+    rawEvidence: 'Szczegółowe wskaźniki modelu',
+    technicalMethod: 'Metoda obliczeń',
+    heuristic:
+      'Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.',
+  },
+} satisfies Record<Locale, Record<string, string>>
 
 function profileLabel(profileId: string, importedName: string | null, importedLabel: string) {
   if (profileId === 'imported') return importedName ? `${importedLabel}: ${importedName}` : importedLabel
@@ -34,8 +217,7 @@ function profileLabel(profileId: string, importedName: string | null, importedLa
 }
 
 export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
-  const t = resourceAllocationWorkspaceI18n[locale]
-  const extra = resourceAllocationExtraI18n[locale]
+  const t = copy[locale]
   const {
     profileId,
     importedName,
@@ -79,16 +261,20 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
   } = useResourceAllocationWorkspace(locale)
 
   const summary = [
-    resourceAllocationCountPhrase(locale, stats.teams, 'teams'),
-    resourceAllocationCountPhrase(locale, stats.communities, 'communities'),
-    resourceAllocationCountPhrase(locale, stats.horizonNeeds, 'demand'),
-    resourceAllocationCountPhrase(locale, stats.days, 'days'),
+    countPhrase(locale, stats.teams, 'teams'),
+    countPhrase(locale, stats.communities, 'communities'),
+    countPhrase(locale, stats.horizonNeeds, 'demand'),
+    countPhrase(locale, stats.days, 'days'),
   ].join(' · ')
 
   const sourceBadge =
     profileId === 'imported'
-      ? `${extra.importedDataset} · ${importedName ?? ''}`
-      : extra.demoDataset
+      ? `${locale === 'uk' ? 'Імпортований набір' : locale === 'pl' ? 'Zaimportowany zestaw' : 'Imported dataset'} · ${importedName ?? ''}`
+      : locale === 'uk'
+        ? 'Демо-дані · синтетичні агреговані · без персональних даних'
+        : locale === 'pl'
+          ? 'Dane demo · syntetyczne i zagregowane · bez danych osobowych'
+          : 'Demo dataset · synthetic aggregate data · no beneficiary PII'
 
   return (
     <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
@@ -137,17 +323,29 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 </div>
                 <div>
                   <span className="block text-slate-500">
-                    {extra.horizonDemand}
+                    {locale === 'uk'
+                      ? 'Потреби горизонту'
+                      : locale === 'pl'
+                        ? 'Potrzeby w horyzoncie'
+                        : 'Horizon demand'}
                   </span>
                   <b className="text-2xl">{stats.horizonNeeds}</b>
                   {stats.incomingNeeds > 0 && (
                     <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
                       {stats.openingNeeds} + {stats.incomingNeeds}{' '}
-                      {extra.incomingDuringHorizon}
+                      {locale === 'uk'
+                        ? 'очікуваних протягом періоду'
+                        : locale === 'pl'
+                          ? 'oczekiwanych w okresie'
+                          : 'expected during the horizon'}
                     </span>
                   )}
                   <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
-                    {extra.demandUnitHelp}
+                    {locale === 'uk'
+                      ? 'Одиниця потреб — синтетична планова одиниця; у pilot вона буде відповідати вашому кейсу, консультації або іншій робочій одиниці.'
+                      : locale === 'pl'
+                        ? 'Jednostka potrzeby jest syntetyczną jednostką planowania; w pilotażu zostanie powiązana z Państwa sprawą, konsultacją lub inną jednostką pracy.'
+                        : 'A demand unit is a synthetic planning unit; in a pilot it is mapped to your case, consultation or other operational unit.'}
                   </span>
                 </div>
                 <div>
@@ -265,7 +463,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               </div>
                               <div className="mt-1 text-xs text-slate-600">
                                 {alternativeMovement.teamsMoved}/{alternativeMovement.totalTeams}{' '}
-                                {extra.teamsShort} ·{' '}
+                                {locale === 'uk' ? 'команд' : locale === 'pl' ? 'zespołów' : 'teams'} ·{' '}
                                 {alternativeMovement.moveEvents} {t.moves}
                                 {index > 0 && (
                                   <>
@@ -290,24 +488,35 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="border-l-2 ds-accent-border-left pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationalePriority}</b>
-                          {extra.rationalePriorityBody}
+                          {locale === 'uk'
+                            ? 'QDIP пріоритезує потреби високої важливості лише там, де призначена команда має потрібні компетенції.'
+                            : locale === 'pl'
+                              ? 'QDIP priorytetyzuje potrzeby o wysokim znaczeniu tam, gdzie przydzielony zespół ma odpowiednie kompetencje.'
+                              : 'QDIP prioritizes high-importance demand where the assigned team has the required skills.'}
                         </div>
                         <div className="border-l-2 ds-accent-border-left pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleHorizon}</b>
-                          {resourceAllocationInterpolate(extra.rationaleHorizonBody, { days: stats.days })}
+                          {locale === 'uk'
+                            ? `QDIP оцінює всі ${stats.days} днів разом: локація завершення дня змінює допустимі рішення наступного дня.`
+                            : locale === 'pl'
+                              ? `QDIP ocenia wszystkie ${stats.days} dni łącznie: lokalizacja na koniec dnia zmienia dopuszczalne decyzje dnia następnego.`
+                              : `QDIP evaluates all ${stats.days} days jointly: the end-of-day location changes what is feasible next.`}
                         </div>
                         <div className="border-l-2 ds-accent-border-left pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleConstraints}</b>
-                          {extra.rationaleConstraintsBody}
+                          {locale === 'uk'
+                            ? 'QDIP перевіряє доступність локації, допустимість призначення, відповідність компетенцій, можливість переміщення та ліміти команд.'
+                            : locale === 'pl'
+                              ? 'QDIP sprawdza dostępność lokalizacji, dopuszczalność przydziału, zgodność kompetencji, możliwość przemieszczenia i limity zespołów.'
+                              : 'QDIP checks location availability, assignment eligibility, skill compatibility, movement feasibility and team limits.'}
                         </div>
                         <div className="border-l-2 ds-accent-border-left pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t.rationaleCost}</b>
-                          {resourceAllocationInterpolate(extra.rationaleCostBody, {
-                            moved: movementSummary.teamsMoved,
-                            total: movementSummary.totalTeams,
-                            events: movementSummary.moveEvents,
-                            days: stats.days,
-                          })}
+                          {locale === 'uk'
+                            ? `План: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} команд змінюють локацію, ${movementSummary.moveEvents} переміщень за ${stats.days} днів.`
+                            : locale === 'pl'
+                              ? `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} zespołów zmienia lokalizację, ${movementSummary.moveEvents} przemieszczeń w ciągu ${stats.days} dni.`
+                              : `Plan: ${movementSummary.teamsMoved}/${movementSummary.totalTeams} teams change location, with ${movementSummary.moveEvents} move events over ${stats.days} days.`}
                         </div>
                       </div>
                       <details className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">
@@ -396,7 +605,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-sm">
                     <span>
                       <Users className="mr-1 inline h-4 w-4" />
-                      {extra.movesToday}
+                      {locale === 'uk'
+                        ? 'Переміщень цього дня'
+                        : locale === 'pl'
+                          ? 'Przemieszczenia tego dnia'
+                          : 'Moves today'}
                       :{' '}
                       <b>
                         {day.recommended.assignment_explanations?.filter(
@@ -503,7 +716,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 text-sm font-bold"
                       >
                         <RotateCcw className="h-4 w-4" />
-                        {extra.restoreBaseline}
+                        {locale === 'uk'
+                          ? 'Повернути базовий сценарій'
+                          : locale === 'pl'
+                            ? 'Przywróć scenariusz bazowy'
+                            : 'Restore baseline scenario'}
                       </button>
                     </div>
                   </div>
@@ -556,20 +773,36 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                     className="rounded-[var(--ds-radius-panel)] border border-emerald-300/20 bg-emerald-300/[0.05] p-6"
                   >
                     <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                      {extra.pilotKicker}
+                      {locale === 'uk'
+                        ? '07 · ПЕРЕВІРИТИ НА ВАШИХ ДАНИХ'
+                        : locale === 'pl'
+                          ? '07 · SPRAWDŹ NA WŁASNYCH DANYCH'
+                          : '07 · TEST ON YOUR DATA'}
                     </div>
                     <h2 className="mt-2 text-2xl font-medium">
-                      {extra.pilotTitle}
+                      {locale === 'uk'
+                        ? 'Перевірте QDIP на одному реальному тижні'
+                        : locale === 'pl'
+                          ? 'Sprawdź QDIP na jednym rzeczywistym tygodniu'
+                          : 'Test QDIP on one real week'}
                     </h2>
                     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-                      {extra.pilotBody}
+                      {locale === 'uk'
+                        ? 'Достатньо агрегованих даних: локації, потреби за видами послуг, команди, їх компетенції та потужність, доступність і маршрути. Персональні дані бенефіціарів не потрібні.'
+                        : locale === 'pl'
+                          ? 'Wystarczą dane zagregowane: lokalizacje, potrzeby według usług, zespoły, ich kompetencje i zdolność, dostępność oraz trasy. Dane osobowe beneficjentów nie są potrzebne.'
+                          : 'Aggregated data is enough: locations, demand by service, teams, skills and capacity, availability and routes. Beneficiary personal data is not required.'}
                     </p>
                     <a
                       href="#resource-import"
                       onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
                       className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
                     >
-                      {extra.pilotCta}
+                      {locale === 'uk'
+                        ? 'Завантажити агреговані дані'
+                        : locale === 'pl'
+                          ? 'Wczytaj dane zagregowane'
+                          : 'Upload aggregated data'}
                     </a>
                   </section>
                   </>
