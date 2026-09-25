@@ -24,7 +24,7 @@ const useCases = [
     route: '/resource-allocation',
     navigation: visible(10),
     decisionPattern: 'allocate',
-    title: { en: PUBLIC_DEMO_NAMES.resourceAllocation, uk: PUBLIC_DEMO_NAMES.resourceAllocation, pl: PUBLIC_DEMO_NAMES.resourceAllocation },
+    title: { en: PUBLIC_DEMO_NAMES.resourceAllocation, uk: 'Розподіл ресурсів', pl: 'Alokacja zasobów' },
     description: {
       en: 'Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.',
       uk: 'Розподіл гуманітарних мобільних команд з урахуванням пропускної здатності, навичок, доступності та обмежень на переміщення.',
@@ -41,8 +41,8 @@ const useCases = [
     decisionPattern: 'allocate',
     title: {
       en: PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
-      uk: PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
-      pl: PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
+      uk: 'Оптимізація мережі постачання',
+      pl: 'Optymalizacja sieci dostaw',
     },
     description: {
       en: 'Optimize inventory placement, inbound allocation and store fulfillment, then recalculate the network when capacity changes.',
@@ -58,7 +58,7 @@ const useCases = [
     route: '/gtm-lab',
     navigation: visible(30),
     decisionPattern: 'prioritize',
-    title: { en: PUBLIC_DEMO_NAMES.gtmLab, uk: PUBLIC_DEMO_NAMES.gtmLab, pl: PUBLIC_DEMO_NAMES.gtmLab },
+    title: { en: PUBLIC_DEMO_NAMES.gtmLab, uk: 'Лабораторія виходу на ринок', pl: 'Laboratorium wejścia na rynek' },
     description: {
       en: 'Evaluate commercial opportunities under incomplete market evidence and decide whether to pursue, research or skip.',
       uk: 'Оцінка комерційних можливостей за неповних ринкових даних: опрацювати, дослідити або відхилити.',

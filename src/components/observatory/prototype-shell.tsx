@@ -16,6 +16,11 @@ export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
 const LOCALES: Locale[] = ['en', 'uk', 'pl']
 const LABEL: Record<Locale, string> = { en: 'EN', pl: 'PL', uk: 'UA' }
+const CHALLENGE_LABEL: Record<Locale, string> = {
+  en: 'Decision Challenge',
+  uk: 'Виклик рішень',
+  pl: 'Wyzwanie decyzyjne',
+}
 const STUDIO_LABEL: Record<Locale, string> = {
   en: 'Open Studio',
   uk: 'Відкрити Studio',
@@ -45,7 +50,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
         aria-current={challengeActive ? 'page' : undefined}
         className={styles.navLink}
       >
-        Decision Challenge
+        {CHALLENGE_LABEL[locale]}
       </a>
       {navItems.map((item) => {
         const active = isActive(item.route)
@@ -133,7 +138,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             <Home />
           </Link>
           <ChevronRight />
-          <span>{challengeActive ? 'Decision Challenge' : (activeItem?.title[locale] ?? 'Observatory')}</span>
+          <span>{challengeActive ? CHALLENGE_LABEL[locale] : (activeItem?.title[locale] ?? 'Observatory')}</span>
         </div>
         <div className={styles.content} id="main-content" tabIndex={-1}>
           {children}
