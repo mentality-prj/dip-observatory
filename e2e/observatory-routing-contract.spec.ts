@@ -131,10 +131,46 @@ test.describe('Observatory product-home routing regression', () => {
       )
       expect(response?.status()).toBeLessThan(400)
 
-      await page.getByRole('link', { name: 'QDIP Observatory home' }).click()
+      await page.locator('a.ds-product-lockup-product').first().click()
       await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/${locale}/?$`))
       await expect(page.locator('#main-content')).toBeVisible()
       await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
+    })
+  }
+})
+
+
+test.describe('Observatory repeated navigation regression', () => {
+  for (const locale of locales) {
+    test(`${locale} repeatedly navigates home and applications without runtime errors`, async ({ page }) => {
+      const errors = capturePageErrors(page)
+      const response = await page.goto(
+        `http://observatory.localhost:3000/${locale}`,
+        { waitUntil: 'domcontentloaded' }
+      )
+      expect(response?.status()).toBeLessThan(400)
+
+      for (const route of routes) {
+        await page
+          .getByRole('link', { name: route.title[locale], exact: true })
+          .first()
+          .click()
+        await expect(page).toHaveURL(
+          new RegExp(`observatory\\.localhost:3000/${locale}${route.path}$`)
+        )
+        await expect(page.locator('#main-content')).toBeVisible()
+
+        await page.locator('a.ds-product-lockup-product').first().click()
+        await expect(page).toHaveURL(
+          new RegExp(`observatory\\.localhost:3000/${locale}/?$`)
+        )
+        await expect(page.locator('#main-content')).toBeVisible()
+      }
+
+      await expect.poll(
+        () => errors.map((error) => error.message),
+        { timeout: 1_500 }
+      ).toEqual([])
     })
   }
 })
