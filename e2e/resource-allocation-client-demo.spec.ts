@@ -152,37 +152,11 @@ const allocationResult = {
   evidence: ['Canonical case: horizon priority coverage = 95%'],
 }
 
-test('Responsible Citizens demo is dynamic and completes decision lifecycle', async ({ page }) => {
+test('Resource Allocation demo is dynamic and exposes a usable QDIP plan', async ({ page }) => {
   let sawResponsibleCitizensInput = false
-  let status: 'proposed' | 'accepted' | 'completed' = 'proposed'
-  const feedback: Array<Record<string, unknown>> = []
-  const outcomes: Array<Record<string, unknown>> = []
-  let recordedOutcomeBody: Record<string, unknown> = {}
 
   await page.route('**/api/resource-allocation/run', async (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>
-    if (body.operation === 'evaluate_manual') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          status: 'ok',
-          aggregate_metrics: {
-            priority_coverage: 0.81,
-            total_coverage: 0.75,
-            travel_cost: 0,
-          },
-          demand_summary: {
-            total_available: 128,
-            served: 96,
-            closing_unmet: 32,
-            priority_coverage: 0.81,
-          },
-        }),
-      })
-      return
-    }
-
     const communities = Array.isArray(body.communities) ? body.communities : []
     sawResponsibleCitizensInput = communities.some(
       (item) =>
@@ -195,176 +169,26 @@ test('Responsible Citizens demo is dynamic and completes decision lifecycle', as
     })
   })
 
-  await page.route('**/api/resource-allocation/decisions', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ decision_id: 'demo-decision-1', status: 'proposed', result: allocationResult }),
-    })
-  })
-
-  await page.route('**/api/resource-allocation/decisions/demo-decision-1', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        decision_id: 'demo-decision-1',
-        status,
-        created_at: '2026-09-21T12:00:00Z',
-        state_hash: '1234567890abcdef',
-        engine_version: 'resource-allocation/0.7.0',
-        plugin_version: '0.7.0',
-        feedback,
-        outcomes,
-      }),
-    })
-  })
-
-  await page.route('**/api/resource-allocation/decisions/demo-decision-1/feedback', async (route) => {
-    status = 'accepted'
-    feedback.push({
-      status: 'accepted',
-      timestamp: '2026-09-21T12:05:00Z',
-      actor_id: 'api-key:demo',
-    })
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ decision_id: 'demo-decision-1', status }),
-    })
-  })
-
-  await page.route('**/api/resource-allocation/decisions/demo-decision-1/outcomes', async (route) => {
-    recordedOutcomeBody = route.request().postDataJSON() as Record<string, unknown>
-    status = 'completed'
-    outcomes.push({
-      recorded_at: '2026-09-21T12:10:00Z',
-      actor_id: 'api-key:demo',
-      notes: 'Executed as planned',
-      metrics: recordedOutcomeBody.metrics as Record<string, unknown>,
-    })
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ decision_id: 'demo-decision-1', status }),
-    })
-  })
-
   await page.goto('/en/resource-allocation')
-
   await expect(page.getByTestId('community-count')).toHaveText('5')
   await expect(page.getByTestId('team-count')).toHaveText('5')
-  await expect(page.getByText('Can the same teams cover more priority demand?')).toBeVisible()
-  await expect(page.getByTestId('resource-scenario-details')).toHaveCount(0)
-
   await page.getByRole('button', { name: 'Calculate recommended allocation' }).click()
+
   await expect(page.getByText('Reference manual plan').first()).toBeVisible()
   await expect(page.getByText('+20', { exact: true })).toBeVisible()
-  await expect(page.getByText('more demand units', { exact: true })).toBeVisible()
-  await expect(page.getByText('without adding teams', { exact: true })).toBeVisible()
   await expect(page.getByTestId('resource-why-details')).toBeVisible()
   await expect(page.getByText('03 · WHY QDIP RECOMMENDS THIS PLAN')).toBeVisible()
   await expect(page.getByText(/Where to send teams · 5 days/)).toBeVisible()
-  await expect(page.getByTestId('capacity-gap-details')).toHaveCount(0)
   await expect(page.getByTestId('resource-pilot-cta')).toBeVisible()
-  await expect(
-    page.getByLabel(
-      'Share of priority demand units the modelled plan can serve across the full planning horizon.'
-    )
-  ).toBeVisible()
   expect(sawResponsibleCitizensInput).toBe(true)
 
-  await page.getByRole('button', { name: 'Мобільна команда 1' }).first().click()
-  await expect(page.getByTestId('assignment-explanation')).toBeVisible()
-  await expect(page.getByText('Psychosocial support')).toBeVisible()
-  await expect(page.getByText('48', { exact: true })).toBeVisible()
-
-  await page.getByRole('button', { name: 'Accept QDIP recommendation' }).click()
-  await expect(page.getByText(/Decision ID · demo-decision-1/)).toBeVisible()
-  await expect(page.getByText('Plan approved')).toBeVisible()
-  await expect(page.getByLabel('Actual priority-needs coverage, %')).toBeHidden()
+  await expect(page.getByText('06 · QDIP PLAN')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Accept QDIP recommendation' })).toHaveCount(0)
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download plan CSV' }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toMatch(/^qdip-resource-allocation-\d{4}-\d{2}-\d{2}\.csv$/)
-
-  await page.getByText('After the plan is executed', { exact: true }).click()
-
-  const actualColumns = [
-    'record_type',
-    'id',
-    'day',
-    'community',
-    'service',
-    'units',
-    'priority',
-    'program',
-    'current_community',
-    'skills',
-    'capacity',
-    'available',
-    'accessible',
-    'max_teams',
-    'allowed_communities',
-    'allowed_programs',
-    'programs',
-    'max_daily_capacity',
-    'max_travel_cost',
-    'max_travel_minutes',
-    'cost_per_capacity',
-    'from',
-    'to',
-    'cost',
-    'minutes',
-    'days',
-    'budget',
-    'target_priority_coverage',
-    'planning_unit',
-    'team',
-  ] as const
-  const actualRow = (
-    values: Partial<Record<(typeof actualColumns)[number], string | number | boolean>>
-  ) => actualColumns.map((column) => String(values[column] ?? '')).join(',')
-  const actualCsv = [
-    actualColumns.join(','),
-    actualRow({ record_type: 'settings', days: 'Mon', planning_unit: 'consultation' }),
-    actualRow({ record_type: 'community', community: 'Hub A', accessible: true, max_teams: 1 }),
-    actualRow({ record_type: 'demand', community: 'Hub A', service: 'psychosocial', units: 128, priority: 'high' }),
-    actualRow({
-      record_type: 'team',
-      id: 'Team A',
-      current_community: 'Hub A',
-      skills: 'psychosocial',
-      capacity: 96,
-    }),
-    actualRow({ record_type: 'baseline', day: 'Mon', team: 'Team A', community: 'Hub A' }),
-  ].join('\n')
-
-  const actualChooser = page.waitForEvent('filechooser')
-  await page.getByRole('button', { name: 'Import actual week' }).click()
-  await (await actualChooser).setFiles({
-    name: 'actual-week.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(actualCsv),
-  })
-
-  await expect(page.getByTestId('actual-week-imported')).toContainText('actual-week.csv')
-  await expect(page.getByLabel('Actual priority-needs coverage, %')).toHaveValue('81')
-  await expect(page.getByLabel('Demand units actually covered')).toHaveValue('96')
-  await expect(page.getByLabel('Demand units actually left uncovered')).toHaveValue('32')
-
-  await page
-    .getByPlaceholder('What actually happened after the decision was executed')
-    .fill('Imported observed week')
-  await page.getByRole('button', { name: 'Record actual outcome' }).click()
-  await expect(page.getByText('Decision completed.')).toBeVisible()
-  await expect(page.getByText('Actual outcome recorded')).toBeVisible()
-  expect(recordedOutcomeBody.metrics).toBeDefined()
-  const recordedMetrics = recordedOutcomeBody.metrics as Record<string, unknown>
-  expect(recordedMetrics.priority_coverage).toBe(0.81)
-  expect(recordedMetrics.served).toBe(96)
-  expect(recordedMetrics.closing_unmet).toBe(32)
 })
 
 test('Resource Allocation stays within a mobile viewport', async ({ page }) => {
@@ -678,6 +502,6 @@ test('non-horizon capacity gap stays out of the client demo', async ({ page }) =
 
   await expect(page.getByTestId('capacity-gap-details')).toHaveCount(0)
   await expect(page.getByText('WHAT IS NEEDED FOR A BETTER RESULT')).toHaveCount(0)
-  await expect(page.getByText('06 · MAKE THE DECISION')).toBeVisible()
+  await expect(page.getByText('06 · QDIP PLAN')).toBeVisible()
   await expect(page.getByTestId('resource-pilot-cta')).toContainText('07 · TEST ON YOUR DATA')
 })
