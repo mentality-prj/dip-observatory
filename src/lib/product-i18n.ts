@@ -202,3 +202,22 @@ export const observatoryHomeI18n = {
     note: 'Dema są wstępnie skonfigurowanymi aplikacjami decyzyjnymi. Studio konfiguruje model, QDIP Core go ocenia, a Observatory udostępnia wynik do inspekcji.',
   },
 } as const
+
+
+export const observatoryDecisionNarrativeI18n = {
+  en: {
+    labels: ['Situation', 'Alternatives', 'Evaluation', 'Risk / uncertainty', 'Recommendation', 'Evidence', 'Trace'],
+    helper: 'One inspection grammar across every QDIP application.',
+    ariaLabel: 'Decision narrative',
+  },
+  uk: {
+    labels: ['Ситуація', 'Альтернативи', 'Оцінювання', 'Ризик / невизначеність', 'Рекомендація', 'Докази', 'Історія рішення'],
+    helper: 'Одна логіка перевірки для кожного застосунку QDIP.',
+    ariaLabel: 'Логіка рішення',
+  },
+  pl: {
+    labels: ['Sytuacja', 'Alternatywy', 'Ocena', 'Ryzyko / niepewność', 'Rekomendacja', 'Dowody', 'Ślad decyzji'],
+    helper: 'Jedna logika weryfikacji dla każdej aplikacji QDIP.',
+    ariaLabel: 'Logika decyzji',
+  },
+} as const
