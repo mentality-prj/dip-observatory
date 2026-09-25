@@ -805,7 +805,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <div>
                   <p className="mb-2 text-sm text-slate-400">{t.frontierHint}</p>
                   <p className="mb-3 text-xs text-slate-500">
-                    {t.evaluatedCandidates}: {candidateAreas.length} · {t.recommendedCandidates}: {paretoCandidates.length}
+                    {t.evaluatedCandidates}: {candidateAreas.length} · {t.recommendedCandidates}:{' '}
+                    {paretoCandidates.length}
                   </p>
                   <div className="space-y-2">
                     {candidateAreas.map((candidate, index) => {
