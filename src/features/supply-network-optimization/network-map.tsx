@@ -360,11 +360,7 @@ export function NetworkMap({
         )
       }
       for (const [index, candidate] of candidateAreas.entries()) {
-        const status = !candidate.feasible
-          ? 'infeasible'
-          : candidate.pareto_efficient
-            ? 'pareto'
-            : 'dominated'
+        const status = !candidate.feasible ? 'infeasible' : candidate.pareto_efficient ? 'pareto' : 'dominated'
         const statusLabel =
           status === 'pareto'
             ? t.candidateRecommended
