@@ -8,8 +8,8 @@ const heroCta = {
 
 const demoNames = {
   en: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
-  uk: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
-  pl: ['Resource Allocation', 'Supply Network Optimization', 'GTM Lab'],
+  uk: ['Розподіл ресурсів', 'Оптимізація мережі постачання', 'Лабораторія виходу на ринок'],
+  pl: ['Alokacja zasobów', 'Optymalizacja sieci dostaw', 'Laboratorium wejścia na rynek'],
 } as const
 
 const proofArtifacts = {
