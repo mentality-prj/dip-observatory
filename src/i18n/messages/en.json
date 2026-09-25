@@ -8,7 +8,12 @@
     "closeNavigation": "Close navigation",
     "products": "QDIP products",
     "footerNavigation": "Footer navigation",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "localeLabels": {
+      "en": "EN",
+      "uk": "UA",
+      "pl": "PL"
+    }
   },
   "observatory": {
     "applications": "Observatory applications",
@@ -748,6 +753,28 @@
     "observatory": {
       "title": "QDIP Observatory | English interface",
       "description": "Explore QDIP decision applications, their inputs, alternatives and decision evidence."
+    }
+  },
+  "decisionPatterns": {
+    "allocate": "ALLOCATE",
+    "decide": "DECIDE",
+    "prioritize": "PRIORITIZE"
+  },
+  "useCases": {
+    "resource-allocation": {
+      "title": "Resource Allocation",
+      "description": "Humanitarian mobile team allocation under capacity, skills, accessibility and travel constraints.",
+      "tag": "HUMANITARIAN"
+    },
+    "supply-network-optimization": {
+      "title": "Supply Network Optimization",
+      "description": "Optimize inventory placement, inbound allocation and store fulfillment, then recalculate the network when capacity changes.",
+      "tag": "SUPPLY NETWORK"
+    },
+    "gtm-lab": {
+      "title": "GTM Lab",
+      "description": "Evaluate commercial opportunities under incomplete market evidence and decide whether to pursue, research or skip.",
+      "tag": "GO-TO-MARKET"
     }
   }
 }
