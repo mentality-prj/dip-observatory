@@ -48,7 +48,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                   <p className="mt-2 text-sm text-slate-400">{t('confidence')}</p>
                 </div>
                 <span className="ds-state-chip-selected rounded-full border px-3 py-1 text-xs">
-                  {t('recommended')Label}
+                  {t('recommendedLabel')}
                 </span>
               </div>
               <div className="mt-8 border-t border-white/10 pt-5">
@@ -69,7 +69,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                   {t('trace')}
                   <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
                 </summary>
-                <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-500">{t('trace')Body}</p>
+                <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-500">{t('traceBody')}</p>
               </details>
               <a
                 className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
@@ -82,7 +82,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
             <aside className="bg-white/[.018] p-6 md:p-8" aria-label={t('evidence')}>
               <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">{t('evidence')}</span>
               <div className="mt-5 grid gap-4">
-                {t('evidence')Items.map((item, index) => (
+                {evidenceItems.map((item, index) => (
                   <div key={item} className="flex gap-3 border-b border-white/8 pb-4 last:border-0">
                     <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-cyan-300/10 text-cyan-300">
                       <Check className="h-3 w-3" />
@@ -103,7 +103,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
             <h2 id="observatory-demos" className="text-xs font-semibold uppercase tracking-[.2em] text-cyan-300">
               {t('demos')}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">{t('demos')Body}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-500">{t('demosBody')}</p>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             {useCases.map((useCase) => {
