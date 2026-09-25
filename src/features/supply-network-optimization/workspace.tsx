@@ -47,7 +47,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function fulfillmentDistribution(result: OptimizationResult) {
   const byWarehouse = new Map<string, number>()
-  for (const item of result('fulfillment')) {
+  for (const item of result.fulfillment) {
     byWarehouse.set(item.warehouse_id, (byWarehouse.get(item.warehouse_id) ?? 0) + item.units)
   }
   const total = [...byWarehouse.values()].reduce((sum, units) => sum + units, 0)
@@ -138,11 +138,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
 
   const selectedService =
     selectedStore && visibleResult
-      ? visibleResult('demand_service').find((item) => item.demand_point_id === selectedStore.id)
+      ? visibleResult.demand_service.find((item) => item.demand_point_id === selectedStore.id)
       : null
   const selectedUtilization =
     selectedWarehouse && visibleResult
-      ? visibleResult('warehouse_utilization').find((item) => item.warehouse_id === selectedWarehouse.id)
+      ? visibleResult.warehouse_utilization.find((item) => item.warehouse_id === selectedWarehouse.id)
       : null
   const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
   const manualFulfillmentDistribution = manualResult ? fulfillmentDistribution(manualResult) : []
@@ -210,8 +210,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     try {
       const response = await runManualCandidate(activeNetwork, manualCandidate)
       const result = response.result
-      setManualEvaluation(result('candidate'))
-      setManualResult(result('optimized_network'))
+      setManualEvaluation(result.candidate)
+      setManualResult(result.optimized_network)
       setDecisionValue(response.decisionValue ?? null)
     } catch (reason) {
       setError(t(requestErrorKey(reason)))
@@ -353,7 +353,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   value={
                     decisionValue.regret?.max_observed_regret == null
                       ? '—'
-                      : formatMoney(decisionValue.regret('max_observed_regret'), locale)
+                      : formatMoney(decisionValue.regret.max_observed_regret, locale)
                   }
                 />
               </div>
@@ -398,7 +398,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       <div>
                         <h3 className="text-sm font-medium text-slate-200">{t('endingInventory')}</h3>
                         <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          {visibleResult('ending_inventory').slice(0, 8).map((item) => (
+                          {visibleResult.ending_inventory.slice(0, 8).map((item) => (
                             <p key={`${item.warehouse_id}-${item.product_class_id}`}>
                               {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
                               {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
@@ -409,7 +409,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       <div>
                         <h3 className="text-sm font-medium text-slate-200">{t('inboundAllocation')}</h3>
                         <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          {visibleResult('inbound_allocation').map((item) => (
+                          {visibleResult.inbound_allocation.map((item) => (
                             <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
                               {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
                               {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
@@ -421,7 +421,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       <div>
                         <h3 className="text-sm font-medium text-slate-200">{t('bindingConstraints')}</h3>
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {visibleResult('binding_constraints').slice(0, 8).map((item) => (
+                          {visibleResult.binding_constraints.slice(0, 8).map((item) => (
                             <Badge key={item} variant="neutral">
                               {constraintDisplayLabel(item, locale)}
                             </Badge>
@@ -431,11 +431,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       <div>
                         <h3 className="text-sm font-medium text-slate-200">{t('costBreakdown')}</h3>
                         <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          <p>{t('logistics')}: {formatMoney(visibleResult('kpis').logistics_cost, locale)}</p>
-                          <p>{t('stockoutCost')}: {formatMoney(visibleResult('kpis').stockout_cost, locale)}</p>
-                          <p>{t('reallocationCost')}: {formatMoney(visibleResult('kpis').reallocation_cost, locale)}</p>
-                          <p>{t('facilityCost')}: {formatMoney(visibleResult('kpis').facility_fixed_cost, locale)}</p>
-                          <p>{t('handlingCostResult')}: {formatMoney(visibleResult('kpis').handling_cost, locale)}</p>
+                          <p>{t('logistics')}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
+                          <p>{t('stockoutCost')}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
+                          <p>{t('reallocationCost')}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
+                          <p>{t('facilityCost')}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
+                          <p>{t('handlingCostResult')}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
                         </div>
                       </div>
                   </div>
@@ -486,7 +486,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <Metric label={t('capacity')} value={number(selectedWarehouse.capacity_units)} />
                   <Metric
                     label={t('currentInventory')}
-                    value={number(Object('values')(selectedWarehouse.current_inventory).reduce((sum, units) => sum + units, 0))}
+                    value={number(Object.values(selectedWarehouse.current_inventory).reduce((sum, units) => sum + units, 0))}
                   />
                   <Metric label={t('receiving')} value={number(selectedWarehouse.receiving_capacity_units_per_day)} />
                   <Metric label={t('dispatch')} value={number(selectedWarehouse.dispatch_capacity_units_per_day)} />
@@ -546,7 +546,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
               </CardHeader>
               <CardContent>
                 <div className="mt-3 space-y-2 text-sm">
-                  {Object('entries')(selectedStore.demand_per_day).map(([product, demand]) => (
+                  {Object.entries(selectedStore.demand_per_day).map(([product, demand]) => (
                     <div key={product} className="flex justify-between">
                       <span>{productClassDisplayLabel(product, locale)}</span>
                       <strong>
@@ -590,7 +590,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="1"
                       value={candidateCapacity}
-                      onChange={(event) => setCandidateCapacity(Number(event('target').value))}
+                      onChange={(event) => setCandidateCapacity(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -601,7 +601,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="1"
                       value={candidateReceiving}
-                      onChange={(event) => setCandidateReceiving(Number(event('target').value))}
+                      onChange={(event) => setCandidateReceiving(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -612,7 +612,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="1"
                       value={candidateDispatch}
-                      onChange={(event) => setCandidateDispatch(Number(event('target').value))}
+                      onChange={(event) => setCandidateDispatch(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -623,7 +623,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="0"
                       value={candidateOpeningCost}
-                      onChange={(event) => setCandidateOpeningCost(Number(event('target').value))}
+                      onChange={(event) => setCandidateOpeningCost(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -634,7 +634,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="1"
                       value={candidateOpeningAmortization}
-                      onChange={(event) => setCandidateOpeningAmortization(Number(event('target').value))}
+                      onChange={(event) => setCandidateOpeningAmortization(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -645,7 +645,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="0"
                       value={candidateFixedOperatingCost}
-                      onChange={(event) => setCandidateFixedOperatingCost(Number(event('target').value))}
+                      onChange={(event) => setCandidateFixedOperatingCost(Number(event.target.value))}
                     />
                   </label>
                   <label className="text-xs text-slate-400">
@@ -656,7 +656,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       type="number"
                       min="0"
                       value={candidateHandlingCost}
-                      onChange={(event) => setCandidateHandlingCost(Number(event('target').value))}
+                      onChange={(event) => setCandidateHandlingCost(Number(event.target.value))}
                     />
                   </label>
                 </div>
@@ -670,9 +670,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           checked={candidateStorage.includes(storageClass)}
                           onChange={(event) =>
                             setCandidateStorage((current) =>
-                              event('target').checked
+                              event.target.checked
                                 ? Array.from(new Set([...current, storageClass]))
-                                : current('filter')((item) => item !== storageClass)
+                                : current.filter((item) => item !== storageClass)
                             )
                           }
                         />
@@ -697,7 +697,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                         </p>
                         <p>
                           {t('fulfillmentExposure')}:{' '}
-                          <strong className="text-slate-200">{pct(manualResult('kpis').maximum_fulfillment_share)}</strong>
+                          <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
                           {' · '}
                           {t('limit')}{' '}
                           <strong className="text-slate-200">{pct(
@@ -836,9 +836,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2">
-                    <Metric label={t('service')} value={pct(item.result('kpis').service_level)} />
-                    <Metric label={t('unserved')} value={number(item.result('kpis').unserved_demand_units)} />
-                    <Metric label={t('logistics')} value={formatMoney(item.result('kpis').logistics_cost, locale)} />
+                    <Metric label={t('service')} value={pct(item.result.kpis.service_level)} />
+                    <Metric label={t('unserved')} value={number(item.result.kpis.unserved_demand_units)} />
+                    <Metric label={t('logistics')} value={formatMoney(item.result.kpis.logistics_cost, locale)} />
                   </div>
                 </CardContent>
               </Card>
