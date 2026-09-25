@@ -210,12 +210,12 @@ export function ResourceAllocationImport({
             onClick={() =>
               downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')
             }
-            className="flex items-center gap-3 border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
+            className="flex min-w-0 items-start gap-2 overflow-hidden border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
           >
-            <Download className="h-4 w-4 shrink-0 text-rose-300" />
-            <span className="min-w-0">
-              <b className="block text-xs text-slate-200">{t.downloadTemplate}</b>
-              <span className="mt-0.5 block text-[10px] text-slate-500">{t.templateHint}</span>
+            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+            <span className="min-w-0 flex-1">
+              <b className="block break-words text-xs leading-4 text-slate-200">{t.downloadTemplate}</b>
+              <span className="mt-1 block break-words text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
             </span>
           </button>
           <button
@@ -224,12 +224,12 @@ export function ResourceAllocationImport({
             onClick={() =>
               downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')
             }
-            className="flex items-center gap-3 border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
+            className="flex min-w-0 items-start gap-2 overflow-hidden border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
           >
-            <Download className="h-4 w-4 shrink-0 text-rose-300" />
-            <span className="min-w-0">
-              <b className="block text-xs text-rose-100">{t.downloadExample}</b>
-              <span className="mt-0.5 block text-[10px] text-slate-500">{t.exampleHint}</span>
+            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+            <span className="min-w-0 flex-1">
+              <b className="block break-words text-xs leading-4 text-rose-100">{t.downloadExample}</b>
+              <span className="mt-1 block break-words text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
             </span>
           </button>
         </div>
