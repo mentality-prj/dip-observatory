@@ -7,11 +7,26 @@ describe('retail-scale Supply Network demo topology', () => {
     expect(new Set(SUPPLY_NETWORK_DEMO.demand_points.map((point) => point.region)).size).toBe(15)
   })
 
-  it('gives every store at least two delivery options', () => {
+  it('gives every store at least three operational delivery options', () => {
     for (const point of SUPPLY_NETWORK_DEMO.demand_points) {
       const routes = SUPPLY_NETWORK_DEMO.delivery_routes.filter((route) => route.to_demand_point_id === point.id)
-      expect(routes.length).toBeGreaterThanOrEqual(2)
+      expect(routes.length).toBeGreaterThanOrEqual(3)
     }
+  })
+
+  it('keeps multiple surviving recovery routes for Kyiv stores after the Kyiv warehouse is lost', () => {
+    const kyivStore = SUPPLY_NETWORK_DEMO.demand_points.find((point) => point.region === 'Kyiv City')
+    expect(kyivStore).toBeDefined()
+
+    const sourceWarehouseIds = new Set(
+      SUPPLY_NETWORK_DEMO.delivery_routes
+        .filter((route) => route.to_demand_point_id === kyivStore?.id)
+        .map((route) => route.from_node_id)
+    )
+
+    expect(sourceWarehouseIds).toContain('central-hub')
+    expect(sourceWarehouseIds).toContain('south-hub')
+    expect(sourceWarehouseIds).toContain('west-hub')
   })
 
   it('keeps the current plan fully allocated for every store and product class', () => {
