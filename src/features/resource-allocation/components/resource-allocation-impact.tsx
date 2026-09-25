@@ -1,6 +1,8 @@
 'use client'
 
 import { ArrowDown, ArrowUp, CircleHelp } from 'lucide-react'
+import { useTranslations } from '@/i18n/provider'
+import { pluralMessage } from '@/i18n/runtime'
 import type {
   ResourceAllocationBaseline,
   ResourceAllocationDemandSummary,
@@ -18,77 +20,6 @@ type Props = {
   locale: 'uk' | 'en' | 'pl'
 }
 
-const labels = {
-  uk: {
-    compareKicker: '02 · РЕЗУЛЬТАТ',
-    compareTitle: 'Що дає рекомендація QDIP у цьому сценарії',
-    recommendationKicker: '02 · ОЧІКУВАНИЙ ЕФЕКТ',
-    recommendationTitle: 'Очікуваний результат рекомендованого плану',
-    recommendationSubtitle: 'Референсний план не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
-    current: 'Поточний план',
-    canonicalBaseline: 'Референсний ручний план',
-    recommended: 'План QDIP',
-    syntheticBaseline: 'Синтетичний допустимий план для порівняння. Це не фактичний план вашої організації.',
-    priorityHelp: 'Частка пріоритетних одиниць потреб, які модельований план дозволяє обслужити протягом усього планового періоду.',
-    moveEvents: 'Переміщень за весь період',
-    scenario: 'Модельована оцінка синтетичного планового сценарію.',
-    unavailable: 'референсний план не оцінено',
-    priority: 'Покриття пріоритетних потреб',
-    total: 'Загальне покриття потреб',
-    served: 'Потреб буде покрито',
-    unmet: 'Залишиться без покриття',
-    moved: 'Команд змінять локацію',
-    of: 'з',
-    heroSuffix: 'одиниць потреб більше',
-    heroSameTeams: 'без додаткових команд',
-  },
-  en: {
-    compareKicker: '02 · RESULT',
-    compareTitle: 'What the QDIP recommendation changes in this scenario',
-    recommendationKicker: '02 · EXPECTED IMPACT',
-    recommendationTitle: 'Expected result of the recommended plan',
-    recommendationSubtitle: 'The reference plan could not be evaluated under the same scenario, so only the recommended plan is shown.',
-    current: 'Current plan',
-    canonicalBaseline: 'Reference manual plan',
-    recommended: 'QDIP plan',
-    syntheticBaseline: 'Synthetic feasible comparison plan. It is not your organisation’s actual plan.',
-    priorityHelp: 'Share of priority demand units the modelled plan can serve across the full planning horizon.',
-    moveEvents: 'Move events over the horizon',
-    scenario: 'Modelled estimate for a synthetic planning scenario.',
-    unavailable: 'reference plan not evaluated',
-    priority: 'Priority needs coverage',
-    total: 'Total needs coverage',
-    served: 'Needs served',
-    unmet: 'Needs left uncovered',
-    moved: 'Teams changing location',
-    of: 'of',
-    heroSuffix: 'more demand units',
-    heroSameTeams: 'without adding teams',
-  },
-  pl: {
-    compareKicker: '02 · WYNIK',
-    compareTitle: 'Co zmienia rekomendacja QDIP w tym scenariuszu',
-    recommendationKicker: '02 · OCZEKIWANY EFEKT',
-    recommendationTitle: 'Oczekiwany wynik rekomendowanego planu',
-    recommendationSubtitle: 'Planu referencyjnego nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
-    current: 'Bieżący plan',
-    canonicalBaseline: 'Referencyjny plan ręczny',
-    recommended: 'Plan QDIP',
-    syntheticBaseline: 'Syntetyczny wykonalny plan porównawczy. Nie jest to rzeczywisty plan Państwa organizacji.',
-    priorityHelp: 'Udział priorytetowych jednostek potrzeb, które modelowany plan może obsłużyć w całym horyzoncie planowania.',
-    moveEvents: 'Przemieszczenia w całym horyzoncie',
-    scenario: 'Modelowana ocena syntetycznego scenariusza planowania.',
-    unavailable: 'plan referencyjny nieoceniony',
-    priority: 'Pokrycie potrzeb priorytetowych',
-    total: 'Łączne pokrycie potrzeb',
-    served: 'Obsłużone potrzeby',
-    unmet: 'Potrzeby bez pokrycia',
-    moved: 'Zespoły zmieniające lokalizację',
-    of: 'z',
-    heroSuffix: 'jednostek potrzeb więcej',
-    heroSameTeams: 'bez dodatkowych zespołów',
-  },
-} as const
 
 export function ResourceAllocationImpact({
   metrics,
@@ -100,9 +31,9 @@ export function ResourceAllocationImpact({
   planningDays,
   locale,
 }: Props) {
-  const t = labels[locale]
+  const t = useTranslations('resourceAllocation.impact')
   const compared = Boolean(baseline)
-  const baselineLabel = baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
+  const baselineLabel = baseline?.kind === 'canonical-plan' ? t('canonicalBaseline') : t('current')
   const currentPriority = baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
   const recommendedPriority = summary.priority_coverage ?? metrics.priority_coverage
   const currentTotalCoverage = baseline && baseline.summary.total_available > 0
@@ -116,18 +47,18 @@ export function ResourceAllocationImpact({
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-4 sm:p-6">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">
-        {compared ? t.compareKicker : t.recommendationKicker}
+        {compared ? t('compareKicker') : t('recommendationKicker')}
       </div>
-      <h2 className="mt-2 text-2xl font-medium sm:text-3xl">{compared ? t.compareTitle : t.recommendationTitle}</h2>
+      <h2 className="mt-2 text-2xl font-medium sm:text-3xl">{compared ? t('compareTitle') : t('recommendationTitle')}</h2>
 
       {baseline && servedDelta !== null && servedDelta > 0 && (
         <div className="mt-6 border border-emerald-300/20 bg-emerald-300/[0.06] p-5 sm:p-6">
           <div className="text-4xl font-black tracking-tight text-emerald-200 sm:text-5xl">+{servedDelta}</div>
-          <div className="mt-1 text-lg font-bold text-white">{t.heroSuffix}</div>
-          <div className="mt-1 text-sm text-emerald-100/80">{t.heroSameTeams}</div>
+          <div className="mt-1 text-lg font-bold text-white">{t('heroSuffix')}</div>
+          <div className="mt-1 text-sm text-emerald-100/80">{t('heroSameTeams')}</div>
           {currentPriority !== undefined && (
             <div className="mt-4 text-sm text-slate-300">
-              {t.priority}: <b>{Math.round(currentPriority * 100)}%</b> →{' '}
+              {t('priority')}: <b>{Math.round(currentPriority * 100)}%</b> →{' '}
               <b className="text-emerald-200">{Math.round(recommendedPriority * 100)}%</b>
             </div>
           )}
@@ -136,23 +67,23 @@ export function ResourceAllocationImpact({
 
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl text-xs leading-relaxed text-slate-500">
-          <p>{t.scenario}{planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}</p>
-          {baseline?.kind === 'canonical-plan' && <p className="mt-1">{t.syntheticBaseline}</p>}
+          <p>{t('scenario')}{planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}</p>
+          {baseline?.kind === 'canonical-plan' && <p className="mt-1">{t('syntheticBaseline')}</p>}
         </div>
         <div className="text-left sm:text-right">
-          <div className="text-xs text-slate-500">{t.moved}</div>
-          <div className="text-xl font-bold">{teamsMoved} <span className="text-sm font-medium text-slate-500">{t.of} {totalTeams}</span></div>
-          <div className="mt-1 text-xs text-slate-500">{t.moveEvents}: <b className="text-slate-300">{moveEvents}</b></div>
+          <div className="text-xs text-slate-500">{t('moved')}</div>
+          <div className="text-xl font-bold">{teamsMoved} <span className="text-sm font-medium text-slate-500">{t('of')} {totalTeams}</span></div>
+          <div className="mt-1 text-xs text-slate-500">{t('moveEvents')}: <b className="text-slate-300">{moveEvents}</b></div>
         </div>
       </div>
 
-      {!compared && <p className="mt-4 max-w-4xl text-sm text-slate-500">{t.recommendationSubtitle}</p>}
+      {!compared && <p className="mt-4 max-w-4xl text-sm text-slate-500">{t('recommendationSubtitle')}</p>}
 
       <div className="mt-6 grid gap-px bg-white/5 sm:grid-cols-2 xl:grid-cols-4">
-        <Impact label={t.priority} help={t.priorityHelp} current={currentPriority} recommended={recommendedPriority} format="pct" unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.total} current={currentTotalCoverage} recommended={recommendedTotalCoverage} format="pct" unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.served} current={baseline?.summary.served} recommended={summary.served} unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
-        <Impact label={t.unmet} current={baseline?.summary.closing_unmet} recommended={summary.closing_unmet} inverse unavailable={t.unavailable} currentLabel={baselineLabel} recommendedLabel={t.recommended} />
+        <Impact label={t('priority')} help={t('priorityHelp')} current={currentPriority} recommended={recommendedPriority} format="pct" unavailable={t('unavailable')} currentLabel={baselineLabel} recommendedLabel={t('recommended')} />
+        <Impact label={t('total')} current={currentTotalCoverage} recommended={recommendedTotalCoverage} format="pct" unavailable={t('unavailable')} currentLabel={baselineLabel} recommendedLabel={t('recommended')} />
+        <Impact label={t('served')} current={baseline?.summary.served} recommended={summary.served} unavailable={t('unavailable')} currentLabel={baselineLabel} recommendedLabel={t('recommended')} />
+        <Impact label={t('unmet')} current={baseline?.summary.closing_unmet} recommended={summary.closing_unmet} inverse unavailable={t('unavailable')} currentLabel={baselineLabel} recommendedLabel={t('recommended')} />
       </div>
     </section>
   )
