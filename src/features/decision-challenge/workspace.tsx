@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, CircleAlert, LockKeyhole, RefreshCw, Scale } from 'lucide-react'
+import { ArrowRight, CheckCircle2, CircleAlert, FileUp, LockKeyhole, RefreshCw, Scale } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { Locale } from '@/lib/observatory-i18n'
 import { marketingHref } from '@/lib/platform-urls'
+import { importResourceAllocationFile } from '@/features/resource-allocation/importer'
 import {
   loadChallenges,
   recordChallengeCta,
@@ -34,6 +35,11 @@ const copy = {
     title: 'Make the decision before QDIP does',
     intro: 'Allocate the same constrained resources QDIP will receive. Your choice is locked before the recommendation is calculated.',
     loading: 'Preparing the decision…',
+    ownData: 'Use your own data',
+    ownDataHelp: 'Upload aggregated Resource Allocation data (CSV / XML / XLSX). The file is validated before a new frozen challenge is created.',
+    upload: 'Upload data',
+    demoData: 'Use example data',
+    imported: 'Customer dataset loaded',
     scenario: 'Business situation',
     resources: 'Available teams',
     targets: 'Competing locations',
@@ -77,6 +83,11 @@ const copy = {
     title: 'Прийміть рішення раніше за QDIP',
     intro: 'Розподіліть ті самі обмежені ресурси, які отримає QDIP. Ваш вибір фіксується до розрахунку рекомендації.',
     loading: 'Готуємо рішення…',
+    ownData: 'Використати власні дані',
+    ownDataHelp: 'Завантажте агреговані дані Resource Allocation (CSV / XML / XLSX). Файл перевіряється до створення нового frozen challenge.',
+    upload: 'Завантажити дані',
+    demoData: 'Використати демо-дані',
+    imported: 'Дані клієнта завантажено',
     scenario: 'Бізнес-ситуація',
     resources: 'Доступні команди',
     targets: 'Конкуруючі локації',
@@ -120,6 +131,11 @@ const copy = {
     title: 'Podejmij decyzję, zanim zrobi to QDIP',
     intro: 'Przydziel te same ograniczone zasoby, które otrzyma QDIP. Twój wybór zostaje zablokowany przed obliczeniem rekomendacji.',
     loading: 'Przygotowywanie decyzji…',
+    ownData: 'Użyj własnych danych',
+    ownDataHelp: 'Prześlij zagregowane dane Resource Allocation (CSV / XML / XLSX). Plik jest walidowany przed utworzeniem nowego zamrożonego Challenge.',
+    upload: 'Prześlij dane',
+    demoData: 'Użyj danych demonstracyjnych',
+    imported: 'Dane klienta zostały wczytane',
     scenario: 'Sytuacja biznesowa',
     resources: 'Dostępne zespoły',
     targets: 'Konkurujące lokalizacje',
@@ -193,7 +209,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
   const [error, setError] = useState<string | null>(null)
   const [submissionId, setSubmissionId] = useState('')
 
-  async function begin() {
+  async function begin(scenarioOverride?: Record<string, unknown>) {
     setLoading(true)
     setError(null)
     setViolations([])
@@ -203,7 +219,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
       const definitions = await loadChallenges()
       const selected = definitions.find((item) => item.id === 'resource-allocation-v1') ?? definitions[0]
       if (!selected) throw new Error(t.unavailable)
-      const started = await startChallenge(selected.id)
+      const started = await startChallenge(selected.id, scenarioOverride)
       const { teams } = scenarioData(started)
       setDefinition(selected)
       setRun(started)
@@ -221,6 +237,19 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
     // One run is intentionally materialized once when this workspace mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function importCustomerScenario(file: File | undefined) {
+    if (!file) return
+    setLoading(true)
+    setError(null)
+    try {
+      const imported = await importResourceAllocationFile(file)
+      await begin(imported as unknown as Record<string, unknown>)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t.unavailable)
+      setLoading(false)
+    }
+  }
 
   const scenario = useMemo(() => scenarioData(run), [run])
   const complete = run?.status === 'COMPLETED' && run.result
@@ -335,6 +364,22 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
         <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl">{t.title}</h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-slate-400">{t.intro}</p>
       </div>
+
+      <section className="ds-card mb-6 p-6 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">{t.ownData}</div>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{t.ownDataHelp}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <label className="ds-button ds-button-primary ds-button-md cursor-pointer">
+              <FileUp className="h-4 w-4" />{t.upload}
+              <input className="sr-only" type="file" accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { const file = event.target.files?.[0]; void importCustomerScenario(file); event.currentTarget.value = '' }} />
+            </label>
+            <button className="ds-button ds-button-secondary ds-button-md" onClick={() => void begin()}>{t.demoData}</button>
+          </div>
+        </div>
+      </section>
 
       <section className="ds-card p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
