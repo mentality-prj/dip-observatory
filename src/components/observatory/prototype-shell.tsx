@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import { ChevronRight, Globe2, Home, Menu, SlidersHorizontal } from 'lucide-react'
+import { ChevronRight, FlaskConical, Globe2, Home, Menu, Network, Scale, SlidersHorizontal, UsersRound } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
@@ -21,6 +21,13 @@ const CHALLENGE_LABEL: Record<Locale, string> = {
   uk: 'Виклик рішень',
   pl: 'Wyzwanie decyzyjne',
 }
+const NAV_ICONS = {
+  challenge: Scale,
+  'resource-allocation': UsersRound,
+  'supply-network-optimization': Network,
+  'gtm-lab': FlaskConical,
+} as const
+
 const STUDIO_LABEL: Record<Locale, string> = {
   en: 'Open Studio',
   uk: 'Відкрити Studio',
@@ -50,10 +57,12 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
         aria-current={challengeActive ? 'page' : undefined}
         className={styles.navLink}
       >
-        {CHALLENGE_LABEL[locale]}
+        <Scale className={styles.navIcon} aria-hidden />
+        <span>{CHALLENGE_LABEL[locale]}</span>
       </a>
       {navItems.map((item) => {
         const active = isActive(item.route)
+        const Icon = NAV_ICONS[item.id as keyof typeof NAV_ICONS]
         return (
           <a
             ref={active ? activeNavRef : undefined}
@@ -62,7 +71,8 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             aria-current={active ? 'page' : undefined}
             className={styles.navLink}
           >
-            {item.title[locale]}
+            {Icon ? <Icon className={styles.navIcon} aria-hidden /> : null}
+            <span>{item.title[locale]}</span>
           </a>
         )
       })}

@@ -35,6 +35,12 @@
     color 150ms ease,
     border-color 150ms ease;
 }
+.navIcon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
 .navLink:hover {
   color: var(--ds-text);
   background: var(--ds-hover);
