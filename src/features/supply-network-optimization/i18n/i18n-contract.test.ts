@@ -46,6 +46,8 @@ describe('Supply Network i18n contract', () => {
       new URL('../network-map.tsx', import.meta.url),
       new URL('../executive-decision-summary.tsx', import.meta.url),
       new URL('../../../components/observatory/prototype-shell.tsx', import.meta.url),
+      new URL('../../../components/observatory/observatory-home.tsx', import.meta.url),
+      new URL('../../../components/observatory/decision-narrative.tsx', import.meta.url),
     ].map((url) => readFileSync(url, 'utf8'))
 
     for (const source of sources) {
