@@ -37,11 +37,12 @@ type Props = {
 
 const markerStyle = (
   kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable',
-  selected = false
+  selected = false,
+  ariaLabel = kind,
 ) => {
   const element = document.createElement('button')
   element.type = 'button'
-  element.setAttribute('aria-label', kind)
+  element.setAttribute('aria-label', ariaLabel)
   const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '34px' : '20px'
   // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
   element.style.width = size
@@ -299,7 +300,11 @@ export function NetworkMap({
 
       for (const warehouse of network.warehouses) {
         const unavailable = unavailableWarehouseIds.includes(warehouse.id)
-        const element = markerStyle(unavailable ? 'unavailable' : 'warehouse', selectedWarehouseId === warehouse.id)
+        const element = markerStyle(
+          unavailable ? 'unavailable' : 'warehouse',
+          selectedWarehouseId === warehouse.id,
+          t.warehouse,
+        )
         element.dataset.networkMarker = 'warehouse'
         element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
         element.addEventListener('click', (event) => {
@@ -311,7 +316,7 @@ export function NetworkMap({
         )
       }
       for (const store of network.demand_points) {
-        const element = markerStyle('store')
+        const element = markerStyle('store', false, t.store)
         element.dataset.networkMarker = 'store'
         element.title = demandDisplayLabel(store.id, locale, store.label)
         element.addEventListener('click', (event) => {
@@ -323,7 +328,7 @@ export function NetworkMap({
         )
       }
       for (const supplier of network.suppliers) {
-        const element = markerStyle('supplier')
+        const element = markerStyle('supplier', false, t.supplier)
         element.dataset.networkMarker = 'supplier'
         element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
         markersRef.current.push(
@@ -331,7 +336,7 @@ export function NetworkMap({
         )
       }
       for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
-        const element = markerStyle('candidate')
+        const element = markerStyle('candidate', false, t.warehouseOption)
         element.dataset.networkMarker = 'candidate'
         element.title = candidateOptionLabel(index, locale)
         markersRef.current.push(
@@ -339,7 +344,7 @@ export function NetworkMap({
         )
       }
       if (manualCandidate) {
-        const element = markerStyle('manual-candidate')
+        const element = markerStyle('manual-candidate', false, t.warehouseOption)
         element.dataset.networkMarker = 'manual-candidate'
         element.title = manualCandidate.label ?? manualCandidate.id
         markersRef.current.push(
