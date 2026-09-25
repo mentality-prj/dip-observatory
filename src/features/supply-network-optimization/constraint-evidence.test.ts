@@ -44,15 +44,10 @@ function result(overrides: Partial<OptimizationResult> = {}): OptimizationResult
 describe('supply constraint evidence normalization', () => {
   it('moves legacy soft concentration evidence out of hard bottlenecks', () => {
     const optimized = result({
-      binding_constraints: [
-        'concentration-target:central-hub:0',
-        'warehouse-capacity:central-hub:0',
-      ],
+      binding_constraints: ['concentration-target:central-hub:0', 'warehouse-capacity:central-hub:0'],
     })
 
-    expect(hardConstraintEvidence(optimized, SUPPLY_NETWORK_DEMO)).toEqual([
-      'warehouse-capacity:central-hub:0',
-    ])
+    expect(hardConstraintEvidence(optimized, SUPPLY_NETWORK_DEMO)).toEqual(['warehouse-capacity:central-hub:0'])
     expect(softPreferenceEvidence(optimized)).toEqual(['concentration-target:central-hub:0'])
   })
 
