@@ -20,7 +20,7 @@ export function ResourceAllocationAssignmentExplanation({ explanation, locale }:
       </div>
       <div className="mt-5 grid gap-2 md:grid-cols-2">
         {explanation.rationale_codes.map((code) => {
-          const text = t('has')(code) ? t(code) : null
+          const text = t.has(code) ? t(code) : null
           return typeof text === 'string' ? <div key={code} className="border-l-2 border-emerald-400 pl-3 text-sm text-slate-300">{text}</div> : null
         })}
       </div>
