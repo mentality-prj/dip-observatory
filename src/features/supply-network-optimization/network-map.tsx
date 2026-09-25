@@ -222,7 +222,8 @@ export function NetworkMap({
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
-  const [flowView, setFlowView] = useState<'current' | 'qdip' | 'compare'>('current')
+  const [flowViewOverride, setFlowViewOverride] = useState<'current' | 'qdip' | 'compare' | null>(null)
+  const flowView = flowViewOverride ?? (result ? 'qdip' : 'current')
   const [projectedFlows, setProjectedFlows] = useState<Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>>([])
   const projectFlowsRef = useRef<() => void>(() => undefined)
   const markersRef = useRef<MapLibreMarker[]>([])
@@ -232,10 +233,6 @@ export function NetworkMap({
   useEffect(() => {
     clickRef.current = onMapClick
   }, [onMapClick])
-
-  useEffect(() => {
-    setFlowView(result ? 'qdip' : 'current')
-  }, [result])
 
   useEffect(() => {
     let cancelled = false
@@ -403,6 +400,7 @@ export function NetworkMap({
     selectedWarehouseId,
     unavailableWarehouseIds,
     flowView,
+    t,
   ])
 
 
@@ -437,7 +435,7 @@ export function NetworkMap({
                     : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
                 aria-pressed={flowView === mode}
-                onClick={() => setFlowView(mode)}
+                onClick={() => setFlowViewOverride(mode)}
               >
                 {label}
               </button>
