@@ -35,7 +35,7 @@ export function PrototypeShell({
   const navItems = observableUseCases()
   const shared = useTranslations('shared')
   const observatory = useTranslations('observatory')
-  const useCaseT = useTranslations('useCases')
+  const caseT = useTranslations('useCases')
   const isActive = (href: string) =>
     activeRoute === href || activeRoute.startsWith(`${href}/`)
   const activeItem = navItems.find((item) => isActive(item.route))
@@ -49,7 +49,7 @@ export function PrototypeShell({
   const activeLabel = challengeActive
     ? observatory('challenge')
     : activeItem
-      ? useCaseT(`${activeItem.id}.title`)
+      ? caseT(`${activeItem.id}.title`)
       : 'Observatory'
 
   const nav = (
@@ -75,7 +75,7 @@ export function PrototypeShell({
             className={styles.navLink}
           >
             {Icon ? <Icon className={styles.navIcon} aria-hidden /> : null}
-            <span>{useCaseT(`${item.id}.title`)}</span>
+            <span>{caseT(`${item.id}.title`)}</span>
           </a>
         )
       })}
