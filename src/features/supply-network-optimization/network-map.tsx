@@ -38,7 +38,7 @@ type Props = {
 const markerStyle = (
   kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable',
   selected = false,
-  ariaLabel = kind,
+  ariaLabel: string = kind,
 ) => {
   const element = document.createElement('button')
   element.type = 'button'
