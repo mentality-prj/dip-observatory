@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
 import { useTranslations } from '@/i18n/provider'
-import type { Locale } from '@/lib/observatory-i18n'
 import type { ResourceAllocationInput } from '../contracts'
 import {
   buildResourceAllocationExampleCsv,
@@ -36,14 +35,12 @@ function downloadCsv(content: string, fileName: string) {
 }
 
 export function ResourceAllocationImport({
-  locale,
   onImported,
 }: {
-  locale: Locale
   onImported: (input: ResourceAllocationInput, fileName: string) => void
 }) {
   const t = useTranslations('resourceAllocation.importer')
-  const recordTypes = t('raw')<Record<string, string>>('recordTypes')
+  const recordTypes = t.raw<Record<string, string>>('recordTypes')
   const inputRef = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
   const [stage, setStage] = useState<ImportStage>('idle')
