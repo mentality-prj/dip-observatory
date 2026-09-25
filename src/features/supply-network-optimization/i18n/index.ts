@@ -1,4 +1,4 @@
-import type { Locale } from '@/i18n/config'
+import { LOCALE_TAGS, type Locale } from '@/i18n/config'
 import {
   formatNumber as formatLocaleNumber,
   rawMessage,
@@ -34,7 +34,7 @@ export function formatNumber(value: number, locale: Locale) {
 }
 
 export function formatMoney(value: number, locale: Locale) {
-  return new Intl.NumberFormat(locale === 'en' ? 'en-GB' : locale === 'uk' ? 'uk-UA' : 'pl-PL', {
+  return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: 'currency',
     currency: 'UAH',
     currencyDisplay: 'narrowSymbol',
