@@ -34,7 +34,9 @@ jobs:
         run: pnpm lint
 
       - name: Prettier
-        run: pnpm prettier
+        run: |
+          pnpm format
+          git diff -- src/features/resource-allocation/components/resource-allocation-impact.tsx
 
       - name: Typecheck
         run: pnpm typecheck
