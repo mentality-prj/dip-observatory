@@ -1,6 +1,11 @@
 'use client'
 
 import { ArrowDown, ArrowUp, CircleHelp } from 'lucide-react'
+import type { Locale } from '@/lib/observatory-i18n'
+import {
+  resourceAllocationExtraI18n,
+  resourceAllocationImpactI18n,
+} from '../i18n'
 import type {
   ResourceAllocationBaseline,
   ResourceAllocationDemandSummary,
@@ -15,80 +20,10 @@ type Props = {
   totalTeams: number
   moveEvents: number
   planningDays?: number
-  locale: 'uk' | 'en' | 'pl'
+  locale: Locale
 }
 
-const labels = {
-  uk: {
-    compareKicker: '02 · РЕЗУЛЬТАТ',
-    compareTitle: 'Що дає рекомендація QDIP у цьому сценарії',
-    recommendationKicker: '02 · ОЧІКУВАНИЙ ЕФЕКТ',
-    recommendationTitle: 'Очікуваний результат рекомендованого плану',
-    recommendationSubtitle: 'Референсний план не вдалося оцінити в тому самому сценарії, тому показано лише рекомендований план.',
-    current: 'Поточний план',
-    canonicalBaseline: 'Референсний ручний план',
-    recommended: 'План QDIP',
-    syntheticBaseline: 'Синтетичний допустимий план для порівняння. Це не фактичний план вашої організації.',
-    priorityHelp: 'Частка пріоритетних одиниць потреб, які модельований план дозволяє обслужити протягом усього планового періоду.',
-    moveEvents: 'Переміщень за весь період',
-    scenario: 'Модельована оцінка синтетичного планового сценарію.',
-    unavailable: 'референсний план не оцінено',
-    priority: 'Покриття пріоритетних потреб',
-    total: 'Загальне покриття потреб',
-    served: 'Потреб буде покрито',
-    unmet: 'Залишиться без покриття',
-    moved: 'Команд змінять локацію',
-    of: 'з',
-    heroSuffix: 'одиниць потреб більше',
-    heroSameTeams: 'без додаткових команд',
-  },
-  en: {
-    compareKicker: '02 · RESULT',
-    compareTitle: 'What the QDIP recommendation changes in this scenario',
-    recommendationKicker: '02 · EXPECTED IMPACT',
-    recommendationTitle: 'Expected result of the recommended plan',
-    recommendationSubtitle: 'The reference plan could not be evaluated under the same scenario, so only the recommended plan is shown.',
-    current: 'Current plan',
-    canonicalBaseline: 'Reference manual plan',
-    recommended: 'QDIP plan',
-    syntheticBaseline: 'Synthetic feasible comparison plan. It is not your organisation’s actual plan.',
-    priorityHelp: 'Share of priority demand units the modelled plan can serve across the full planning horizon.',
-    moveEvents: 'Move events over the horizon',
-    scenario: 'Modelled estimate for a synthetic planning scenario.',
-    unavailable: 'reference plan not evaluated',
-    priority: 'Priority needs coverage',
-    total: 'Total needs coverage',
-    served: 'Needs served',
-    unmet: 'Needs left uncovered',
-    moved: 'Teams changing location',
-    of: 'of',
-    heroSuffix: 'more demand units',
-    heroSameTeams: 'without adding teams',
-  },
-  pl: {
-    compareKicker: '02 · WYNIK',
-    compareTitle: 'Co zmienia rekomendacja QDIP w tym scenariuszu',
-    recommendationKicker: '02 · OCZEKIWANY EFEKT',
-    recommendationTitle: 'Oczekiwany wynik rekomendowanego planu',
-    recommendationSubtitle: 'Planu referencyjnego nie udało się ocenić w tym samym scenariuszu, dlatego pokazano tylko rekomendowany plan.',
-    current: 'Bieżący plan',
-    canonicalBaseline: 'Referencyjny plan ręczny',
-    recommended: 'Plan QDIP',
-    syntheticBaseline: 'Syntetyczny wykonalny plan porównawczy. Nie jest to rzeczywisty plan Państwa organizacji.',
-    priorityHelp: 'Udział priorytetowych jednostek potrzeb, które modelowany plan może obsłużyć w całym horyzoncie planowania.',
-    moveEvents: 'Przemieszczenia w całym horyzoncie',
-    scenario: 'Modelowana ocena syntetycznego scenariusza planowania.',
-    unavailable: 'plan referencyjny nieoceniony',
-    priority: 'Pokrycie potrzeb priorytetowych',
-    total: 'Łączne pokrycie potrzeb',
-    served: 'Obsłużone potrzeby',
-    unmet: 'Potrzeby bez pokrycia',
-    moved: 'Zespoły zmieniające lokalizację',
-    of: 'z',
-    heroSuffix: 'jednostek potrzeb więcej',
-    heroSameTeams: 'bez dodatkowych zespołów',
-  },
-} as const
+
 
 export function ResourceAllocationImpact({
   metrics,
@@ -100,7 +35,8 @@ export function ResourceAllocationImpact({
   planningDays,
   locale,
 }: Props) {
-  const t = labels[locale]
+  const t = resourceAllocationImpactI18n[locale]
+  const extra = resourceAllocationExtraI18n[locale]
   const compared = Boolean(baseline)
   const baselineLabel = baseline?.kind === 'canonical-plan' ? t.canonicalBaseline : t.current
   const currentPriority = baseline?.summary.priority_coverage ?? baseline?.metrics.priority_coverage
@@ -136,7 +72,7 @@ export function ResourceAllocationImpact({
 
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-3xl text-xs leading-relaxed text-slate-500">
-          <p>{t.scenario}{planningDays ? ` · ${planningDays} ${locale === 'uk' ? 'днів' : locale === 'pl' ? 'dni' : 'days'}` : ''}</p>
+          <p>{t.scenario}{planningDays ? ` · ${planningDays} ${extra.daysUnit}` : ''}</p>
           {baseline?.kind === 'canonical-plan' && <p className="mt-1">{t.syntheticBaseline}</p>}
         </div>
         <div className="text-left sm:text-right">
