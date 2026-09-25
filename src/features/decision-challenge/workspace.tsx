@@ -321,10 +321,10 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
     }
   }
 
-  if (loading) return <main className="ds-page"><div className="ds-card p-8">{t.loading}</div></main>
+  if (loading) return <main className="ds-container ds-page"><div className="ds-card p-8">{t.loading}</div></main>
   if (!run || !definition) {
     return (
-      <main className="ds-page">
+      <main className="ds-container ds-page">
         <div className="ds-card p-8">
           <CircleAlert className="mb-4 h-6 w-6 text-rose-300" />
           <p>{error ?? t.unavailable}</p>
@@ -358,7 +358,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
           : t.humanBetter
 
   return (
-    <main className="ds-page">
+    <main className="ds-container ds-page">
       <div className="mb-8">
         <div className="observatory-eyebrow">{t.eyebrow}</div>
         <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl">{t.title}</h1>
