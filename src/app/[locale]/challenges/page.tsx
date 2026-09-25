@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { PrototypeShell } from '@/components/observatory/prototype-shell'
 import { DecisionChallengeWorkspace } from '@/features/decision-challenge'
-import { decisionChallengeMetadataI18n } from '@/features/decision-challenge/i18n'
+import { getDecisionChallengeMetadataI18n } from '@/features/decision-challenge/i18n'
 import { isSupportedLocale, type Locale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 
 export function generateStaticParams() {
@@ -17,7 +17,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   if (!isSupportedLocale(locale)) return {}
-  const metadata = decisionChallengeMetadataI18n[locale]
+  const metadata = getDecisionChallengeMetadataI18n(locale)
   return {
     title: { absolute: metadata.title },
     description: metadata.description,
