@@ -6,17 +6,10 @@ export function getDecisionChallengeI18n(locale: Locale) {
 }
 
 export function getDecisionChallengeMetadataI18n(locale: Locale) {
-  return rawMessage<{ title: string; description: string }>(
-    locale,
-    'decisionChallenge.metadata',
-  )
+  return rawMessage<{ title: string; description: string }>(locale, 'decisionChallenge.metadata')
 }
 
-export function formatChallengeMoney(
-  value: number,
-  currency: string,
-  locale: Locale,
-) {
+export function formatChallengeMoney(value: number, currency: string, locale: Locale) {
   return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: 'currency',
     currency,

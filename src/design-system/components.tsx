@@ -48,7 +48,11 @@ export function DesignSystemProvider({
   children: ReactNode
   className?: string
 }) {
-  return <div data-ds-theme={theme} data-ds-mode={mode} className={className}>{children}</div>
+  return (
+    <div data-ds-theme={theme} data-ds-mode={mode} className={className}>
+      {children}
+    </div>
+  )
 }
 
 export function ProductLockup({
@@ -107,12 +111,12 @@ export function ProductSwitchLink({
   nativeNavigation = false,
 }: ProductSwitch & { nativeNavigation?: boolean }) {
   return (
-    <NavigationLink
-      className="ds-product-switch-link"
-      href={href}
-      native={nativeNavigation}
-    >
-      {icon ? <span className="ds-product-switch-icon" aria-hidden>{icon}</span> : null}
+    <NavigationLink className="ds-product-switch-link" href={href} native={nativeNavigation}>
+      {icon ? (
+        <span className="ds-product-switch-icon" aria-hidden>
+          {icon}
+        </span>
+      ) : null}
       <span>{label}</span>
     </NavigationLink>
   )
@@ -147,15 +151,14 @@ export function ProductHeader({
     <header className={cn('ds-product-header', className)}>
       <div className="ds-product-header-inner">
         <div className="ds-product-header-brand">
-          <ProductLockup
-            href={href}
-            brandHref={brandHref}
-            product={product}
-            nativeNavigation={nativeNavigation}
-          />
+          <ProductLockup href={href} brandHref={brandHref} product={product} nativeNavigation={nativeNavigation} />
           {brandStatus ? <div className="ds-product-header-brand-status">{brandStatus}</div> : null}
         </div>
-        {navigation ? <div className="ds-product-header-center">{navigation}</div> : <div className="ds-product-header-spacer" />}
+        {navigation ? (
+          <div className="ds-product-header-center">{navigation}</div>
+        ) : (
+          <div className="ds-product-header-spacer" />
+        )}
         <div className="ds-product-header-actions">
           {status}
           {siteLink ? <ProductSwitchLink {...siteLink} nativeNavigation={nativeNavigation} /> : null}
@@ -220,11 +223,38 @@ export function ProductShell({
   )
 }
 
-export function Surface({ as: Tag = 'section', className, children }: { as?: 'section' | 'article' | 'div'; className?: string; children: ReactNode }) {
+export function Surface({
+  as: Tag = 'section',
+  className,
+  children,
+}: {
+  as?: 'section' | 'article' | 'div'
+  className?: string
+  children: ReactNode
+}) {
   return <Tag className={cn('ds-surface', className)}>{children}</Tag>
 }
-export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: ReactNode; title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
-  return <div className="ds-page-header"><div>{eyebrow ? <div className="ds-page-eyebrow">{eyebrow}</div> : null}<h1 className="ds-h1">{title}</h1>{description ? <p className="ds-page-description">{description}</p> : null}</div>{actions ? <div className="ds-page-actions">{actions}</div> : null}</div>
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  actions,
+}: {
+  eyebrow?: ReactNode
+  title: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <div className="ds-page-header">
+      <div>
+        {eyebrow ? <div className="ds-page-eyebrow">{eyebrow}</div> : null}
+        <h1 className="ds-h1">{title}</h1>
+        {description ? <p className="ds-page-description">{description}</p> : null}
+      </div>
+      {actions ? <div className="ds-page-actions">{actions}</div> : null}
+    </div>
+  )
 }
 export function StatusBadge({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn('ds-status-badge', className)}>{children}</span>

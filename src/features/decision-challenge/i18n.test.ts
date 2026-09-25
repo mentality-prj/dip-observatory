@@ -30,9 +30,10 @@ describe('Decision Challenge i18n contract', () => {
     ['metadata', getDecisionChallengeMetadataI18n],
   ] as const) {
     it(`keeps EN/UK/PL ${name} shapes aligned and string-only`, () => {
-      const resources = Object.fromEntries(
-        SUPPORTED_LOCALES.map((locale) => [locale, load(locale)]),
-      ) as Record<(typeof SUPPORTED_LOCALES)[number], unknown>
+      const resources = Object.fromEntries(SUPPORTED_LOCALES.map((locale) => [locale, load(locale)])) as Record<
+        (typeof SUPPORTED_LOCALES)[number],
+        unknown
+      >
 
       expect(deepKeys(resources.uk)).toEqual(deepKeys(resources.en))
       expect(deepKeys(resources.pl)).toEqual(deepKeys(resources.en))

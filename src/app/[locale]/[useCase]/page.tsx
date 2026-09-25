@@ -25,11 +25,7 @@ export function generateStaticParams() {
   )
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<UseCasePageParams>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<UseCasePageParams> }): Promise<Metadata> {
   const { locale, useCase: routeSegment } = await params
   if (!isSupportedLocale(locale)) return {}
 
@@ -64,11 +60,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function UseCasePage({
-  params,
-}: {
-  params: Promise<UseCasePageParams>
-}) {
+export default async function UseCasePage({ params }: { params: Promise<UseCasePageParams> }) {
   const { locale, useCase: routeSegment } = await params
   if (!isSupportedLocale(locale)) notFound()
   const application = resolveUseCase(routeSegment)

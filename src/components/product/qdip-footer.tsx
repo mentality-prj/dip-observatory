@@ -28,9 +28,13 @@ function FooterLink({
 }) {
   const brandAttribute = dataFooterBrand ? '' : undefined
   return native ? (
-    <a className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>{children}</a>
+    <a className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>
+      {children}
+    </a>
   ) : (
-    <Link className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>{children}</Link>
+    <Link className={className} href={href} aria-label={ariaLabel} data-footer-brand={brandAttribute}>
+      {children}
+    </Link>
   )
 }
 
@@ -52,7 +56,11 @@ export function QdipFooter({
   const native = variant === 'observatory'
 
   return (
-    <footer className={`${styles.footer}${className ? ` ${className}` : ''}`} data-variant={variant} data-testid={testId}>
+    <footer
+      className={`${styles.footer}${className ? ` ${className}` : ''}`}
+      data-variant={variant}
+      data-testid={testId}
+    >
       <div className={styles.inner}>
         <FooterLink
           className={styles.brand}
@@ -66,15 +74,25 @@ export function QdipFooter({
 
         {showNavigation ? (
           <nav className={styles.navigation} aria-label={shared('footerNavigation')}>
-            <FooterLink href={path(locale, 'how-it-works')} native={native}>{copy('how')}</FooterLink>
-            <FooterLink href={path(locale, 'use-cases')} native={native}>{copy('useCases')}</FooterLink>
-            <FooterLink href={path(locale, 'core')} native={native}>{copy('core')}</FooterLink>
-            <FooterLink href={path(locale, 'core/research')} native={native}>{copy('research')}</FooterLink>
+            <FooterLink href={path(locale, 'how-it-works')} native={native}>
+              {copy('how')}
+            </FooterLink>
+            <FooterLink href={path(locale, 'use-cases')} native={native}>
+              {copy('useCases')}
+            </FooterLink>
+            <FooterLink href={path(locale, 'core')} native={native}>
+              {copy('core')}
+            </FooterLink>
+            <FooterLink href={path(locale, 'core/research')} native={native}>
+              {copy('research')}
+            </FooterLink>
           </nav>
         ) : null}
 
         <div className={styles.meta}>
-          <span className={styles.copyright} data-footer-copyright>© {new Date().getFullYear()} QDIP</span>
+          <span className={styles.copyright} data-footer-copyright>
+            © {new Date().getFullYear()} QDIP
+          </span>
           <span className={styles.disclaimer}>{copy('disclaimer')}</span>
         </div>
       </div>

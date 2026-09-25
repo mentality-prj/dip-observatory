@@ -1,7 +1,17 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { ChevronRight, FlaskConical, Globe2, Home, Menu, Network, Scale, SlidersHorizontal, UsersRound } from 'lucide-react'
+import {
+  ChevronRight,
+  FlaskConical,
+  Globe2,
+  Home,
+  Menu,
+  Network,
+  Scale,
+  SlidersHorizontal,
+  UsersRound,
+} from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { useTranslations } from '@/i18n/provider'
 import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
@@ -25,19 +35,13 @@ const NAV_ICONS = {
   'gtm-lab': FlaskConical,
 } as const
 
-export function PrototypeShell({
-  locale,
-  children,
-  activeRoute,
-  theme = 'cyan',
-}: PrototypeShellProps) {
+export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }: PrototypeShellProps) {
   const activeNavRef = useRef<HTMLAnchorElement>(null)
   const navItems = observableUseCases()
   const shared = useTranslations('shared')
   const observatory = useTranslations('observatory')
   const caseT = useTranslations('useCases')
-  const isActive = (href: string) =>
-    activeRoute === href || activeRoute.startsWith(`${href}/`)
+  const isActive = (href: string) => activeRoute === href || activeRoute.startsWith(`${href}/`)
   const activeItem = navItems.find((item) => isActive(item.route))
   const challengeActive = isActive('/challenges')
 

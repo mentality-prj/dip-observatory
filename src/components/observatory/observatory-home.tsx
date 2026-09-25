@@ -5,8 +5,6 @@ import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { createTranslator } from '@/i18n/runtime'
 import { observableUseCases } from '@/use-cases/registry'
 
-
-
 const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
@@ -80,7 +78,9 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
               </a>
             </div>
             <aside className="bg-white/[.018] p-6 md:p-8" aria-label={t('evidence')}>
-              <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">{t('evidence')}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">
+                {t('evidence')}
+              </span>
               <div className="mt-5 grid gap-4">
                 {evidenceItems.map((item, index) => (
                   <div key={item} className="flex gap-3 border-b border-white/8 pb-4 last:border-0">
@@ -126,8 +126,12 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                       {caseMessages(`${useCase.id}.tag`)}
                     </span>
                   </div>
-                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">{caseMessages(`${useCase.id}.title`)}</h3>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{caseMessages(`${useCase.id}.description`)}</p>
+                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">
+                    {caseMessages(`${useCase.id}.title`)}
+                  </h3>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
+                    {caseMessages(`${useCase.id}.description`)}
+                  </p>
                   <div className="mt-auto flex items-center gap-2 pt-7 text-sm font-semibold text-cyan-200">
                     {t('open')}
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
