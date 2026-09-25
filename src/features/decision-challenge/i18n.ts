@@ -14,8 +14,8 @@ export function getDecisionChallengeMetadataI18n(locale: Locale) {
 
 export function formatChallengeMoney(
   value: number,
-  locale: Locale,
   currency: string,
+  locale: Locale,
 ) {
   return new Intl.NumberFormat(LOCALE_TAGS[locale], {
     style: 'currency',
