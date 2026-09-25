@@ -62,6 +62,7 @@ const optimized: OptimizationResult = {
       warehouse_id: 'north-hub',
       used: true,
       inventory_units: 500,
+      peak_storage_units: 500,
       capacity_units: 2300,
       capacity_utilization: 0.217,
       receiving_units: 100,
@@ -86,10 +87,17 @@ const optimized: OptimizationResult = {
   kpis: {
     service_level: 0.95,
     maximum_fulfillment_share: 0.55,
+    maximum_inventory_share: 0.45,
     unserved_demand_units: 20,
     unserved_demand_value: 2400,
+    stockout_cost: 2400,
     logistics_cost: 12000,
     holding_cost: 1000,
+    facility_fixed_cost: 0,
+    handling_cost: 0,
+    reallocation_cost: 0,
+    lead_time_penalty: 0,
+    inbound_cancellation_cost: 0,
     inventory_value_at_risk: 0,
     objective_value: 15400,
     estimated_business_impact: 15400,
@@ -170,9 +178,11 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="en" />)
 
     expect(screen.getByTestId('mock-map')).toBeVisible()
-    expect(screen.getByText(/Optimize where inventory is stored/)).toBeVisible()
+    expect(screen.getByText(/When a warehouse drops out/)).toBeVisible()
+    expect(screen.getByText('Try the disruption in 3 steps')).toBeVisible()
+    expect(screen.getByText('What this demonstrates')).toBeVisible()
 
-    await user.click(screen.getByRole('button', { name: 'Calculate current plan' }))
+    await user.click(screen.getByRole('button', { name: 'See current network plan' }))
     await waitFor(() => expect(api.runOptimization).toHaveBeenCalledTimes(1))
     expect(screen.getByText('95%')).toBeVisible()
   })
@@ -195,7 +205,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     expect(screen.getByText('Ending storage capacity · Kyiv warehouse')).toBeVisible()
     expect(screen.getByText('Disruption + new plan')).toBeVisible()
 
-    await user.click(screen.getByRole('button', { name: 'Find options to strengthen the network' }))
+    await user.click(screen.getByRole('button', { name: 'Find the best recovery options' }))
     await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
     expect(screen.getByText('Warehouse option 1')).toBeVisible()
   })
@@ -213,7 +223,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     const user = userEvent.setup()
     render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
 
-    await user.click(screen.getByRole('button', { name: 'Розрахувати поточний план' }))
+    await user.click(screen.getByRole('button', { name: 'Показати поточний план мережі' }))
     await waitFor(() => expect(api.runOptimization).toHaveBeenCalledTimes(1))
     expect(screen.getByText('Чому отримано такий результат')).toBeVisible()
     expect(screen.queryByText('Технічні деталі')).not.toBeInTheDocument()
@@ -287,8 +297,8 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
   })
 
   it.each([
-    ['uk', 'Оптимізуйте розміщення запасів'],
-    ['pl', 'Optymalizuj rozmieszczenie zapasów'],
+    ['uk', 'Якщо склад вибуває з мережі'],
+    ['pl', 'Gdy magazyn wypada z sieci'],
   ] as const)('renders localized %s copy', (locale, heading) => {
     render(<SupplyNetworkOptimizationWorkspace locale={locale} />)
     expect(screen.getByText(new RegExp(heading))).toBeVisible()

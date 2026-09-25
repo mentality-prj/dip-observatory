@@ -18,6 +18,10 @@ export type Warehouse = {
   supported_storage_classes: StorageClass[]
   current_inventory: Record<string, number>
   operating_cost?: number
+  opening_cost?: number
+  opening_cost_amortization_days?: number
+  fixed_operating_cost_per_day?: number
+  handling_cost_per_unit?: number
   is_candidate?: boolean
 }
 
@@ -45,6 +49,7 @@ export type DeliveryRoute = {
   lead_time_days: number
   capacity_units_per_day: number
   cost_per_unit: number
+  transport_mode?: string
 }
 
 export type TransferRoute = {
@@ -53,6 +58,7 @@ export type TransferRoute = {
   lead_time_days: number
   capacity_units_per_day: number
   cost_per_unit: number
+  transport_mode?: string
 }
 
 export type InboundSupply = {
@@ -66,12 +72,15 @@ export type InboundSupply = {
     transport_cost_per_unit: number
     lead_time_days: number
     capacity_units: number
+    transport_mode?: string
   }[]
 }
 
-export type CurrentFlow = {
+export type BaselineFulfillment = {
   warehouse_id: string
   demand_point_id: string
+  product_class_id: string
+  units_per_day: number
 }
 
 export type SupplyNetwork = {
@@ -82,12 +91,17 @@ export type SupplyNetwork = {
   inbound_supply: InboundSupply[]
   delivery_routes: DeliveryRoute[]
   transfer_routes: TransferRoute[]
+  baseline_fulfillment: BaselineFulfillment[]
   unavailable_warehouse_ids: string[]
   policy: {
     planning_horizon_days: number
     minimum_service_level: number
     maximum_node_inventory_exposure: number
     maximum_node_fulfillment_share: number
+    emergency_maximum_node_fulfillment_share: number
+    service_objective_mode: 'economic-with-service-floor' | 'lexicographic-service-then-cost'
+    reallocation_cost_per_unit: number
+    inbound_cancellation_penalty_per_unit: number
     solver_time_limit_seconds: number
     stockout_penalty_multiplier: number
     concentration_penalty_per_unit: number
@@ -106,6 +120,7 @@ export type OptimizationResult = {
     lead_time_days: number
     departure_period: number
     cost: number
+    transport_mode?: string
   }[]
   inbound_allocation: {
     supply_id: string
@@ -115,6 +130,7 @@ export type OptimizationResult = {
     units: number
     lead_time_days: number
     cost: number
+    transport_mode?: string
   }[]
   transfers: {
     from_warehouse_id: string
@@ -124,11 +140,13 @@ export type OptimizationResult = {
     lead_time_days: number
     departure_period: number
     cost: number
+    transport_mode?: string
   }[]
   warehouse_utilization: {
     warehouse_id: string
     used: boolean
     inventory_units: number
+    peak_storage_units: number
     capacity_units: number
     capacity_utilization: number
     receiving_units: number
@@ -150,10 +168,17 @@ export type OptimizationResult = {
   kpis: {
     service_level: number
     maximum_fulfillment_share: number
+    maximum_inventory_share: number
     unserved_demand_units: number
     unserved_demand_value: number
+    stockout_cost: number
     logistics_cost: number
     holding_cost: number
+    facility_fixed_cost: number
+    handling_cost: number
+    reallocation_cost: number
+    lead_time_penalty: number
+    inbound_cancellation_cost: number
     inventory_value_at_risk: number
     objective_value: number
     estimated_business_impact: number
@@ -178,6 +203,10 @@ export type CandidateWarehouse = {
   dispatch_capacity_units_per_day: number
   supported_storage_classes: StorageClass[]
   operating_cost: number
+  opening_cost: number
+  opening_cost_amortization_days: number
+  fixed_operating_cost_per_day: number
+  handling_cost_per_unit: number
 }
 
 export type CandidateResult = {
@@ -192,6 +221,10 @@ export type CandidateResult = {
   objective_improvement?: number
   required_capacity_units?: number
   configured_capacity_units?: number
+  required_receiving_capacity_units_per_day?: number
+  required_dispatch_capacity_units_per_day?: number
+  configured_receiving_capacity_units_per_day?: number
+  configured_dispatch_capacity_units_per_day?: number
   inventory_allocation?: OptimizationResult['ending_inventory']
   stores_served?: string[]
   logistics_cost?: number

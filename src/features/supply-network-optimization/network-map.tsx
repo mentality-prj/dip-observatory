@@ -5,7 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type {
   CandidateResult,
   CandidateWarehouse,
-  CurrentFlow,
+  BaselineFulfillment,
   DemandPoint,
   OptimizationResult,
   SupplyNetwork,
@@ -21,7 +21,7 @@ type Props = {
   unavailableWarehouseIds: string[]
   candidateAreas: CandidateResult[]
   manualCandidate: CandidateWarehouse | null
-  currentFlows: CurrentFlow[]
+  currentFlows: BaselineFulfillment[]
   selectedWarehouseId: string | null
   onWarehouseSelect: (warehouse: Warehouse) => void
   onStoreSelect: (store: DemandPoint) => void
@@ -57,7 +57,7 @@ const markerStyle = (
   element.style.boxShadow = selected
     ? '0 0 0 4px #facc15, 0 0 0 7px rgba(15,23,42,.82), 0 2px 12px rgba(0,0,0,.65)'
     : '0 1px 8px rgba(0,0,0,.45)'
-  if (kind === 'supplier' || kind === 'candidate') {
+  if (kind === 'supplier' || kind === 'candidate' || kind === 'manual-candidate') {
     element.style.clipPath = 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'
     element.style.borderRadius = '0'
   }
@@ -110,23 +110,42 @@ type FlowSegment = {
   from: [number, number]
   to: [number, number]
   units?: number
+  local?: boolean
 }
 
 export function buildFlowSegments(
   network: SupplyNetwork,
-  currentFlows: CurrentFlow[],
+  currentFlows: BaselineFulfillment[],
   result: OptimizationResult | null,
   manualCandidate: CandidateWarehouse | null,
   candidateAreas: CandidateResult[]
 ): FlowSegment[] {
   const segments: FlowSegment[] = []
 
+  const currentAggregated = new Map<string, { warehouseId: string; demandPointId: string; units: number }>()
   for (const item of currentFlows) {
-    if (network.unavailable_warehouse_ids.includes(item.warehouse_id)) continue
-    const from = coordinate(network, item.warehouse_id, manualCandidate, candidateAreas)
-    const to = coordinate(network, item.demand_point_id, manualCandidate, candidateAreas)
-    if (from && to && (from[0] !== to[0] || from[1] !== to[1])) {
-      segments.push({ kind: 'current', from, to })
+    const key = `${item.warehouse_id}:${item.demand_point_id}`
+    const existing = currentAggregated.get(key)
+    if (existing) existing.units += item.units_per_day
+    else {
+      currentAggregated.set(key, {
+        warehouseId: item.warehouse_id,
+        demandPointId: item.demand_point_id,
+        units: item.units_per_day,
+      })
+    }
+  }
+  for (const item of currentAggregated.values()) {
+    const from = coordinate(network, item.warehouseId, manualCandidate, candidateAreas)
+    const to = coordinate(network, item.demandPointId, manualCandidate, candidateAreas)
+    if (from && to) {
+      segments.push({
+        kind: 'current',
+        from,
+        to,
+        units: item.units,
+        local: from[0] === to[0] && from[1] === to[1],
+      })
     }
   }
 
@@ -164,8 +183,14 @@ export function buildFlowSegments(
   for (const flow of aggregated.values()) {
     const from = coordinate(network, flow.fromId, manualCandidate, candidateAreas)
     const to = coordinate(network, flow.toId, manualCandidate, candidateAreas)
-    if (from && to && (from[0] !== to[0] || from[1] !== to[1])) {
-      segments.push({ kind: flow.kind, from, to, units: flow.units })
+    if (from && to) {
+      segments.push({
+        kind: flow.kind,
+        from,
+        to,
+        units: flow.units,
+        local: from[0] === to[0] && from[1] === to[1],
+      })
     }
   }
   return segments
@@ -191,6 +216,7 @@ export function NetworkMap({
   const [projectedFlows, setProjectedFlows] = useState<Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>>([])
   const projectFlowsRef = useRef<() => void>(() => undefined)
   const markersRef = useRef<MapLibreMarker[]>([])
+  const boundsKeyRef = useRef('')
   const clickRef = useRef(onMapClick)
 
   useEffect(() => {
@@ -308,6 +334,27 @@ export function NetworkMap({
         )
       }
 
+      const visibleCoordinates = [
+        ...network.warehouses.map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...network.demand_points.map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...network.suppliers.map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...candidateAreas.filter((item) => item.feasible).map((item) => [item.longitude, item.latitude] as [number, number]),
+        ...(manualCandidate ? [[manualCandidate.longitude, manualCandidate.latitude] as [number, number]] : []),
+      ]
+      const boundsKey = visibleCoordinates.map((item) => item.join(',')).join('|')
+      if (visibleCoordinates.length > 0 && boundsKey !== boundsKeyRef.current) {
+        const longitudes = visibleCoordinates.map(([longitude]) => longitude)
+        const latitudes = visibleCoordinates.map(([, latitude]) => latitude)
+        map.fitBounds(
+          [
+            [Math.min(...longitudes), Math.min(...latitudes)],
+            [Math.max(...longitudes), Math.max(...latitudes)],
+          ],
+          { padding: 54, maxZoom: 6.2, duration: 0 }
+        )
+        boundsKeyRef.current = boundsKey
+      }
+
       const flowSegments = buildFlowSegments(network, currentFlows, result, manualCandidate, candidateAreas)
       const projectFlows = () => {
         setProjectedFlows(flowSegments.map((segment, index) => {
@@ -339,6 +386,10 @@ export function NetworkMap({
     0,
     ...projectedFlows.filter((item) => item.kind !== 'current').map((item) => item.units ?? 0)
   )
+  const maxCurrentFlowUnits = Math.max(
+    0,
+    ...projectedFlows.filter((item) => item.kind === 'current').map((item) => item.units ?? 0)
+  )
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950">
@@ -365,7 +416,35 @@ export function NetworkMap({
             const optimizedWidth = maxOptimizedFlowUnits > 0 && flow.units
               ? 2.5 + 4 * Math.sqrt(flow.units / maxOptimizedFlowUnits)
               : 4.5
-            const flowWidth = isCurrent ? 3.5 : optimizedWidth
+            const currentWidth = maxCurrentFlowUnits > 0 && flow.units
+              ? 2.5 + 3 * Math.sqrt(flow.units / maxCurrentFlowUnits)
+              : 3.5
+            const flowWidth = isCurrent ? currentWidth : optimizedWidth
+            if (flow.local) {
+              return (
+                <g key={`${flow.kind}-${flow.index}`}>
+                  <circle
+                    cx={flow.x1}
+                    cy={flow.y1}
+                    r={22 + flowWidth}
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth={flowWidth + 3}
+                    strokeOpacity={0.78}
+                    strokeDasharray={dash}
+                  />
+                  <circle
+                    cx={flow.x1}
+                    cy={flow.y1}
+                    r={22 + flowWidth}
+                    fill="none"
+                    stroke={stroke}
+                    strokeWidth={flowWidth}
+                    strokeDasharray={dash}
+                  />
+                </g>
+              )
+            }
             return (
               <g key={`${flow.kind}-${flow.index}`}>
                 <line
@@ -416,7 +495,17 @@ export function NetworkMap({
         {currentFlows.length > 0 ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-blue-800">→</span>
-            {locale === 'uk' ? 'Поточні потоки' : locale === 'pl' ? 'Bieżące przepływy' : 'Current flows'}
+            {network.unavailable_warehouse_ids.length > 0
+              ? locale === 'uk'
+                ? 'Базові потоки до збою'
+                : locale === 'pl'
+                  ? 'Przepływy bazowe przed zakłóceniem'
+                  : 'Baseline flows before disruption'
+              : locale === 'uk'
+                ? 'Поточні потоки'
+                : locale === 'pl'
+                  ? 'Bieżące przepływy'
+                  : 'Current flows'}
           </span>
         ) : null}
         {projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (

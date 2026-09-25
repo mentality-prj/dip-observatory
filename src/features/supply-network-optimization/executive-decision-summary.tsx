@@ -12,7 +12,7 @@ const copy = {
     constraintTitle: 'What is preventing a better result', routeEvidence: (r: string, c: number, h: number) => `${r} is already at its delivery limit on ${c} of ${h} days.`,
     routeVsStorage: (u: string) => `Warehouses reach only ${u} utilization, so storage space is not the main problem. Delivery capacity is.`,
     genericConstraint: 'The current network limits a better result. Open the technical details below to see which limits are reached.',
-    impactNote: 'Estimate based on the demo demand and cost assumptions; not an accounting forecast.', delta: 'vs baseline', improve: 'Test improvement options', unservedDelta: 'unserved',
+    impactNote: 'Model estimate based on synthetic demo demand and cost assumptions; not realized savings or an accounting forecast.', delta: 'vs baseline', improve: 'Test recovery options', unservedDelta: 'unserved',
   },
   uk: {
     title: 'Підсумок рішення', baselineHeadline: (s: string) => `За поточним планом мережа може виконати ${s} попиту`, disruptionHeadline: (s: string) => `Після збою мережа може виконати ${s} попиту`,
@@ -20,7 +20,7 @@ const copy = {
     constraintTitle: 'Що заважає отримати кращий результат', routeEvidence: (r: string, c: number, h: number) => `${r} уже працює на межі пропускної здатності у ${c} з ${h} днів.`,
     routeVsStorage: (u: string) => `Склади завантажені максимум на ${u}, тому проблема не в нестачі місця. Обмеження виникає на доставці.`,
     genericConstraint: 'Поточна конфігурація мережі не дозволяє отримати кращий результат. У технічних деталях нижче можна побачити, які саме ліміти досягнуті.',
-    impactNote: 'Оцінка на основі демонстраційного попиту та заданих витрат; це не бухгалтерський прогноз.', delta: 'проти базового сценарію', improve: 'Перевірити варіанти покращення', unservedDelta: 'непокрито',
+    impactNote: 'Модельна оцінка на синтетичних демонстраційних даних про попит і витрати; це не фактично отримана економія і не бухгалтерський прогноз.', delta: 'проти базового сценарію', improve: 'Перевірити варіанти відновлення', unservedDelta: 'непокрито',
   },
   pl: {
     title: 'Podsumowanie decyzji', baselineHeadline: (s: string) => `Przy bieżącym planie sieć może zrealizować ${s} popytu`, disruptionHeadline: (s: string) => `Po zakłóceniu sieć może zrealizować ${s} popytu`,
@@ -28,7 +28,7 @@ const copy = {
     constraintTitle: 'Co nie pozwala uzyskać lepszego wyniku', routeEvidence: (r: string, c: number, h: number) => `${r} wykorzystuje pełną dostępną przepustowość przez ${c} z ${h} dni.`,
     routeVsStorage: (u: string) => `Magazyny są wykorzystane maksymalnie w ${u}, więc problemem nie jest brak miejsca. Ograniczeniem jest przepustowość dostaw.`,
     genericConstraint: 'Obecna konfiguracja sieci nie pozwala uzyskać lepszego wyniku. W szczegółach technicznych poniżej można sprawdzić, które limity zostały osiągnięte.',
-    impactNote: 'Szacunek oparty na demonstracyjnym popycie i przyjętych kosztach; nie jest prognozą księgową.', delta: 'względem bazowego scenariusza', improve: 'Sprawdź warianty poprawy', unservedDelta: 'niezaspokojone',
+    impactNote: 'Estymacja modelu oparta na syntetycznych danych demonstracyjnych o popycie i kosztach; nie oznacza zrealizowanych oszczędności ani prognozy księgowej.', delta: 'względem bazowego scenariusza', improve: 'Sprawdź warianty odbudowy planu', unservedDelta: 'niezaspokojone',
   },
 } as const
 
