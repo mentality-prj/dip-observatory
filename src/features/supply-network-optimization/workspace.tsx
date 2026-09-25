@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { AlertTriangle, MapPin, Network, Play, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
+import { AlertTriangle, MapPin, Network, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
-import { runCandidateAreas, runManualCandidate, runOptimization, runUnavailableScenario } from './api'
+import { runCandidateAreas, runManualCandidate, runUnavailableScenario } from './api'
 import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import {
@@ -36,7 +36,6 @@ const copy = {
     title: 'When a warehouse drops out, see the least-cost way to keep stores supplied.',
     intro:
       'Start with a working retail network, take one warehouse offline, and see how QDIP reroutes inventory, protects demand and tests whether another warehouse would pay off.',
-    optimize: 'See current network plan',
     optimizing: 'Calculating…',
     current: 'Current network',
     optimized: 'Current plan',
@@ -138,7 +137,7 @@ const copy = {
     warehouseList: 'Warehouses',
     chooseWarehouse: 'Choose a warehouse from the list or tap it on the map.',
     walkthrough: 'Try the disruption in 3 steps',
-    step1: '1 · Show the current plan',
+    step1: '1 · Review the current operational plan on the map',
     step2: '2 · Choose a warehouse and take it offline',
     step3: '3 · Compare the recovery plan and test warehouse options',
     prospectOutcome: 'What this demonstrates',
@@ -150,7 +149,6 @@ const copy = {
     title: 'Якщо склад вибуває з мережі — знайдіть найвигідніший спосіб зберегти постачання магазинів.',
     intro:
       'Почніть із робочої роздрібної мережі, зробіть один склад недоступним і подивіться, як QDIP перенаправляє запаси, захищає попит та перевіряє, чи окупиться інша складська локація.',
-    optimize: 'Показати поточний план мережі',
     optimizing: 'Розраховуємо…',
     current: 'Поточна мережа',
     optimized: 'Поточний план',
@@ -251,7 +249,7 @@ const copy = {
     warehouseList: 'Склади',
     chooseWarehouse: 'Оберіть склад зі списку або натисніть на нього на мапі.',
     walkthrough: 'Перевірте збій у 3 кроки',
-    step1: '1 · Покажіть поточний план',
+    step1: '1 · Перегляньте поточний операційний план на мапі',
     step2: '2 · Оберіть склад і зробіть його недоступним',
     step3: '3 · Порівняйте план відновлення та варіанти нового складу',
     prospectOutcome: 'Що демонструє цей сценарій',
@@ -263,7 +261,6 @@ const copy = {
     title: 'Gdy magazyn wypada z sieci, znajdź najtańszy sposób utrzymania dostaw do sklepów.',
     intro:
       'Zacznij od działającej sieci detalicznej, wyłącz jeden magazyn i zobacz, jak QDIP przekierowuje zapasy, chroni popyt oraz sprawdza, czy dodatkowa lokalizacja magazynu się opłaca.',
-    optimize: 'Pokaż bieżący plan sieci',
     optimizing: 'Obliczamy…',
     current: 'Bieżąca sieć',
     optimized: 'Bieżący plan',
@@ -365,7 +362,7 @@ const copy = {
     warehouseList: 'Magazyny',
     chooseWarehouse: 'Wybierz magazyn z listy lub dotknij go na mapie.',
     walkthrough: 'Sprawdź zakłócenie w 3 krokach',
-    step1: '1 · Pokaż bieżący plan',
+    step1: '1 · Sprawdź bieżący plan operacyjny na mapie',
     step2: '2 · Wybierz magazyn i wyłącz go z sieci',
     step3: '3 · Porównaj plan odbudowy i warianty nowego magazynu',
     prospectOutcome: 'Co pokazuje ten scenariusz',
@@ -538,23 +535,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const manualCandidateShare = manualCandidate
     ? manualFulfillmentDistribution.find((item) => item.warehouseId === manualCandidate.id)?.share ?? 0
     : 0
-  const optimize = useCallback(async () => {
-    if (pending) return
-    setPending(true)
-    setError(null)
-    try {
-      setBaseline(await runOptimization(SUPPLY_NETWORK_DEMO))
-      setScenario(null)
-      setDecisionValue(null)
-      setCandidateAreas([])
-      setManualResult(null)
-      setManualEvaluation(null)
-    } catch (reason) {
-      setError(t[requestErrorKey(reason)])
-    } finally {
-      setPending(false)
-    }
-  }, [pending, t])
+
 
   const makeUnavailable = useCallback(
     async (warehouseId: string) => {
@@ -668,9 +649,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <p className="text-xs text-slate-500">{t.productClasses}</p>
               </div>
             </div>
-            <Button className="mt-6 w-full" onClick={optimize} disabled={pending}>
-              <Play className="h-4 w-4" /> {pending ? t.optimizing : t.optimize}
-            </Button>
+
           </CardContent>
         </Card>
       </section>
@@ -779,19 +758,78 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,.65fr)]">
-        <LazyNetworkMap
-          locale={locale}
-          network={activeNetwork}
-          result={visibleResult}
-          unavailableWarehouseIds={unavailableIds}
-          candidateAreas={candidateAreas}
-          manualCandidate={manualCandidate}
-          currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
-          selectedWarehouseId={selectedWarehouse?.id ?? null}
-          onWarehouseSelect={selectWarehouse}
-          onStoreSelect={selectStore}
-          onMapClick={selectMapLocation}
-        />
+        <div className="min-w-0 space-y-5">
+          <LazyNetworkMap
+            locale={locale}
+            network={activeNetwork}
+            result={visibleResult}
+            unavailableWarehouseIds={unavailableIds}
+            candidateAreas={candidateAreas}
+            manualCandidate={manualCandidate}
+            currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
+            selectedWarehouseId={selectedWarehouse?.id ?? null}
+            onWarehouseSelect={selectWarehouse}
+            onStoreSelect={selectStore}
+            onMapClick={selectMapLocation}
+          />
+
+          {visibleResult ? (
+            <section className="mt-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t.evidence}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 lg:grid-cols-3">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          {visibleResult.ending_inventory.slice(0, 8).map((item) => (
+                            <p key={`${item.warehouse_id}-${item.product_class_id}`}>
+                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          {visibleResult.inbound_allocation.map((item) => (
+                            <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
+                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                              {item.transport_mode ? ` · ${item.transport_mode}` : ''}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {visibleResult.binding_constraints.slice(0, 8).map((item) => (
+                            <Badge key={item} variant="neutral">
+                              {humanizeConstraint(item, locale)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200">{t.costBreakdown}</h3>
+                        <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          <p>{t.logistics}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
+                          <p>{t.stockoutCost}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
+                          <p>{t.reallocationCost}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
+                          <p>{t.facilityCost}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
+                          <p>{t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
+                        </div>
+                      </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          ) : null}
+        </div>
 
         <div className="space-y-4">
           <Card>
@@ -1085,62 +1123,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         </div>
       </section>
 
-      {visibleResult ? (
-        <section className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.evidence}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 lg:grid-cols-3">
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.endingInventory}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      {visibleResult.ending_inventory.slice(0, 8).map((item) => (
-                        <p key={`${item.warehouse_id}-${item.product_class_id}`}>
-                          {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                          {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      {visibleResult.inbound_allocation.map((item) => (
-                        <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
-                          {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                          {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                          {item.transport_mode ? ` · ${item.transport_mode}` : ''}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.bindingConstraints}</h3>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {visibleResult.binding_constraints.slice(0, 8).map((item) => (
-                        <Badge key={item} variant="neutral">
-                          {humanizeConstraint(item, locale)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-200">{t.costBreakdown}</h3>
-                    <div className="mt-2 space-y-1 text-xs text-slate-400">
-                      <p>{t.logistics}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
-                      <p>{t.stockoutCost}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
-                      <p>{t.reallocationCost}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
-                      <p>{t.facilityCost}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
-                      <p>{t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
-                    </div>
-                  </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
+
 
       {scenario ? (
         <section id="supply-alternatives" className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
