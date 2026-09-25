@@ -117,18 +117,26 @@ function distanceKm(latitudeA: number, longitudeA: number, latitudeB: number, lo
   return 2 * earthRadiusKm * Math.asin(Math.sqrt(a))
 }
 
+const DELIVERY_ROUTE_MAX_DISTANCE_KM = 850
+
+function deliveryLeadTimeDays(routeDistanceKm: number): number {
+  if (routeDistanceKm <= 80) return 0
+  if (routeDistanceKm <= 550) return 1
+  return 2
+}
+
 function buildDeliveryRoutes(stores: DemandPoint[]): DeliveryRoute[] {
   return stores.flatMap((store) =>
     WAREHOUSES.map((warehouse) => ({
       warehouse,
       distanceKm: distanceKm(warehouse.latitude, warehouse.longitude, store.latitude, store.longitude),
     }))
+      .filter(({ distanceKm: routeDistanceKm }) => routeDistanceKm <= DELIVERY_ROUTE_MAX_DISTANCE_KM)
       .sort((a, b) => a.distanceKm - b.distanceKm)
-      .slice(0, 2)
-      .map(({ warehouse, distanceKm: routeDistanceKm }, optionIndex) => ({
+      .map(({ warehouse, distanceKm: routeDistanceKm }) => ({
         from_node_id: warehouse.id,
         to_demand_point_id: store.id,
-        lead_time_days: optionIndex === 0 ? 0 : 1,
+        lead_time_days: deliveryLeadTimeDays(routeDistanceKm),
         capacity_units_per_day: 120,
         cost_per_unit: Math.round(120 + routeDistanceKm * 0.95),
         transport_mode: 'road',
