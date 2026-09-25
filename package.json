@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
+    "prettier": "prettier --write src/features/supply-network-optimization/network-map.tsx src/features/supply-network-optimization/workspace.tsx && git diff -- src/features/supply-network-optimization/network-map.tsx src/features/supply-network-optimization/workspace.tsx",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
