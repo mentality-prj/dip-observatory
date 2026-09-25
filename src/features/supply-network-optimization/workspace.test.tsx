@@ -20,11 +20,16 @@ vi.mock('./lazy-map', () => ({
       demand_points: Array<{ id: string; label: string }>
     }
     selectedWarehouseId: string | null
+    selectedCandidateId: string | null
     onWarehouseSelect: (warehouse: unknown) => void
     onStoreSelect: (store: unknown) => void
     onMapClick: (latitude: number, longitude: number) => void
   }) => (
-    <div data-testid="mock-map" data-selected-warehouse={props.selectedWarehouseId ?? ''}>
+    <div
+      data-testid="mock-map"
+      data-selected-warehouse={props.selectedWarehouseId ?? ''}
+      data-selected-candidate={props.selectedCandidateId ?? ''}
+    >
       <button onClick={() => props.onWarehouseSelect(props.network.warehouses[0])}>select warehouse</button>
       <button onClick={() => props.onStoreSelect(props.network.demand_points[0])}>select store</button>
       <button onClick={() => props.onMapClick(51.5, 20.2)}>select map location</button>
@@ -166,6 +171,28 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
           required_capacity_units: 410,
           service_level: 0.96,
         },
+        {
+          candidate_id: 'dominated-west',
+          label: 'Western demand area',
+          latitude: 50.1,
+          longitude: 23.4,
+          feasible: true,
+          used: true,
+          pareto_efficient: false,
+          objective_value: 14500,
+          objective_improvement: 900,
+          required_capacity_units: 420,
+          service_level: 0.95,
+        },
+        {
+          candidate_id: 'infeasible-south',
+          label: 'Southern demand area',
+          latitude: 47.1,
+          longitude: 31.2,
+          feasible: false,
+          used: false,
+          pareto_efficient: false,
+        },
       ],
       pareto_frontier_candidate_ids: ['recommended-central'],
       connectivity_rule: 'demo-geographic-v1',
@@ -228,6 +255,15 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     await user.click(screen.getByRole('button', { name: 'Find the best recovery options' }))
     await waitFor(() => expect(api.runCandidateAreas).toHaveBeenCalledTimes(1))
     expect(screen.getByText('Warehouse option 1')).toBeVisible()
+    expect(screen.getByText('Warehouse option 2')).toBeVisible()
+    expect(screen.getByText('Warehouse option 3')).toBeVisible()
+    expect(screen.getByText('Worth considering')).toBeVisible()
+    expect(screen.getByText('Dominated')).toBeVisible()
+    expect(screen.getByText('Infeasible')).toBeVisible()
+    expect(screen.getByText(/Locations tested: 3/)).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: /Warehouse option 2/ }))
+    expect(screen.getByTestId('mock-map')).toHaveAttribute('data-selected-candidate', 'dominated-west')
   })
 
   it('lets the user select a warehouse from the list without using the map', async () => {
