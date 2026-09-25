@@ -24,6 +24,14 @@ const actionEvaluationSchema = z.object({
   economic_inputs: z.record(z.string(), z.number()).default({}),
   constraint_violations: z.array(z.string()).default([]),
   evidence: z.array(z.record(z.string(), z.unknown())).default([]),
+  evaluation_reproducibility: z.object({
+    evaluator_id: z.string(),
+    evaluator_version: z.string(),
+    context_hash: z.string(),
+    random_seed: z.number().nullable().optional(),
+    sample_set_ref: z.string().nullable().optional(),
+    common_random_numbers: z.boolean(),
+  }),
   data_quality_warnings: z.array(z.string()).default([]),
 })
 
@@ -99,6 +107,9 @@ export const challengeRunSchema = z.object({
     problem_hash: z.string(),
     problem: z.record(z.string(), z.unknown()),
     evidence_refs: z.array(z.string()).default([]),
+    evidence_revision: z.string(),
+    economic_model_hash: z.string(),
+    model_versions_hash: z.string(),
     created_at: z.string(),
   }),
   submission_id: z.string().nullable().optional(),

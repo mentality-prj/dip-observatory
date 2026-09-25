@@ -308,7 +308,25 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
   const result = run.result
   const currency = result?.human_economic_outcome.objective.currency ?? 'EUR'
   const delta = result?.economic_comparison.delta.nominal_delta ?? 0
-  const verdict = Math.abs(delta) < 0.000001 ? t.tie : delta > 0 ? t.qdipBetter : t.humanBetter
+  const direction = result?.human_economic_outcome.objective.direction
+  const comparisonConsistent =
+    result != null &&
+    result.human_economic_outcome.objective.objective_id ===
+      result.qdip_economic_outcome.objective.objective_id &&
+    result.human_economic_outcome.objective.metric_id ===
+      result.qdip_economic_outcome.objective.metric_id &&
+    result.human_economic_outcome.objective.direction ===
+      result.qdip_economic_outcome.objective.direction &&
+    result.human_economic_outcome.objective.unit ===
+      result.qdip_economic_outcome.objective.unit
+  const verdict =
+    !comparisonConsistent || !['maximize', 'minimize'].includes(direction ?? '')
+      ? null
+      : Math.abs(delta) < 0.000001
+        ? t.tie
+        : delta > 0
+          ? t.qdipBetter
+          : t.humanBetter
 
   return (
     <main className="ds-page">
@@ -382,7 +400,13 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
           <section className="ds-card mt-6 p-6 sm:p-8" data-testid="challenge-comparison">
             <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">03 · {t.comparison}</div>
             <h2 className="mt-2 text-2xl font-semibold">{t.comparison}</h2>
-            <p className="mt-3 text-sm text-slate-400">{verdict}</p>
+            {verdict ? (
+              <p className="mt-3 text-sm text-slate-400">{verdict}</p>
+            ) : (
+              <p role="alert" className="mt-3 text-sm text-rose-200">
+                Comparison unavailable: economic objective metadata is inconsistent.
+              </p>
+            )}
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <ValueCard label={t.human} value={formatMoney(result.human_economic_outcome.nominal_value, currency, locale)} />
               <ValueCard label={t.qdip} value={formatMoney(result.qdip_economic_outcome.nominal_value, currency, locale)} />
@@ -413,6 +437,11 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
                 <Meta label="Human action" value={result.human_action_hash.slice(0, 16)} />
                 <Meta label="QDIP action" value={result.qdip_action_hash.slice(0, 16)} />
                 <Meta label="Replay" value={result.reproducibility.reproducibility_token.slice(0, 16)} />
+                <Meta label="Evidence" value={run.snapshot.evidence_revision.slice(0, 16)} />
+                <Meta label="Economic model" value={run.snapshot.economic_model_hash.slice(0, 16)} />
+                <Meta label="Model versions" value={run.snapshot.model_versions_hash.slice(0, 16)} />
+                <Meta label="Evaluator" value={`${result.evaluation_reproducibility.evaluator_id} · ${result.evaluation_reproducibility.evaluator_version}`} />
+                <Meta label="Evaluation context" value={result.evaluation_reproducibility.context_hash.slice(0, 16)} />
               </dl>
             </div>
           </section>
