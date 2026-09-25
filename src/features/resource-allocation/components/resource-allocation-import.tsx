@@ -203,7 +203,7 @@ export function ResourceAllocationImport({
       <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-4">
         <b className="block text-sm">{t.starterTitle}</b>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.starterBody}</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="mt-3 grid gap-2 lg:grid-cols-2">
           <button
             type="button"
             data-testid="resource-download-template"
@@ -214,8 +214,8 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block break-words text-xs leading-4 text-slate-200">{t.downloadTemplate}</b>
-              <span className="mt-1 block break-words text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
+              <b className="block whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-4 text-slate-200">{t.downloadTemplate}</b>
+              <span className="mt-1 block whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] leading-4 text-slate-500">{t.templateHint}</span>
             </span>
           </button>
           <button
@@ -228,8 +228,8 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block break-words text-xs leading-4 text-rose-100">{t.downloadExample}</b>
-              <span className="mt-1 block break-words text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
+              <b className="block whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-4 text-rose-100">{t.downloadExample}</b>
+              <span className="mt-1 block whitespace-normal break-words [overflow-wrap:anywhere] text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
             </span>
           </button>
         </div>
@@ -331,7 +331,7 @@ export function ResourceAllocationImport({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="inline-flex items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-sm font-bold text-rose-200"
+              className="flex w-full min-w-0 items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
             >
               <Upload className="h-4 w-4" />
               {t.choose}
