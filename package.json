@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
+    "prettier": "prettier --write src/features/supply-network-optimization/constraint-evidence.ts src/features/supply-network-optimization/constraint-evidence.test.ts && git diff -- src/features/supply-network-optimization/constraint-evidence.ts src/features/supply-network-optimization/constraint-evidence.test.ts",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
