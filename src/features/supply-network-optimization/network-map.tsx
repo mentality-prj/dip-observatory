@@ -392,8 +392,8 @@ export function NetworkMap({
   )
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-950">
-      <div ref={containerRef} className="h-[420px] w-full sm:h-[540px]" data-testid="supply-network-map" />
+    <div className="relative h-[420px] overflow-hidden rounded-xl border border-white/10 bg-slate-950 sm:h-[540px]">
+      <div ref={containerRef} className="absolute inset-0 h-full w-full" data-testid="supply-network-map" />
       {projectedFlows.length > 0 ? (
         <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-testid="supply-network-flow-overlay">
           <defs>
