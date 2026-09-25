@@ -743,5 +743,11 @@
       "imported": "Imported dataset",
       "demo": "Demo dataset · synthetic aggregate data · no beneficiary PII"
     }
+  },
+  "metadata": {
+    "observatory": {
+      "title": "QDIP Observatory | English interface",
+      "description": "Explore QDIP decision applications, their inputs, alternatives and decision evidence."
+    }
   }
 }
