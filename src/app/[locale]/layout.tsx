@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 
+import { I18nProvider } from '@/i18n/provider'
 import { getLocaleMetadata, isSupportedLocale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 
 type LayoutProps = {
@@ -34,7 +35,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
           __html: `document.documentElement.lang=${JSON.stringify(locale)}`,
         }}
       />
-      {children}
+      <I18nProvider locale={locale}>{children}</I18nProvider>
     </>
   )
 }

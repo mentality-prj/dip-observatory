@@ -1,16 +1,10 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system'
+import { useTranslations } from '@/i18n/provider'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { OptimizationResult, SupplyNetwork } from './domain'
-import {
-  demandDisplayLabel,
-  formatMoney,
-  formatNumber,
-  getSupplyNetworkI18n,
-  interpolate,
-  warehouseDisplayLabel,
-} from './i18n'
+import { demandDisplayLabel, formatMoney, formatNumber, warehouseDisplayLabel } from './i18n'
 
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
@@ -49,7 +43,7 @@ export function ExecutiveDecisionSummary({
   locale: Locale
   network: SupplyNetwork
 }) {
-  const t = getSupplyNetworkI18n(locale).summary
+  const t = useTranslations('supplyNetwork.summary')
   const route = routeBottleneck(result)
   const utilization = peakUtilization(result)
   const baselineUtilization = baseline ? peakUtilization(baseline) : null
@@ -63,63 +57,63 @@ export function ExecutiveDecisionSummary({
     <section className="mb-5" aria-labelledby="supply-decision-summary">
       <Card>
         <CardHeader>
-          <CardTitle id="supply-decision-summary">{t.title}</CardTitle>
+          <CardTitle id="supply-decision-summary">{t('title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <h2 className="max-w-4xl text-2xl font-medium tracking-[-.02em] text-slate-100 md:text-3xl">
-            {interpolate(hasDisruption ? t.disruptionHeadline : t.baselineHeadline, {
+            {t(hasDisruption ? 'disruptionHeadline' : 'baselineHeadline', {
               service: pct(result.kpis.service_level),
             })}
           </h2>
           <p className="mt-3 text-sm text-slate-300">
-            <strong className="text-slate-100">{number(result.kpis.unserved_demand_units)}</strong> {t.unserved}.
+            <strong className="text-slate-100">{number(result.kpis.unserved_demand_units)}</strong> {t('unserved')}.
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <Metric
-              label={t.service}
+              label={t('service')}
               value={pct(result.kpis.service_level)}
               delta={serviceDelta === null ? null : signed(serviceDelta, ' pp')}
-              deltaLabel={t.delta}
+              deltaLabel={t('delta')}
             />
             <Metric
-              label={t.unservedMetric}
+              label={t('unservedMetric')}
               value={number(result.kpis.unserved_demand_units)}
               delta={unservedDelta === null ? null : signed(unservedDelta)}
-              deltaLabel={t.delta}
+              deltaLabel={t('delta')}
             />
             <Metric
-              label={t.logistics}
+              label={t('logistics')}
               value={formatMoney(result.kpis.logistics_cost, locale)}
               delta={logisticsDelta === null ? null : formatMoney(logisticsDelta, locale)}
-              deltaLabel={t.delta}
+              deltaLabel={t('delta')}
             />
             <Metric
-              label={t.impact}
+              label={t('impact')}
               value={formatMoney(result.kpis.estimated_business_impact, locale)}
-              note={t.impactNote}
+              note={t('impactNote')}
             />
             <Metric
-              label={t.utilization}
+              label={t('utilization')}
               value={pct(utilization)}
               delta={utilizationDelta === null ? null : signed(utilizationDelta, ' pp')}
-              deltaLabel={t.delta}
+              deltaLabel={t('delta')}
             />
           </div>
           <div className="mt-6 rounded-lg border border-amber-300/15 bg-amber-300/[.035] p-4">
-            <h3 className="text-sm font-medium text-slate-100">{t.constraintTitle}</h3>
+            <h3 className="text-sm font-medium text-slate-100">{t('constraintTitle')}</h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
               {route
-                ? `${interpolate(t.routeEvidence, {
+                ? `${t('routeEvidence', {
                     route: `${warehouseDisplayLabel(route.from, locale)} → ${demandDisplayLabel(route.to, locale)}`,
                     count: route.count,
                     horizon: network.policy.planning_horizon_days,
-                  })} ${utilization < 0.8 ? interpolate(t.routeVsStorage, { utilization: pct(utilization) }) : ''}`
-                : t.genericConstraint}
+                  })} ${utilization < 0.8 ? t('routeVsStorage', { utilization: pct(utilization) }) : ''}`
+                : t('genericConstraint')}
             </p>
           </div>
           {hasDisruption ? (
             <a href="#supply-alternatives" className="mt-5 inline-flex text-sm font-semibold text-cyan-200">
-              {t.improve} →
+              {t('improve')} →
             </a>
           ) : null}
         </CardContent>

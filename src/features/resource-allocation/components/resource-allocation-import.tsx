@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
-import type { Locale } from '@/lib/observatory-i18n'
+import { useTranslations } from '@/i18n/provider'
 import type { ResourceAllocationInput } from '../contracts'
 import {
   buildResourceAllocationExampleCsv,
@@ -14,147 +14,6 @@ import {
 } from '../importer'
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
-
-const copy = {
-  uk: {
-    title: 'Дані клієнта',
-    body: 'Завантажте агреговані операційні дані. Не додавайте ПІБ, телефони, адреси чи інші персональні дані бенефіціарів.',
-    choose: 'Вибрати CSV / XML / XLSX',
-    drop: 'Перетягніть файл сюди',
-    dropActive: 'Відпустіть файл для імпорту',
-    or: 'або',
-    template: 'Поля шаблону',
-    templateIntro:
-      'CSV містить кілька типів рядків. Поле record_type визначає, які дані описує рядок. Заповнюйте лише поля, що стосуються цього типу запису; решта можуть залишатися порожніми.',
-    recordTypesTitle: 'Типи записів',
-    recordTypes: {
-      settings: 'загальні параметри планування: бюджет, цільове покриття та одиниця планування',
-      community: 'локація та її постійні обмеження',
-      community_day: 'доступність і обмеження локації для конкретного дня',
-      demand: 'потреба в певній послузі, локації та дні',
-      team: 'команда, її навички, потужність і дозволені локації',
-      team_day: 'доступність або потужність команди для конкретного дня',
-      travel: 'вартість і час переміщення між двома локаціями',
-      baseline: 'ручний план для порівняння з рекомендацією QDIP',
-    },
-    columnsTitle: 'Колонки CSV',
-    multiValueHint:
-      'Якщо поле містить кілька значень, наприклад skills, days або allowed_communities, розділяйте їх символом |.',
-
-    starterTitle: 'Почніть з готового CSV',
-    starterBody:
-      'Завантажте мінімальний шаблон або повний вигаданий приклад, відредагуйте його в Excel / Google Sheets і завантажте назад.',
-    downloadTemplate: 'Завантажити CSV шаблон',
-    downloadExample: 'Завантажити демо CSV',
-    templateHint: 'Мінімальний валідний файл',
-    exampleHint: 'Повний 5-денний приклад',
-    reading: 'Читаю файл…',
-    validating: 'Перевіряю структуру та зв’язки…',
-    ready: 'Дані активовані',
-    communities: 'громад/локацій',
-    teams: 'команд',
-    demand: 'од. потреб',
-    replace: 'Замінити файл',
-    days: 'днів',
-    baseline: 'Ручний baseline',
-    baselineYes: 'надано',
-    baselineNo: 'не надано',
-    scheduled: 'майбутніх потреб',
-    rules: 'денних правил доступності',
-  },
-  en: {
-    title: 'Client data',
-    body: 'Upload aggregated operational data only. Do not include beneficiary names, phones, addresses or other personal data.',
-    choose: 'Choose CSV / XML / XLSX',
-    drop: 'Drag and drop a file here',
-    dropActive: 'Drop the file to import',
-    or: 'or',
-    template: 'Template columns',
-    templateIntro:
-      'The CSV contains several row types. The record_type field determines what each row describes. Fill only the columns relevant to that record type; the remaining columns may stay empty.',
-    recordTypesTitle: 'Record types',
-    recordTypes: {
-      settings: 'global planning settings: budget, target coverage and planning unit',
-      community: 'a location and its persistent constraints',
-      community_day: 'location availability and constraints for a specific day',
-      demand: 'service demand for a location and day',
-      team: 'a team, its skills, capacity and allowed locations',
-      team_day: 'team availability or capacity for a specific day',
-      travel: 'travel cost and time between two locations',
-      baseline: 'manual plan used for comparison with the QDIP recommendation',
-    },
-    columnsTitle: 'CSV columns',
-    multiValueHint:
-      'For fields with multiple values, such as skills, days or allowed_communities, separate values with |.',
-
-    starterTitle: 'Start from a ready CSV',
-    starterBody:
-      'Download the minimal template or a complete fictional example, edit it in Excel / Google Sheets, then upload it back here.',
-    downloadTemplate: 'Download CSV template',
-    downloadExample: 'Download example CSV',
-    templateHint: 'Minimal valid file',
-    exampleHint: 'Complete five-day example',
-    reading: 'Reading file…',
-    validating: 'Validating structure and references…',
-    ready: 'Dataset activated',
-    communities: 'communities / locations',
-    teams: 'teams',
-    demand: 'demand units',
-    replace: 'Replace file',
-    days: 'days',
-    baseline: 'Manual baseline',
-    baselineYes: 'provided',
-    baselineNo: 'not provided',
-    scheduled: 'scheduled demand',
-    rules: 'daily availability rules',
-  },
-  pl: {
-    title: 'Dane klienta',
-    body: 'Prześlij wyłącznie zagregowane dane operacyjne. Nie dodawaj danych osobowych beneficjentów.',
-    choose: 'Wybierz CSV / XML / XLSX',
-    drop: 'Przeciągnij i upuść plik tutaj',
-    dropActive: 'Upuść plik, aby go zaimportować',
-    or: 'lub',
-    template: 'Kolumny szablonu',
-    templateIntro:
-      'CSV zawiera kilka typów wierszy. Pole record_type określa, jakie dane opisuje dany wiersz. Wypełniaj tylko kolumny dotyczące danego typu rekordu; pozostałe mogą pozostać puste.',
-    recordTypesTitle: 'Typy rekordów',
-    recordTypes: {
-      settings: 'ogólne parametry planowania: budżet, docelowe pokrycie i jednostka planowania',
-      community: 'lokalizacja i jej stałe ograniczenia',
-      community_day: 'dostępność i ograniczenia lokalizacji dla konkretnego dnia',
-      demand: 'zapotrzebowanie na usługę w lokalizacji i dniu',
-      team: 'zespół, jego kompetencje, zdolność i dozwolone lokalizacje',
-      team_day: 'dostępność lub zdolność zespołu dla konkretnego dnia',
-      travel: 'koszt i czas przejazdu między lokalizacjami',
-      baseline: 'plan ręczny używany do porównania z rekomendacją QDIP',
-    },
-    columnsTitle: 'Kolumny CSV',
-    multiValueHint:
-      'Jeśli pole zawiera kilka wartości, np. skills, days lub allowed_communities, rozdzielaj je znakiem |.',
-
-    starterTitle: 'Zacznij od gotowego CSV',
-    starterBody:
-      'Pobierz minimalny szablon lub pełny fikcyjny przykład, edytuj go w Excelu / Google Sheets i prześlij ponownie.',
-    downloadTemplate: 'Pobierz szablon CSV',
-    downloadExample: 'Pobierz przykładowy CSV',
-    templateHint: 'Minimalny poprawny plik',
-    exampleHint: 'Pełny przykład na pięć dni',
-    reading: 'Odczytuję plik…',
-    validating: 'Sprawdzam strukturę i odwołania…',
-    ready: 'Zestaw danych aktywowany',
-    communities: 'społeczności / lokalizacji',
-    teams: 'zespołów',
-    demand: 'jedn. potrzeb',
-    replace: 'Zastąp plik',
-    days: 'dni',
-    baseline: 'Plan ręczny',
-    baselineYes: 'dostarczony',
-    baselineNo: 'brak',
-    scheduled: 'przyszłych potrzeb',
-    rules: 'dziennych reguł dostępności',
-  },
-} as const
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -175,13 +34,12 @@ function downloadCsv(content: string, fileName: string) {
 }
 
 export function ResourceAllocationImport({
-  locale,
   onImported,
 }: {
-  locale: Locale
   onImported: (input: ResourceAllocationInput, fileName: string) => void
 }) {
-  const t = copy[locale]
+  const t = useTranslations('resourceAllocation.importer')
+  const recordTypes = t.raw<Record<string, string>>('recordTypes')
   const inputRef = useRef<HTMLInputElement>(null)
   const dragDepth = useRef(0)
   const [stage, setStage] = useState<ImportStage>('idle')
@@ -249,14 +107,14 @@ export function ResourceAllocationImport({
       <div className="flex items-start gap-3">
         <FileSpreadsheet className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
         <div className="min-w-0">
-          <b className="block">{t.title}</b>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.body}</p>
+          <b className="block">{t('title')}</b>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('body')}</p>
         </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-4">
-        <b className="block text-sm">{t.starterTitle}</b>
-        <p className="mt-1 text-xs leading-relaxed text-slate-500">{t.starterBody}</p>
+        <b className="block text-sm">{t('starterTitle')}</b>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('starterBody')}</p>
         <div className="mt-3 grid grid-cols-1 gap-2">
           <button
             type="button"
@@ -266,9 +124,9 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t.downloadTemplate}</b>
+              <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t('downloadTemplate')}</b>
               <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
-                {t.templateHint}
+                {t('templateHint')}
               </span>
             </span>
           </button>
@@ -280,8 +138,10 @@ export function ResourceAllocationImport({
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal text-xs leading-5 text-rose-100">{t.downloadExample}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t.exampleHint}</span>
+              <b className="block whitespace-normal text-xs leading-5 text-rose-100">{t('downloadExample')}</b>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
+                {t('exampleHint')}
+              </span>
             </span>
           </button>
         </div>
@@ -313,12 +173,12 @@ export function ResourceAllocationImport({
         {dragging && !busy ? (
           <div aria-live="polite" data-testid="resource-import-drag-prompt">
             <Upload className="mx-auto h-7 w-7 text-rose-200" />
-            <div className="mt-3 text-sm font-bold">{t.dropActive}</div>
+            <div className="mt-3 text-sm font-bold">{t('dropActive')}</div>
           </div>
         ) : busy ? (
           <div aria-live="polite">
             <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
-            <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t.reading : t.validating}</div>
+            <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t('reading') : t('validating')}</div>
             {fileMeta && (
               <div className="mt-1 break-words text-xs text-slate-500">
                 {fileMeta.name} · {formatBytes(fileMeta.size)}
@@ -331,39 +191,39 @@ export function ResourceAllocationImport({
         ) : stage === 'ready' && fileMeta && summary ? (
           <div aria-live="polite">
             <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
-            <div className="mt-3 font-bold text-emerald-200">{t.ready}</div>
+            <div className="mt-3 font-bold text-emerald-200">{t('ready')}</div>
             <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
               {fileMeta.name} · {formatBytes(fileMeta.size)}
             </div>
             <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3">
               <div className="rounded-lg bg-white/[0.04] p-2">
                 <b className="block text-lg">{summary.communities}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.communities}</span>
+                <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
                 <b className="block text-lg">{summary.teams}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.teams}</span>
+                <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
                 <b className="block text-lg">{summary.horizonDemand}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.demand}</span>
+                <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
                 <b className="block text-lg">{summary.days}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.days}</span>
+                <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-sm">{summary.baselineProvided ? t.baselineYes : t.baselineNo}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.baseline}</span>
+                <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
+                <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
               </div>
               <div className="rounded-lg bg-white/[0.04] p-2">
                 <b className="block text-lg">{summary.scheduledDemand}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t.scheduled}</span>
+                <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
               </div>
             </div>
             {summary.availabilityRules > 0 && (
               <div className="mt-2 text-left text-[11px] text-slate-500">
-                {summary.availabilityRules} {t.rules}
+                {summary.availabilityRules} {t('rules')}
               </div>
             )}
             <button
@@ -372,21 +232,21 @@ export function ResourceAllocationImport({
               className="mt-4 inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
             >
               <FileCheck2 className="h-4 w-4" />
-              {t.replace}
+              {t('replace')}
             </button>
           </div>
         ) : (
           <>
             <Upload className={`mx-auto h-7 w-7 ${dragging ? 'text-rose-200' : 'text-rose-300'}`} />
-            <div className="mt-3 text-sm font-bold">{dragging ? t.dropActive : t.drop}</div>
-            <div className="my-2 text-xs text-slate-600">{t.or}</div>
+            <div className="mt-3 text-sm font-bold">{dragging ? t('dropActive') : t('drop')}</div>
+            <div className="my-2 text-xs text-slate-600">{t('or')}</div>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               className="flex w-full min-w-0 items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
             >
               <Upload className="h-4 w-4" />
-              {t.choose}
+              {t('choose')}
             </button>
             <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
           </>
@@ -400,13 +260,13 @@ export function ResourceAllocationImport({
       )}
 
       <details className="mt-4 text-xs text-slate-500">
-        <summary className="cursor-pointer font-semibold text-slate-400">{t.template}</summary>
+        <summary className="cursor-pointer font-semibold text-slate-400">{t('template')}</summary>
         <div className="mt-4 space-y-5 border-t border-white/10 pt-4">
-          <p className="leading-relaxed">{t.templateIntro}</p>
+          <p className="leading-relaxed">{t('templateIntro')}</p>
           <div>
-            <b className="text-slate-300">{t.recordTypesTitle}</b>
+            <b className="text-slate-300">{t('recordTypesTitle')}</b>
             <dl className="mt-3 grid gap-2">
-              {Object.entries(t.recordTypes).map(([type, description]) => (
+              {Object.entries(recordTypes).map(([type, description]) => (
                 <div
                   key={type}
                   className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3"
@@ -420,7 +280,7 @@ export function ResourceAllocationImport({
             </dl>
           </div>
           <div>
-            <b className="text-slate-300">{t.columnsTitle}</b>
+            <b className="text-slate-300">{t('columnsTitle')}</b>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => (
                 <code
@@ -432,7 +292,7 @@ export function ResourceAllocationImport({
               ))}
             </div>
           </div>
-          <p className="border-l-2 border-rose-300/30 pl-3 leading-relaxed">{t.multiValueHint}</p>
+          <p className="border-l-2 border-rose-300/30 pl-3 leading-relaxed">{t('multiValueHint')}</p>
         </div>
       </details>
     </section>
