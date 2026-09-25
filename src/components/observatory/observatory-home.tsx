@@ -11,7 +11,7 @@ const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization':
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
   const t = createTranslator(locale, 'observatoryHome')
-  const useCaseMessages = createTranslator(locale, 'useCases')
+  const caseMessages = createTranslator(locale, 'useCases')
   const decisionPatterns = createTranslator(locale, 'decisionPatterns')
   const alternativeItems = t.raw<Array<[string, string]>>('alternativeItems')
   const evidenceItems = t.raw<string[]>('evidenceItems')
@@ -123,11 +123,11 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                     <span className="flex items-center gap-2 text-[10px] font-semibold tracking-[.14em] text-slate-500">
                       <b className="text-cyan-300">{decisionPatterns(useCase.decisionPattern)}</b>
                       <span>·</span>
-                      {useCaseMessages(`${useCase.id}.tag`)}
+                      {caseMessages(`${useCase.id}.tag`)}
                     </span>
                   </div>
-                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">{useCaseMessages(`${useCase.id}.title`)}</h3>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{useCaseMessages(`${useCase.id}.description`)}</p>
+                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">{caseMessages(`${useCase.id}.title`)}</h3>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{caseMessages(`${useCase.id}.description`)}</p>
                   <div className="mt-auto flex items-center gap-2 pt-7 text-sm font-semibold text-cyan-200">
                     {t('open')}
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
