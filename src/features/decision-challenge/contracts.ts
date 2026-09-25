@@ -16,6 +16,15 @@ export const actionValidationSchema = z.object({
   violations: z.array(z.string()).default([]),
 })
 
+const evaluationReproducibilitySchema = z.object({
+  evaluator_id: z.string(),
+  evaluator_version: z.string(),
+  context_hash: z.string(),
+  random_seed: z.number().nullable().optional(),
+  sample_set_ref: z.string().nullable().optional(),
+  common_random_numbers: z.boolean(),
+})
+
 const actionEvaluationSchema = z.object({
   feasible: z.boolean(),
   score: z.number().nullable().optional(),
@@ -24,14 +33,7 @@ const actionEvaluationSchema = z.object({
   economic_inputs: z.record(z.string(), z.number()).default({}),
   constraint_violations: z.array(z.string()).default([]),
   evidence: z.array(z.record(z.string(), z.unknown())).default([]),
-  evaluation_reproducibility: z.object({
-    evaluator_id: z.string(),
-    evaluator_version: z.string(),
-    context_hash: z.string(),
-    random_seed: z.number().nullable().optional(),
-    sample_set_ref: z.string().nullable().optional(),
-    common_random_numbers: z.boolean(),
-  }),
+  evaluation_reproducibility: evaluationReproducibilitySchema,
   data_quality_warnings: z.array(z.string()).default([]),
 })
 
@@ -83,6 +85,7 @@ const resultSchema = z.object({
   economic_comparison: comparisonSchema,
   available_economic_metrics: z.array(z.string()),
   explanation: z.array(z.record(z.string(), z.unknown())).default([]),
+  evaluation_reproducibility: evaluationReproducibilitySchema,
   reproducibility: z.object({
     solver: z.string(),
     solver_version: z.string(),

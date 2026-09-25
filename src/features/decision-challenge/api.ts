@@ -28,7 +28,10 @@ export function loadChallenges() {
   return request('', challengeDefinitionSchema.array())
 }
 
-export function startChallenge(challengeId: string) {
+export function startChallenge(
+  challengeId: string,
+  scenario?: Record<string, unknown>
+) {
   return request('/runs', challengeRunSchema, {
     method: 'POST',
     body: JSON.stringify({ challenge_id: challengeId, ...(scenario ? { scenario } : {}) }),

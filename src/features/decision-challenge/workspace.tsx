@@ -328,7 +328,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
         <div className="ds-card p-8">
           <CircleAlert className="mb-4 h-6 w-6 text-rose-300" />
           <p>{error ?? t.unavailable}</p>
-          <button className="ds-button ds-button-primary ds-button-md mt-5" onClick={begin}>{t.restart}</button>
+          <button className="ds-button ds-button-primary ds-button-md mt-5" onClick={() => void begin()}>{t.restart}</button>
         </div>
       </main>
     )
@@ -435,7 +435,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
           {!locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={validating || submitting} onClick={validate}>{validating ? t.validating : t.validate}</button>}
           {!locked && <button className="ds-button ds-button-primary ds-button-md" disabled={!valid || submitting} onClick={submit}><LockKeyhole className="h-4 w-4" />{submitting ? t.evaluating : t.lock}</button>}
           {run.status === 'FAILED' && <button className="ds-button ds-button-primary ds-button-md" disabled={submitting} onClick={retry}><RefreshCw className="h-4 w-4" />{submitting ? t.evaluating : t.retry}</button>}
-          {locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={submitting} onClick={begin}>{t.restart}</button>}
+          {locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={submitting} onClick={() => void begin()}>{t.restart}</button>}
         </div>
         {error && <p role="alert" className="mt-4 text-sm text-rose-200">{error}</p>}
       </section>
