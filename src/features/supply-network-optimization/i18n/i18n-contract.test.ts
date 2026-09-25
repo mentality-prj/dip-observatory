@@ -1,13 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import {
-  supplyNetworkConstraintMessages,
-  supplyNetworkEntityMessages,
-  supplyNetworkMapMessages,
-  supplyNetworkSummaryMessages,
-  supplyNetworkWorkspaceMessages,
-} from './messages'
+import { getSupplyNetworkI18n } from './index'
 
 function deepKeys(value: unknown, prefix = ''): string[] {
   if (typeof value !== 'object' || value === null) return [prefix]
@@ -25,19 +19,17 @@ function assertStringLeaves(value: unknown): void {
 }
 
 describe('Supply Network i18n contract', () => {
-  for (const resources of [
-    supplyNetworkWorkspaceMessages,
-    supplyNetworkSummaryMessages,
-    supplyNetworkMapMessages,
-    supplyNetworkEntityMessages,
-    supplyNetworkConstraintMessages,
-  ]) {
-    it('keeps locale resource shapes aligned and string-only', () => {
-      expect(deepKeys(resources.uk)).toEqual(deepKeys(resources.en))
-      expect(deepKeys(resources.pl)).toEqual(deepKeys(resources.en))
-      assertStringLeaves(resources.en)
-      assertStringLeaves(resources.uk)
-      assertStringLeaves(resources.pl)
+  for (const namespace of ['workspace', 'summary', 'map', 'entities', 'constraints'] as const) {
+    it(`keeps ${namespace} locale resource shapes aligned and string-only`, () => {
+      const en = getSupplyNetworkI18n('en')[namespace]
+      const uk = getSupplyNetworkI18n('uk')[namespace]
+      const pl = getSupplyNetworkI18n('pl')[namespace]
+
+      expect(deepKeys(uk)).toEqual(deepKeys(en))
+      expect(deepKeys(pl)).toEqual(deepKeys(en))
+      assertStringLeaves(en)
+      assertStringLeaves(uk)
+      assertStringLeaves(pl)
     })
   }
 

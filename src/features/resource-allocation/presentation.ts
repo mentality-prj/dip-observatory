@@ -1,4 +1,5 @@
 import type { Locale } from '@/lib/observatory-i18n'
+import { translate } from '@/i18n/runtime'
 import type { ResourceAllocationDayPlan, ResourceAllocationTeamInput } from './contracts'
 
 export type MovementSummary = {
@@ -7,43 +8,21 @@ export type MovementSummary = {
   moveEvents: number
 }
 
-const DAY_LABELS: Record<Locale, Record<string, string>> = {
-  uk: { Mon: 'Пн', Tue: 'Вт', Wed: 'Ср', Thu: 'Чт', Fri: 'Пт', Sat: 'Сб', Sun: 'Нд' },
-  en: { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' },
-  pl: { Mon: 'Pn', Tue: 'Wt', Wed: 'Śr', Thu: 'Czw', Fri: 'Pt', Sat: 'Sob', Sun: 'Nd' },
-}
-
-const SERVICE_LABELS: Record<string, Record<Locale, string>> = {
-  psychosocial: {
-    uk: 'Психосоціальна підтримка',
-    en: 'Psychosocial support',
-    pl: 'Wsparcie psychospołeczne',
-  },
-  legal: { uk: 'Правова допомога', en: 'Legal support', pl: 'Wsparcie prawne' },
-  'case-management': {
-    uk: 'Кейс-менеджмент',
-    en: 'Case management',
-    pl: 'Case management',
-  },
-  'child-support': {
-    uk: 'Підтримка дітей',
-    en: 'Child support',
-    pl: 'Wsparcie dzieci',
-  },
-  'cash-assistance': {
-    uk: 'Грошова допомога',
-    en: 'Cash assistance',
-    pl: 'Pomoc finansowa',
-  },
-}
-
 export function localizePlanningDay(day: string, locale: Locale): string {
   const normalized = day.slice(0, 1).toUpperCase() + day.slice(1, 3).toLowerCase()
-  return DAY_LABELS[locale][normalized] ?? day
+  try {
+    return translate(locale, `resourceAllocation.days.${normalized}`)
+  } catch {
+    return day
+  }
 }
 
 export function localizeService(service: string, locale: Locale): string {
-  return SERVICE_LABELS[service]?.[locale] ?? service
+  try {
+    return translate(locale, `resourceAllocation.services.${service}`)
+  } catch {
+    return service
+  }
 }
 
 export function summarizeMovements(

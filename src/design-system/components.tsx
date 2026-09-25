@@ -8,6 +8,35 @@ export type DesignMode = 'dark' | 'light'
 export type ProductName = 'Studio' | 'Observatory'
 export type ProductSwitch = { href: string; label: string; icon?: ReactNode }
 
+function NavigationLink({
+  href,
+  className,
+  children,
+  ariaLabel,
+  onClick,
+  native,
+}: {
+  href: string
+  className?: string
+  children: ReactNode
+  ariaLabel?: string
+  onClick?: () => void
+  native: boolean
+}) {
+  if (native) {
+    return (
+      <a aria-label={ariaLabel} className={className} href={href} onClick={onClick}>
+        {children}
+      </a>
+    )
+  }
+  return (
+    <Link aria-label={ariaLabel} className={className} href={href} onClick={onClick}>
+      {children}
+    </Link>
+  )
+}
+
 export function DesignSystemProvider({
   theme,
   mode = 'dark',
@@ -32,28 +61,33 @@ export function ProductLockup({
   product,
   className,
   onClick,
-  nativeProductNavigation = false,
+  nativeNavigation = false,
 }: {
   href: string
   brandHref?: string
   product: ProductName
   className?: string
   onClick?: () => void
-  nativeProductNavigation?: boolean
+  nativeNavigation?: boolean
 }) {
-  const productHome = nativeProductNavigation ? (
-    <a aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
-      {product}.
-    </a>
-  ) : (
-    <Link aria-label={`QDIP ${product} home`} className="ds-product-lockup-product" href={href} onClick={onClick}>
-      {product}.
-    </Link>
-  )
   return (
     <div className={cn('ds-product-lockup', className)}>
-      {productHome}
-      <Link aria-label="QDIP home" className="ds-product-lockup-brand" href={brandHref ?? href} onClick={onClick}>
+      <NavigationLink
+        ariaLabel={`QDIP ${product} home`}
+        className="ds-product-lockup-product"
+        href={href}
+        onClick={onClick}
+        native={nativeNavigation}
+      >
+        {product}.
+      </NavigationLink>
+      <NavigationLink
+        ariaLabel="QDIP home"
+        className="ds-product-lockup-brand"
+        href={brandHref ?? href}
+        onClick={onClick}
+        native={nativeNavigation}
+      >
         <span className="ds-product-lockup-wordmark-frame" aria-hidden="true">
           <Image
             alt=""
@@ -65,23 +99,29 @@ export function ProductLockup({
             width={300}
           />
         </span>
-      </Link>
+      </NavigationLink>
     </div>
   )
 }
 
-export function ProductSwitchLink({ href, label, icon }: ProductSwitch) {
+export function ProductSwitchLink({
+  href,
+  label,
+  icon,
+  nativeNavigation = false,
+}: ProductSwitch & { nativeNavigation?: boolean }) {
   return (
-    <Link className="ds-product-switch-link" href={href}>
+    <NavigationLink className="ds-product-switch-link" href={href} native={nativeNavigation}>
       {icon ? (
         <span className="ds-product-switch-icon" aria-hidden>
           {icon}
         </span>
       ) : null}
       <span>{label}</span>
-    </Link>
+    </NavigationLink>
   )
 }
+
 export function ProductHeader({
   href,
   brandHref,
@@ -93,7 +133,7 @@ export function ProductHeader({
   status,
   utilities,
   className,
-  nativeProductNavigation = false,
+  nativeNavigation = false,
 }: {
   href: string
   brandHref?: string
@@ -105,18 +145,13 @@ export function ProductHeader({
   status?: ReactNode
   utilities?: ReactNode
   className?: string
-  nativeProductNavigation?: boolean
+  nativeNavigation?: boolean
 }) {
   return (
     <header className={cn('ds-product-header', className)}>
       <div className="ds-product-header-inner">
         <div className="ds-product-header-brand">
-          <ProductLockup
-            href={href}
-            brandHref={brandHref}
-            product={product}
-            nativeProductNavigation={nativeProductNavigation}
-          />
+          <ProductLockup href={href} brandHref={brandHref} product={product} nativeNavigation={nativeNavigation} />
           {brandStatus ? <div className="ds-product-header-brand-status">{brandStatus}</div> : null}
         </div>
         {navigation ? (
@@ -126,14 +161,15 @@ export function ProductHeader({
         )}
         <div className="ds-product-header-actions">
           {status}
-          {siteLink ? <ProductSwitchLink {...siteLink} /> : null}
-          {productSwitch ? <ProductSwitchLink {...productSwitch} /> : null}
+          {siteLink ? <ProductSwitchLink {...siteLink} nativeNavigation={nativeNavigation} /> : null}
+          {productSwitch ? <ProductSwitchLink {...productSwitch} nativeNavigation={nativeNavigation} /> : null}
           {utilities}
         </div>
       </div>
     </header>
   )
 }
+
 export function ProductShell({
   theme,
   mode = 'dark',
@@ -149,7 +185,7 @@ export function ProductShell({
   status,
   utilities,
   children,
-  nativeProductNavigation = false,
+  nativeNavigation = false,
 }: {
   theme: DesignTheme
   mode?: DesignMode
@@ -165,7 +201,7 @@ export function ProductShell({
   status?: ReactNode
   utilities?: ReactNode
   children: ReactNode
-  nativeProductNavigation?: boolean
+  nativeNavigation?: boolean
 }) {
   return (
     <DesignSystemProvider theme={theme} mode={mode} className={className}>
@@ -179,13 +215,14 @@ export function ProductShell({
         productSwitch={productSwitch}
         status={status}
         utilities={utilities}
-        nativeProductNavigation={nativeProductNavigation}
+        nativeNavigation={nativeNavigation}
       />
       {mobileNavigation ? <div className="ds-product-mobile-navigation">{mobileNavigation}</div> : null}
       {children}
     </DesignSystemProvider>
   )
 }
+
 export function Surface({
   as: Tag = 'section',
   className,

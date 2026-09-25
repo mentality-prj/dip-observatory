@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Pencil, RefreshCw } from 'lucide-react'
+import { useTranslations } from '@/i18n/provider'
 import type { Locale } from '@/lib/observatory-i18n'
 import type {
   EvaluatedManualAllocation,
@@ -13,86 +14,6 @@ import { localizePlanningDay, trackResourceAllocation } from '../presentation'
 
 type DayPlan = { day: string; recommended: { assignments: Record<string, string | null> } }
 type InputTeam = { id: string; current_community: string }
-const copy = {
-  uk: {
-    section: 'ПЕРЕВІРТЕ ВЛАСНЕ РІШЕННЯ',
-    title: 'Не погоджуєтесь з рекомендацією? Перевірте свій варіант',
-    description:
-      'Змініть призначення команд. QDIP не скасує ваші зміни — він оцінить їх наслідки: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
-    reset: 'Скинути',
-    team: 'Команда',
-    unassigned: 'Не призначено',
-    evaluate: 'Оцінити мої зміни',
-    evaluating: 'Перевірка…',
-    use: 'Використати мій варіант для рішення',
-    priority: 'Пріоритетні потреби',
-    total: 'Усі потреби',
-    served: 'Буде покрито',
-    unmet: 'Не буде покрито',
-    travel: 'Індекс переміщень',
-    day: 'День',
-    destination: 'Ваш варіант',
-    qdipRecommends: 'QDIP рекомендує',
-    advanced: 'Розширене редагування',
-    violations: 'порушень обмежень',
-    feasible: 'Ручний план допустимий за поточних обмежень.',
-    qdip: 'План QDIP',
-    yours: 'Ваш план',
-    difference: 'Різниця',
-  },
-  en: {
-    section: 'TEST YOUR OWN DECISION',
-    title: 'Disagree with the recommendation? Test your own allocation',
-    description:
-      'Change team assignments. QDIP will not optimize your edits away — it evaluates their consequences: coverage, unmet demand, movement and constraint violations.',
-    reset: 'Reset',
-    team: 'Team',
-    unassigned: 'Unassigned',
-    evaluate: 'Evaluate my changes',
-    evaluating: 'Evaluating…',
-    use: 'Use my plan for the decision',
-    priority: 'Priority needs',
-    total: 'All needs',
-    served: 'Expected covered',
-    unmet: 'Expected uncovered',
-    travel: 'Movement cost index',
-    day: 'Day',
-    destination: 'Your choice',
-    qdipRecommends: 'QDIP recommends',
-    advanced: 'Advanced editing',
-    violations: 'constraint violations',
-    feasible: 'The manual plan is feasible under current constraints.',
-    qdip: 'QDIP plan',
-    yours: 'Your plan',
-    difference: 'Difference',
-  },
-  pl: {
-    section: 'SPRAWDŹ WŁASNĄ DECYZJĘ',
-    title: 'Nie zgadzasz się z rekomendacją? Sprawdź własny wariant',
-    description:
-      'Zmień przydziały zespołów. QDIP nie cofnie Twoich zmian — oceni ich skutki: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
-    reset: 'Resetuj',
-    team: 'Zespół',
-    unassigned: 'Nieprzydzielony',
-    evaluate: 'Oceń moje zmiany',
-    evaluating: 'Ocena…',
-    use: 'Użyj mojego wariantu do decyzji',
-    priority: 'Potrzeby priorytetowe',
-    total: 'Wszystkie potrzeby',
-    served: 'Zostanie pokryte',
-    unmet: 'Pozostanie bez pokrycia',
-    travel: 'Indeks kosztu przemieszczeń',
-    day: 'Dzień',
-    destination: 'Twój wariant',
-    qdipRecommends: 'QDIP rekomenduje',
-    advanced: 'Edycja zaawansowana',
-    violations: 'naruszeń ograniczeń',
-    feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
-    qdip: 'Plan QDIP',
-    yours: 'Twój plan',
-    difference: 'Różnica',
-  },
-} as const
 
 export function ResourceAllocationManualEditor({
   input,
@@ -113,7 +34,7 @@ export function ResourceAllocationManualEditor({
   onUseModified: (selected: EvaluatedManualAllocation) => void
   locale: Locale
 }) {
-  const t = copy[locale]
+  const t = useTranslations('resourceAllocation.manualEditor')
   const seed = useMemo(
     () => Object.fromEntries(plan.daily.map((day) => [day.day, { ...day.recommended.assignments }])),
     [plan]
@@ -194,9 +115,11 @@ export function ResourceAllocationManualEditor({
     <section className="min-w-0 max-w-full overflow-hidden p-4 sm:p-6">
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-[16rem]">
-          <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t.section}</div>
-          <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t.title}</h3>
-          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">{t.description}</p>
+          <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t('section')}</div>
+          <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t('title')}</h3>
+          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
+            {t('description')}
+          </p>
         </div>
         <button
           type="button"
@@ -207,13 +130,13 @@ export function ResourceAllocationManualEditor({
           className="flex max-w-full shrink-0 items-center gap-2 border border-white/15 px-3 py-2 text-sm"
         >
           <RefreshCw className="h-4 w-4 shrink-0" />
-          <span className="break-words">{t.reset}</span>
+          <span className="break-words">{t('reset')}</span>
         </button>
       </div>
 
       <div className="mt-6 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-3">
         <label className="text-sm">
-          <span className="block text-slate-500">{t.team}</span>
+          <span className="block text-slate-500">{t('team')}</span>
           <select
             value={quickTeam}
             onChange={(event) => setQuickTeam(event.target.value)}
@@ -227,7 +150,7 @@ export function ResourceAllocationManualEditor({
           </select>
         </label>
         <label className="text-sm">
-          <span className="block text-slate-500">{t.day}</span>
+          <span className="block text-slate-500">{t('day')}</span>
           <select
             value={quickDay}
             onChange={(event) => setQuickDay(event.target.value)}
@@ -241,13 +164,13 @@ export function ResourceAllocationManualEditor({
           </select>
         </label>
         <label className="text-sm">
-          <span className="block text-slate-500">{t.destination}</span>
+          <span className="block text-slate-500">{t('destination')}</span>
           <select
             value={allocation[quickDay]?.[quickTeam] ?? ''}
             onChange={(event) => change(quickDay, quickTeam, event.target.value)}
             className="mt-2 w-full border border-white/10 bg-slate-950 p-3 text-white [color-scheme:dark]"
           >
-            <option value="">{t.unassigned}</option>
+            <option value="">{t('unassigned')}</option>
             {communities.map((community) => (
               <option key={community} value={community}>
                 {community}
@@ -255,9 +178,9 @@ export function ResourceAllocationManualEditor({
             ))}
           </select>
           <span className="mt-2 block text-xs text-slate-600">
-            {t.qdipRecommends}:{' '}
+            {t('qdipRecommends')}:{' '}
             <b className="text-slate-400">
-              {plan.daily.find((day) => day.day === quickDay)?.recommended.assignments[quickTeam] ?? t.unassigned}
+              {plan.daily.find((day) => day.day === quickDay)?.recommended.assignments[quickTeam] ?? t('unassigned')}
             </b>
           </span>
         </label>
@@ -271,7 +194,7 @@ export function ResourceAllocationManualEditor({
           className="flex max-w-full items-center gap-2 bg-slate-950/70 px-5 py-3 font-bold text-white disabled:opacity-50"
         >
           <Pencil className="h-4 w-4 shrink-0" />
-          <span className="break-words">{running ? t.evaluating : t.evaluate}</span>
+          <span className="break-words">{running ? t('evaluating') : t('evaluate')}</span>
         </button>
         {evaluation && (
           <button
@@ -280,7 +203,7 @@ export function ResourceAllocationManualEditor({
             onClick={stageManual}
             className="max-w-full break-words border border-rose-300/40 px-5 py-3 font-bold text-rose-300 disabled:opacity-30"
           >
-            {t.use}
+            {t('use')}
           </button>
         )}
       </div>
@@ -299,24 +222,24 @@ export function ResourceAllocationManualEditor({
           <div className="mt-5 overflow-hidden border border-white/10">
             <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-px bg-white/10 text-xs">
               <div className="bg-slate-950/70 p-3" />
-              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.qdip}</div>
-              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.yours}</div>
-              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t.difference}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t('qdip')}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t('yours')}</div>
+              <div className="bg-slate-950/70 p-3 font-bold text-slate-400">{t('difference')}</div>
               <ComparisonRow
-                label={t.priority}
+                label={t('priority')}
                 reference={referenceMetrics.priority_coverage}
                 actual={metrics?.priority_coverage}
                 percentage
               />
-              <ComparisonRow label={t.served} reference={referenceSummary.served} actual={demand?.served} />
+              <ComparisonRow label={t('served')} reference={referenceSummary.served} actual={demand?.served} />
               <ComparisonRow
-                label={t.unmet}
+                label={t('unmet')}
                 reference={referenceSummary.closing_unmet}
                 actual={demand?.closing_unmet}
                 inverse
               />
               <ComparisonRow
-                label={t.travel}
+                label={t('travel')}
                 reference={referenceMetrics.travel_cost}
                 actual={metrics?.travel_cost}
                 inverse
@@ -324,23 +247,15 @@ export function ResourceAllocationManualEditor({
             </div>
             {typeof demand?.served === 'number' && (
               <div className="border-t border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-                {locale === 'uk'
-                  ? demand.served === referenceSummary.served
-                    ? 'Ваш план покриває стільки ж одиниць потреб, як план QDIP.'
-                    : demand.served > referenceSummary.served
-                      ? `Ваш план покриває на ${Math.round(demand.served - referenceSummary.served)} одиниць потреб більше.`
-                      : `Ваш план покриває на ${Math.round(referenceSummary.served - demand.served)} одиниць потреб менше.`
-                  : locale === 'pl'
-                    ? demand.served === referenceSummary.served
-                      ? 'Twój plan pokrywa tyle samo jednostek potrzeb co plan QDIP.'
-                      : demand.served > referenceSummary.served
-                        ? `Twój plan pokrywa o ${Math.round(demand.served - referenceSummary.served)} jednostek potrzeb więcej.`
-                        : `Twój plan pokrywa o ${Math.round(referenceSummary.served - demand.served)} jednostek potrzeb mniej.`
-                    : demand.served === referenceSummary.served
-                      ? 'Your plan covers the same number of demand units as the QDIP plan.'
-                      : demand.served > referenceSummary.served
-                        ? `Your plan covers ${Math.round(demand.served - referenceSummary.served)} more demand units.`
-                        : `Your plan covers ${Math.round(referenceSummary.served - demand.served)} fewer demand units.`}
+                {demand.served === referenceSummary.served
+                  ? t('coverageSame')
+                  : demand.served > referenceSummary.served
+                    ? t('coverageMore', {
+                        delta: Math.round(demand.served - referenceSummary.served),
+                      })
+                    : t('coverageLess', {
+                        delta: Math.round(referenceSummary.served - demand.served),
+                      })}
               </div>
             )}
           </div>
@@ -355,7 +270,7 @@ export function ResourceAllocationManualEditor({
             {!feasible ? (
               <>
                 <b>
-                  {violations.length + dayFailures.length} {t.violations}
+                  {violations.length + dayFailures.length} {t('violations')}
                 </b>
                 <div className="mt-2 space-y-1">
                   {violations.slice(0, 8).map((item, index) => (
@@ -369,14 +284,14 @@ export function ResourceAllocationManualEditor({
                 </div>
               </>
             ) : (
-              <b>{t.feasible}</b>
+              <b>{t('feasible')}</b>
             )}
           </div>
         </>
       )}
 
       <details className="mt-6 border border-white/10 bg-white/[0.02]">
-        <summary className="cursor-pointer p-4 text-sm font-bold">{t.advanced}</summary>
+        <summary className="cursor-pointer p-4 text-sm font-bold">{t('advanced')}</summary>
         <div className="border-t border-white/10 pb-4">
           {visualPlan && inputTeams.length > 0 && (
             <>
@@ -425,7 +340,7 @@ export function ResourceAllocationManualEditor({
                         value={allocation[item.day]?.[team] ?? ''}
                         onChange={(event) => change(item.day, team, event.target.value)}
                       >
-                        <option value="">{t.unassigned}</option>
+                        <option value="">{t('unassigned')}</option>
                         {communities.map((community) => (
                           <option key={community} value={community}>
                             {community}
@@ -446,7 +361,7 @@ export function ResourceAllocationManualEditor({
             <table className="w-full min-w-[900px] border-collapse text-sm">
               <thead>
                 <tr>
-                  <th className="border-b border-white/15 p-2 text-left">{t.team}</th>
+                  <th className="border-b border-white/15 p-2 text-left">{t('team')}</th>
                   {plan.daily.map((item) => (
                     <th key={item.day} className="border-b border-white/15 p-2 text-left">
                       {localizePlanningDay(item.day, locale)}
@@ -466,7 +381,7 @@ export function ResourceAllocationManualEditor({
                           value={allocation[item.day]?.[team] ?? ''}
                           onChange={(event) => change(item.day, team, event.target.value)}
                         >
-                          <option value="">{t.unassigned}</option>
+                          <option value="">{t('unassigned')}</option>
                           {communities.map((community) => (
                             <option key={community} value={community}>
                               {community}

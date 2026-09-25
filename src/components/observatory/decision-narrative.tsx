@@ -1,22 +1,24 @@
 import type { Locale } from '@/lib/observatory-i18n'
 import type { DipUseCase } from '@/use-cases/registry'
-import { decisionPatternLabel } from '@/product/experience'
-import { observatoryDecisionNarrativeI18n } from '@/lib/product-i18n'
+import { createTranslator } from '@/i18n/runtime'
 
 export function ObservatoryDecisionNarrative({ locale, useCase }: { locale: Locale; useCase: DipUseCase }) {
-  const t = observatoryDecisionNarrativeI18n[locale]
+  const t = createTranslator(locale, 'observatoryDecisionNarrative')
+  const useCases = createTranslator(locale, 'useCases')
+  const decisionPatterns = createTranslator(locale, 'decisionPatterns')
+  const labels = t.raw<string[]>('labels')
   return (
-    <section className="mx-auto w-full max-w-[1540px] px-4 pt-5 sm:px-5 md:px-8 lg:px-10" aria-label={t.ariaLabel}>
+    <section className="mx-auto w-full max-w-[1540px] px-4 pt-5 sm:px-5 md:px-8 lg:px-10" aria-label={t('ariaLabel')}>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">
-            {decisionPatternLabel(useCase.decisionPattern, locale)} · {useCase.tag[locale]}
+            {decisionPatterns(useCase.decisionPattern)} · {useCases(`${useCase.id}.tag`)}
           </span>
-          <p className="mt-1 text-xs text-slate-500">{t.helper}</p>
+          <p className="mt-1 text-xs text-slate-500">{t('helper')}</p>
         </div>
       </div>
       <ol className="grid grid-cols-2 gap-x-4 gap-y-2 py-4 text-xs text-slate-500 sm:grid-cols-4 xl:grid-cols-7">
-        {t.labels.map((label, index) => (
+        {labels.map((label, index) => (
           <li
             key={label}
             className={`relative border-t pt-3 ${index === 4 ? 'border-[var(--ds-semantic-selected)] text-[var(--ds-semantic-selected)]' : index === 3 ? 'border-[var(--ds-semantic-uncertainty)] text-[var(--ds-semantic-uncertainty)]' : 'border-white/10'}`}
