@@ -337,7 +337,19 @@
     "metadata": {
       "title": "Decision Challenge — QDIP Observatory",
       "description": "Make your own decision and compare it with QDIP on the exact same decision problem."
-    }
+    },
+    "comparisonUnavailable": "Comparison unavailable: economic objective metadata is inconsistent.",
+    "problem": "Problem",
+    "humanAction": "Human action",
+    "qdipAction": "QDIP action",
+    "replay": "Replay",
+    "evidenceRevision": "Evidence",
+    "economicModel": "Economic model",
+    "modelVersions": "Model versions",
+    "evaluator": "Evaluator",
+    "evaluationContext": "Evaluation context",
+    "nextStep": "NEXT STEP",
+    "priorityDemand": "priority demand"
   },
   "gtmLab": {
     "subtitle": "Decide which prospects deserve commercial attention, why, and what to do next.",
