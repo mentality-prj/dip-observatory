@@ -4,9 +4,9 @@ import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { observatoryHomeI18n } from '@/lib/product-i18n'
 import { decisionPatternLabel } from '@/product/experience'
-import { observableUseCases } finspekcji.',
-  },
-} as const
+import { observableUseCases } from '@/use-cases/registry'
+
+
 
 const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
 
