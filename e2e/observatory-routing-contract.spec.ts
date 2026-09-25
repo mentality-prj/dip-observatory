@@ -2,9 +2,21 @@ import { expect, test, type Page } from '@playwright/test'
 
 const locales = ['en', 'uk', 'pl'] as const
 const routes = [
-  { id: 'resource-allocation', path: '/resource-allocation', title: 'Resource Allocation' },
-  { id: 'supply-network-optimization', path: '/supply-network-optimization', title: 'Supply Network Optimization' },
-  { id: 'gtm-lab', path: '/gtm-lab', title: 'GTM Lab' },
+  {
+    id: 'resource-allocation',
+    path: '/resource-allocation',
+    title: { en: 'Resource Allocation', uk: 'Розподіл ресурсів', pl: 'Alokacja zasobów' },
+  },
+  {
+    id: 'supply-network-optimization',
+    path: '/supply-network-optimization',
+    title: { en: 'Supply Network Optimization', uk: 'Оптимізація мережі постачання', pl: 'Optymalizacja sieci dostaw' },
+  },
+  {
+    id: 'gtm-lab',
+    path: '/gtm-lab',
+    title: { en: 'GTM Lab', uk: 'Лабораторія виходу на ринок', pl: 'Laboratorium wejścia na rynek' },
+  },
 ] as const
 
 function capturePageErrors(page: Page) {
@@ -25,7 +37,7 @@ test.describe('Observatory production routing contract', () => {
 
         expect(response?.status()).toBeLessThan(400)
         await expect(page.locator('#main-content')).toBeVisible()
-        await expect(page.getByRole('link', { name: route.title, exact: true }).first()).toHaveAttribute(
+        await expect(page.getByRole('link', { name: route.title[locale], exact: true }).first()).toHaveAttribute(
           'aria-current',
           'page'
         )
@@ -44,7 +56,7 @@ test.describe('Observatory production routing contract', () => {
       expect(response?.status()).toBeLessThan(400)
 
       for (const route of routes.slice(1)) {
-        await page.getByRole('link', { name: route.title, exact: true }).first().click()
+        await page.getByRole('link', { name: route.title[locale], exact: true }).first().click()
         await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/${locale}${route.path}$`))
         await expect(page.locator('#main-content')).toBeVisible()
       }
