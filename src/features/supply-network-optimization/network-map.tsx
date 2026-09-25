@@ -102,11 +102,11 @@ const markerStyle = (
             : '#f59e0b'
         : kind === 'manual-candidate'
           ? '#f59e0b'
-        : kind === 'warehouse'
-          ? '#22d3ee'
-          : kind === 'supplier'
-            ? '#a78bfa'
-            : '#e2e8f0'
+          : kind === 'warehouse'
+            ? '#22d3ee'
+            : kind === 'supplier'
+              ? '#a78bfa'
+              : '#e2e8f0'
   if (kind === 'unavailable') {
     element.style.borderRadius = '50%'
     element.style.transform = 'none'
@@ -360,7 +360,11 @@ export function NetworkMap({
         )
       }
       for (const [index, candidate] of candidateAreas.entries()) {
-        const status = !candidate.feasible ? 'infeasible' : candidate.pareto_efficient ? 'pareto' : 'dominated'
+        const status = !candidate.feasible
+          ? 'infeasible'
+          : candidate.pareto_efficient
+            ? 'pareto'
+            : 'dominated'
         const statusLabel =
           status === 'pareto'
             ? t.candidateRecommended
