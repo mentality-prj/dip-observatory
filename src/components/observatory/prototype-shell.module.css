@@ -1,4 +1,7 @@
 .shell {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
   color: var(--ds-text);
   background: var(--ds-bg);
 }
@@ -147,6 +150,7 @@
 .stage {
   width: 100%;
   max-width: var(--ds-content-max);
+  flex: 1 0 auto;
   margin: 0 auto;
 }
 .breadcrumb {
