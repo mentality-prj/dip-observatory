@@ -1,14 +1,26 @@
 'use client'
 
 import type { Locale } from '@/lib/observatory-i18n'
-import { resourceAllocationExplanationI18n } from '../i18n'
 import type { ResourceAllocationAssignmentExplanation } from '../contracts'
 import { localizeService } from '../presentation'
 
-
+const copy = {
+  uk: {
+    title: 'Чому саме сюди?', route: 'Маршрут', services: 'Компетенції команди', priority: 'Пріоритетні потреби в локації', served: 'Планове покриття цією командою', travel: 'Переміщення', minutes: 'хв', constraints: 'Технічні перевірки', pass: 'виконується', fail: 'не виконується',
+    HIGH_PRIORITY_DEMAND: 'У цій локації є пріоритетні потреби, які команда може покрити.', SKILL_MATCH: 'Команда має потрібні для цих послуг компетенції.', REACHABLE: 'Команда може дістатися до локації в межах заданих обмежень.', RELOCATION: 'Для цього плану команда змінює локацію.', HORIZON_FEASIBLE: 'Це переміщення не блокує допустимі рішення наступних днів.',
+  },
+  en: {
+    title: 'Why this location?', route: 'Route', services: 'Team skills', priority: 'Priority needs at this location', served: 'Planned coverage by this team', travel: 'Travel', minutes: 'min', constraints: 'Technical checks', pass: 'passed', fail: 'failed',
+    HIGH_PRIORITY_DEMAND: 'This location has priority needs the team can cover.', SKILL_MATCH: 'The team has the skills required for these services.', REACHABLE: 'The team can reach the location within the configured constraints.', RELOCATION: 'The team changes location for this plan.', HORIZON_FEASIBLE: 'This move does not block feasible choices on following days.',
+  },
+  pl: {
+    title: 'Dlaczego właśnie tutaj?', route: 'Trasa', services: 'Kompetencje zespołu', priority: 'Priorytetowe potrzeby w lokalizacji', served: 'Planowane pokrycie przez zespół', travel: 'Przejazd', minutes: 'min', constraints: 'Kontrole techniczne', pass: 'spełnione', fail: 'niespełnione',
+    HIGH_PRIORITY_DEMAND: 'W tej lokalizacji są priorytetowe potrzeby, które zespół może obsłużyć.', SKILL_MATCH: 'Zespół ma kompetencje wymagane dla tych usług.', REACHABLE: 'Zespół może dotrzeć do lokalizacji w ramach zadanych ograniczeń.', RELOCATION: 'W tym planie zespół zmienia lokalizację.', HORIZON_FEASIBLE: 'To przemieszczenie nie blokuje dopuszczalnych decyzji w kolejnych dniach.',
+  },
+} as const
 
 export function ResourceAllocationAssignmentExplanation({ explanation, locale }: { explanation: ResourceAllocationAssignmentExplanation; locale: Locale }) {
-  const t = resourceAllocationExplanationI18n[locale]
+  const t = copy[locale]
   return (
     <section data-testid="assignment-explanation" className="mt-5 border border-rose-300/20 bg-rose-300/[0.05] p-5">
       <div className="text-xs font-bold uppercase tracking-wider text-rose-300">{t.title}</div>
