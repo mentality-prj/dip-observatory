@@ -5,7 +5,7 @@ import { AlertTriangle, MapPin, Network, Play, Plus, Warehouse as WarehouseIcon 
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
 import { runCandidateAreas, runManualCandidate, runOptimization, runUnavailableScenario } from './api'
-import { SUPPLY_NETWORK_CURRENT_FLOWS, SUPPLY_NETWORK_DEMO } from './demo-data'
+import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { LazyNetworkMap } from './lazy-map'
 import {
   candidateOptionLabel,
@@ -33,10 +33,10 @@ import type {
 const copy = {
   en: {
     featureName: 'Supply Network Optimization',
-    title: 'Optimize where inventory is stored and how stores are supplied.',
+    title: 'When a warehouse drops out, see the least-cost way to keep stores supplied.',
     intro:
-      'QDIP calculates supply flows across the network, then lets you test warehouse loss or a new warehouse and immediately compare the updated plan.',
-    optimize: 'Calculate current plan',
+      'Start with a working retail network, take one warehouse offline, and see how QDIP reroutes inventory, protects demand and tests whether another warehouse would pay off.',
+    optimize: 'See current network plan',
     optimizing: 'Calculating…',
     current: 'Current network',
     optimized: 'Current plan',
@@ -52,15 +52,15 @@ const copy = {
     cancel: 'Cancel',
     addHere: 'Add warehouse here',
     candidateArea: 'Improvement options',
-    findImprovements: 'Find options to strengthen the network',
-    findingImprovements: 'Finding improvement options…',
+    findImprovements: 'Find the best recovery options',
+    findingImprovements: 'Evaluating recovery options…',
     decisionSummary: 'Decision summary',
     serviceChange: 'Change in demand fulfilled',
     unservedChange: 'Change in unfulfilled demand',
     costChange: 'Change in logistics cost',
     paretoAlternatives: 'Improvement options',
     frontierHint:
-      'Each option offers a different balance between demand fulfilled and cost. Compare them before deciding.',
+      'These are nondominated options across economic impact, service and tested resilience. Compare the trade-offs before deciding.',
     disruptionReallocated: 'Disruption + new plan',
     noCandidate: 'None of the locations tested materially improves the network under the current conditions.',
     service: 'Demand fulfilled',
@@ -78,7 +78,10 @@ const copy = {
     utilizationAfterPlan: 'Capacity utilization after calculation',
     actualPeakReceiving: 'Planned peak receiving per day',
     actualPeakDispatch: 'Planned peak dispatch per day',
-    operating: 'Warehouse operating cost, ₴',
+    openingCost: 'Opening / setup cost, ₴',
+    openingAmortization: 'Opening-cost amortization, days',
+    fixedOperatingCost: 'Fixed operating cost per day, ₴',
+    handlingCost: 'Handling cost per unit, ₴',
     storage: 'Storage requirements',
     evaluate: 'Check this warehouse',
     candidateNotUsed:
@@ -94,7 +97,13 @@ const copy = {
     pending: 'Calculating the plan…',
     clickHint: 'Click anywhere on the map to check whether a new warehouse at that location would help.',
     improvement: 'Plan improvement',
-    requiredCapacity: 'Inventory at warehouse',
+    requiredCapacity: 'Required peak storage capacity',
+    economicEffect: 'Economic effect vs disrupted plan',
+    costBreakdown: 'Economic cost breakdown',
+    stockoutCost: 'Stockout impact',
+    reallocationCost: 'Reallocation',
+    facilityCost: 'New-facility fixed cost',
+    handlingCostResult: 'Handling',
     pareto: 'Worth considering',
     peakReceiving: 'Peak receiving per day',
     peakDispatch: 'Peak dispatch per day',
@@ -128,13 +137,20 @@ const copy = {
     perDay: 'per day',
     warehouseList: 'Warehouses',
     chooseWarehouse: 'Choose a warehouse from the list or tap it on the map.',
+    walkthrough: 'Try the disruption in 3 steps',
+    step1: '1 · Show the current plan',
+    step2: '2 · Choose a warehouse and take it offline',
+    step3: '3 · Compare the recovery plan and test warehouse options',
+    prospectOutcome: 'What this demonstrates',
+    prospectOutcomeText:
+      'QDIP turns the same demand, inventory, capacity and route constraints into an auditable recovery decision: what to reroute, what remains uncovered, what it costs and whether extra warehouse capacity improves the economics.',
   },
   uk: {
     featureName: 'Оптимізація мережі постачання',
-    title: 'Оптимізуйте розміщення запасів і постачання магазинів.',
+    title: 'Якщо склад вибуває з мережі — знайдіть найвигідніший спосіб зберегти постачання магазинів.',
     intro:
-      'QDIP розраховує потоки товару в мережі, а потім дозволяє перевірити втрату складу або нову локацію й одразу порівняти оновлений план.',
-    optimize: 'Розрахувати поточний план',
+      'Почніть із робочої роздрібної мережі, зробіть один склад недоступним і подивіться, як QDIP перенаправляє запаси, захищає попит та перевіряє, чи окупиться інша складська локація.',
+    optimize: 'Показати поточний план мережі',
     optimizing: 'Розраховуємо…',
     current: 'Поточна мережа',
     optimized: 'Поточний план',
@@ -150,14 +166,14 @@ const copy = {
     cancel: 'Скасувати',
     addHere: 'Додати склад тут',
     candidateArea: 'Варіанти покращення',
-    findImprovements: 'Знайти варіанти посилення мережі',
-    findingImprovements: 'Шукаємо варіанти посилення…',
+    findImprovements: 'Знайти найкращі варіанти відновлення',
+    findingImprovements: 'Оцінюємо варіанти відновлення…',
     decisionSummary: 'Підсумок рішення',
     serviceChange: 'Зміна виконаного попиту',
     unservedChange: 'Зміна непокритого попиту',
     costChange: 'Зміна вартості логістики',
     paretoAlternatives: 'Варіанти покращення',
-    frontierHint: 'Кожен варіант має свій баланс між виконанням попиту та витратами. Порівняйте їх перед рішенням.',
+    frontierHint: 'Це недоміновані варіанти за економічним впливом, сервісом і перевіреною стійкістю. Порівняйте компроміси перед рішенням.',
     disruptionReallocated: 'Збій + новий план',
     noCandidate: 'Серед перевірених місць немає варіанта, який помітно покращує роботу мережі за заданих умов.',
     service: 'Виконано попиту',
@@ -175,7 +191,10 @@ const copy = {
     utilizationAfterPlan: 'Завантаження місткості після розрахунку',
     actualPeakReceiving: 'Планове пікове приймання за день',
     actualPeakDispatch: 'Планове пікове відвантаження за день',
-    operating: 'Витрати на роботу складу, ₴',
+    openingCost: 'Витрати на відкриття / запуск, ₴',
+    openingAmortization: 'Амортизація витрат на відкриття, днів',
+    fixedOperatingCost: 'Постійні операційні витрати за день, ₴',
+    handlingCost: 'Обробка одиниці товару, ₴',
     storage: 'Умови зберігання',
     evaluate: 'Перевірити цей склад',
     candidateNotUsed:
@@ -191,7 +210,13 @@ const copy = {
     pending: 'Розраховуємо план…',
     clickHint: 'Натисніть на будь-яке місце на мапі, щоб перевірити, чи допоможе новий склад у цій точці.',
     improvement: 'Покращення плану',
-    requiredCapacity: 'Запас на складі',
+    requiredCapacity: 'Необхідна пікова місткість зберігання',
+    economicEffect: 'Економічний ефект проти плану після збою',
+    costBreakdown: 'Структура економічних витрат',
+    stockoutCost: 'Вплив непокритого попиту',
+    reallocationCost: 'Перерозподіл',
+    facilityCost: 'Фіксовані витрати нового складу',
+    handlingCostResult: 'Обробка товару',
     pareto: 'Вартий розгляду',
     peakReceiving: 'Максимальне приймання за день',
     peakDispatch: 'Максимальне відвантаження за день',
@@ -225,13 +250,20 @@ const copy = {
     perDay: 'за день',
     warehouseList: 'Склади',
     chooseWarehouse: 'Оберіть склад зі списку або натисніть на нього на мапі.',
+    walkthrough: 'Перевірте збій у 3 кроки',
+    step1: '1 · Покажіть поточний план',
+    step2: '2 · Оберіть склад і зробіть його недоступним',
+    step3: '3 · Порівняйте план відновлення та варіанти нового складу',
+    prospectOutcome: 'Що демонструє цей сценарій',
+    prospectOutcomeText:
+      'QDIP перетворює ті самі дані про попит, запаси, потужності та маршрути на перевірюване рішення: що перенаправити, який попит залишиться непокритим, скільки це коштує і чи покращить економіку додаткова складська потужність.',
   },
   pl: {
     featureName: 'Optymalizacja sieci dostaw',
-    title: 'Optymalizuj rozmieszczenie zapasów i zaopatrzenie sklepów.',
+    title: 'Gdy magazyn wypada z sieci, znajdź najtańszy sposób utrzymania dostaw do sklepów.',
     intro:
-      'QDIP oblicza przepływy towarów w sieci, a następnie pozwala sprawdzić utratę magazynu lub nową lokalizację i od razu porównać zaktualizowany plan.',
-    optimize: 'Oblicz bieżący plan',
+      'Zacznij od działającej sieci detalicznej, wyłącz jeden magazyn i zobacz, jak QDIP przekierowuje zapasy, chroni popyt oraz sprawdza, czy dodatkowa lokalizacja magazynu się opłaca.',
+    optimize: 'Pokaż bieżący plan sieci',
     optimizing: 'Obliczamy…',
     current: 'Bieżąca sieć',
     optimized: 'Bieżący plan',
@@ -247,15 +279,15 @@ const copy = {
     cancel: 'Anuluj',
     addHere: 'Dodaj magazyn tutaj',
     candidateArea: 'Warianty poprawy',
-    findImprovements: 'Znajdź warianty wzmocnienia sieci',
-    findingImprovements: 'Szukamy wariantów wzmocnienia…',
+    findImprovements: 'Znajdź najlepsze warianty odbudowy planu',
+    findingImprovements: 'Oceniamy warianty odbudowy planu…',
     decisionSummary: 'Podsumowanie decyzji',
     serviceChange: 'Zmiana zrealizowanego popytu',
     unservedChange: 'Zmiana niezaspokojonego popytu',
     costChange: 'Zmiana kosztu logistyki',
     paretoAlternatives: 'Warianty poprawy',
     frontierHint:
-      'Każdy wariant oznacza inny kompromis między realizacją popytu a kosztami. Porównaj je przed podjęciem decyzji.',
+      'To warianty niezdominowane pod względem wpływu ekonomicznego, obsługi i testowanej odporności. Porównaj kompromisy przed decyzją.',
     disruptionReallocated: 'Zakłócenie + nowy plan',
     noCandidate: 'Żadna ze sprawdzonych lokalizacji nie poprawia istotnie działania sieci w obecnych warunkach.',
     service: 'Zrealizowany popyt',
@@ -273,7 +305,10 @@ const copy = {
     utilizationAfterPlan: 'Wykorzystanie pojemności po obliczeniu',
     actualPeakReceiving: 'Planowany szczyt przyjęć dziennie',
     actualPeakDispatch: 'Planowany szczyt wysyłek dziennie',
-    operating: 'Koszt działania magazynu, ₴',
+    openingCost: 'Koszt otwarcia / uruchomienia, ₴',
+    openingAmortization: 'Amortyzacja kosztu otwarcia, dni',
+    fixedOperatingCost: 'Stały koszt operacyjny dziennie, ₴',
+    handlingCost: 'Koszt obsługi jednostki, ₴',
     storage: 'Warunki składowania',
     evaluate: 'Sprawdź ten magazyn',
     candidateNotUsed:
@@ -289,7 +324,13 @@ const copy = {
     pending: 'Obliczamy plan…',
     clickHint: 'Kliknij dowolne miejsce na mapie, aby sprawdzić, czy nowy magazyn w tej lokalizacji pomoże.',
     improvement: 'Poprawa planu',
-    requiredCapacity: 'Zapas w magazynie',
+    requiredCapacity: 'Wymagana szczytowa pojemność składowania',
+    economicEffect: 'Efekt ekonomiczny względem planu po zakłóceniu',
+    costBreakdown: 'Struktura kosztów ekonomicznych',
+    stockoutCost: 'Wpływ niezaspokojonego popytu',
+    reallocationCost: 'Realokacja',
+    facilityCost: 'Stały koszt nowego magazynu',
+    handlingCostResult: 'Obsługa towaru',
     pareto: 'Warto rozważyć',
     peakReceiving: 'Maksymalne przyjęcia dziennie',
     peakDispatch: 'Maksymalne wysyłki dziennie',
@@ -323,6 +364,13 @@ const copy = {
     perDay: 'dziennie',
     warehouseList: 'Magazyny',
     chooseWarehouse: 'Wybierz magazyn z listy lub dotknij go na mapie.',
+    walkthrough: 'Sprawdź zakłócenie w 3 krokach',
+    step1: '1 · Pokaż bieżący plan',
+    step2: '2 · Wybierz magazyn i wyłącz go z sieci',
+    step3: '3 · Porównaj plan odbudowy i warianty nowego magazynu',
+    prospectOutcome: 'Co pokazuje ten scenariusz',
+    prospectOutcomeText:
+      'QDIP zamienia te same dane o popycie, zapasach, przepustowości i trasach w audytowalną decyzję: co przekierować, jaki popyt pozostanie niezaspokojony, ile to kosztuje i czy dodatkowa pojemność magazynowa poprawia ekonomikę.'
   },
 } as const
 
@@ -430,7 +478,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [candidateCapacity, setCandidateCapacity] = useState(1800)
   const [candidateReceiving, setCandidateReceiving] = useState(340)
   const [candidateDispatch, setCandidateDispatch] = useState(380)
-  const [candidateOperatingCost, setCandidateOperatingCost] = useState(88000)
+  const [candidateOpeningCost, setCandidateOpeningCost] = useState(1200000)
+  const [candidateOpeningAmortization, setCandidateOpeningAmortization] = useState(365)
+  const [candidateFixedOperatingCost, setCandidateFixedOperatingCost] = useState(22000)
+  const [candidateHandlingCost, setCandidateHandlingCost] = useState(14)
   const [candidateStorage, setCandidateStorage] = useState<StorageClass[]>(['ambient', 'controlled'])
   const [pending, setPending] = useState(false)
   const [candidatePending, setCandidatePending] = useState(false)
@@ -455,13 +506,20 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       receiving_capacity_units_per_day: candidateReceiving,
       dispatch_capacity_units_per_day: candidateDispatch,
       supported_storage_classes: candidateStorage,
-      operating_cost: candidateOperatingCost,
+      operating_cost: 0,
+      opening_cost: candidateOpeningCost,
+      opening_cost_amortization_days: candidateOpeningAmortization,
+      fixed_operating_cost_per_day: candidateFixedOperatingCost,
+      handling_cost_per_unit: candidateHandlingCost,
     }
   }, [
     candidateCapacity,
     candidateDispatch,
     candidateLocation,
-    candidateOperatingCost,
+    candidateOpeningCost,
+    candidateOpeningAmortization,
+    candidateFixedOperatingCost,
+    candidateHandlingCost,
     candidateReceiving,
     candidateStorage,
     t.manualCandidate,
@@ -543,6 +601,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       manualCandidate.capacity_units <= 0 ||
       manualCandidate.receiving_capacity_units_per_day <= 0 ||
       manualCandidate.dispatch_capacity_units_per_day <= 0 ||
+      manualCandidate.opening_cost < 0 ||
+      manualCandidate.opening_cost_amortization_days <= 0 ||
+      manualCandidate.fixed_operating_cost_per_day < 0 ||
+      manualCandidate.handling_cost_per_unit < 0 ||
       manualCandidate.supported_storage_classes.length === 0
     ) {
       setError(t.validationError)
@@ -609,6 +671,27 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             <Button className="mt-6 w-full" onClick={optimize} disabled={pending}>
               <Play className="h-4 w-4" /> {pending ? t.optimizing : t.optimize}
             </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mb-5" aria-label={t.walkthrough}>
+        <Card>
+          <CardContent style={{ paddingTop: 'var(--ds-space-6)' }}>
+            <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr] lg:items-center">
+              <div>
+                <p className="text-sm font-medium text-slate-100">{t.walkthrough}</p>
+                <div className="mt-3 grid gap-2 text-sm text-slate-300">
+                  <p>{t.step1}</p>
+                  <p>{t.step2}</p>
+                  <p>{t.step3}</p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-cyan-400/15 bg-cyan-400/[.04] p-4">
+                <p className="text-sm font-medium text-cyan-100">{t.prospectOutcome}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{t.prospectOutcomeText}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -703,7 +786,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           unavailableWarehouseIds={unavailableIds}
           candidateAreas={candidateAreas}
           manualCandidate={manualCandidate}
-          currentFlows={SUPPLY_NETWORK_CURRENT_FLOWS}
+          currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
           selectedWarehouseId={selectedWarehouse?.id ?? null}
           onWarehouseSelect={selectWarehouse}
           onStoreSelect={selectStore}
@@ -881,14 +964,47 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                     />
                   </label>
                   <label className="text-xs text-slate-400">
-                    {t.operating}
+                    {t.openingCost}
                     <input
-                      aria-label={t.operating}
+                      aria-label={t.openingCost}
                       className="mt-1 w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm"
                       type="number"
                       min="0"
-                      value={candidateOperatingCost}
-                      onChange={(event) => setCandidateOperatingCost(Number(event.target.value))}
+                      value={candidateOpeningCost}
+                      onChange={(event) => setCandidateOpeningCost(Number(event.target.value))}
+                    />
+                  </label>
+                  <label className="text-xs text-slate-400">
+                    {t.openingAmortization}
+                    <input
+                      aria-label={t.openingAmortization}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+                      type="number"
+                      min="1"
+                      value={candidateOpeningAmortization}
+                      onChange={(event) => setCandidateOpeningAmortization(Number(event.target.value))}
+                    />
+                  </label>
+                  <label className="text-xs text-slate-400">
+                    {t.fixedOperatingCost}
+                    <input
+                      aria-label={t.fixedOperatingCost}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+                      type="number"
+                      min="0"
+                      value={candidateFixedOperatingCost}
+                      onChange={(event) => setCandidateFixedOperatingCost(Number(event.target.value))}
+                    />
+                  </label>
+                  <label className="text-xs text-slate-400">
+                    {t.handlingCost}
+                    <input
+                      aria-label={t.handlingCost}
+                      className="mt-1 w-full rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+                      type="number"
+                      min="0"
+                      value={candidateHandlingCost}
+                      onChange={(event) => setCandidateHandlingCost(Number(event.target.value))}
                     />
                   </label>
                 </div>
@@ -932,7 +1048,11 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
                           {' · '}
                           {locale === 'uk' ? 'ліміт' : locale === 'pl' ? 'limit' : 'limit'}{' '}
-                          <strong className="text-slate-200">{pct(activeNetwork.policy.maximum_node_fulfillment_share)}</strong>
+                          <strong className="text-slate-200">{pct(
+                            activeNetwork.unavailable_warehouse_ids.length
+                              ? activeNetwork.policy.emergency_maximum_node_fulfillment_share
+                              : activeNetwork.policy.maximum_node_fulfillment_share
+                          )}</strong>
                         </p>
                         <div>
                           <p className="mb-1 text-slate-500">{t.fulfillmentDistribution}</p>
@@ -1011,7 +1131,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           <span>{candidateOptionLabel(index, locale)}</span>
                           <span className="text-cyan-300">{t.pareto}</span>
                         </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-slate-400">
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400 sm:grid-cols-3 lg:grid-cols-6">
                           <span>
                             {t.service}: {pct(candidate.service_level ?? 0)}
                           </span>
@@ -1019,8 +1139,20 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                             {t.requiredCapacity}: {number(candidate.required_capacity_units ?? 0)}
                           </span>
                           <span>
+                            {t.peakReceiving}: {number(candidate.required_receiving_capacity_units_per_day ?? 0)}
+                          </span>
+                          <span>
+                            {t.peakDispatch}: {number(candidate.required_dispatch_capacity_units_per_day ?? 0)}
+                          </span>
+                          <span>
                             {t.logistics}:{' '}
                             {candidate.logistics_cost == null ? '—' : formatMoney(candidate.logistics_cost, locale)}
+                          </span>
+                          <span>
+                            {t.economicEffect}:{' '}
+                            {candidate.objective_improvement == null
+                              ? '—'
+                              : formatMoney(candidate.objective_improvement, locale)}
                           </span>
                         </div>
                       </div>
@@ -1038,7 +1170,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       {scenario ? (
         <section className="mt-8">
           <h2 className="ds-h2 mb-4">{t.scenarioComparison}</h2>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-4">
             {[
               { label: t.optimized, result: scenario.baseline },
               { label: t.reallocated, result: scenario.disrupted },
@@ -1084,9 +1216,10 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                     <h3 className="text-sm font-medium text-slate-200">{t.inboundAllocation}</h3>
                     <div className="mt-2 space-y-1 text-xs text-slate-400">
                       {visibleResult.inbound_allocation.map((item) => (
-                        <p key={`${item.supply_id}-${item.warehouse_id}`}>
+                        <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
                           {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
                           {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                          {item.transport_mode ? ` · ${item.transport_mode}` : ''}
                         </p>
                       ))}
                     </div>
@@ -1099,6 +1232,16 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           {humanizeConstraint(item, locale)}
                         </Badge>
                       ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-200">{t.costBreakdown}</h3>
+                    <div className="mt-2 space-y-1 text-xs text-slate-400">
+                      <p>{t.logistics}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
+                      <p>{t.stockoutCost}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
+                      <p>{t.reallocationCost}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
+                      <p>{t.facilityCost}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
+                      <p>{t.handlingCostResult}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
                     </div>
                   </div>
               </div>

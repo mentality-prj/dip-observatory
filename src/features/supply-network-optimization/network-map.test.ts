@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SUPPLY_NETWORK_CURRENT_FLOWS, SUPPLY_NETWORK_DEMO } from './demo-data'
+import { SUPPLY_NETWORK_DEMO } from './demo-data'
 import { buildFlowSegments } from './network-map'
 import type { OptimizationResult } from './domain'
 
@@ -17,12 +17,15 @@ const result = {
 
 describe('buildFlowSegments', () => {
   it('builds visible current network flows before optimization', () => {
-    const segments = buildFlowSegments(SUPPLY_NETWORK_DEMO, SUPPLY_NETWORK_CURRENT_FLOWS, null, null, [])
-    expect(segments.filter((item) => item.kind === 'current').length).toBeGreaterThan(0)
+    const segments = buildFlowSegments(SUPPLY_NETWORK_DEMO, SUPPLY_NETWORK_DEMO.baseline_fulfillment, null, null, [])
+    const current = segments.filter((item) => item.kind === 'current')
+    expect(current.length).toBeGreaterThan(0)
+    expect(current.every((item) => (item.units ?? 0) > 0)).toBe(true)
+    expect(current.some((item) => item.local)).toBe(true)
   })
 
   it('builds QDIP fulfillment, transfer and supplier inbound flows from the result', () => {
-    const segments = buildFlowSegments(SUPPLY_NETWORK_DEMO, SUPPLY_NETWORK_CURRENT_FLOWS, result, null, [])
+    const segments = buildFlowSegments(SUPPLY_NETWORK_DEMO, SUPPLY_NETWORK_DEMO.baseline_fulfillment, result, null, [])
     expect(segments.some((item) => item.kind === 'recommended')).toBe(true)
     expect(segments.some((item) => item.kind === 'transfer')).toBe(true)
     expect(segments.some((item) => item.kind === 'inbound')).toBe(true)

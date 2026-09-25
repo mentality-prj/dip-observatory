@@ -33,7 +33,12 @@ export function evaluateCandidateAreas(network: SupplyNetwork) {
       receiving_capacity_units_per_day: 340,
       dispatch_capacity_units_per_day: 380,
       supported_storage_classes: ['ambient', 'controlled'],
-      operating_cost: 88000,
+      operating_cost: 0,
+      opening_cost: 1200000,
+      opening_cost_amortization_days: 365,
+      fixed_operating_cost_per_day: 22000,
+      handling_cost_per_unit: 14,
+      minimum_distance_from_existing_warehouse_km: 40,
       maximum_candidates: 5,
     }),
   })

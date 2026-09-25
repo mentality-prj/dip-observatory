@@ -1,14 +1,4 @@
-import type { CurrentFlow, SupplyNetwork } from './domain'
-
-export const SUPPLY_NETWORK_CURRENT_FLOWS: CurrentFlow[] = [
-  { warehouse_id: 'north-hub', demand_point_id: 'north-coast' },
-  { warehouse_id: 'north-hub', demand_point_id: 'north-east' },
-  { warehouse_id: 'west-hub', demand_point_id: 'west' },
-  { warehouse_id: 'central-hub', demand_point_id: 'central' },
-  { warehouse_id: 'central-hub', demand_point_id: 'south-east' },
-  { warehouse_id: 'south-hub', demand_point_id: 'south' },
-  { warehouse_id: 'south-hub', demand_point_id: 'south-east' },
-]
+import type { SupplyNetwork } from './domain'
 
 export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   product_classes: [
@@ -57,18 +47,22 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     {
       id: 'incoming-core', supplier_id: 'supplier-main', product_class_id: 'core', available_units: 520,
       routes: [
-        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 336, lead_time_days: 2, capacity_units: 300 },
-        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 208, lead_time_days: 1, capacity_units: 360 },
-        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 272, lead_time_days: 1, capacity_units: 390 },
-        { to_warehouse_id: 'south-hub', transport_cost_per_unit: 176, lead_time_days: 1, capacity_units: 260 },
+        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 336, lead_time_days: 2, capacity_units: 300, transport_mode: 'road' },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 208, lead_time_days: 1, capacity_units: 360, transport_mode: 'road' },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 154, lead_time_days: 2, capacity_units: 240, transport_mode: 'rail' },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 272, lead_time_days: 1, capacity_units: 390, transport_mode: 'road' },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 205, lead_time_days: 2, capacity_units: 260, transport_mode: 'rail' },
+        { to_warehouse_id: 'south-hub', transport_cost_per_unit: 176, lead_time_days: 1, capacity_units: 260, transport_mode: 'road' },
       ],
     },
     {
       id: 'incoming-premium', supplier_id: 'supplier-main', product_class_id: 'premium', available_units: 170,
       routes: [
-        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 372, lead_time_days: 2, capacity_units: 150 },
-        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 256, lead_time_days: 1, capacity_units: 150 },
-        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 284, lead_time_days: 1, capacity_units: 170 },
+        { to_warehouse_id: 'north-hub', transport_cost_per_unit: 372, lead_time_days: 2, capacity_units: 150, transport_mode: 'road' },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 256, lead_time_days: 1, capacity_units: 150, transport_mode: 'road' },
+        { to_warehouse_id: 'west-hub', transport_cost_per_unit: 198, lead_time_days: 2, capacity_units: 100, transport_mode: 'rail' },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 284, lead_time_days: 1, capacity_units: 170, transport_mode: 'road' },
+        { to_warehouse_id: 'central-hub', transport_cost_per_unit: 218, lead_time_days: 2, capacity_units: 110, transport_mode: 'rail' },
       ],
     },
   ],
@@ -81,6 +75,7 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   ].map(([from_node_id,to_demand_point_id,lead_time_days,capacity_units_per_day,cost_per_unit]) => ({
     from_node_id: String(from_node_id), to_demand_point_id: String(to_demand_point_id),
     lead_time_days: Number(lead_time_days), capacity_units_per_day: Number(capacity_units_per_day), cost_per_unit: Number(cost_per_unit),
+    transport_mode: 'road',
   })),
   transfer_routes: [
     ['north-hub','central-hub',2,180,232], ['central-hub','north-hub',2,180,232],
@@ -90,6 +85,22 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
   ].map(([from_node_id,to_node_id,lead_time_days,capacity_units_per_day,cost_per_unit]) => ({
     from_node_id: String(from_node_id), to_node_id: String(to_node_id),
     lead_time_days: Number(lead_time_days), capacity_units_per_day: Number(capacity_units_per_day), cost_per_unit: Number(cost_per_unit),
+    transport_mode: 'road',
+  })),
+  baseline_fulfillment: [
+    ['north-hub', 'north-coast', 'core', 92], ['north-hub', 'north-coast', 'premium', 42], ['north-hub', 'north-coast', 'gift', 35],
+    ['north-hub', 'north-east', 'core', 63], ['north-hub', 'north-east', 'premium', 18], ['north-hub', 'north-east', 'gift', 29],
+    ['west-hub', 'west', 'core', 86], ['west-hub', 'west', 'premium', 31], ['west-hub', 'west', 'gift', 46],
+    ['central-hub', 'central', 'core', 130], ['central-hub', 'central', 'premium', 58], ['central-hub', 'central', 'gift', 71],
+    ['south-hub', 'south', 'core', 104], ['central-hub', 'south', 'premium', 39], ['south-hub', 'south', 'gift', 48],
+    ['central-hub', 'south-east', 'core', 39], ['south-hub', 'south-east', 'core', 38],
+    ['central-hub', 'south-east', 'premium', 22],
+    ['central-hub', 'south-east', 'gift', 17], ['south-hub', 'south-east', 'gift', 17],
+  ].map(([warehouse_id, demand_point_id, product_class_id, units_per_day]) => ({
+    warehouse_id: String(warehouse_id),
+    demand_point_id: String(demand_point_id),
+    product_class_id: String(product_class_id),
+    units_per_day: Number(units_per_day),
   })),
   unavailable_warehouse_ids: [],
   policy: {
@@ -97,6 +108,10 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     minimum_service_level: 0.88,
     maximum_node_inventory_exposure: 0.55,
     maximum_node_fulfillment_share: 0.55,
+    emergency_maximum_node_fulfillment_share: 0.80,
+    service_objective_mode: 'economic-with-service-floor',
+    reallocation_cost_per_unit: 140,
+    inbound_cancellation_penalty_per_unit: 90,
     solver_time_limit_seconds: 10,
     stockout_penalty_multiplier: 2,
     concentration_penalty_per_unit: 18,
