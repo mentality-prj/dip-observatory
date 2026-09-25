@@ -39,10 +39,31 @@ export const sharedI18n = {
   },
 } as const satisfies Localized<Record<string, string>>
 
+export const localeLabels: Localized<string> = {
+  en: 'EN',
+  uk: 'UA',
+  pl: 'PL',
+}
+
 export const observatoryI18n = {
-  en: { applications: 'Observatory applications', mobileApplications: 'Applications' },
-  uk: { applications: 'Застосунки Observatory', mobileApplications: 'Застосунки' },
-  pl: { applications: 'Aplikacje Observatory', mobileApplications: 'Aplikacje' },
+  en: {
+    applications: 'Observatory applications',
+    mobileApplications: 'Applications',
+    challenge: 'Decision Challenge',
+    openStudio: 'Open Studio',
+  },
+  uk: {
+    applications: 'Застосунки Observatory',
+    mobileApplications: 'Застосунки',
+    challenge: 'Виклик рішень',
+    openStudio: 'Відкрити Studio',
+  },
+  pl: {
+    applications: 'Aplikacje Observatory',
+    mobileApplications: 'Aplikacje',
+    challenge: 'Wyzwanie decyzyjne',
+    openStudio: 'Otwórz Studio',
+  },
 } as const satisfies Localized<Record<string, string>>
 
 export const marketingA11yI18n = {
