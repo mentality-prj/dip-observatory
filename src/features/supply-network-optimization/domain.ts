@@ -87,6 +87,7 @@ export type SupplyNetwork = {
     planning_horizon_days: number
     minimum_service_level: number
     maximum_node_inventory_exposure: number
+    maximum_node_fulfillment_share: number
     solver_time_limit_seconds: number
     stockout_penalty_multiplier: number
     concentration_penalty_per_unit: number
@@ -148,6 +149,7 @@ export type OptimizationResult = {
   }[]
   kpis: {
     service_level: number
+    maximum_fulfillment_share: number
     unserved_demand_units: number
     unserved_demand_value: number
     logistics_cost: number

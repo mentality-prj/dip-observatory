@@ -22,12 +22,16 @@ type Props = {
   candidateAreas: CandidateResult[]
   manualCandidate: CandidateWarehouse | null
   currentFlows: CurrentFlow[]
+  selectedWarehouseId: string | null
   onWarehouseSelect: (warehouse: Warehouse) => void
   onStoreSelect: (store: DemandPoint) => void
   onMapClick: (latitude: number, longitude: number) => void
 }
 
-const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable') => {
+const markerStyle = (
+  kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'manual-candidate' | 'unavailable',
+  selected = false
+) => {
   const element = document.createElement('button')
   element.type = 'button'
   element.setAttribute('aria-label', kind)
@@ -49,8 +53,14 @@ const markerStyle = (kind: 'warehouse' | 'store' | 'supplier' | 'candidate' | 'm
   element.style.boxSizing = 'border-box'
   element.style.appearance = 'none'
   element.style.borderRadius = kind === 'store' ? '50%' : '5px'
-  element.style.border = '2px solid rgba(255,255,255,.9)'
-  element.style.boxShadow = '0 1px 8px rgba(0,0,0,.45)'
+  element.style.border = '2px solid rgba(255,255,255,.95)'
+  element.style.boxShadow = selected
+    ? '0 0 0 4px #facc15, 0 0 0 7px rgba(15,23,42,.82), 0 2px 12px rgba(0,0,0,.65)'
+    : '0 1px 8px rgba(0,0,0,.45)'
+  if (kind === 'supplier' || kind === 'candidate') {
+    element.style.clipPath = 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'
+    element.style.borderRadius = '0'
+  }
   element.style.cursor = 'pointer'
   element.style.touchAction = 'manipulation'
   element.style.setProperty('-webkit-tap-highlight-color', 'transparent')
@@ -169,6 +179,7 @@ export function NetworkMap({
   candidateAreas,
   manualCandidate,
   currentFlows,
+  selectedWarehouseId,
   onWarehouseSelect,
   onStoreSelect,
   onMapClick,
@@ -249,7 +260,7 @@ export function NetworkMap({
 
       for (const warehouse of network.warehouses) {
         const unavailable = unavailableWarehouseIds.includes(warehouse.id)
-        const element = markerStyle(unavailable ? 'unavailable' : 'warehouse')
+        const element = markerStyle(unavailable ? 'unavailable' : 'warehouse', selectedWarehouseId === warehouse.id)
         element.dataset.networkMarker = 'warehouse'
         element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
         element.addEventListener('click', (event) => {
@@ -319,6 +330,7 @@ export function NetworkMap({
     onStoreSelect,
     onWarehouseSelect,
     result,
+    selectedWarehouseId,
     unavailableWarehouseIds,
   ])
 
@@ -330,34 +342,47 @@ export function NetworkMap({
         <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-testid="supply-network-flow-overlay">
           <defs>
             <marker id="flow-arrow-current" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 z" fill="#cbd5e1" />
+              <path d="M0,0 L8,4 L0,8 z" fill="#1e3a8a" />
             </marker>
             <marker id="flow-arrow-qdip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 z" fill="#22d3ee" />
+              <path d="M0,0 L8,4 L0,8 z" fill="#0f766e" />
             </marker>
             <marker id="flow-arrow-inbound" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 z" fill="#a78bfa" />
+              <path d="M0,0 L8,4 L0,8 z" fill="#6d28d9" />
             </marker>
           </defs>
           {projectedFlows.map((flow) => {
             const isCurrent = flow.kind === 'current'
             const isInbound = flow.kind === 'inbound'
-            const stroke = isCurrent ? '#cbd5e1' : isInbound ? '#a78bfa' : '#22d3ee'
+            const stroke = isCurrent ? '#1e3a8a' : isInbound ? '#6d28d9' : '#0f766e'
             const marker = isCurrent ? 'url(#flow-arrow-current)' : isInbound ? 'url(#flow-arrow-inbound)' : 'url(#flow-arrow-qdip)'
+            const dash = isCurrent ? '7 5' : undefined
             return (
-              <line
-                key={`${flow.kind}-${flow.index}`}
-                x1={flow.x1}
-                y1={flow.y1}
-                x2={flow.x2}
-                y2={flow.y2}
-                stroke={stroke}
-                strokeWidth={isCurrent ? 3 : 4}
-                strokeOpacity={isCurrent ? 0.8 : 0.95}
-                strokeDasharray={isCurrent ? '7 5' : undefined}
-                markerEnd={marker}
-                vectorEffect="non-scaling-stroke"
-              />
+              <g key={`${flow.kind}-${flow.index}`}>
+                <line
+                  x1={flow.x1}
+                  y1={flow.y1}
+                  x2={flow.x2}
+                  y2={flow.y2}
+                  stroke="#ffffff"
+                  strokeWidth={isCurrent ? 6 : 7}
+                  strokeOpacity={0.78}
+                  strokeDasharray={dash}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <line
+                  x1={flow.x1}
+                  y1={flow.y1}
+                  x2={flow.x2}
+                  y2={flow.y2}
+                  stroke={stroke}
+                  strokeWidth={isCurrent ? 3.5 : 4.5}
+                  strokeOpacity={1}
+                  strokeDasharray={dash}
+                  markerEnd={marker}
+                  vectorEffect="non-scaling-stroke"
+                />
+              </g>
             )
           })}
         </svg>
@@ -371,12 +396,36 @@ export function NetworkMap({
         </div>
       ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5 text-[11px] text-slate-200 sm:right-auto sm:max-w-[80%]">
-        <span className="rounded bg-slate-950/90 px-2 py-1">▰ {locale === 'uk' ? 'Склад' : locale === 'pl' ? 'Magazyn' : 'Warehouse'}</span>
-        <span className="rounded bg-slate-950/90 px-2 py-1">● {locale === 'uk' ? 'Регіон попиту' : locale === 'pl' ? 'Region popytu' : 'Demand region'}</span>
-        {currentFlows.length > 0 ? <span className="rounded bg-slate-950/90 px-2 py-1">→ {locale === 'uk' ? 'Поточні потоки' : locale === 'pl' ? 'Bieżące przepływy' : 'Current flows'}</span> : null}
-        {projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? <span className="rounded bg-slate-950/90 px-2 py-1 text-cyan-200">→ {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}</span> : null}
-        <span className="rounded bg-slate-950/90 px-2 py-1 text-violet-200">◆ {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}</span>
-        {candidateAreas.some((item) => item.feasible) || manualCandidate ? <span className="rounded bg-slate-950/90 px-2 py-1">◇ {locale === 'uk' ? 'Варіант складу' : locale === 'pl' ? 'Wariant magazynu' : 'Warehouse option'}</span> : null}
+        <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+          <span className="h-3 w-3 rounded-[2px] border border-white bg-cyan-400" />
+          {locale === 'uk' ? 'Склад' : locale === 'pl' ? 'Magazyn' : 'Warehouse'}
+        </span>
+        <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+          <span className="h-3 w-3 rounded-full border border-white bg-slate-200" />
+          {locale === 'uk' ? 'Регіон попиту' : locale === 'pl' ? 'Region popytu' : 'Demand region'}
+        </span>
+        {currentFlows.length > 0 ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="text-base font-bold leading-none text-blue-800">→</span>
+            {locale === 'uk' ? 'Поточні потоки' : locale === 'pl' ? 'Bieżące przepływy' : 'Current flows'}
+          </span>
+        ) : null}
+        {projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="text-base font-bold leading-none text-teal-600">→</span>
+            {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}
+          </span>
+        ) : null}
+        <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+          <span className="h-3 w-3 bg-violet-700" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
+          {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}
+        </span>
+        {candidateAreas.some((item) => item.feasible) || manualCandidate ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="h-3 w-3 bg-amber-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
+            {locale === 'uk' ? 'Варіант складу' : locale === 'pl' ? 'Wariant magazynu' : 'Warehouse option'}
+          </span>
+        ) : null}
       </div>
     </div>
   )

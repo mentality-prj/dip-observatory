@@ -83,7 +83,8 @@ const copy = {
     evaluate: 'Check this warehouse',
     candidateNotUsed:
       'Adding a warehouse at this location is not worthwhile. Under the current conditions it does not improve the network, so QDIP finds a better plan without using it.',
-    candidateUsed: 'This warehouse improves the network. QDIP included it in the updated supply plan.',
+    candidateUsed: 'QDIP included this warehouse in the updated plan while keeping fulfillment distributed across the network.',
+    fulfillmentExposure: 'Largest share supplied by one warehouse',
     demand: 'Demand',
     source: 'Supplying warehouse',
     status: 'Demand coverage',
@@ -177,7 +178,8 @@ const copy = {
     evaluate: 'Перевірити цей склад',
     candidateNotUsed:
       'Додавати склад у цій точці недоцільно. За поточних умов він не покращує роботу мережі, тому QDIP знаходить кращий план без нього.',
-    candidateUsed: 'Цей склад покращує роботу мережі. QDIP включив його до оновленого плану постачання.',
+    candidateUsed: 'QDIP включив цей склад до оновленого плану, зберігши розподіл постачання між складами мережі.',
+    fulfillmentExposure: 'Найбільша частка постачання з одного складу',
     demand: 'Попит',
     source: 'Склад, з якого постачаємо',
     status: 'Виконання попиту',
@@ -272,7 +274,8 @@ const copy = {
     evaluate: 'Sprawdź ten magazyn',
     candidateNotUsed:
       'Dodanie magazynu w tej lokalizacji nie jest opłacalne. W obecnych warunkach nie poprawia działania sieci, dlatego QDIP znajduje lepszy plan bez jego wykorzystania.',
-    candidateUsed: 'Ten magazyn poprawia działanie sieci. QDIP uwzględnił go w zaktualizowanym planie dostaw.',
+    candidateUsed: 'QDIP uwzględnił ten magazyn w zaktualizowanym planie, zachowując rozproszenie dostaw między magazynami.',
+    fulfillmentExposure: 'Największy udział dostaw z jednego magazynu',
     demand: 'Popyt',
     source: 'Magazyn realizujący dostawy',
     status: 'Realizacja popytu',
@@ -679,6 +682,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           candidateAreas={candidateAreas}
           manualCandidate={manualCandidate}
           currentFlows={SUPPLY_NETWORK_CURRENT_FLOWS}
+          selectedWarehouseId={selectedWarehouse?.id ?? null}
           onWarehouseSelect={selectWarehouse}
           onStoreSelect={selectStore}
           onMapClick={selectMapLocation}
@@ -891,9 +895,20 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <Plus className="h-4 w-4" /> {t.evaluate}
                 </Button>
                 {manualEvaluation ? (
-                  <p className={`mt-3 text-sm ${manualEvaluation.used ? 'text-emerald-300' : 'text-amber-200'}`}>
-                    {manualEvaluation.used ? t.candidateUsed : t.candidateNotUsed}
-                  </p>
+                  <div className="mt-3 space-y-2">
+                    <p className={`text-sm ${manualEvaluation.used ? 'text-emerald-300' : 'text-amber-200'}`}>
+                      {manualEvaluation.used ? t.candidateUsed : t.candidateNotUsed}
+                    </p>
+                    {manualEvaluation.used && manualResult ? (
+                      <p className="text-xs text-slate-400">
+                        {t.fulfillmentExposure}:{' '}
+                        <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
+                        {' · '}
+                        {locale === 'uk' ? 'ліміт' : locale === 'pl' ? 'limit' : 'limit'}{' '}
+                        <strong className="text-slate-200">{pct(activeNetwork.policy.maximum_node_fulfillment_share)}</strong>
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
               </CardContent>
             </Card>

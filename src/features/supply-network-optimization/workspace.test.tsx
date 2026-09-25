@@ -19,11 +19,12 @@ vi.mock('./lazy-map', () => ({
       warehouses: Array<{ id: string; label?: string }>
       demand_points: Array<{ id: string; label: string }>
     }
+    selectedWarehouseId: string | null
     onWarehouseSelect: (warehouse: unknown) => void
     onStoreSelect: (store: unknown) => void
     onMapClick: (latitude: number, longitude: number) => void
   }) => (
-    <div data-testid="mock-map">
+    <div data-testid="mock-map" data-selected-warehouse={props.selectedWarehouseId ?? ''}>
       <button onClick={() => props.onWarehouseSelect(props.network.warehouses[0])}>select warehouse</button>
       <button onClick={() => props.onStoreSelect(props.network.demand_points[0])}>select store</button>
       <button onClick={() => props.onMapClick(51.5, 20.2)}>select map location</button>
@@ -84,6 +85,7 @@ const optimized: OptimizationResult = {
   ],
   kpis: {
     service_level: 0.95,
+    maximum_fulfillment_share: 0.55,
     unserved_demand_units: 20,
     unserved_demand_value: 2400,
     logistics_cost: 12000,
@@ -203,6 +205,7 @@ describe('SupplyNetworkOptimizationWorkspace', () => {
     render(<SupplyNetworkOptimizationWorkspace locale="uk" />)
 
     await user.click(screen.getByRole('button', { name: /Львівський склад/ }))
+    expect(screen.getByTestId('mock-map')).toHaveAttribute('data-selected-warehouse', 'west-hub')
     expect(screen.getByText(/якщо цей склад стане повністю недоступним/)).toBeVisible()
   })
 
