@@ -751,5 +751,11 @@
       "imported": "Zaimportowany zestaw",
       "demo": "Dane demo · syntetyczne i zagregowane · bez danych osobowych"
     }
+  },
+  "metadata": {
+    "observatory": {
+      "title": "QDIP Observatory | Polski interfejs",
+      "description": "Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i uzasadnienia decyzji."
+    }
   }
 }
