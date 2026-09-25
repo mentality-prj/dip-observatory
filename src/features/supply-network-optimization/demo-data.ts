@@ -96,6 +96,7 @@ export const SUPPLY_NETWORK_DEMO: SupplyNetwork = {
     planning_horizon_days: 4,
     minimum_service_level: 0.88,
     maximum_node_inventory_exposure: 0.55,
+    maximum_node_fulfillment_share: 0.55,
     solver_time_limit_seconds: 10,
     stockout_penalty_multiplier: 2,
     concentration_penalty_per_unit: 18,
