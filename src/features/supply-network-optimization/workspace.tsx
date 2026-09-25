@@ -77,6 +77,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const [baseline, setBaseline] = useState<OptimizationResult | null>(null)
   const [scenario, setScenario] = useState<ScenarioComparison | null>(null)
   const [candidateAreas, setCandidateAreas] = useState<CandidateResult[]>([])
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null)
   const [manualResult, setManualResult] = useState<OptimizationResult | null>(null)
   const [manualEvaluation, setManualEvaluation] = useState<CandidateResult | null>(null)
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null)
@@ -162,6 +163,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
         setManualResult(null)
         setManualEvaluation(null)
         setCandidateAreas([])
+        setSelectedCandidateId(null)
       } catch (reason) {
         setError(t[requestErrorKey(reason)])
       } finally {
@@ -179,6 +181,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
       const disruptedNetwork = withUnavailable(SUPPLY_NETWORK_DEMO, scenario.unavailable_warehouse_id)
       const candidates = await runCandidateAreas(disruptedNetwork)
       setCandidateAreas(candidates.candidates)
+      setSelectedCandidateId(candidates.candidates.find((item) => item.feasible && item.pareto_efficient)?.candidate_id ?? null)
     } catch (reason) {
       setError(t[requestErrorKey(reason)])
     } finally {
@@ -377,7 +380,9 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
             manualCandidate={manualCandidate}
             currentFlows={SUPPLY_NETWORK_DEMO.baseline_fulfillment}
             selectedWarehouseId={selectedWarehouse?.id ?? null}
+            selectedCandidateId={selectedCandidateId}
             onWarehouseSelect={selectWarehouse}
+            onCandidateSelect={setSelectedCandidateId}
             onStoreSelect={selectStore}
             onMapClick={selectMapLocation}
           />
@@ -794,46 +799,82 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 >
                   <Plus className="h-4 w-4" /> {candidatePending ? t.findingImprovements : t.findImprovements}
                 </Button>
-              ) : paretoCandidates.length ? (
+              ) : (
                 <div>
-                  <p className="mb-3 text-sm text-slate-400">{t.frontierHint}</p>
+                  <p className="mb-2 text-sm text-slate-400">{t.frontierHint}</p>
+                  <p className="mb-3 text-xs text-slate-500">
+                    {t.evaluatedCandidates}: {candidateAreas.length} · {t.recommendedCandidates}: {paretoCandidates.length}
+                  </p>
                   <div className="space-y-2">
-                    {paretoCandidates.slice(0, 5).map((candidate, index) => (
-                      <div key={candidate.candidate_id} className="rounded-md border border-cyan-400/15 p-3 text-sm">
-                        <div className="flex items-center justify-between gap-3">
-                          <span>{candidateOptionLabel(index, locale)}</span>
-                          <span className="text-cyan-300">{t.pareto}</span>
-                        </div>
-                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400 sm:grid-cols-3 lg:grid-cols-6">
-                          <span>
-                            {t.service}: {pct(candidate.service_level ?? 0)}
-                          </span>
-                          <span>
-                            {t.requiredCapacity}: {number(candidate.required_capacity_units ?? 0)}
-                          </span>
-                          <span>
-                            {t.peakReceiving}: {number(candidate.required_receiving_capacity_units_per_day ?? 0)}
-                          </span>
-                          <span>
-                            {t.peakDispatch}: {number(candidate.required_dispatch_capacity_units_per_day ?? 0)}
-                          </span>
-                          <span>
-                            {t.logistics}:{' '}
-                            {candidate.logistics_cost == null ? '—' : formatMoney(candidate.logistics_cost, locale)}
-                          </span>
-                          <span>
-                            {t.economicEffect}:{' '}
-                            {candidate.objective_improvement == null
-                              ? '—'
-                              : formatMoney(candidate.objective_improvement, locale)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                    {candidateAreas.map((candidate, index) => {
+                      const selected = selectedCandidateId === candidate.candidate_id
+                      const status = !candidate.feasible ? t.infeasibleCandidate : candidate.pareto_efficient ? t.pareto : t.dominatedCandidate
+                      return (
+                        <button
+                          key={candidate.candidate_id}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => setSelectedCandidateId(candidate.candidate_id)}
+                          className={`w-full rounded-md border p-3 text-left text-sm transition ${
+                            selected
+                              ? 'border-amber-300/70 bg-amber-300/[.06] ring-1 ring-amber-300/50'
+                              : candidate.pareto_efficient
+                                ? 'border-cyan-400/20 hover:border-cyan-300/40'
+                                : candidate.feasible
+                                  ? 'border-slate-600/50 opacity-80 hover:border-slate-400/70'
+                                  : 'border-red-400/20 opacity-70 hover:border-red-300/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span>{candidateOptionLabel(index, locale)}</span>
+                            <span
+                              className={
+                                !candidate.feasible
+                                  ? 'text-red-300'
+                                  : candidate.pareto_efficient
+                                    ? 'text-cyan-300'
+                                    : 'text-slate-400'
+                              }
+                            >
+                              {status}
+                            </span>
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400 sm:grid-cols-3 lg:grid-cols-6">
+                            <span>
+                              {t.service}: {candidate.service_level == null ? '—' : pct(candidate.service_level)}
+                            </span>
+                            <span>
+                              {t.requiredCapacity}:{' '}
+                              {candidate.required_capacity_units == null ? '—' : number(candidate.required_capacity_units)}
+                            </span>
+                            <span>
+                              {t.peakReceiving}:{' '}
+                              {candidate.required_receiving_capacity_units_per_day == null
+                                ? '—'
+                                : number(candidate.required_receiving_capacity_units_per_day)}
+                            </span>
+                            <span>
+                              {t.peakDispatch}:{' '}
+                              {candidate.required_dispatch_capacity_units_per_day == null
+                                ? '—'
+                                : number(candidate.required_dispatch_capacity_units_per_day)}
+                            </span>
+                            <span>
+                              {t.logistics}:{' '}
+                              {candidate.logistics_cost == null ? '—' : formatMoney(candidate.logistics_cost, locale)}
+                            </span>
+                            <span>
+                              {t.economicEffect}:{' '}
+                              {candidate.objective_improvement == null
+                                ? '—'
+                                : formatMoney(candidate.objective_improvement, locale)}
+                            </span>
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
-              ) : (
-                <p className="text-sm text-slate-400">{t.noCandidate}</p>
               )}
             </CardContent>
           </Card>
