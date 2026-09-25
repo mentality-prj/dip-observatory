@@ -12,7 +12,6 @@ import {
   candidateOptionLabel,
   constraintDisplayLabel,
   demandDisplayLabel,
-  entityDisplayLabel,
   formatMoney,
   formatNumber,
   productClassDisplayLabel,
@@ -105,12 +104,13 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     [scenario]
   )
   const visibleResult = manualResult ?? scenario?.disrupted ?? baseline
+  const manualCandidateLabel = t('manualCandidate')
 
   const manualCandidate = useMemo<CandidateWarehouse | null>(() => {
     if (!candidateLocation) return null
     return {
       id: 'manual-candidate',
-      label: t('manualCandidate'),
+      label: manualCandidateLabel,
       latitude: candidateLocation.latitude,
       longitude: candidateLocation.longitude,
       capacity_units: candidateCapacity,
@@ -133,7 +133,7 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
     candidateHandlingCost,
     candidateReceiving,
     candidateStorage,
-    t('manualCandidate'),
+    manualCandidateLabel,
   ])
 
   const selectedService =
