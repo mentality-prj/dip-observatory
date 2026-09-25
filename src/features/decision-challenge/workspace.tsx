@@ -35,6 +35,18 @@ const copy = {
     title: 'Make the decision before QDIP does',
     intro: 'Allocate the same constrained resources QDIP will receive. Your choice is locked before the recommendation is calculated.',
     loading: 'Preparing the decision…',
+    howTitle: 'How it works',
+    howIntro: 'You control 4 teams that must be assigned across 5 competing locations.',
+    howGoal: 'Goal: make the best allocation you can using each location’s demand, team skills and capacity, the budget and hard constraints.',
+    howSteps: [
+      'Review the teams and the demand at each location.',
+      'In “Your decision”, choose one allowed location for each team.',
+      'Select “Check constraints”. If the allocation is infeasible, adjust it and check again.',
+      'When the allocation is feasible, lock your decision. You cannot change it in this run.',
+      'QDIP then solves the exact same frozen problem without seeing or changing your choice.',
+      'Compare your allocation with QDIP by modeled economic value and inspect the explanation.',
+    ],
+    howImportant: 'QDIP’s recommendation stays hidden until you lock your own decision.',
     ownData: 'Use your own data',
     ownDataHelp: 'Upload aggregated Resource Allocation data (CSV / XML / XLSX). The file is validated before a new frozen challenge is created.',
     upload: 'Upload data',
@@ -86,6 +98,18 @@ const copy = {
     title: 'Прийміть рішення раніше за QDIP',
     intro: 'Розподіліть ті самі обмежені ресурси, які отримає QDIP. Ваш вибір фіксується до розрахунку рекомендації.',
     loading: 'Готуємо рішення…',
+    howTitle: 'Як це працює',
+    howIntro: 'Ви керуєте 4 командами, які потрібно розподілити між 5 конкуруючими локаціями.',
+    howGoal: 'Мета: скласти найкращий, на вашу думку, розподіл з урахуванням потреб локацій, навичок і потужності команд, бюджету та жорстких обмежень.',
+    howSteps: [
+      'Перегляньте команди та потреби кожної локації.',
+      'У блоці «Ваше рішення» виберіть для кожної команди одну з дозволених локацій.',
+      'Натисніть «Перевірити обмеження». Якщо розподіл недопустимий — змініть його та перевірте ще раз.',
+      'Коли рішення стане допустимим, зафіксуйте його. У цьому запуску змінити його вже не можна.',
+      'Після цього QDIP розв’яже ту саму зафіксовану задачу, не змінюючи ваш вибір.',
+      'Порівняйте свій розподіл із QDIP за модельованою економічною цінністю та перегляньте пояснення.',
+    ],
+    howImportant: 'Рекомендація QDIP прихована, доки ви не зафіксуєте власне рішення.',
     ownData: 'Використати власні дані',
     ownDataHelp: 'Завантажте агреговані дані Resource Allocation (CSV / XML / XLSX). Файл перевіряється до створення нового frozen challenge.',
     upload: 'Завантажити дані',
@@ -137,6 +161,18 @@ const copy = {
     title: 'Podejmij decyzję, zanim zrobi to QDIP',
     intro: 'Przydziel te same ograniczone zasoby, które otrzyma QDIP. Twój wybór zostaje zablokowany przed obliczeniem rekomendacji.',
     loading: 'Przygotowywanie decyzji…',
+    howTitle: 'Jak to działa',
+    howIntro: 'Zarządzasz 4 zespołami, które trzeba przydzielić między 5 konkurujących lokalizacji.',
+    howGoal: 'Cel: przygotuj najlepszy według Ciebie przydział, uwzględniając popyt lokalizacji, kompetencje i zdolność zespołów, budżet oraz twarde ograniczenia.',
+    howSteps: [
+      'Przejrzyj zespoły oraz zapotrzebowanie każdej lokalizacji.',
+      'W sekcji „Twoja decyzja” wybierz dla każdego zespołu jedną z dozwolonych lokalizacji.',
+      'Kliknij „Sprawdź ograniczenia”. Jeśli przydział jest niedopuszczalny, zmień go i sprawdź ponownie.',
+      'Gdy decyzja jest dopuszczalna, zablokuj ją. W tym uruchomieniu nie będzie można jej zmienić.',
+      'Następnie QDIP rozwiąże dokładnie ten sam zamrożony problem bez zmiany Twojego wyboru.',
+      'Porównaj swój przydział z QDIP według modelowanej wartości ekonomicznej i przejrzyj wyjaśnienie.',
+    ],
+    howImportant: 'Rekomendacja QDIP pozostaje ukryta, dopóki nie zablokujesz własnej decyzji.',
     ownData: 'Użyj własnych danych',
     ownDataHelp: 'Prześlij zagregowane dane Resource Allocation (CSV / XML / XLSX). Plik jest walidowany przed utworzeniem nowego zamrożonego Challenge.',
     upload: 'Prześlij dane',
@@ -373,6 +409,17 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
         <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl">{t.title}</h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-slate-400">{t.intro}</p>
       </div>
+
+      <section className="ds-card mb-6 p-6 sm:p-8">
+        <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">00 · {t.howTitle}</div>
+        <h2 className="mt-2 text-2xl font-semibold">{t.howTitle}</h2>
+        <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">{t.howIntro}</p>
+        <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300"><strong>{t.howGoal.split(':')[0]}:</strong>{t.howGoal.slice(t.howGoal.indexOf(':') + 1)}</p>
+        <ol className="mt-5 grid gap-3 text-sm leading-6 text-slate-400">
+          {t.howSteps.map((step, index) => <li key={step} className="flex gap-3"><span className="font-mono text-cyan-300">{index + 1}.</span><span>{step}</span></li>)}
+        </ol>
+        <div className="mt-5 rounded-[var(--ds-radius-panel)] border border-cyan-300/20 bg-cyan-300/[0.05] p-4 text-sm text-slate-300"><strong>{t.howImportant}</strong></div>
+      </section>
 
       <section className="ds-card mb-6 p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
