@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
+import { hardConstraintEvidence } from './constraint-evidence'
 import type { OptimizationResult, SupplyNetwork } from './domain'
 import {
   demandDisplayLabel,
@@ -14,9 +15,9 @@ import {
 
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
-function routeBottleneck(result: OptimizationResult) {
+function routeBottleneck(result: OptimizationResult, network: SupplyNetwork) {
   const counts = new Map<string, number>()
-  for (const constraint of result.binding_constraints) {
+  for (const constraint of hardConstraintEvidence(result, network)) {
     const [kind, from, to] = constraint.split(':')
     if (kind !== 'delivery-route-capacity' || !from || !to) continue
     const key = `${from}:${to}`
@@ -50,7 +51,7 @@ export function ExecutiveDecisionSummary({
   network: SupplyNetwork
 }) {
   const t = getSupplyNetworkI18n(locale).summary
-  const route = routeBottleneck(result)
+  const route = routeBottleneck(result, network)
   const utilization = peakUtilization(result)
   const baselineUtilization = baseline ? peakUtilization(baseline) : null
   const number = (value: number) => formatNumber(value, locale)
