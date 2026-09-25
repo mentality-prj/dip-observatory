@@ -504,7 +504,20 @@
       "rationaleCost": "Przemieszczenia i koszt",
       "rawEvidence": "Szczegółowe wskaźniki modelu",
       "technicalMethod": "Metoda obliczeń",
-      "heuristic": "Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego."
+      "heuristic": "Dla dużych przestrzeni decyzyjnych używany jest deterministyczny branch-aware beam search; interfejs nie przedstawia wyniku heurystyki jako matematycznie gwarantowanego optimum globalnego.",
+      "horizonDemand": "Potrzeby w horyzoncie",
+      "expectedDuringHorizon": "oczekiwanych w okresie",
+      "demandUnitHelp": "Jednostka potrzeby jest syntetyczną jednostką planowania; w pilotażu zostanie powiązana z Państwa sprawą, konsultacją lub inną jednostką pracy.",
+      "rationalePriorityBody": "QDIP priorytetyzuje potrzeby o wysokim znaczeniu tam, gdzie przydzielony zespół ma odpowiednie kompetencje.",
+      "rationaleHorizonBody": "QDIP ocenia wszystkie {days} dni łącznie: lokalizacja na koniec dnia zmienia dopuszczalne decyzje dnia następnego.",
+      "rationaleConstraintsBody": "QDIP sprawdza dostępność lokalizacji, dopuszczalność przydziału, zgodność kompetencji, możliwość przemieszczenia i limity zespołów.",
+      "rationaleCostBody": "Plan: {moved}/{total} zespołów zmienia lokalizację, {events} przemieszczeń w ciągu {days} dni.",
+      "movesToday": "Przemieszczenia tego dnia",
+      "restoreBaseline": "Przywróć scenariusz bazowy",
+      "pilotKicker": "07 · SPRAWDŹ NA WŁASNYCH DANYCH",
+      "pilotTitle": "Sprawdź QDIP na jednym rzeczywistym tygodniu",
+      "pilotBody": "Wystarczą dane zagregowane: lokalizacje, potrzeby według usług, zespoły, ich kompetencje i zdolność, dostępność oraz trasy. Dane osobowe beneficjentów nie są potrzebne.",
+      "pilotUpload": "Wczytaj dane zagregowane"
     },
     "importer": {
       "title": "Dane klienta",
@@ -668,7 +681,10 @@
       "feasible": "Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.",
       "qdip": "Plan QDIP",
       "yours": "Twój plan",
-      "difference": "Różnica"
+      "difference": "Różnica",
+      "coverageSame": "Twój plan pokrywa tyle samo jednostek potrzeb co plan QDIP.",
+      "coverageMore": "Twój plan pokrywa o {delta} jednostek potrzeb więcej.",
+      "coverageLess": "Twój plan pokrywa o {delta} jednostek potrzeb mniej."
     },
     "assignmentExplanation": {
       "title": "Dlaczego właśnie tutaj?",
