@@ -57,8 +57,8 @@ test('locks the human choice before revealing QDIP comparison', async ({ page })
           human_action_hash: 'human-hash',
           qdip_action: { alpha: 'south', bravo: 'north' },
           qdip_action_hash: 'qdip-hash',
-          human_evaluation: { feasible: true },
-          qdip_evaluation: { feasible: true },
+          human_evaluation: { feasible: true, metrics: {}, economic_inputs: {}, constraint_violations: [], evidence: [], data_quality_warnings: [] },
+          qdip_evaluation: { feasible: true, metrics: {}, economic_inputs: {}, constraint_violations: [], evidence: [], data_quality_warnings: [] },
           optimizer_score: 1,
           human_economic_outcome: { policy_id: 'human', policy_version: '1', decision_id: 'run-1', objective: { objective_id: 'value', metric_id: 'nominal', direction: 'maximize', unit: 'EUR', currency: 'EUR' }, nominal_value: 1200 },
           qdip_economic_outcome: { policy_id: 'qdip', policy_version: '1', decision_id: 'run-1', objective: { objective_id: 'value', metric_id: 'nominal', direction: 'maximize', unit: 'EUR', currency: 'EUR' }, nominal_value: 1100 },
@@ -86,8 +86,11 @@ test('locks the human choice before revealing QDIP comparison', async ({ page })
 
 test('rejects oversized challenge uploads at the public proxy boundary', async ({ request }) => {
   const response = await request.post('/api/decision-challenge/runs', {
-    headers: { 'content-length': '1200000', 'content-type': 'application/json' },
-    data: { challenge_id: 'resource-allocation-v1' },
+    headers: { 'content-type': 'application/json' },
+    data: {
+      challenge_id: 'resource-allocation-v1',
+      scenario: { padding: 'x'.repeat(1_100_001) },
+    },
   })
   expect(response.status()).toBe(413)
 })

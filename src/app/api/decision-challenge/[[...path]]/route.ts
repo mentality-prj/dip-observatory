@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const runtime = 'nodejs'
-const MAX_BODY_BYTES = 1_100_000
 import {
   getDecisionChallenge,
   listDecisionChallenges,
@@ -11,6 +9,9 @@ import {
   validateDecisionChallengeAction,
 } from '@/features/decision-challenge/server'
 import { DipApiError } from '@/shared/dip/server-client'
+
+export const runtime = 'nodejs'
+const MAX_BODY_BYTES = 1_100_000
 
 const token = /^[a-zA-Z0-9_.:-]+$/
 

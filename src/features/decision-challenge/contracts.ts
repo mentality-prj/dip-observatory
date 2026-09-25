@@ -33,7 +33,6 @@ const actionEvaluationSchema = z.object({
   economic_inputs: z.record(z.string(), z.number()).default({}),
   constraint_violations: z.array(z.string()).default([]),
   evidence: z.array(z.record(z.string(), z.unknown())).default([]),
-  evaluation_reproducibility: evaluationReproducibilitySchema,
   data_quality_warnings: z.array(z.string()).default([]),
 })
 
