@@ -31,8 +31,6 @@ import type {
   Warehouse,
 } from './domain'
 
-
-
 const pct = (value: number) => `${Math.round(value * 100)}%`
 
 function Metric({ label, value }: { label: string; value: string }) {
@@ -147,9 +145,8 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
   const paretoCandidates = candidateAreas.filter((item) => item.feasible && item.pareto_efficient)
   const manualFulfillmentDistribution = manualResult ? fulfillmentDistribution(manualResult) : []
   const manualCandidateShare = manualCandidate
-    ? manualFulfillmentDistribution.find((item) => item.warehouseId === manualCandidate.id)?.share ?? 0
+    ? (manualFulfillmentDistribution.find((item) => item.warehouseId === manualCandidate.id)?.share ?? 0)
     : 0
-
 
   const makeUnavailable = useCallback(
     async (warehouseId: string) => {
@@ -263,7 +260,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 <p className="text-xs text-slate-500">{t('productClasses')}</p>
               </div>
             </div>
-
           </CardContent>
         </Card>
       </section>
@@ -395,49 +391,59 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 lg:grid-cols-3">
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-200">{t('endingInventory')}</h3>
-                        <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          {visibleResult.ending_inventory.slice(0, 8).map((item) => (
-                            <p key={`${item.warehouse_id}-${item.product_class_id}`}>
-                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                            </p>
-                          ))}
-                        </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200">{t('endingInventory')}</h3>
+                      <div className="mt-2 space-y-1 text-xs text-slate-400">
+                        {visibleResult.ending_inventory.slice(0, 8).map((item) => (
+                          <p key={`${item.warehouse_id}-${item.product_class_id}`}>
+                            {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                            {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                          </p>
+                        ))}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-200">{t('inboundAllocation')}</h3>
-                        <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          {visibleResult.inbound_allocation.map((item) => (
-                            <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
-                              {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
-                              {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
-                              {item.transport_mode ? ` · ${item.transport_mode}` : ''}
-                            </p>
-                          ))}
-                        </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200">{t('inboundAllocation')}</h3>
+                      <div className="mt-2 space-y-1 text-xs text-slate-400">
+                        {visibleResult.inbound_allocation.map((item) => (
+                          <p key={`${item.supply_id}-${item.warehouse_id}-${item.transport_mode ?? 'default'}`}>
+                            {productClassDisplayLabel(item.product_class_id, locale)} →{' '}
+                            {warehouseDisplayLabel(item.warehouse_id, locale)}: {number(item.units)}
+                            {item.transport_mode ? ` · ${item.transport_mode}` : ''}
+                          </p>
+                        ))}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-200">{t('bindingConstraints')}</h3>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {visibleResult.binding_constraints.slice(0, 8).map((item) => (
-                            <Badge key={item} variant="neutral">
-                              {constraintDisplayLabel(item, locale)}
-                            </Badge>
-                          ))}
-                        </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200">{t('bindingConstraints')}</h3>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {visibleResult.binding_constraints.slice(0, 8).map((item) => (
+                          <Badge key={item} variant="neutral">
+                            {constraintDisplayLabel(item, locale)}
+                          </Badge>
+                        ))}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-200">{t('costBreakdown')}</h3>
-                        <div className="mt-2 space-y-1 text-xs text-slate-400">
-                          <p>{t('logistics')}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}</p>
-                          <p>{t('stockoutCost')}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}</p>
-                          <p>{t('reallocationCost')}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}</p>
-                          <p>{t('facilityCost')}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}</p>
-                          <p>{t('handlingCostResult')}: {formatMoney(visibleResult.kpis.handling_cost, locale)}</p>
-                        </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-200">{t('costBreakdown')}</h3>
+                      <div className="mt-2 space-y-1 text-xs text-slate-400">
+                        <p>
+                          {t('logistics')}: {formatMoney(visibleResult.kpis.logistics_cost, locale)}
+                        </p>
+                        <p>
+                          {t('stockoutCost')}: {formatMoney(visibleResult.kpis.stockout_cost, locale)}
+                        </p>
+                        <p>
+                          {t('reallocationCost')}: {formatMoney(visibleResult.kpis.reallocation_cost, locale)}
+                        </p>
+                        <p>
+                          {t('facilityCost')}: {formatMoney(visibleResult.kpis.facility_fixed_cost, locale)}
+                        </p>
+                        <p>
+                          {t('handlingCostResult')}: {formatMoney(visibleResult.kpis.handling_cost, locale)}
+                        </p>
                       </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -465,10 +471,14 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                       className={`min-h-11 rounded-lg border px-3 py-2 text-left text-sm transition ${selected ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-100' : 'border-white/10 bg-white/[.02] text-slate-200 hover:border-white/20'}`}
                     >
                       <span className="flex items-center justify-between gap-3">
-                        <span className="font-medium">{warehouseDisplayLabel(warehouse.id, locale, warehouse.label)}</span>
+                        <span className="font-medium">
+                          {warehouseDisplayLabel(warehouse.id, locale, warehouse.label)}
+                        </span>
                         {unavailable ? <Badge variant="amber">{t('unavailable')}</Badge> : null}
                       </span>
-                      <span className="mt-1 block text-xs text-slate-500">{t('capacity')}: {number(warehouse.capacity_units)}</span>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        {t('capacity')}: {number(warehouse.capacity_units)}
+                      </span>
                     </button>
                   )
                 })}
@@ -486,21 +496,31 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                   <Metric label={t('capacity')} value={number(selectedWarehouse.capacity_units)} />
                   <Metric
                     label={t('currentInventory')}
-                    value={number(Object.values(selectedWarehouse.current_inventory).reduce((sum, units) => sum + units, 0))}
+                    value={number(
+                      Object.values(selectedWarehouse.current_inventory).reduce((sum, units) => sum + units, 0)
+                    )}
                   />
                   <Metric label={t('receiving')} value={number(selectedWarehouse.receiving_capacity_units_per_day)} />
                   <Metric label={t('dispatch')} value={number(selectedWarehouse.dispatch_capacity_units_per_day)} />
                   <div className="col-span-2 rounded-lg border border-white/10 bg-white/[.02] p-3">
                     <div className="text-xs text-slate-500">{t('storage')}</div>
                     <div className="mt-1 text-sm text-slate-200">
-                      {selectedWarehouse.supported_storage_classes.map((storageClass) => storageClassDisplayLabel(storageClass, locale)).join(' · ')}
+                      {selectedWarehouse.supported_storage_classes
+                        .map((storageClass) => storageClassDisplayLabel(storageClass, locale))
+                        .join(' · ')}
                     </div>
                   </div>
                   {selectedUtilization ? (
                     <>
                       <Metric label={t('utilizationAfterPlan')} value={pct(selectedUtilization.capacity_utilization)} />
-                      <Metric label={t('actualPeakReceiving')} value={number(selectedUtilization.peak_receiving_units_per_day)} />
-                      <Metric label={t('actualPeakDispatch')} value={number(selectedUtilization.peak_dispatch_units_per_day)} />
+                      <Metric
+                        label={t('actualPeakReceiving')}
+                        value={number(selectedUtilization.peak_receiving_units_per_day)}
+                      />
+                      <Metric
+                        label={t('actualPeakDispatch')}
+                        value={number(selectedUtilization.peak_dispatch_units_per_day)}
+                      />
                     </>
                   ) : null}
                 </div>
@@ -700,11 +720,13 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           <strong className="text-slate-200">{pct(manualResult.kpis.maximum_fulfillment_share)}</strong>
                           {' · '}
                           {t('limit')}{' '}
-                          <strong className="text-slate-200">{pct(
-                            activeNetwork.unavailable_warehouse_ids.length
-                              ? activeNetwork.policy.emergency_maximum_node_fulfillment_share
-                              : activeNetwork.policy.maximum_node_fulfillment_share
-                          )}</strong>
+                          <strong className="text-slate-200">
+                            {pct(
+                              activeNetwork.unavailable_warehouse_ids.length
+                                ? activeNetwork.policy.emergency_maximum_node_fulfillment_share
+                                : activeNetwork.policy.maximum_node_fulfillment_share
+                            )}
+                          </strong>
                         </p>
                         <div>
                           <p className="mb-1 text-slate-500">{t('fulfillmentDistribution')}</p>
@@ -736,8 +758,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           )}
         </div>
       </section>
-
-
 
       {scenario ? (
         <section id="supply-alternatives" className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr]">
@@ -846,8 +866,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
           </div>
         </section>
       ) : null}
-
-
     </main>
   )
 }

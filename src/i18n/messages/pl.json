@@ -45,14 +45,8 @@
     ],
     "alternatives": "Alternatywy",
     "alternativeItems": [
-      [
-        "Bieżąca alokacja",
-        "Zachowaj obecne rozmieszczenie zespołów"
-      ],
-      [
-        "Ręczne nadpisanie",
-        "Osoba odpowiedzialna zmienia proponowany plan"
-      ]
+      ["Bieżąca alokacja", "Zachowaj obecne rozmieszczenie zespołów"],
+      ["Ręczne nadpisanie", "Osoba odpowiedzialna zmienia proponowany plan"]
     ],
     "trace": "Otwórz ślad decyzji",
     "traceBody": "Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.",
@@ -62,35 +56,15 @@
     "open": "Przeanalizuj decyzję",
     "inspect": "Cztery pytania, na które powinno odpowiadać Observatory",
     "questions": [
-      [
-        "Co jest rekomendowane?",
-        "Zobacz wybrane działanie i wykonalne alternatywy."
-      ],
-      [
-        "Dlaczego?",
-        "Sprawdź dowody, priorytety, ograniczenia i kompromisy."
-      ],
-      [
-        "Co się zmieniło?",
-        "Porównaj stan i scenariusz, które doprowadziły do innego wyniku."
-      ],
-      [
-        "Co zmieni decyzję?",
-        "Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację."
-      ]
+      ["Co jest rekomendowane?", "Zobacz wybrane działanie i wykonalne alternatywy."],
+      ["Dlaczego?", "Sprawdź dowody, priorytety, ograniczenia i kompromisy."],
+      ["Co się zmieniło?", "Porównaj stan i scenariusz, które doprowadziły do innego wyniku."],
+      ["Co zmieni decyzję?", "Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację."]
     ],
     "note": "Dema są wstępnie skonfigurowanymi aplikacjami decyzyjnymi. Studio konfiguruje model, QDIP Core go ocenia, a Observatory udostępnia wynik do inspekcji."
   },
   "observatoryDecisionNarrative": {
-    "labels": [
-      "Sytuacja",
-      "Alternatywy",
-      "Ocena",
-      "Ryzyko / niepewność",
-      "Rekomendacja",
-      "Dowody",
-      "Ślad decyzji"
-    ],
+    "labels": ["Sytuacja", "Alternatywy", "Ocena", "Ryzyko / niepewność", "Rekomendacja", "Dowody", "Ślad decyzji"],
     "helper": "Jedna logika weryfikacji dla każdej aplikacji QDIP.",
     "ariaLabel": "Logika decyzji"
   },

@@ -45,14 +45,8 @@
     ],
     "alternatives": "Alternatives",
     "alternativeItems": [
-      [
-        "Current allocation",
-        "Keep the existing team placement"
-      ],
-      [
-        "Manual override",
-        "Responsible person changes the proposed plan"
-      ]
+      ["Current allocation", "Keep the existing team placement"],
+      ["Manual override", "Responsible person changes the proposed plan"]
     ],
     "trace": "Open decision trace",
     "traceBody": "Needs and available teams → feasible allocations → constraint checks → priority evaluation → recommended allocation.",
@@ -62,35 +56,15 @@
     "open": "Inspect decision",
     "inspect": "The four questions Observatory should answer",
     "questions": [
-      [
-        "What is recommended?",
-        "See the selected action and viable alternatives."
-      ],
-      [
-        "Why?",
-        "Inspect evidence, priorities, constraints and trade-offs."
-      ],
-      [
-        "What changed?",
-        "Compare the state and scenario that produced a different result."
-      ],
-      [
-        "What would change it?",
-        "Explore which constraints or evidence can move the recommendation."
-      ]
+      ["What is recommended?", "See the selected action and viable alternatives."],
+      ["Why?", "Inspect evidence, priorities, constraints and trade-offs."],
+      ["What changed?", "Compare the state and scenario that produced a different result."],
+      ["What would change it?", "Explore which constraints or evidence can move the recommendation."]
     ],
     "note": "Demos are preconfigured decision applications. Studio configures the decision model; QDIP Core evaluates it; Observatory makes the result inspectable."
   },
   "observatoryDecisionNarrative": {
-    "labels": [
-      "Situation",
-      "Alternatives",
-      "Evaluation",
-      "Risk / uncertainty",
-      "Recommendation",
-      "Evidence",
-      "Trace"
-    ],
+    "labels": ["Situation", "Alternatives", "Evaluation", "Risk / uncertainty", "Recommendation", "Evidence", "Trace"],
     "helper": "One inspection grammar across every QDIP application.",
     "ariaLabel": "Decision narrative"
   },

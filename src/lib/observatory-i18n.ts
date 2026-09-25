@@ -8,13 +8,7 @@ import {
 } from '@/i18n/config'
 import { translate } from '@/i18n/runtime'
 
-export {
-  DEFAULT_LOCALE,
-  LOCALE_TAGS,
-  SUPPORTED_LOCALES,
-  isSupportedLocale,
-  type Locale,
-}
+export { DEFAULT_LOCALE, LOCALE_TAGS, SUPPORTED_LOCALES, isSupportedLocale, type Locale }
 
 export const buildLocalePath = localizePath
 export const LOCALE_STORAGE_KEY = 'qdip-observatory-locale'
@@ -26,9 +20,7 @@ export function detectLocaleFromHeader(value?: string | null): Locale {
     .filter(Boolean) as string[]
 
   for (const candidate of candidates) {
-    const locale = SUPPORTED_LOCALES.find((item) =>
-      candidate.toLowerCase().startsWith(item),
-    )
+    const locale = SUPPORTED_LOCALES.find((item) => candidate.toLowerCase().startsWith(item))
     if (locale) return locale
   }
   return DEFAULT_LOCALE

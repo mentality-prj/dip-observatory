@@ -7,13 +7,7 @@ const INTERNAL_REWRITE_HEADER = 'x-qdip-internal-rewrite'
 type Surface = 'site' | 'studio' | 'observatory' | 'local'
 
 function requestHost(request: NextRequest) {
-  return (
-    request.headers.get('x-forwarded-host') ??
-    request.headers.get('host') ??
-    ''
-  )
-    .split(':')[0]
-    .toLowerCase()
+  return (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').split(':')[0].toLowerCase()
 }
 
 function resolveSurface(host: string): Surface {
@@ -60,9 +54,7 @@ function routeStudio(request: NextRequest) {
 
   if (pathname === '/') return redirectPath(request, '/en')
 
-  const localized = pathname.match(
-    new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
-  )
+  const localized = pathname.match(new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`))
   if (localized) {
     const locale = localized[1]
     const suffix = localized[2] ?? ''
@@ -102,24 +94,14 @@ function routeSite(request: NextRequest) {
 
   if (pathname === '/') return NextResponse.next()
 
-  const internalPlatformPath = pathname.match(
-    new RegExp(`^/platform/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
-  )
+  const internalPlatformPath = pathname.match(new RegExp(`^/platform/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`))
   if (internalPlatformPath) {
-    return redirectPath(
-      request,
-      `/${internalPlatformPath[1]}${internalPlatformPath[2] ?? ''}`
-    )
+    return redirectPath(request, `/${internalPlatformPath[1]}${internalPlatformPath[2] ?? ''}`)
   }
 
-  const publicPath = pathname.match(
-    new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`)
-  )
+  const publicPath = pathname.match(new RegExp(`^/${SUPPORTED_LOCALE_PATTERN}(/.*)?$`))
   if (publicPath) {
-    return rewritePath(
-      request,
-      `/platform/${publicPath[1]}${publicPath[2] ?? ''}`
-    )
+    return rewritePath(request, `/platform/${publicPath[1]}${publicPath[2] ?? ''}`)
   }
 
   return NextResponse.next()

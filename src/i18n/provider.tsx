@@ -6,13 +6,7 @@ import { createTranslator, type Translator } from './runtime'
 
 const LocaleContext = createContext<Locale | null>(null)
 
-export function I18nProvider({
-  locale,
-  children,
-}: {
-  locale: Locale
-  children: ReactNode
-}) {
+export function I18nProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
   return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>
 }
 

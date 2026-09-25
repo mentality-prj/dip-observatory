@@ -43,20 +43,11 @@ const useCases = [
 export type UseCaseId = (typeof useCases)[number]['id']
 export const DIP_USE_CASES: readonly DipUseCase[] = useCases
 export const observableUseCases = () =>
-  [...DIP_USE_CASES]
-    .filter((item) => item.navigation.visible)
-    .sort((a, b) => a.navigation.order - b.navigation.order)
-export const findUseCaseById = (id: string) =>
-  DIP_USE_CASES.find((item) => item.id === id)
-export const findUseCaseByRoute = (route: string) =>
-  DIP_USE_CASES.find((item) => item.route === route)
-export function findUseCaseByPlugin(
-  pluginId: string,
-  capabilityId?: string,
-): DipUseCase | undefined {
+  [...DIP_USE_CASES].filter((item) => item.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order)
+export const findUseCaseById = (id: string) => DIP_USE_CASES.find((item) => item.id === id)
+export const findUseCaseByRoute = (route: string) => DIP_USE_CASES.find((item) => item.route === route)
+export function findUseCaseByPlugin(pluginId: string, capabilityId?: string): DipUseCase | undefined {
   return DIP_USE_CASES.find(
-    (item) =>
-      item.plugin.id === pluginId &&
-      (!capabilityId || item.plugin.capability === capabilityId),
+    (item) => item.plugin.id === pluginId && (!capabilityId || item.plugin.capability === capabilityId)
   )
 }
