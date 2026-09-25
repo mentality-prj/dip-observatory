@@ -119,3 +119,22 @@ test('retired Supply Network Resilience route is not publicly routable', async (
     expect(response?.status()).toBe(404)
   }
 })
+
+
+test.describe('Observatory product-home routing regression', () => {
+  for (const locale of locales) {
+    test(`${locale} product lockup returns to Observatory home without client runtime errors`, async ({ page }) => {
+      const errors = capturePageErrors(page)
+      const response = await page.goto(
+        `http://observatory.localhost:3000/${locale}/supply-network-optimization`,
+        { waitUntil: 'domcontentloaded' }
+      )
+      expect(response?.status()).toBeLessThan(400)
+
+      await page.getByRole('link', { name: 'QDIP Observatory home' }).click()
+      await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/${locale}/?$`))
+      await expect(page.locator('#main-content')).toBeVisible()
+      await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
+    })
+  }
+})
