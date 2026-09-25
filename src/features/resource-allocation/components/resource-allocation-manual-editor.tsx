@@ -3,11 +3,6 @@
 import { useMemo, useState } from 'react'
 import { Pencil, RefreshCw } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
-import {
-  resourceAllocationExtraI18n,
-  resourceAllocationInterpolate,
-  resourceAllocationManualEditorI18n,
-} from '../i18n'
 import type {
   EvaluatedManualAllocation,
   ResourceAllocationManualEvaluation as Evaluation,
@@ -18,7 +13,86 @@ import { localizePlanningDay, trackResourceAllocation } from '../presentation'
 
 type DayPlan = { day: string; recommended: { assignments: Record<string, string | null> } }
 type InputTeam = { id: string; current_community: string }
-
+const copy = {
+  uk: {
+    section: 'ПЕРЕВІРТЕ ВЛАСНЕ РІШЕННЯ',
+    title: 'Не погоджуєтесь з рекомендацією? Перевірте свій варіант',
+    description:
+      'Змініть призначення команд. QDIP не скасує ваші зміни — він оцінить їх наслідки: покриття потреб, непокритий попит, переміщення та порушення обмежень.',
+    reset: 'Скинути',
+    team: 'Команда',
+    unassigned: 'Не призначено',
+    evaluate: 'Оцінити мої зміни',
+    evaluating: 'Перевірка…',
+    use: 'Використати мій варіант для рішення',
+    priority: 'Пріоритетні потреби',
+    total: 'Усі потреби',
+    served: 'Буде покрито',
+    unmet: 'Не буде покрито',
+    travel: 'Індекс переміщень',
+    day: 'День',
+    destination: 'Ваш варіант',
+    qdipRecommends: 'QDIP рекомендує',
+    advanced: 'Розширене редагування',
+    violations: 'порушень обмежень',
+    feasible: 'Ручний план допустимий за поточних обмежень.',
+    qdip: 'План QDIP',
+    yours: 'Ваш план',
+    difference: 'Різниця',
+  },
+  en: {
+    section: 'TEST YOUR OWN DECISION',
+    title: 'Disagree with the recommendation? Test your own allocation',
+    description:
+      'Change team assignments. QDIP will not optimize your edits away — it evaluates their consequences: coverage, unmet demand, movement and constraint violations.',
+    reset: 'Reset',
+    team: 'Team',
+    unassigned: 'Unassigned',
+    evaluate: 'Evaluate my changes',
+    evaluating: 'Evaluating…',
+    use: 'Use my plan for the decision',
+    priority: 'Priority needs',
+    total: 'All needs',
+    served: 'Expected covered',
+    unmet: 'Expected uncovered',
+    travel: 'Movement cost index',
+    day: 'Day',
+    destination: 'Your choice',
+    qdipRecommends: 'QDIP recommends',
+    advanced: 'Advanced editing',
+    violations: 'constraint violations',
+    feasible: 'The manual plan is feasible under current constraints.',
+    qdip: 'QDIP plan',
+    yours: 'Your plan',
+    difference: 'Difference',
+  },
+  pl: {
+    section: 'SPRAWDŹ WŁASNĄ DECYZJĘ',
+    title: 'Nie zgadzasz się z rekomendacją? Sprawdź własny wariant',
+    description:
+      'Zmień przydziały zespołów. QDIP nie cofnie Twoich zmian — oceni ich skutki: pokrycie potrzeb, niezaspokojony popyt, przemieszczenia i naruszenia ograniczeń.',
+    reset: 'Resetuj',
+    team: 'Zespół',
+    unassigned: 'Nieprzydzielony',
+    evaluate: 'Oceń moje zmiany',
+    evaluating: 'Ocena…',
+    use: 'Użyj mojego wariantu do decyzji',
+    priority: 'Potrzeby priorytetowe',
+    total: 'Wszystkie potrzeby',
+    served: 'Zostanie pokryte',
+    unmet: 'Pozostanie bez pokrycia',
+    travel: 'Indeks kosztu przemieszczeń',
+    day: 'Dzień',
+    destination: 'Twój wariant',
+    qdipRecommends: 'QDIP rekomenduje',
+    advanced: 'Edycja zaawansowana',
+    violations: 'naruszeń ograniczeń',
+    feasible: 'Plan ręczny jest dopuszczalny przy bieżących ograniczeniach.',
+    qdip: 'Plan QDIP',
+    yours: 'Twój plan',
+    difference: 'Różnica',
+  },
+} as const
 
 export function ResourceAllocationManualEditor({
   input,
@@ -39,8 +113,7 @@ export function ResourceAllocationManualEditor({
   onUseModified: (selected: EvaluatedManualAllocation) => void
   locale: Locale
 }) {
-  const t = resourceAllocationManualEditorI18n[locale]
-  const extra = resourceAllocationExtraI18n[locale]
+  const t = copy[locale]
   const seed = useMemo(
     () => Object.fromEntries(plan.daily.map((day) => [day.day, { ...day.recommended.assignments }])),
     [plan]
@@ -251,18 +324,23 @@ export function ResourceAllocationManualEditor({
             </div>
             {typeof demand?.served === 'number' && (
               <div className="border-t border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-                {demand.served === referenceSummary.served
-                  ? extra.manualSame
-                  : resourceAllocationInterpolate(
-                      demand.served > referenceSummary.served
-                        ? extra.manualMore
-                        : extra.manualFewer,
-                      {
-                        delta: Math.round(
-                          Math.abs(demand.served - referenceSummary.served),
-                        ),
-                      },
-                    )}
+                {locale === 'uk'
+                  ? demand.served === referenceSummary.served
+                    ? 'Ваш план покриває стільки ж одиниць потреб, як план QDIP.'
+                    : demand.served > referenceSummary.served
+                      ? `Ваш план покриває на ${Math.round(demand.served - referenceSummary.served)} одиниць потреб більше.`
+                      : `Ваш план покриває на ${Math.round(referenceSummary.served - demand.served)} одиниць потреб менше.`
+                  : locale === 'pl'
+                    ? demand.served === referenceSummary.served
+                      ? 'Twój plan pokrywa tyle samo jednostek potrzeb co plan QDIP.'
+                      : demand.served > referenceSummary.served
+                        ? `Twój plan pokrywa o ${Math.round(demand.served - referenceSummary.served)} jednostek potrzeb więcej.`
+                        : `Twój plan pokrywa o ${Math.round(referenceSummary.served - demand.served)} jednostek potrzeb mniej.`
+                    : demand.served === referenceSummary.served
+                      ? 'Your plan covers the same number of demand units as the QDIP plan.'
+                      : demand.served > referenceSummary.served
+                        ? `Your plan covers ${Math.round(demand.served - referenceSummary.served)} more demand units.`
+                        : `Your plan covers ${Math.round(referenceSummary.served - demand.served)} fewer demand units.`}
               </div>
             )}
           </div>
