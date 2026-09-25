@@ -40,57 +40,57 @@ const markerStyle = (
   selected = false,
   ariaLabel: string = kind,
 ) => {
-  const element = document('createElement')('button')
-  element('type') = 'button'
-  element('setAttribute')('aria-label', ariaLabel)
+  const element = document.createElement('button')
+  element.type = 'button'
+  element.setAttribute('aria-label', ariaLabel)
   const size = kind === 'store' ? '14px' : kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '34px' : '20px'
   // Reset global button/mobile styles so MapLibre markers remain true squares/circles.
-  element('style').width = size
-  element('style').height = size
-  element('style').minWidth = size
-  element('style').minHeight = size
-  element('style').maxWidth = size
-  element('style').maxHeight = size
-  element('style').padding = '0'
-  element('style').margin = '0'
-  element('style').display = 'flex'
-  element('style').alignItems = 'center'
-  element('style').justifyContent = 'center'
-  element('style').flex = '0 0 auto'
-  element('style').lineHeight = '1'
-  element('style').boxSizing = 'border-box'
-  element('style').appearance = 'none'
-  element('style').borderRadius = kind === 'store' ? '50%' : '5px'
-  element('style').border = '2px solid rgba(255,255,255,.95)'
-  element('style').boxShadow = selected
+  element.style.width = size
+  element.style.height = size
+  element.style.minWidth = size
+  element.style.minHeight = size
+  element.style.maxWidth = size
+  element.style.maxHeight = size
+  element.style.padding = '0'
+  element.style.margin = '0'
+  element.style.display = 'flex'
+  element.style.alignItems = 'center'
+  element.style.justifyContent = 'center'
+  element.style.flex = '0 0 auto'
+  element.style.lineHeight = '1'
+  element.style.boxSizing = 'border-box'
+  element.style.appearance = 'none'
+  element.style.borderRadius = kind === 'store' ? '50%' : '5px'
+  element.style.border = '2px solid rgba(255,255,255,.95)'
+  element.style.boxShadow = selected
     ? '0 0 0 4px #facc15, 0 0 0 7px rgba(15,23,42,.82), 0 2px 12px rgba(0,0,0,.65)'
     : '0 1px 8px rgba(0,0,0,.45)'
   if (kind === 'supplier' || kind === 'candidate' || kind === 'manual-candidate') {
-    element('style').clipPath = 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'
-    element('style').borderRadius = '0'
+    element.style.clipPath = 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)'
+    element.style.borderRadius = '0'
   }
-  element('style').cursor = 'pointer'
-  element('style').touchAction = 'manipulation'
-  element('style').setProperty('-webkit-tap-highlight-color', 'transparent')
+  element.style.cursor = 'pointer'
+  element.style.touchAction = 'manipulation'
+  element.style.setProperty('-webkit-tap-highlight-color', 'transparent')
   // Warehouses are actionable network nodes. Keep them above demand/store
   // markers when geographic coordinates overlap so the warehouse action
   // remains reachable (for example Kyiv warehouse + Kyiv demand region).
-  element('style').zIndex = kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
-  element('style').background =
+  element.style.zIndex = kind === 'warehouse' || kind === 'manual-candidate' || kind === 'unavailable' ? '20' : kind === 'candidate' ? '10' : kind === 'supplier' ? '5' : '1'
+  element.style.background =
     kind === 'unavailable' ? '#ef4444'
       : kind === 'candidate' || kind === 'manual-candidate' ? '#f59e0b'
         : kind === 'warehouse' ? '#22d3ee'
           : kind === 'supplier' ? '#a78bfa'
             : '#e2e8f0'
   if (kind === 'unavailable') {
-    element('style').borderRadius = '50%'
-    element('style').transform = 'none'
-    element('style').setProperty('font-size', '15px')
-    element('style').setProperty('font-weight', '800')
-    element('style').setProperty('line-height', '1')
-    element('style').setProperty('text-align', 'center')
-    element('style').setProperty('color', '#fff')
-    element('textContent') = '×'
+    element.style.borderRadius = '50%'
+    element.style.transform = 'none'
+    element.style.setProperty('font-size', '15px')
+    element.style.setProperty('font-weight', '800')
+    element.style.setProperty('line-height', '1')
+    element.style.setProperty('text-align', 'center')
+    element.style.setProperty('color', '#fff')
+    element.textContent = '×'
   }
   return element
 }
@@ -104,7 +104,7 @@ function coordinate(
   const warehouse = network.warehouses.find((item) => item.id === id)
   if (warehouse) return [warehouse.longitude, warehouse.latitude]
   const point = network.demand_points.find((item) => item.id === id)
-  if (point) return [point('longitude'), point('latitude')]
+  if (point) return [point.longitude, point.latitude]
   const supplier = network.suppliers.find((item) => item.id === id)
   if (supplier) return [supplier.longitude, supplier.latitude]
   if (manualCandidate?.id === id) return [manualCandidate.longitude, manualCandidate.latitude]
@@ -178,13 +178,13 @@ export function buildFlowSegments(
     else aggregated.set(key, { kind, fromId, toId, units })
   }
 
-  for (const item of result('fulfillment')) {
+  for (const item of result.fulfillment) {
     addFlow('recommended', item.warehouse_id, item.demand_point_id, item.units)
   }
-  for (const item of result('transfers')) {
+  for (const item of result.transfers) {
     addFlow('transfer', item.from_warehouse_id, item.to_warehouse_id, item.units)
   }
-  for (const item of result('inbound_allocation')) {
+  for (const item of result.inbound_allocation) {
     addFlow('inbound', item.supplier_id, item.warehouse_id, item.units)
   }
 
@@ -270,9 +270,9 @@ export function NetworkMap({
       resizeObserver = new ResizeObserver(resize)
       resizeObserver.observe(containerRef.current)
       localMap.on('click', (event) => {
-        const target = event('originalEvent')?.target
-        if (target instanceof HTMLElement && target('closest')('[data-network-marker]')) return
-        clickRef.current(event('lngLat').lat, event('lngLat').lng)
+        const target = event.originalEvent?.target
+        if (target instanceof HTMLElement && target.closest('[data-network-marker]')) return
+        clickRef.current(event.lngLat.lat, event.lngLat.lng)
       })
       const refreshOverlay = () => projectFlowsRef.current()
       localMap.on('move', refreshOverlay)
@@ -281,7 +281,7 @@ export function NetworkMap({
     })
     return () => {
       cancelled = true
-      markersRef.current('forEach')((marker) => marker.remove())
+      markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
       resizeObserver?.disconnect()
       localMap?.remove()
@@ -295,7 +295,7 @@ export function NetworkMap({
     void loadMapLibre().then((maplibre) => {
       const map = mapRef.current
       if (cancelled || !mapReady || !maplibre || !map) return
-      markersRef.current('forEach')((marker) => marker.remove())
+      markersRef.current.forEach((marker) => marker.remove())
       markersRef.current = []
 
       for (const warehouse of network.warehouses) {
@@ -305,49 +305,49 @@ export function NetworkMap({
           selectedWarehouseId === warehouse.id,
           t('warehouse'),
         )
-        element('dataset').networkMarker = 'warehouse'
-        element('title') = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
-        element('addEventListener')('click', (event) => {
-          event('stopPropagation')()
+        element.dataset.networkMarker = 'warehouse'
+        element.title = warehouseDisplayLabel(warehouse.id, locale, warehouse.label)
+        element.addEventListener('click', (event) => {
+          event.stopPropagation()
           onWarehouseSelect(warehouse)
         })
-        markersRef.current('push')(
+        markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([warehouse.longitude, warehouse.latitude]).addTo(map)
         )
       }
       for (const store of network.demand_points) {
         const element = markerStyle('store', false, t('store'))
-        element('dataset').networkMarker = 'store'
-        element('title') = demandDisplayLabel(store.id, locale, store.label)
-        element('addEventListener')('click', (event) => {
-          event('stopPropagation')()
+        element.dataset.networkMarker = 'store'
+        element.title = demandDisplayLabel(store.id, locale, store.label)
+        element.addEventListener('click', (event) => {
+          event.stopPropagation()
           onStoreSelect(store)
         })
-        markersRef.current('push')(
+        markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([store.longitude, store.latitude]).addTo(map)
         )
       }
       for (const supplier of network.suppliers) {
         const element = markerStyle('supplier', false, t('supplier'))
-        element('dataset').networkMarker = 'supplier'
-        element('title') = supplierDisplayLabel(supplier.id, locale, supplier.label)
-        markersRef.current('push')(
+        element.dataset.networkMarker = 'supplier'
+        element.title = supplierDisplayLabel(supplier.id, locale, supplier.label)
+        markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([supplier.longitude, supplier.latitude]).addTo(map)
         )
       }
       for (const [index, candidate] of candidateAreas.filter((item) => item.feasible).entries()) {
         const element = markerStyle('candidate', false, t('warehouseOption'))
-        element('dataset').networkMarker = 'candidate'
-        element('title') = candidateOptionLabel(index, locale)
-        markersRef.current('push')(
+        element.dataset.networkMarker = 'candidate'
+        element.title = candidateOptionLabel(index, locale)
+        markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map)
         )
       }
       if (manualCandidate) {
         const element = markerStyle('manual-candidate', false, t('warehouseOption'))
-        element('dataset').networkMarker = 'manual-candidate'
-        element('title') = manualCandidate.label ?? manualCandidate.id
-        markersRef.current('push')(
+        element.dataset.networkMarker = 'manual-candidate'
+        element.title = manualCandidate.label ?? manualCandidate.id
+        markersRef.current.push(
           new maplibre.Marker({ element }).setLngLat([manualCandidate.longitude, manualCandidate.latitude]).addTo(map)
         )
       }
@@ -376,13 +376,13 @@ export function NetworkMap({
       const flowSegments = buildFlowSegments(network, currentFlows, result, manualCandidate, candidateAreas)
       const visibleFlowSegments = flowSegments.filter((segment) => {
         if (flowView === 'compare') return true
-        if (flowView === 'current') return segment('kind') === 'current'
-        return segment('kind') !== 'current'
+        if (flowView === 'current') return segment.kind === 'current'
+        return segment.kind !== 'current'
       })
       const projectFlows = () => {
         setProjectedFlows(visibleFlowSegments.map((segment, index) => {
-          const from = map.project(segment('from'))
-          const to = map.project(segment('to'))
+          const from = map.project(segment.from)
+          const to = map.project(segment.to)
           return { ...segment, index, x1: from.x, y1: from.y, x2: to.x, y2: to.y }
         }))
       }
