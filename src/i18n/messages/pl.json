@@ -337,7 +337,19 @@
     "metadata": {
       "title": "Wyzwanie decyzyjne — QDIP Observatory",
       "description": "Podejmij własną decyzję i porównaj ją z rekomendacją QDIP dla tego samego problemu."
-    }
+    },
+    "comparisonUnavailable": "Porównanie jest niedostępne: metadane celu ekonomicznego są niespójne.",
+    "problem": "Problem",
+    "humanAction": "Decyzja człowieka",
+    "qdipAction": "Decyzja QDIP",
+    "replay": "Odtworzenie",
+    "evidenceRevision": "Dowody",
+    "economicModel": "Model ekonomiczny",
+    "modelVersions": "Wersje modeli",
+    "evaluator": "Ewaluator",
+    "evaluationContext": "Kontekst oceny",
+    "nextStep": "NASTĘPNY KROK",
+    "priorityDemand": "popyt priorytetowy"
   },
   "gtmLab": {
     "subtitle": "Określ, które firmy zasługują na uwagę handlową, dlaczego i jaki powinien być następny krok.",
