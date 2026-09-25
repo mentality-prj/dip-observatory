@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { ChevronRight, FlaskConical, Globe2, Home, Menu, Network, Scale, SlidersHorizontal, UsersRound } from 'lucide-react'
 import { ProductShell, type DesignTheme } from '@/design-system'
-import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
+import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { localeLabels, observatoryI18n, sharedI18n } from '@/lib/product-i18n'
 import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
@@ -14,7 +14,7 @@ import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
 type PrototypeShellProps = { locale: Locale; children: React.ReactNode; theme?: PrototypeTheme }
-const LOCALES: Locale[] = ['en', 'uk', 'pl']
+const LOCALES = SUPPORTED_LOCALES
 
 export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeShellProps) {
   const pathname = usePathname()
