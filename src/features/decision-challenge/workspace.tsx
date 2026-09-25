@@ -62,10 +62,6 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
   const [submissionId, setSubmissionId] = useState('')
 
   async function begin(scenarioOverride?: Record<string, unknown>) {
-    setLoading(true)
-    setError(null)
-    setViolations([])
-    setValid(false)
     try {
       const nextSubmissionId = newSubmissionId()
       const definitions = await loadChallenges()
@@ -90,10 +86,20 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  function restart() {
+    setLoading(true)
+    setError(null)
+    setViolations([])
+    setValid(false)
+    void begin()
+  }
+
   async function importCustomerScenario(file: File | undefined) {
     if (!file) return
     setLoading(true)
     setError(null)
+    setViolations([])
+    setValid(false)
     try {
       const imported = await importResourceAllocationFile(file)
       await begin(imported as unknown as Record<string, unknown>)
@@ -180,7 +186,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
         <div className="ds-card p-8">
           <CircleAlert className="mb-4 h-6 w-6 text-rose-300" />
           <p>{error ?? t('unavailable')}</p>
-          <button className="ds-button ds-button-primary ds-button-md mt-5" onClick={() => void begin()}>{t('restart')}</button>
+          <button className="ds-button ds-button-primary ds-button-md mt-5" onClick={restart}>{t('restart')}</button>
         </div>
       </main>
     )
@@ -239,7 +245,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
               <FileUp className="h-4 w-4" />{t('upload')}
               <input className="sr-only" type="file" accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { const file = event.target.files?.[0]; void importCustomerScenario(file); event.currentTarget.value = '' }} />
             </label>
-            <button className="ds-button ds-button-secondary ds-button-md" onClick={() => void begin()}>{t('demoData')}</button>
+            <button className="ds-button ds-button-secondary ds-button-md" onClick={restart}>{t('demoData')}</button>
           </div>
         </div>
       </section>
@@ -298,7 +304,7 @@ export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
           {!locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={validating || submitting} onClick={validate}>{validating ? t('validating') : t('validate')}</button>}
           {!locked && <button className="ds-button ds-button-primary ds-button-md" disabled={!valid || submitting} onClick={submit}><LockKeyhole className="h-4 w-4" />{submitting ? t('evaluating') : t('lock')}</button>}
           {run.status === 'FAILED' && <button className="ds-button ds-button-primary ds-button-md" disabled={submitting} onClick={retry}><RefreshCw className="h-4 w-4" />{submitting ? t('evaluating') : t('retry')}</button>}
-          {locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={submitting} onClick={() => void begin()}>{t('restart')}</button>}
+          {locked && <button className="ds-button ds-button-secondary ds-button-md" disabled={submitting} onClick={restart}>{t('restart')}</button>}
         </div>
         {error && <p role="alert" className="mt-4 text-sm text-rose-200">{error}</p>}
       </section>
