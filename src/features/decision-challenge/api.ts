@@ -31,7 +31,7 @@ export function loadChallenges() {
 export function startChallenge(challengeId: string) {
   return request('/runs', challengeRunSchema, {
     method: 'POST',
-    body: JSON.stringify({ challenge_id: challengeId }),
+    body: JSON.stringify({ challenge_id: challengeId, ...(scenario ? { scenario } : {}) }),
   })
 }
 

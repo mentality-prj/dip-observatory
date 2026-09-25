@@ -36,11 +36,11 @@ async function handler(
       })
     }
     if (request.method === 'POST' && path.length === 1 && path[0] === 'runs') {
-      const body = (await request.json()) as { challenge_id?: string }
+      const body = (await request.json()) as { challenge_id?: string; scenario?: Record<string, unknown> }
       if (!body.challenge_id) {
         return NextResponse.json({ error: 'challenge_id is required' }, { status: 422 })
       }
-      return NextResponse.json(await startDecisionChallenge(body.challenge_id))
+      return NextResponse.json(await startDecisionChallenge(body.challenge_id, body.scenario))
     }
     if (path[0] === 'runs' && path.length >= 2) {
       const runId = path[1]

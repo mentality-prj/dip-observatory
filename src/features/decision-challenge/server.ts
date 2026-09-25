@@ -10,10 +10,10 @@ export function listDecisionChallenges() {
   return dipRequest(`${base}/definitions`, challengeDefinitionSchema.array())
 }
 
-export function startDecisionChallenge(challengeId: string) {
+export function startDecisionChallenge(challengeId: string, scenario?: Record<string, unknown>) {
   return dipRequest(`${base}/runs`, challengeRunSchema, {
     method: 'POST',
-    body: JSON.stringify({ challenge_id: challengeId }),
+    body: JSON.stringify({ challenge_id: challengeId, ...(scenario ? { scenario } : {}) }),
   })
 }
 
