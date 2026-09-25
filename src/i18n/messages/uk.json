@@ -337,7 +337,19 @@
     "metadata": {
       "title": "Виклик рішень — QDIP Observatory",
       "description": "Прийміть власне рішення та порівняйте його з рекомендацією QDIP для тієї самої задачі."
-    }
+    },
+    "comparisonUnavailable": "Порівняння недоступне: метадані економічної цілі неузгоджені.",
+    "problem": "Задача",
+    "humanAction": "Рішення людини",
+    "qdipAction": "Рішення QDIP",
+    "replay": "Відтворення",
+    "evidenceRevision": "Докази",
+    "economicModel": "Економічна модель",
+    "modelVersions": "Версії моделей",
+    "evaluator": "Оцінювач",
+    "evaluationContext": "Контекст оцінювання",
+    "nextStep": "НАСТУПНИЙ КРОК",
+    "priorityDemand": "пріоритетний попит"
   },
   "gtmLab": {
     "subtitle": "Визначайте, які потенційні клієнти заслуговують комерційної уваги, чому і що робити далі.",
