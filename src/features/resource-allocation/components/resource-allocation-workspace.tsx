@@ -122,7 +122,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
             <details id="resource-import" className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t('tryOwnData')}</summary>
               <div className="mt-3">
-                <ResourceAllocationImport locale={locale} onImported={useImportedData} />
+                <ResourceAllocationImport onImported={useImportedData} />
               </div>
             </details>
 
