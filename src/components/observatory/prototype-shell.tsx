@@ -31,6 +31,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
   const observatory = observatoryI18n[locale]
   const isActive = (href: string) => normalizedPath === href || normalizedPath.startsWith(`${href}/`)
   const activeItem = navItems.find((item) => isActive(item.route))
+  const challengeActive = isActive('/challenges')
 
   useEffect(() => activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' }), [normalizedPath])
 
@@ -38,6 +39,14 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
 
   const nav = (
     <nav className={styles.navigation} aria-label={observatory.applications}>
+      <a
+        ref={challengeActive ? activeNavRef : undefined}
+        href={buildLocalePath('/challenges', locale)}
+        aria-current={challengeActive ? 'page' : undefined}
+        className={styles.navLink}
+      >
+        Decision Challenge
+      </a>
       {navItems.map((item) => {
         const active = isActive(item.route)
         return (
@@ -124,7 +133,7 @@ export function PrototypeShell({ locale, children, theme = 'cyan' }: PrototypeSh
             <Home />
           </Link>
           <ChevronRight />
-          <span>{activeItem?.title[locale] ?? 'Observatory'}</span>
+          <span>{challengeActive ? 'Decision Challenge' : (activeItem?.title[locale] ?? 'Observatory')}</span>
         </div>
         <div className={styles.content} id="main-content" tabIndex={-1}>
           {children}
