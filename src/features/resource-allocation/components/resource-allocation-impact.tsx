@@ -2,7 +2,6 @@
 
 import { ArrowDown, ArrowUp, CircleHelp } from 'lucide-react'
 import { useTranslations } from '@/i18n/provider'
-import { pluralMessage } from '@/i18n/runtime'
 import type {
   ResourceAllocationBaseline,
   ResourceAllocationDemandSummary,
