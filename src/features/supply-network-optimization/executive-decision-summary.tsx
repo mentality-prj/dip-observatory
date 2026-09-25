@@ -3,34 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system'
 import type { Locale } from '@/lib/observatory-i18n'
 import type { OptimizationResult, SupplyNetwork } from './domain'
-import { demandDisplayLabel, formatMoney, formatNumber, warehouseDisplayLabel } from './presentation'
+import {
+  demandDisplayLabel,
+  formatMoney,
+  formatNumber,
+  getSupplyNetworkI18n,
+  interpolate,
+  warehouseDisplayLabel,
+} from './i18n'
 
-const copy = {
-  en: {
-    title: 'Decision summary', baselineHeadline: (s: string) => `Under the current plan, the network can fulfill ${s} of demand`, disruptionHeadline: (s: string) => `After the disruption, the network can fulfill ${s} of demand`,
-    unserved: 'units of demand remain unfulfilled', service: 'Demand fulfilled', unservedMetric: 'Unfulfilled demand', logistics: 'Estimated logistics cost', impact: 'Estimated economic impact', utilization: 'Peak warehouse utilization',
-    constraintTitle: 'What is preventing a better result', routeEvidence: (r: string, c: number, h: number) => `${r} is already at its delivery limit on ${c} of ${h} days.`,
-    routeVsStorage: (u: string) => `Warehouses reach only ${u} utilization, so storage space is not the main problem. Delivery capacity is.`,
-    genericConstraint: 'The current network limits a better result. Open the technical details below to see which limits are reached.',
-    impactNote: 'Model estimate based on synthetic demo demand and cost assumptions; not realized savings or an accounting forecast.', delta: 'vs baseline', improve: 'Test recovery options', unservedDelta: 'unserved',
-  },
-  uk: {
-    title: 'Підсумок рішення', baselineHeadline: (s: string) => `За поточним планом мережа може виконати ${s} попиту`, disruptionHeadline: (s: string) => `Після збою мережа може виконати ${s} попиту`,
-    unserved: 'од. попиту залишаються непокритими', service: 'Виконано попиту', unservedMetric: 'Непокритий попит', logistics: 'Орієнтовні логістичні витрати', impact: 'Оцінений економічний вплив', utilization: 'Максимальне завантаження складів',
-    constraintTitle: 'Що заважає отримати кращий результат', routeEvidence: (r: string, c: number, h: number) => `${r} уже працює на межі пропускної здатності у ${c} з ${h} днів.`,
-    routeVsStorage: (u: string) => `Склади завантажені максимум на ${u}, тому проблема не в нестачі місця. Обмеження виникає на доставці.`,
-    genericConstraint: 'Поточна конфігурація мережі не дозволяє отримати кращий результат. У технічних деталях нижче можна побачити, які саме ліміти досягнуті.',
-    impactNote: 'Модельна оцінка на синтетичних демонстраційних даних про попит і витрати; це не фактично отримана економія і не бухгалтерський прогноз.', delta: 'проти базового сценарію', improve: 'Перевірити варіанти відновлення', unservedDelta: 'непокрито',
-  },
-  pl: {
-    title: 'Podsumowanie decyzji', baselineHeadline: (s: string) => `Przy bieżącym planie sieć może zrealizować ${s} popytu`, disruptionHeadline: (s: string) => `Po zakłóceniu sieć może zrealizować ${s} popytu`,
-    unserved: 'jedn. popytu pozostaje niezaspokojonych', service: 'Zrealizowany popyt', unservedMetric: 'Niezaspokojony popyt', logistics: 'Szacowany koszt logistyki', impact: 'Szacowany wpływ ekonomiczny', utilization: 'Maksymalne wykorzystanie magazynów',
-    constraintTitle: 'Co nie pozwala uzyskać lepszego wyniku', routeEvidence: (r: string, c: number, h: number) => `${r} wykorzystuje pełną dostępną przepustowość przez ${c} z ${h} dni.`,
-    routeVsStorage: (u: string) => `Magazyny są wykorzystane maksymalnie w ${u}, więc problemem nie jest brak miejsca. Ograniczeniem jest przepustowość dostaw.`,
-    genericConstraint: 'Obecna konfiguracja sieci nie pozwala uzyskać lepszego wyniku. W szczegółach technicznych poniżej można sprawdzić, które limity zostały osiągnięte.',
-    impactNote: 'Estymacja modelu oparta na syntetycznych danych demonstracyjnych o popycie i kosztach; nie oznacza zrealizowanych oszczędności ani prognozy księgowej.', delta: 'względem bazowego scenariusza', improve: 'Sprawdź warianty odbudowy planu', unservedDelta: 'niezaspokojone',
-  },
-} as const
+
 
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
@@ -59,7 +41,9 @@ function peakUtilization(result: OptimizationResult) {
 export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, locale, network }: {
   result: OptimizationResult; baseline: OptimizationResult | null; hasDisruption: boolean; locale: Locale; network: SupplyNetwork
 }) {
-  const t = copy[locale], route = routeBottleneck(result), utilization = peakUtilization(result)
+  const t = getSupplyNetworkI18n(locale).summary
+  const route = routeBottleneck(result)
+  const utilization = peakUtilization(result)
   const baselineUtilization = baseline ? peakUtilization(baseline) : null
   const number = (value: number) => formatNumber(value, locale)
   const signed = (value: number, suffix = '') => `${value > 0 ? '+' : ''}${number(value)}${suffix}`
@@ -73,7 +57,10 @@ export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, loca
         <CardHeader><CardTitle id="supply-decision-summary">{t.title}</CardTitle></CardHeader>
         <CardContent>
           <h2 className="max-w-4xl text-2xl font-medium tracking-[-.02em] text-slate-100 md:text-3xl">
-            {hasDisruption ? t.disruptionHeadline(pct(result.kpis.service_level)) : t.baselineHeadline(pct(result.kpis.service_level))}
+            {interpolate(
+              hasDisruption ? t.disruptionHeadline : t.baselineHeadline,
+              { service: pct(result.kpis.service_level) },
+            )}
           </h2>
           <p className="mt-3 text-sm text-slate-300"><strong className="text-slate-100">{number(result.kpis.unserved_demand_units)}</strong> {t.unserved}.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -86,7 +73,13 @@ export function ExecutiveDecisionSummary({ result, baseline, hasDisruption, loca
           <div className="mt-6 rounded-lg border border-amber-300/15 bg-amber-300/[.035] p-4">
             <h3 className="text-sm font-medium text-slate-100">{t.constraintTitle}</h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              {route ? `${t.routeEvidence(`${warehouseDisplayLabel(route.from, locale)} → ${demandDisplayLabel(route.to, locale)}`, route.count, network.policy.planning_horizon_days)} ${utilization < 0.8 ? t.routeVsStorage(pct(utilization)) : ''}` : t.genericConstraint}
+              {route
+                ? `${interpolate(t.routeEvidence, {
+                    route: `${warehouseDisplayLabel(route.from, locale)} → ${demandDisplayLabel(route.to, locale)}`,
+                    count: route.count,
+                    horizon: network.policy.planning_horizon_days,
+                  })} ${utilization < 0.8 ? interpolate(t.routeVsStorage, { utilization: pct(utilization) }) : ''}`
+                : t.genericConstraint}
             </p>
           </div>
           {hasDisruption ? <a href="#supply-alternatives" className="mt-5 inline-flex text-sm font-semibold text-cyan-200">{t.improve} →</a> : null}
