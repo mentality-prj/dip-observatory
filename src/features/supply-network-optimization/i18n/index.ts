@@ -1,21 +1,12 @@
 import { LOCALE_TAGS, type Locale } from '@/i18n/config'
-import {
-  formatNumber as formatLocaleNumber,
-  rawMessage,
-  translate,
-} from '@/i18n/runtime'
+import { formatNumber as formatLocaleNumber, rawMessage, translate } from '@/i18n/runtime'
 import type { StorageClass } from '../domain'
 
 type MessageValue = string | number
 
-export function interpolate(
-  template: string,
-  values: Record<string, MessageValue> = {},
-): string {
+export function interpolate(template: string, values: Record<string, MessageValue> = {}): string {
   return template.replace(/\{([^}]+)\}/g, (match, key: string) =>
-    Object.prototype.hasOwnProperty.call(values, key)
-      ? String(values[key])
-      : match,
+    Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match
   )
 }
 
@@ -42,11 +33,7 @@ export function formatMoney(value: number, locale: Locale) {
   }).format(value)
 }
 
-export function warehouseDisplayLabel(
-  id: string,
-  locale: Locale,
-  fallback?: string,
-) {
+export function warehouseDisplayLabel(id: string, locale: Locale, fallback?: string) {
   try {
     return translate(locale, `supplyNetwork.entities.warehouses.${id}`)
   } catch {
@@ -54,11 +41,7 @@ export function warehouseDisplayLabel(
   }
 }
 
-export function demandDisplayLabel(
-  id: string,
-  locale: Locale,
-  fallback?: string,
-) {
+export function demandDisplayLabel(id: string, locale: Locale, fallback?: string) {
   const storeMatch = /^store-(\d+)$/.exec(id)
   if (storeMatch) {
     return translate(locale, 'supplyNetwork.entities.store', {
@@ -68,11 +51,7 @@ export function demandDisplayLabel(
   return fallback ?? id
 }
 
-export function supplierDisplayLabel(
-  id: string,
-  locale: Locale,
-  fallback?: string,
-) {
+export function supplierDisplayLabel(id: string, locale: Locale, fallback?: string) {
   try {
     return translate(locale, `supplyNetwork.entities.suppliers.${id}`)
   } catch {
@@ -80,11 +59,7 @@ export function supplierDisplayLabel(
   }
 }
 
-export function entityDisplayLabel(
-  id: string,
-  locale: Locale,
-  fallback?: string,
-) {
+export function entityDisplayLabel(id: string, locale: Locale, fallback?: string) {
   const warehouse = warehouseDisplayLabel(id, locale)
   if (warehouse !== id) return warehouse
 
@@ -96,7 +71,7 @@ export function entityDisplayLabel(
   }
 
   const supplier = supplierDisplayLabel(id, locale)
-  return supplier !== id ? supplier : fallback ?? id
+  return supplier !== id ? supplier : (fallback ?? id)
 }
 
 export function productClassDisplayLabel(id: string, locale: Locale) {
@@ -107,10 +82,7 @@ export function productClassDisplayLabel(id: string, locale: Locale) {
   }
 }
 
-export function storageClassDisplayLabel(
-  storageClass: StorageClass,
-  locale: Locale,
-) {
+export function storageClassDisplayLabel(storageClass: StorageClass, locale: Locale) {
   return translate(locale, `supplyNetwork.entities.storage.${storageClass}`)
 }
 
@@ -128,10 +100,6 @@ export function constraintDisplayLabel(value: string, locale: Locale) {
   } catch {
     return value.replaceAll(':', ' · ')
   }
-  const readableParts = parts.map((part) =>
-    entityDisplayLabel(part, locale),
-  )
-  return readableParts.length
-    ? `${label} · ${readableParts.join(' · ')}`
-    : label
+  const readableParts = parts.map((part) => entityDisplayLabel(part, locale))
+  return readableParts.length ? `${label} · ${readableParts.join(' · ')}` : label
 }

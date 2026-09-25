@@ -8,8 +8,6 @@ export type MovementSummary = {
   moveEvents: number
 }
 
-
-
 export function localizePlanningDay(day: string, locale: Locale): string {
   const normalized = day.slice(0, 1).toUpperCase() + day.slice(1, 3).toLowerCase()
   try {

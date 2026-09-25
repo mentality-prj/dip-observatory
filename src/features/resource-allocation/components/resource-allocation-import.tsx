@@ -15,7 +15,6 @@ import {
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
 
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -120,29 +119,29 @@ export function ResourceAllocationImport({
           <button
             type="button"
             data-testid="resource-download-template"
-            onClick={() =>
-              downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')
-            }
+            onClick={() => downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')}
             className="flex min-w-0 items-start gap-2 overflow-hidden border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
               <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t('downloadTemplate')}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t('templateHint')}</span>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
+                {t('templateHint')}
+              </span>
             </span>
           </button>
           <button
             type="button"
             data-testid="resource-download-example"
-            onClick={() =>
-              downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')
-            }
+            onClick={() => downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')}
             className="flex min-w-0 items-start gap-2 overflow-hidden border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
           >
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <span className="min-w-0 flex-1">
               <b className="block whitespace-normal text-xs leading-5 text-rose-100">{t('downloadExample')}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t('exampleHint')}</span>
+              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
+                {t('exampleHint')}
+              </span>
             </span>
           </button>
         </div>
@@ -268,8 +267,13 @@ export function ResourceAllocationImport({
             <b className="text-slate-300">{t('recordTypesTitle')}</b>
             <dl className="mt-3 grid gap-2">
               {Object.entries(recordTypes).map(([type, description]) => (
-                <div key={type} className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3">
-                  <dt><code className="text-rose-200">{type}</code></dt>
+                <div
+                  key={type}
+                  className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3"
+                >
+                  <dt>
+                    <code className="text-rose-200">{type}</code>
+                  </dt>
                   <dd className="leading-relaxed">{description}</dd>
                 </div>
               ))}
@@ -279,7 +283,10 @@ export function ResourceAllocationImport({
             <b className="text-slate-300">{t('columnsTitle')}</b>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => (
-                <code key={column} className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400">
+                <code
+                  key={column}
+                  className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400"
+                >
                   {column}
                 </code>
               ))}

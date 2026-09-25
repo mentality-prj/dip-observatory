@@ -117,7 +117,9 @@ export function ResourceAllocationManualEditor({
         <div className="min-w-0 flex-1 basis-[16rem]">
           <div className="break-words text-xs font-bold uppercase tracking-wider text-rose-300">{t('section')}</div>
           <h3 className="mt-2 break-words text-2xl font-black [overflow-wrap:anywhere]">{t('title')}</h3>
-          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">{t('description')}</p>
+          <p className="mt-2 max-w-3xl break-words text-sm text-slate-500 [overflow-wrap:anywhere]">
+            {t('description')}
+          </p>
         </div>
         <button
           type="button"

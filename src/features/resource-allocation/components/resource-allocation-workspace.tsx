@@ -4,19 +4,12 @@ import { CircleAlert, Play, RotateCcw, Route, Users } from 'lucide-react'
 import { useTranslations } from '@/i18n/provider'
 import { pluralMessage } from '@/i18n/runtime'
 import type { Locale } from '@/lib/observatory-i18n'
-import {
-  RESOURCE_ALLOCATION_PROFILES,
-  type ResourceAllocationProfileId,
-} from '../demo-data'
+import { RESOURCE_ALLOCATION_PROFILES, type ResourceAllocationProfileId } from '../demo-data'
 import { ResourceAllocationDecisionPanel } from './resource-allocation-decision-panel'
 import { ResourceAllocationImpact } from './resource-allocation-impact'
 import { ResourceAllocationImport } from './resource-allocation-import'
 import { ResourceAllocationManualEditor } from './resource-allocation-manual-editor'
-import {
-  localizePlanningDay,
-  summarizeMovements,
-  trackResourceAllocation,
-} from '../presentation'
+import { localizePlanningDay, summarizeMovements, trackResourceAllocation } from '../presentation'
 import { useResourceAllocationWorkspace } from '../hooks/use-resource-allocation-workspace'
 import { ResourceAllocationAssignmentExplanation } from './resource-allocation-assignment-explanation'
 
@@ -24,15 +17,9 @@ const pct = (value: number) => `${Math.round(value * 100)}%`
 
 type CountKind = 'teams' | 'communities' | 'demand' | 'days'
 
-
 function countPhrase(locale: Locale, count: number, kind: CountKind): string {
-  return `${count} ${pluralMessage(
-    locale,
-    `resourceAllocation.countForms.${kind}`,
-    count,
-  )}`
+  return `${count} ${pluralMessage(locale, `resourceAllocation.countForms.${kind}`, count)}`
 }
-
 
 function profileLabel(profileId: string, importedName: string | null, importedLabel: string) {
   if (profileId === 'imported') return importedName ? `${importedLabel}: ${importedName}` : importedLabel
@@ -91,10 +78,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
     countPhrase(locale, stats.days, 'days'),
   ].join(' · ')
 
-  const sourceBadge =
-    profileId === 'imported'
-      ? `${source('imported')} · ${importedName ?? ''}`
-      : source('demo')
+  const sourceBadge = profileId === 'imported' ? `${source('imported')} · ${importedName ?? ''}` : source('demo')
 
   return (
     <main className="resource-allocation-workspace min-h-[calc(100vh-7rem)] w-full max-w-full overflow-x-clip bg-transparent text-white">
@@ -119,7 +103,10 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
 
         <section className="grid min-w-0 gap-5 py-6 xl:grid-cols-[330px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4">
-            <details id="resource-import" className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4">
+            <details
+              id="resource-import"
+              className="order-2 rounded-[var(--radius-card)] border border-white/10 bg-white/[0.03] p-4"
+            >
               <summary className="cursor-pointer text-sm font-bold text-rose-200">{t('tryOwnData')}</summary>
               <div className="mt-3">
                 <ResourceAllocationImport onImported={useImportedData} />
@@ -142,19 +129,14 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </b>
                 </div>
                 <div>
-                  <span className="block text-slate-500">
-                    {t('horizonDemand')}
-                  </span>
+                  <span className="block text-slate-500">{t('horizonDemand')}</span>
                   <b className="text-2xl">{stats.horizonNeeds}</b>
                   {stats.incomingNeeds > 0 && (
                     <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
-                      {stats.openingNeeds} + {stats.incomingNeeds}{' '}
-                      {t('expectedDuringHorizon')}
+                      {stats.openingNeeds} + {stats.incomingNeeds} {t('expectedDuringHorizon')}
                     </span>
                   )}
-                  <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">
-                    {t('demandUnitHelp')}
-                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-slate-600">{t('demandUnitHelp')}</span>
                 </div>
                 <div>
                   <span className="block text-slate-500">{t('services')}</span>
@@ -223,7 +205,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   <summary className="cursor-pointer p-6 text-lg font-black">03 · {t('why')}</summary>
                   <div className="grid gap-5 border-t border-white/10 p-6 lg:grid-cols-[.8fr_1.2fr]">
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider ds-text-accent">{t('alternatives')}</div>
+                      <div className="text-xs font-bold uppercase tracking-wider ds-text-accent">
+                        {t('alternatives')}
+                      </div>
                       <div className="mt-4 space-y-2">
                         {result.alternatives.map((alternative, index) => {
                           const alternativeMovement = summarizeMovements(
@@ -247,11 +231,8 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                             recommendedAlternative?.demand_summary.priority_coverage ??
                             recommendedAlternative?.aggregate_metrics.priority_coverage ??
                             alternativePriority
-                          const coverageDeltaPp = Math.round(
-                            (alternativePriority - recommendedPriority) * 100
-                          )
-                          const moveDelta =
-                            alternativeMovement.moveEvents - recommendedMovement.moveEvents
+                          const coverageDeltaPp = Math.round((alternativePriority - recommendedPriority) * 100)
+                          const moveDelta = alternativeMovement.moveEvents - recommendedMovement.moveEvents
                           return (
                             <button
                               type="button"
@@ -271,8 +252,12 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                               </div>
                               <div className="mt-1 text-xs text-slate-600">
                                 {alternativeMovement.teamsMoved}/{alternativeMovement.totalTeams}{' '}
-                                {pluralMessage(locale, 'resourceAllocation.countForms.teams', alternativeMovement.totalTeams)} ·{' '}
-                                {alternativeMovement.moveEvents} {t('moves')}
+                                {pluralMessage(
+                                  locale,
+                                  'resourceAllocation.countForms.teams',
+                                  alternativeMovement.totalTeams
+                                )}{' '}
+                                · {alternativeMovement.moveEvents} {t('moves')}
                                 {index > 0 && (
                                   <>
                                     {' · '}
@@ -309,11 +294,11 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                         <div className="border-l-2 ds-accent-border-left pl-3 text-sm text-slate-300">
                           <b className="block text-white">{t('rationaleCost')}</b>
                           {t('rationaleCostBody', {
-                              moved: movementSummary.teamsMoved,
-                              total: movementSummary.totalTeams,
-                              events: movementSummary.moveEvents,
-                              days: stats.days,
-                            })}
+                            moved: movementSummary.teamsMoved,
+                            total: movementSummary.totalTeams,
+                            events: movementSummary.moveEvents,
+                            days: stats.days,
+                          })}
                         </div>
                       </div>
                       <details className="mt-6 border-t border-white/10 pt-4 text-xs text-slate-500">
@@ -334,7 +319,9 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                 <div className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.04] p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider ds-text-accent">04 · {t('weekly')}</div>
+                      <div className="text-xs font-bold uppercase tracking-wider ds-text-accent">
+                        04 · {t('weekly')}
+                      </div>
                       <h2 className="mt-2 text-2xl font-medium">
                         {t('weeklyTitle')} · {stats.days} {t('days')}
                       </h2>
@@ -382,9 +369,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                                 key={team}
                                 onClick={() => selectExplanationTeam(team)}
                                 className={`w-full break-words px-2 py-1 text-left text-xs font-semibold [overflow-wrap:anywhere] ${
-                                  activeExplanationTeam === team
-                                    ? 'ds-selection-surface'
-                                    : 'bg-slate-950/70 text-white'
+                                  activeExplanationTeam === team ? 'ds-selection-surface' : 'bg-slate-950/70 text-white'
                                 }`}
                               >
                                 {team}
@@ -402,8 +387,7 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-sm">
                     <span>
                       <Users className="mr-1 inline h-4 w-4" />
-                      {t('movesToday')}
-                      :{' '}
+                      {t('movesToday')}:{' '}
                       <b>
                         {day.recommended.assignment_explanations?.filter(
                           (item) => item.from !== item.to && item.to !== null
@@ -515,8 +499,6 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 </details>
 
-
-
                 {lastInput && (
                   <details className="rounded-[var(--ds-radius-panel)] border border-white/10 bg-white/[0.03]">
                     <summary className="cursor-pointer p-6 text-lg font-medium">{t('testOwnPlan')}</summary>
@@ -557,27 +539,23 @@ export function ResourceAllocationWorkspace({ locale }: { locale: Locale }) {
                       locale={locale}
                     />
 
-                  <section
-                    data-testid="resource-pilot-cta"
-                    className="rounded-[var(--ds-radius-panel)] border border-emerald-300/20 bg-emerald-300/[0.05] p-6"
-                  >
-                    <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                      {t('pilotKicker')}
-                    </div>
-                    <h2 className="mt-2 text-2xl font-medium">
-                      {t('pilotTitle')}
-                    </h2>
-                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-                      {t('pilotBody')}
-                    </p>
-                    <a
-                      href="#resource-import"
-                      onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
-                      className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
+                    <section
+                      data-testid="resource-pilot-cta"
+                      className="rounded-[var(--ds-radius-panel)] border border-emerald-300/20 bg-emerald-300/[0.05] p-6"
                     >
-                      {t('pilotUpload')}
-                    </a>
-                  </section>
+                      <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        {t('pilotKicker')}
+                      </div>
+                      <h2 className="mt-2 text-2xl font-medium">{t('pilotTitle')}</h2>
+                      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">{t('pilotBody')}</p>
+                      <a
+                        href="#resource-import"
+                        onClick={() => trackResourceAllocation('ra_pilot_cta_clicked', locale)}
+                        className="mt-5 inline-flex border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm font-bold text-emerald-200"
+                      >
+                        {t('pilotUpload')}
+                      </a>
+                    </section>
                   </>
                 )}
               </>
