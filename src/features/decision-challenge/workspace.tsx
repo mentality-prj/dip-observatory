@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2, CircleAlert, FileUp, LockKeyhole, RefreshCw, 
 import { useEffect, useMemo, useState } from 'react'
 
 import type { Locale } from '@/lib/observatory-i18n'
-import { decisionChallengeI18n, formatChallengeMoney } from './i18n'
+import { formatChallengeMoney, getDecisionChallengeI18n } from './i18n'
 import { marketingHref } from '@/lib/platform-urls'
 import { importResourceAllocationFile } from '@/features/resource-allocation/importer'
 import {
@@ -48,7 +48,7 @@ function scenarioData(run: ChallengeRun | null) {
 }
 
 export function DecisionChallengeWorkspace({ locale }: { locale: Locale }) {
-  const t = decisionChallengeI18n[locale]
+  const t = getDecisionChallengeI18n(locale) as Record<string, any>
   const [definition, setDefinition] = useState<ChallengeDefinition | null>(null)
   const [run, setRun] = useState<ChallengeRun | null>(null)
   const [allocation, setAllocation] = useState<ChallengeAssignment>({})
