@@ -8,7 +8,12 @@
     "closeNavigation": "Zamknij nawigację",
     "products": "Produkty QDIP",
     "footerNavigation": "Nawigacja w stopce",
-    "breadcrumb": "Ścieżka nawigacyjna"
+    "breadcrumb": "Ścieżka nawigacyjna",
+    "localeLabels": {
+      "en": "EN",
+      "uk": "UA",
+      "pl": "PL"
+    }
   },
   "observatory": {
     "applications": "Aplikacje Observatory",
@@ -756,6 +761,28 @@
     "observatory": {
       "title": "QDIP Observatory | Polski interfejs",
       "description": "Poznaj aplikacje decyzyjne QDIP, ich dane wejściowe, alternatywy i uzasadnienia decyzji."
+    }
+  },
+  "decisionPatterns": {
+    "allocate": "ALOKACJA",
+    "decide": "WYBÓR DZIAŁANIA",
+    "prioritize": "PRIORYTETY"
+  },
+  "useCases": {
+    "resource-allocation": {
+      "title": "Alokacja zasobów",
+      "description": "Alokacja mobilnych zespołów humanitarnych z uwzględnieniem przepustowości, kompetencji, dostępności i ograniczeń związanych z przejazdami.",
+      "tag": "HUMANITARNY"
+    },
+    "supply-network-optimization": {
+      "title": "Optymalizacja sieci dostaw",
+      "description": "Optymalizacja rozmieszczenia zapasów, dostaw przychodzących i obsługi punktów popytu z ponownym przeliczeniem sieci po zmianie dostępnej przepustowości.",
+      "tag": "SIEĆ DOSTAW"
+    },
+    "gtm-lab": {
+      "title": "Laboratorium wejścia na rynek",
+      "description": "Ocena możliwości komercyjnych przy niepełnych danych rynkowych: rozwijać, zbadać lub pominąć.",
+      "tag": "WEJŚCIE NA RYNEK"
     }
   }
 }
