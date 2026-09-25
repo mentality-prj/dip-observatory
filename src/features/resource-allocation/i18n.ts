@@ -1,7 +1,8 @@
 import { LOCALE_TAGS, type Locale } from '@/lib/observatory-i18n'
 
 type CountKind = 'teams' | 'communities' | 'demand' | 'days'
-type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string }
+type PluralCategory = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other'
+type PluralForms = Partial<Record<PluralCategory, string>> & { other: string }
 
 const countForms: Record<Locale, Record<CountKind, PluralForms>> = {
   en: {
