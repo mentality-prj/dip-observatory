@@ -213,6 +213,7 @@ export function NetworkMap({
   const mapRef = useRef<MapLibreMap | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
+  const [flowView, setFlowView] = useState<'current' | 'qdip' | 'compare'>('current')
   const [projectedFlows, setProjectedFlows] = useState<Array<FlowSegment & { index: number; x1: number; y1: number; x2: number; y2: number }>>([])
   const projectFlowsRef = useRef<() => void>(() => undefined)
   const markersRef = useRef<MapLibreMarker[]>([])
@@ -222,6 +223,10 @@ export function NetworkMap({
   useEffect(() => {
     clickRef.current = onMapClick
   }, [onMapClick])
+
+  useEffect(() => {
+    setFlowView(result ? 'qdip' : 'current')
+  }, [result])
 
   useEffect(() => {
     let cancelled = false
@@ -356,8 +361,13 @@ export function NetworkMap({
       }
 
       const flowSegments = buildFlowSegments(network, currentFlows, result, manualCandidate, candidateAreas)
+      const visibleFlowSegments = flowSegments.filter((segment) => {
+        if (flowView === 'compare') return true
+        if (flowView === 'current') return segment.kind === 'current'
+        return segment.kind !== 'current'
+      })
       const projectFlows = () => {
-        setProjectedFlows(flowSegments.map((segment, index) => {
+        setProjectedFlows(visibleFlowSegments.map((segment, index) => {
           const from = map.project(segment.from)
           const to = map.project(segment.to)
           return { ...segment, index, x1: from.x, y1: from.y, x2: to.x, y2: to.y }
@@ -379,6 +389,7 @@ export function NetworkMap({
     result,
     selectedWarehouseId,
     unavailableWarehouseIds,
+    flowView,
   ])
 
 
@@ -394,6 +405,45 @@ export function NetworkMap({
   return (
     <div className="relative h-[420px] w-full overflow-hidden rounded-xl border border-white/10 bg-slate-950 sm:h-[540px]">
       <div ref={containerRef} className="absolute inset-0 h-full w-full" data-testid="supply-network-map" />
+      {result ? (
+        <div className="absolute left-3 top-3 z-30 flex rounded-lg border border-white/10 bg-slate-950/90 p-1 text-xs shadow-lg">
+          {(['current', 'qdip', 'compare'] as const).map((mode) => {
+            const label =
+              mode === 'current'
+                ? locale === 'uk'
+                  ? 'До збою'
+                  : locale === 'pl'
+                    ? 'Przed zakłóceniem'
+                    : 'Before'
+                : mode === 'qdip'
+                  ? locale === 'uk'
+                    ? 'План QDIP'
+                    : locale === 'pl'
+                      ? 'Plan QDIP'
+                      : 'QDIP plan'
+                  : locale === 'uk'
+                    ? 'Порівняти'
+                    : locale === 'pl'
+                      ? 'Porównaj'
+                      : 'Compare'
+            return (
+              <button
+                key={mode}
+                type="button"
+                className={`rounded-md px-2.5 py-1.5 transition ${
+                  flowView === mode
+                    ? 'bg-white text-slate-950'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+                aria-pressed={flowView === mode}
+                onClick={() => setFlowView(mode)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
       {projectedFlows.length > 0 ? (
         <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-testid="supply-network-flow-overlay">
           <defs>
@@ -490,9 +540,9 @@ export function NetworkMap({
         </span>
         <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
           <span className="h-3 w-3 rounded-full border border-white bg-slate-200" />
-          {locale === 'uk' ? 'Регіон попиту' : locale === 'pl' ? 'Region popytu' : 'Demand region'}
+          {locale === 'uk' ? 'Магазин' : locale === 'pl' ? 'Sklep' : 'Store'}
         </span>
-        {currentFlows.length > 0 ? (
+        {currentFlows.length > 0 && flowView !== 'qdip' ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-blue-800">→</span>
             {network.unavailable_warehouse_ids.length > 0
@@ -508,7 +558,7 @@ export function NetworkMap({
                   : 'Current flows'}
           </span>
         ) : null}
-        {projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
+        {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'recommended' || item.kind === 'transfer') ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="text-base font-bold leading-none text-teal-600">→</span>
             {locale === 'uk' ? 'План QDIP' : locale === 'pl' ? 'Plan QDIP' : 'QDIP plan'}
@@ -518,6 +568,12 @@ export function NetworkMap({
           <span className="h-3 w-3 bg-violet-700" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
           {locale === 'uk' ? 'Постачальник' : locale === 'pl' ? 'Dostawca' : 'Supplier'}
         </span>
+        {flowView !== 'current' && projectedFlows.some((item) => item.kind === 'inbound') ? (
+          <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
+            <span className="text-base font-bold leading-none text-violet-700">→</span>
+            {locale === 'uk' ? 'Вхідні поставки' : locale === 'pl' ? 'Dostawy przychodzące' : 'Inbound supply'}
+          </span>
+        ) : null}
         {candidateAreas.some((item) => item.feasible) || manualCandidate ? (
           <span className="flex items-center gap-1.5 rounded bg-slate-950/90 px-2 py-1">
             <span className="h-3 w-3 bg-amber-500" style={{ clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)' }} />
