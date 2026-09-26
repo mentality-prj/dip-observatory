@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { decisionChallengeI18n, decisionChallengeMetadataI18n } from './i18n'
+import { SUPPORTED_LOCALES } from '@/i18n/config'
+import { getDecisionChallengeI18n, getDecisionChallengeMetadataI18n } from './i18n'
 
 function deepKeys(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) {
@@ -24,8 +25,16 @@ function assertStringLeaves(value: unknown): void {
 }
 
 describe('Decision Challenge i18n contract', () => {
-  for (const resources of [decisionChallengeI18n, decisionChallengeMetadataI18n]) {
-    it('keeps EN/UK/PL resource shapes aligned and string-only', () => {
+  for (const [name, load] of [
+    ['messages', getDecisionChallengeI18n],
+    ['metadata', getDecisionChallengeMetadataI18n],
+  ] as const) {
+    it(`keeps EN/UK/PL ${name} shapes aligned and string-only`, () => {
+      const resources = Object.fromEntries(SUPPORTED_LOCALES.map((locale) => [locale, load(locale)])) as Record<
+        (typeof SUPPORTED_LOCALES)[number],
+        unknown
+      >
+
       expect(deepKeys(resources.uk)).toEqual(deepKeys(resources.en))
       expect(deepKeys(resources.pl)).toEqual(deepKeys(resources.en))
       assertStringLeaves(resources.en)

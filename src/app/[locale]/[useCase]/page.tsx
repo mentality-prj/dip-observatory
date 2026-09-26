@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { PrototypeShell } from '@/components/observatory/prototype-shell'
+import { createTranslator } from '@/i18n/runtime'
 import { isSupportedLocale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 import { ApplicationFrontend } from '@/use-cases/application-runtime'
 import { DIP_USE_CASES, findUseCaseByRoute, type UseCaseId } from '@/use-cases/registry'
@@ -31,8 +32,9 @@ export async function generateMetadata({ params }: { params: Promise<UseCasePage
   const application = resolveUseCase(routeSegment)
   if (!application) return {}
 
-  const title = `${application.title[locale]} — QDIP Observatory`
-  const description = application.description[locale]
+  const messages = createTranslator(locale, `useCases.${application.id}`)
+  const title = `${messages('title')} — QDIP Observatory`
+  const description = messages('description')
   const route = application.route
   const canonical = `https://observatory.qdip.ai/${locale}${route}`
 
@@ -65,7 +67,7 @@ export default async function UseCasePage({ params }: { params: Promise<UseCaseP
   if (!application) notFound()
 
   return (
-    <PrototypeShell locale={locale} theme={application.presentation.theme}>
+    <PrototypeShell locale={locale} activeRoute={application.route} theme={application.presentation.theme}>
       <ApplicationFrontend id={application.id as UseCaseId} locale={locale} />
     </PrototypeShell>
   )
