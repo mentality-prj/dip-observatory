@@ -52,26 +52,36 @@ export const semanticParamsSchema = z
   })
   .strict()
 
-export const clarificationQuestionSchema = z.object({
-  code: clarificationQuestionCodeSchema,
-  params: semanticParamsSchema,
-})
-export const semanticReasonSchema = z.object({
-  code: semanticReasonCodeSchema,
-  params: semanticParamsSchema,
-})
-export const semanticAssumptionSchema = z.object({
-  code: semanticAssumptionCodeSchema,
-  params: semanticParamsSchema,
-})
-export const evidenceReasonSchema = z.object({
-  code: evidenceReasonCodeSchema,
-  params: semanticParamsSchema,
-})
-export const nextStepSchema = z.object({
-  code: nextStepCodeSchema,
-  params: semanticParamsSchema,
-})
+export const clarificationQuestionSchema = z
+  .object({
+    code: clarificationQuestionCodeSchema,
+    params: semanticParamsSchema,
+  })
+  .strict()
+export const semanticReasonSchema = z
+  .object({
+    code: semanticReasonCodeSchema,
+    params: semanticParamsSchema,
+  })
+  .strict()
+export const semanticAssumptionSchema = z
+  .object({
+    code: semanticAssumptionCodeSchema,
+    params: semanticParamsSchema,
+  })
+  .strict()
+export const evidenceReasonSchema = z
+  .object({
+    code: evidenceReasonCodeSchema,
+    params: semanticParamsSchema,
+  })
+  .strict()
+export const nextStepSchema = z
+  .object({
+    code: nextStepCodeSchema,
+    params: semanticParamsSchema,
+  })
+  .strict()
 
 export const evidenceGateSchema = z.object({
   status: z.enum([
