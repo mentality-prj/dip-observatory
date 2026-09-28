@@ -223,9 +223,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       semantic_mappings?: Record<string, string>
     } = {}
 
-    if (question.kind === 'confirm_semantic' && question.field) {
+    if (question.kind === 'confirm_semantic' && question.field && question.role) {
       body.candidate_statuses = {
-        [question.field]: action === 'reject' ? 'rejected' : 'user_confirmed',
+        [`${question.role}:${question.field}`]: action === 'reject' ? 'rejected' : 'user_confirmed',
       }
     }
 
