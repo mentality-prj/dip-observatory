@@ -45,7 +45,13 @@ export const nextStepCodeSchema = z.enum([
   'next_step.compile_resource_allocation',
 ])
 
-const semanticParamsSchema = z.record(z.string(), z.string())
+export const semanticParamsSchema = z
+  .object({
+    field: z.string().nullable(),
+    role: z.string().nullable(),
+  })
+  .strict()
+
 export const clarificationQuestionSchema = z.object({
   code: clarificationQuestionCodeSchema,
   params: semanticParamsSchema,
@@ -142,6 +148,7 @@ export const compiledResourceAllocationSchema = z.object({
   request: z.record(z.string(), z.unknown()),
 })
 
+export type SemanticParams = z.infer<typeof semanticParamsSchema>
 export type ClarificationQuestion = z.infer<typeof clarificationQuestionSchema>
 export type SemanticReason = z.infer<typeof semanticReasonSchema>
 export type SemanticAssumption = z.infer<typeof semanticAssumptionSchema>
