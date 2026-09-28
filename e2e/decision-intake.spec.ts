@@ -59,7 +59,9 @@ const analysis = {
   },
 }
 
-test('Decision Intake reuses uploader UI and localizes semantic codes without English prose leakage', async ({ page }) => {
+test('Decision Intake reuses uploader UI and localizes semantic codes without English prose leakage', async ({
+  page,
+}) => {
   await page.route('**/api/decision-intake/analyze', async (route) => {
     await route.fulfill({
       status: 200,
