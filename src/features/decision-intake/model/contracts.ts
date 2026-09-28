@@ -137,10 +137,12 @@ export const causalIdentificationCertificateSchema = z.object({
   estimand: z.string().nullable(),
   estimand_ast: estimandExpressionSchema.nullable(),
   proof_steps: z.array(z.string()),
-  hedge: z
+  failure_witness: z
     .object({
-      f_nodes: z.array(z.string()),
-      f_prime_nodes: z.array(z.string()),
+      outer_component_nodes: z.array(z.string()),
+      inner_component_nodes: z.array(z.string()),
+      hedge_recoverable: z.boolean(),
+      claim: z.string(),
     })
     .nullable(),
   assumptions: z.array(z.string()),
