@@ -52,6 +52,13 @@ const copy = {
     effectRemoves: 'If verified, this removes one necessary blocker.',
     effectCausal: 'This enables a formal causal-identification test; it does not guarantee identifiability.',
     boundary: 'QDIP will not infer causal identifiability from column names or correlations alone.',
+    certificate: 'Structural certificate',
+    certificateIssued: 'issued',
+    certificateBlocked: 'blocked',
+    planner: 'Question planner',
+    requirements: 'Requirement graph',
+    priority: 'Priority score',
+    estimatedCost: 'Estimated acquisition cost',
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ПІДГОТОВКА РІШЕННЯ',
@@ -93,6 +100,13 @@ const copy = {
     effectRemoves: 'Після підтвердження буде усунуто один необхідний blocker.',
     effectCausal: 'Це дозволить запустити формальний тест ідентифікованості, але не гарантує її.',
     boundary: 'QDIP не робить висновок про каузальну ідентифікованість лише з назв колонок або кореляцій.',
+    certificate: 'Структурний сертифікат',
+    certificateIssued: 'видано',
+    certificateBlocked: 'заблоковано',
+    planner: 'Планувальник питань',
+    requirements: 'Граф вимог',
+    priority: 'Оцінка пріоритету',
+    estimatedCost: 'Оціночна вартість отримання відповіді',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · PRZYGOTOWANIE DECYZJI',
@@ -134,6 +148,13 @@ const copy = {
     effectRemoves: 'Po weryfikacji zostanie usunięta jedna wymagana blokada.',
     effectCausal: 'Umożliwi to formalny test identyfikowalności przyczynowej, ale jej nie gwarantuje.',
     boundary: 'QDIP nie wnioskuje o identyfikowalności przyczynowej wyłącznie z nazw kolumn lub korelacji.',
+    certificate: 'Certyfikat strukturalny',
+    certificateIssued: 'wydany',
+    certificateBlocked: 'zablokowany',
+    planner: 'Planer pytań',
+    requirements: 'Graf wymagań',
+    priority: 'Wynik priorytetu',
+    estimatedCost: 'Szacowany koszt pozyskania odpowiedzi',
   },
 } as const
 
@@ -343,13 +364,47 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       : t.causalNeedsModel}
                 </dd>
               </div>
+              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                <dt className="text-slate-400">{t.certificate}</dt>
+                <dd className="text-right text-cyan-200">
+                  {analysis.sufficiency.certificate.issued ? t.certificateIssued : t.certificateBlocked}
+                  <span className="ml-2 text-xs text-slate-500">{analysis.sufficiency.certificate.scope}</span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                <dt className="text-slate-400">{t.planner}</dt>
+                <dd className="text-right text-xs text-slate-500">{analysis.sufficiency.planner_strategy}</dd>
+              </div>
             </dl>
+
+            <details className="mt-5 border-t border-white/10 pt-4">
+              <summary className="cursor-pointer text-sm font-semibold text-white">{t.requirements}</summary>
+              <div className="mt-3 grid gap-2">
+                {analysis.sufficiency.requirements.map((requirement) => (
+                  <div
+                    key={requirement.id}
+                    className="flex items-start justify-between gap-4 rounded-lg border border-white/10 bg-slate-900/40 p-3 text-xs"
+                  >
+                    <div>
+                      <div className="font-medium text-slate-200">{requirement.id}</div>
+                      {requirement.depends_on.length ? (
+                        <div className="mt-1 text-slate-600">depends on: {requirement.depends_on.join(', ')}</div>
+                      ) : null}
+                    </div>
+                    <span className="whitespace-nowrap text-cyan-200">{requirement.state}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
 
             {nextQuestion ? (
               <div className="mt-6 border-t border-white/10 pt-4">
                 <b className="text-sm">{t.nextQuestion}</b>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{questionText(locale, nextQuestion)}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{questionEffect(locale, nextQuestion)}</p>
+                <p className="mt-1 text-[11px] leading-5 text-slate-600">
+                  {t.priority}: {nextQuestion.priority_score.toFixed(2)} · {t.estimatedCost}: {nextQuestion.estimated_cost}
+                </p>
 
                 {nextQuestion.kind === 'select_field' ? (
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
