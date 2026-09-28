@@ -65,6 +65,8 @@ const copy = {
     causalEvidenceQuestion: 'The current observational model is not sufficient. Plan additional causal evidence.',
     causalEdges: 'Causal edges',
     causalEdgesHint: 'One edge per line: A -> B or A <-> B',
+    graphWarning:
+      'Omitted directed or bidirected edges are causal assumptions, not unknown relationships. Confirm the graph only if those absences are defensible.',
     treatments: 'Interventions',
     outcomes: 'Outcomes',
     conditioning: 'Conditioning variables',
@@ -145,6 +147,8 @@ const copy = {
       'Поточної observational-моделі недостатньо. Потрібно спланувати додатковий causal evidence.',
     causalEdges: 'Каузальні зв’язки',
     causalEdgesHint: 'Один зв’язок на рядок: A -> B або A <-> B',
+    graphWarning:
+      'Відсутні directed або bidirected edges — це causal assumptions, а не невідомі зв’язки. Підтверджуйте граф лише якщо їхню відсутність можна обґрунтувати.',
     treatments: 'Втручання',
     outcomes: 'Результати',
     conditioning: 'Умовні змінні',
@@ -224,6 +228,8 @@ const copy = {
     causalEvidenceQuestion: 'Obecny model obserwacyjny jest niewystarczający. Zaplanuj dodatkowe dowody przyczynowe.',
     causalEdges: 'Krawędzie przyczynowe',
     causalEdgesHint: 'Jedna krawędź na wiersz: A -> B lub A <-> B',
+    graphWarning:
+      'Pominięte krawędzie directed lub bidirected są założeniami przyczynowymi, a nie nieznanymi relacjami. Potwierdź graf tylko, jeśli ich brak można uzasadnić.',
     treatments: 'Interwencje',
     outcomes: 'Wyniki',
     conditioning: 'Zmienne warunkujące',
@@ -731,6 +737,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         placeholder={t.causalEdgesHint}
                         className="rounded-lg border border-white/10 bg-slate-900 p-3 font-mono text-xs text-white"
                       />
+                      <p className="text-[11px] leading-5 text-amber-200/80">{t.graphWarning}</p>
                     </label>
                     <div className="grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-2 text-xs text-slate-400">
