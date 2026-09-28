@@ -87,6 +87,10 @@ const copy = {
     supportNot: 'not assessed',
     treatmentLevels: 'Treatment levels',
     checkedStrata: 'Checked strata',
+    evidenceVerifyQuestion:
+      'Can independent domain evidence justify absence of latent confounding for {variables}?',
+    evidenceRandomizeQuestion:
+      'Can you collect prospective interventional data for {variables}?',
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ПІДГОТОВКА РІШЕННЯ',
@@ -163,6 +167,10 @@ const copy = {
     supportNot: 'не перевірено',
     treatmentLevels: 'Рівні treatment',
     checkedStrata: 'Перевірено strata',
+    evidenceVerifyQuestion:
+      'Чи підтверджують незалежні domain evidence відсутність latent confounding для {variables}?',
+    evidenceRandomizeQuestion:
+      'Чи можете ви зібрати prospective interventional data для {variables}?',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · PRZYGOTOWANIE DECYZJI',
@@ -238,6 +246,10 @@ const copy = {
     supportNot: 'nie oceniono',
     treatmentLevels: 'Poziomy treatment',
     checkedStrata: 'Sprawdzone strata',
+    evidenceVerifyQuestion:
+      'Czy niezależne dowody dziedzinowe uzasadniają brak latent confounding dla {variables}?',
+    evidenceRandomizeQuestion:
+      'Czy możesz zebrać prospektywne dane interwencyjne dla {variables}?',
   },
 } as const
 
@@ -250,7 +262,16 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
   }
   if (question.kind === 'select_available_fields') return t.availableQuestion
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
-  if (question.kind === 'plan_causal_evidence') return t.causalEvidenceQuestion
+  if (question.kind === 'plan_causal_evidence') {
+    const variables = question.evidence_variables.join(', ')
+    if (question.evidence_kind === 'verify_no_latent_confounding') {
+      return t.evidenceVerifyQuestion.replace('{variables}', variables)
+    }
+    if (question.evidence_kind === 'randomized_intervention') {
+      return t.evidenceRandomizeQuestion.replace('{variables}', variables)
+    }
+    return t.causalEvidenceQuestion
+  }
   if (question.kind === 'confirm_semantic') {
     return t.confirmQuestion.replace('{field}', question.field ?? '').replace('{role}', question.role ?? '')
   }
