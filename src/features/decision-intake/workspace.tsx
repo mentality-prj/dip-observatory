@@ -75,9 +75,9 @@ const copy = {
     runIdentification: 'Run ID/IDC identification',
     causalCertificate: 'Causal identification certificate',
     estimand: 'Identifying estimand',
-    hedge: 'Non-identifiability hedge',
+    failureWitness: 'ID non-identifiability failure witness',
     proof: 'Identification trace',
-    effectEvidence: 'A hedge was found; observational data alone cannot identify this effect under the verified graph.',
+    effectEvidence: 'ID reached a non-identifiability failure; observational data alone cannot identify this effect under the verified graph.',
     evidencePlan: 'Evidence acquisition plan',
     evidenceVerify: 'Verify absence of latent confounding',
     evidenceRandomize: 'Collect prospective interventional data',
@@ -155,9 +155,9 @@ const copy = {
     runIdentification: 'Запустити ID/IDC identification',
     causalCertificate: 'Сертифікат каузальної ідентифікації',
     estimand: 'Ідентифікуючий estimand',
-    hedge: 'Hedge неідентифікованості',
+    failureWitness: 'ID witness неідентифікованості',
     proof: 'Трасування identification',
-    effectEvidence: 'Знайдено hedge: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
+    effectEvidence: 'ID дійшов до failure неідентифікованості: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
     evidencePlan: 'План отримання causal evidence',
     evidenceVerify: 'Перевірити відсутність latent confounding',
     evidenceRandomize: 'Зібрати prospective interventional data',
@@ -235,9 +235,9 @@ const copy = {
     runIdentification: 'Uruchom identyfikację ID/IDC',
     causalCertificate: 'Certyfikat identyfikacji przyczynowej',
     estimand: 'Estymanda identyfikująca',
-    hedge: 'Hedge nieidentyfikowalności',
+    failureWitness: 'Świadek błędu nieidentyfikowalności ID',
     proof: 'Ślad identyfikacji',
-    effectEvidence: 'Znaleziono hedge; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
+    effectEvidence: 'ID osiągnął błąd nieidentyfikowalności; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
     evidencePlan: 'Plan pozyskania dowodów przyczynowych',
     evidenceVerify: 'Zweryfikuj brak ukrytego confoundingu',
     evidenceRandomize: 'Zbierz prospektywne dane interwencyjne',
@@ -784,10 +784,10 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 {nextQuestion.kind === 'plan_causal_evidence' ? (
                   <div className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
                     {t.effectEvidence}
-                    {analysis.sufficiency.causal_certificate?.hedge ? (
+                    {analysis.sufficiency.causal_certificate?.failure_witness ? (
                       <div className="mt-2 font-mono text-[11px] text-amber-50">
-                        F = [{analysis.sufficiency.causal_certificate.hedge.f_nodes.join(', ')}], F′ = [
-                        {analysis.sufficiency.causal_certificate.hedge.f_prime_nodes.join(', ')}]
+                        outer C-component = [{analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner C-component = [
+                        {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                       </div>
                     ) : null}
                   </div>
@@ -812,12 +812,12 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     </pre>
                   </div>
                 ) : null}
-                {analysis.sufficiency.causal_certificate.hedge ? (
+                {analysis.sufficiency.causal_certificate.failure_witness ? (
                   <div className="mt-3">
-                    <div className="text-xs font-medium text-slate-300">{t.hedge}</div>
+                    <div className="text-xs font-medium text-slate-300">{t.failureWitness}</div>
                     <div className="mt-1 font-mono text-[11px] text-amber-200">
-                      F = [{analysis.sufficiency.causal_certificate.hedge.f_nodes.join(', ')}], F′ = [
-                      {analysis.sufficiency.causal_certificate.hedge.f_prime_nodes.join(', ')}]
+                      outer C-component = [{analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner C-component = [
+                      {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                     </div>
                   </div>
                 ) : null}
