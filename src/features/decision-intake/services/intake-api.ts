@@ -3,7 +3,7 @@ import 'server-only'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 import { compiledResourceAllocationSchema, contractResponseSchema, intakeAnalysisSchema } from '../model/contracts'
-import type { ContractResponse, IntakeAnalysis } from '../model/contracts'
+import type { CausalSpecification, ContractResponse, IntakeAnalysis } from '../model/contracts'
 
 export class DecisionIntakeApiError extends Error {
   constructor(
@@ -67,6 +67,7 @@ export async function submitDecisionIntakeAnswers(
     candidate_statuses?: Record<string, string>
     information_availability?: Record<string, string>
     semantic_mappings?: Record<string, string>
+    causal_specification?: CausalSpecification
   }
 ): Promise<ContractResponse> {
   return contractResponseSchema.parse(
