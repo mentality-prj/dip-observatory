@@ -47,19 +47,19 @@ test.describe('platform surface routing contract', () => {
     expect(response?.status()).toBeLessThan(400)
     await expect(page.locator('#main-content')).toBeVisible()
 
-    await page.locator('a[href="/en/plugins"]').first().click()
+    await page.locator('a[href="/en/plugins"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/en\/plugins$/)
 
-    await page.locator('a[data-studio-locale="uk"]').click()
+    await page.locator('a[data-studio-locale="uk"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/uk\/plugins$/)
 
-    await page.locator('a[href="/uk/bindings"]').first().click()
+    await page.locator('a[href="/uk/bindings"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/uk\/bindings$/)
 
-    await page.locator('a[data-studio-locale="pl"]').click()
+    await page.locator('a[data-studio-locale="pl"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/pl\/bindings$/)
 
-    await page.locator('a[href="/pl/dimensions"]').first().click()
+    await page.locator('a[href="/pl/dimensions"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/pl\/dimensions$/)
 
     await expect(page.locator('#main-content')).toBeVisible()
