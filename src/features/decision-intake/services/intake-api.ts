@@ -71,9 +71,7 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
   if (input.businessContext?.trim()) {
     form.set('business_context', input.businessContext.trim())
   }
-  return normalizeIntakeAnalysis(
-    await requestV2WithFallback('/v2/analyze', '/analyze', { method: 'POST', body: form })
-  )
+  return normalizeIntakeAnalysis(await requestV2WithFallback('/v2/analyze', '/analyze', { method: 'POST', body: form }))
 }
 
 export async function submitDecisionIntakeAnswers(
@@ -95,9 +93,7 @@ export async function submitDecisionIntakeAnswers(
 
 export async function getDecisionIntakeContract(sessionId: string): Promise<ContractResponse> {
   const encoded = encodeURIComponent(sessionId)
-  return normalizeContractResponse(
-    await requestV2WithFallback(`/v2/${encoded}/contract`, `/${encoded}/contract`)
-  )
+  return normalizeContractResponse(await requestV2WithFallback(`/v2/${encoded}/contract`, `/${encoded}/contract`))
 }
 
 export async function compileDecisionIntake(sessionId: string) {
