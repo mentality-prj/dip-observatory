@@ -221,10 +221,10 @@ const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
     : text.includes('ambiguous')
       ? 'evidence_reason.critical_semantics_ambiguous'
       : text.includes('information set')
-      ? 'evidence_reason.information_set_unresolved_or_unverified'
-      : text.includes('minimum verified')
-        ? 'evidence_reason.minimum_verified_semantics_present'
-        : 'evidence_reason.verified_critical_semantics_missing'
+        ? 'evidence_reason.information_set_unresolved_or_unverified'
+        : text.includes('minimum verified')
+          ? 'evidence_reason.minimum_verified_semantics_present'
+          : 'evidence_reason.verified_critical_semantics_missing'
 
 function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
   const semanticRole = role(value.role)
