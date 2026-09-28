@@ -132,7 +132,9 @@ export function ResourceAllocationImport({
         file={fileMeta}
         formats="CSV · XML · XLSX"
         state={uploaderState}
-        statusLabel={busy ? (stage === 'reading' ? t('reading') : t('validating')) : stage === 'ready' ? t('ready') : undefined}
+        statusLabel={
+          busy ? (stage === 'reading' ? t('reading') : t('validating')) : stage === 'ready' ? t('ready') : undefined
+        }
         disabled={busy}
         onFile={handleFile}
         tone="rose"
