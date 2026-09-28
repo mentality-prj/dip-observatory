@@ -2,7 +2,11 @@ import 'server-only'
 
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
-import { compiledResourceAllocationSchema, contractResponseSchema, intakeAnalysisSchema } from '../model/contracts'
+import {
+  compiledResourceAllocationSchema,
+  normalizeContractResponse,
+  normalizeIntakeAnalysis,
+} from '../model/contracts'
 import type { ContractResponse, IntakeAnalysis } from '../model/contracts'
 
 export class DecisionIntakeApiError extends Error {
@@ -52,13 +56,24 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   return response.json()
 }
 
+async function requestV2WithFallback(v2Path: string, v1Path: string, init: RequestInit = {}): Promise<unknown> {
+  try {
+    return await request(v2Path, init)
+  } catch (error) {
+    if (!(error instanceof DecisionIntakeApiError) || error.status !== 404) throw error
+    return request(v1Path, init)
+  }
+}
+
 export async function analyzeDecisionDataset(input: { file: File; businessContext?: string }): Promise<IntakeAnalysis> {
   const form = new FormData()
   form.set('file', input.file)
   if (input.businessContext?.trim()) {
     form.set('business_context', input.businessContext.trim())
   }
-  return intakeAnalysisSchema.parse(await request('/analyze', { method: 'POST', body: form }))
+  return normalizeIntakeAnalysis(
+    await requestV2WithFallback('/v2/analyze', '/analyze', { method: 'POST', body: form })
+  )
 }
 
 export async function submitDecisionIntakeAnswers(
@@ -68,8 +83,9 @@ export async function submitDecisionIntakeAnswers(
     information_availability?: Record<string, string>
   }
 ): Promise<ContractResponse> {
-  return contractResponseSchema.parse(
-    await request(`/${encodeURIComponent(sessionId)}/answers`, {
+  const encoded = encodeURIComponent(sessionId)
+  return normalizeContractResponse(
+    await requestV2WithFallback(`/v2/${encoded}/answers`, `/${encoded}/answers`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(input),
@@ -78,11 +94,15 @@ export async function submitDecisionIntakeAnswers(
 }
 
 export async function getDecisionIntakeContract(sessionId: string): Promise<ContractResponse> {
-  return contractResponseSchema.parse(await request(`/${encodeURIComponent(sessionId)}/contract`))
+  const encoded = encodeURIComponent(sessionId)
+  return normalizeContractResponse(
+    await requestV2WithFallback(`/v2/${encoded}/contract`, `/${encoded}/contract`)
+  )
 }
 
 export async function compileDecisionIntake(sessionId: string) {
+  const encoded = encodeURIComponent(sessionId)
   return compiledResourceAllocationSchema.parse(
-    await request(`/${encodeURIComponent(sessionId)}/compile`, { method: 'POST' })
+    await requestV2WithFallback(`/v2/${encoded}/compile`, `/${encoded}/compile`, { method: 'POST' })
   )
 }
