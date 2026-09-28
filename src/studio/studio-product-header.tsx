@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ProductHeader } from '@/design-system'
-import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioSurfaceHref } from '@/lib/platform-urls'
 import { studioCopy } from './studio-copy'
 import { StudioLanguageSwitcher } from './studio-language-switcher'
 import { useStudioLocale } from './use-studio-locale'
@@ -54,11 +54,12 @@ export function StudioProductHeader() {
 
   return (
     <ProductHeader
-      href={studioHref('', locale)}
+      href={studioSurfaceHref('', locale)}
       brandHref={marketingHref(locale)}
       product="Studio"
       brandStatus={<StudioCoreStatus />}
       utilities={<StudioLanguageSwitcher />}
+      nativeNavigation
     />
   )
 }
