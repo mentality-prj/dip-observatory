@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Table } from '@/design-system'
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
-import { studioHref } from '@/lib/platform-urls'
+import { studioSurfaceHref } from '@/lib/platform-urls'
 import { studioRequest, type Dimension, type Plugin, type Profile, type ProfileView } from './contracts'
 import { ProfileEditor } from './profile-editor'
 import { ProfileRunner } from './profile-runner'
@@ -55,7 +54,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
         ) : (
           <p role="status">{c.loading}</p>
         )}
-        <Link href={studioHref('profiles', locale)}>{c.decisionProfiles}</Link>
+        <a href={studioSurfaceHref('profiles', locale)}>{c.decisionProfiles}</a>
       </>
     )
   }
@@ -63,7 +62,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
   const { profile, dimensions, plugins } = data
   const plugin = plugins.find((p) => p.name === profile.plugin_id)
   const pluginName = plugin?.ui?.label ?? profile.plugin_id
-  const base = studioHref(`profiles/${encodeURIComponent(id)}`, locale)
+  const base = studioSurfaceHref(`profiles/${encodeURIComponent(id)}`, locale)
   const clean = Object.fromEntries(Object.entries(profile).filter(([key]) => key !== 'validation')) as Profile
   const sourceLabels = studioCopy(locale).presentation
 
@@ -71,7 +70,7 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
     <>
       <Breadcrumbs
         items={[
-          { label: c.decisionProfiles, href: studioHref('profiles', locale) },
+          { label: c.decisionProfiles, href: studioSurfaceHref('profiles', locale) },
           { label: profile.name, href: base },
           { label: sectionLabel(section, locale) },
         ]}
@@ -91,13 +90,13 @@ export function ProfileDetail({ id, section }: { id: string; section: ProfileSec
 
       <nav aria-label={c.profileSections} className="studio-profile-nav">
         {profileSections.map((tab) => (
-          <Link
+          <a
             key={tab}
             aria-current={section === tab ? 'page' : undefined}
             href={tab === 'overview' ? base : `${base}/${tab}`}
           >
             {sectionLabel(tab, locale)}
-          </Link>
+          </a>
         ))}
       </nav>
 
