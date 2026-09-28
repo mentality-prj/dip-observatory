@@ -1,18 +1,15 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Boxes, Braces, GitBranch, SlidersHorizontal, Telescope } from 'lucide-react'
-import { observatoryHref, studioHref } from '@/lib/platform-urls'
-import { studioSectionFromPath } from './studio-locale'
+import { observatoryHref, studioSurfaceHref } from '@/lib/platform-urls'
 import { studioCopy } from './studio-copy'
-import { useStudioLocale } from './use-studio-locale'
+import { useStudioLocale, useStudioRoute } from './use-studio-locale'
 
 export function StudioNav() {
-  const pathname = usePathname()
+  const route = useStudioRoute()
   const locale = useStudioLocale()
   const c = studioCopy(locale)
-  const localizedHref = (section: string) => studioHref(section, locale)
+  const localizedHref = (section: string) => studioSurfaceHref(section, locale)
   const items = [
     { section: 'profiles', label: c.nav.decisions, description: c.nav.decisionsDescription, icon: SlidersHorizontal },
   ] as const
@@ -32,17 +29,14 @@ export function StudioNav() {
     },
   ] as const
 
-  const isActive = (section: string) => {
-    const activeSection = studioSectionFromPath(pathname)
-    return activeSection === section || activeSection.startsWith(`${section}/`)
-  }
+  const isActive = (section: string) => route === section || route.startsWith(`${section}/`)
   const renderItem = ({
     section,
     label,
     description,
     icon: Icon,
   }: (typeof items)[number] | (typeof platformItems)[number]) => (
-    <Link key={section} aria-current={isActive(section) ? 'page' : undefined} href={localizedHref(section)}>
+    <a key={section} aria-current={isActive(section) ? 'page' : undefined} href={localizedHref(section)}>
       <span className="studio-nav-icon" aria-hidden>
         <Icon size={16} />
       </span>
@@ -50,7 +44,7 @@ export function StudioNav() {
         <strong>{label}</strong>
         <small className="sr-only">{description}</small>
       </span>
-    </Link>
+    </a>
   )
 
   return (
@@ -59,14 +53,14 @@ export function StudioNav() {
       {items.map(renderItem)}
       <span className="studio-nav-label">{c.nav.advancedPlatform}</span>
       {platformItems.map(renderItem)}
-      <Link href={observatoryHref('', locale)}>
+      <a href={observatoryHref('', locale)}>
         <span className="studio-nav-icon" aria-hidden>
           <Telescope size={16} />
         </span>
         <span className="studio-nav-copy">
           <strong>{c.nav.openObservatory}</strong>
         </span>
-      </Link>
+      </a>
     </nav>
   )
 }

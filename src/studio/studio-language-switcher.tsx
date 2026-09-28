@@ -1,40 +1,30 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { studioHref } from '@/lib/platform-urls'
-import { useTransition } from 'react'
 import { Globe2 } from 'lucide-react'
-import { STUDIO_LOCALES, STUDIO_LOCALE_LABEL, studioSectionFromPath, type StudioLocale } from './studio-locale'
+import { studioSurfaceHref } from '@/lib/platform-urls'
+import { STUDIO_LOCALES, STUDIO_LOCALE_LABEL, type StudioLocale } from './studio-locale'
 import { studioCopy } from './studio-copy'
-import { useStudioLocale } from './use-studio-locale'
+import { useStudioLocale, useStudioRoute } from './use-studio-locale'
 
 export function StudioLanguageSwitcher() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  const route = useStudioRoute()
   const active = useStudioLocale()
   const c = studioCopy(active)
-
-  const changeLocale = (locale: StudioLocale) => {
-    if (locale === active) return
-    const section = studioSectionFromPath(pathname)
-    startTransition(() => router.replace(studioHref(section, locale)))
-  }
+  const localeHref = (locale: StudioLocale) => studioSurfaceHref(route, locale)
 
   return (
     <div className="studio-language-controls">
       <div className="studio-language-switcher" aria-label={c.language.label}>
         {STUDIO_LOCALES.map((locale) => (
-          <button
+          <a
             key={locale}
-            type="button"
-            disabled={pending}
+            href={localeHref(locale)}
+            data-studio-locale={locale}
             aria-current={locale === active ? 'page' : undefined}
             aria-label={`${c.language.switchTo} ${STUDIO_LOCALE_LABEL[locale]}`}
-            onClick={() => changeLocale(locale)}
           >
             {STUDIO_LOCALE_LABEL[locale]}
-          </button>
+          </a>
         ))}
       </div>
       <label className="studio-language-select">
@@ -42,8 +32,10 @@ export function StudioLanguageSwitcher() {
         <span className="sr-only">{c.language.label}</span>
         <select
           value={active}
-          disabled={pending}
-          onChange={(event) => changeLocale(event.target.value as StudioLocale)}
+          onChange={(event) => {
+            const locale = event.target.value as StudioLocale
+            if (locale !== active) window.location.assign(localeHref(locale))
+          }}
         >
           {STUDIO_LOCALES.map((locale) => (
             <option key={locale} value={locale}>

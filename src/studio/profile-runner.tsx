@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { Button, CardContent, CardDescription, CardHeader, CardTitle } from '@/design-system'
 import { observatoryHref } from '@/lib/platform-urls'
@@ -65,9 +64,9 @@ export function ProfileRunner({ profile }: { profile: Profile }) {
         {result && (
           <div className="studio-success" role="status">
             {result.status}: {result.selected_alternative ?? copy.noAlternative}.{' '}
-            <Link href={observatoryHref(`decisions?decision=${encodeURIComponent(result.decision_id)}`)}>
+            <a href={observatoryHref(`decisions?decision=${encodeURIComponent(result.decision_id)}`, locale)}>
               {copy.inspect}
-            </Link>
+            </a>
           </div>
         )}
       </CardContent>
