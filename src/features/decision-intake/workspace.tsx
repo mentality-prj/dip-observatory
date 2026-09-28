@@ -37,6 +37,7 @@ const copy = {
     unstructuredNextStep: 'Additional evidence is required before the decision can proceed.',
     inferredReason: 'AI-inferred hypothesis; human confirmation is required.',
     verifiedReason: 'Verified semantic mapping.',
+    unknownRole: 'other role',
     assumptionsSummary: '{count} unstructured model assumption(s) require verification.',
     gateStatuses: {
       no_opportunity: 'No opportunity',
@@ -77,7 +78,8 @@ const copy = {
     unstructuredNextStep: 'Перед продовженням рішення потрібні додаткові докази.',
     inferredReason: 'Гіпотеза, визначена ШІ; потрібне підтвердження людиною.',
     verifiedReason: 'Підтверджене семантичне зіставлення.',
-    assumptionsSummary: '{count} неструктурованих припущень моделі потребують перевірки.',
+    unknownRole: 'інша роль',
+    assumptionsSummary: 'Неструктуровані припущення моделі потребують перевірки: {count}.'
     gateStatuses: {
       no_opportunity: 'Немає можливості',
       discovered: 'Виявлено',
@@ -117,7 +119,8 @@ const copy = {
     unstructuredNextStep: 'Przed kontynuacją decyzji potrzebne są dodatkowe dowody.',
     inferredReason: 'Hipoteza wywnioskowana przez AI; wymaga potwierdzenia przez człowieka.',
     verifiedReason: 'Zweryfikowane mapowanie semantyczne.',
-    assumptionsSummary: '{count} nieustrukturyzowanych założeń modelu wymaga weryfikacji.',
+    unknownRole: 'inna rola',
+    assumptionsSummary: 'Nieustrukturyzowane założenia modelu wymagają weryfikacji: {count}.'
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
       discovered: 'Wykryto',
@@ -370,7 +373,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               {analysis.interpretation.candidates.map((candidate) => (
                 <div key={`${candidate.field}:${candidate.role}`} className="border-t border-white/10 pt-3 text-sm">
                   <b>{candidate.field}</b> →{' '}
-                  <span className="text-cyan-200">{roleLabels[locale][candidate.role] ?? candidate.role}</span>
+                  <span className="text-cyan-200">
+                    {roleLabels[locale][candidate.role] ?? (locale === 'en' ? candidate.role : t.unknownRole)}
+                  </span>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     {locale === 'en'
                       ? candidate.reason
