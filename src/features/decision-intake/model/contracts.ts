@@ -139,6 +139,35 @@ export const causalIdentificationCertificateSchema = z.object({
   claim: z.string(),
 })
 
+export const causalEvidencePlanSchema = z.object({
+  actions: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(['verify_no_latent_confounding', 'randomized_intervention']),
+      variables: z.array(z.string()),
+      question: z.string(),
+      estimated_cost: z.number().int().positive(),
+      resolves_observational_nonidentifiability: z.boolean(),
+      rationale: z.string(),
+    })
+  ),
+  preferred_action_id: z.string().nullable(),
+  claim: z.string(),
+})
+
+export const empiricalSupportSchema = z.object({
+  status: z.enum([
+    'not_assessed',
+    'basic_check_passed',
+    'basic_check_failed',
+    'requires_full_analysis',
+  ]),
+  treatment_levels: z.record(z.string(), z.number().int().nonnegative()),
+  checked_strata: z.number().int().nonnegative(),
+  missing_strata: z.array(z.string()),
+  claim: z.string(),
+})
+
 export const decisionSufficiencySchema = z.object({
   structural_status: z.enum(['blocked', 'ready']),
   causal_identifiability: z.enum([
@@ -155,6 +184,8 @@ export const decisionSufficiencySchema = z.object({
   next_question: sufficiencyQuestionSchema.nullable(),
   certificate: sufficiencyCertificateSchema,
   causal_certificate: causalIdentificationCertificateSchema.nullable(),
+  causal_evidence_plan: causalEvidencePlanSchema.nullable(),
+  empirical_support: empiricalSupportSchema.nullable(),
   planner_strategy: z.string(),
   proof_scope: z.string(),
 })
