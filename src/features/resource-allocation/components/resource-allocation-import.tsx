@@ -129,7 +129,7 @@ export function ResourceAllocationImport({
           }`
         }
       >
-        {({ dragging, openFilePicker }) =>
+        {({ dragging, inputId }) =>
           dragging && !busy ? (
             <div aria-live="polite" data-testid="resource-import-drag-prompt">
               <Upload className="mx-auto h-7 w-7 text-rose-200" />
@@ -186,28 +186,26 @@ export function ResourceAllocationImport({
                   {summary.availabilityRules} {t('rules')}
                 </div>
               )}
-              <button
-                type="button"
-                onClick={openFilePicker}
-                className="mt-4 inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
+              <label
+                htmlFor={inputId}
+                className="mt-4 inline-flex cursor-pointer items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
               >
                 <FileCheck2 className="h-4 w-4" />
                 {t('replace')}
-              </button>
+              </label>
             </div>
           ) : (
             <>
               <Upload className={`mx-auto h-7 w-7 ${dragging ? 'text-rose-200' : 'text-rose-300'}`} />
               <div className="mt-3 text-sm font-bold">{dragging ? t('dropActive') : t('drop')}</div>
               <div className="my-2 text-xs text-slate-600">{t('or')}</div>
-              <button
-                type="button"
-                onClick={openFilePicker}
-                className="flex w-full min-w-0 items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
+              <label
+                htmlFor={inputId}
+                className="flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
               >
                 <Upload className="h-4 w-4" />
                 {t('choose')}
-              </button>
+              </label>
               <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
             </>
           )
