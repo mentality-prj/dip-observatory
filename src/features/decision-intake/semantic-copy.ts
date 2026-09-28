@@ -223,5 +223,11 @@ export function renderNextStep(locale: Locale, item: NextStep): string {
         uk: 'Скомпілюйте контракт через адаптер обмеженого розподілу ресурсів.',
         pl: 'Skompiluj kontrakt przez adapter ograniczonej alokacji zasobów.',
       }[locale]
+    case 'next_step.select_decision_adapter':
+      return {
+        en: 'Select a compatible decision adapter for this contract.',
+        uk: 'Виберіть сумісний адаптер рішення для цього контракту.',
+        pl: 'Wybierz zgodny adapter decyzyjny dla tego kontraktu.',
+      }[locale]
   }
 }
