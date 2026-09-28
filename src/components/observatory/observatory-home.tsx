@@ -3,9 +3,15 @@ import { ArrowRight, BrainCircuit, Check, ChevronDown, FileUp, Network, Route, S
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { createTranslator } from '@/i18n/runtime'
-import { systemApplicationCopy } from '@/observatory/application-copy'\nimport { observableApplications } from '@/observatory/applications'
+import { systemApplicationCopy } from '@/observatory/application-copy'
+import { observableApplications } from '@/observatory/applications'
 
-const demoIcons = {\n  'decision-challenge': Scale,\n  'decision-intake': FileUp,\n  'resource-allocation': Route,\n  'supply-network-optimization': Network,\n} as const
+const demoIcons = {
+  'decision-challenge': Scale,
+  'decision-intake': FileUp,
+  'resource-allocation': Route,
+  'supply-network-optimization': Network,
+} as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
   const t = createTranslator(locale, 'observatoryHome')
