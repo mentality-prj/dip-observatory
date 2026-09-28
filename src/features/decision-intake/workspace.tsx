@@ -5,11 +5,7 @@ import { FileUp } from 'lucide-react'
 
 import { FileUploader } from '@/components/file-uploader'
 import type { Locale } from '@/lib/observatory-i18n'
-import {
-  intakeAnalysisSchema,
-  type IntakeAnalysis,
-  type IntakeMessageCode,
-} from './model/contracts'
+import { intakeAnalysisSchema, type IntakeAnalysis, type IntakeMessageCode } from './model/contracts'
 
 const copy = {
   en: {
@@ -146,7 +142,8 @@ const messageText: Record<Locale, Record<IntakeMessageCode, string>> = {
     'reason.information_set_unresolved_or_unverified': 'The decision-time information set is unresolved or unverified.',
     'reason.minimum_verified_semantics_present': 'Minimum verified decision semantics and information set are present.',
     'next.confirm_or_reject_inferred_critical_semantic': 'Confirm or reject every inferred critical semantic.',
-    'next.confirm_controllable_action_and_business_objective': 'Confirm the controllable action and business objective.',
+    'next.confirm_controllable_action_and_business_objective':
+      'Confirm the controllable action and business objective.',
     'next.verify_decision_time_availability': 'Verify decision-time availability for every input field.',
     'next.compile_resource_allocation': 'Compile through the constrained resource-allocation adapter.',
   },
@@ -158,26 +155,35 @@ const messageText: Record<Locale, Record<IntakeMessageCode, string>> = {
     'question.realized_outcome': 'Яке поле фіксує фактичний результат?',
     'reason.critical_semantics_ai_inferred': 'Критична семантика рішення досі визначена лише ШІ.',
     'reason.verified_critical_semantics_missing': 'Немає підтвердженої критичної семантики рішення.',
-    'reason.information_set_unresolved_or_unverified': 'Набір інформації на момент рішення не визначений або не підтверджений.',
-    'reason.minimum_verified_semantics_present': 'Мінімально необхідна семантика рішення та набір інформації підтверджені.',
-    'next.confirm_or_reject_inferred_critical_semantic': 'Підтвердьте або відхиліть кожну критичну семантику, визначену ШІ.',
+    'reason.information_set_unresolved_or_unverified':
+      'Набір інформації на момент рішення не визначений або не підтверджений.',
+    'reason.minimum_verified_semantics_present':
+      'Мінімально необхідна семантика рішення та набір інформації підтверджені.',
+    'next.confirm_or_reject_inferred_critical_semantic':
+      'Підтвердьте або відхиліть кожну критичну семантику, визначену ШІ.',
     'next.confirm_controllable_action_and_business_objective': 'Підтвердьте керовану дію та бізнес-мету.',
-    'next.verify_decision_time_availability': 'Підтвердьте доступність кожного вхідного поля на момент прийняття рішення.',
+    'next.verify_decision_time_availability':
+      'Підтвердьте доступність кожного вхідного поля на момент прийняття рішення.',
     'next.compile_resource_allocation': 'Скомпілюйте контракт через адаптер обмеженого розподілу ресурсів.',
   },
   pl: {
-    'question.controllable_action': 'Które pole reprezentuje działanie, które może kontrolować osoba podejmująca decyzję?',
+    'question.controllable_action':
+      'Które pole reprezentuje działanie, które może kontrolować osoba podejmująca decyzję?',
     'question.business_objective': 'Jaki cel biznesowy powinien optymalizować QDIP?',
     'question.binding_constraints': 'Które ograniczenia były znane i wiążące w momencie podejmowania decyzji?',
     'question.decision_time_information': 'Które pola były dostępne przed wyborem działania?',
     'question.realized_outcome': 'Które pole rejestruje rzeczywisty wynik?',
     'reason.critical_semantics_ai_inferred': 'Krytyczna semantyka decyzji nadal jest wyłącznie wnioskiem AI.',
     'reason.verified_critical_semantics_missing': 'Brakuje zweryfikowanej krytycznej semantyki decyzji.',
-    'reason.information_set_unresolved_or_unverified': 'Zbiór informacji dostępnych w momencie decyzji jest nierozstrzygnięty lub niezweryfikowany.',
-    'reason.minimum_verified_semantics_present': 'Minimalna wymagana semantyka decyzji i zbiór informacji zostały zweryfikowane.',
-    'next.confirm_or_reject_inferred_critical_semantic': 'Potwierdź lub odrzuć każdą krytyczną semantykę wywnioskowaną przez AI.',
+    'reason.information_set_unresolved_or_unverified':
+      'Zbiór informacji dostępnych w momencie decyzji jest nierozstrzygnięty lub niezweryfikowany.',
+    'reason.minimum_verified_semantics_present':
+      'Minimalna wymagana semantyka decyzji i zbiór informacji zostały zweryfikowane.',
+    'next.confirm_or_reject_inferred_critical_semantic':
+      'Potwierdź lub odrzuć każdą krytyczną semantykę wywnioskowaną przez AI.',
     'next.confirm_controllable_action_and_business_objective': 'Potwierdź kontrolowane działanie i cel biznesowy.',
-    'next.verify_decision_time_availability': 'Zweryfikuj dostępność każdego pola wejściowego w momencie podejmowania decyzji.',
+    'next.verify_decision_time_availability':
+      'Zweryfikuj dostępność każdego pola wejściowego w momencie podejmowania decyzji.',
     'next.compile_resource_allocation': 'Skompiluj kontrakt przez adapter ograniczonej alokacji zasobów.',
   },
 }
@@ -258,7 +264,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const payload: unknown = await response.json()
 
       if (!response.ok) {
-        setError(response.status === 413 ? t.uploadTooLarge : response.status === 422 ? t.invalidDataset : t.requestFailed)
+        setError(
+          response.status === 413 ? t.uploadTooLarge : response.status === 422 ? t.invalidDataset : t.requestFailed
+        )
         return
       }
 
@@ -384,8 +392,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             </ol>
 
             <div className="mt-6 border-t border-white/10 pt-4 text-sm">
-              <b>{t.gate}:</b>{' '}
-              <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
+              <b>{t.gate}:</b> <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
               <p className="mt-2 text-xs leading-5 text-slate-500">{nextStep}</p>
             </div>
 
