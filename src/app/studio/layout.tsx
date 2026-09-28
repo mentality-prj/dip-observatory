@@ -12,7 +12,7 @@ import {
   StudioProductHeader,
   studioCopy,
 } from '@/features/studio'
-import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioSurfaceHref } from '@/lib/platform-urls'
 
 export const metadata = {
   title: 'QDIP Studio',
@@ -33,10 +33,11 @@ export default async function StudioLayout({ children }: { children: ReactNode }
         <Suspense
           fallback={
             <ProductHeader
-              href={studioHref('', locale)}
+              href={studioSurfaceHref('', locale)}
               brandHref={marketingHref(locale)}
               product="Studio"
               brandStatus={coreStatus}
+              nativeNavigation
               utilities={
                 <div className="studio-language-switcher" aria-hidden>
                   <span>EN</span>
