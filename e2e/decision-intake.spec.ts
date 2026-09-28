@@ -66,7 +66,7 @@ const analysis = {
       },
       {
         code: 'assumption.field_availability_inferred',
-        params: { field: 'capacity' },
+        params: { field: 'capacity', role: null },
       },
     ],
     validation_status: 'inferred',
