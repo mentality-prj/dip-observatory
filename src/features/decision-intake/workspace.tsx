@@ -208,7 +208,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <>
                 <FileUp className="mx-auto h-6 w-6 text-cyan-300" />
                 <div data-testid="decision-intake-file" className="mt-3 break-words text-sm font-semibold text-white">
-                  {dragging ? t.dropActive : file?.name ?? t.drop}
+                  {dragging ? t.dropActive : (file?.name ?? t.drop)}
                 </div>
                 {!dragging ? (
                   <>
@@ -270,8 +270,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               ))}
             </ol>
             <div className="mt-6 border-t border-white/10 pt-4 text-sm">
-              <b>{t.gate}:</b>{' '}
-              <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
+              <b>{t.gate}:</b> <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
               <p className="mt-2 text-xs leading-5 text-slate-500">
                 {localizeRuntimeText(locale, analysis.evidence_gate.recommended_next_step)}
               </p>
