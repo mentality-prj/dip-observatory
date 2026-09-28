@@ -1,11 +1,17 @@
-import { ArrowRight, BrainCircuit, Check, ChevronDown, Network, Route } from 'lucide-react'
+import { ArrowRight, BrainCircuit, Check, ChevronDown, FileUp, Network, Route, Scale } from 'lucide-react'
 
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { createTranslator } from '@/i18n/runtime'
-import { observableUseCases } from '@/use-cases/registry'
+import { systemApplicationCopy } from '@/observatory/application-copy'
+import { observableApplications } from '@/observatory/applications'
 
-const demoIcons = { 'resource-allocation': Route, 'supply-network-optimization': Network } as const
+const demoIcons = {
+  'decision-challenge': Scale,
+  'decision-intake': FileUp,
+  'resource-allocation': Route,
+  'supply-network-optimization': Network,
+} as const
 
 export function ObservatoryHome({ locale }: { locale: Locale }) {
   const t = createTranslator(locale, 'observatoryHome')
@@ -14,7 +20,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
   const alternativeItems = t.raw<Array<[string, string]>>('alternativeItems')
   const evidenceItems = t.raw<string[]>('evidenceItems')
   const questions = t.raw<Array<[string, string]>>('questions')
-  const useCases = observableUseCases()
+  const applications = observableApplications()
   return (
     <main className="observatory-home relative min-h-[calc(100vh-6.5rem)] overflow-hidden px-4 pb-20 pt-8 text-white md:px-6 md:pt-12 xl:px-10">
       <div className="relative z-10 mx-auto max-w-[1500px]">
@@ -106,14 +112,23 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
             <p className="mt-3 text-sm leading-6 text-slate-500">{t('demosBody')}</p>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            {useCases.map((useCase) => {
-              const Icon = demoIcons[useCase.id as keyof typeof demoIcons] ?? BrainCircuit
+            {applications.map((application) => {
+              const Icon = demoIcons[application.id as keyof typeof demoIcons] ?? BrainCircuit
+              const systemCopy =
+                application.kind === 'use-case'
+                  ? null
+                  : systemApplicationCopy(locale, application.id as 'decision-challenge' | 'decision-intake')
+              const title = systemCopy?.title ?? caseMessages(`${application.useCaseId}.title`)
+              const description = systemCopy?.description ?? caseMessages(`${application.useCaseId}.description`)
+              const tag = systemCopy?.tag ?? caseMessages(`${application.useCaseId}.tag`)
+              const pattern =
+                systemCopy?.pattern ?? decisionPatterns(application.id === 'gtm-lab' ? 'prioritize' : 'allocate')
               return (
                 <a
-                  key={useCase.id}
-                  href={buildLocalePath(useCase.route, locale)}
-                  data-use-case={useCase.id}
-                  data-theme={useCase.presentation.theme}
+                  key={application.id}
+                  href={buildLocalePath(application.route, locale)}
+                  data-use-case={application.id}
+                  data-theme={application.theme}
                   className="observatory-demo-card group flex min-h-64 flex-col p-6 md:p-8"
                 >
                   <div className="flex items-center justify-between gap-4">
@@ -121,17 +136,13 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
                       <Icon className="h-5 w-5 text-cyan-200" />
                     </span>
                     <span className="flex items-center gap-2 text-[10px] font-semibold tracking-[.14em] text-slate-500">
-                      <b className="text-cyan-300">{decisionPatterns(useCase.decisionPattern)}</b>
+                      <b className="text-cyan-300">{pattern}</b>
                       <span>·</span>
-                      {caseMessages(`${useCase.id}.tag`)}
+                      {tag}
                     </span>
                   </div>
-                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">
-                    {caseMessages(`${useCase.id}.title`)}
-                  </h3>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
-                    {caseMessages(`${useCase.id}.description`)}
-                  </p>
+                  <h3 className="mt-8 text-xl font-medium tracking-[-.02em] md:text-2xl">{title}</h3>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">{description}</p>
                   <div className="mt-auto flex items-center gap-2 pt-7 text-sm font-semibold text-cyan-200">
                     {t('open')}
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
