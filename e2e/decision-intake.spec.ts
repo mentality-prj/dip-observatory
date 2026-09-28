@@ -25,28 +25,28 @@ const analysis = {
       },
     ],
     clarifications: [
-      { code: 'clarification.controllable_action', params: {} },
-      { code: 'clarification.business_objective', params: {} },
-      { code: 'clarification.binding_constraints', params: {} },
-      { code: 'clarification.decision_time_information', params: {} },
-      { code: 'clarification.realized_outcome', params: {} },
+      { code: 'clarification.controllable_action', params: { field: null, role: null } },
+      { code: 'clarification.business_objective', params: { field: null, role: null } },
+      { code: 'clarification.binding_constraints', params: { field: null, role: null } },
+      { code: 'clarification.decision_time_information', params: { field: null, role: null } },
+      { code: 'clarification.realized_outcome', params: { field: null, role: null } },
       {
         code: 'clarification.field_role',
         params: { field: 'capacity', role: 'constraint' },
       },
       {
         code: 'clarification.field_meaning',
-        params: { field: 'capacity' },
+        params: { field: 'capacity', role: null },
       },
     ],
     assumptions: [
       {
         code: 'assumption.business_semantics_require_confirmation',
-        params: {},
+        params: { field: null, role: null },
       },
       {
         code: 'assumption.field_availability_inferred',
-        params: { field: 'capacity' },
+        params: { field: 'capacity', role: null },
       },
     ],
     provider: 'openai-compatible',
@@ -62,7 +62,7 @@ const analysis = {
     assumptions: [
       {
         code: 'assumption.business_semantics_require_confirmation',
-        params: {},
+        params: { field: null, role: null },
       },
       {
         code: 'assumption.field_availability_inferred',
@@ -76,14 +76,14 @@ const analysis = {
     reasons: [
       {
         code: 'evidence_reason.verified_critical_semantics_missing',
-        params: {},
+        params: { field: null, role: null },
       },
     ],
     missing_evidence: ['action', 'objective'],
     blocking_assumptions: [],
     recommended_next_step: {
       code: 'next_step.confirm_controllable_action_and_business_objective',
-      params: {},
+      params: { field: null, role: null },
     },
   },
 }
