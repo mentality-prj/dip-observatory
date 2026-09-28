@@ -16,6 +16,7 @@ const analysis = {
     archetype: 'generic_decision',
     candidates: [
       {
+        candidate_id: 'semantic-action',
         field: 'action',
         role: 'action',
         source_columns: ['action'],
