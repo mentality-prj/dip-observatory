@@ -667,9 +667,121 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 ) : null}
 
                 {nextQuestion.kind === 'define_causal_model' ? (
-                  <p className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
-                    {t.boundary}
-                  </p>
+                  <div className="mt-4 grid gap-3">
+                    <p className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
+                      {t.boundary}
+                    </p>
+                    <label className="grid gap-2 text-xs text-slate-400">
+                      <span className="font-medium text-slate-200">{t.causalEdges}</span>
+                      <textarea
+                        rows={6}
+                        value={causalEdges}
+                        onChange={(event) => setCausalEdges(event.target.value)}
+                        placeholder={t.causalEdgesHint}
+                        className="rounded-lg border border-white/10 bg-slate-900 p-3 font-mono text-xs text-white"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-2 text-xs text-slate-400">
+                        <span className="font-medium text-slate-200">{t.treatments}</span>
+                        <input
+                          value={causalTreatments}
+                          onChange={(event) => setCausalTreatments(event.target.value)}
+                          placeholder={verifiedRoleField(analysis, 'action') ?? t.commaSeparated}
+                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-xs text-slate-400">
+                        <span className="font-medium text-slate-200">{t.outcomes}</span>
+                        <input
+                          value={causalOutcomes}
+                          onChange={(event) => setCausalOutcomes(event.target.value)}
+                          placeholder={verifiedRoleField(analysis, 'outcome') ?? t.commaSeparated}
+                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
+                        />
+                      </label>
+                      <label className="grid gap-2 text-xs text-slate-400">
+                        <span className="font-medium text-slate-200">{t.conditioning}</span>
+                        <input
+                          value={causalConditioning}
+                          onChange={(event) => setCausalConditioning(event.target.value)}
+                          placeholder={t.commaSeparated}
+                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
+                        />
+                      </label>
+                    </div>
+                    <label className="flex items-start gap-2 text-xs leading-5 text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={causalAssumptionsVerified}
+                        onChange={(event) => setCausalAssumptionsVerified(event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>{t.verifyCausalAssumptions}</span>
+                    </label>
+                    <button
+                      type="button"
+                      disabled={!causalAssumptionsVerified || answerBusy}
+                      onClick={() => void applyCausalSpecification()}
+                      className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                    >
+                      {answerBusy ? t.answerBusy : t.runIdentification}
+                    </button>
+                  </div>
+                ) : null}
+
+                {nextQuestion.kind === 'plan_causal_evidence' ? (
+                  <div className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
+                    {t.effectEvidence}
+                    {analysis.sufficiency.causal_certificate?.hedge ? (
+                      <div className="mt-2 font-mono text-[11px] text-amber-50">
+                        F = [{analysis.sufficiency.causal_certificate.hedge.f_nodes.join(', ')}], F′ = [
+                        {analysis.sufficiency.causal_certificate.hedge.f_prime_nodes.join(', ')}]
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {analysis.sufficiency.causal_certificate ? (
+              <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <b className="text-sm">{t.causalCertificate}</b>
+                  <span className="text-xs text-cyan-200">
+                    {analysis.sufficiency.causal_certificate.method} ·{' '}
+                    {analysis.sufficiency.causal_certificate.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-400">
+                  {analysis.sufficiency.causal_certificate.claim}
+                </p>
+                {analysis.sufficiency.causal_certificate.estimand ? (
+                  <div className="mt-3">
+                    <div className="text-xs font-medium text-slate-300">{t.estimand}</div>
+                    <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-[11px] leading-5 text-cyan-100">
+                      {analysis.sufficiency.causal_certificate.estimand}
+                    </pre>
+                  </div>
+                ) : null}
+                {analysis.sufficiency.causal_certificate.hedge ? (
+                  <div className="mt-3">
+                    <div className="text-xs font-medium text-slate-300">{t.hedge}</div>
+                    <div className="mt-1 font-mono text-[11px] text-amber-200">
+                      F = [{analysis.sufficiency.causal_certificate.hedge.f_nodes.join(', ')}], F′ = [
+                      {analysis.sufficiency.causal_certificate.hedge.f_prime_nodes.join(', ')}]
+                    </div>
+                  </div>
+                ) : null}
+                {analysis.sufficiency.causal_certificate.proof_steps.length ? (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-xs font-medium text-slate-300">{t.proof}</summary>
+                    <ol className="mt-2 grid gap-1 pl-4 text-[11px] leading-5 text-slate-500">
+                      {analysis.sufficiency.causal_certificate.proof_steps.map((step, index) => (
+                        <li key={`${index}:${step}`}>{step}</li>
+                      ))}
+                    </ol>
+                  </details>
                 ) : null}
               </div>
             ) : null}
