@@ -55,7 +55,7 @@ describe('Decision Intake contract compatibility', () => {
     expect(result.schema_version).toBe(2)
     expect(result.interpretation.clarifications[0]?.code).toBe('clarification.business_objective')
     expect(result.interpretation.candidates[0]?.reason.code).toBe('semantic_reason.model_inference')
-    expect(result.interpretation.candidates[0]?.candidate_id).toBe('legacy:capacity:constraint')
+    expect(result.interpretation.candidates[0]?.candidate_id).toBe('semantic:constraint:capacity')
     expect(result.interpretation.candidates[0]?.legacy_reason).toBe('legacy prose')
     expect(result.interpretation.legacy_clarifications).toEqual(['Custom AI clarification?'])
     expect(result.interpretation.legacy_assumptions).toEqual(['legacy assumption'])
