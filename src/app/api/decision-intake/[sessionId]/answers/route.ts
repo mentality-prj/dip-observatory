@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import type { CausalSpecification } from '@/features/decision-intake/model/contracts'
 import { DecisionIntakeApiError, submitDecisionIntakeAnswers } from '@/features/decision-intake/server'
 
 export const runtime = 'nodejs'
@@ -8,6 +9,7 @@ type AnswerPayload = {
   candidate_statuses?: Record<string, string>
   information_availability?: Record<string, string>
   semantic_mappings?: Record<string, string>
+  causal_specification?: CausalSpecification
 }
 
 export async function POST(request: Request, context: { params: Promise<{ sessionId: string }> }) {
