@@ -264,8 +264,11 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
   if (question.kind === 'plan_causal_evidence') {
     const variables = question.evidence_variables.join(', ')
+    const targets = question.evidence_targets.length
+      ? question.evidence_targets.join(', ')
+      : variables
     if (question.evidence_kind === 'verify_no_latent_confounding') {
-      return t.evidenceVerifyQuestion.replace('{variables}', variables)
+      return t.evidenceVerifyQuestion.replace('{variables}', targets)
     }
     if (question.evidence_kind === 'randomized_intervention') {
       return t.evidenceRandomizeQuestion.replace('{variables}', variables)
