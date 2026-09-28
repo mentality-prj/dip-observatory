@@ -77,16 +77,54 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
 export async function submitDecisionIntakeAnswers(
   sessionId: string,
   input: {
+    candidate_statuses_by_id?: Record<string, string>
     candidate_statuses?: Record<string, string>
     information_availability?: Record<string, string>
   }
 ): Promise<ContractResponse> {
   const encoded = encodeURIComponent(sessionId)
+  const v2Path = `/v2/${encoded}/answers`
+  try {
+    return normalizeContractResponse(
+      await request(v2Path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+    )
+  } catch (error) {
+    if (!(error instanceof DecisionIntakeApiError) || error.status !== 404) throw error
+  }
+
+  const legacyContract = normalizeContractResponse(await request(`/${encoded}/contract`))
+  const fieldCounts = new Map<string, number>()
+  for (const candidate of legacyContract.contract.candidates) {
+    fieldCounts.set(candidate.field, (fieldCounts.get(candidate.field) ?? 0) + 1)
+  }
+
+  const legacyStatuses: Record<string, string> = { ...(input.candidate_statuses ?? {}) }
+  for (const [candidateId, status] of Object.entries(input.candidate_statuses_by_id ?? {})) {
+    const candidate = legacyContract.contract.candidates.find((item) => item.candidate_id === candidateId)
+    if (!candidate) {
+      throw new DecisionIntakeApiError('Unknown semantic candidate id.', 422)
+    }
+    if ((fieldCounts.get(candidate.field) ?? 0) !== 1) {
+      throw new DecisionIntakeApiError(
+        'This semantic confirmation requires Decision Intake v2 because the field has multiple candidate roles.',
+        409
+      )
+    }
+    legacyStatuses[candidate.field] = status
+  }
+
   return normalizeContractResponse(
-    await requestV2WithFallback(`/v2/${encoded}/answers`, `/${encoded}/answers`, {
+    await request(`/${encoded}/answers`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        candidate_statuses: legacyStatuses,
+        information_availability: input.information_availability,
+      }),
     })
   )
 }
