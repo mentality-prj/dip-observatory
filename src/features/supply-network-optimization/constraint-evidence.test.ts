@@ -51,6 +51,14 @@ describe('supply constraint evidence normalization', () => {
     expect(softPreferenceEvidence(optimized)).toEqual(['concentration-target:central-hub:0'])
   })
 
+  it('moves legacy reallocation evidence out of hard constraints', () => {
+    const label = 'reallocation-excess:central-hub:store-1:core:0'
+    const optimized = result({ binding_constraints: [label] })
+
+    expect(hardConstraintEvidence(optimized, SUPPLY_NETWORK_DEMO)).toEqual([])
+    expect(softPreferenceEvidence(optimized)).toEqual([label])
+  })
+
   it('does not treat an unused delivery route lower bound as a bottleneck', () => {
     const route = SUPPLY_NETWORK_DEMO.delivery_routes[0]
     const label = `delivery-route-capacity:${route.from_node_id}:${route.to_demand_point_id}:0`
