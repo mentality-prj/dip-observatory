@@ -161,7 +161,9 @@ export function FileUploader({
             </div>
           ) : null}
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className={`h-full w-1/2 animate-pulse rounded-full ${tone === 'rose' ? 'bg-rose-400' : 'bg-cyan-300'}`} />
+            <div
+              className={`h-full w-1/2 animate-pulse rounded-full ${tone === 'rose' ? 'bg-rose-400' : 'bg-cyan-300'}`}
+            />
           </div>
         </div>
       ) : file ? (
