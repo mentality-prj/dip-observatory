@@ -120,11 +120,22 @@ export const sufficiencyCertificateSchema = z.object({
   claim: z.string(),
 })
 
+export const estimandExpressionSchema: z.ZodTypeAny = z.lazy(() =>
+  z.object({
+    kind: z.enum(['joint', 'sum', 'product', 'conditional', 'ratio']),
+    variables: z.array(z.string()),
+    target: z.string().nullable(),
+    given: z.array(z.string()),
+    children: z.array(estimandExpressionSchema),
+  })
+)
+
 export const causalIdentificationCertificateSchema = z.object({
   issued: z.boolean(),
   status: z.enum(['requires_causal_model', 'requires_verification', 'identified', 'not_identified', 'invalid_model']),
   method: z.string(),
   estimand: z.string().nullable(),
+  estimand_ast: estimandExpressionSchema.nullable(),
   proof_steps: z.array(z.string()),
   hedge: z
     .object({
