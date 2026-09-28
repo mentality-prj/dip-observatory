@@ -71,7 +71,10 @@ export function entityDisplayLabel(id: string, locale: Locale, fallback?: string
   }
 
   const supplier = supplierDisplayLabel(id, locale)
-  return supplier !== id ? supplier : (fallback ?? id)
+  if (supplier !== id) return supplier
+
+  const product = productClassDisplayLabel(id, locale)
+  return product !== id ? product : (fallback ?? id)
 }
 
 export function productClassDisplayLabel(id: string, locale: Locale) {
