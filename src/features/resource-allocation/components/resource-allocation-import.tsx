@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
+import { FileDropzone } from '@/components/file-dropzone'
 import { useTranslations } from '@/i18n/provider'
 import type { ResourceAllocationInput } from '../contracts'
 import {
@@ -40,10 +41,7 @@ export function ResourceAllocationImport({
 }) {
   const t = useTranslations('resourceAllocation.importer')
   const recordTypes = t.raw<Record<string, string>>('recordTypes')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dragDepth = useRef(0)
   const [stage, setStage] = useState<ImportStage>('idle')
-  const [dragging, setDragging] = useState(false)
   const [fileMeta, setFileMeta] = useState<{ name: string; size: number } | null>(null)
   const [summary, setSummary] = useState<ResourceAllocationImportSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -68,38 +66,7 @@ export function ResourceAllocationImport({
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Import failed')
       setStage('error')
-    } finally {
-      if (inputRef.current) inputRef.current.value = ''
     }
-  }
-
-  function dragEnter(event: React.DragEvent<HTMLElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    dragDepth.current += 1
-    if (!busy) setDragging(true)
-  }
-
-  function dragLeave(event: React.DragEvent<HTMLElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    dragDepth.current = Math.max(0, dragDepth.current - 1)
-    if (dragDepth.current === 0) setDragging(false)
-  }
-
-  function dragOver(event: React.DragEvent<HTMLElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    if (event.dataTransfer) event.dataTransfer.dropEffect = busy ? 'none' : 'copy'
-  }
-
-  function drop(event: React.DragEvent<HTMLElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    dragDepth.current = 0
-    setDragging(false)
-    if (busy) return
-    void handleFile(event.dataTransfer.files?.[0])
   }
 
   return (
@@ -147,111 +114,105 @@ export function ResourceAllocationImport({
         </div>
       </div>
 
-      <input
-        ref={inputRef}
-        className="sr-only"
-        type="file"
+      <FileDropzone
         accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        onChange={(event) => void handleFile(event.target.files?.[0])}
-      />
-
-      <div
-        data-testid="resource-import-dropzone"
-        data-dragging={dragging ? 'true' : 'false'}
-        onDragEnter={dragEnter}
-        onDragLeave={dragLeave}
-        onDragOver={dragOver}
-        onDrop={drop}
-        className={`mt-4 rounded-xl border border-dashed p-5 text-center transition-colors ${
-          dragging
-            ? 'border-rose-300 bg-rose-300/15'
-            : stage === 'ready'
-              ? 'border-emerald-300/35 bg-emerald-300/[0.06]'
-              : 'border-white/15 bg-slate-950/35'
-        }`}
+        disabled={busy}
+        onFile={handleFile}
+        testId="resource-import-dropzone"
+        className={(dragging) =>
+          `mt-4 rounded-xl border border-dashed p-5 text-center transition-colors ${
+            dragging
+              ? 'border-rose-300 bg-rose-300/15'
+              : stage === 'ready'
+                ? 'border-emerald-300/35 bg-emerald-300/[0.06]'
+                : 'border-white/15 bg-slate-950/35'
+          }`
+        }
       >
-        {dragging && !busy ? (
-          <div aria-live="polite" data-testid="resource-import-drag-prompt">
-            <Upload className="mx-auto h-7 w-7 text-rose-200" />
-            <div className="mt-3 text-sm font-bold">{t('dropActive')}</div>
-          </div>
-        ) : busy ? (
-          <div aria-live="polite">
-            <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
-            <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t('reading') : t('validating')}</div>
-            {fileMeta && (
-              <div className="mt-1 break-words text-xs text-slate-500">
+        {({ dragging, openFilePicker }) =>
+          dragging && !busy ? (
+            <div aria-live="polite" data-testid="resource-import-drag-prompt">
+              <Upload className="mx-auto h-7 w-7 text-rose-200" />
+              <div className="mt-3 text-sm font-bold">{t('dropActive')}</div>
+            </div>
+          ) : busy ? (
+            <div aria-live="polite">
+              <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
+              <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t('reading') : t('validating')}</div>
+              {fileMeta && (
+                <div className="mt-1 break-words text-xs text-slate-500">
+                  {fileMeta.name} · {formatBytes(fileMeta.size)}
+                </div>
+              )}
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-1/2 animate-pulse rounded-full bg-rose-400" />
+              </div>
+            </div>
+          ) : stage === 'ready' && fileMeta && summary ? (
+            <div aria-live="polite">
+              <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
+              <div className="mt-3 font-bold text-emerald-200">{t('ready')}</div>
+              <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
                 {fileMeta.name} · {formatBytes(fileMeta.size)}
               </div>
-            )}
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-1/2 animate-pulse rounded-full bg-rose-400" />
+              <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3">
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-lg">{summary.communities}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-lg">{summary.teams}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-lg">{summary.horizonDemand}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-lg">{summary.days}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
+                </div>
+                <div className="rounded-lg bg-white/[0.04] p-2">
+                  <b className="block text-lg">{summary.scheduledDemand}</b>
+                  <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
+                </div>
+              </div>
+              {summary.availabilityRules > 0 && (
+                <div className="mt-2 text-left text-[11px] text-slate-500">
+                  {summary.availabilityRules} {t('rules')}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={openFilePicker}
+                className="mt-4 inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
+              >
+                <FileCheck2 className="h-4 w-4" />
+                {t('replace')}
+              </button>
             </div>
-          </div>
-        ) : stage === 'ready' && fileMeta && summary ? (
-          <div aria-live="polite">
-            <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
-            <div className="mt-3 font-bold text-emerald-200">{t('ready')}</div>
-            <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
-              {fileMeta.name} · {formatBytes(fileMeta.size)}
-            </div>
-            <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3">
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{summary.communities}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
-              </div>
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{summary.teams}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
-              </div>
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{summary.horizonDemand}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
-              </div>
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{summary.days}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
-              </div>
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
-              </div>
-              <div className="rounded-lg bg-white/[0.04] p-2">
-                <b className="block text-lg">{summary.scheduledDemand}</b>
-                <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
-              </div>
-            </div>
-            {summary.availabilityRules > 0 && (
-              <div className="mt-2 text-left text-[11px] text-slate-500">
-                {summary.availabilityRules} {t('rules')}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="mt-4 inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
-            >
-              <FileCheck2 className="h-4 w-4" />
-              {t('replace')}
-            </button>
-          </div>
-        ) : (
-          <>
-            <Upload className={`mx-auto h-7 w-7 ${dragging ? 'text-rose-200' : 'text-rose-300'}`} />
-            <div className="mt-3 text-sm font-bold">{dragging ? t('dropActive') : t('drop')}</div>
-            <div className="my-2 text-xs text-slate-600">{t('or')}</div>
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="flex w-full min-w-0 items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
-            >
-              <Upload className="h-4 w-4" />
-              {t('choose')}
-            </button>
-            <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <Upload className={`mx-auto h-7 w-7 ${dragging ? 'text-rose-200' : 'text-rose-300'}`} />
+              <div className="mt-3 text-sm font-bold">{dragging ? t('dropActive') : t('drop')}</div>
+              <div className="my-2 text-xs text-slate-600">{t('or')}</div>
+              <button
+                type="button"
+                onClick={openFilePicker}
+                className="flex w-full min-w-0 items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
+              >
+                <Upload className="h-4 w-4" />
+                {t('choose')}
+              </button>
+              <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
+            </>
+          )
+        }
+      </FileDropzone>
 
       {error && (
         <div role="alert" className="mt-3 break-words text-xs text-rose-300">
