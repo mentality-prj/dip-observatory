@@ -29,9 +29,9 @@ const useCaseLocalization = {
 } as const
 
 const heroHeadlines = {
-  en: 'Make complex decisions repeatable',
-  uk: 'Приймайте складні рішення послідовно',
-  pl: 'Podejmuj złożone decyzje w sposób powtarzalny',
+  en: 'Turn uncertainty into decisions',
+  uk: 'Перетворюйте невизначеність на рішення',
+  pl: 'Przekształcaj niepewność w decyzje',
 } as const
 
 const whyLabels = {
