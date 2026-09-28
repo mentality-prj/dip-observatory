@@ -58,10 +58,12 @@ export const nextStepCodeSchema = z.enum([
   'next_step.verify_decision_time_availability',
   'next_step.compile_resource_allocation',
 ])
-export const semanticParamsSchema = z.object({
-  field: z.string().nullable(),
-  role: semanticRoleSchema.nullable(),
-}).strict()
+export const semanticParamsSchema = z
+  .object({
+    field: z.string().nullable(),
+    role: semanticRoleSchema.nullable(),
+  })
+  .strict()
 
 const semanticMessage = <T extends z.ZodTypeAny>(code: T) => z.object({ code, params: semanticParamsSchema }).strict()
 export const clarificationQuestionSchema = semanticMessage(clarificationQuestionCodeSchema)
@@ -79,29 +81,38 @@ const semanticCandidateSchema = z.object({
 })
 const evidenceGateSchema = z.object({
   status: z.enum([
-    'no_opportunity','discovered','ready_for_decision','ready_for_historical_evaluation',
-    'needs_more_data','needs_prospective_pilot','invalid',
+    'no_opportunity',
+    'discovered',
+    'ready_for_decision',
+    'ready_for_historical_evaluation',
+    'needs_more_data',
+    'needs_prospective_pilot',
+    'invalid',
   ]),
   reasons: z.array(evidenceReasonSchema),
   missing_evidence: z.array(z.string()),
   blocking_assumptions: z.array(semanticAssumptionSchema),
   recommended_next_step: nextStepSchema,
 })
-export const decisionContractSchema = z.object({
-  schema_version: z.literal(2),
-  contract_id: z.string(),
-  version: z.number(),
-  source_hash: z.string(),
-  archetype: decisionArchetypeSchema,
-  candidates: z.array(semanticCandidateSchema),
-  information_set: z.array(z.object({
-    field: z.string(),
-    availability: availabilitySchema,
-    status: semanticStatusSchema,
-  })),
-  assumptions: z.array(semanticAssumptionSchema),
-  validation_status: z.string(),
-}).passthrough()
+export const decisionContractSchema = z
+  .object({
+    schema_version: z.literal(2),
+    contract_id: z.string(),
+    version: z.number(),
+    source_hash: z.string(),
+    archetype: decisionArchetypeSchema,
+    candidates: z.array(semanticCandidateSchema),
+    information_set: z.array(
+      z.object({
+        field: z.string(),
+        availability: availabilitySchema,
+        status: semanticStatusSchema,
+      })
+    ),
+    assumptions: z.array(semanticAssumptionSchema),
+    validation_status: z.string(),
+  })
+  .passthrough()
 
 export const intakeAnalysisSchema = z.object({
   schema_version: z.literal(2),
@@ -129,7 +140,11 @@ export const intakeAnalysisSchema = z.object({
 export const contractResponseSchema = z.object({ contract: decisionContractSchema, evidence_gate: evidenceGateSchema })
 
 const legacyCandidateSchema = z.object({
-  field: z.string(), role: z.string(), source_columns: z.array(z.string()), reason: z.string(), status: semanticStatusSchema,
+  field: z.string(),
+  role: z.string(),
+  source_columns: z.array(z.string()),
+  reason: z.string(),
+  status: semanticStatusSchema,
 })
 const legacyGateSchema = z.object({
   status: evidenceGateSchema.shape.status,
@@ -138,17 +153,21 @@ const legacyGateSchema = z.object({
   blocking_assumptions: z.array(z.string()),
   recommended_next_step: z.string(),
 })
-const legacyContractSchema = z.object({
-  contract_id: z.string(),
-  version: z.number(),
-  source_hash: z.string(),
-  archetype: z.string(),
-  candidates: z.array(legacyCandidateSchema),
-  information_set: z.array(z.object({ field: z.string(), availability: availabilitySchema, status: semanticStatusSchema })),
-  assumptions: z.array(z.string()),
-  unknowns: z.array(z.string()),
-  validation_status: z.string(),
-}).passthrough()
+const legacyContractSchema = z
+  .object({
+    contract_id: z.string(),
+    version: z.number(),
+    source_hash: z.string(),
+    archetype: z.string(),
+    candidates: z.array(legacyCandidateSchema),
+    information_set: z.array(
+      z.object({ field: z.string(), availability: availabilitySchema, status: semanticStatusSchema })
+    ),
+    assumptions: z.array(z.string()),
+    unknowns: z.array(z.string()),
+    validation_status: z.string(),
+  })
+  .passthrough()
 const legacyAnalysisSchema = z.object({
   profile: intakeAnalysisSchema.shape.profile,
   interpretation: z.object({
@@ -165,7 +184,8 @@ const legacyAnalysisSchema = z.object({
 })
 const legacyContractResponseSchema = z.object({ contract: legacyContractSchema, evidence_gate: legacyGateSchema })
 
-const role = (value: string) => semanticRoleSchema.safeParse(value).success ? semanticRoleSchema.parse(value) : 'information'
+const role = (value: string) =>
+  semanticRoleSchema.safeParse(value).success ? semanticRoleSchema.parse(value) : 'information'
 const emptyParams = { field: null, role: null } as const
 const questionCode: Record<string, z.infer<typeof clarificationQuestionCodeSchema>> = {
   'Which field represents the action a decision maker can control?': 'clarification.controllable_action',
@@ -176,15 +196,19 @@ const questionCode: Record<string, z.infer<typeof clarificationQuestionCodeSchem
 }
 const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
   'Confirm or reject every inferred critical semantic.': 'next_step.confirm_or_reject_inferred_critical_semantic',
-  'Confirm the controllable action and business objective.': 'next_step.confirm_controllable_action_and_business_objective',
+  'Confirm the controllable action and business objective.':
+    'next_step.confirm_controllable_action_and_business_objective',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
 }
 const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
-  text.includes('AI-inferred') ? 'evidence_reason.critical_semantics_ai_inferred'
-  : text.includes('information set') ? 'evidence_reason.information_set_unresolved_or_unverified'
-  : text.includes('minimum verified') ? 'evidence_reason.minimum_verified_semantics_present'
-  : 'evidence_reason.verified_critical_semantics_missing'
+  text.includes('AI-inferred')
+    ? 'evidence_reason.critical_semantics_ai_inferred'
+    : text.includes('information set')
+      ? 'evidence_reason.information_set_unresolved_or_unverified'
+      : text.includes('minimum verified')
+        ? 'evidence_reason.minimum_verified_semantics_present'
+        : 'evidence_reason.verified_critical_semantics_missing'
 
 function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
   const semanticRole = role(value.role)
@@ -203,7 +227,7 @@ function legacyContract(value: z.infer<typeof legacyContractSchema>) {
     schema_version: 2 as const,
     archetype: decisionArchetypeSchema.safeParse(value.archetype).success
       ? decisionArchetypeSchema.parse(value.archetype)
-      : 'generic_decision' as const,
+      : ('generic_decision' as const),
     candidates: value.candidates.map(legacyCandidate),
     assumptions: value.assumptions.length
       ? [{ code: 'assumption.business_semantics_require_confirmation' as const, params: emptyParams }]
@@ -252,7 +276,10 @@ export function normalizeContractResponse(payload: unknown): ContractResponse {
   const v2 = contractResponseSchema.safeParse(payload)
   if (v2.success) return v2.data
   const legacy = legacyContractResponseSchema.parse(payload)
-  return contractResponseSchema.parse({ contract: legacyContract(legacy.contract), evidence_gate: legacyGate(legacy.evidence_gate) })
+  return contractResponseSchema.parse({
+    contract: legacyContract(legacy.contract),
+    evidence_gate: legacyGate(legacy.evidence_gate),
+  })
 }
 
 export const compiledResourceAllocationSchema = z.object({
