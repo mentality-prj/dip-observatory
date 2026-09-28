@@ -230,7 +230,7 @@ function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
   const semanticRole = role(value.role)
   return {
     ...value,
-    candidate_id: `legacy:${encodeURIComponent(value.field)}:${semanticRole}`,
+    candidate_id: `semantic:${semanticRole}:${value.field}`,
     role: semanticRole,
     reason: {
       code: 'semantic_reason.model_inference' as const,
