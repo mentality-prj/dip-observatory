@@ -16,15 +16,17 @@ import { ProductShell, type DesignTheme } from '@/design-system'
 import { useTranslations } from '@/i18n/provider'
 import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
 import { marketingHref, studioHref } from '@/lib/platform-urls'
-import { observableUseCases, type UseCaseTheme } from '@/use-cases/registry'
+import { observableUseCases, type UseCaseRoute, type UseCaseTheme } from '@/use-cases/registry'
 import { ObservatoryFooter } from './observatory-footer'
 import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
+export type ObservatoryRoute = '/' | '/challenges' | '/decisions' | UseCaseRoute
+
 type PrototypeShellProps = {
   locale: Locale
   children: React.ReactNode
-  activeRoute: string
+  activeRoute: ObservatoryRoute
   theme?: PrototypeTheme
 }
 
