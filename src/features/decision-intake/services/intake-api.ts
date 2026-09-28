@@ -66,6 +66,7 @@ export async function submitDecisionIntakeAnswers(
   input: {
     candidate_statuses?: Record<string, string>
     information_availability?: Record<string, string>
+    semantic_mappings?: Record<string, string>
   }
 ): Promise<ContractResponse> {
   return contractResponseSchema.parse(
