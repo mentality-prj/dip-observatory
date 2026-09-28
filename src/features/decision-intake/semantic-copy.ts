@@ -1,6 +1,6 @@
 import type { Locale } from '@/lib/observatory-i18n'
 
-import type { ClarificationQuestion, NextStep, SemanticAssumption, SemanticReason } from './model/contracts'
+import type { ClarificationQuestion, NextStep, SemanticAssumption, SemanticParams, SemanticReason } from './model/contracts'
 
 const roleLabels: Record<Locale, Record<string, string>> = {
   en: {
@@ -48,11 +48,11 @@ export function renderSemanticRole(locale: Locale, role: string): string {
   return roleLabels[locale][role] ?? fallback[locale].role
 }
 
-function fieldParam(locale: Locale, params: Record<string, string>): string {
+function fieldParam(locale: Locale, params: SemanticParams): string {
   return params.field?.trim() || fallback[locale].field
 }
 
-function roleParam(locale: Locale, params: Record<string, string>): string {
+function roleParam(locale: Locale, params: SemanticParams): string {
   return renderSemanticRole(locale, params.role?.trim() || '')
 }
 
