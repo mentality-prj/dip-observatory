@@ -24,10 +24,11 @@ const coreStatus = <StudioCoreStatus />
 export default async function StudioLayout({ children }: { children: ReactNode }) {
   const requestHeaders = await headers()
   const locale = parseStudioLocale(requestHeaders.get('x-qdip-studio-locale'))
+  const route = requestHeaders.get('x-qdip-studio-route') ?? ''
   const c = studioCopy(locale)
 
   return (
-    <StudioLocaleProvider initialLocale={locale}>
+    <StudioLocaleProvider initialLocale={locale} initialRoute={route}>
       <DesignSystemProvider theme="green" mode="light" className="studio-shell">
         <Suspense
           fallback={
