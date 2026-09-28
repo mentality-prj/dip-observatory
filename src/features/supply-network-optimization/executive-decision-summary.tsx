@@ -45,6 +45,7 @@ export function ExecutiveDecisionSummary({
   network: SupplyNetwork
 }) {
   const t = useTranslations('supplyNetwork.summary')
+  const activeConstraints = hardConstraintEvidence(result, network)
   const route = routeBottleneck(result, network)
   const utilization = peakUtilization(result)
   const baselineUtilization = baseline ? peakUtilization(baseline) : null
@@ -109,7 +110,22 @@ export function ExecutiveDecisionSummary({
                     count: route.count,
                     horizon: network.policy.planning_horizon_days,
                   })} ${utilization < 0.8 ? t('routeVsStorage', { utilization: pct(utilization) }) : ''}`
-                : t('genericConstraint')}
+                : activeConstraints.length
+                  ? t('genericConstraint')
+                  : t('noActiveConstraint')}
+            </p>
+          </div>
+          <div className="mt-3 rounded-lg border border-cyan-300/15 bg-cyan-300/[.035] p-4">
+            <h3 className="text-sm font-medium text-cyan-100">{t('nextCheckTitle')}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              {route
+                ? t('nextCheckRoute', {
+                    route: `${warehouseDisplayLabel(route.from, locale)} → ${demandDisplayLabel(route.to, locale)}`,
+                    percent: 10,
+                  })
+                : activeConstraints.length
+                  ? t('nextCheckGeneric')
+                  : t('nextCheckAlternatives')}
             </p>
           </div>
           {hasDisruption ? (

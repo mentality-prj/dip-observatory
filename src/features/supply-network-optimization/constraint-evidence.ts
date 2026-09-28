@@ -1,6 +1,6 @@
 import type { OptimizationResult, SupplyNetwork } from './domain'
 
-const SOFT_PREFERENCE_PREFIXES = ['concentration-target:'] as const
+const SOFT_PREFERENCE_PREFIXES = ['concentration-target:', 'reallocation-excess:'] as const
 
 function isSoftPreference(label: string) {
   return SOFT_PREFERENCE_PREFIXES.some((prefix) => label.startsWith(prefix))
