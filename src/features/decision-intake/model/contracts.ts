@@ -75,7 +75,7 @@ export const decisionContractSchema = z
 
 export const requirementNodeSchema = z.object({
   id: z.string(),
-  layer: z.enum(['structural', 'causal']),
+  layer: z.enum(['structural', 'causal', 'statistical']),
   state: z.enum(['satisfied', 'blocked', 'waiting']),
   mode: z.enum(['all', 'any']),
   depends_on: z.array(z.string()),
@@ -168,6 +168,7 @@ export const decisionSufficiencySchema = z.object({
   ]),
   blockers: z.array(z.string()),
   causal_blockers: z.array(z.string()),
+  statistical_blockers: z.array(z.string()),
   requirements: z.array(requirementNodeSchema),
   questions: z.array(sufficiencyQuestionSchema).max(7),
   next_question: sufficiencyQuestionSchema.nullable(),
