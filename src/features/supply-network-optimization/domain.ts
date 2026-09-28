@@ -189,6 +189,11 @@ export type OptimizationResult = {
   candidate_warehouse_ids_used: string[]
   binding_constraints: string[]
   binding_preferences?: string[]
+  evidence_semantics?: {
+    binding_constraints: string
+    binding_preferences: string
+    concentration_penalty: string
+  }
   solver_status: string
   solve_time_ms: number
   mip_gap: number | null
