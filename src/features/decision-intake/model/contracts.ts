@@ -106,6 +106,12 @@ export const sufficiencyQuestionSchema = z.object({
   estimated_cost: z.number().int().positive(),
   priority_score: z.number(),
   rationale: z.string(),
+  evidence_action_id: z.string().nullable().optional(),
+  evidence_kind: z
+    .enum(['verify_no_latent_confounding', 'randomized_intervention'])
+    .nullable()
+    .optional(),
+  evidence_variables: z.array(z.string()),
 })
 
 export const sufficiencyCertificateSchema = z.object({
