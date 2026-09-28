@@ -99,7 +99,7 @@ describe('Decision Intake contract compatibility', () => {
         missing_evidence: [],
         blocking_assumptions: [],
         recommended_next_step: {
-          code: 'next_step.confirm_controllable_action_and_business_objective',
+          code: 'next_step.select_decision_adapter',
           params: { field: null, role: null },
         },
       },
@@ -107,5 +107,6 @@ describe('Decision Intake contract compatibility', () => {
 
     expect(result.schema_version).toBe(2)
     expect(result.contract.archetype).toBe('generic_decision')
+    expect(result.evidence_gate.recommended_next_step.code).toBe('next_step.select_decision_adapter')
   })
 })
