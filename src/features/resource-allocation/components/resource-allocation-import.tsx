@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, Download, FileCheck2, FileSpreadsheet, LoaderCircle, Upload } from 'lucide-react'
-import { FileDropzone } from '@/components/file-dropzone'
+import { Download, FileSpreadsheet } from 'lucide-react'
+
+import { FileUploader, type FileUploaderState } from '@/components/file-uploader'
 import { useTranslations } from '@/i18n/provider'
 import type { ResourceAllocationInput } from '../contracts'
 import {
@@ -15,12 +16,6 @@ import {
 } from '../importer'
 
 type ImportStage = 'idle' | 'reading' | 'validating' | 'ready' | 'error'
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 function downloadCsv(content: string, fileName: string) {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
@@ -47,6 +42,15 @@ export function ResourceAllocationImport({
   const [error, setError] = useState<string | null>(null)
 
   const busy = stage === 'reading' || stage === 'validating'
+  const uploaderState: FileUploaderState = busy
+    ? 'busy'
+    : stage === 'ready'
+      ? 'ready'
+      : fileMeta
+        ? stage === 'error'
+          ? 'error'
+          : 'selected'
+        : 'idle'
 
   async function handleFile(file: File | undefined) {
     if (!file || busy) return
@@ -114,106 +118,67 @@ export function ResourceAllocationImport({
         </div>
       </div>
 
-      <FileDropzone
+      <FileUploader
         accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        copy={{
+          drop: t('drop'),
+          dropActive: t('dropActive'),
+          or: t('or'),
+          choose: t('choose'),
+          replace: t('replace'),
+          busy: t('reading'),
+          ready: t('ready'),
+        }}
+        file={fileMeta}
+        formats="CSV · XML · XLSX"
+        state={uploaderState}
+        statusLabel={busy ? (stage === 'reading' ? t('reading') : t('validating')) : stage === 'ready' ? t('ready') : undefined}
         disabled={busy}
         onFile={handleFile}
+        tone="rose"
         testId="resource-import-dropzone"
-        className={(dragging) =>
-          `mt-4 rounded-xl border border-dashed p-5 text-center transition-colors ${
-            dragging
-              ? 'border-rose-300 bg-rose-300/15'
-              : stage === 'ready'
-                ? 'border-emerald-300/35 bg-emerald-300/[0.06]'
-                : 'border-white/15 bg-slate-950/35'
-          }`
-        }
-      >
-        {({ dragging, inputId }) =>
-          dragging && !busy ? (
-            <div aria-live="polite" data-testid="resource-import-drag-prompt">
-              <Upload className="mx-auto h-7 w-7 text-rose-200" />
-              <div className="mt-3 text-sm font-bold">{t('dropActive')}</div>
+        fileTestId="resource-import-file"
+        dragPromptTestId="resource-import-drag-prompt"
+        className="mt-4"
+      />
+
+      {stage === 'ready' && summary ? (
+        <div
+          data-testid="resource-import-summary"
+          className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3"
+          aria-live="polite"
+        >
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-lg">{summary.communities}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-lg">{summary.teams}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-lg">{summary.horizonDemand}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-lg">{summary.days}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] p-2">
+            <b className="block text-lg">{summary.scheduledDemand}</b>
+            <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
+          </div>
+          {summary.availabilityRules > 0 ? (
+            <div className="col-span-full text-[11px] text-slate-500">
+              {summary.availabilityRules} {t('rules')}
             </div>
-          ) : busy ? (
-            <div aria-live="polite">
-              <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-rose-300" />
-              <div className="mt-3 text-sm font-bold">{stage === 'reading' ? t('reading') : t('validating')}</div>
-              {fileMeta && (
-                <div className="mt-1 break-words text-xs text-slate-500">
-                  {fileMeta.name} · {formatBytes(fileMeta.size)}
-                </div>
-              )}
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-1/2 animate-pulse rounded-full bg-rose-400" />
-              </div>
-            </div>
-          ) : stage === 'ready' && fileMeta && summary ? (
-            <div aria-live="polite">
-              <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-300" />
-              <div className="mt-3 font-bold text-emerald-200">{t('ready')}</div>
-              <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
-                {fileMeta.name} · {formatBytes(fileMeta.size)}
-              </div>
-              <div
-                data-testid="resource-import-summary"
-                className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3"
-              >
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-lg">{summary.communities}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-lg">{summary.teams}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-lg">{summary.horizonDemand}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-lg">{summary.days}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
-                </div>
-                <div className="rounded-lg bg-white/[0.04] p-2">
-                  <b className="block text-lg">{summary.scheduledDemand}</b>
-                  <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
-                </div>
-              </div>
-              {summary.availabilityRules > 0 && (
-                <div className="mt-2 text-left text-[11px] text-slate-500">
-                  {summary.availabilityRules} {t('rules')}
-                </div>
-              )}
-              <label
-                htmlFor={inputId}
-                className="mt-4 inline-flex cursor-pointer items-center gap-2 border border-white/15 px-3 py-2 text-xs font-bold"
-              >
-                <FileCheck2 className="h-4 w-4" />
-                {t('replace')}
-              </label>
-            </div>
-          ) : (
-            <>
-              <Upload className={`mx-auto h-7 w-7 ${dragging ? 'text-rose-200' : 'text-rose-300'}`} />
-              <div className="mt-3 text-sm font-bold">{dragging ? t('dropActive') : t('drop')}</div>
-              <div className="my-2 text-xs text-slate-600">{t('or')}</div>
-              <label
-                htmlFor={inputId}
-                className="flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 border border-rose-300/30 bg-rose-300/10 px-3 py-2.5 text-center text-sm font-bold leading-6 text-rose-200 whitespace-normal break-words [overflow-wrap:anywhere]"
-              >
-                <Upload className="h-4 w-4" />
-                {t('choose')}
-              </label>
-              <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XML · XLSX</div>
-            </>
-          )
-        }
-      </FileDropzone>
+          ) : null}
+        </div>
+      ) : null}
 
       {error && (
         <div role="alert" className="mt-3 break-words text-xs text-rose-300">
