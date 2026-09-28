@@ -8,6 +8,7 @@ export const semanticStatusSchema = z.enum([
   'rejected',
 ])
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
+export const contractValidationStatusSchema = z.enum(['inferred', 'needs_review', 'verified'])
 export const decisionArchetypeSchema = z.enum(['generic_decision', 'constrained_resource_allocation'])
 export const semanticRoleSchema = z.enum([
   'action',
@@ -49,12 +50,14 @@ export const semanticAssumptionCodeSchema = z.enum([
 export const evidenceReasonCodeSchema = z.enum([
   'evidence_reason.critical_semantics_ai_inferred',
   'evidence_reason.verified_critical_semantics_missing',
+  'evidence_reason.critical_semantics_ambiguous',
   'evidence_reason.information_set_unresolved_or_unverified',
   'evidence_reason.minimum_verified_semantics_present',
 ])
 export const nextStepCodeSchema = z.enum([
   'next_step.confirm_or_reject_inferred_critical_semantic',
   'next_step.confirm_controllable_action_and_business_objective',
+  'next_step.resolve_critical_semantics',
   'next_step.verify_decision_time_availability',
   'next_step.compile_resource_allocation',
   'next_step.select_decision_adapter',
@@ -74,6 +77,7 @@ export const evidenceReasonSchema = semanticMessage(evidenceReasonCodeSchema)
 export const nextStepSchema = semanticMessage(nextStepCodeSchema)
 
 const semanticCandidateSchema = z.object({
+  candidate_id: z.string(),
   field: z.string(),
   role: semanticRoleSchema,
   source_columns: z.array(z.string()),
@@ -111,7 +115,7 @@ export const decisionContractSchema = z
       })
     ),
     assumptions: z.array(semanticAssumptionSchema),
-    validation_status: z.string(),
+    validation_status: contractValidationStatusSchema,
   })
   .passthrough()
 
@@ -132,6 +136,7 @@ export const intakeAnalysisSchema = z.object({
     candidates: z.array(semanticCandidateSchema),
     clarifications: z.array(clarificationQuestionSchema).max(7),
     assumptions: z.array(semanticAssumptionSchema),
+    legacy_clarifications: z.array(z.string()).default([]),
     provider: z.string(),
     model: z.string().nullable(),
   }),
@@ -199,6 +204,8 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
   'Confirm or reject every inferred critical semantic.': 'next_step.confirm_or_reject_inferred_critical_semantic',
   'Confirm the controllable action and business objective.':
     'next_step.confirm_controllable_action_and_business_objective',
+  'Resolve competing controllable-action or business-objective semantics.':
+    'next_step.resolve_critical_semantics',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
   'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
@@ -216,6 +223,7 @@ function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
   const semanticRole = role(value.role)
   return {
     ...value,
+    candidate_id: `legacy:${encodeURIComponent(value.field)}:${semanticRole}`,
     role: semanticRole,
     reason: {
       code: 'semantic_reason.model_inference' as const,
@@ -264,6 +272,7 @@ export function normalizeIntakeAnalysis(payload: unknown): IntakeAnalysis {
         .map((text) => questionCode[text])
         .filter((code): code is z.infer<typeof clarificationQuestionCodeSchema> => Boolean(code))
         .map((code) => ({ code, params: emptyParams })),
+      legacy_clarifications: legacy.interpretation.clarification_questions.filter((text) => !questionCode[text]),
       assumptions: legacy.interpretation.assumptions.length
         ? [{ code: 'assumption.business_semantics_require_confirmation', params: emptyParams }]
         : [],
