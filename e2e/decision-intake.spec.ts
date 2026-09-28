@@ -4,7 +4,7 @@ const analysis = {
   profile: {
     source_hash: 'test-source',
     row_count: 2,
-    column_count: 2,
+    column_count: 3,
     columns: [],
     candidate_entity_columns: [],
     candidate_time_columns: [],
@@ -17,51 +17,78 @@ const analysis = {
         field: 'action',
         role: 'action',
         source_columns: ['action'],
-        reason: 'English AI reason that must not leak into the Ukrainian UI.',
+        reason: {
+          code: 'semantic_reason.business_context_match',
+          params: { field: 'action', role: 'action' },
+        },
         status: 'inferred',
       },
     ],
-    unknowns: [],
-    ambiguities: [],
-    clarification_questions: ['Legacy English question that should not be rendered.'],
-    assumptions: ['English assumption that must not leak into the Ukrainian UI.'],
-    provider: 'deterministic',
-    model: null,
+    clarifications: [
+      { code: 'clarification.controllable_action', params: {} },
+      { code: 'clarification.business_objective', params: {} },
+      { code: 'clarification.binding_constraints', params: {} },
+      { code: 'clarification.decision_time_information', params: {} },
+      { code: 'clarification.realized_outcome', params: {} },
+      {
+        code: 'clarification.field_role',
+        params: { field: 'capacity', role: 'constraint' },
+      },
+      {
+        code: 'clarification.field_meaning',
+        params: { field: 'capacity' },
+      },
+    ],
+    assumptions: [
+      {
+        code: 'assumption.business_semantics_require_confirmation',
+        params: {},
+      },
+      {
+        code: 'assumption.field_availability_inferred',
+        params: { field: 'capacity' },
+      },
+    ],
+    provider: 'openai-compatible',
+    model: 'test-model',
   },
   contract: {
     contract_id: 'test-contract',
     version: 1,
     source_hash: 'test-source',
-    archetype: 'unknown',
+    archetype: 'constrained_resource_allocation',
     candidates: [],
     information_set: [],
-    assumptions: ['English assumption that must not leak into the Ukrainian UI.'],
-    unknowns: [],
-    validation_status: 'discovered',
+    assumptions: [
+      {
+        code: 'assumption.business_semantics_require_confirmation',
+        params: {},
+      },
+      {
+        code: 'assumption.field_availability_inferred',
+        params: { field: 'capacity' },
+      },
+    ],
+    validation_status: 'inferred',
   },
   evidence_gate: {
     status: 'discovered',
-    reasons: ['Legacy English evidence reason.'],
-    reason_codes: ['reason.verified_critical_semantics_missing'],
-    missing_evidence: [],
-    blocking_assumptions: [],
-    recommended_next_step: 'Legacy English next step that should not be rendered.',
-    recommended_next_step_code: 'next.confirm_controllable_action_and_business_objective',
-  },
-  semantic_codes: {
-    clarification_questions: [
-      'question.controllable_action',
-      'question.business_objective',
-      'question.binding_constraints',
-      'question.decision_time_information',
-      'question.realized_outcome',
+    reasons: [
+      {
+        code: 'evidence_reason.verified_critical_semantics_missing',
+        params: {},
+      },
     ],
+    missing_evidence: ['action', 'objective'],
+    blocking_assumptions: [],
+    recommended_next_step: {
+      code: 'next_step.confirm_controllable_action_and_business_objective',
+      params: {},
+    },
   },
 }
 
-test('Decision Intake reuses uploader UI and localizes semantic codes without English prose leakage', async ({
-  page,
-}) => {
+test('Decision Intake preserves structured AI semantics and localizes them without prose leakage', async ({ page }) => {
   await page.route('**/api/decision-intake/analyze', async (route) => {
     await route.fulfill({
       status: 200,
@@ -73,7 +100,7 @@ test('Decision Intake reuses uploader UI and localizes semantic codes without En
   await page.goto('/uk/decision-intake')
 
   const dropzone = page.getByTestId('decision-intake-dropzone')
-  const csv = ['action,outcome', 'keep,10'].join('\n')
+  const csv = ['action,capacity,outcome', 'keep,10,8'].join('\n')
 
   await dropzone.evaluate((element, contents) => {
     const transfer = new DataTransfer()
@@ -113,14 +140,22 @@ test('Decision Intake reuses uploader UI and localizes semantic codes without En
   await expect(page.getByText('Які обмеження були відомі та обов’язкові на момент прийняття рішення?')).toBeVisible()
   await expect(page.getByText('Які поля були доступні до вибору дії?')).toBeVisible()
   await expect(page.getByText('Яке поле фіксує фактичний результат?')).toBeVisible()
+
+  await expect(page.getByText('Чи має поле «capacity» відповідати ролі «обмеження»?')).toBeVisible()
+  await expect(page.getByText('Яке бізнес-значення має поле «capacity»?')).toBeVisible()
+  await expect(
+    page.getByText('Бізнес-контекст підтримує зіставлення поля «action» з роллю «дія».')
+  ).toBeVisible()
+  await expect(page.getByText('Бізнес-семантика потребує підтвердження людиною.')).toBeVisible()
+  await expect(
+    page.getByText('Доступність поля «capacity» на момент рішення є припущенням і потребує підтвердження.')
+  ).toBeVisible()
+
   await expect(page.getByText('Виявлено')).toBeVisible()
   await expect(page.getByText('Підтвердьте керовану дію та бізнес-мету.')).toBeVisible()
-  await expect(page.getByText('дія', { exact: true })).toBeVisible()
-  await expect(page.getByText('Гіпотеза, визначена ШІ; потрібне підтвердження людиною.')).toBeVisible()
-  await expect(page.getByText('Неструктуровані припущення моделі потребують перевірки: 1.')).toBeVisible()
 
-  await expect(page.getByText('Legacy English question that should not be rendered.')).toHaveCount(0)
-  await expect(page.getByText('Legacy English next step that should not be rendered.')).toHaveCount(0)
-  await expect(page.getByText('English AI reason that must not leak into the Ukrainian UI.')).toHaveCount(0)
-  await expect(page.getByText('English assumption that must not leak into the Ukrainian UI.')).toHaveCount(0)
+  await expect(page.getByText(/clarification\./)).toHaveCount(0)
+  await expect(page.getByText(/semantic_reason\./)).toHaveCount(0)
+  await expect(page.getByText(/assumption\./)).toHaveCount(0)
+  await expect(page.getByText(/next_step\./)).toHaveCount(0)
 })
