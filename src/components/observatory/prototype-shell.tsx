@@ -53,7 +53,9 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
 
   const localeHref = (next: Locale) => buildLocalePath(activeRoute, next)
   const labelFor = (item: (typeof navItems)[number]) =>
-    item.kind === 'use-case' ? caseT(`${item.useCaseId}.title`) : systemApplicationCopy(locale, item.id as 'decision-challenge' | 'decision-intake').title
+    item.kind === 'use-case'
+      ? caseT(`${item.useCaseId}.title`)
+      : systemApplicationCopy(locale, item.id as 'decision-challenge' | 'decision-intake').title
   const activeLabel = activeItem ? labelFor(activeItem) : 'Observatory'
 
   const nav = (
@@ -81,7 +83,12 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
     <div className={styles.localeControls}>
       <div className={styles.locale} aria-label={shared('language')}>
         {SUPPORTED_LOCALES.map((option) => (
-          <a key={option} href={localeHref(option)} aria-current={option === locale ? 'page' : undefined} data-locale={option}>
+          <a
+            key={option}
+            href={localeHref(option)}
+            aria-current={option === locale ? 'page' : undefined}
+            data-locale={option}
+          >
             {shared(`localeLabels.${option}`)}
           </a>
         ))}
@@ -97,7 +104,9 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
           }}
         >
           {SUPPORTED_LOCALES.map((option) => (
-            <option key={option} value={option}>{shared(`localeLabels.${option}`)}</option>
+            <option key={option} value={option}>
+              {shared(`localeLabels.${option}`)}
+            </option>
           ))}
         </select>
       </label>
@@ -115,7 +124,9 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
       navigation={<div className={styles.desktopNavigation}>{nav}</div>}
       mobileNavigation={
         <details className={styles.mobileMenu}>
-          <summary><Menu aria-hidden /> <span>{observatory('mobileApplications')}</span></summary>
+          <summary>
+            <Menu aria-hidden /> <span>{observatory('mobileApplications')}</span>
+          </summary>
           <div className={styles.mobileNavigation}>
             {nav}
             <a className={styles.mobileProductLink} href={studioHref('', locale)}>
@@ -125,16 +136,24 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
           </div>
         </details>
       }
-      productSwitch={{ href: studioHref('', locale), label: observatory('openStudio'), icon: <SlidersHorizontal size={15} /> }}
+      productSwitch={{
+        href: studioHref('', locale),
+        label: observatory('openStudio'),
+        icon: <SlidersHorizontal size={15} />,
+      }}
       utilities={utilities}
     >
       <div className={styles.stage}>
         <div className={styles.breadcrumb} aria-label={shared('breadcrumb')}>
-          <a className={styles.breadcrumbHome} href={marketingHref(locale)} aria-label={shared('home')}><Home /></a>
+          <a className={styles.breadcrumbHome} href={marketingHref(locale)} aria-label={shared('home')}>
+            <Home />
+          </a>
           <ChevronRight />
           <span>{activeLabel}</span>
         </div>
-        <div className={styles.content} id="main-content" tabIndex={-1}>{children}</div>
+        <div className={styles.content} id="main-content" tabIndex={-1}>
+          {children}
+        </div>
       </div>
       <ObservatoryFooter locale={locale} />
     </ProductShell>

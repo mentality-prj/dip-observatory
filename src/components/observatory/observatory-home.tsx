@@ -122,8 +122,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
               const description = systemCopy?.description ?? caseMessages(`${application.useCaseId}.description`)
               const tag = systemCopy?.tag ?? caseMessages(`${application.useCaseId}.tag`)
               const pattern =
-                systemCopy?.pattern ??
-                decisionPatterns(application.id === 'gtm-lab' ? 'prioritize' : 'allocate')
+                systemCopy?.pattern ?? decisionPatterns(application.id === 'gtm-lab' ? 'prioritize' : 'allocate')
               return (
                 <a
                   key={application.id}
