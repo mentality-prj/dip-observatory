@@ -19,6 +19,8 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
   const decisionPatterns = createTranslator(locale, 'decisionPatterns')
   const questions = t.raw<Array<[string, string]>>('questions')
   const applications = observableApplications()
+  const challengeCopy = systemApplicationCopy(locale, 'decision-challenge')
+  const intakeCopy = systemApplicationCopy(locale, 'decision-intake')
   return (
     <main className="observatory-home relative min-h-[calc(100vh-6.5rem)] overflow-hidden px-4 pb-20 pt-8 text-white md:px-6 md:pt-12 xl:px-10">
       <div className="relative z-10 mx-auto max-w-[1500px]">
@@ -33,13 +35,13 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
               className="inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950"
               href={buildLocalePath('/challenges', locale)}
             >
-              {t('challengeCta')} <ArrowRight className="h-4 w-4" />
+              {challengeCopy.title} <ArrowRight className="h-4 w-4" />
             </a>
             <a
               className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-semibold text-slate-200"
               href={buildLocalePath('/decision-intake', locale)}
             >
-              {t('intakeCta')} <ArrowRight className="h-4 w-4" />
+              {intakeCopy.title} <ArrowRight className="h-4 w-4" />
             </a>
           </div>
         </header>
@@ -51,7 +53,6 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
             <h2 id="observatory-inspect" className="text-xs font-semibold uppercase tracking-[.2em] text-cyan-300">
               {t('inspect')}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">{t('inspectBody')}</p>
           </div>
           <div className="mt-6 grid gap-x-8 gap-y-5 md:grid-cols-2 xl:grid-cols-4">
             {questions.map(([title, body], index) => (
