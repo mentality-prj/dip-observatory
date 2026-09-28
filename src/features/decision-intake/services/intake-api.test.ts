@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import { analyzeDecisionDataset, DecisionIntakeApiError, submitDecisionIntakeAnswers } from './intake-api'
+import { analyzeDecisionDataset, submitDecisionIntakeAnswers } from './intake-api'
 
 const legacyGate = {
   status: 'discovered',
