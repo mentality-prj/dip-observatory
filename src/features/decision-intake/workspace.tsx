@@ -225,7 +225,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
     if (question.kind === 'confirm_semantic' && question.field && question.role) {
       body.candidate_statuses = {
-        [`${question.role}:${question.field}`]: action === 'reject' ? 'rejected' : 'user_confirmed',
+        [`${question.role}:${question.field}`]:
+          action === 'reject' ? 'rejected' : 'user_confirmed',
       }
     }
 
@@ -368,17 +369,23 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <dt className="text-slate-400">{t.certificate}</dt>
                 <dd className="text-right text-cyan-200">
                   {analysis.sufficiency.certificate.issued ? t.certificateIssued : t.certificateBlocked}
-                  <span className="ml-2 text-xs text-slate-500">{analysis.sufficiency.certificate.scope}</span>
+                  <span className="ml-2 text-xs text-slate-500">
+                    {analysis.sufficiency.certificate.scope}
+                  </span>
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
                 <dt className="text-slate-400">{t.planner}</dt>
-                <dd className="text-right text-xs text-slate-500">{analysis.sufficiency.planner_strategy}</dd>
+                <dd className="text-right text-xs text-slate-500">
+                  {analysis.sufficiency.planner_strategy}
+                </dd>
               </div>
             </dl>
 
             <details className="mt-5 border-t border-white/10 pt-4">
-              <summary className="cursor-pointer text-sm font-semibold text-white">{t.requirements}</summary>
+              <summary className="cursor-pointer text-sm font-semibold text-white">
+                {t.requirements}
+              </summary>
               <div className="mt-3 grid gap-2">
                 {analysis.sufficiency.requirements.map((requirement) => (
                   <div
@@ -388,10 +395,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     <div>
                       <div className="font-medium text-slate-200">{requirement.id}</div>
                       {requirement.depends_on.length ? (
-                        <div className="mt-1 text-slate-600">depends on: {requirement.depends_on.join(', ')}</div>
+                        <div className="mt-1 text-slate-600">
+                          depends on: {requirement.depends_on.join(', ')}
+                        </div>
                       ) : null}
                     </div>
-                    <span className="whitespace-nowrap text-cyan-200">{requirement.state}</span>
+                    <span className="whitespace-nowrap text-cyan-200">
+                      {requirement.state}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -403,7 +414,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <p className="mt-2 text-sm leading-6 text-slate-300">{questionText(locale, nextQuestion)}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{questionEffect(locale, nextQuestion)}</p>
                 <p className="mt-1 text-[11px] leading-5 text-slate-600">
-                  {t.priority}: {nextQuestion.priority_score.toFixed(2)} · {t.estimatedCost}: {nextQuestion.estimated_cost}
+                  {t.priority}: {nextQuestion.priority_score.toFixed(2)} · {t.estimatedCost}:{' '}
+                  {nextQuestion.estimated_cost}
                 </p>
 
                 {nextQuestion.kind === 'select_field' ? (
