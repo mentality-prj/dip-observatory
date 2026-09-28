@@ -7,6 +7,7 @@ import type { Locale } from '@/lib/observatory-i18n'
 import {
   contractResponseSchema,
   intakeAnalysisSchema,
+  type CausalSpecification,
   type IntakeAnalysis,
   type SufficiencyQuestion,
 } from './model/contracts'
@@ -59,6 +60,23 @@ const copy = {
     requirements: 'Requirement graph',
     priority: 'Priority score',
     estimatedCost: 'Estimated acquisition cost',
+    causalNeedsVerification: 'causal specification requires verification',
+    causalInvalid: 'invalid causal specification',
+    causalEvidenceQuestion: 'The current observational model is not sufficient. Plan additional causal evidence.',
+    causalEdges: 'Causal edges',
+    causalEdgesHint: 'One edge per line: A -> B or A <-> B',
+    treatments: 'Interventions',
+    outcomes: 'Outcomes',
+    conditioning: 'Conditioning variables',
+    commaSeparated: 'Comma-separated field names',
+    verifyCausalAssumptions:
+      'I confirm the graph semantics and identification assumptions for this causal model.',
+    runIdentification: 'Run ID/IDC identification',
+    causalCertificate: 'Causal identification certificate',
+    estimand: 'Identifying estimand',
+    hedge: 'Non-identifiability hedge',
+    proof: 'Identification trace',
+    effectEvidence: 'A hedge was found; observational data alone cannot identify this effect under the verified graph.',
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ПІДГОТОВКА РІШЕННЯ',
@@ -107,6 +125,23 @@ const copy = {
     requirements: 'Граф вимог',
     priority: 'Оцінка пріоритету',
     estimatedCost: 'Оціночна вартість отримання відповіді',
+    causalNeedsVerification: 'каузальна специфікація потребує перевірки',
+    causalInvalid: 'некоректна каузальна специфікація',
+    causalEvidenceQuestion: 'Поточної observational-моделі недостатньо. Потрібно спланувати додатковий causal evidence.',
+    causalEdges: 'Каузальні зв’язки',
+    causalEdgesHint: 'Один зв’язок на рядок: A -> B або A <-> B',
+    treatments: 'Втручання',
+    outcomes: 'Результати',
+    conditioning: 'Умовні змінні',
+    commaSeparated: 'Назви полів через кому',
+    verifyCausalAssumptions:
+      'Я підтверджую семантику графа та assumptions ідентифікації для цієї causal model.',
+    runIdentification: 'Запустити ID/IDC identification',
+    causalCertificate: 'Сертифікат каузальної ідентифікації',
+    estimand: 'Ідентифікуючий estimand',
+    hedge: 'Hedge неідентифікованості',
+    proof: 'Трасування identification',
+    effectEvidence: 'Знайдено hedge: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · PRZYGOTOWANIE DECYZJI',
@@ -155,6 +190,23 @@ const copy = {
     requirements: 'Graf wymagań',
     priority: 'Wynik priorytetu',
     estimatedCost: 'Szacowany koszt pozyskania odpowiedzi',
+    causalNeedsVerification: 'specyfikacja przyczynowa wymaga weryfikacji',
+    causalInvalid: 'nieprawidłowa specyfikacja przyczynowa',
+    causalEvidenceQuestion: 'Obecny model obserwacyjny jest niewystarczający. Zaplanuj dodatkowe dowody przyczynowe.',
+    causalEdges: 'Krawędzie przyczynowe',
+    causalEdgesHint: 'Jedna krawędź na wiersz: A -> B lub A <-> B',
+    treatments: 'Interwencje',
+    outcomes: 'Wyniki',
+    conditioning: 'Zmienne warunkujące',
+    commaSeparated: 'Nazwy pól oddzielone przecinkami',
+    verifyCausalAssumptions:
+      'Potwierdzam semantykę grafu i założenia identyfikacji dla tego modelu przyczynowego.',
+    runIdentification: 'Uruchom identyfikację ID/IDC',
+    causalCertificate: 'Certyfikat identyfikacji przyczynowej',
+    estimand: 'Estymanda identyfikująca',
+    hedge: 'Hedge nieidentyfikowalności',
+    proof: 'Ślad identyfikacji',
+    effectEvidence: 'Znaleziono hedge; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
   },
 } as const
 
@@ -167,6 +219,7 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
   }
   if (question.kind === 'select_available_fields') return t.availableQuestion
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
+  if (question.kind === 'plan_causal_evidence') return t.causalEvidenceQuestion
   if (question.kind === 'confirm_semantic') {
     return t.confirmQuestion.replace('{field}', question.field ?? '').replace('{role}', question.role ?? '')
   }
@@ -177,7 +230,38 @@ function questionEffect(locale: Locale, question: SufficiencyQuestion) {
   const t = copy[locale]
   if (question.effect === 'makes_structurally_decidable') return t.effectDecidable
   if (question.effect === 'enables_causal_identification_test') return t.effectCausal
+  if (question.effect === 'requires_interventional_evidence') return t.effectEvidence
   return t.effectRemoves
+}
+
+function splitFields(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function parseCausalEdges(value: string) {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = line.match(/^(.+?)\s*(<->|->)\s*(.+)$/)
+      if (!match) throw new Error(`Invalid causal edge: ${line}`)
+      return {
+        source: match[1].trim(),
+        target: match[3].trim(),
+        type: match[2] === '<->' ? ('bidirected' as const) : ('directed' as const),
+      }
+    })
+}
+
+function verifiedRoleField(analysis: IntakeAnalysis, role: string) {
+  const verified = new Set(['user_confirmed', 'data_validated', 'evidence_supported'])
+  return analysis.contract.candidates.find(
+    (candidate) => candidate.role === role && verified.has(candidate.status)
+  )?.field
 }
 
 export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
@@ -188,6 +272,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [answerBusy, setAnswerBusy] = useState(false)
   const [selectedField, setSelectedField] = useState('')
   const [availableFields, setAvailableFields] = useState<string[]>([])
+  const [causalEdges, setCausalEdges] = useState('')
+  const [causalTreatments, setCausalTreatments] = useState('')
+  const [causalOutcomes, setCausalOutcomes] = useState('')
+  const [causalConditioning, setCausalConditioning] = useState('')
+  const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -215,12 +304,19 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
   async function applyAnswer(action?: 'confirm' | 'reject') {
     const question = analysis?.sufficiency.next_question
-    if (!analysis || !question || question.kind === 'define_causal_model') return
+    if (
+      !analysis ||
+      !question ||
+      question.kind === 'define_causal_model' ||
+      question.kind === 'plan_causal_evidence'
+    )
+      return
 
     const body: {
       candidate_statuses?: Record<string, string>
       information_availability?: Record<string, string>
       semantic_mappings?: Record<string, string>
+      causal_specification?: CausalSpecification
     } = {}
 
     if (question.kind === 'confirm_semantic' && question.field && question.role) {
@@ -272,6 +368,70 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       )
       setSelectedField('')
       setAvailableFields([])
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Request failed.')
+    } finally {
+      setAnswerBusy(false)
+    }
+  }
+
+  async function applyCausalSpecification() {
+    if (!analysis) return
+
+    try {
+      const actionField = verifiedRoleField(analysis, 'action')
+      const outcomeField = verifiedRoleField(analysis, 'outcome')
+      const treatments = splitFields(causalTreatments || actionField || '')
+      const outcomes = splitFields(causalOutcomes || outcomeField || '')
+      if (!treatments.length || !outcomes.length) {
+        throw new Error('Causal query requires at least one treatment and one outcome.')
+      }
+
+      const specification: CausalSpecification = {
+        graph: {
+          variables: analysis.contract.information_set.map((item) => item.field),
+          edges: parseCausalEdges(causalEdges),
+        },
+        query: {
+          treatments,
+          outcomes,
+          conditioning: splitFields(causalConditioning),
+        },
+        assumptions: ['semi_markovian_admg', 'causal_markov', 'consistency', 'no_interference'],
+        graph_status: 'user_confirmed',
+        query_status: 'user_confirmed',
+        assumptions_verified: causalAssumptionsVerified,
+      }
+
+      setAnswerBusy(true)
+      setError('')
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ causal_specification: specification }),
+        }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        const detail =
+          typeof payload === 'object' && payload && 'detail' in payload
+            ? String(payload.detail)
+            : 'Request failed.'
+        throw new Error(detail)
+      }
+      const updated = contractResponseSchema.parse(payload)
+      setAnalysis((current) =>
+        current
+          ? {
+              ...current,
+              contract: updated.contract,
+              evidence_gate: updated.evidence_gate,
+              sufficiency: updated.sufficiency,
+            }
+          : current
+      )
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Request failed.')
     } finally {
