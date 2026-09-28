@@ -112,6 +112,7 @@ export const sufficiencyQuestionSchema = z.object({
     .nullable()
     .optional(),
   evidence_variables: z.array(z.string()),
+  evidence_targets: z.array(z.string()),
 })
 
 export const sufficiencyCertificateSchema = z.object({
@@ -145,6 +146,7 @@ export const causalEvidencePlanSchema = z.object({
       id: z.string(),
       kind: z.enum(['verify_no_latent_confounding', 'randomized_intervention']),
       variables: z.array(z.string()),
+      targets: z.array(z.string()),
       question: z.string(),
       estimated_cost: z.number().int().positive(),
       resolves_observational_nonidentifiability: z.boolean(),
