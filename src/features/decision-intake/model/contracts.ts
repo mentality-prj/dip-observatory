@@ -82,6 +82,7 @@ const semanticCandidateSchema = z.object({
   role: semanticRoleSchema,
   source_columns: z.array(z.string()),
   reason: semanticReasonSchema,
+  legacy_reason: z.string().optional(),
   status: semanticStatusSchema,
 })
 const evidenceGateSchema = z.object({
@@ -115,6 +116,8 @@ export const decisionContractSchema = z
       })
     ),
     assumptions: z.array(semanticAssumptionSchema),
+    legacy_assumptions: z.array(z.string()).default([]),
+    legacy_unknowns: z.array(z.string()).default([]),
     validation_status: contractValidationStatusSchema,
   })
   .passthrough()
@@ -137,6 +140,9 @@ export const intakeAnalysisSchema = z.object({
     clarifications: z.array(clarificationQuestionSchema).max(7),
     assumptions: z.array(semanticAssumptionSchema),
     legacy_clarifications: z.array(z.string()).default([]),
+    legacy_assumptions: z.array(z.string()).default([]),
+    legacy_unknowns: z.array(z.string()).default([]),
+    legacy_ambiguities: z.array(z.string()).default([]),
     provider: z.string(),
     model: z.string().nullable(),
   }),
@@ -230,6 +236,7 @@ function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
       code: 'semantic_reason.model_inference' as const,
       params: { field: value.field, role: semanticRole },
     },
+    legacy_reason: value.reason,
   }
 }
 function legacyContract(value: z.infer<typeof legacyContractSchema>) {
@@ -243,6 +250,8 @@ function legacyContract(value: z.infer<typeof legacyContractSchema>) {
     assumptions: value.assumptions.length
       ? [{ code: 'assumption.business_semantics_require_confirmation' as const, params: emptyParams }]
       : [],
+    legacy_assumptions: value.assumptions,
+    legacy_unknowns: value.unknowns,
   }
 }
 function legacyGate(value: z.infer<typeof legacyGateSchema>) {
@@ -274,6 +283,9 @@ export function normalizeIntakeAnalysis(payload: unknown): IntakeAnalysis {
         .filter((code): code is z.infer<typeof clarificationQuestionCodeSchema> => Boolean(code))
         .map((code) => ({ code, params: emptyParams })),
       legacy_clarifications: legacy.interpretation.clarification_questions.filter((text) => !questionCode[text]),
+      legacy_assumptions: legacy.interpretation.assumptions,
+      legacy_unknowns: legacy.interpretation.unknowns,
+      legacy_ambiguities: legacy.interpretation.ambiguities,
       assumptions: legacy.interpretation.assumptions.length
         ? [{ code: 'assumption.business_semantics_require_confirmation', params: emptyParams }]
         : [],
