@@ -213,7 +213,8 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
   'Confirm the controllable action and business objective.':
     'next_step.confirm_controllable_action_and_business_objective',
   'Resolve competing controllable-action or business-objective semantics.': 'next_step.resolve_critical_semantics',
-  'Verify the required semantic mappings for the selected decision archetype.': 'next_step.verify_archetype_requirements',
+  'Verify the required semantic mappings for the selected decision archetype.':
+    'next_step.verify_archetype_requirements',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
   'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
@@ -226,10 +227,10 @@ const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
       : text.includes('ambiguous')
         ? 'evidence_reason.critical_semantics_ambiguous'
         : text.includes('information set')
-        ? 'evidence_reason.information_set_unresolved_or_unverified'
-        : text.includes('minimum verified')
-          ? 'evidence_reason.minimum_verified_semantics_present'
-          : 'evidence_reason.verified_critical_semantics_missing'
+          ? 'evidence_reason.information_set_unresolved_or_unverified'
+          : text.includes('minimum verified')
+            ? 'evidence_reason.minimum_verified_semantics_present'
+            : 'evidence_reason.verified_critical_semantics_missing'
 
 function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
   const semanticRole = role(value.role)
