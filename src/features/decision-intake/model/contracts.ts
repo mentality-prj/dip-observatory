@@ -8,6 +8,21 @@ export const semanticStatusSchema = z.enum([
   'rejected',
 ])
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
+export const intakeMessageCodeSchema = z.enum([
+  'question.controllable_action',
+  'question.business_objective',
+  'question.binding_constraints',
+  'question.decision_time_information',
+  'question.realized_outcome',
+  'reason.critical_semantics_ai_inferred',
+  'reason.verified_critical_semantics_missing',
+  'reason.information_set_unresolved_or_unverified',
+  'reason.minimum_verified_semantics_present',
+  'next.confirm_or_reject_inferred_critical_semantic',
+  'next.confirm_controllable_action_and_business_objective',
+  'next.verify_decision_time_availability',
+  'next.compile_resource_allocation',
+])
 export const evidenceGateSchema = z.object({
   status: z.enum([
     'no_opportunity',
@@ -19,9 +34,11 @@ export const evidenceGateSchema = z.object({
     'invalid',
   ]),
   reasons: z.array(z.string()),
+  reason_codes: z.array(intakeMessageCodeSchema).optional().default([]),
   missing_evidence: z.array(z.string()),
   blocking_assumptions: z.array(z.string()),
   recommended_next_step: z.string(),
+  recommended_next_step_code: intakeMessageCodeSchema.nullable().optional().default(null),
 })
 const semanticCandidateSchema = z.object({
   field: z.string(),
@@ -71,6 +88,11 @@ export const intakeAnalysisSchema = z.object({
   }),
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
+  semantic_codes: z
+    .object({
+      clarification_questions: z.array(intakeMessageCodeSchema).max(7),
+    })
+    .optional(),
 })
 export const contractResponseSchema = z.object({
   contract: decisionContractSchema,
@@ -80,5 +102,6 @@ export const compiledResourceAllocationSchema = z.object({
   archetype: z.literal('constrained_resource_allocation'),
   request: z.record(z.string(), z.unknown()),
 })
+export type IntakeMessageCode = z.infer<typeof intakeMessageCodeSchema>
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
