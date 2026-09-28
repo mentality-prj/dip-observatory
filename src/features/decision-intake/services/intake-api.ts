@@ -102,7 +102,16 @@ export async function submitDecisionIntakeAnswers(
     fieldCounts.set(candidate.field, (fieldCounts.get(candidate.field) ?? 0) + 1)
   }
 
-  const legacyStatuses: Record<string, string> = { ...(input.candidate_statuses ?? {}) }
+  const legacyStatuses: Record<string, string> = {}
+  for (const [field, status] of Object.entries(input.candidate_statuses ?? {})) {
+    if ((fieldCounts.get(field) ?? 0) !== 1) {
+      throw new DecisionIntakeApiError(
+        'Legacy field-only semantic confirmation is ambiguous and requires Decision Intake v2.',
+        409
+      )
+    }
+    legacyStatuses[field] = status
+  }
   for (const [candidateId, status] of Object.entries(input.candidate_statuses_by_id ?? {})) {
     const candidate = legacyContract.contract.candidates.find((item) => item.candidate_id === candidateId)
     if (!candidate) {
