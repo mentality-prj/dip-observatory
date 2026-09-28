@@ -79,7 +79,7 @@ const copy = {
     inferredReason: 'Гіпотеза, визначена ШІ; потрібне підтвердження людиною.',
     verifiedReason: 'Підтверджене семантичне зіставлення.',
     unknownRole: 'інша роль',
-    assumptionsSummary: 'Неструктуровані припущення моделі потребують перевірки: {count}.'
+    assumptionsSummary: 'Неструктуровані припущення моделі потребують перевірки: {count}.',
     gateStatuses: {
       no_opportunity: 'Немає можливості',
       discovered: 'Виявлено',
@@ -120,7 +120,7 @@ const copy = {
     inferredReason: 'Hipoteza wywnioskowana przez AI; wymaga potwierdzenia przez człowieka.',
     verifiedReason: 'Zweryfikowane mapowanie semantyczne.',
     unknownRole: 'inna rola',
-    assumptionsSummary: 'Nieustrukturyzowane założenia modelu wymagają weryfikacji: {count}.'
+    assumptionsSummary: 'Nieustrukturyzowane założenia modelu wymagają weryfikacji: {count}.',
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
       discovered: 'Wykryto',
