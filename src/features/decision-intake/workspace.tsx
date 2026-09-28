@@ -187,7 +187,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
           <span className="font-semibold text-white">{t.file}</span>
           <FileDropzone
             accept=".csv,.xlsx,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            disabled={busy || !file}
+            disabled={busy}
             onFile={(nextFile) => {
               setFile(nextFile)
               setAnalysis(null)
@@ -230,7 +230,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
         </div>
         <p className="text-xs text-slate-500">{t.privacy}</p>
         <button
-          disabled={busy}
+          disabled={busy || !file}
           className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
         >
           <FileUp className="h-4 w-4" /> {busy ? t.busy : t.submit}
