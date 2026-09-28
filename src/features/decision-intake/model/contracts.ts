@@ -118,13 +118,7 @@ export const sufficiencyCertificateSchema = z.object({
 
 export const causalIdentificationCertificateSchema = z.object({
   issued: z.boolean(),
-  status: z.enum([
-    'requires_causal_model',
-    'requires_verification',
-    'identified',
-    'not_identified',
-    'invalid_model',
-  ]),
+  status: z.enum(['requires_causal_model', 'requires_verification', 'identified', 'not_identified', 'invalid_model']),
   method: z.string(),
   estimand: z.string().nullable(),
   proof_steps: z.array(z.string()),
@@ -156,12 +150,7 @@ export const causalEvidencePlanSchema = z.object({
 })
 
 export const empiricalSupportSchema = z.object({
-  status: z.enum([
-    'not_assessed',
-    'basic_check_passed',
-    'basic_check_failed',
-    'requires_full_analysis',
-  ]),
+  status: z.enum(['not_assessed', 'basic_check_passed', 'basic_check_failed', 'requires_full_analysis']),
   treatment_levels: z.record(z.string(), z.number().int().nonnegative()),
   checked_strata: z.number().int().nonnegative(),
   missing_strata: z.array(z.string()),
