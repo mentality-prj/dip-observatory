@@ -107,10 +107,7 @@ export const sufficiencyQuestionSchema = z.object({
   priority_score: z.number(),
   rationale: z.string(),
   evidence_action_id: z.string().nullable().optional(),
-  evidence_kind: z
-    .enum(['verify_no_latent_confounding', 'randomized_intervention'])
-    .nullable()
-    .optional(),
+  evidence_kind: z.enum(['verify_no_latent_confounding', 'randomized_intervention']).nullable().optional(),
   evidence_variables: z.array(z.string()),
   evidence_targets: z.array(z.string()),
 })
