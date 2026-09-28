@@ -16,14 +16,7 @@ export type FileDropzoneProps = {
   testId?: string
 }
 
-export function FileDropzone({
-  accept,
-  children,
-  className,
-  disabled = false,
-  onFile,
-  testId,
-}: FileDropzoneProps) {
+export function FileDropzone({ accept, children, className, disabled = false, onFile, testId }: FileDropzoneProps) {
   const inputId = useId()
   const dragDepth = useRef(0)
   const [dragging, setDragging] = useState(false)
