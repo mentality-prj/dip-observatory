@@ -217,6 +217,12 @@ export function renderNextStep(locale: Locale, item: NextStep): string {
         uk: 'Усуньте неоднозначність між конкуруючими керованими діями або бізнес-цілями.',
         pl: 'Rozstrzygnij konkurujące semantyki działania kontrolowanego lub celu biznesowego.',
       }[locale]
+    case 'next_step.verify_archetype_requirements':
+      return {
+        en: 'Verify the required semantic mappings for the selected decision archetype.',
+        uk: 'Підтвердьте обов’язкові семантичні зіставлення для вибраного типу рішення.',
+        pl: 'Zweryfikuj wymagane mapowania semantyczne dla wybranego archetypu decyzji.',
+      }[locale]
     case 'next_step.verify_decision_time_availability':
       return {
         en: 'Verify decision-time availability for every input field.',
