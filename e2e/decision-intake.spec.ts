@@ -12,17 +12,19 @@ const analysis = {
     warnings: [],
   },
   interpretation: {
-    candidates: [],
+    candidates: [
+      {
+        field: 'action',
+        role: 'action',
+        source_columns: ['action'],
+        reason: 'English AI reason that must not leak into the Ukrainian UI.',
+        status: 'inferred',
+      },
+    ],
     unknowns: [],
     ambiguities: [],
-    clarification_questions: [
-      'Which field represents the action a decision maker can control?',
-      'What business objective should QDIP optimize?',
-      'Which constraints were known and binding at decision time?',
-      'Which fields were available before the action was chosen?',
-      'Which field records the realized outcome?',
-    ],
-    assumptions: [],
+    clarification_questions: ['Legacy English question that should not be rendered.'],
+    assumptions: ['English assumption that must not leak into the Ukrainian UI.'],
     provider: 'deterministic',
     model: null,
   },
@@ -33,20 +35,31 @@ const analysis = {
     archetype: 'unknown',
     candidates: [],
     information_set: [],
-    assumptions: [],
+    assumptions: ['English assumption that must not leak into the Ukrainian UI.'],
     unknowns: [],
     validation_status: 'discovered',
   },
   evidence_gate: {
     status: 'discovered',
-    reasons: [],
+    reasons: ['Legacy English evidence reason.'],
+    reason_codes: ['reason.verified_critical_semantics_missing'],
     missing_evidence: [],
     blocking_assumptions: [],
-    recommended_next_step: 'Confirm the controllable action and business objective.',
+    recommended_next_step: 'Legacy English next step that should not be rendered.',
+    recommended_next_step_code: 'next.confirm_controllable_action_and_business_objective',
+  },
+  semantic_codes: {
+    clarification_questions: [
+      'question.controllable_action',
+      'question.business_objective',
+      'question.binding_constraints',
+      'question.decision_time_information',
+      'question.realized_outcome',
+    ],
   },
 }
 
-test('Decision Intake reuses drag and drop and localizes runtime evidence text', async ({ page }) => {
+test('Decision Intake reuses uploader UI and localizes semantic codes without English prose leakage', async ({ page }) => {
   await page.route('**/api/decision-intake/analyze', async (route) => {
     await route.fulfill({
       status: 200,
@@ -87,7 +100,8 @@ test('Decision Intake reuses drag and drop and localizes runtime evidence text',
     )
   }, csv)
 
-  await expect(page.getByTestId('decision-intake-file')).toHaveText('decision.csv')
+  await expect(page.getByTestId('decision-intake-file')).toContainText('decision.csv')
+  await expect(page.getByText('Замінити файл')).toBeVisible()
   await page.getByRole('button', { name: 'Проаналізувати дані' }).click()
 
   await expect(
@@ -99,5 +113,11 @@ test('Decision Intake reuses drag and drop and localizes runtime evidence text',
   await expect(page.getByText('Яке поле фіксує фактичний результат?')).toBeVisible()
   await expect(page.getByText('Виявлено')).toBeVisible()
   await expect(page.getByText('Підтвердьте керовану дію та бізнес-мету.')).toBeVisible()
-  await expect(page.getByText('Which field represents the action a decision maker can control?')).toHaveCount(0)
+  await expect(page.getByText('Гіпотеза, визначена ШІ; потрібне підтвердження людиною.')).toBeVisible()
+  await expect(page.getByText('1 неструктурованих припущень моделі потребують перевірки.')).toBeVisible()
+
+  await expect(page.getByText('Legacy English question that should not be rendered.')).toHaveCount(0)
+  await expect(page.getByText('Legacy English next step that should not be rendered.')).toHaveCount(0)
+  await expect(page.getByText('English AI reason that must not leak into the Ukrainian UI.')).toHaveCount(0)
+  await expect(page.getByText('English assumption that must not leak into the Ukrainian UI.')).toHaveCount(0)
 })
