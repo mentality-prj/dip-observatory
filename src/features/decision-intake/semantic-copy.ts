@@ -1,11 +1,6 @@
 import type { Locale } from '@/lib/observatory-i18n'
 
-import type {
-  ClarificationQuestion,
-  NextStep,
-  SemanticAssumption,
-  SemanticReason,
-} from './model/contracts'
+import type { ClarificationQuestion, NextStep, SemanticAssumption, SemanticReason } from './model/contracts'
 
 const roleLabels: Record<Locale, Record<string, string>> = {
   en: {
