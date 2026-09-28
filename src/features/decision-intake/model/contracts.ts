@@ -57,6 +57,7 @@ export const nextStepCodeSchema = z.enum([
   'next_step.confirm_controllable_action_and_business_objective',
   'next_step.verify_decision_time_availability',
   'next_step.compile_resource_allocation',
+  'next_step.select_decision_adapter',
 ])
 export const semanticParamsSchema = z
   .object({
@@ -200,6 +201,7 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
     'next_step.confirm_controllable_action_and_business_objective',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
+  'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
 }
 const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
   text.includes('AI-inferred')
