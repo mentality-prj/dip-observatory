@@ -31,44 +31,40 @@
   "observatoryHome": {
     "eyebrow": "QDIP OBSERVATORY · DECYZJE",
     "title": "Od danych operacyjnych do decyzji, którą można zweryfikować.",
-    "subtitle": "Zobacz, jak QDIP formułuje problem, ocenia alternatywy przy niepewności i ograniczeniach, wyjaśnia rekomendację i pozostawia wynik pod kontrolą człowieka.",
-    "challengeCta": "Wypróbuj Wyzwanie decyzyjne",
-    "intakeCta": "Prześlij swoje dane",
-    "inspect": "Co ujawnia każda decyzja QDIP",
-    "inspectBody": "Observatory nie jest demonstracją jednej domeny. To przestrzeń do weryfikacji procesu decyzyjnego w różnych aplikacjach QDIP.",
-    "questions": [
-      [
-        "Co zrobić?",
-        "Zobacz rekomendowane działanie i alternatywy, które pozostały wykonalne."
-      ],
-      [
-        "Dlaczego?",
-        "Sprawdź oczekiwany efekt, dowody, koszty, ograniczenia i kompromisy."
-      ],
-      [
-        "Jak duża jest niepewność?",
-        "Zobacz, gdzie decyzja zależy od niepewnych informacji i zmian scenariusza."
-      ],
-      [
-        "Co wydarzyło się później?",
-        "Łącz decyzje z obserwowanymi wynikami, aby kalibrować kolejne decyzje."
-      ]
+    "subtitle": "Observatory to przestrzeń do weryfikacji decyzji QDIP. W każdej aplikacji zobaczysz rekomendację, alternatywy, dowody i ślad decyzji.",
+    "inspectLabel": "Alokacja zasobów · podgląd decyzji",
+    "recommendation": "Rekomendacja",
+    "recommended": "Rekomendowany plan alokacji",
+    "confidence": "Wygenerowany z konfiguracji scenariusza i ograniczeń operacyjnych",
+    "recommendedLabel": "Rekomendacja QDIP",
+    "evidence": "Dowody",
+    "evidenceItems": [
+      "Sprawdzono ograniczenia pojemności i kompetencji",
+      "Porównano pokrycie potrzeb priorytetowych",
+      "Pokazano przeniesienia zespołów i kompromisy"
     ],
-    "demos": "Poznaj QDIP",
-    "demosBody": "Zacznij od własnej decyzji, prześlij dane operacyjne albo otwórz działającą aplikację. Każda ścieżka pokazuje inną część tego samego silnika decyzyjnego.",
-    "open": "Otwórz aplikację",
-    "note": "AI może pomóc zinterpretować problem. Człowiek potwierdza znaczenie biznesowe. QDIP ocenia decyzję. Dowody i obserwowane wyniki pokazują, na czym opierała się rekomendacja i co wydarzyło się później."
+    "alternatives": "Alternatywy",
+    "alternativeItems": [
+      ["Bieżąca alokacja", "Zachowaj obecne rozmieszczenie zespołów"],
+      ["Ręczne nadpisanie", "Osoba odpowiedzialna zmienia proponowany plan"]
+    ],
+    "trace": "Otwórz ślad decyzji",
+    "traceBody": "Potrzeby i dostępne zespoły → wykonalne alokacje → kontrola ograniczeń → ocena priorytetów → rekomendowany przydział.",
+    "previewCta": "Otwórz Resource Allocation",
+    "demos": "Działające aplikacje decyzyjne",
+    "demosBody": "Różne domeny, ta sama logika weryfikacji. Otwórz aplikację, aby przeanalizować rzeczywistą rekomendację i stojące za nią dowody.",
+    "open": "Przeanalizuj decyzję",
+    "inspect": "Cztery pytania, na które powinno odpowiadać Observatory",
+    "questions": [
+      ["Co jest rekomendowane?", "Zobacz wybrane działanie i wykonalne alternatywy."],
+      ["Dlaczego?", "Sprawdź dowody, priorytety, ograniczenia i kompromisy."],
+      ["Co się zmieniło?", "Porównaj stan i scenariusz, które doprowadziły do innego wyniku."],
+      ["Co zmieni decyzję?", "Sprawdź, które ograniczenia lub dowody mogą zmienić rekomendację."]
+    ],
+    "note": "Dema są wstępnie skonfigurowanymi aplikacjami decyzyjnymi. Studio konfiguruje model, QDIP Core go ocenia, a Observatory udostępnia wynik do inspekcji."
   },
   "observatoryDecisionNarrative": {
-    "labels": [
-      "Sytuacja",
-      "Alternatywy",
-      "Ocena",
-      "Ryzyko / niepewność",
-      "Rekomendacja",
-      "Dowody",
-      "Ślad decyzji"
-    ],
+    "labels": ["Sytuacja", "Alternatywy", "Ocena", "Ryzyko / niepewność", "Rekomendacja", "Dowody", "Ślad decyzji"],
     "helper": "Jedna logika weryfikacji dla każdej aplikacji QDIP.",
     "ariaLabel": "Logika decyzji"
   },
