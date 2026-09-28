@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { ArrowRight, Database, FileJson, Play, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { Badge, Button } from '@/design-system'
-import { studioHref } from '@/lib/platform-urls'
+import { studioSurfaceHref } from '@/lib/platform-urls'
 import type { Plugin, Profile, ProfileView } from './contracts'
 import { studioCopy } from './studio-copy'
 import { useStudioLocale } from './use-studio-locale'
@@ -272,9 +271,9 @@ export function ProfileDashboard({
 
               <div className="studio-overview-actions">
                 <Button asChild>
-                  <Link href={studioHref(`profiles/${encodeURIComponent(selected.id)}`, locale)}>
+                  <a href={studioSurfaceHref(`profiles/${encodeURIComponent(selected.id)}`, locale)}>
                     {c.openProfile} <ArrowRight size={15} aria-hidden />
-                  </Link>
+                  </a>
                 </Button>
                 <Button
                   type="button"
