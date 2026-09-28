@@ -77,6 +77,17 @@ const copy = {
     hedge: 'Non-identifiability hedge',
     proof: 'Identification trace',
     effectEvidence: 'A hedge was found; observational data alone cannot identify this effect under the verified graph.',
+    evidencePlan: 'Evidence acquisition plan',
+    evidenceVerify: 'Verify absence of latent confounding',
+    evidenceRandomize: 'Collect prospective interventional data',
+    preferred: 'preferred',
+    empiricalSupport: 'Empirical support check',
+    supportPassed: 'basic overlap check passed — full positivity is not certified',
+    supportFailed: 'basic overlap check failed',
+    supportFull: 'full model-aware positivity analysis required',
+    supportNot: 'not assessed',
+    treatmentLevels: 'Treatment levels',
+    checkedStrata: 'Checked strata',
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ПІДГОТОВКА РІШЕННЯ',
@@ -142,6 +153,17 @@ const copy = {
     hedge: 'Hedge неідентифікованості',
     proof: 'Трасування identification',
     effectEvidence: 'Знайдено hedge: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
+    evidencePlan: 'План отримання causal evidence',
+    evidenceVerify: 'Перевірити відсутність latent confounding',
+    evidenceRandomize: 'Зібрати prospective interventional data',
+    preferred: 'пріоритетний',
+    empiricalSupport: 'Перевірка empirical support',
+    supportPassed: 'базову перевірку overlap пройдено — повну positivity не сертифіковано',
+    supportFailed: 'базову перевірку overlap не пройдено',
+    supportFull: 'потрібен повний model-aware positivity analysis',
+    supportNot: 'не перевірено',
+    treatmentLevels: 'Рівні treatment',
+    checkedStrata: 'Перевірено strata',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · PRZYGOTOWANIE DECYZJI',
@@ -207,6 +229,17 @@ const copy = {
     hedge: 'Hedge nieidentyfikowalności',
     proof: 'Ślad identyfikacji',
     effectEvidence: 'Znaleziono hedge; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
+    evidencePlan: 'Plan pozyskania dowodów przyczynowych',
+    evidenceVerify: 'Zweryfikuj brak ukrytego confoundingu',
+    evidenceRandomize: 'Zbierz prospektywne dane interwencyjne',
+    preferred: 'preferowane',
+    empiricalSupport: 'Kontrola empirical support',
+    supportPassed: 'podstawowa kontrola overlap zaliczona — pełna positivity nie jest certyfikowana',
+    supportFailed: 'podstawowa kontrola overlap nie powiodła się',
+    supportFull: 'wymagana pełna analiza positivity zależna od modelu',
+    supportNot: 'nie oceniono',
+    treatmentLevels: 'Poziomy treatment',
+    checkedStrata: 'Sprawdzone strata',
   },
 } as const
 
@@ -241,6 +274,26 @@ function causalStatusText(locale: Locale, status: IntakeAnalysis['sufficiency'][
   if (status === 'requires_verification') return t.causalNeedsVerification
   if (status === 'invalid_model') return t.causalInvalid
   return t.causalNeedsModel
+}
+
+function supportStatusText(
+  locale: Locale,
+  status: NonNullable<IntakeAnalysis['sufficiency']['empirical_support']>['status']
+) {
+  const t = copy[locale]
+  if (status === 'basic_check_passed') return t.supportPassed
+  if (status === 'basic_check_failed') return t.supportFailed
+  if (status === 'requires_full_analysis') return t.supportFull
+  return t.supportNot
+}
+
+function evidenceActionText(
+  locale: Locale,
+  kind: NonNullable<IntakeAnalysis['sufficiency']['causal_evidence_plan']>['actions'][number]['kind']
+) {
+  return kind === 'verify_no_latent_confounding'
+    ? copy[locale].evidenceVerify
+    : copy[locale].evidenceRandomize
 }
 
 function splitFields(value: string) {
@@ -769,6 +822,56 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     </ol>
                   </details>
                 ) : null}
+              </div>
+            ) : null}
+
+            {analysis.sufficiency.causal_evidence_plan ? (
+              <div className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4">
+                <b className="text-sm text-amber-100">{t.evidencePlan}</b>
+                <div className="mt-3 grid gap-2">
+                  {analysis.sufficiency.causal_evidence_plan.actions.map((action) => (
+                    <div
+                      key={action.id}
+                      className="rounded-lg border border-amber-200/10 bg-slate-950/40 p-3 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium text-amber-50">
+                          {evidenceActionText(locale, action.kind)}
+                        </span>
+                        {analysis.sufficiency.causal_evidence_plan?.preferred_action_id === action.id ? (
+                          <span className="text-[10px] uppercase tracking-wide text-cyan-200">
+                            {t.preferred}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-1 font-mono text-[11px] text-slate-400">
+                        {action.variables.join(', ')} · {t.estimatedCost}: {action.estimated_cost}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {analysis.sufficiency.empirical_support ? (
+              <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <b className="text-sm">{t.empiricalSupport}</b>
+                  <span className="text-xs text-cyan-200">
+                    {analysis.sufficiency.empirical_support.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-400">
+                  {supportStatusText(locale, analysis.sufficiency.empirical_support.status)}
+                </p>
+                <div className="mt-2 text-[11px] text-slate-500">
+                  {t.treatmentLevels}:{' '}
+                  {Object.entries(analysis.sufficiency.empirical_support.treatment_levels)
+                    .map(([field, count]) => `${field}=${count}`)
+                    .join(', ') || '—'}
+                  {' · '}
+                  {t.checkedStrata}: {analysis.sufficiency.empirical_support.checked_strata}
+                </div>
               </div>
             ) : null}
 
