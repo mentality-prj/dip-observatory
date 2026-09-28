@@ -451,6 +451,19 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                           <span className="text-xs text-slate-500">{t('none')}</span>
                         )}
                       </div>
+                      {(visibleResult.kpis.concentration_penalty ??
+                        visibleResult.objective_components.concentration_penalty ??
+                        0) > 0 ? (
+                        <p className="mt-2 text-xs text-slate-400">
+                          {t('preferencePenaltyScore')}:{' '}
+                          {number(
+                            visibleResult.kpis.concentration_penalty ??
+                              visibleResult.objective_components.concentration_penalty ??
+                              0
+                          )}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 text-[11px] leading-4 text-slate-500">{t('policyPenaltyNote')}</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-slate-200">{t('costBreakdown')}</h3>
@@ -470,16 +483,6 @@ export function SupplyNetworkOptimizationWorkspace({ locale }: { locale: Locale 
                         <p>
                           {t('handlingCostResult')}: {formatMoney(visibleResult.kpis.handling_cost, locale)}
                         </p>
-                        <p>
-                          {t('concentrationPenalty')}:{' '}
-                          {formatMoney(
-                            visibleResult.kpis.concentration_penalty ??
-                              visibleResult.objective_components.concentration_penalty ??
-                              0,
-                            locale
-                          )}
-                        </p>
-                        <p className="pt-1 text-[11px] leading-4 text-slate-500">{t('policyPenaltyNote')}</p>
                       </div>
                     </div>
                   </div>
