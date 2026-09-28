@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { useId, useRef, useState, type DragEvent, type ReactNode } from 'react'
 
 export type FileDropzoneRenderState = {
   dragging: boolean
-  openFilePicker: () => void
+  inputId: string
 }
 
 export type FileDropzoneProps = {
@@ -24,13 +24,9 @@ export function FileDropzone({
   onFile,
   testId,
 }: FileDropzoneProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputId = useId()
   const dragDepth = useRef(0)
   const [dragging, setDragging] = useState(false)
-
-  const openFilePicker = useCallback(() => {
-    if (!disabled) inputRef.current?.click()
-  }, [disabled])
 
   function selectFile(file: File | undefined) {
     if (!file || disabled) return
@@ -77,7 +73,7 @@ export function FileDropzone({
       className={typeof className === 'function' ? className(dragging) : className}
     >
       <input
-        ref={inputRef}
+        id={inputId}
         className="sr-only"
         type="file"
         accept={accept}
@@ -87,7 +83,7 @@ export function FileDropzone({
           event.currentTarget.value = ''
         }}
       />
-      {children({ dragging, openFilePicker })}
+      {children({ dragging, inputId })}
     </div>
   )
 }
