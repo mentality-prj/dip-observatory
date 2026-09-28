@@ -77,8 +77,8 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
 export async function submitDecisionIntakeAnswers(
   sessionId: string,
   input: {
-    candidate_statuses_by_id?: Record<string, string>
-    candidate_statuses?: Record<string, string>
+    candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
+    candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
     information_availability?: Record<string, string>
   }
 ): Promise<ContractResponse> {
