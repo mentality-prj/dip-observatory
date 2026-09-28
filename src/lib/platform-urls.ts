@@ -1,9 +1,11 @@
+import { isSupportedLocale, type Locale } from '@/i18n/config'
+
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 const defaultStudioOrigin = isDevelopment ? '/studio' : 'https://studio.qdip.ai'
 const defaultObservatoryOrigin = isDevelopment ? '' : 'https://observatory.qdip.ai'
 
-export type PlatformLocale = 'en' | 'uk' | 'pl'
+export type PlatformLocale = Locale
 
 export const PLATFORM_URLS = {
   site: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://qdip.ai',
@@ -16,20 +18,26 @@ function normalizePath(path: string) {
   return clean ? `/${clean}` : ''
 }
 
-export function studioHref(path = '', locale: PlatformLocale = 'en') {
+export function studioSurfaceHref(path = '', locale: PlatformLocale = 'en') {
   const suffix = normalizePath(path)
   if (isDevelopment) {
     const query = locale === 'en' ? '' : `?lang=${locale}`
     return `/studio${suffix}${query}`
   }
-  return `${PLATFORM_URLS.studio}/${locale}${suffix}`
+  return `/${locale}${suffix}`
+}
+
+export function studioHref(path = '', locale: PlatformLocale = 'en') {
+  if (isDevelopment) return studioSurfaceHref(path, locale)
+  return `${PLATFORM_URLS.studio}${studioSurfaceHref(path, locale)}`
 }
 
 export function observatoryHref(path = '', locale?: PlatformLocale) {
   const cleanPath = path.replace(/^\/+/, '')
-  const explicitLocale = cleanPath.match(/^(en|uk|pl)(?:\/(.*))?$/)
-  const resolvedLocale = locale ?? (explicitLocale?.[1] as PlatformLocale | undefined) ?? 'en'
-  const localizedPath = explicitLocale ? (explicitLocale[2] ?? '') : cleanPath
+  const [firstSegment, ...rest] = cleanPath.split('/')
+  const explicitLocale = isSupportedLocale(firstSegment) ? firstSegment : undefined
+  const resolvedLocale = locale ?? explicitLocale ?? 'en'
+  const localizedPath = explicitLocale ? rest.join('/') : cleanPath
   return `${PLATFORM_URLS.observatory}/${resolvedLocale}${normalizePath(localizedPath)}`
 }
 
