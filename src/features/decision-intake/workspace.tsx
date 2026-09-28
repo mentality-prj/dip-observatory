@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { FileUp } from 'lucide-react'
 
 import type { Locale } from '@/lib/observatory-i18n'
@@ -286,20 +286,6 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalOutcomes, setCausalOutcomes] = useState('')
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
-
-  useEffect(() => {
-    const specification = analysis?.contract.causal_specification
-    if (!specification) return
-    setCausalEdges(
-      specification.graph.edges
-        .map((edge) => `${edge.source} ${edge.type === 'bidirected' ? '<->' : '->'} ${edge.target}`)
-        .join('\n')
-    )
-    setCausalTreatments(specification.query.treatments.join(', '))
-    setCausalOutcomes(specification.query.outcomes.join(', '))
-    setCausalConditioning(specification.query.conditioning.join(', '))
-    setCausalAssumptionsVerified(specification.assumptions_verified)
-  }, [analysis?.contract.causal_specification])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
