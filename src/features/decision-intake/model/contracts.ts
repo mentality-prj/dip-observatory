@@ -30,6 +30,28 @@ const semanticCandidateSchema = z.object({
   reason: z.string(),
   status: semanticStatusSchema,
 })
+const causalEdgeSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  type: z.enum(['directed', 'bidirected']),
+})
+
+export const causalSpecificationSchema = z.object({
+  graph: z.object({
+    variables: z.array(z.string()),
+    edges: z.array(causalEdgeSchema),
+  }),
+  query: z.object({
+    treatments: z.array(z.string()),
+    outcomes: z.array(z.string()),
+    conditioning: z.array(z.string()),
+  }),
+  assumptions: z.array(z.string()),
+  graph_status: semanticStatusSchema,
+  query_status: semanticStatusSchema,
+  assumptions_verified: z.boolean(),
+})
+
 export const decisionContractSchema = z
   .object({
     contract_id: z.string(),
@@ -46,6 +68,7 @@ export const decisionContractSchema = z
     ),
     assumptions: z.array(z.string()),
     unknowns: z.array(z.string()),
+    causal_specification: causalSpecificationSchema.nullable().optional(),
     validation_status: z.string(),
   })
   .passthrough()
@@ -63,12 +86,23 @@ export const requirementNodeSchema = z.object({
 
 export const sufficiencyQuestionSchema = z.object({
   id: z.string(),
-  kind: z.enum(['confirm_semantic', 'select_field', 'select_available_fields', 'define_causal_model']),
+  kind: z.enum([
+    'confirm_semantic',
+    'select_field',
+    'select_available_fields',
+    'define_causal_model',
+    'plan_causal_evidence',
+  ]),
   role: z.string().nullable().optional(),
   field: z.string().nullable().optional(),
   options: z.array(z.string()),
   resolves: z.array(z.string()),
-  effect: z.enum(['removes_blocker', 'makes_structurally_decidable', 'enables_causal_identification_test']),
+  effect: z.enum([
+    'removes_blocker',
+    'makes_structurally_decidable',
+    'enables_causal_identification_test',
+    'requires_interventional_evidence',
+  ]),
   estimated_cost: z.number().int().positive(),
   priority_score: z.number(),
   rationale: z.string(),
@@ -82,15 +116,45 @@ export const sufficiencyCertificateSchema = z.object({
   claim: z.string(),
 })
 
+export const causalIdentificationCertificateSchema = z.object({
+  issued: z.boolean(),
+  status: z.enum([
+    'requires_causal_model',
+    'requires_verification',
+    'identified',
+    'not_identified',
+    'invalid_model',
+  ]),
+  method: z.string(),
+  estimand: z.string().nullable(),
+  proof_steps: z.array(z.string()),
+  hedge: z
+    .object({
+      f_nodes: z.array(z.string()),
+      f_prime_nodes: z.array(z.string()),
+    })
+    .nullable(),
+  assumptions: z.array(z.string()),
+  scope: z.string(),
+  claim: z.string(),
+})
+
 export const decisionSufficiencySchema = z.object({
   structural_status: z.enum(['blocked', 'ready']),
-  causal_identifiability: z.enum(['requires_causal_model', 'identified', 'not_identified']),
+  causal_identifiability: z.enum([
+    'requires_causal_model',
+    'requires_verification',
+    'identified',
+    'not_identified',
+    'invalid_model',
+  ]),
   blockers: z.array(z.string()),
   causal_blockers: z.array(z.string()),
   requirements: z.array(requirementNodeSchema),
   questions: z.array(sufficiencyQuestionSchema).max(7),
   next_question: sufficiencyQuestionSchema.nullable(),
   certificate: sufficiencyCertificateSchema,
+  causal_certificate: causalIdentificationCertificateSchema.nullable(),
   planner_strategy: z.string(),
   proof_scope: z.string(),
 })
@@ -131,3 +195,5 @@ export const compiledResourceAllocationSchema = z.object({
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
 export type SufficiencyQuestion = z.infer<typeof sufficiencyQuestionSchema>
+
+export type CausalSpecification = z.infer<typeof causalSpecificationSchema>
