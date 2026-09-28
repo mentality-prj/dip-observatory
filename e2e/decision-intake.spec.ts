@@ -115,8 +115,9 @@ test('Decision Intake reuses uploader UI and localizes semantic codes without En
   await expect(page.getByText('Яке поле фіксує фактичний результат?')).toBeVisible()
   await expect(page.getByText('Виявлено')).toBeVisible()
   await expect(page.getByText('Підтвердьте керовану дію та бізнес-мету.')).toBeVisible()
+  await expect(page.getByText('дія', { exact: true })).toBeVisible()
   await expect(page.getByText('Гіпотеза, визначена ШІ; потрібне підтвердження людиною.')).toBeVisible()
-  await expect(page.getByText('1 неструктурованих припущень моделі потребують перевірки.')).toBeVisible()
+  await expect(page.getByText('Неструктуровані припущення моделі потребують перевірки: 1.')).toBeVisible()
 
   await expect(page.getByText('Legacy English question that should not be rendered.')).toHaveCount(0)
   await expect(page.getByText('Legacy English next step that should not be rendered.')).toHaveCount(0)
