@@ -63,7 +63,7 @@ function routeStudio(request: NextRequest) {
       suffix ? `/studio${suffix}` : '/studio',
       {
         'x-qdip-studio-locale': locale,
-        'x-qdip-studio-route': suffix.replace(/^\\/+/, ''),
+        'x-qdip-studio-route': suffix.replace(/^\/+/, ''),
       },
       { lang: locale }
     )
