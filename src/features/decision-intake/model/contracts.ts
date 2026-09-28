@@ -167,6 +167,22 @@ export const causalEvidencePlanSchema = z.object({
   claim: z.string(),
 })
 
+export const estimandRequirementsSchema = z.object({
+  obligations: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(['observational_joint', 'conditional_kernel', 'normalization']),
+      target: z.string().nullable(),
+      given: z.array(z.string()),
+      variables: z.array(z.string()),
+      expression_path: z.string(),
+      claim: z.string(),
+    })
+  ),
+  scope: z.string(),
+  claim: z.string(),
+})
+
 export const empiricalSupportSchema = z.object({
   status: z.enum(['not_assessed', 'basic_check_passed', 'basic_check_failed', 'requires_full_analysis']),
   treatment_levels: z.record(z.string(), z.number().int().nonnegative()),
@@ -193,6 +209,7 @@ export const decisionSufficiencySchema = z.object({
   certificate: sufficiencyCertificateSchema,
   causal_certificate: causalIdentificationCertificateSchema.nullable(),
   causal_evidence_plan: causalEvidencePlanSchema.nullable(),
+  estimand_requirements: estimandRequirementsSchema.nullable(),
   empirical_support: empiricalSupportSchema.nullable(),
   planner_strategy: z.string(),
   proof_scope: z.string(),
