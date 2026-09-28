@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { FileUp } from 'lucide-react'
 
 import type { Locale } from '@/lib/observatory-i18n'
@@ -234,6 +234,15 @@ function questionEffect(locale: Locale, question: SufficiencyQuestion) {
   return t.effectRemoves
 }
 
+function causalStatusText(locale: Locale, status: IntakeAnalysis['sufficiency']['causal_identifiability']) {
+  const t = copy[locale]
+  if (status === 'identified') return t.causalIdentified
+  if (status === 'not_identified') return t.causalNotIdentified
+  if (status === 'requires_verification') return t.causalNeedsVerification
+  if (status === 'invalid_model') return t.causalInvalid
+  return t.causalNeedsModel
+}
+
 function splitFields(value: string) {
   return value
     .split(',')
@@ -278,6 +287,20 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
 
+  useEffect(() => {
+    const specification = analysis?.contract.causal_specification
+    if (!specification) return
+    setCausalEdges(
+      specification.graph.edges
+        .map((edge) => `${edge.source} ${edge.type === 'bidirected' ? '<->' : '->'} ${edge.target}`)
+        .join('\n')
+    )
+    setCausalTreatments(specification.query.treatments.join(', '))
+    setCausalOutcomes(specification.query.outcomes.join(', '))
+    setCausalConditioning(specification.query.conditioning.join(', '))
+    setCausalAssumptionsVerified(specification.assumptions_verified)
+  }, [analysis?.contract.causal_specification])
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setBusy(true)
@@ -285,6 +308,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setAnalysis(null)
     setSelectedField('')
     setAvailableFields([])
+    setCausalEdges('')
+    setCausalTreatments('')
+    setCausalOutcomes('')
+    setCausalConditioning('')
+    setCausalAssumptionsVerified(false)
     try {
       const form = new FormData(event.currentTarget)
       const response = await fetch('/api/decision-intake/analyze', { method: 'POST', body: form })
@@ -517,11 +545,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
                 <dt className="text-slate-400">{t.causal}</dt>
                 <dd className="text-right text-cyan-200">
-                  {analysis.sufficiency.causal_identifiability === 'identified'
-                    ? t.causalIdentified
-                    : analysis.sufficiency.causal_identifiability === 'not_identified'
-                      ? t.causalNotIdentified
-                      : t.causalNeedsModel}
+                  {causalStatusText(locale, analysis.sufficiency.causal_identifiability)}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
