@@ -27,7 +27,7 @@ describe('Decision Intake contract compatibility', () => {
         ],
         unknowns: [],
         ambiguities: [],
-        clarification_questions: ['What business objective should QDIP optimize?'],
+        clarification_questions: ['What business objective should QDIP optimize?', 'Custom AI clarification?'],
         assumptions: ['legacy assumption'],
         provider: 'deterministic',
         model: null,
@@ -55,6 +55,8 @@ describe('Decision Intake contract compatibility', () => {
     expect(result.schema_version).toBe(2)
     expect(result.interpretation.clarifications[0]?.code).toBe('clarification.business_objective')
     expect(result.interpretation.candidates[0]?.reason.code).toBe('semantic_reason.model_inference')
+    expect(result.interpretation.candidates[0]?.candidate_id).toBe('legacy:capacity:constraint')
+    expect(result.interpretation.legacy_clarifications).toEqual(['Custom AI clarification?'])
     expect(result.contract.archetype).toBe('constrained_resource_allocation')
     expect(result.evidence_gate.recommended_next_step.code).toBe(
       'next_step.confirm_controllable_action_and_business_objective'
