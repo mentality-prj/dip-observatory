@@ -151,7 +151,7 @@
       "scenarioComparison": "QDIP nominal reference and recovery plan",
       "endingInventory": "Remaining inventory",
       "inboundAllocation": "Incoming supply allocation",
-      "bindingConstraints": "What limits the result",
+      "bindingConstraints": "Active hard constraints",
       "none": "None",
       "used": "included in plan",
       "notUsed": "not needed in this plan",
@@ -193,10 +193,10 @@
       "logistics": "Estimated logistics cost",
       "impact": "Estimated economic impact",
       "utilization": "Peak warehouse utilization",
-      "constraintTitle": "What is preventing a better result",
-      "routeEvidence": "{route} is already at its delivery limit on {count} of {horizon} days.",
-      "routeVsStorage": "Warehouses reach only {utilization} utilization, so storage space is not the main problem. Delivery capacity is.",
-      "genericConstraint": "The current network limits a better result. Open the technical details below to see which limits are reached.",
+      "constraintTitle": "Active capacity evidence",
+      "routeEvidence": "{route} reaches its configured delivery capacity on {count} of {horizon} days.",
+      "routeVsStorage": "Warehouses reach only {utilization} utilization. In this solution, delivery capacity is active while storage is not heavily utilized.",
+      "genericConstraint": "One or more hard constraints are active in this solution. Tightness alone does not prove that relaxing a constraint would improve the objective; see the technical details below.",
       "impactNote": "Model estimate based on synthetic demo demand and cost assumptions; not realized savings or an accounting forecast.",
       "delta": "vs baseline",
       "improve": "Test recovery options",
@@ -253,7 +253,8 @@
       "point-service-level": "Demand-point service level",
       "minimum-service-level": "Network minimum service level",
       "inventory-exposure": "Inventory exposure limit",
-      "concentration-target": "Inventory concentration target"
+      "concentration-target": "Inventory concentration target",
+      "reallocation-excess": "Reallocation above baseline share"
     }
   },
   "decisionChallenge": {
