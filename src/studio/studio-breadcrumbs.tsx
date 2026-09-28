@@ -45,7 +45,11 @@ export function StudioBreadcrumbs({ items }: { items: { label: string; href?: st
       {items.map((item, index) => (
         <span key={index}>
           <span aria-hidden="true"> / </span>
-          {item.href ? <a href={localizeHref(item.href)}>{item.label}</a> : <span aria-current="page">{item.label}</span>}
+          {item.href ? (
+            <a href={localizeHref(item.href)}>{item.label}</a>
+          ) : (
+            <span aria-current="page">{item.label}</span>
+          )}
         </span>
       ))}
     </nav>
