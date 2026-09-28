@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const analysis = {
+  schema_version: 2,
   profile: {
     source_hash: 'test-source',
     row_count: 2,
@@ -12,6 +13,7 @@ const analysis = {
     warnings: [],
   },
   interpretation: {
+    archetype: 'generic_decision',
     candidates: [
       {
         field: 'action',
@@ -53,10 +55,11 @@ const analysis = {
     model: 'test-model',
   },
   contract: {
+    schema_version: 2,
     contract_id: 'test-contract',
     version: 1,
     source_hash: 'test-source',
-    archetype: 'constrained_resource_allocation',
+    archetype: 'generic_decision',
     candidates: [],
     information_set: [],
     assumptions: [
