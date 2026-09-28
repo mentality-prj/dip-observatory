@@ -8,21 +8,65 @@ export const semanticStatusSchema = z.enum([
   'rejected',
 ])
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
-export const intakeMessageCodeSchema = z.enum([
-  'question.controllable_action',
-  'question.business_objective',
-  'question.binding_constraints',
-  'question.decision_time_information',
-  'question.realized_outcome',
-  'reason.critical_semantics_ai_inferred',
-  'reason.verified_critical_semantics_missing',
-  'reason.information_set_unresolved_or_unverified',
-  'reason.minimum_verified_semantics_present',
-  'next.confirm_or_reject_inferred_critical_semantic',
-  'next.confirm_controllable_action_and_business_objective',
-  'next.verify_decision_time_availability',
-  'next.compile_resource_allocation',
+
+export const clarificationQuestionCodeSchema = z.enum([
+  'clarification.controllable_action',
+  'clarification.business_objective',
+  'clarification.binding_constraints',
+  'clarification.decision_time_information',
+  'clarification.realized_outcome',
+  'clarification.field_role',
+  'clarification.field_meaning',
+  'clarification.field_availability',
 ])
+export const semanticReasonCodeSchema = z.enum([
+  'semantic_reason.model_inference',
+  'semantic_reason.field_name_match',
+  'semantic_reason.data_profile_match',
+  'semantic_reason.business_context_match',
+])
+export const semanticAssumptionCodeSchema = z.enum([
+  'assumption.business_semantics_require_confirmation',
+  'assumption.field_role_inferred',
+  'assumption.field_meaning_inferred',
+  'assumption.field_availability_inferred',
+  'assumption.business_context_inferred',
+])
+export const evidenceReasonCodeSchema = z.enum([
+  'evidence_reason.critical_semantics_ai_inferred',
+  'evidence_reason.verified_critical_semantics_missing',
+  'evidence_reason.information_set_unresolved_or_unverified',
+  'evidence_reason.minimum_verified_semantics_present',
+])
+export const nextStepCodeSchema = z.enum([
+  'next_step.confirm_or_reject_inferred_critical_semantic',
+  'next_step.confirm_controllable_action_and_business_objective',
+  'next_step.verify_decision_time_availability',
+  'next_step.compile_resource_allocation',
+])
+
+const semanticParamsSchema = z.record(z.string(), z.string())
+export const clarificationQuestionSchema = z.object({
+  code: clarificationQuestionCodeSchema,
+  params: semanticParamsSchema,
+})
+export const semanticReasonSchema = z.object({
+  code: semanticReasonCodeSchema,
+  params: semanticParamsSchema,
+})
+export const semanticAssumptionSchema = z.object({
+  code: semanticAssumptionCodeSchema,
+  params: semanticParamsSchema,
+})
+export const evidenceReasonSchema = z.object({
+  code: evidenceReasonCodeSchema,
+  params: semanticParamsSchema,
+})
+export const nextStepSchema = z.object({
+  code: nextStepCodeSchema,
+  params: semanticParamsSchema,
+})
+
 export const evidenceGateSchema = z.object({
   status: z.enum([
     'no_opportunity',
@@ -33,20 +77,20 @@ export const evidenceGateSchema = z.object({
     'needs_prospective_pilot',
     'invalid',
   ]),
-  reasons: z.array(z.string()),
-  reason_codes: z.array(intakeMessageCodeSchema).optional().default([]),
+  reasons: z.array(evidenceReasonSchema),
   missing_evidence: z.array(z.string()),
-  blocking_assumptions: z.array(z.string()),
-  recommended_next_step: z.string(),
-  recommended_next_step_code: intakeMessageCodeSchema.nullable().optional().default(null),
+  blocking_assumptions: z.array(semanticAssumptionSchema),
+  recommended_next_step: nextStepSchema,
 })
+
 const semanticCandidateSchema = z.object({
   field: z.string(),
   role: z.string(),
   source_columns: z.array(z.string()),
-  reason: z.string(),
+  reason: semanticReasonSchema,
   status: semanticStatusSchema,
 })
+
 export const decisionContractSchema = z
   .object({
     contract_id: z.string(),
@@ -61,11 +105,11 @@ export const decisionContractSchema = z
         status: semanticStatusSchema,
       })
     ),
-    assumptions: z.array(z.string()),
-    unknowns: z.array(z.string()),
+    assumptions: z.array(semanticAssumptionSchema),
     validation_status: z.string(),
   })
   .passthrough()
+
 export const intakeAnalysisSchema = z.object({
   profile: z.object({
     source_hash: z.string(),
@@ -79,29 +123,29 @@ export const intakeAnalysisSchema = z.object({
   }),
   interpretation: z.object({
     candidates: z.array(semanticCandidateSchema),
-    unknowns: z.array(z.string()),
-    ambiguities: z.array(z.string()),
-    clarification_questions: z.array(z.string()).max(7),
-    assumptions: z.array(z.string()),
+    clarifications: z.array(clarificationQuestionSchema).max(7),
+    assumptions: z.array(semanticAssumptionSchema),
     provider: z.string(),
     model: z.string().nullable(),
   }),
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
-  semantic_codes: z
-    .object({
-      clarification_questions: z.array(intakeMessageCodeSchema).max(7),
-    })
-    .optional(),
 })
+
 export const contractResponseSchema = z.object({
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
 })
+
 export const compiledResourceAllocationSchema = z.object({
   archetype: z.literal('constrained_resource_allocation'),
   request: z.record(z.string(), z.unknown()),
 })
-export type IntakeMessageCode = z.infer<typeof intakeMessageCodeSchema>
+
+export type ClarificationQuestion = z.infer<typeof clarificationQuestionSchema>
+export type SemanticReason = z.infer<typeof semanticReasonSchema>
+export type SemanticAssumption = z.infer<typeof semanticAssumptionSchema>
+export type EvidenceReason = z.infer<typeof evidenceReasonSchema>
+export type NextStep = z.infer<typeof nextStepSchema>
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
