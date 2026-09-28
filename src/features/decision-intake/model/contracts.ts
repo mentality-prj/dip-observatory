@@ -49,6 +49,27 @@ export const decisionContractSchema = z
     validation_status: z.string(),
   })
   .passthrough()
+
+export const sufficiencyQuestionSchema = z.object({
+  id: z.string(),
+  kind: z.enum(['confirm_semantic', 'select_field', 'select_available_fields', 'define_causal_model']),
+  role: z.string().nullable().optional(),
+  field: z.string().nullable().optional(),
+  options: z.array(z.string()),
+  resolves: z.array(z.string()),
+  effect: z.enum(['removes_blocker', 'makes_structurally_decidable', 'enables_causal_identification_test']),
+})
+
+export const decisionSufficiencySchema = z.object({
+  structural_status: z.enum(['blocked', 'ready']),
+  causal_identifiability: z.enum(['requires_causal_model', 'identified', 'not_identified']),
+  blockers: z.array(z.string()),
+  causal_blockers: z.array(z.string()),
+  questions: z.array(sufficiencyQuestionSchema).max(7),
+  next_question: sufficiencyQuestionSchema.nullable(),
+  proof_scope: z.string(),
+})
+
 export const intakeAnalysisSchema = z.object({
   profile: z.object({
     source_hash: z.string(),
@@ -71,10 +92,12 @@ export const intakeAnalysisSchema = z.object({
   }),
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
+  sufficiency: decisionSufficiencySchema,
 })
 export const contractResponseSchema = z.object({
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
+  sufficiency: decisionSufficiencySchema,
 })
 export const compiledResourceAllocationSchema = z.object({
   archetype: z.literal('constrained_resource_allocation'),
@@ -82,3 +105,4 @@ export const compiledResourceAllocationSchema = z.object({
 })
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
+export type SufficiencyQuestion = z.infer<typeof sufficiencyQuestionSchema>
