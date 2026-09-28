@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --write e2e/decision-intake.spec.ts src/features/decision-intake/semantic-copy.ts && git diff -- e2e/decision-intake.spec.ts src/features/decision-intake/semantic-copy.ts && exit 1",
+    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
