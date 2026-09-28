@@ -77,7 +77,8 @@ const copy = {
     estimand: 'Identifying estimand',
     failureWitness: 'ID non-identifiability failure witness',
     proof: 'Identification trace',
-    effectEvidence: 'ID reached a non-identifiability failure; observational data alone cannot identify this effect under the verified graph.',
+    effectEvidence:
+      'ID reached a non-identifiability failure; observational data alone cannot identify this effect under the verified graph.',
     evidencePlan: 'Evidence acquisition plan',
     evidenceVerify: 'Verify absence of latent confounding',
     evidenceRandomize: 'Collect prospective interventional data',
@@ -157,7 +158,8 @@ const copy = {
     estimand: 'Ідентифікуючий estimand',
     failureWitness: 'ID witness неідентифікованості',
     proof: 'Трасування identification',
-    effectEvidence: 'ID дійшов до failure неідентифікованості: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
+    effectEvidence:
+      'ID дійшов до failure неідентифікованості: лише observational data не ідентифікують цей ефект за підтвердженого графа.',
     evidencePlan: 'План отримання causal evidence',
     evidenceVerify: 'Перевірити відсутність latent confounding',
     evidenceRandomize: 'Зібрати prospective interventional data',
@@ -237,7 +239,8 @@ const copy = {
     estimand: 'Estymanda identyfikująca',
     failureWitness: 'Świadek błędu nieidentyfikowalności ID',
     proof: 'Ślad identyfikacji',
-    effectEvidence: 'ID osiągnął błąd nieidentyfikowalności; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
+    effectEvidence:
+      'ID osiągnął błąd nieidentyfikowalności; same dane obserwacyjne nie identyfikują tego efektu przy zweryfikowanym grafie.',
     evidencePlan: 'Plan pozyskania dowodów przyczynowych',
     evidenceVerify: 'Zweryfikuj brak ukrytego confoundingu',
     evidenceRandomize: 'Zbierz prospektywne dane interwencyjne',
@@ -786,7 +789,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     {t.effectEvidence}
                     {analysis.sufficiency.causal_certificate?.failure_witness ? (
                       <div className="mt-2 font-mono text-[11px] text-amber-50">
-                        outer C-component = [{analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner C-component = [
+                        outer C-component = [
+                        {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}],
+                        inner C-component = [
                         {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                       </div>
                     ) : null}
@@ -816,7 +821,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   <div className="mt-3">
                     <div className="text-xs font-medium text-slate-300">{t.failureWitness}</div>
                     <div className="mt-1 font-mono text-[11px] text-amber-200">
-                      outer C-component = [{analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner C-component = [
+                      outer C-component = [
+                      {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner
+                      C-component = [
                       {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                     </div>
                   </div>
