@@ -1,14 +1,14 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, ProductShell } from '@/design-system'
-import { observatoryHref, studioHref } from '@/lib/platform-urls'
+import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { studioRequest, type Audit } from './contracts'
 import { StudioUseCasePanel } from './use-case-panel'
 
-export function DecisionAuditView({ initialId }: { initialId?: string }) {
+export function DecisionAuditView({ initialId, locale }: { initialId?: string; locale: Locale }) {
   const [audits, setAudits] = useState<Audit[]>([])
   const [selected, setSelected] = useState<Audit | null>(null)
   const [error, setError] = useState('')
@@ -40,18 +40,20 @@ export function DecisionAuditView({ initialId }: { initialId?: string }) {
     <ProductShell
       theme="cyan"
       className="observatory-shell observatory-audit min-h-screen text-white"
-      href={observatoryHref()}
+      href={buildLocalePath('/', locale)}
+      brandHref={marketingHref(locale)}
       product="Observatory"
-      productSwitch={{ href: studioHref(), label: 'Open Studio', icon: <SlidersHorizontal size={15} /> }}
+      nativeNavigation
+      productSwitch={{ href: studioHref('', locale), label: 'Open Studio', icon: <SlidersHorizontal size={15} /> }}
     >
       <div className="observatory-audit-layout">
         <aside className="observatory-audit-sidebar">
           <h2>Decision audit</h2>
           <p>Inspect decisions, evidence, and exact evaluation versions.</p>
           <nav>
-            <Link href={observatoryHref()}>Scenario Observatory</Link>
-            <Link href={observatoryHref('decisions')}>Decision audit</Link>
-            <Link href={studioHref()}>Decision Studio</Link>
+            <a href={buildLocalePath('/', locale)}>Scenario Observatory</a>
+            <a href={buildLocalePath('/decisions', locale)}>Decision audit</a>
+            <a href={studioHref('', locale)}>Decision Studio</a>
           </nav>
         </aside>
         <main id="main-content" tabIndex={-1} className="observatory-audit-main studio-main">

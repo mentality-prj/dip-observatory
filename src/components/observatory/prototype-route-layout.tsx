@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 
-import { PrototypeShell, type PrototypeTheme } from './prototype-shell'
+import { PrototypeShell, type ObservatoryRoute, type PrototypeTheme } from './prototype-shell'
 import { isSupportedLocale } from '@/lib/observatory-i18n'
 
 type PrototypeRouteLayoutProps = {
   children: ReactNode
   params: Promise<{ locale: string }>
   theme: PrototypeTheme
-  activeRoute: string
+  activeRoute: ObservatoryRoute
 }
 
 export async function PrototypeRouteLayout({ children, params, theme, activeRoute }: PrototypeRouteLayoutProps) {

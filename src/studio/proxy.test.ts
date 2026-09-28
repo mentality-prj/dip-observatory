@@ -18,7 +18,7 @@ test('Studio uses the existing DIP key and ignores the removed Studio key', asyn
       return Response.json([])
     }
     const request = () =>
-      GET(new NextRequest('https://frontend.example/api/studio/decision-profiles'), {
+      GET(new NextRequest('https://studio.qdip.ai/api/studio/decision-profiles'), {
         params: Promise.resolve({ path: ['decision-profiles'] }),
       })
     assert.equal((await request()).status, 200)

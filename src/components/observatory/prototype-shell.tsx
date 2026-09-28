@@ -19,15 +19,17 @@ import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observato
 import { marketingHref, studioHref } from '@/lib/platform-urls'
 import { systemApplicationCopy } from '@/observatory/application-copy'
 import { findObservatoryApplicationByRoute, observableApplications } from '@/observatory/applications'
-import { type UseCaseTheme } from '@/use-cases/registry'
+import { type UseCaseRoute, type UseCaseTheme } from '@/use-cases/registry'
 import { ObservatoryFooter } from './observatory-footer'
 import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
+export type ObservatoryRoute = '/' | '/challenges' | '/decision-intake' | '/decisions' | UseCaseRoute
+
 type PrototypeShellProps = {
   locale: Locale
   children: React.ReactNode
-  activeRoute: string
+  activeRoute: ObservatoryRoute
   theme?: PrototypeTheme
 }
 

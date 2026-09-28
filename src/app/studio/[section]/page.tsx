@@ -1,22 +1,34 @@
-import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
-import { DecisionStudio, parseStudioLocale } from '@/features/studio'
-import { studioHref } from '@/lib/platform-urls'
+import { DecisionStudio, parseStudioLocale, StudioSurfaceShell } from '@/features/studio'
 
-function isStudioSurfaceHost(host: string) {
-  const hostname = host.split(':')[0].toLowerCase()
-  return hostname === 'studio.qdip.ai' || hostname.startsWith('studio.')
+type SearchParams = {
+  lang?: string | string[]
+  route?: string | string[]
 }
 
-export default async function StudioPage({ params }: { params: Promise<{ section: string }> }) {
-  const [{ section }, requestHeaders] = await Promise.all([params, headers()])
+export default async function StudioPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ section: string }>
+  searchParams: Promise<SearchParams>
+}) {
+  const [{ section }, query] = await Promise.all([params, searchParams])
+  const rawLocale = Array.isArray(query.lang) ? query.lang[0] : query.lang
+  const locale = parseStudioLocale(rawLocale)
 
   if (['constraints', 'policies', 'compliance'].includes(section)) {
-    const locale = parseStudioLocale(requestHeaders.get('x-qdip-studio-locale'))
-    const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? ''
-    redirect(isStudioSurfaceHost(host) ? `/${locale}/profiles` : studioHref('profiles', locale))
+    redirect(`/${locale}/profiles`)
   }
 
   if (!['profiles', 'plugins', 'dimensions', 'bindings'].includes(section)) notFound()
-  return <DecisionStudio section={section} />
+
+  const rawRoute = Array.isArray(query.route) ? query.route[0] : query.route
+  const route = rawRoute || section
+
+  return (
+    <StudioSurfaceShell locale={locale} route={route}>
+      <DecisionStudio section={section} />
+    </StudioSurfaceShell>
+  )
 }

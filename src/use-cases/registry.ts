@@ -40,8 +40,10 @@ const useCases = [
   },
 ] as const satisfies readonly DipUseCase[]
 
-export type UseCaseId = (typeof useCases)[number]['id']
-export const DIP_USE_CASES: readonly DipUseCase[] = useCases
+export type RegisteredUseCase = (typeof useCases)[number]
+export type UseCaseId = RegisteredUseCase['id']
+export type UseCaseRoute = RegisteredUseCase['route']
+export const DIP_USE_CASES: readonly RegisteredUseCase[] = useCases
 export const observableUseCases = () =>
   [...DIP_USE_CASES].filter((item) => item.navigation.visible).sort((a, b) => a.navigation.order - b.navigation.order)
 export const findUseCaseById = (id: string) => DIP_USE_CASES.find((item) => item.id === id)

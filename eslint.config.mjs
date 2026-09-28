@@ -2,6 +2,18 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 
+const restrictedClientRouterImports = [
+  {
+    name: 'next/link',
+    message: 'Rewrite-sensitive product navigation must use native anchors and server-owned route state.',
+  },
+  {
+    name: 'next/navigation',
+    importNames: ['usePathname', 'useRouter', 'useSearchParams'],
+    message: 'Rewrite-sensitive product navigation must not derive route state from the Next client router.',
+  },
+]
+
 const restrictedDesignSystemImports = [
   {
     name: '@/design-system/components',
@@ -55,6 +67,17 @@ const eslintConfig = defineConfig([
     ignores: ['src/design-system/**', 'src/components/ui/**'],
     rules: {
       'no-restricted-imports': ['error', { paths: restrictedDesignSystemImports }],
+    },
+  },
+  {
+    files: ['src/studio/**/*.{ts,tsx}', 'src/components/observatory/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...restrictedDesignSystemImports, ...restrictedClientRouterImports],
+        },
+      ],
     },
   },
   {

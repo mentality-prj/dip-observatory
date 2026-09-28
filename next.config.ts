@@ -1,5 +1,121 @@
 import type { NextConfig } from 'next'
+import { PLATFORM_HOST_PATTERNS, PLATFORM_ORIGINS } from './src/routing-config'
 
-const nextConfig: NextConfig = {/* config options here */}
+const hasHost = (value: string) => [{ type: 'host' as const, value }]
+const metadataPaths = ['/robots.txt', '/sitemap.xml', '/manifest.webmanifest'] as const
+
+const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: hasHost(PLATFORM_HOST_PATTERNS.studio),
+        destination: '/en/profiles',
+        permanent: true,
+      },
+      {
+        source: '/',
+        has: hasHost(PLATFORM_HOST_PATTERNS.observatory),
+        destination: '/en',
+        permanent: true,
+      },
+      {
+        source: '/decisions',
+        has: hasHost(PLATFORM_HOST_PATTERNS.observatory),
+        destination: '/en/decisions',
+        permanent: true,
+      },
+
+      {
+        source: '/platform/:locale(en|uk|pl)',
+        destination: `${PLATFORM_ORIGINS.site}/:locale`,
+        permanent: true,
+      },
+      {
+        source: '/platform/:locale(en|uk|pl)/:path*',
+        destination: `${PLATFORM_ORIGINS.site}/:locale/:path*`,
+        permanent: true,
+      },
+
+      {
+        source: '/studio',
+        has: [{ type: 'query', key: 'lang', value: '(?<legacyLocale>en|uk|pl)' }],
+        destination: `${PLATFORM_ORIGINS.studio}/:legacyLocale/profiles`,
+        permanent: true,
+      },
+      {
+        source: '/studio/:path*',
+        has: [{ type: 'query', key: 'lang', value: '(?<legacyLocale>en|uk|pl)' }],
+        destination: `${PLATFORM_ORIGINS.studio}/:legacyLocale/:path*`,
+        permanent: true,
+      },
+      {
+        source: '/studio',
+        destination: `${PLATFORM_ORIGINS.studio}/en/profiles`,
+        permanent: true,
+      },
+      {
+        source: '/studio/:path*',
+        destination: `${PLATFORM_ORIGINS.studio}/en/:path*`,
+        permanent: true,
+      },
+
+      {
+        source: '/observatory',
+        destination: `${PLATFORM_ORIGINS.observatory}/en`,
+        permanent: true,
+      },
+      {
+        source: '/observatory/:path*',
+        destination: `${PLATFORM_ORIGINS.observatory}/en/:path*`,
+        permanent: true,
+      },
+
+      ...metadataPaths.flatMap((source) => [
+        {
+          source,
+          has: hasHost(PLATFORM_HOST_PATTERNS.studio),
+          destination: `${PLATFORM_ORIGINS.site}${source}`,
+          permanent: true,
+        },
+        {
+          source,
+          has: hasHost(PLATFORM_HOST_PATTERNS.observatory),
+          destination: `${PLATFORM_ORIGINS.site}${source}`,
+          permanent: true,
+        },
+      ]),
+    ]
+  },
+
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/:locale(en|uk|pl)',
+          has: hasHost(PLATFORM_HOST_PATTERNS.site),
+          destination: '/platform/:locale',
+        },
+        {
+          source: '/:locale(en|uk|pl)/:path*',
+          has: hasHost(PLATFORM_HOST_PATTERNS.site),
+          destination: '/platform/:locale/:path*',
+        },
+        {
+          source: '/:locale(en|uk|pl)',
+          has: hasHost(PLATFORM_HOST_PATTERNS.studio),
+          destination: '/studio?lang=:locale',
+        },
+        {
+          source: '/:locale(en|uk|pl)/:path*',
+          has: hasHost(PLATFORM_HOST_PATTERNS.studio),
+          destination: '/studio/:path*?lang=:locale&route=:path*',
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    }
+  },
+}
 
 export default nextConfig

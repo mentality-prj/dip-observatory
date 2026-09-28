@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
+import { isSurfaceHost } from '@/routing-config'
 
 const resource = /^[a-zA-Z0-9_.-]+$/
 function allowed(path: string[], method: string) {
@@ -20,6 +21,11 @@ function allowed(path: string[], method: string) {
 }
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? request.nextUrl.host
+  if (!isSurfaceHost('studio', host)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
   const { path } = await context.params
   if (!allowed(path, request.method))
     return NextResponse.json({ error: 'Unsupported Studio resource' }, { status: 404 })

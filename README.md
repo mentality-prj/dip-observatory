@@ -8,8 +8,9 @@ One Next.js application serving the QDIP product family:
 | `studio.qdip.ai`      | Decision configuration           | `/studio`                              |
 | `observatory.qdip.ai` | Demonstrators and decision audit | `/en`, `/pl`, `/observatory/decisions` |
 
-Host-based rewrites live in `src/proxy.ts`. During local development, Studio remains available at `/studio` and Observatory at `/en`.
-The marketing site is localized at `/en`, `/uk`, and `/pl`; these paths are rewritten to the internal `/platform/[locale]` route only on the main `qdip.ai` host.
+Host ownership lives in `src/routing-config.ts`. `next.config.ts` uses Next.js built-in host-conditioned `rewrites()` and `redirects()`; there is no application Proxy/middleware router.
+Canonical public paths use the same `/[locale]/...` shape on every product surface. Local development mirrors production hosts through `qdip.localhost`, `studio.localhost`, and `observatory.localhost`.
+Generated `*.vercel.app` preview hosts are matched only by the marketing rewrite.
 
 ## Local development
 
@@ -19,15 +20,23 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open `http://localhost:3000`. Decision Studio is at `/studio`; the default Observatory is at `/en`.
+Use the product-local hosts so local routing exercises the same host contracts as production:
+
+- marketing: `http://qdip.localhost:3000/en`
+- Studio: `http://studio.localhost:3000/en`
+- Observatory: `http://observatory.localhost:3000/en`
+
+The internal `/studio` and `/platform` paths are rewrite destinations only. Direct requests are permanently redirected to canonical public URLs by Next.js `redirects()`.
 
 ## Environment
 
 Platform URLs have production-safe defaults and can be overridden:
 
 - `NEXT_PUBLIC_SITE_URL` — defaults to `https://qdip.ai`
-- `NEXT_PUBLIC_STUDIO_URL` — defaults to `https://studio.qdip.ai` in production
-- `NEXT_PUBLIC_OBSERVATORY_URL` — defaults to `https://observatory.qdip.ai` in production
+- `NEXT_PUBLIC_STUDIO_URL` — defaults to `https://studio.qdip.ai`
+- `NEXT_PUBLIC_OBSERVATORY_URL` — defaults to `https://observatory.qdip.ai`
+
+The hostname of each configured origin is automatically registered as the owner of that surface. Staging/custom domains therefore do not require a second routing configuration. A host cannot belong to more than one surface; startup fails fast if the configured origins collide.
 
 Backend integration uses:
 
@@ -49,7 +58,7 @@ Zoho supports authenticated SMTP over SSL on port 465. If the account uses a dat
 
 ## Deployment
 
-Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. The application selects the correct surface from the request host; no separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Zoho SMTP environment variables above.
+Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. Next.js selects the surface declaratively in `next.config.ts` using host conditions; no runtime middleware/proxy or separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Zoho SMTP environment variables above.
 
 ## Verification
 
