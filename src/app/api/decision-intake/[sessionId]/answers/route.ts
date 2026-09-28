@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import type { CausalSpecification } from '@/features/decision-intake/model/contracts'
-import { DecisionIntakeApiError, submitDecisionIntakeAnswers } from '@/features/decision-intake/server'
+import {
+  DecisionIntakeApiError,
+  submitDecisionIntakeAnswers,
+  type CausalSpecification,
+} from '@/features/decision-intake/server'
 
 export const runtime = 'nodejs'
 
