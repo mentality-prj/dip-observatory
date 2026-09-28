@@ -69,8 +69,7 @@ const copy = {
     outcomes: 'Outcomes',
     conditioning: 'Conditioning variables',
     commaSeparated: 'Comma-separated field names',
-    verifyCausalAssumptions:
-      'I confirm the graph semantics and identification assumptions for this causal model.',
+    verifyCausalAssumptions: 'I confirm the graph semantics and identification assumptions for this causal model.',
     runIdentification: 'Run ID/IDC identification',
     causalCertificate: 'Causal identification certificate',
     estimand: 'Identifying estimand',
@@ -138,15 +137,15 @@ const copy = {
     estimatedCost: 'Оціночна вартість отримання відповіді',
     causalNeedsVerification: 'каузальна специфікація потребує перевірки',
     causalInvalid: 'некоректна каузальна специфікація',
-    causalEvidenceQuestion: 'Поточної observational-моделі недостатньо. Потрібно спланувати додатковий causal evidence.',
+    causalEvidenceQuestion:
+      'Поточної observational-моделі недостатньо. Потрібно спланувати додатковий causal evidence.',
     causalEdges: 'Каузальні зв’язки',
     causalEdgesHint: 'Один зв’язок на рядок: A -> B або A <-> B',
     treatments: 'Втручання',
     outcomes: 'Результати',
     conditioning: 'Умовні змінні',
     commaSeparated: 'Назви полів через кому',
-    verifyCausalAssumptions:
-      'Я підтверджую семантику графа та assumptions ідентифікації для цієї causal model.',
+    verifyCausalAssumptions: 'Я підтверджую семантику графа та assumptions ідентифікації для цієї causal model.',
     runIdentification: 'Запустити ID/IDC identification',
     causalCertificate: 'Сертифікат каузальної ідентифікації',
     estimand: 'Ідентифікуючий estimand',
@@ -221,8 +220,7 @@ const copy = {
     outcomes: 'Wyniki',
     conditioning: 'Zmienne warunkujące',
     commaSeparated: 'Nazwy pól oddzielone przecinkami',
-    verifyCausalAssumptions:
-      'Potwierdzam semantykę grafu i założenia identyfikacji dla tego modelu przyczynowego.',
+    verifyCausalAssumptions: 'Potwierdzam semantykę grafu i założenia identyfikacji dla tego modelu przyczynowego.',
     runIdentification: 'Uruchom identyfikację ID/IDC',
     causalCertificate: 'Certyfikat identyfikacji przyczynowej',
     estimand: 'Estymanda identyfikująca',
@@ -291,9 +289,7 @@ function evidenceActionText(
   locale: Locale,
   kind: NonNullable<IntakeAnalysis['sufficiency']['causal_evidence_plan']>['actions'][number]['kind']
 ) {
-  return kind === 'verify_no_latent_confounding'
-    ? copy[locale].evidenceVerify
-    : copy[locale].evidenceRandomize
+  return kind === 'verify_no_latent_confounding' ? copy[locale].evidenceVerify : copy[locale].evidenceRandomize
 }
 
 function splitFields(value: string) {
@@ -321,9 +317,8 @@ function parseCausalEdges(value: string) {
 
 function verifiedRoleField(analysis: IntakeAnalysis, role: string) {
   const verified = new Set(['user_confirmed', 'data_validated', 'evidence_supported'])
-  return analysis.contract.candidates.find(
-    (candidate) => candidate.role === role && verified.has(candidate.status)
-  )?.field
+  return analysis.contract.candidates.find((candidate) => candidate.role === role && verified.has(candidate.status))
+    ?.field
 }
 
 export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
@@ -371,12 +366,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
   async function applyAnswer(action?: 'confirm' | 'reject') {
     const question = analysis?.sufficiency.next_question
-    if (
-      !analysis ||
-      !question ||
-      question.kind === 'define_causal_model' ||
-      question.kind === 'plan_causal_evidence'
-    )
+    if (!analysis || !question || question.kind === 'define_causal_model' || question.kind === 'plan_causal_evidence')
       return
 
     const body: {
@@ -483,9 +473,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const payload: unknown = await response.json()
       if (!response.ok) {
         const detail =
-          typeof payload === 'object' && payload && 'detail' in payload
-            ? String(payload.detail)
-            : 'Request failed.'
+          typeof payload === 'object' && payload && 'detail' in payload ? String(payload.detail) : 'Request failed.'
         throw new Error(detail)
       }
       const updated = contractResponseSchema.parse(payload)
@@ -788,13 +776,10 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <b className="text-sm">{t.causalCertificate}</b>
                   <span className="text-xs text-cyan-200">
-                    {analysis.sufficiency.causal_certificate.method} ·{' '}
-                    {analysis.sufficiency.causal_certificate.status}
+                    {analysis.sufficiency.causal_certificate.method} · {analysis.sufficiency.causal_certificate.status}
                   </span>
                 </div>
-                <p className="mt-2 text-xs leading-5 text-slate-400">
-                  {analysis.sufficiency.causal_certificate.claim}
-                </p>
+                <p className="mt-2 text-xs leading-5 text-slate-400">{analysis.sufficiency.causal_certificate.claim}</p>
                 {analysis.sufficiency.causal_certificate.estimand ? (
                   <div className="mt-3">
                     <div className="text-xs font-medium text-slate-300">{t.estimand}</div>
@@ -830,18 +815,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <b className="text-sm text-amber-100">{t.evidencePlan}</b>
                 <div className="mt-3 grid gap-2">
                   {analysis.sufficiency.causal_evidence_plan.actions.map((action) => (
-                    <div
-                      key={action.id}
-                      className="rounded-lg border border-amber-200/10 bg-slate-950/40 p-3 text-xs"
-                    >
+                    <div key={action.id} className="rounded-lg border border-amber-200/10 bg-slate-950/40 p-3 text-xs">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium text-amber-50">
-                          {evidenceActionText(locale, action.kind)}
-                        </span>
+                        <span className="font-medium text-amber-50">{evidenceActionText(locale, action.kind)}</span>
                         {analysis.sufficiency.causal_evidence_plan?.preferred_action_id === action.id ? (
-                          <span className="text-[10px] uppercase tracking-wide text-cyan-200">
-                            {t.preferred}
-                          </span>
+                          <span className="text-[10px] uppercase tracking-wide text-cyan-200">{t.preferred}</span>
                         ) : null}
                       </div>
                       <div className="mt-1 font-mono text-[11px] text-slate-400">
@@ -857,9 +835,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <b className="text-sm">{t.empiricalSupport}</b>
-                  <span className="text-xs text-cyan-200">
-                    {analysis.sufficiency.empirical_support.status}
-                  </span>
+                  <span className="text-xs text-cyan-200">{analysis.sufficiency.empirical_support.status}</span>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-slate-400">
                   {supportStatusText(locale, analysis.sufficiency.empirical_support.status)}
