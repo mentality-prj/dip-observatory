@@ -204,7 +204,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               }`
             }
           >
-            {({ dragging, openFilePicker }) => (
+            {({ dragging, inputId }) => (
               <>
                 <FileUp className="mx-auto h-6 w-6 text-cyan-300" />
                 <div data-testid="decision-intake-file" className="mt-3 break-words text-sm font-semibold text-white">
@@ -213,14 +213,13 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 {!dragging ? (
                   <>
                     <div className="my-2 text-xs text-slate-600">{t.or}</div>
-                    <button
-                      type="button"
-                      onClick={openFilePicker}
-                      className="inline-flex items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100"
+                    <label
+                      htmlFor={inputId}
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100"
                     >
                       <FileUp className="h-4 w-4" />
                       {t.choose}
-                    </button>
+                    </label>
                     <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">CSV · XLSX · JSON</div>
                   </>
                 ) : null}
