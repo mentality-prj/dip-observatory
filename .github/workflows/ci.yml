@@ -1,29 +1,52 @@
-name: Format Decision Intake PR
+name: CI
+
 on:
+  push:
+    branches:
+      - dev
   pull_request:
-    branches: [dev]
-permissions:
-  contents: write
+    branches:
+      - dev
+
 jobs:
-  format:
+  quality:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feat/observatory-decision-intake-app
-      - uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10.22.0
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Format and commit
-        run: |
-          pnpm exec prettier --write src/components/observatory/observatory-home.tsx src/components/observatory/prototype-shell.tsx src/features/decision-intake/workspace.tsx src/observatory/application-copy.ts
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/observatory/observatory-home.tsx src/components/observatory/prototype-shell.tsx src/features/decision-intake/workspace.tsx src/observatory/application-copy.ts
-          git commit -m "fix: format Observatory application UI"
-          git push origin HEAD:feat/observatory-decision-intake-app
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Prettier
+        run: pnpm prettier
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and component tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: pnpm test:e2e
