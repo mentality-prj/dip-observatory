@@ -18,7 +18,13 @@ const proofArtifacts = {
   pl: ['Ślad audytowy decyzji', 'Porównanie ze scenariuszem bazowym', 'Deterministyczne odtworzenie'],
 } as const
 
-const decisionPreview = {
+const applicationNames = {
+  en: { challenge: 'Decision Challenge', intake: 'Decision Intake' },
+  uk: { challenge: 'Виклик рішень', intake: 'Підготовка рішення' },
+  pl: { challenge: 'Wyzwanie decyzyjne', intake: 'Przygotowanie decyzji' },
+} as const
+
+const legacyAllocationPreview = {
   en: 'Recommended allocation plan',
   uk: 'Рекомендований план розподілу',
   pl: 'Rekomendowany plan alokacji',
@@ -60,7 +66,7 @@ test.describe('P1 marketing conversion gate', () => {
 
 test.describe('P1 Observatory consistency gate', () => {
   for (const locale of locales) {
-    test(`${locale} uses canonical public demo names and a concrete decision preview`, async ({ page }) => {
+    test(`${locale} exposes canonical applications without a domain-specific homepage preview`, async ({ page }) => {
       const response = await page.goto(`http://observatory.localhost:3000/${locale}`)
       expect(response?.status()).toBeLessThan(400)
 
@@ -68,8 +74,10 @@ test.describe('P1 Observatory consistency gate', () => {
         await expect(page.getByRole('heading', { level: 3, name })).toBeVisible()
       }
 
-      await expect(page.getByText(decisionPreview[locale], { exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 3, name: applicationNames[locale].challenge })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 3, name: applicationNames[locale].intake })).toBeVisible()
       await expect(page.locator('[data-use-case="resource-allocation"]')).toBeVisible()
+      await expect(page.getByText(legacyAllocationPreview[locale], { exact: true })).toHaveCount(0)
 
       const footer = page.getByTestId('observatory-footer')
       await expect(footer).toBeVisible()

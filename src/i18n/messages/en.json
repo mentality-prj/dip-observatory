@@ -29,9 +29,9 @@
     "disclaimer": "Your team makes the final decision."
   },
   "observatoryHome": {
-    "eyebrow": "QDIP OBSERVATORY · UNDERSTAND",
-    "title": "Understand the recommendation, not just the output.",
-    "subtitle": "Observatory is the inspection surface for QDIP decisions. Every application follows the same narrative: recommendation first, then alternatives, evidence and trace.",
+    "eyebrow": "QDIP OBSERVATORY · DECIDE",
+    "title": "From operational data to a decision you can inspect.",
+    "subtitle": "Explore how QDIP frames a decision, evaluates alternatives under uncertainty and constraints, explains the recommendation, and keeps the result open to human review.",
     "inspectLabel": "Resource Allocation · decision preview",
     "recommendation": "Recommendation",
     "recommended": "Recommended allocation plan",
@@ -51,15 +51,15 @@
     "trace": "Open decision trace",
     "traceBody": "Needs and available teams → feasible allocations → constraint checks → priority evaluation → recommended allocation.",
     "previewCta": "Open Resource Allocation",
-    "demos": "Live decision applications",
-    "demosBody": "Different domains, the same inspection grammar. Open an application to examine a real recommendation and the evidence behind it.",
-    "open": "Inspect decision",
-    "inspect": "The four questions Observatory should answer",
+    "demos": "Explore QDIP",
+    "demosBody": "Start with your own judgment, bring operational data, or open a working decision application. Each path exposes a different part of the same decision engine.",
+    "open": "Open application",
+    "inspect": "What every QDIP decision makes visible",
     "questions": [
-      ["What is recommended?", "See the selected action and viable alternatives."],
-      ["Why?", "Inspect evidence, priorities, constraints and trade-offs."],
-      ["What changed?", "Compare the state and scenario that produced a different result."],
-      ["What would change it?", "Explore which constraints or evidence can move the recommendation."]
+      ["What should we do?", "See the recommended action and the alternatives that remained feasible."],
+      ["Why?", "Inspect expected effects, evidence, costs, constraints and trade-offs."],
+      ["How uncertain is it?", "See where the decision depends on uncertain information and changing scenarios."],
+      ["What happened next?", "Connect decisions to observed outcomes so future decisions can be calibrated."]
     ],
     "note": "Demos are preconfigured decision applications. Studio configures the decision model; QDIP Core evaluates it; Observatory makes the result inspectable."
   },

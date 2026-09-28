@@ -41,13 +41,13 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 {c.hero[5]}
               </MarketingTrackedLink>
               <MarketingTrackedLink
-                event="marketing_hero_explainer_click"
+                event="marketing_decision_intake_click"
                 locale={locale}
                 placement="hero"
                 className={styles.secondaryButton}
-                href={path(locale, 'how-it-works')}
+                href={decisionHref}
               >
-                {c.nav[0]} <ArrowRight size={15} />
+                {c.conversion[2]} <ArrowRight size={15} />
               </MarketingTrackedLink>
             </div>
           </div>
