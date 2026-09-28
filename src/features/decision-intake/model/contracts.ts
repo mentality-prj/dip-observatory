@@ -204,8 +204,7 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
   'Confirm or reject every inferred critical semantic.': 'next_step.confirm_or_reject_inferred_critical_semantic',
   'Confirm the controllable action and business objective.':
     'next_step.confirm_controllable_action_and_business_objective',
-  'Resolve competing controllable-action or business-objective semantics.':
-    'next_step.resolve_critical_semantics',
+  'Resolve competing controllable-action or business-objective semantics.': 'next_step.resolve_critical_semantics',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
   'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
