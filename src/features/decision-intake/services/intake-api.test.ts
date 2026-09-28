@@ -137,7 +137,7 @@ describe('Decision Intake API compatibility transport', () => {
           'legacy:demand:action': 'user_confirmed',
         },
       })
-    ).rejects.toMatchObject<Partial<DecisionIntakeApiError>>({ status: 409 })
+    ).rejects.toMatchObject({ status: 409 })
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
