@@ -212,7 +212,9 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
 const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
   text.includes('AI-inferred')
     ? 'evidence_reason.critical_semantics_ai_inferred'
-    : text.includes('information set')
+    : text.includes('ambiguous')
+      ? 'evidence_reason.critical_semantics_ambiguous'
+      : text.includes('information set')
       ? 'evidence_reason.information_set_unresolved_or_unverified'
       : text.includes('minimum verified')
         ? 'evidence_reason.minimum_verified_semantics_present'
