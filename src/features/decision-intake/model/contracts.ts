@@ -50,6 +50,17 @@ export const decisionContractSchema = z
   })
   .passthrough()
 
+export const requirementNodeSchema = z.object({
+  id: z.string(),
+  layer: z.enum(['structural', 'causal']),
+  state: z.enum(['satisfied', 'blocked', 'waiting']),
+  mode: z.enum(['all', 'any']),
+  depends_on: z.array(z.string()),
+  blockers: z.array(z.string()),
+  evidence: z.array(z.string()),
+  description: z.string(),
+})
+
 export const sufficiencyQuestionSchema = z.object({
   id: z.string(),
   kind: z.enum(['confirm_semantic', 'select_field', 'select_available_fields', 'define_causal_model']),
@@ -58,6 +69,17 @@ export const sufficiencyQuestionSchema = z.object({
   options: z.array(z.string()),
   resolves: z.array(z.string()),
   effect: z.enum(['removes_blocker', 'makes_structurally_decidable', 'enables_causal_identification_test']),
+  estimated_cost: z.number().int().positive(),
+  priority_score: z.number(),
+  rationale: z.string(),
+})
+
+export const sufficiencyCertificateSchema = z.object({
+  issued: z.boolean(),
+  scope: z.string(),
+  satisfied_requirements: z.array(z.string()),
+  blocking_requirements: z.array(z.string()),
+  claim: z.string(),
 })
 
 export const decisionSufficiencySchema = z.object({
@@ -65,8 +87,11 @@ export const decisionSufficiencySchema = z.object({
   causal_identifiability: z.enum(['requires_causal_model', 'identified', 'not_identified']),
   blockers: z.array(z.string()),
   causal_blockers: z.array(z.string()),
+  requirements: z.array(requirementNodeSchema),
   questions: z.array(sufficiencyQuestionSchema).max(7),
   next_question: sufficiencyQuestionSchema.nullable(),
+  certificate: sufficiencyCertificateSchema,
+  planner_strategy: z.string(),
   proof_scope: z.string(),
 })
 
