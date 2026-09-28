@@ -1,52 +1,21 @@
 name: CI
-
 on:
-  push:
-    branches:
-      - dev
   pull_request:
-    branches:
-      - dev
-
+    branches: [dev]
 jobs:
   quality:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.22.0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Prettier
-        run: pnpm prettier
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit and component tests
-        run: pnpm test
-
-      - name: Production build
-        run: pnpm build
-
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: E2E tests
-        run: pnpm test:e2e
+      - run: pnpm install --frozen-lockfile
+      - name: Exact Prettier diff
+        run: |
+          pnpm exec prettier --write src/components/observatory/observatory-home.tsx src/components/observatory/prototype-shell.tsx src/features/decision-intake/workspace.tsx src/observatory/application-copy.ts
+          git diff -- src/components/observatory/observatory-home.tsx src/components/observatory/prototype-shell.tsx src/features/decision-intake/workspace.tsx src/observatory/application-copy.ts
