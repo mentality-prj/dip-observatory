@@ -237,7 +237,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             </div>
             <div className="mt-5 grid gap-3">
               {analysis.interpretation.candidates.map((candidate) => (
-                <div key={`${candidate.field}:${candidate.role}`} className="border-t border-white/10 pt-3 text-sm">
+                <div key={candidate.candidate_id} className="border-t border-white/10 pt-3 text-sm">
                   <b>{candidate.field}</b> →{' '}
                   <span className="text-cyan-200">{renderSemanticRole(locale, candidate.role)}</span>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
