@@ -134,7 +134,7 @@ describe('Decision Intake API compatibility transport', () => {
     await expect(
       submitDecisionIntakeAnswers('legacy', {
         candidate_statuses_by_id: {
-          'legacy:demand:action': 'user_confirmed',
+          'semantic:action:demand': 'user_confirmed',
         },
       })
     ).rejects.toMatchObject({ status: 409 })
