@@ -51,6 +51,7 @@ export const evidenceReasonCodeSchema = z.enum([
   'evidence_reason.critical_semantics_ai_inferred',
   'evidence_reason.verified_critical_semantics_missing',
   'evidence_reason.critical_semantics_ambiguous',
+  'evidence_reason.archetype_requirements_unresolved',
   'evidence_reason.information_set_unresolved_or_unverified',
   'evidence_reason.minimum_verified_semantics_present',
 ])
@@ -58,6 +59,7 @@ export const nextStepCodeSchema = z.enum([
   'next_step.confirm_or_reject_inferred_critical_semantic',
   'next_step.confirm_controllable_action_and_business_objective',
   'next_step.resolve_critical_semantics',
+  'next_step.verify_archetype_requirements',
   'next_step.verify_decision_time_availability',
   'next_step.compile_resource_allocation',
   'next_step.select_decision_adapter',
@@ -211,6 +213,7 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
   'Confirm the controllable action and business objective.':
     'next_step.confirm_controllable_action_and_business_objective',
   'Resolve competing controllable-action or business-objective semantics.': 'next_step.resolve_critical_semantics',
+  'Verify the required semantic mappings for the selected decision archetype.': 'next_step.verify_archetype_requirements',
   'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
   'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
   'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
@@ -218,9 +221,11 @@ const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
 const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
   text.includes('AI-inferred')
     ? 'evidence_reason.critical_semantics_ai_inferred'
-    : text.includes('ambiguous')
-      ? 'evidence_reason.critical_semantics_ambiguous'
-      : text.includes('information set')
+    : text.includes('archetype mappings')
+      ? 'evidence_reason.archetype_requirements_unresolved'
+      : text.includes('ambiguous')
+        ? 'evidence_reason.critical_semantics_ambiguous'
+        : text.includes('information set')
         ? 'evidence_reason.information_set_unresolved_or_unverified'
         : text.includes('minimum verified')
           ? 'evidence_reason.minimum_verified_semantics_present'
