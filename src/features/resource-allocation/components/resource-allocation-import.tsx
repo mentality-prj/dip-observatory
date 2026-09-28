@@ -155,7 +155,10 @@ export function ResourceAllocationImport({
               <div data-testid="resource-import-file" className="mt-1 break-words text-xs text-slate-400">
                 {fileMeta.name} · {formatBytes(fileMeta.size)}
               </div>
-              <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3">
+              <div
+                data-testid="resource-import-summary"
+                className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3"
+              >
                 <div className="rounded-lg bg-white/[0.04] p-2">
                   <b className="block text-lg">{summary.communities}</b>
                   <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
