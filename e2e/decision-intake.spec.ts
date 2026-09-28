@@ -73,9 +73,7 @@ test('Decision Intake reuses drag and drop and localizes runtime evidence text',
   }, csv)
 
   await expect(dropzone).toHaveAttribute('data-dragging', 'true')
-  await expect(page.getByTestId('decision-intake-file')).toHaveText(
-    'Відпустіть файл, щоб додати його'
-  )
+  await expect(page.getByTestId('decision-intake-file')).toHaveText('Відпустіть файл, щоб додати його')
 
   await dropzone.evaluate((element, contents) => {
     const transfer = new DataTransfer()
@@ -96,9 +94,7 @@ test('Decision Intake reuses drag and drop and localizes runtime evidence text',
     page.getByText('Яке поле відповідає дії, яку може контролювати особа, що приймає рішення?')
   ).toBeVisible()
   await expect(page.getByText('Яку бізнес-мету має оптимізувати QDIP?')).toBeVisible()
-  await expect(
-    page.getByText('Які обмеження були відомі та обов’язкові на момент прийняття рішення?')
-  ).toBeVisible()
+  await expect(page.getByText('Які обмеження були відомі та обов’язкові на момент прийняття рішення?')).toBeVisible()
   await expect(page.getByText('Які поля були доступні до вибору дії?')).toBeVisible()
   await expect(page.getByText('Яке поле фіксує фактичний результат?')).toBeVisible()
   await expect(page.getByText('Виявлено')).toBeVisible()
