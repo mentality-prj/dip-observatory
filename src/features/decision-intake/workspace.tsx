@@ -40,7 +40,8 @@ const copy = {
     objectiveQuestion: 'Which field represents the business objective QDIP should optimize?',
     outcomeQuestion: 'Which field records the realized outcome?',
     availableQuestion: 'Which fields were available before the action was chosen?',
-    causalModelQuestion: 'Define the causal query and causal graph before claiming that an intervention effect is identifiable.',
+    causalModelQuestion:
+      'Define the causal query and causal graph before claiming that an intervention effect is identifiable.',
     confirmQuestion: 'Confirm whether “{field}” really represents the {role}.',
     choose: 'Choose a field',
     confirm: 'Confirm',
@@ -80,7 +81,8 @@ const copy = {
     objectiveQuestion: 'Яке поле представляє бізнес-мету, яку QDIP має оптимізувати?',
     outcomeQuestion: 'Яке поле фіксує фактично отриманий результат?',
     availableQuestion: 'Які поля були доступні до моменту вибору дії?',
-    causalModelQuestion: 'Задайте каузальний запит і каузальний граф, перш ніж стверджувати, що ефект втручання ідентифікований.',
+    causalModelQuestion:
+      'Задайте каузальний запит і каузальний граф, перш ніж стверджувати, що ефект втручання ідентифікований.',
     confirmQuestion: 'Підтвердіть, чи «{field}» справді представляє роль «{role}».',
     choose: 'Оберіть поле',
     confirm: 'Підтвердити',
@@ -120,7 +122,8 @@ const copy = {
     objectiveQuestion: 'Które pole reprezentuje cel biznesowy, który QDIP ma optymalizować?',
     outcomeQuestion: 'Które pole zapisuje zrealizowany wynik?',
     availableQuestion: 'Które pola były dostępne przed wyborem działania?',
-    causalModelQuestion: 'Zdefiniuj zapytanie przyczynowe i graf przyczynowy przed stwierdzeniem identyfikowalności efektu interwencji.',
+    causalModelQuestion:
+      'Zdefiniuj zapytanie przyczynowe i graf przyczynowy przed stwierdzeniem identyfikowalności efektu interwencji.',
     confirmQuestion: 'Potwierdź, czy „{field}” rzeczywiście reprezentuje rolę „{role}”.',
     choose: 'Wybierz pole',
     confirm: 'Potwierdź',
@@ -144,9 +147,7 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
   if (question.kind === 'select_available_fields') return t.availableQuestion
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
   if (question.kind === 'confirm_semantic') {
-    return t.confirmQuestion
-      .replace('{field}', question.field ?? '')
-      .replace('{role}', question.role ?? '')
+    return t.confirmQuestion.replace('{field}', question.field ?? '').replace('{role}', question.role ?? '')
   }
   return question.id
 }
@@ -223,11 +224,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setAnswerBusy(true)
     setError('')
     try {
-      const response = await fetch(`/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      })
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        }
+      )
       const payload: unknown = await response.json()
       if (!response.ok) {
         const detail =
@@ -403,9 +407,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                             checked={availableFields.includes(field)}
                             onChange={(event) =>
                               setAvailableFields((current) =>
-                                event.target.checked
-                                  ? [...current, field]
-                                  : current.filter((item) => item !== field)
+                                event.target.checked ? [...current, field] : current.filter((item) => item !== field)
                               )
                             }
                           />
