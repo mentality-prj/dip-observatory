@@ -211,6 +211,12 @@ export function renderNextStep(locale: Locale, item: NextStep): string {
         uk: 'Підтвердьте керовану дію та бізнес-мету.',
         pl: 'Potwierdź kontrolowane działanie i cel biznesowy.',
       }[locale]
+    case 'next_step.resolve_critical_semantics':
+      return {
+        en: 'Resolve competing controllable-action or business-objective semantics.',
+        uk: 'Усуньте неоднозначність між конкуруючими керованими діями або бізнес-цілями.',
+        pl: 'Rozstrzygnij konkurujące semantyki działania kontrolowanego lub celu biznesowego.',
+      }[locale]
     case 'next_step.verify_decision_time_availability':
       return {
         en: 'Verify decision-time availability for every input field.',
