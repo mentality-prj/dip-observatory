@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
 
 export type FileDropzoneRenderState = {
   dragging: boolean
@@ -28,9 +28,9 @@ export function FileDropzone({
   const dragDepth = useRef(0)
   const [dragging, setDragging] = useState(false)
 
-  function openFilePicker() {
+  const openFilePicker = useCallback(() => {
     if (!disabled) inputRef.current?.click()
-  }
+  }, [disabled])
 
   function selectFile(file: File | undefined) {
     if (!file || disabled) return
