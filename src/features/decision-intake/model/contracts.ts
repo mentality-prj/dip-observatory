@@ -9,8 +9,8 @@ export const semanticStatusSchema = z.enum([
 ])
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
 export const contractValidationStatusSchema = z.enum(['inferred', 'needs_review', 'verified'])
-export const decisionArchetypeSchema = z.enum(['unclassified', 'generic_decision', 'constrained_resource_allocation'])
-export const decisionVariableKindSchema = z.enum(['allocation', 'selection', 'quantity', 'routing', 'generic'])
+export const decisionArchetypeSchema = z.string().min(1)
+export const decisionVariableKindSchema = z.string().min(1)
 export const objectiveSenseSchema = z.enum(['maximize', 'minimize'])
 export const constraintKindSchema = z.enum(['hard', 'soft', 'ambiguous'])
 export const formalizationAssumptionProvenanceSchema = z.enum([
@@ -29,7 +29,7 @@ export const formalizationQuestionKindSchema = z.enum([
   'confirm_timing',
   'confirm_compiler_mapping',
 ])
-export const semanticRoleSchema = z.enum([
+export const builtInSemanticRoles = [
   'action',
   'objective',
   'constraint',
@@ -42,7 +42,8 @@ export const semanticRoleSchema = z.enum([
   'capacity',
   'demand',
   'service',
-])
+] as const
+export const semanticRoleSchema = z.string().min(1)
 export const clarificationQuestionCodeSchema = z.enum([
   'clarification.controllable_action',
   'clarification.business_objective',
@@ -82,6 +83,7 @@ export const nextStepCodeSchema = z.enum([
   'next_step.verify_archetype_requirements',
   'next_step.verify_decision_time_availability',
   'next_step.compile_resource_allocation',
+  'next_step.compile_supported_decision',
   'next_step.select_decision_adapter',
 ])
 export const semanticParamsSchema = z
@@ -714,12 +716,13 @@ export function normalizeContractResponse(payload: unknown): ContractResponse {
   })
 }
 
-export const compiledResourceAllocationSchema = z.object({
-  archetype: z.literal('constrained_resource_allocation'),
+export const compiledDecisionIntakeSchema = z.object({
+  archetype: decisionArchetypeSchema,
   request: z.record(z.string(), z.unknown()),
 })
+export const compiledResourceAllocationSchema = compiledDecisionIntakeSchema
 
-export const executedDecisionIntakeSchema = compiledResourceAllocationSchema.extend({
+export const executedDecisionIntakeSchema = compiledDecisionIntakeSchema.extend({
   result: z.record(z.string(), z.unknown()),
 })
 export type SemanticParams = z.infer<typeof semanticParamsSchema>
