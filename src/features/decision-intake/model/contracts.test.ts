@@ -68,6 +68,40 @@ describe('Decision Intake sufficiency contract', () => {
         evidence_variables: ['X', 'Y', 'M'],
         evidence_targets: [],
       },
+      compilation_questions: [
+        {
+          id: 'select-compiler-capacity',
+          kind: 'select_field',
+          role: 'capacity',
+          field: null,
+          options: ['X', 'Y', 'M'],
+          resolves: ['compiler_role:capacity:not_verified'],
+          effect: 'removes_blocker',
+          estimated_cost: 2,
+          priority_score: 0.5,
+          rationale: 'Compiler requires one verified capacity mapping.',
+          evidence_action_id: null,
+          evidence_kind: null,
+          evidence_variables: [],
+          evidence_targets: [],
+        },
+      ],
+      compilation_next_question: {
+        id: 'select-compiler-capacity',
+        kind: 'select_field',
+        role: 'capacity',
+        field: null,
+        options: ['X', 'Y', 'M'],
+        resolves: ['compiler_role:capacity:not_verified'],
+        effect: 'removes_blocker',
+        estimated_cost: 2,
+        priority_score: 0.5,
+        rationale: 'Compiler requires one verified capacity mapping.',
+        evidence_action_id: null,
+        evidence_kind: null,
+        evidence_variables: [],
+        evidence_targets: [],
+      },
       certificate: {
         issued: true,
         scope: 'decision-contract-structural-v2',
@@ -124,6 +158,7 @@ describe('Decision Intake sufficiency contract', () => {
     })
 
     expect(result.next_question?.kind).toBe('assess_estimability')
+    expect(result.compilation_next_question?.role).toBe('capacity')
     expect(result.empirical_support?.deferred_obligations).toEqual(['conditional:Y|X,M'])
     expect(result.causal_certificate?.status).toBe('identified')
   })
