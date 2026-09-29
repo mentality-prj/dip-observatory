@@ -853,7 +853,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
     }
     for (const item of formalization.assumptions) {
-      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+      if (item.status === 'inferred' && item.impact === 'decision_relevant') {
+        formalizationStatuses[item.id] = 'user_confirmed'
+      }
     }
 
     const acceptedSemanticRoles = new Set(['community_id', 'team_id', 'capacity', 'demand', 'service'])
