@@ -381,6 +381,13 @@ function verifiedRoleField(analysis: IntakeAnalysis, role: string) {
     ?.field
 }
 
+type IntakeAnswerBody = {
+  candidate_statuses?: Record<string, string>
+  information_availability?: Record<string, string>
+  semantic_mappings?: Record<string, string>
+  causal_specification?: CausalSpecification
+}
+
 export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [analysis, setAnalysis] = useState<IntakeAnalysis | null>(null)
@@ -388,6 +395,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [busy, setBusy] = useState(false)
   const [answerBusy, setAnswerBusy] = useState(false)
   const [selectedField, setSelectedField] = useState('')
+  const [selectedCompilerField, setSelectedCompilerField] = useState('')
   const [availableFields, setAvailableFields] = useState<string[]>([])
   const [causalEdges, setCausalEdges] = useState('')
   const [causalTreatments, setCausalTreatments] = useState('')
@@ -401,6 +409,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setError('')
     setAnalysis(null)
     setSelectedField('')
+    setSelectedCompilerField('')
     setAvailableFields([])
     setCausalEdges('')
     setCausalTreatments('')
@@ -424,36 +433,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     }
   }
 
-  async function applyAnswer(action?: 'confirm' | 'reject') {
-    const question = analysis?.sufficiency.next_question
-    if (!analysis || !question || question.kind === 'define_causal_model' || question.kind === 'plan_causal_evidence')
-      return
-
-    const body: {
-      candidate_statuses?: Record<string, string>
-      information_availability?: Record<string, string>
-      semantic_mappings?: Record<string, string>
-      causal_specification?: CausalSpecification
-    } = {}
-
-    if (question.kind === 'confirm_semantic' && question.field && question.role) {
-      body.candidate_statuses = {
-        [`${question.role}:${question.field}`]: action === 'reject' ? 'rejected' : 'user_confirmed',
-      }
-    }
-
-    if (question.kind === 'select_field' && question.role && selectedField) {
-      body.semantic_mappings = { [question.role]: selectedField }
-    }
-
-    if (question.kind === 'select_available_fields') {
-      const selected = new Set(availableFields)
-      body.information_availability = Object.fromEntries(
-        question.options.map((field) => [field, selected.has(field) ? 'available' : 'not_available'])
-      )
-    }
-
-    if (!Object.keys(body).length) return
+  async function submitAnswerPayload(body: IntakeAnswerBody) {
+    if (!analysis) return false
 
     setAnswerBusy(true)
     setError('')
@@ -469,7 +450,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const payload: unknown = await response.json()
       if (!response.ok) {
         const detail =
-          typeof payload === 'object' && payload && 'detail' in payload ? String(payload.detail) : 'Request failed.'
+          typeof payload === 'object' && payload && 'detail' in payload
+            ? String(payload.detail)
+            : 'Request failed.'
         throw new Error(detail)
       }
       const updated = contractResponseSchema.parse(payload)
@@ -483,12 +466,67 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             }
           : current
       )
-      setSelectedField('')
-      setAvailableFields([])
+      return true
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Request failed.')
+      return false
     } finally {
       setAnswerBusy(false)
+    }
+  }
+
+  async function applyAnswer(action?: 'confirm' | 'reject') {
+    const question = analysis?.sufficiency.next_question
+    if (
+      !analysis ||
+      !question ||
+      question.kind === 'define_causal_model' ||
+      question.kind === 'plan_causal_evidence' ||
+      question.kind === 'assess_estimability'
+    )
+      return
+
+    const body: IntakeAnswerBody = {}
+
+    if (question.kind === 'confirm_semantic' && question.field && question.role) {
+      body.candidate_statuses = {
+        [`${question.role}:${question.field}`]:
+          action === 'reject' ? 'rejected' : 'user_confirmed',
+      }
+    }
+
+    if (question.kind === 'select_field' && question.role && selectedField) {
+      body.semantic_mappings = { [question.role]: selectedField }
+    }
+
+    if (question.kind === 'select_available_fields') {
+      const selected = new Set(availableFields)
+      body.information_availability = Object.fromEntries(
+        question.options.map((field) => [
+          field,
+          selected.has(field) ? 'available' : 'not_available',
+        ])
+      )
+    }
+
+    if (!Object.keys(body).length) return
+
+    if (await submitAnswerPayload(body)) {
+      setSelectedField('')
+      setAvailableFields([])
+    }
+  }
+
+  async function applyCompilationAnswer() {
+    const question = analysis?.sufficiency.compilation_next_question
+    if (!question?.role || !selectedCompilerField) return
+
+    if (
+      await submitAnswerPayload({
+        semantic_mappings: { [question.role]: selectedCompilerField },
+      })
+    ) {
+      setSelectedCompilerField('')
     }
   }
 
@@ -520,37 +558,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
         assumptions_verified: causalAssumptionsVerified,
       }
 
-      setAnswerBusy(true)
-      setError('')
-      const response = await fetch(
-        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ causal_specification: specification }),
-        }
-      )
-      const payload: unknown = await response.json()
-      if (!response.ok) {
-        const detail =
-          typeof payload === 'object' && payload && 'detail' in payload ? String(payload.detail) : 'Request failed.'
-        throw new Error(detail)
-      }
-      const updated = contractResponseSchema.parse(payload)
-      setAnalysis((current) =>
-        current
-          ? {
-              ...current,
-              contract: updated.contract,
-              evidence_gate: updated.evidence_gate,
-              sufficiency: updated.sufficiency,
-            }
-          : current
-      )
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Request failed.')
-    } finally {
-      setAnswerBusy(false)
+      await submitAnswerPayload({ causal_specification: specification })
     }
   }
 
