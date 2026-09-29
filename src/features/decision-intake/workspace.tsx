@@ -8,11 +8,13 @@ import type { Locale } from '@/lib/observatory-i18n'
 import {
   compiledResourceAllocationSchema,
   contractResponseSchema,
+  executedDecisionIntakeSchema,
   decisionArchetypeSchema,
   intakeAnalysisSchema,
   semanticRoleSchema,
   type CausalSpecification,
   type CompiledResourceAllocation,
+  type ExecutedDecisionIntake,
   type IntakeAnalysis,
   type IntakeAnswers,
   type SufficiencyQuestion,
@@ -100,6 +102,11 @@ const copy = {
     compiling: 'Compiling…',
     compileFailed: 'Decision Intake compilation failed.',
     compiledTitle: 'Compiled adapter request',
+    execute: 'Run decision',
+    executing: 'Running decision…',
+    executionFailed: 'Decision execution failed.',
+    executedTitle: 'QDIP decision result',
+    preflightError: 'Compiler preflight',
     noCandidates: 'No semantic hypotheses were proposed. Add the required mappings manually.',
     gateStatuses: {
       no_opportunity: 'No opportunity',
@@ -262,6 +269,11 @@ const copy = {
     compiling: 'Компілюю…',
     compileFailed: 'Не вдалося скомпілювати Decision Intake.',
     compiledTitle: 'Скомпільований запит адаптера',
+    execute: 'Запустити рішення',
+    executing: 'Виконую рішення…',
+    executionFailed: 'Не вдалося виконати рішення.',
+    executedTitle: 'Результат рішення QDIP',
+    preflightError: 'Compiler preflight',
     noCandidates: 'Семантичних гіпотез немає. Додайте потрібні зіставлення вручну.',
     gateStatuses: {
       no_opportunity: 'Немає можливості',
@@ -426,6 +438,11 @@ const copy = {
     compiling: 'Kompilowanie…',
     compileFailed: 'Kompilacja Decision Intake nie powiodła się.',
     compiledTitle: 'Skompilowane żądanie adaptera',
+    execute: 'Uruchom decyzję',
+    executing: 'Uruchamianie decyzji…',
+    executionFailed: 'Wykonanie decyzji nie powiodło się.',
+    executedTitle: 'Wynik decyzji QDIP',
+    preflightError: 'Compiler preflight',
     noCandidates: 'Brak hipotez semantycznych. Dodaj wymagane mapowania ręcznie.',
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
@@ -630,6 +647,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [verifying, setVerifying] = useState(false)
   const [formalizationAccepting, setFormalizationAccepting] = useState(false)
   const [compiling, setCompiling] = useState(false)
+  const [executing, setExecuting] = useState(false)
   const [verificationError, setVerificationError] = useState('')
   const [compileError, setCompileError] = useState('')
   const [candidateAnswers, setCandidateAnswers] = useState<Record<string, CandidateChoice>>({})
@@ -638,6 +656,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [mappingField, setMappingField] = useState('')
   const [mappingRole, setMappingRole] = useState<SemanticMapping['role']>('action')
   const [compiled, setCompiled] = useState<CompiledResourceAllocation | null>(null)
+  const [executed, setExecuted] = useState<ExecutedDecisionIntake | null>(null)
+  const [executionError, setExecutionError] = useState('')
   const [answerBusy, setAnswerBusy] = useState(false)
   const [selectedField, setSelectedField] = useState('')
   const [selectedCompilerField, setSelectedCompilerField] = useState('')
@@ -656,6 +676,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setVerificationError('')
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
+    setExecuted(null)
+    setExecutionError('')
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
     setSelectedObjectiveId(nextAnalysis?.contract.formalization?.objectives[0]?.id ?? '')
@@ -722,6 +745,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setVerificationError('')
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
 
     const input: IntakeAnswers = {}
     if (Object.keys(candidateAnswers).length) input.candidate_statuses_by_id = candidateAnswers
@@ -779,6 +803,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setVerificationError('')
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
 
     const formalizationStatuses: Record<string, CandidateChoice> = {}
     for (const item of formalization.decision_variables) {
@@ -851,6 +876,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setCompiling(true)
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
     try {
       const response = await fetch(
         `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/compile`,
@@ -866,6 +892,29 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       setCompileError(t.compileFailed)
     } finally {
       setCompiling(false)
+    }
+  }
+
+  async function executeContract() {
+    if (!analysis) return
+    setExecuting(true)
+    setExecutionError('')
+    setExecuted(null)
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/execute`,
+        { method: 'POST' }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setExecutionError(t.executionFailed)
+        return
+      }
+      setExecuted(executedDecisionIntakeSchema.parse(payload))
+    } catch {
+      setExecutionError(t.executionFailed)
+    } finally {
+      setExecuting(false)
     }
   }
 
@@ -1647,15 +1696,26 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               </button>
               {analysis.sufficiency.compilation_status === 'ready' &&
               analysis.contract.archetype === 'constrained_resource_allocation' ? (
-                <button
-                  type="button"
-                  data-testid="decision-intake-compile"
-                  disabled={compiling}
-                  onClick={compileContract}
-                  className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-300/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 disabled:opacity-40"
-                >
-                  <Wrench className="h-4 w-4" /> {compiling ? t.compiling : t.compile}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    data-testid="decision-intake-compile"
+                    disabled={compiling}
+                    onClick={compileContract}
+                    className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-300/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 disabled:opacity-40"
+                  >
+                    <Wrench className="h-4 w-4" /> {compiling ? t.compiling : t.compile}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="decision-intake-execute"
+                    disabled={executing}
+                    onClick={executeContract}
+                    className="inline-flex items-center gap-2 bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
+                  >
+                    <Wrench className="h-4 w-4" /> {executing ? t.executing : t.execute}
+                  </button>
+                </>
               ) : null}
             </div>
 
@@ -1669,12 +1729,25 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 {compileError}
               </p>
             ) : null}
+            {executionError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {executionError}
+              </p>
+            ) : null}
 
             {compiled ? (
               <div data-testid="decision-intake-compiled" className="mt-6 border-t border-white/10 pt-5">
                 <h3 className="text-sm font-semibold text-emerald-200">{t.compiledTitle}</h3>
                 <pre className="mt-3 max-h-80 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
                   {JSON.stringify(compiled.request, null, 2)}
+                </pre>
+              </div>
+            ) : null}
+            {executed ? (
+              <div data-testid="decision-intake-executed" className="mt-6 border-t border-white/10 pt-5">
+                <h3 className="text-sm font-semibold text-emerald-200">{t.executedTitle}</h3>
+                <pre className="mt-3 max-h-96 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
+                  {JSON.stringify(executed.result, null, 2)}
                 </pre>
               </div>
             ) : null}
@@ -1700,6 +1773,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         : t.compilationBlocked}
                   </dd>
                 </div>
+                {analysis.sufficiency.compilation_validation_error ? (
+                  <div className="border-t border-white/10 pt-3">
+                    <dt className="text-slate-400">{t.preflightError}</dt>
+                    <dd className="mt-1 text-xs leading-5 text-rose-200">
+                      {analysis.sufficiency.compilation_validation_error}
+                    </dd>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
                   <dt className="text-slate-400">{t.causal}</dt>
                   <dd className="text-right text-cyan-200">
