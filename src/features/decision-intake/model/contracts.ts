@@ -12,6 +12,7 @@ export const evidenceGateSchema = z.object({
   status: z.enum([
     'no_opportunity',
     'discovered',
+    'ready_for_structural_intake',
     'ready_for_decision',
     'ready_for_historical_evaluation',
     'needs_more_data',
