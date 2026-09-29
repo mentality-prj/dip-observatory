@@ -74,7 +74,8 @@ const copy = {
     gate: 'Перевірка доказів',
     assumptions: 'Припущення',
     legacySemantics: 'Legacy-семантика v1 (оригінальне формулювання)',
-    legacySemanticsHint: 'Ці елементи v1 збережено дослівно, оскільки їх неможливо безпечно локалізувати без втрати змісту.',
+    legacySemanticsHint:
+      'Ці елементи v1 збережено дослівно, оскільки їх неможливо безпечно локалізувати без втрати змісту.',
     privacy: 'Не завантажуйте зайві персональні дані.',
     requestFailed: 'Не вдалося виконати запит Decision Intake.',
     invalidDataset: 'Набір даних не вдалося проаналізувати. Перевірте його структуру та значення.',
@@ -111,7 +112,8 @@ const copy = {
     gate: 'Bramka dowodowa',
     assumptions: 'Założenia',
     legacySemantics: 'Semantyka legacy v1 (oryginalne brzmienie)',
-    legacySemanticsHint: 'Te elementy v1 zachowano dosłownie, ponieważ nie można ich bezpiecznie zlokalizować bez utraty znaczenia.',
+    legacySemanticsHint:
+      'Te elementy v1 zachowano dosłownie, ponieważ nie można ich bezpiecznie zlokalizować bez utraty znaczenia.',
     privacy: 'Nie przesyłaj zbędnych danych osobowych.',
     requestFailed: 'Nie udało się wykonać żądania Decision Intake.',
     invalidDataset: 'Nie udało się przeanalizować zbioru. Sprawdź jego strukturę i wartości.',
