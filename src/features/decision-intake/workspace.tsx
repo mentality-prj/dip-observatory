@@ -32,6 +32,10 @@ const copy = {
     structural: 'Structural decision',
     structuralBlocked: 'insufficient',
     structuralReady: 'structural intake requirements satisfied',
+    compilation: 'Compiler readiness',
+    compilationReady: 'ready for supported compiler',
+    compilationBlocked: 'compiler mappings incomplete',
+    compilationUnsupported: 'no supported compiler for this archetype',
     causal: 'Causal identifiability',
     causalNeedsModel: 'not assessed — causal query and graph required',
     causalIdentified: 'identified',
@@ -119,6 +123,10 @@ const copy = {
     structural: 'Структура рішення',
     structuralBlocked: 'недостатньо даних',
     structuralReady: 'структурні вимоги intake виконано',
+    compilation: 'Готовність compiler',
+    compilationReady: 'готово до supported compiler',
+    compilationBlocked: 'compiler mappings неповні',
+    compilationUnsupported: 'для цього archetype немає supported compiler',
     causal: 'Каузальна ідентифікованість',
     causalNeedsModel: 'не перевірено — потрібні каузальний запит і граф',
     causalIdentified: 'ідентифіковано',
@@ -208,6 +216,10 @@ const copy = {
     structural: 'Struktura decyzji',
     structuralBlocked: 'niewystarczająca',
     structuralReady: 'wymagania strukturalne intake spełnione',
+    compilation: 'Gotowość kompilatora',
+    compilationReady: 'gotowe dla obsługiwanego kompilatora',
+    compilationBlocked: 'mapowania kompilatora są niekompletne',
+    compilationUnsupported: 'brak obsługiwanego kompilatora dla tego archetypu',
     causal: 'Identyfikowalność przyczynowa',
     causalNeedsModel: 'nie oceniono — wymagane są zapytanie przyczynowe i graf',
     causalIdentified: 'zidentyfikowano',
@@ -615,6 +627,16 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <dt className="text-slate-400">{t.structural}</dt>
                 <dd className="text-cyan-200">
                   {analysis.sufficiency.structural_status === 'ready' ? t.structuralReady : t.structuralBlocked}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                <dt className="text-slate-400">{t.compilation}</dt>
+                <dd className="text-right text-cyan-200">
+                  {analysis.sufficiency.compilation_status === 'ready'
+                    ? t.compilationReady
+                    : analysis.sufficiency.compilation_status === 'unsupported'
+                      ? t.compilationUnsupported
+                      : t.compilationBlocked}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
