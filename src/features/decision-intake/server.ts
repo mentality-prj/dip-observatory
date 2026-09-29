@@ -5,5 +5,17 @@ export {
   getDecisionIntakeContract,
   submitDecisionIntakeAnswers,
 } from './services/intake-api'
-export { intakeAnalysisSchema } from './model/contracts'
-export type { ContractResponse, IntakeAnalysis } from './model/contracts'
+export {
+  compiledResourceAllocationSchema,
+  contractResponseSchema,
+  intakeAnalysisSchema,
+  intakeAnswersSchema,
+} from './model/contracts'
+export type {
+  CausalSpecification,
+  CompiledResourceAllocation,
+  ContractResponse,
+  IntakeAnalysis,
+  IntakeAnswers,
+} from './model/contracts'
+export { assertDecisionIntakeSameOrigin, DecisionIntakeAccessError } from './server/access'
