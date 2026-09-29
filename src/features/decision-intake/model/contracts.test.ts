@@ -162,4 +162,27 @@ describe('Decision Intake sufficiency contract', () => {
     expect(result.empirical_support?.deferred_obligations).toEqual(['conditional:Y|X,M'])
     expect(result.causal_certificate?.status).toBe('identified')
   })
+
+  it('parses explicit archetype selection as a compiler goal step', () => {
+    const result = sufficiencyQuestionSchema.parse({
+      id: 'select-compiler-archetype',
+      kind: 'select_archetype',
+      role: null,
+      field: null,
+      options: ['constrained_resource_allocation'],
+      resolves: ['compiler:archetype_unclassified'],
+      effect: 'removes_blocker',
+      estimated_cost: 1,
+      priority_score: 1,
+      rationale: 'Select an explicit supported decision archetype.',
+      evidence_action_id: null,
+      evidence_kind: null,
+      evidence_variables: [],
+      evidence_targets: [],
+    })
+
+    expect(result.kind).toBe('select_archetype')
+    expect(result.options).toEqual(['constrained_resource_allocation'])
+  })
+
 })
