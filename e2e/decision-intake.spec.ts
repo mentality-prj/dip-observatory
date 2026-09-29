@@ -216,7 +216,6 @@ test('legacy Decision Intake semantics remain available without leaking into the
   await expect(page.getByText('Custom legacy assumption')).toBeVisible()
 })
 
-
 test('human verification can create missing semantics and compile a ready RA contract', async ({ page }) => {
   const candidates = [
     ['team_id', 'action'],
