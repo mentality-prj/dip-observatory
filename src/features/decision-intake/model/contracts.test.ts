@@ -284,7 +284,7 @@ describe('Decision Intake sufficiency contract', () => {
     expect(decisionArchetypeSchema.parse('unclassified')).toBe('unclassified')
   })
 
-  it('accepts one-shot formalization and timing verification payloads', () => {
+  it('accepts one-shot formalization with explicit timing verification', () => {
     const result = intakeAnswersSchema.parse({
       archetype: 'constrained_resource_allocation',
       formalization_statuses: {
@@ -292,14 +292,20 @@ describe('Decision Intake sufficiency contract', () => {
         'objective:resource_allocation_score': 'user_confirmed',
         'constraint:budget': 'user_confirmed',
       },
-      accept_timing_suggestions: true,
+      information_availability: {
+        capacity: 'available',
+        outcome: 'not_available',
+      },
       candidate_statuses_by_id: {
         'semantic:team_id:id': 'user_confirmed',
       },
     })
 
     expect(result.archetype).toBe('constrained_resource_allocation')
-    expect(result.accept_timing_suggestions).toBe(true)
+    expect(result.information_availability).toEqual({
+      capacity: 'available',
+      outcome: 'not_available',
+    })
   })
 
   it('accepts formalization and scope overrides', () => {
