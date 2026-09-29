@@ -163,4 +163,25 @@ describe('Decision Intake API compatibility transport', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
+
+  it('requires Decision Intake v2 for human-created semantic mappings', async () => {
+    vi.stubEnv('DIP_API_BASE_URL', 'https://dip.example')
+    vi.stubEnv('DIP_API_KEY', 'secret')
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(JSON.stringify({ detail: 'Not Found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      submitDecisionIntakeAnswers('legacy', {
+        semantic_mappings: [{ field: 'profit', role: 'objective' }],
+      })
+    ).rejects.toMatchObject({ status: 409 })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
 })
