@@ -38,6 +38,7 @@ const copy = {
     compilationUnsupported: 'no supported compiler for this archetype',
     compilerNextStep: 'Compiler next required step',
     compilerMapping: 'Required compiler mapping',
+    decisionArchetype: 'Decision archetype',
     causal: 'Causal identifiability',
     causalNeedsModel: 'not assessed — causal query and graph required',
     causalIdentified: 'identified',
@@ -131,6 +132,7 @@ const copy = {
     compilationUnsupported: 'для цього archetype немає supported compiler',
     compilerNextStep: 'Наступний необхідний крок compiler',
     compilerMapping: 'Обов’язковий compiler mapping',
+    decisionArchetype: 'Archetype рішення',
     causal: 'Каузальна ідентифікованість',
     causalNeedsModel: 'не перевірено — потрібні каузальний запит і граф',
     causalIdentified: 'ідентифіковано',
@@ -226,6 +228,7 @@ const copy = {
     compilationUnsupported: 'brak obsługiwanego kompilatora dla tego archetypu',
     compilerNextStep: 'Następny wymagany krok kompilatora',
     compilerMapping: 'Wymagane mapowanie kompilatora',
+    decisionArchetype: 'Archetyp decyzji',
     causal: 'Identyfikowalność przyczynowa',
     causalNeedsModel: 'nie oceniono — wymagane są zapytanie przyczynowe i graf',
     causalIdentified: 'zidentyfikowano',
@@ -391,6 +394,7 @@ type IntakeAnswerBody = {
   candidate_statuses?: Record<string, string>
   information_availability?: Record<string, string>
   semantic_mappings?: Record<string, string>
+  archetype?: string
   causal_specification?: CausalSpecification
 }
 
@@ -525,13 +529,18 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
   async function applyCompilationAnswer() {
     const question = analysis?.sufficiency.compilation_next_question
-    if (!question?.role || !selectedCompilerField) return
+    if (!question || !selectedCompilerField) return
 
-    if (
-      await submitAnswerPayload({
-        semantic_mappings: { [question.role]: selectedCompilerField },
-      })
-    ) {
+    const body: IntakeAnswerBody =
+      question.kind === 'select_archetype'
+        ? { archetype: selectedCompilerField }
+        : question.role
+          ? { semantic_mappings: { [question.role]: selectedCompilerField } }
+          : {}
+
+    if (!Object.keys(body).length) return
+
+    if (await submitAnswerPayload(body)) {
       setSelectedCompilerField('')
     }
   }
@@ -680,7 +689,15 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <div className="mt-5 border-t border-white/10 pt-4">
                 <b className="text-sm">{t.compilerNextStep}</b>
                 <p className="mt-2 text-xs leading-5 text-slate-400">
-                  {t.compilerMapping}: <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
+                  {compilationNextQuestion.kind === 'select_archetype'
+                    ? t.decisionArchetype
+                    : t.compilerMapping}
+                  {compilationNextQuestion.role ? (
+                    <>
+                      :{' '}
+                      <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
+                    </>
+                  ) : null}
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-slate-600">
                   {compilationNextQuestion.rationale}
