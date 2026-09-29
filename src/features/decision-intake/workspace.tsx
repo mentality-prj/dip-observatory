@@ -55,7 +55,8 @@ const copy = {
     invalidDataset: 'The dataset could not be analyzed. Check its structure and values.',
     uploadTooLarge: 'The dataset exceeds Decision Intake limits.',
     verificationTitle: 'Human verification',
-    verificationBody: 'Confirm or reject inferred semantics, add missing field-role mappings, and verify which fields existed before the decision.',
+    verificationBody:
+      'Confirm or reject inferred semantics, add missing field-role mappings, and verify which fields existed before the decision.',
     contractVersion: 'Contract version',
     candidateReview: 'Semantic hypotheses',
     confirm: 'Confirm',
@@ -481,8 +482,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               </ol>
 
               <div className="mt-6 border-t border-white/10 pt-4 text-sm">
-                <b>{t.gate}:</b>{' '}
-                <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
+                <b>{t.gate}:</b> <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
                   {renderNextStep(locale, analysis.evidence_gate.recommended_next_step)}
                 </p>
@@ -543,7 +543,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     const pending = candidateAnswers[candidate.candidate_id]
                     const confirmed =
                       pending === 'user_confirmed' ||
-                      (!pending && ['user_confirmed', 'data_validated', 'evidence_supported'].includes(candidate.status))
+                      (!pending &&
+                        ['user_confirmed', 'data_validated', 'evidence_supported'].includes(candidate.status))
                     const rejected = pending === 'rejected' || (!pending && candidate.status === 'rejected')
                     return (
                       <div
@@ -662,9 +663,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                           aria-label={t.remove}
                           onClick={() =>
                             setSemanticMappings((current) =>
-                              current.filter(
-                                (item) => !(item.field === mapping.field && item.role === mapping.role)
-                              )
+                              current.filter((item) => !(item.field === mapping.field && item.role === mapping.role))
                             )
                           }
                           className="text-slate-400 hover:text-white"
