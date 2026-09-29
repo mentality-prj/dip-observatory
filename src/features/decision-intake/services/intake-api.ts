@@ -84,6 +84,7 @@ export async function submitDecisionIntakeAnswers(
     candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
     candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
     information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
+    semantic_mappings?: Array<{ field: string; role: string }>
   }
 ): Promise<ContractResponse> {
   if (input.candidate_statuses_by_id && input.candidate_statuses) {
@@ -101,6 +102,13 @@ export async function submitDecisionIntakeAnswers(
     )
   } catch (error) {
     if (!isMissingV2Route(error)) throw error
+  }
+
+  if (input.semantic_mappings?.length) {
+    throw new DecisionIntakeApiError(
+      'Human semantic mapping requires Decision Intake v2.',
+      409
+    )
   }
 
   const legacyContract = normalizeContractResponse(await request(`/${encoded}/contract`))
