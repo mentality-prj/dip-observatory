@@ -56,11 +56,15 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   return response.json()
 }
 
+function isMissingV2Route(error: unknown): error is DecisionIntakeApiError {
+  return error instanceof DecisionIntakeApiError && error.status === 404 && error.message === 'Not Found'
+}
+
 async function requestV2WithFallback(v2Path: string, v1Path: string, init: RequestInit = {}): Promise<unknown> {
   try {
     return await request(v2Path, init)
   } catch (error) {
-    if (!(error instanceof DecisionIntakeApiError) || error.status !== 404) throw error
+    if (!isMissingV2Route(error)) throw error
     return request(v1Path, init)
   }
 }
@@ -79,9 +83,12 @@ export async function submitDecisionIntakeAnswers(
   input: {
     candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
     candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
-    information_availability?: Record<string, string>
+    information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
   }
 ): Promise<ContractResponse> {
+  if (input.candidate_statuses_by_id && input.candidate_statuses) {
+    throw new DecisionIntakeApiError('Use one semantic confirmation identity mode.', 422)
+  }
   const encoded = encodeURIComponent(sessionId)
   const v2Path = `/v2/${encoded}/answers`
   try {
@@ -93,7 +100,7 @@ export async function submitDecisionIntakeAnswers(
       })
     )
   } catch (error) {
-    if (!(error instanceof DecisionIntakeApiError) || error.status !== 404) throw error
+    if (!isMissingV2Route(error)) throw error
   }
 
   const legacyContract = normalizeContractResponse(await request(`/${encoded}/contract`))
