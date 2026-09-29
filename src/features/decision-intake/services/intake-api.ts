@@ -8,7 +8,7 @@ import {
   normalizeContractResponse,
   normalizeIntakeAnalysis,
 } from '../model/contracts'
-import type { CausalSpecification, ContractResponse, IntakeAnalysis, IntakeAnswers } from '../model/contracts'
+import type { ContractResponse, IntakeAnalysis, IntakeAnswers } from '../model/contracts'
 
 export class DecisionIntakeApiError extends Error {
   constructor(
@@ -48,10 +48,11 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
     let detail = `Decision Intake failed with status ${response.status}`
     try {
       const payload = (await response.json()) as {
-        detail?: string
+        detail?: string | { code?: string; result?: unknown }
         error?: { message?: string }
       }
-      if (payload.detail) detail = payload.detail
+      if (typeof payload.detail === 'string') detail = payload.detail
+      else if (payload.detail?.code) detail = payload.detail.code
       else if (payload.error?.message) detail = payload.error.message
     } catch {
       // Preserve the status-derived error without exposing upstream response bodies.
