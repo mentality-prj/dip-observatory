@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --write src/features/decision-intake/workspace.tsx && echo __WORKSPACE__ && cat src/features/decision-intake/workspace.tsx && exit 1",
+    "prettier": "prettier --write src/features/decision-intake/model/contracts.ts src/features/decision-intake/model/contracts.test.ts src/features/decision-intake/workspace.tsx && echo __CONTRACTS__ && cat src/features/decision-intake/model/contracts.ts && echo __TEST__ && cat src/features/decision-intake/model/contracts.test.ts && echo __WORKSPACE__ && cat src/features/decision-intake/workspace.tsx && exit 1",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
