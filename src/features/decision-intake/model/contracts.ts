@@ -455,6 +455,15 @@ export const intakeAnswersSchema = z
         })
       )
       .optional(),
+    objective_overrides: z
+      .record(
+        z.string(),
+        z.object({
+          sense: objectiveSenseSchema.optional(),
+          expression: z.string().optional(),
+        })
+      )
+      .optional(),
     constraint_overrides: z
       .record(
         z.string(),
