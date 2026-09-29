@@ -66,6 +66,7 @@ const copy = {
     formalizationBody:
       'QDIP inferred the decision structure, objective candidates, constraints, compiler mappings and decision-time inputs. These remain hypotheses until you confirm them.',
     completeness: 'Formalization completeness',
+    heuristicScore: 'heuristic score',
     decisionVariable: 'Decision variable',
     objectiveCandidates: 'Objective candidates',
     constraintsTitle: 'Inferred constraints',
@@ -244,6 +245,7 @@ const copy = {
     formalizationBody:
       'QDIP сам визначив структуру рішення, варіанти objective, constraints, compiler mappings і decision-time inputs. До підтвердження це гіпотези.',
     completeness: 'Повнота формалізації',
+    heuristicScore: 'евристичний score',
     decisionVariable: 'Decision variable',
     objectiveCandidates: 'Варіанти objective',
     constraintsTitle: 'Виявлені constraints',
@@ -424,6 +426,7 @@ const copy = {
     formalizationBody:
       'QDIP wywnioskował strukturę decyzji, kandydatów celu, ograniczenia, mapowania kompilatora i dane dostępne przed decyzją. Do potwierdzenia są to hipotezy.',
     completeness: 'Kompletność formalizacji',
+    heuristicScore: 'wynik heurystyczny',
     decisionVariable: 'Zmienna decyzyjna',
     objectiveCandidates: 'Kandydaci celu',
     constraintsTitle: 'Wywnioskowane ograniczenia',
@@ -1368,7 +1371,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                           : 'rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-xs text-slate-400'
                       }
                     >
-                      {item.archetype} · {Math.round(item.score * 100)}%
+                      {item.archetype} · {t.heuristicScore} {item.score.toFixed(2)}
                     </span>
                   ))}
                 </div>
@@ -1384,7 +1387,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
                         <div className="font-mono text-sm text-cyan-100">{item.expression}</div>
                         <div className="mt-1 text-[11px] text-slate-500">
-                          {item.kind} · {Math.round(item.score * 100)}% · {item.status}
+                          {item.kind} · {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
                         </div>
                         <details className="mt-3 border-t border-white/10 pt-2">
                           <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
@@ -1471,7 +1474,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                               {item.sense} · {item.expression}
                             </span>
                             <span className="mt-1 block text-[11px] text-slate-500">
-                              {Math.round(item.score * 100)}% · {item.status} ·{' '}
+                              {t.heuristicScore} {item.score.toFixed(2)} · {item.status} ·{' '}
                               {item.supported_compilers.includes('resource_allocation.v1')
                                 ? t.supportedByCompiler
                                 : t.requiresDifferentCompiler}
@@ -1536,7 +1539,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         </span>
                       </div>
                       <div className="mt-1 text-[11px] text-slate-600">
-                        {Math.round(item.score * 100)}% · {item.status}
+                        {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
                       </div>
                       <details className="mt-3 border-t border-white/10 pt-2">
                         <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
