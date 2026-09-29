@@ -550,7 +550,18 @@ test('automatic formalization can be accepted and executed end to end', async ({
       evidence: ['operational input field'],
       status: 'inferred',
     })),
-    questions: [],
+    questions: [
+      {
+        id: 'formalization:compiler-mapping',
+        kind: 'confirm_compiler_mapping',
+        hypothesis_ids: compilerCandidates.map((item) => item.candidate_id),
+        field: null,
+        options: [],
+        score: 1,
+        rationale: 'Verify mappings required by the selected compiler adapter.',
+      },
+    ],
+    discovery_completeness_score: 1,
     completeness_score: 1,
     claim: 'Candidate mathematical formalization only.',
   }
