@@ -180,7 +180,6 @@ describe('Decision Intake API compatibility transport', () => {
         formalization_statuses: {
           'objective:resource_allocation_score': 'user_confirmed',
         },
-        accept_timing_suggestions: true,
       })
     ).rejects.toMatchObject({ status: 409 })
 
