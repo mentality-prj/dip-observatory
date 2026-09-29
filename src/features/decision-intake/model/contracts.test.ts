@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { decisionSufficiencySchema } from './contracts'
+import { decisionSufficiencySchema, sufficiencyQuestionSchema } from './contracts'
 
 describe('Decision Intake sufficiency contract', () => {
   it('parses an identified effect that still requires estimability work', () => {
