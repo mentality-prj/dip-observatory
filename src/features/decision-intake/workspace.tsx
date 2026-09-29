@@ -72,6 +72,8 @@ const copy = {
     acceptFormalization: 'Accept suggested formalization',
     acceptingFormalization: 'Applying formalization…',
     selectObjective: 'Select objective',
+    supportedByCompiler: 'supported by compiler',
+    requiresDifferentCompiler: 'requires another compiler',
     hardConstraint: 'hard',
     softConstraint: 'soft',
     ambiguousConstraint: 'ambiguous',
@@ -231,6 +233,8 @@ const copy = {
     acceptFormalization: 'Прийняти запропоновану formalization',
     acceptingFormalization: 'Застосовую formalization…',
     selectObjective: 'Оберіть objective',
+    supportedByCompiler: 'підтримується compiler',
+    requiresDifferentCompiler: 'потрібен інший compiler',
     hardConstraint: 'hard',
     softConstraint: 'soft',
     ambiguousConstraint: 'ambiguous',
@@ -392,6 +396,8 @@ const copy = {
     acceptFormalization: 'Zaakceptuj proponowaną formalizację',
     acceptingFormalization: 'Stosowanie formalizacji…',
     selectObjective: 'Wybierz cel',
+    supportedByCompiler: 'obsługiwane przez kompilator',
+    requiresDifferentCompiler: 'wymaga innego kompilatora',
     hardConstraint: 'twarde',
     softConstraint: 'miękkie',
     ambiguousConstraint: 'niejednoznaczne',
@@ -517,6 +523,7 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
     if (question.role === 'objective') return t.objectiveQuestion
     if (question.role === 'outcome') return t.outcomeQuestion
   }
+  if (question.kind === 'select_objective') return t.selectObjective
   if (question.kind === 'select_available_fields') return t.availableQuestion
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
   if (question.kind === 'plan_causal_evidence') {
@@ -972,6 +979,12 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const archetype = decisionArchetypeSchema.safeParse(selectedCompilerField)
       if (!archetype.success) return
       body = { archetype: archetype.data }
+    } else if (question.kind === 'select_objective') {
+      body = {
+        formalization_statuses: {
+          [selectedCompilerField]: 'user_confirmed',
+        },
+      }
     } else if (question.role) {
       const role = semanticRoleSchema.safeParse(question.role)
       if (!role.success) return
@@ -1228,7 +1241,10 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                             {item.sense} · {item.expression}
                           </span>
                           <span className="mt-1 block text-[11px] text-slate-500">
-                            {Math.round(item.score * 100)}% · {item.status}
+                            {Math.round(item.score * 100)}% · {item.status} ·{' '}
+                            {item.supported_compilers.includes('resource_allocation.v1')
+                              ? t.supportedByCompiler
+                              : t.requiresDifferentCompiler}
                           </span>
                         </span>
                       </label>
@@ -1619,7 +1635,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       onChange={(event) => setSelectedCompilerField(event.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
                     >
-                      <option value="">{t.chooseField}</option>
+                      <option value="">
+                        {compilationNextQuestion.kind === 'select_objective' ? t.selectObjective : t.chooseField}
+                      </option>
                       {compilationNextQuestion.options.map((field) => (
                         <option key={field} value={field}>
                           {field}
