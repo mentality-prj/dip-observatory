@@ -13,6 +13,17 @@ export const decisionArchetypeSchema = z.enum(['unclassified', 'generic_decision
 export const decisionVariableKindSchema = z.enum(['allocation', 'selection', 'quantity', 'routing', 'generic'])
 export const objectiveSenseSchema = z.enum(['maximize', 'minimize'])
 export const constraintKindSchema = z.enum(['hard', 'soft', 'ambiguous'])
+export const formalizationAssumptionProvenanceSchema = z.enum([
+  'dataset',
+  'business_context',
+  'user_confirmed',
+  'system_default',
+  'compiler_default',
+])
+export const formalizationAssumptionImpactSchema = z.enum([
+  'decision_neutral',
+  'decision_relevant',
+])
 export const decisionTimingSchema = z.enum(['pre_decision', 'post_decision', 'decision_variable', 'ambiguous'])
 export const formalizationQuestionKindSchema = z.enum([
   'confirm_decision_variable',
@@ -163,6 +174,20 @@ export const problemFormalizationSchema = z.object({
       status: semanticStatusSchema,
     })
   ),
+  assumptions: z
+    .array(
+      z.object({
+        id: z.string(),
+        parameter: z.string(),
+        value: z.union([z.number(), z.string(), z.boolean()]).nullable(),
+        provenance: formalizationAssumptionProvenanceSchema,
+        impact: formalizationAssumptionImpactSchema,
+        rationale: z.string(),
+        supported_compilers: z.array(z.string()),
+        status: semanticStatusSchema,
+      })
+    )
+    .default([]),
   timing: z.array(
     z.object({
       field: z.string(),
