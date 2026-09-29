@@ -460,9 +460,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const payload: unknown = await response.json()
       if (!response.ok) {
         const detail =
-          typeof payload === 'object' && payload && 'detail' in payload
-            ? String(payload.detail)
-            : 'Request failed.'
+          typeof payload === 'object' && payload && 'detail' in payload ? String(payload.detail) : 'Request failed.'
         throw new Error(detail)
       }
       const updated = contractResponseSchema.parse(payload)
@@ -500,8 +498,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
     if (question.kind === 'confirm_semantic' && question.field && question.role) {
       body.candidate_statuses = {
-        [`${question.role}:${question.field}`]:
-          action === 'reject' ? 'rejected' : 'user_confirmed',
+        [`${question.role}:${question.field}`]: action === 'reject' ? 'rejected' : 'user_confirmed',
       }
     }
 
@@ -512,10 +509,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     if (question.kind === 'select_available_fields') {
       const selected = new Set(availableFields)
       body.information_availability = Object.fromEntries(
-        question.options.map((field) => [
-          field,
-          selected.has(field) ? 'available' : 'not_available',
-        ])
+        question.options.map((field) => [field, selected.has(field) ? 'available' : 'not_available'])
       )
     }
 
@@ -580,8 +574,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   }
 
   const nextQuestion = analysis?.sufficiency.next_question ?? null
-  const compilationNextQuestion =
-    analysis?.sufficiency.compilation_next_question ?? null
+  const compilationNextQuestion = analysis?.sufficiency.compilation_next_question ?? null
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 text-white md:px-8 md:pt-12">
@@ -689,19 +682,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <div className="mt-5 border-t border-white/10 pt-4">
                 <b className="text-sm">{t.compilerNextStep}</b>
                 <p className="mt-2 text-xs leading-5 text-slate-400">
-                  {compilationNextQuestion.kind === 'select_archetype'
-                    ? t.decisionArchetype
-                    : t.compilerMapping}
+                  {compilationNextQuestion.kind === 'select_archetype' ? t.decisionArchetype : t.compilerMapping}
                   {compilationNextQuestion.role ? (
                     <>
-                      :{' '}
-                      <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
+                      : <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
                     </>
                   ) : null}
                 </p>
-                <p className="mt-1 text-[11px] leading-5 text-slate-600">
-                  {compilationNextQuestion.rationale}
-                </p>
+                <p className="mt-1 text-[11px] leading-5 text-slate-600">{compilationNextQuestion.rationale}</p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                   <select
                     value={selectedCompilerField}
