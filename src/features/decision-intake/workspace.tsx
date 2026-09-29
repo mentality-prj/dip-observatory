@@ -1163,6 +1163,165 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             </article>
           </section>
 
+          {analysis.contract.formalization ? (
+            <section
+              data-testid="decision-intake-formalization"
+              className="mt-6 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.035] p-6 md:p-8"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-3xl">
+                  <h2 className="text-xl font-medium">{t.formalizationTitle}</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{t.formalizationBody}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">{t.completeness}</div>
+                  <div className="mt-1 text-2xl font-medium text-cyan-200">
+                    {Math.round(analysis.contract.formalization.completeness_score * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.decisionVariable}</div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.decision_variables.map((item) => (
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
+                        <div className="font-mono text-sm text-cyan-100">{item.expression}</div>
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {item.kind} · {Math.round(item.score * 100)}% · {item.status}
+                        </div>
+                      </div>
+                    ))}
+                    {!analysis.contract.formalization.decision_variables.length ? (
+                      <div className="text-xs text-amber-200">{t.structuralBlocked}</div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.objectiveCandidates}</div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.objectives.map((item) => (
+                      <label
+                        key={item.id}
+                        className="flex cursor-pointer items-start gap-3 rounded-md border border-white/10 bg-white/[0.025] p-3"
+                      >
+                        <input
+                          type="radio"
+                          name="formalization-objective"
+                          data-testid={`formalization-objective-${item.id}`}
+                          checked={selectedObjectiveId === item.id}
+                          onChange={() => setSelectedObjectiveId(item.id)}
+                          disabled={item.status === 'rejected' || formalizationAccepting}
+                          className="mt-1"
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-sm text-slate-200">
+                            {item.sense} · {item.expression}
+                          </span>
+                          <span className="mt-1 block text-[11px] text-slate-500">
+                            {Math.round(item.score * 100)}% · {item.status}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.constraintsTitle}</div>
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  {analysis.contract.formalization.constraints.map((item) => (
+                    <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-xs">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="leading-5 text-slate-300">{item.expression}</span>
+                        <span
+                          className={
+                            item.kind === 'hard'
+                              ? 'whitespace-nowrap text-rose-200'
+                              : item.kind === 'soft'
+                                ? 'whitespace-nowrap text-amber-200'
+                                : 'whitespace-nowrap text-slate-400'
+                          }
+                        >
+                          {item.kind === 'hard'
+                            ? t.hardConstraint
+                            : item.kind === 'soft'
+                              ? t.softConstraint
+                              : t.ambiguousConstraint}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-600">
+                        {Math.round(item.score * 100)}% · {item.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.compilerMappings}</div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.candidates
+                      .filter((candidate) =>
+                        ['community_id', 'team_id', 'capacity', 'demand', 'service'].includes(candidate.role)
+                      )
+                      .map((candidate) => (
+                        <div key={candidate.candidate_id} className="text-xs leading-5 text-slate-300">
+                          <span className="font-mono text-cyan-100">{candidate.field}</span>
+                          {' → '}
+                          <span>{candidate.role}</span>
+                          {candidate.scope ? (
+                            <span className="text-slate-500">
+                              {' '}
+                              · {t.scopedTo} {candidate.scope.field} ∈ [{candidate.scope.values.join(', ')}]
+                            </span>
+                          ) : null}
+                          <span className="text-slate-600"> · {candidate.status}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.timingSuggestions}</div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    {(['pre_decision', 'post_decision', 'ambiguous'] as const).map((timing) => {
+                      const count = analysis.contract.formalization?.timing.filter((item) => item.timing === timing).length ?? 0
+                      return (
+                        <span key={timing} className="rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-slate-300">
+                          {timing}: <b className="text-white">{count}</b>
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  data-testid="decision-intake-accept-formalization"
+                  disabled={
+                    formalizationAccepting ||
+                    (analysis.contract.formalization.objectives.length > 0 && !selectedObjectiveId)
+                  }
+                  onClick={() => void acceptSuggestedFormalization()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {formalizationAccepting ? t.acceptingFormalization : t.acceptFormalization}
+                </button>
+                <span className="text-xs leading-5 text-slate-500">
+                  {analysis.contract.formalization.claim}
+                </span>
+              </div>
+            </section>
+          ) : null}
+
           <section className="mt-6 rounded-xl border border-cyan-300/20 bg-slate-950/70 p-6 md:p-8">
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 h-5 w-5 text-cyan-300" />
