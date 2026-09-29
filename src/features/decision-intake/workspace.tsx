@@ -616,6 +616,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [formalizationAccepting, setFormalizationAccepting] = useState(false)
   const [compiling, setCompiling] = useState(false)
   const [verificationError, setVerificationError] = useState('')
   const [compileError, setCompileError] = useState('')
@@ -634,6 +635,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalOutcomes, setCausalOutcomes] = useState('')
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState('')
 
   function resetVerification(nextAnalysis?: IntakeAnalysis | null) {
     setCandidateAnswers({})
@@ -644,6 +646,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setCompiled(null)
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
+    setSelectedObjectiveId(nextAnalysis?.contract.formalization?.objectives[0]?.id ?? '')
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -738,6 +741,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               interpretation: {
                 ...current.interpretation,
                 candidates: result.contract.candidates,
+                formalization: result.contract.formalization,
               },
             }
           : current
@@ -749,6 +753,81 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       setVerificationError(t.verificationFailed)
     } finally {
       setVerifying(false)
+    }
+  }
+
+  async function acceptSuggestedFormalization() {
+    if (!analysis?.contract.formalization) return
+    const formalization = analysis.contract.formalization
+    if (formalization.objectives.length && !selectedObjectiveId) return
+
+    setFormalizationAccepting(true)
+    setVerificationError('')
+    setCompileError('')
+    setCompiled(null)
+
+    const formalizationStatuses: Record<string, CandidateChoice> = {}
+    for (const item of formalization.decision_variables) {
+      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+    }
+    for (const item of formalization.objectives) {
+      if (item.id === selectedObjectiveId) {
+        formalizationStatuses[item.id] = 'user_confirmed'
+      }
+    }
+    for (const item of formalization.constraints) {
+      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+    }
+
+    const compilerRoles = new Set(['community_id', 'team_id', 'capacity', 'demand', 'service'])
+    const compilerStatuses: Record<string, CandidateChoice> = {}
+    for (const candidate of analysis.contract.candidates) {
+      if (compilerRoles.has(candidate.role) && candidate.status === 'inferred') {
+        compilerStatuses[candidate.candidate_id] = 'user_confirmed'
+      }
+    }
+
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            formalization_statuses: formalizationStatuses,
+            candidate_statuses_by_id: compilerStatuses,
+            accept_timing_suggestions: true,
+          } satisfies IntakeAnswers),
+        }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setVerificationError(t.verificationFailed)
+        return
+      }
+      const result = contractResponseSchema.parse(payload)
+      setAnalysis((current) =>
+        current
+          ? {
+              ...current,
+              contract: result.contract,
+              evidence_gate: result.evidence_gate,
+              sufficiency: result.sufficiency,
+              interpretation: {
+                ...current.interpretation,
+                candidates: result.contract.candidates,
+                formalization: result.contract.formalization,
+              },
+            }
+          : current
+      )
+      setCandidateAnswers({})
+      setAvailabilityAnswers({})
+      setSemanticMappings([])
+    } catch {
+      setVerificationError(t.verificationFailed)
+    } finally {
+      setFormalizationAccepting(false)
     }
   }
 
@@ -808,6 +887,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               contract: updated.contract,
               evidence_gate: updated.evidence_gate,
               sufficiency: updated.sufficiency,
+              interpretation: {
+                ...current.interpretation,
+                candidates: updated.contract.candidates,
+                formalization: updated.contract.formalization,
+              },
             }
           : current
       )
@@ -833,7 +917,15 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
     const body: IntakeAnswerBody = {}
 
-    if (question.kind === 'confirm_semantic' && question.field && question.role) {
+    if (question.kind === 'confirm_semantic' && question.hypothesis_id) {
+      body.formalization_statuses = {
+        [question.hypothesis_id]: action === 'reject' ? 'rejected' : 'user_confirmed',
+      }
+    } else if (question.kind === 'confirm_semantic' && question.hypothesis_ids.length) {
+      body.formalization_statuses = Object.fromEntries(
+        question.hypothesis_ids.map((id) => [id, action === 'reject' ? 'rejected' : 'user_confirmed'])
+      )
+    } else if (question.kind === 'confirm_semantic' && question.field && question.role) {
       const candidate = analysis.contract.candidates.find(
         (item) => item.field === question.field && item.role === question.role
       )
