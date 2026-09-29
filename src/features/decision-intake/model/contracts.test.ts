@@ -16,6 +16,7 @@ describe('Decision Intake sufficiency contract', () => {
       causal_identifiability: 'identified',
       blockers: [],
       compilation_blockers: ['compiler_role:capacity:not_verified'],
+      compilation_validation_error: null,
       causal_blockers: [],
       statistical_blockers: ['positivity:requires_full_analysis'],
       requirements: [
@@ -217,6 +218,7 @@ describe('Decision Intake sufficiency contract', () => {
           value_field: null,
           score: 0.98,
           evidence: ['community', 'capacity', 'units'],
+          supported_compilers: ['resource_allocation.v1'],
           status: 'inferred',
         },
       ],
@@ -237,10 +239,13 @@ describe('Decision Intake sufficiency contract', () => {
           id: 'constraint:budget',
           kind: 'hard',
           expression: 'total operating cost <= budget',
+          parameter: 'budget',
           field: 'budget',
           operator: '<=',
+          value: null,
           score: 0.96,
           evidence: ['budget'],
+          supported_compilers: ['resource_allocation.v1'],
           status: 'inferred',
         },
       ],
@@ -282,6 +287,32 @@ describe('Decision Intake sufficiency contract', () => {
 
     expect(result.archetype).toBe('constrained_resource_allocation')
     expect(result.accept_timing_suggestions).toBe(true)
+  })
+
+  it('accepts formalization and scope overrides', () => {
+    const result = intakeAnswersSchema.parse({
+      decision_variable_overrides: {
+        'decision_variable:resource_allocation': {
+          expression: 'x[team, community, day] in {0,1}',
+        },
+      },
+      constraint_overrides: {
+        'constraint:budget': {
+          kind: 'hard',
+          operator: '<=',
+          value: 80,
+        },
+      },
+      candidate_scope_overrides: {
+        'semantic:team_id:id': {
+          field: 'record_type',
+          values: ['team'],
+        },
+      },
+    })
+
+    expect(result.constraint_overrides?.['constraint:budget']?.value).toBe(80)
+    expect(result.candidate_scope_overrides?.['semantic:team_id:id']?.values).toEqual(['team'])
   })
 
   it('parses compiler objective reselection questions', () => {
