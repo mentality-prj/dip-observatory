@@ -146,7 +146,7 @@ describe('Decision Intake API compatibility transport', () => {
     vi.stubEnv('DIP_API_BASE_URL', 'https://dip.example')
     vi.stubEnv('DIP_API_KEY', 'secret')
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ detail: 'decision intake session not found' }), {
+      new Response(JSON.stringify({ error: { code: 'http_error', message: 'decision intake session not found' } }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -160,6 +160,29 @@ describe('Decision Intake API compatibility transport', () => {
         },
       })
     ).rejects.toMatchObject({ status: 404 })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('requires Decision Intake v2 for problem formalization verification', async () => {
+    vi.stubEnv('DIP_API_BASE_URL', 'https://dip.example')
+    vi.stubEnv('DIP_API_KEY', 'secret')
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: { code: 'http_error', message: 'Not Found' } }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      submitDecisionIntakeAnswers('legacy', {
+        formalization_statuses: {
+          'objective:resource_allocation_score': 'user_confirmed',
+        },
+        accept_timing_suggestions: true,
+      })
+    ).rejects.toMatchObject({ status: 409 })
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
