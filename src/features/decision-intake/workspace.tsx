@@ -95,6 +95,10 @@ const copy = {
     deferredObligations: 'Obligations requiring full analysis',
     evidenceVerifyQuestion: 'Can independent domain evidence justify absence of latent confounding for {variables}?',
     evidenceRandomizeQuestion: 'Can you collect prospective interventional data for {variables}?',
+    estimabilityQuestion:
+      'The causal effect is identified. Complete the statistical estimability and positivity checks before using it for a decision.',
+    effectEstimability:
+      'This does not change causal identification; it determines whether the identified estimand can be supported by the available data.',
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ПІДГОТОВКА РІШЕННЯ',
@@ -180,6 +184,10 @@ const copy = {
     evidenceVerifyQuestion:
       'Чи підтверджують незалежні domain evidence відсутність latent confounding для {variables}?',
     evidenceRandomizeQuestion: 'Чи можете ви зібрати prospective interventional data для {variables}?',
+    estimabilityQuestion:
+      'Каузальний ефект ідентифікований. Завершіть перевірку statistical estimability та positivity перед використанням у рішенні.',
+    effectEstimability:
+      'Це не змінює causal identification; перевірка визначає, чи можна підтримати identified estimand наявними даними.',
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · PRZYGOTOWANIE DECYZJI',
@@ -263,6 +271,10 @@ const copy = {
     deferredObligations: 'Obowiązki wymagające pełnej analizy',
     evidenceVerifyQuestion: 'Czy niezależne dowody dziedzinowe uzasadniają brak latent confounding dla {variables}?',
     evidenceRandomizeQuestion: 'Czy możesz zebrać prospektywne dane interwencyjne dla {variables}?',
+    estimabilityQuestion:
+      'Efekt przyczynowy jest zidentyfikowany. Ukończ kontrolę estimability i positivity przed użyciem go w decyzji.',
+    effectEstimability:
+      'Nie zmienia to identyfikacji przyczynowej; sprawdza, czy zidentyfikowana estymanda ma wystarczające wsparcie w danych.',
   },
 } as const
 
@@ -297,6 +309,7 @@ function questionEffect(locale: Locale, question: SufficiencyQuestion) {
   if (question.effect === 'makes_structurally_decidable') return t.effectDecidable
   if (question.effect === 'enables_causal_identification_test') return t.effectCausal
   if (question.effect === 'requires_interventional_evidence') return t.effectEvidence
+  if (question.effect === 'enables_estimability_check') return t.effectEstimability
   return t.effectRemoves
 }
 
@@ -802,6 +815,18 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}],
                         inner C-component = [
                         {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
+
+                {nextQuestion.kind === 'assess_estimability' ? (
+                  <div className="mt-4 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-3 text-xs leading-5 text-cyan-50">
+                    <div>{nextQuestion.rationale}</div>
+                    {nextQuestion.evidence_variables.length ? (
+                      <div className="mt-2 font-mono text-[11px] text-cyan-100/70">
+                        {nextQuestion.evidence_variables.join(', ')}
                       </div>
                     ) : null}
                   </div>
