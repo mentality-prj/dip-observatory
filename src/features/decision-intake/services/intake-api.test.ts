@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import { analyzeDecisionDataset, submitDecisionIntakeAnswers } from './intake-api'
+import {
+  analyzeDecisionDataset,
+  executeDecisionIntake,
+  submitDecisionIntakeAnswers,
+} from './intake-api'
 
 const legacyGate = {
   status: 'discovered',
@@ -185,6 +189,33 @@ describe('Decision Intake API compatibility transport', () => {
     ).rejects.toMatchObject({ status: 409 })
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('executes a verified Decision Intake contract through v2', async () => {
+    vi.stubEnv('DIP_API_BASE_URL', 'https://dip.example')
+    vi.stubEnv('DIP_API_KEY', 'secret')
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          archetype: 'constrained_resource_allocation',
+          request: { teams: [], communities: [] },
+          result: { status: 'ok', recommended: { assignments: {} } },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await executeDecisionIntake('verified')
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://dip.example/api/v1/intake/v2/verified/execute'
+    )
+    expect(result.result.status).toBe('ok')
   })
 
   it('requires Decision Intake v2 for human-created semantic mappings', async () => {
