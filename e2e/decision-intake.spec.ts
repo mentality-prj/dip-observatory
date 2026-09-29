@@ -6,6 +6,7 @@ const baseSufficiency = {
   causal_identifiability: 'requires_causal_model',
   blockers: ['role:action:not_verified', 'role:objective:not_verified'],
   compilation_blockers: ['compiler:unsupported_archetype:generic_decision'],
+  compilation_validation_error: null,
   causal_blockers: ['role:outcome:not_verified', 'causal_identification:not_run'],
   statistical_blockers: ['causal_identification:not_ready'],
   requirements: [],
