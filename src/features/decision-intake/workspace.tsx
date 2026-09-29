@@ -773,6 +773,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   async function acceptSuggestedFormalization() {
     if (!analysis?.contract.formalization) return
     const formalization = analysis.contract.formalization
+    const preferredArchetype = formalization.archetype_hypotheses[0]?.archetype
+    if (!preferredArchetype) return
     if (formalization.objectives.length && !selectedObjectiveId) return
 
     setFormalizationAccepting(true)
@@ -814,6 +816,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
+            archetype: preferredArchetype,
             formalization_statuses: formalizationStatuses,
             candidate_statuses_by_id: compilerStatuses,
             accept_timing_suggestions: true,
@@ -1207,6 +1210,26 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   <div className="mt-1 text-2xl font-medium text-cyan-200">
                     {Math.round(analysis.contract.formalization.completeness_score * 100)}%
                   </div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {t.decisionArchetype}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {analysis.contract.formalization.archetype_hypotheses.map((item, index) => (
+                    <span
+                      key={item.archetype}
+                      className={
+                        index === 0
+                          ? 'rounded-md border border-cyan-300/30 bg-cyan-300/10 px-2.5 py-1.5 text-xs text-cyan-100'
+                          : 'rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-xs text-slate-400'
+                      }
+                    >
+                      {item.archetype} · {Math.round(item.score * 100)}%
+                    </span>
+                  ))}
                 </div>
               </div>
 
