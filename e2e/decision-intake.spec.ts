@@ -1,5 +1,49 @@
 import { expect, test } from '@playwright/test'
 
+const baseSufficiency = {
+  structural_status: 'blocked',
+  compilation_status: 'unsupported',
+  causal_identifiability: 'requires_causal_model',
+  blockers: ['role:action:not_verified', 'role:objective:not_verified'],
+  compilation_blockers: ['compiler:unsupported_archetype:generic_decision'],
+  causal_blockers: ['role:outcome:not_verified', 'causal_identification:not_run'],
+  statistical_blockers: ['causal_identification:not_ready'],
+  requirements: [],
+  questions: [],
+  next_question: null,
+  compilation_questions: [],
+  compilation_next_question: null,
+  certificate: {
+    issued: false,
+    scope: 'decision-contract-structural-v2',
+    satisfied_requirements: [],
+    blocking_requirements: ['structural.role.action', 'structural.role.objective'],
+    claim: 'Structural sufficiency is not certified because required evidence is unresolved.',
+  },
+  causal_certificate: null,
+  causal_evidence_plan: null,
+  estimand_requirements: null,
+  empirical_support: null,
+  planner_strategy: 'max-requirement-reduction-per-cost-v1',
+  proof_scope: 'decision-contract-structural-v2',
+}
+
+const readyRaSufficiency = {
+  ...baseSufficiency,
+  structural_status: 'ready',
+  compilation_status: 'ready',
+  blockers: [],
+  compilation_blockers: [],
+  statistical_blockers: [],
+  certificate: {
+    ...baseSufficiency.certificate,
+    issued: true,
+    satisfied_requirements: ['structural.role.action', 'structural.role.objective'],
+    blocking_requirements: [],
+    claim: 'The DecisionContract satisfies the current structural intake requirements.',
+  },
+}
+
 const analysis = {
   schema_version: 2,
   profile: {
@@ -106,6 +150,7 @@ const analysis = {
       params: { field: null, role: null },
     },
   },
+  sufficiency: baseSufficiency,
 }
 
 test('Decision Intake preserves structured AI semantics and localizes them without prose leakage', async ({ page }) => {
@@ -264,6 +309,16 @@ test('human verification can create missing semantics and compile a ready RA con
         params: { field: null, role: null },
       },
     },
+    sufficiency: {
+      ...baseSufficiency,
+      compilation_status: 'blocked',
+      compilation_blockers: [
+        'compiler_role:community_id:not_verified',
+        'compiler_role:team_id:not_verified',
+        'compiler_role:capacity:not_verified',
+        'compiler_role:demand:not_verified',
+      ],
+    },
   }
 
   const verifiedCandidates = [
@@ -330,6 +385,7 @@ test('human verification can create missing semantics and compile a ready RA con
             params: { field: null, role: null },
           },
         },
+        sufficiency: readyRaSufficiency,
       }),
     })
   })
