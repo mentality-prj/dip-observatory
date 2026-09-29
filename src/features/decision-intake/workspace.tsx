@@ -890,20 +890,17 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 </div>
                 {analysis.sufficiency.empirical_support.checked_obligations.length ? (
                   <div className="mt-2 text-[11px] leading-5 text-emerald-200/80">
-                    {t.checkedObligations}:{' '}
-                    {analysis.sufficiency.empirical_support.checked_obligations.join(', ')}
+                    {t.checkedObligations}: {analysis.sufficiency.empirical_support.checked_obligations.join(', ')}
                   </div>
                 ) : null}
                 {analysis.sufficiency.empirical_support.failed_obligations.length ? (
                   <div className="mt-2 text-[11px] leading-5 text-rose-200/80">
-                    {t.failedObligations}:{' '}
-                    {analysis.sufficiency.empirical_support.failed_obligations.join(', ')}
+                    {t.failedObligations}: {analysis.sufficiency.empirical_support.failed_obligations.join(', ')}
                   </div>
                 ) : null}
                 {analysis.sufficiency.empirical_support.deferred_obligations.length ? (
                   <div className="mt-2 text-[11px] leading-5 text-amber-200/80">
-                    {t.deferredObligations}:{' '}
-                    {analysis.sufficiency.empirical_support.deferred_obligations.join(', ')}
+                    {t.deferredObligations}: {analysis.sufficiency.empirical_support.deferred_obligations.join(', ')}
                   </div>
                 ) : null}
               </div>
