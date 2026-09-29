@@ -6,8 +6,10 @@ describe('Decision Intake sufficiency contract', () => {
   it('parses an identified effect that still requires estimability work', () => {
     const result = decisionSufficiencySchema.parse({
       structural_status: 'ready',
+      compilation_status: 'blocked',
       causal_identifiability: 'identified',
       blockers: [],
+      compilation_blockers: ['compiler_role:capacity:not_verified'],
       causal_blockers: [],
       statistical_blockers: ['positivity:requires_full_analysis'],
       requirements: [
