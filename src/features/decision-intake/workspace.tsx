@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { FileUp } from 'lucide-react'
+import { Check, FileUp, Plus, ShieldCheck, Trash2, Wrench, X } from 'lucide-react'
 
+import { FileUploader } from '@/components/file-uploader'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
   contractResponseSchema,
@@ -20,6 +21,12 @@ const copy = {
     context: 'Business context',
     contextHint: 'Describe the recurring decision, objective and operational constraints.',
     file: 'Dataset',
+    drop: 'Drag and drop a file here',
+    dropActive: 'Drop the file to analyze',
+    or: 'or',
+    choose: 'Choose CSV / XLSX / JSON',
+    replace: 'Replace file',
+    fileRequired: 'Choose a dataset before analysis.',
     submit: 'Analyze dataset',
     busy: 'Analyzing…',
     result: 'Interpretation',
@@ -28,6 +35,8 @@ const copy = {
     questions: 'Decision sufficiency',
     gate: 'Evidence gate',
     assumptions: 'Assumptions',
+    legacySemantics: 'Legacy v1 semantics (original wording)',
+    legacySemanticsHint: 'These opaque v1 items are preserved verbatim because they cannot be localized safely.',
     privacy: 'Do not upload unnecessary personal data.',
     structural: 'Structural decision',
     structuralBlocked: 'insufficient',
@@ -114,6 +123,12 @@ const copy = {
     context: 'Бізнес-контекст',
     contextHint: 'Опишіть повторюване рішення, мету та операційні обмеження.',
     file: 'Набір даних',
+    drop: 'Перетягніть файл сюди',
+    dropActive: 'Відпустіть файл, щоб додати його',
+    or: 'або',
+    choose: 'Вибрати CSV / XLSX / JSON',
+    replace: 'Замінити файл',
+    fileRequired: 'Виберіть набір даних перед аналізом.',
     submit: 'Проаналізувати дані',
     busy: 'Аналізую…',
     result: 'Інтерпретація',
@@ -122,6 +137,9 @@ const copy = {
     questions: 'Достатність рішення',
     gate: 'Перевірка доказів',
     assumptions: 'Припущення',
+    legacySemantics: 'Legacy-семантика v1 (оригінальне формулювання)',
+    legacySemanticsHint:
+      'Ці елементи v1 збережено дослівно, оскільки їх неможливо безпечно локалізувати без втрати змісту.',
     privacy: 'Не завантажуйте зайві персональні дані.',
     structural: 'Структура рішення',
     structuralBlocked: 'недостатньо даних',
@@ -210,6 +228,12 @@ const copy = {
     context: 'Kontekst biznesowy',
     contextHint: 'Opisz powtarzalną decyzję, cel i ograniczenia operacyjne.',
     file: 'Zbiór danych',
+    drop: 'Przeciągnij i upuść plik tutaj',
+    dropActive: 'Upuść plik, aby go dodać',
+    or: 'lub',
+    choose: 'Wybierz CSV / XLSX / JSON',
+    replace: 'Zastąp plik',
+    fileRequired: 'Wybierz zbiór danych przed analizą.',
     submit: 'Analizuj dane',
     busy: 'Analizowanie…',
     result: 'Interpretacja',
@@ -218,6 +242,9 @@ const copy = {
     questions: 'Wystarczalność decyzji',
     gate: 'Bramka dowodowa',
     assumptions: 'Założenia',
+    legacySemantics: 'Semantyka legacy v1 (oryginalne brzmienie)',
+    legacySemanticsHint:
+      'Te elementy v1 zachowano dosłownie, ponieważ nie można ich bezpiecznie zlokalizować bez utraty znaczenia.',
     privacy: 'Nie przesyłaj zbędnych danych osobowych.',
     structural: 'Struktura decyzji',
     structuralBlocked: 'niewystarczająca',
@@ -401,6 +428,7 @@ type IntakeAnswerBody = {
 export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [analysis, setAnalysis] = useState<IntakeAnalysis | null>(null)
+  const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [answerBusy, setAnswerBusy] = useState(false)
@@ -413,8 +441,24 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
 
+  function resetVerification(nextAnalysis?: IntakeAnalysis | null) {
+    setCandidateAnswers({})
+    setAvailabilityAnswers({})
+    setSemanticMappings([])
+    setVerificationError('')
+    setCompileError('')
+    setCompiled(null)
+    setMappingRole('action')
+    setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!file) {
+      setError(t.fileRequired)
+      return
+    }
+
     setBusy(true)
     setError('')
     setAnalysis(null)
@@ -428,16 +472,22 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setCausalAssumptionsVerified(false)
     try {
       const form = new FormData(event.currentTarget)
+      form.set('file', file)
       const response = await fetch('/api/decision-intake/analyze', { method: 'POST', body: form })
       const payload: unknown = await response.json()
+
       if (!response.ok) {
-        const detail =
-          typeof payload === 'object' && payload && 'detail' in payload ? String(payload.detail) : 'Request failed.'
-        throw new Error(detail)
+        setError(
+          response.status === 413 ? t.uploadTooLarge : response.status === 422 ? t.invalidDataset : t.requestFailed
+        )
+        return
       }
-      setAnalysis(intakeAnalysisSchema.parse(payload))
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Request failed.')
+
+      const nextAnalysis = intakeAnalysisSchema.parse(payload)
+      setAnalysis(nextAnalysis)
+      resetVerification(nextAnalysis)
+    } catch {
+      setError(t.requestFailed)
     } finally {
       setBusy(false)
     }
@@ -594,23 +644,44 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             className="rounded-lg border border-white/10 bg-slate-900 p-3"
           />
         </label>
-        <label className="grid gap-2 text-sm text-slate-300">
+
+        <div className="grid gap-2 text-sm text-slate-300">
           <span className="font-semibold text-white">{t.file}</span>
-          <input
-            name="file"
-            type="file"
-            required
-            accept=".csv,.xlsx,.json,text/csv,application/json"
-            className="rounded-lg border border-white/10 bg-slate-900 p-3"
+          <FileUploader
+            accept=".csv,.xlsx,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            copy={{
+              drop: t.drop,
+              dropActive: t.dropActive,
+              or: t.or,
+              choose: t.choose,
+              replace: t.replace,
+              busy: t.busy,
+            }}
+            file={file ? { name: file.name, size: file.size } : null}
+            formats="CSV · XLSX · JSON"
+            state={busy ? 'busy' : file ? 'selected' : 'idle'}
+            statusLabel={busy ? t.busy : undefined}
+            disabled={busy}
+            onFile={(nextFile) => {
+              setFile(nextFile)
+              setAnalysis(null)
+              setError('')
+              resetVerification(null)
+            }}
+            tone="cyan"
+            testId="decision-intake-dropzone"
+            fileTestId="decision-intake-file"
           />
-        </label>
+        </div>
+
         <p className="text-xs text-slate-500">{t.privacy}</p>
         <button
-          disabled={busy}
+          disabled={busy || !file}
           className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
         >
           <FileUp className="h-4 w-4" /> {busy ? t.busy : t.submit}
         </button>
+
         {error ? (
           <p role="alert" className="text-sm text-rose-300">
             {error}
@@ -619,24 +690,236 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       </form>
 
       {analysis ? (
-        <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-live="polite">
-          <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
-            <h2 className="text-xl font-medium">{t.result}</h2>
-            <div className="mt-4 flex gap-6 text-sm text-slate-400">
-              <span>
-                {t.rows}: <b className="text-white">{analysis.profile.row_count}</b>
-              </span>
-              <span>
-                {t.columns}: <b className="text-white">{analysis.profile.column_count}</b>
-              </span>
-            </div>
-            <div className="mt-5 grid gap-3">
-              {analysis.interpretation.candidates.map((candidate) => (
-                <div key={`${candidate.field}:${candidate.role}`} className="border-t border-white/10 pt-3 text-sm">
-                  <b>{candidate.field}</b> → <span className="text-cyan-200">{candidate.role}</span>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">{candidate.reason}</p>
+        <>
+          <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-live="polite">
+            <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
+              <h2 className="text-xl font-medium">{t.result}</h2>
+              <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-400">
+                <span>
+                  {t.rows}: <b className="text-white">{analysis.profile.row_count}</b>
+                </span>
+                <span>
+                  {t.columns}: <b className="text-white">{analysis.profile.column_count}</b>
+                </span>
+                <span>
+                  {t.contractVersion}: <b className="text-white">{analysis.contract.version}</b>
+                </span>
+              </div>
+              <div className="mt-5 grid gap-3">
+                {analysis.contract.candidates.map((candidate) => (
+                  <div key={candidate.candidate_id} className="border-t border-white/10 pt-3 text-sm">
+                    <b>{candidate.field}</b> →{' '}
+                    <span className="text-cyan-200">{renderSemanticRole(locale, candidate.role)}</span>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      {renderSemanticReason(locale, candidate.reason)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
+              <h2 className="text-xl font-medium">{t.questions}</h2>
+              <ol className="mt-4 grid gap-3 text-sm text-slate-300">
+                {analysis.interpretation.clarifications.map((item, index) => (
+                  <li key={`${item.code}:${index}`}>{renderClarification(locale, item)}</li>
+                ))}
+              </ol>
+
+              <div className="mt-6 border-t border-white/10 pt-4 text-sm">
+                <b>{t.gate}:</b> <span className="text-cyan-200">{t.gateStatuses[analysis.evidence_gate.status]}</span>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  {renderNextStep(locale, analysis.evidence_gate.recommended_next_step)}
+                </p>
+                {analysis.evidence_gate.missing_evidence.length ? (
+                  <p className="mt-2 text-xs text-amber-200">
+                    {t.missingEvidence}: {analysis.evidence_gate.missing_evidence.join(', ')}
+                  </p>
+                ) : null}
+              </div>
+
+              {analysis.contract.assumptions.length ? (
+                <div className="mt-5">
+                  <b className="text-sm">{t.assumptions}</b>
+                  <ul className="mt-2 text-xs leading-5 text-slate-500">
+                    {analysis.contract.assumptions.map((item, index) => (
+                      <li key={`${item.code}:${index}`}>{renderAssumption(locale, item)}</li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              ) : null}
+
+              {analysis.interpretation.legacy_clarifications.length ||
+              analysis.interpretation.legacy_assumptions.length ||
+              analysis.interpretation.legacy_unknowns.length ||
+              analysis.interpretation.legacy_ambiguities.length ? (
+                <details className="mt-5 border-t border-white/10 pt-4 text-xs text-slate-500">
+                  <summary className="cursor-pointer font-semibold text-slate-300">{t.legacySemantics}</summary>
+                  <p className="mt-2 leading-5">{t.legacySemanticsHint}</p>
+                  <ul className="mt-2 grid gap-1">
+                    {[
+                      ...analysis.interpretation.legacy_clarifications,
+                      ...analysis.interpretation.legacy_assumptions,
+                      ...analysis.interpretation.legacy_unknowns,
+                      ...analysis.interpretation.legacy_ambiguities,
+                    ].map((item, index) => (
+                      <li key={`legacy:${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+            </article>
+          </section>
+
+          <section className="mt-6 rounded-xl border border-cyan-300/20 bg-slate-950/70 p-6 md:p-8">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 h-5 w-5 text-cyan-300" />
+              <div>
+                <h2 className="text-xl font-medium">{t.verificationTitle}</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">{t.verificationBody}</p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold">{t.candidateReview}</h3>
+              {analysis.contract.candidates.length ? (
+                <div className="mt-3 grid gap-3">
+                  {analysis.contract.candidates.map((candidate) => {
+                    const pending = candidateAnswers[candidate.candidate_id]
+                    const confirmed =
+                      pending === 'user_confirmed' ||
+                      (!pending &&
+                        ['user_confirmed', 'data_validated', 'evidence_supported'].includes(candidate.status))
+                    const rejected = pending === 'rejected' || (!pending && candidate.status === 'rejected')
+                    return (
+                      <div
+                        key={candidate.candidate_id}
+                        className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.025] p-4 md:grid-cols-[1fr_auto]"
+                      >
+                        <div className="min-w-0 text-sm">
+                          <b>{candidate.field}</b> →{' '}
+                          <span className="text-cyan-200">{renderSemanticRole(locale, candidate.role)}</span>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                            {renderSemanticReason(locale, candidate.reason)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            data-testid={`confirm-${candidate.candidate_id}`}
+                            onClick={() =>
+                              setCandidateAnswers((current) => ({
+                                ...current,
+                                [candidate.candidate_id]: 'user_confirmed',
+                              }))
+                            }
+                            className={`inline-flex items-center gap-1 border px-3 py-2 text-xs font-semibold ${
+                              confirmed
+                                ? 'border-emerald-300/50 bg-emerald-300/10 text-emerald-200'
+                                : 'border-white/15 text-slate-300'
+                            }`}
+                          >
+                            <Check className="h-3.5 w-3.5" /> {t.confirm}
+                          </button>
+                          <button
+                            type="button"
+                            data-testid={`reject-${candidate.candidate_id}`}
+                            onClick={() =>
+                              setCandidateAnswers((current) => ({
+                                ...current,
+                                [candidate.candidate_id]: 'rejected',
+                              }))
+                            }
+                            className={`inline-flex items-center gap-1 border px-3 py-2 text-xs font-semibold ${
+                              rejected
+                                ? 'border-rose-300/50 bg-rose-300/10 text-rose-200'
+                                : 'border-white/15 text-slate-300'
+                            }`}
+                          >
+                            <X className="h-3.5 w-3.5" /> {t.reject}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">{t.noCandidates}</p>
+              )}
+            </div>
+
+            <div className="mt-7 border-t border-white/10 pt-6">
+              <h3 className="text-sm font-semibold">{t.mappingTitle}</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-500">{t.mappingHint}</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                <label className="grid gap-1 text-xs text-slate-400">
+                  {t.field}
+                  <select
+                    data-testid="decision-intake-mapping-field"
+                    value={mappingField}
+                    onChange={(event) => setMappingField(event.target.value)}
+                    className="border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">—</option>
+                    {analysis.contract.information_set.map((item) => (
+                      <option key={item.field} value={item.field}>
+                        {item.field}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-xs text-slate-400">
+                  {t.role}
+                  <select
+                    data-testid="decision-intake-mapping-role"
+                    value={mappingRole}
+                    onChange={(event) => setMappingRole(event.target.value as SemanticMapping['role'])}
+                    className="border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
+                  >
+                    {semanticRoleSchema.options.map((role) => (
+                      <option key={role} value={role}>
+                        {renderSemanticRole(locale, role)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  data-testid="decision-intake-add-mapping"
+                  disabled={!mappingField}
+                  onClick={addSemanticMapping}
+                  className="mt-auto inline-flex items-center justify-center gap-2 border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100 disabled:opacity-40"
+                >
+                  <Plus className="h-4 w-4" /> {t.addMapping}
+                </button>
+              </div>
+              {semanticMappings.length ? (
+                <div className="mt-4">
+                  <b className="text-xs text-slate-400">{t.pendingMappings}</b>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {semanticMappings.map((mapping) => (
+                      <span
+                        key={`${mapping.field}:${mapping.role}`}
+                        className="inline-flex items-center gap-2 border border-cyan-300/20 bg-cyan-300/[0.06] px-2 py-1 text-xs"
+                      >
+                        {mapping.field} → {renderSemanticRole(locale, mapping.role)}
+                        <button
+                          type="button"
+                          aria-label={t.remove}
+                          onClick={() =>
+                            setSemanticMappings((current) =>
+                              current.filter((item) => !(item.field === mapping.field && item.role === mapping.role))
+                            )
+                          }
+                          className="text-slate-400 hover:text-white"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </article>
 
@@ -1012,18 +1295,28 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             <div className="mt-6 border-t border-white/10 pt-4 text-sm">
               <b>{t.gate}:</b> <span className="text-cyan-200">{analysis.evidence_gate.status}</span>
             </div>
-            {analysis.contract.assumptions.length ? (
-              <div className="mt-5">
-                <b className="text-sm">{t.assumptions}</b>
-                <ul className="mt-2 text-xs leading-5 text-slate-500">
-                  {analysis.contract.assumptions.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+
+            {verificationError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {verificationError}
+              </p>
+            ) : null}
+            {compileError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {compileError}
+              </p>
+            ) : null}
+
+            {compiled ? (
+              <div data-testid="decision-intake-compiled" className="mt-6 border-t border-white/10 pt-5">
+                <h3 className="text-sm font-semibold text-emerald-200">{t.compiledTitle}</h3>
+                <pre className="mt-3 max-h-80 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
+                  {JSON.stringify(compiled.request, null, 2)}
+                </pre>
               </div>
             ) : null}
-          </article>
-        </section>
+          </section>
+        </>
       ) : null}
     </main>
   )
