@@ -496,6 +496,28 @@ test('automatic formalization can be accepted and executed end to end', async ({
         status: 'inferred',
       },
     ],
+    assumptions: [
+      {
+        id: 'assumption:resource_allocation:skills',
+        parameter: 'skills',
+        value: 'all_demand_services',
+        provenance: 'compiler_default',
+        impact: 'decision_relevant',
+        rationale: 'Missing skills require explicit confirmation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+      {
+        id: 'assumption:resource_allocation:travel',
+        parameter: 'travel',
+        value: 'zero_cost_unrestricted',
+        provenance: 'compiler_default',
+        impact: 'decision_relevant',
+        rationale: 'Missing travel graph requires explicit confirmation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+    ],
     constraints: [
       {
         id: 'constraint:budget',
@@ -556,6 +578,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
     decision_variables: formalization.decision_variables.map((item) => ({ ...item, status: 'user_confirmed' })),
     objectives: formalization.objectives.map((item) => ({ ...item, status: 'user_confirmed' })),
     constraints: formalization.constraints.map((item) => ({ ...item, status: 'user_confirmed' })),
+    assumptions: formalization.assumptions.map((item) => ({ ...item, status: 'user_confirmed' })),
     timing: formalization.timing.map((item) => ({ ...item, status: 'user_confirmed' })),
   }
   const verifiedContract = {
@@ -588,6 +611,8 @@ test('automatic formalization can be accepted and executed end to end', async ({
       'decision_variable:resource_allocation': 'user_confirmed',
       'objective:resource_allocation_score': 'user_confirmed',
       'constraint:budget': 'user_confirmed',
+      'assumption:resource_allocation:skills': 'user_confirmed',
+      'assumption:resource_allocation:travel': 'user_confirmed',
     })
     expect(body.candidate_statuses_by_id).toEqual({
       'semantic:community_id:community': 'user_confirmed',
@@ -657,6 +682,8 @@ test('automatic formalization can be accepted and executed end to end', async ({
 
   await expect(page.getByTestId('decision-intake-formalization')).toBeVisible()
   await expect(page.getByText(/1000\*priority_coverage/)).toBeVisible()
+  await expect(page.getByText('skills = all_demand_services')).toBeVisible()
+  await expect(page.getByText('travel = zero_cost_unrestricted')).toBeVisible()
   await page.getByTestId('decision-intake-accept-formalization').click()
 
   await expect(page.getByTestId('decision-intake-execute')).toBeVisible()
