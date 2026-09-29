@@ -153,6 +153,13 @@ export const intakeAnalysisSchema = z.object({
 })
 export const contractResponseSchema = z.object({ contract: decisionContractSchema, evidence_gate: evidenceGateSchema })
 
+export const intakeAnswersSchema = z
+  .object({
+    candidate_statuses_by_id: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
+    information_availability: z.record(z.string(), availabilitySchema).optional(),
+  })
+  .strict()
+
 const legacyCandidateSchema = z.object({
   field: z.string(),
   role: z.string(),
@@ -324,3 +331,5 @@ export type EvidenceReason = z.infer<typeof evidenceReasonSchema>
 export type NextStep = z.infer<typeof nextStepSchema>
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
+export type IntakeAnswers = z.infer<typeof intakeAnswersSchema>
+export type CompiledResourceAllocation = z.infer<typeof compiledResourceAllocationSchema>
