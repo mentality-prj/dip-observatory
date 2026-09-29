@@ -188,6 +188,9 @@ export const empiricalSupportSchema = z.object({
   treatment_levels: z.record(z.string(), z.number().int().nonnegative()),
   checked_strata: z.number().int().nonnegative(),
   missing_strata: z.array(z.string()),
+  checked_obligations: z.array(z.string()),
+  failed_obligations: z.array(z.string()),
+  deferred_obligations: z.array(z.string()),
   claim: z.string(),
 })
 
