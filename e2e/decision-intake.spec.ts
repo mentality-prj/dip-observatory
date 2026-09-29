@@ -161,3 +161,40 @@ test('Decision Intake preserves structured AI semantics and localizes them witho
   await expect(page.getByText(/assumption\./)).toHaveCount(0)
   await expect(page.getByText(/next_step\./)).toHaveCount(0)
 })
+
+
+test('legacy Decision Intake semantics remain available without leaking into the primary localized flow', async ({ page }) => {
+  const legacyAnalysis = {
+    ...analysis,
+    interpretation: {
+      ...analysis.interpretation,
+      legacy_clarifications: ['Custom AI clarification?'],
+      legacy_assumptions: ['Custom legacy assumption'],
+      legacy_unknowns: [],
+      legacy_ambiguities: [],
+    },
+  }
+
+  await page.route('**/api/decision-intake/analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(legacyAnalysis),
+    })
+  })
+
+  await page.goto('/uk/decision-intake')
+  const dropzone = page.getByTestId('decision-intake-dropzone')
+  const csv = ['action,capacity,outcome', 'keep,10,8'].join('\n')
+  await dropzone.evaluate((element, contents) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([contents], 'decision.csv', { type: 'text/csv' }))
+    element.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
+  }, csv)
+  await page.getByRole('button', { name: 'Проаналізувати дані' }).click()
+
+  await expect(page.getByText('Custom AI clarification?')).toHaveCount(0)
+  await page.getByText('Legacy-семантика v1 (оригінальне формулювання)').click()
+  await expect(page.getByText('Custom AI clarification?')).toBeVisible()
+  await expect(page.getByText('Custom legacy assumption')).toBeVisible()
+})
