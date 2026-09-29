@@ -91,7 +91,7 @@ export async function submitDecisionIntakeAnswers(
     formalization_statuses?: Record<string, 'user_confirmed' | 'rejected'>
     accept_timing_suggestions?: boolean
     semantic_mappings?: Array<{ field: string; role: string }>
-    archetype?: 'generic_decision' | 'constrained_resource_allocation'
+    archetype?: 'unclassified' | 'generic_decision' | 'constrained_resource_allocation'
     causal_specification?: CausalSpecification
   }
 ): Promise<ContractResponse> {
