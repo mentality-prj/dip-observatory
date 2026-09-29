@@ -107,6 +107,13 @@ const copy = {
     executionFailed: 'Decision execution failed.',
     executedTitle: 'QDIP decision result',
     preflightError: 'Compiler preflight',
+    editFormalization: 'Edit exception',
+    saveOverride: 'Save override',
+    expression: 'Expression',
+    operator: 'Operator',
+    value: 'Value',
+    scopeField: 'Scope field',
+    scopeValues: 'Scope values (comma-separated)',
     noCandidates: 'No semantic hypotheses were proposed. Add the required mappings manually.',
     gateStatuses: {
       no_opportunity: 'No opportunity',
@@ -274,6 +281,13 @@ const copy = {
     executionFailed: 'Не вдалося виконати рішення.',
     executedTitle: 'Результат рішення QDIP',
     preflightError: 'Compiler preflight',
+    editFormalization: 'Редагувати виняток',
+    saveOverride: 'Зберегти override',
+    expression: 'Вираз',
+    operator: 'Оператор',
+    value: 'Значення',
+    scopeField: 'Поле scope',
+    scopeValues: 'Значення scope через кому',
     noCandidates: 'Семантичних гіпотез немає. Додайте потрібні зіставлення вручну.',
     gateStatuses: {
       no_opportunity: 'Немає можливості',
@@ -443,6 +457,13 @@ const copy = {
     executionFailed: 'Wykonanie decyzji nie powiodło się.',
     executedTitle: 'Wynik decyzji QDIP',
     preflightError: 'Compiler preflight',
+    editFormalization: 'Edytuj wyjątek',
+    saveOverride: 'Zapisz nadpisanie',
+    expression: 'Wyrażenie',
+    operator: 'Operator',
+    value: 'Wartość',
+    scopeField: 'Pole zakresu',
+    scopeValues: 'Wartości zakresu (po przecinku)',
     noCandidates: 'Brak hipotez semantycznych. Dodaj wymagane mapowania ręcznie.',
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
@@ -968,6 +989,55 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     }
   }
 
+  async function overrideDecisionVariable(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const expression = String(form.get('expression') ?? '').trim()
+    if (!expression) return
+    await submitAnswerPayload({
+      decision_variable_overrides: {
+        [id]: { expression },
+      },
+    })
+  }
+
+  async function overrideConstraint(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const rawValue = String(form.get('value') ?? '').trim()
+    let value: string | number | boolean | undefined
+    if (rawValue) {
+      if (rawValue === 'true' || rawValue === 'false') value = rawValue === 'true'
+      else if (!Number.isNaN(Number(rawValue))) value = Number(rawValue)
+      else value = rawValue
+    }
+    await submitAnswerPayload({
+      constraint_overrides: {
+        [id]: {
+          kind: String(form.get('kind') ?? 'hard') as 'hard' | 'soft' | 'ambiguous',
+          operator: String(form.get('operator') ?? '').trim() || undefined,
+          expression: String(form.get('expression') ?? '').trim() || undefined,
+          value,
+        },
+      },
+    })
+  }
+
+  async function overrideCandidateScope(event: FormEvent<HTMLFormElement>, candidateId: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const field = String(form.get('scopeField') ?? '').trim()
+    const values = String(form.get('scopeValues') ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    await submitAnswerPayload({
+      candidate_scope_overrides: {
+        [candidateId]: field && values.length ? { field, values } : null,
+      },
+    })
+  }
+
   async function applyAnswer(action?: 'confirm' | 'reject') {
     const question = analysis?.sufficiency.next_question
     if (
@@ -1286,6 +1356,27 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         <div className="mt-1 text-[11px] text-slate-500">
                           {item.kind} · {Math.round(item.score * 100)}% · {item.status}
                         </div>
+                        <details className="mt-3 border-t border-white/10 pt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                          <form
+                            className="mt-2 flex gap-2"
+                            onSubmit={(event) => void overrideDecisionVariable(event, item.id)}
+                          >
+                            <input
+                              name="expression"
+                              defaultValue={item.expression}
+                              aria-label={t.expression}
+                              className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                            <button
+                              type="submit"
+                              disabled={answerBusy}
+                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                            >
+                              {t.saveOverride}
+                            </button>
+                          </form>
+                        </details>
                         <div className="mt-3 flex gap-2">
                           <button
                             type="button"
@@ -1390,6 +1481,50 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       <div className="mt-1 text-[11px] text-slate-600">
                         {Math.round(item.score * 100)}% · {item.status}
                       </div>
+                      <details className="mt-3 border-t border-white/10 pt-2">
+                        <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                        <form
+                          className="mt-2 grid gap-2"
+                          onSubmit={(event) => void overrideConstraint(event, item.id)}
+                        >
+                          <div className="grid grid-cols-2 gap-2">
+                            <select
+                              name="kind"
+                              defaultValue={item.kind}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            >
+                              <option value="hard">{t.hardConstraint}</option>
+                              <option value="soft">{t.softConstraint}</option>
+                              <option value="ambiguous">{t.ambiguousConstraint}</option>
+                            </select>
+                            <input
+                              name="operator"
+                              defaultValue={item.operator ?? ''}
+                              placeholder={t.operator}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                          </div>
+                          <input
+                            name="value"
+                            defaultValue={item.value == null ? '' : String(item.value)}
+                            placeholder={t.value}
+                            className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                          />
+                          <input
+                            name="expression"
+                            defaultValue={item.expression}
+                            placeholder={t.expression}
+                            className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                          />
+                          <button
+                            type="submit"
+                            disabled={answerBusy}
+                            className="w-fit border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                          >
+                            {t.saveOverride}
+                          </button>
+                        </form>
+                      </details>
                       <div className="mt-3 flex gap-2">
                         <button
                           type="button"
@@ -1451,6 +1586,33 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                             </span>
                           ) : null}
                           <span className="text-slate-600"> · {candidate.status}</span>
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-[11px] text-slate-500">{t.editFormalization}</summary>
+                            <form
+                              className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+                              onSubmit={(event) => void overrideCandidateScope(event, candidate.candidate_id)}
+                            >
+                              <input
+                                name="scopeField"
+                                defaultValue={candidate.scope?.field ?? ''}
+                                placeholder={t.scopeField}
+                                className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                              />
+                              <input
+                                name="scopeValues"
+                                defaultValue={candidate.scope?.values.join(', ') ?? ''}
+                                placeholder={t.scopeValues}
+                                className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={answerBusy}
+                                className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                              >
+                                {t.saveOverride}
+                              </button>
+                            </form>
+                          </details>
                         </div>
                       ))}
                   </div>
