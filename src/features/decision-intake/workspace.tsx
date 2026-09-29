@@ -994,6 +994,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     if (!Object.keys(body).length) return
 
     if (await submitAnswerPayload(body)) {
+      if (question.kind === 'select_objective') {
+        setSelectedObjectiveId(selectedCompilerField)
+      }
       setSelectedCompilerField('')
     }
   }
