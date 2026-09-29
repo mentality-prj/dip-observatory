@@ -36,6 +36,8 @@ const copy = {
     questions: 'Questions to verify',
     gate: 'Evidence gate',
     assumptions: 'Assumptions',
+    legacySemantics: 'Legacy v1 semantics (original wording)',
+    legacySemanticsHint: 'These opaque v1 items are preserved verbatim because they cannot be localized safely.',
     privacy: 'Do not upload unnecessary personal data.',
     requestFailed: 'Decision Intake request failed.',
     invalidDataset: 'The dataset could not be analyzed. Check its structure and values.',
@@ -71,6 +73,8 @@ const copy = {
     questions: 'Питання для перевірки',
     gate: 'Перевірка доказів',
     assumptions: 'Припущення',
+    legacySemantics: 'Legacy-семантика v1 (оригінальне формулювання)',
+    legacySemanticsHint: 'Ці елементи v1 збережено дослівно, оскільки їх неможливо безпечно локалізувати без втрати змісту.',
     privacy: 'Не завантажуйте зайві персональні дані.',
     requestFailed: 'Не вдалося виконати запит Decision Intake.',
     invalidDataset: 'Набір даних не вдалося проаналізувати. Перевірте його структуру та значення.',
@@ -106,6 +110,8 @@ const copy = {
     questions: 'Pytania do weryfikacji',
     gate: 'Bramka dowodowa',
     assumptions: 'Założenia',
+    legacySemantics: 'Semantyka legacy v1 (oryginalne brzmienie)',
+    legacySemanticsHint: 'Te elementy v1 zachowano dosłownie, ponieważ nie można ich bezpiecznie zlokalizować bez utraty znaczenia.',
     privacy: 'Nie przesyłaj zbędnych danych osobowych.',
     requestFailed: 'Nie udało się wykonać żądania Decision Intake.',
     invalidDataset: 'Nie udało się przeanalizować zbioru. Sprawdź jego strukturę i wartości.',
@@ -272,6 +278,26 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   ))}
                 </ul>
               </div>
+            ) : null}
+
+            {analysis.interpretation.legacy_clarifications.length ||
+            analysis.interpretation.legacy_assumptions.length ||
+            analysis.interpretation.legacy_unknowns.length ||
+            analysis.interpretation.legacy_ambiguities.length ? (
+              <details className="mt-5 border-t border-white/10 pt-4 text-xs text-slate-500">
+                <summary className="cursor-pointer font-semibold text-slate-300">{t.legacySemantics}</summary>
+                <p className="mt-2 leading-5">{t.legacySemanticsHint}</p>
+                <ul className="mt-2 grid gap-1">
+                  {[
+                    ...analysis.interpretation.legacy_clarifications,
+                    ...analysis.interpretation.legacy_assumptions,
+                    ...analysis.interpretation.legacy_unknowns,
+                    ...analysis.interpretation.legacy_ambiguities,
+                  ].map((item, index) => (
+                    <li key={`legacy:${index}`}>{item}</li>
+                  ))}
+                </ul>
+              </details>
             ) : null}
           </article>
         </section>
