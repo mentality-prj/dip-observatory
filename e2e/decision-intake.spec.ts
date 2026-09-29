@@ -517,6 +517,16 @@ test('automatic formalization can be accepted and executed end to end', async ({
         supported_compilers: ['resource_allocation.v1'],
         status: 'inferred',
       },
+      {
+        id: 'assumption:resource_allocation:operation',
+        parameter: 'operation',
+        value: 'optimize',
+        provenance: 'system_default',
+        impact: 'decision_neutral',
+        rationale: 'Optimize is the selected Decision Intake adapter operation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
     ],
     constraints: [
       {
@@ -578,7 +588,10 @@ test('automatic formalization can be accepted and executed end to end', async ({
     decision_variables: formalization.decision_variables.map((item) => ({ ...item, status: 'user_confirmed' })),
     objectives: formalization.objectives.map((item) => ({ ...item, status: 'user_confirmed' })),
     constraints: formalization.constraints.map((item) => ({ ...item, status: 'user_confirmed' })),
-    assumptions: formalization.assumptions.map((item) => ({ ...item, status: 'user_confirmed' })),
+    assumptions: formalization.assumptions.map((item) => ({
+      ...item,
+      status: item.impact === 'decision_relevant' ? 'user_confirmed' : 'inferred',
+    })),
     timing: formalization.timing.map((item) => ({ ...item, status: 'user_confirmed' })),
   }
   const verifiedContract = {
@@ -684,6 +697,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
   await expect(page.getByText(/1000\*priority_coverage/)).toBeVisible()
   await expect(page.getByText('skills = all_demand_services')).toBeVisible()
   await expect(page.getByText('travel = zero_cost_unrestricted')).toBeVisible()
+  await expect(page.getByText('operation = optimize')).toBeVisible()
   await page.getByTestId('decision-intake-accept-formalization').click()
 
   await expect(page.getByTestId('decision-intake-execute')).toBeVisible()
