@@ -81,10 +81,11 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
 export async function submitDecisionIntakeAnswers(
   sessionId: string,
   input: {
-    candidate_statuses?: Record<string, string>
-    information_availability?: Record<string, string>
-    semantic_mappings?: Record<string, string>
-    archetype?: string
+    candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
+    candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
+    information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
+    semantic_mappings?: Array<{ field: string; role: string }>
+    archetype?: 'generic_decision' | 'constrained_resource_allocation'
     causal_specification?: CausalSpecification
   }
 ): Promise<ContractResponse> {
@@ -105,8 +106,11 @@ export async function submitDecisionIntakeAnswers(
     if (!isMissingV2Route(error)) throw error
   }
 
-  if (input.semantic_mappings?.length) {
-    throw new DecisionIntakeApiError('Human semantic mapping requires Decision Intake v2.', 409)
+  if (input.semantic_mappings?.length || input.archetype || input.causal_specification) {
+    throw new DecisionIntakeApiError(
+      'Semantic mappings, archetype selection, and causal specification require Decision Intake v2.',
+      409
+    )
   }
 
   const legacyContract = normalizeContractResponse(await request(`/${encoded}/contract`))
