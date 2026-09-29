@@ -498,7 +498,6 @@ export const intakeAnswersSchema = z
       )
       .optional(),
     candidate_scope_overrides: z.record(z.string(), semanticScopeSchema.nullable()).optional(),
-    accept_timing_suggestions: z.boolean().optional(),
     candidate_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     semantic_mappings: z
       .array(
