@@ -184,5 +184,4 @@ describe('Decision Intake sufficiency contract', () => {
     expect(result.kind).toBe('select_archetype')
     expect(result.options).toEqual(['constrained_resource_allocation'])
   })
-
 })
