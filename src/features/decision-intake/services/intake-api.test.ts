@@ -141,4 +141,27 @@ describe('Decision Intake API compatibility transport', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
+
+  it('does not treat a missing v2 session as a missing route', async () => {
+    vi.stubEnv('DIP_API_BASE_URL', 'https://dip.example')
+    vi.stubEnv('DIP_API_KEY', 'secret')
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ detail: 'decision intake session not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      submitDecisionIntakeAnswers('missing', {
+        candidate_statuses_by_id: {
+          'semantic:action:action': 'user_confirmed',
+        },
+      })
+    ).rejects.toMatchObject({ status: 404 })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
 })
