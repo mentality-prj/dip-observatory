@@ -4,10 +4,11 @@ import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 import {
   compiledResourceAllocationSchema,
+  executedDecisionIntakeSchema,
   normalizeContractResponse,
   normalizeIntakeAnalysis,
 } from '../model/contracts'
-import type { CausalSpecification, ContractResponse, IntakeAnalysis } from '../model/contracts'
+import type { CausalSpecification, ContractResponse, IntakeAnalysis, IntakeAnswers } from '../model/contracts'
 
 export class DecisionIntakeApiError extends Error {
   constructor(
@@ -84,16 +85,7 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
 
 export async function submitDecisionIntakeAnswers(
   sessionId: string,
-  input: {
-    candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
-    candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
-    information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
-    formalization_statuses?: Record<string, 'user_confirmed' | 'rejected'>
-    accept_timing_suggestions?: boolean
-    semantic_mappings?: Array<{ field: string; role: string }>
-    archetype?: 'unclassified' | 'generic_decision' | 'constrained_resource_allocation'
-    causal_specification?: CausalSpecification
-  }
+  input: IntakeAnswers
 ): Promise<ContractResponse> {
   if (input.candidate_statuses_by_id && input.candidate_statuses) {
     throw new DecisionIntakeApiError('Use one semantic confirmation identity mode.', 422)
@@ -117,6 +109,9 @@ export async function submitDecisionIntakeAnswers(
     input.archetype ||
     input.causal_specification ||
     Object.keys(input.formalization_statuses ?? {}).length ||
+    Object.keys(input.decision_variable_overrides ?? {}).length ||
+    Object.keys(input.constraint_overrides ?? {}).length ||
+    Object.keys(input.candidate_scope_overrides ?? {}).length ||
     input.accept_timing_suggestions
   ) {
     throw new DecisionIntakeApiError(
@@ -176,5 +171,15 @@ export async function compileDecisionIntake(sessionId: string) {
   const encoded = encodeURIComponent(sessionId)
   return compiledResourceAllocationSchema.parse(
     await requestV2WithFallback(`/v2/${encoded}/compile`, `/${encoded}/compile`, { method: 'POST' })
+  )
+}
+
+
+export async function executeDecisionIntake(sessionId: string) {
+  const encoded = encodeURIComponent(sessionId)
+  return executedDecisionIntakeSchema.parse(
+    await requestV2WithFallback(`/v2/${encoded}/execute`, `/${encoded}/execute`, {
+      method: 'POST',
+    })
   )
 }
