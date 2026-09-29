@@ -176,7 +176,7 @@ export const problemFormalizationSchema = z.object({
       z.object({
         id: z.string(),
         parameter: z.string(),
-        value: z.union([z.number(), z.string(), z.boolean()]).nullable(),
+        value: z.unknown(),
         provenance: formalizationAssumptionProvenanceSchema,
         impact: formalizationAssumptionImpactSchema,
         rationale: z.string(),
@@ -207,6 +207,7 @@ export const problemFormalizationSchema = z.object({
       })
     )
     .max(12),
+  discovery_completeness_score: z.number().min(0).max(1).default(0),
   completeness_score: z.number().min(0).max(1),
   claim: z.string(),
 })
@@ -494,6 +495,14 @@ export const intakeAnswersSchema = z
           expression: z.string().optional(),
           operator: z.string().optional(),
           value: z.union([z.number(), z.string(), z.boolean()]).optional(),
+        })
+      )
+      .optional(),
+    assumption_overrides: z
+      .record(
+        z.string(),
+        z.object({
+          value: z.unknown(),
         })
       )
       .optional(),
