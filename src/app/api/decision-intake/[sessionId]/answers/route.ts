@@ -1,30 +1,30 @@
 import { NextResponse } from 'next/server'
 
 import {
+  assertDecisionIntakeSameOrigin,
+  DecisionIntakeAccessError,
   DecisionIntakeApiError,
+  intakeAnswersSchema,
   submitDecisionIntakeAnswers,
-  type CausalSpecification,
 } from '@/features/decision-intake/server'
 
 export const runtime = 'nodejs'
 
-type AnswerPayload = {
-  candidate_statuses?: Record<string, string>
-  information_availability?: Record<string, string>
-  semantic_mappings?: Record<string, string>
-  archetype?: string
-  causal_specification?: CausalSpecification
-}
-
 export async function POST(request: Request, context: { params: Promise<{ sessionId: string }> }) {
   try {
+    assertDecisionIntakeSameOrigin(request)
     const { sessionId } = await context.params
-    const payload = (await request.json()) as AnswerPayload
-    const result = await submitDecisionIntakeAnswers(sessionId, payload)
-    return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store' } })
+    const input = intakeAnswersSchema.parse(await request.json())
+    return NextResponse.json(await submitDecisionIntakeAnswers(sessionId, input), {
+      headers: { 'Cache-Control': 'no-store' },
+    })
   } catch (error) {
-    const status = error instanceof DecisionIntakeApiError ? error.status : 500
-    const detail = error instanceof Error ? error.message : 'Decision Intake answer failed.'
-    return NextResponse.json({ detail }, { status })
+    if (error instanceof DecisionIntakeAccessError) {
+      return NextResponse.json({ detail: error.message }, { status: error.status })
+    }
+    if (error instanceof DecisionIntakeApiError) {
+      return NextResponse.json({ detail: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ detail: 'Invalid Decision Intake verification request.' }, { status: 422 })
   }
 }
