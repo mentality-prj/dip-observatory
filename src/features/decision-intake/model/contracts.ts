@@ -9,7 +9,7 @@ export const semanticStatusSchema = z.enum([
 ])
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
 export const contractValidationStatusSchema = z.enum(['inferred', 'needs_review', 'verified'])
-export const decisionArchetypeSchema = z.enum(['generic_decision', 'constrained_resource_allocation'])
+export const decisionArchetypeSchema = z.enum(['unclassified', 'generic_decision', 'constrained_resource_allocation'])
 export const decisionVariableKindSchema = z.enum(['allocation', 'selection', 'quantity', 'routing', 'generic'])
 export const objectiveSenseSchema = z.enum(['maximize', 'minimize'])
 export const constraintKindSchema = z.enum(['hard', 'soft', 'ambiguous'])
