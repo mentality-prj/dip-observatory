@@ -39,6 +39,7 @@ export const semanticReasonCodeSchema = z.enum([
   'semantic_reason.field_name_match',
   'semantic_reason.data_profile_match',
   'semantic_reason.business_context_match',
+  'semantic_reason.user_selection',
 ])
 export const semanticAssumptionCodeSchema = z.enum([
   'assumption.business_semantics_require_confirmation',
@@ -157,6 +158,17 @@ export const intakeAnswersSchema = z
   .object({
     candidate_statuses_by_id: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     information_availability: z.record(z.string(), availabilitySchema).optional(),
+    semantic_mappings: z
+      .array(
+        z
+          .object({
+            field: z.string(),
+            role: semanticRoleSchema,
+          })
+          .strict()
+      )
+      .max(50)
+      .optional(),
   })
   .strict()
 
