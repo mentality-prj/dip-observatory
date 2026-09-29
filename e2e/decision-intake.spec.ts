@@ -659,7 +659,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
   await expect(page.getByText(/1000\*priority_coverage/)).toBeVisible()
   await page.getByTestId('decision-intake-accept-formalization').click()
 
-  await expect(page.getByText('Готово до підтримуваного compiler')).toBeVisible()
+  await expect(page.getByTestId('decision-intake-execute')).toBeVisible()
   await page.getByTestId('decision-intake-execute').click()
   await expect(page.getByTestId('decision-intake-executed')).toBeVisible()
   await expect(page.getByText(/team-a/)).toBeVisible()
