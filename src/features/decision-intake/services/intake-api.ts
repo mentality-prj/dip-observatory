@@ -46,8 +46,12 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   if (!response.ok) {
     let detail = `Decision Intake failed with status ${response.status}`
     try {
-      const payload = (await response.json()) as { detail?: string }
+      const payload = (await response.json()) as {
+        detail?: string
+        error?: { message?: string }
+      }
       if (payload.detail) detail = payload.detail
+      else if (payload.error?.message) detail = payload.error.message
     } catch {
       // Preserve the status-derived error without exposing upstream response bodies.
     }
@@ -84,6 +88,8 @@ export async function submitDecisionIntakeAnswers(
     candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
     candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
     information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
+    formalization_statuses?: Record<string, 'user_confirmed' | 'rejected'>
+    accept_timing_suggestions?: boolean
     semantic_mappings?: Array<{ field: string; role: string }>
     archetype?: 'generic_decision' | 'constrained_resource_allocation'
     causal_specification?: CausalSpecification
@@ -106,9 +112,15 @@ export async function submitDecisionIntakeAnswers(
     if (!isMissingV2Route(error)) throw error
   }
 
-  if (input.semantic_mappings?.length || input.archetype || input.causal_specification) {
+  if (
+    input.semantic_mappings?.length ||
+    input.archetype ||
+    input.causal_specification ||
+    Object.keys(input.formalization_statuses ?? {}).length ||
+    input.accept_timing_suggestions
+  ) {
     throw new DecisionIntakeApiError(
-      'Semantic mappings, archetype selection, and causal specification require Decision Intake v2.',
+      'Problem formalization, semantic mappings, archetype selection, and causal specification require Decision Intake v2.',
       409
     )
   }
