@@ -72,6 +72,10 @@ const copy = {
     constraintsTitle: 'Inferred constraints',
     compilerMappings: 'Compiler mappings',
     timingSuggestions: 'Decision-time suggestions',
+    timingReviewHint:
+      'Review the concrete fields below. Confirming them marks only the visible pre/post suggestions as human-verified.',
+    timingReviewConfirm: 'I reviewed these decision-time suggestions',
+    timingAmbiguous: 'Ambiguous timing is never accepted automatically; classify those fields manually below.',
     defaultAssumptions: 'Default assumptions',
     decisionRelevant: 'decision-relevant',
     decisionNeutral: 'decision-neutral',
@@ -251,6 +255,10 @@ const copy = {
     constraintsTitle: 'Виявлені constraints',
     compilerMappings: 'Compiler mappings',
     timingSuggestions: 'Припущення про decision-time',
+    timingReviewHint:
+      'Перегляньте конкретні поля нижче. Підтвердження позначить як перевірені людиною лише видимі pre/post suggestions.',
+    timingReviewConfirm: 'Я переглянув ці decision-time suggestions',
+    timingAmbiguous: 'Ambiguous timing не підтверджується автоматично; класифікуйте такі поля вручну нижче.',
     defaultAssumptions: 'Default assumptions',
     decisionRelevant: 'впливає на рішення',
     decisionNeutral: 'нейтральне для optimize',
@@ -432,6 +440,10 @@ const copy = {
     constraintsTitle: 'Wywnioskowane ograniczenia',
     compilerMappings: 'Mapowania kompilatora',
     timingSuggestions: 'Sugestie dostępności w czasie decyzji',
+    timingReviewHint:
+      'Sprawdź konkretne pola poniżej. Potwierdzenie oznaczy jako zweryfikowane tylko widoczne sugestie pre/post.',
+    timingReviewConfirm: 'Sprawdziłem te sugestie czasu decyzji',
+    timingAmbiguous: 'Niejednoznaczny timing nie jest akceptowany automatycznie; sklasyfikuj te pola ręcznie poniżej.',
     defaultAssumptions: 'Założenia domyślne',
     decisionRelevant: 'wpływa na decyzję',
     decisionNeutral: 'neutralne dla optimize',
@@ -704,6 +716,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
   const [selectedObjectiveId, setSelectedObjectiveId] = useState('')
+  const [timingReviewed, setTimingReviewed] = useState(false)
 
   function resetVerification(nextAnalysis?: IntakeAnalysis | null) {
     setCandidateAnswers({})
@@ -717,6 +730,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
     setSelectedObjectiveId(nextAnalysis?.contract.formalization?.objectives[0]?.id ?? '')
+    setTimingReviewed(false)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -833,6 +847,24 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     const preferredArchetype = formalization.archetype_hypotheses[0]?.archetype
     if (!preferredArchetype) return
     if (formalization.objectives.length && !selectedObjectiveId) return
+    const hasReviewableTiming = formalization.timing.some(
+      (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+    )
+    if (hasReviewableTiming && !timingReviewed) return
+
+    const explicitInformationAvailability: Record<string, AvailabilityChoice> = {
+      ...availabilityAnswers,
+    }
+    if (timingReviewed) {
+      for (const item of formalization.timing) {
+        if (explicitInformationAvailability[item.field]) continue
+        if (item.timing === 'pre_decision') {
+          explicitInformationAvailability[item.field] = 'available'
+        } else if (item.timing === 'post_decision') {
+          explicitInformationAvailability[item.field] = 'not_available'
+        }
+      }
+    }
 
     setFormalizationAccepting(true)
     setVerificationError('')
@@ -876,7 +908,10 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             archetype: preferredArchetype,
             formalization_statuses: formalizationStatuses,
             candidate_statuses_by_id: compilerStatuses,
-            accept_timing_suggestions: true,
+            information_availability:
+              Object.keys(explicitInformationAvailability).length > 0
+                ? explicitInformationAvailability
+                : undefined,
           } satisfies IntakeAnswers),
         }
       )
@@ -1751,20 +1786,52 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {t.timingSuggestions}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    {(['pre_decision', 'post_decision', 'ambiguous'] as const).map((timing) => {
-                      const count =
-                        analysis.contract.formalization?.timing.filter((item) => item.timing === timing).length ?? 0
-                      return (
-                        <span
-                          key={timing}
-                          className="rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-slate-300"
-                        >
-                          {timing}: <b className="text-white">{count}</b>
-                        </span>
-                      )
-                    })}
+                  <p className="mt-2 text-xs leading-5 text-slate-500">{t.timingReviewHint}</p>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.timing.map((item) => (
+                      <div
+                        key={item.field}
+                        data-testid={`decision-intake-timing-${item.field}`}
+                        className="rounded-md border border-white/10 bg-white/[0.025] px-3 py-2 text-xs"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-mono text-cyan-100">{item.field}</span>
+                          <span
+                            className={
+                              item.timing === 'ambiguous'
+                                ? 'text-amber-200'
+                                : item.timing === 'post_decision'
+                                  ? 'text-rose-200'
+                                  : 'text-emerald-200'
+                            }
+                          >
+                            {item.timing}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-600">{item.evidence.join(' · ')}</div>
+                      </div>
+                    ))}
                   </div>
+                  {analysis.contract.formalization.timing.some((item) => item.timing === 'ambiguous') ? (
+                    <p className="mt-3 text-xs leading-5 text-amber-200">{t.timingAmbiguous}</p>
+                  ) : null}
+                  {analysis.contract.formalization.timing.some(
+                    (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+                  ) ? (
+                    <label className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-300">
+                      <input
+                        type="checkbox"
+                        data-testid="decision-intake-review-timing"
+                        checked={timingReviewed}
+                        onChange={(event) => setTimingReviewed(event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>{t.timingReviewConfirm}</span>
+                    </label>
+                  ) : null}
                 </div>
               </div>
 
@@ -1774,7 +1841,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   data-testid="decision-intake-accept-formalization"
                   disabled={
                     formalizationAccepting ||
-                    (analysis.contract.formalization.objectives.length > 0 && !selectedObjectiveId)
+                    (analysis.contract.formalization.objectives.length > 0 && !selectedObjectiveId) ||
+                    (analysis.contract.formalization.timing.some(
+                      (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+                    ) &&
+                      !timingReviewed)
                   }
                   onClick={() => void acceptSuggestedFormalization()}
                   className="inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
