@@ -116,7 +116,7 @@ const copy = {
     causalModelQuestion:
       'Define the causal query and causal graph before claiming that an intervention effect is identifiable.',
     confirmQuestion: 'Confirm whether “{field}” really represents the {role}.',
-    choose: 'Choose a field',
+    chooseField: 'Choose a field',
     confirm: 'Confirm',
     reject: 'Reject',
     apply: 'Apply answer',
@@ -259,7 +259,7 @@ const copy = {
     causalModelQuestion:
       'Задайте каузальний запит і каузальний граф, перш ніж стверджувати, що ефект втручання ідентифікований.',
     confirmQuestion: 'Підтвердіть, чи «{field}» справді представляє роль «{role}».',
-    choose: 'Оберіть поле',
+    chooseField: 'Оберіть поле',
     confirm: 'Підтвердити',
     reject: 'Відхилити',
     apply: 'Застосувати відповідь',
@@ -404,7 +404,7 @@ const copy = {
     causalModelQuestion:
       'Zdefiniuj zapytanie przyczynowe i graf przyczynowy przed stwierdzeniem identyfikowalności efektu interwencji.',
     confirmQuestion: 'Potwierdź, czy „{field}” rzeczywiście reprezentuje rolę „{role}”.',
-    choose: 'Wybierz pole',
+    chooseField: 'Wybierz pole',
     confirm: 'Potwierdź',
     reject: 'Odrzuć',
     apply: 'Zastosuj odpowiedź',
@@ -1307,7 +1307,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       onChange={(event) => setSelectedCompilerField(event.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
                     >
-                      <option value="">{t.choose}</option>
+                      <option value="">{t.chooseField}</option>
                       {compilationNextQuestion.options.map((field) => (
                         <option key={field} value={field}>
                           {field}
@@ -1363,7 +1363,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         onChange={(event) => setSelectedField(event.target.value)}
                         className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
                       >
-                        <option value="">{t.choose}</option>
+                        <option value="">{t.chooseField}</option>
                         {nextQuestion.options.map((field) => (
                           <option key={field} value={field}>
                             {field}
