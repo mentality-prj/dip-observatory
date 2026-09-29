@@ -213,6 +213,8 @@ export const decisionSufficiencySchema = z.object({
   requirements: z.array(requirementNodeSchema),
   questions: z.array(sufficiencyQuestionSchema).max(7),
   next_question: sufficiencyQuestionSchema.nullable(),
+  compilation_questions: z.array(sufficiencyQuestionSchema).max(7),
+  compilation_next_question: sufficiencyQuestionSchema.nullable(),
   certificate: sufficiencyCertificateSchema,
   causal_certificate: causalIdentificationCertificateSchema.nullable(),
   causal_evidence_plan: causalEvidencePlanSchema.nullable(),
