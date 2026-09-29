@@ -132,6 +132,7 @@ export const problemFormalizationSchema = z.object({
       value_field: z.string().nullable(),
       score: z.number().min(0).max(1),
       evidence: z.array(z.string()),
+      supported_compilers: z.array(z.string()),
       status: semanticStatusSchema,
     })
   ),
@@ -259,6 +260,7 @@ export const sufficiencyQuestionSchema = z.object({
   kind: z.enum([
     'confirm_semantic',
     'select_field',
+    'select_objective',
     'select_available_fields',
     'select_archetype',
     'define_causal_model',
