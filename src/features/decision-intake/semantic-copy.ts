@@ -156,6 +156,12 @@ export function renderSemanticReason(locale: Locale, item: SemanticReason): stri
         uk: `Бізнес-контекст підтримує зіставлення поля «${field}» з роллю «${role}».`,
         pl: `Kontekst biznesowy wspiera przypisanie pola „${field}” do roli „${role}”.`,
       }[locale]
+    case 'semantic_reason.user_selection':
+      return {
+        en: `The user selected field “${field}” for the “${role}” role.`,
+        uk: `Користувач вибрав поле «${field}» для ролі «${role}».`,
+        pl: `Użytkownik wybrał pole „${field}” dla roli „${role}”.`,
+      }[locale]
   }
 }
 
