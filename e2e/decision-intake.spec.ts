@@ -208,7 +208,9 @@ test('Decision Intake preserves structured AI semantics and localizes them witho
 
   await expect(page.getByText('Чи має поле «capacity» відповідати ролі «обмеження»?')).toBeVisible()
   await expect(page.getByText('Яке бізнес-значення має поле «capacity»?')).toBeVisible()
-  await expect(page.getByText('Бізнес-контекст підтримує зіставлення поля «action» з роллю «дія».').first()).toBeVisible()
+  await expect(
+    page.getByText('Бізнес-контекст підтримує зіставлення поля «action» з роллю «дія».').first()
+  ).toBeVisible()
   await expect(page.getByText('Бізнес-семантика потребує підтвердження людиною.')).toBeVisible()
   await expect(
     page.getByText('Доступність поля «capacity» на момент рішення є припущенням і потребує підтвердження.')
