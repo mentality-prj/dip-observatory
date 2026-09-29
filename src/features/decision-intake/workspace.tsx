@@ -1440,10 +1440,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   </div>
                   <div className="mt-3 grid gap-2">
                     {analysis.contract.formalization.objectives.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-md border border-white/10 bg-white/[0.025] p-3"
-                      >
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
                         <label className="flex cursor-pointer items-start gap-3">
                           <input
                             type="radio"
@@ -1467,9 +1464,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                           </span>
                         </label>
                         <details className="mt-2">
-                          <summary className="cursor-pointer text-[11px] text-slate-400">
-                            {t.editFormalization}
-                          </summary>
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
                           <form
                             className="mt-2 grid gap-2 sm:grid-cols-[auto_1fr_auto]"
                             onSubmit={(event) => void overrideObjective(event, item.id)}
