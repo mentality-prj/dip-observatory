@@ -779,10 +779,17 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
     }
 
-    const compilerRoles = new Set(['community_id', 'team_id', 'capacity', 'demand', 'service'])
+    const acceptedSemanticRoles = new Set([
+      'constraint',
+      'community_id',
+      'team_id',
+      'capacity',
+      'demand',
+      'service',
+    ])
     const compilerStatuses: Record<string, CandidateChoice> = {}
     for (const candidate of analysis.contract.candidates) {
-      if (compilerRoles.has(candidate.role) && candidate.status === 'inferred') {
+      if (acceptedSemanticRoles.has(candidate.role) && candidate.status === 'inferred') {
         compilerStatuses[candidate.candidate_id] = 'user_confirmed'
       }
     }
