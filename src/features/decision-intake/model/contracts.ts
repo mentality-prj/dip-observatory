@@ -10,6 +10,17 @@ export const semanticStatusSchema = z.enum([
 export const availabilitySchema = z.enum(['available', 'not_available', 'unknown'])
 export const contractValidationStatusSchema = z.enum(['inferred', 'needs_review', 'verified'])
 export const decisionArchetypeSchema = z.enum(['generic_decision', 'constrained_resource_allocation'])
+export const decisionVariableKindSchema = z.enum(['allocation', 'selection', 'quantity', 'routing', 'generic'])
+export const objectiveSenseSchema = z.enum(['maximize', 'minimize'])
+export const constraintKindSchema = z.enum(['hard', 'soft', 'ambiguous'])
+export const decisionTimingSchema = z.enum(['pre_decision', 'post_decision', 'decision_variable', 'ambiguous'])
+export const formalizationQuestionKindSchema = z.enum([
+  'confirm_decision_variable',
+  'select_objective',
+  'confirm_constraints',
+  'confirm_timing',
+  'confirm_compiler_mapping',
+])
 export const semanticRoleSchema = z.enum([
   'action',
   'objective',
@@ -79,14 +90,96 @@ export const semanticAssumptionSchema = semanticMessage(semanticAssumptionCodeSc
 export const evidenceReasonSchema = semanticMessage(evidenceReasonCodeSchema)
 export const nextStepSchema = semanticMessage(nextStepCodeSchema)
 
+const semanticScopeSchema = z.object({
+  field: z.string(),
+  values: z.array(z.string()).min(1),
+})
+
 const semanticCandidateSchema = z.object({
   candidate_id: z.string(),
   field: z.string(),
   role: semanticRoleSchema,
   source_columns: z.array(z.string()),
   reason: semanticReasonSchema,
+  scope: semanticScopeSchema.nullable().optional(),
   legacy_reason: z.string().optional(),
   status: semanticStatusSchema,
+})
+
+export const problemFormalizationSchema = z.object({
+  version: z.literal(1),
+  archetype_hypotheses: z.array(
+    z.object({
+      archetype: decisionArchetypeSchema,
+      score: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+    })
+  ),
+  row_subtypes: z.array(
+    z.object({
+      discriminator: z.string(),
+      value: z.string(),
+      semantic_type: z.string(),
+      score: z.number().min(0).max(1),
+    })
+  ),
+  decision_variables: z.array(
+    z.object({
+      id: z.string(),
+      kind: decisionVariableKindSchema,
+      expression: z.string(),
+      indexed_by: z.array(z.string()),
+      value_field: z.string().nullable(),
+      score: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+      status: semanticStatusSchema,
+    })
+  ),
+  objectives: z.array(
+    z.object({
+      id: z.string(),
+      sense: objectiveSenseSchema,
+      expression: z.string(),
+      field: z.string().nullable(),
+      score: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+      status: semanticStatusSchema,
+    })
+  ),
+  constraints: z.array(
+    z.object({
+      id: z.string(),
+      kind: constraintKindSchema,
+      expression: z.string(),
+      field: z.string().nullable(),
+      operator: z.string().nullable(),
+      score: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+      status: semanticStatusSchema,
+    })
+  ),
+  timing: z.array(
+    z.object({
+      field: z.string(),
+      timing: decisionTimingSchema,
+      score: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+      status: semanticStatusSchema,
+    })
+  ),
+  questions: z.array(
+    z.object({
+      id: z.string(),
+      kind: formalizationQuestionKindSchema,
+      hypothesis_ids: z.array(z.string()),
+      field: z.string().nullable(),
+      options: z.array(z.string()),
+      score: z.number().nonnegative(),
+      rationale: z.string(),
+    })
+  ).max(12),
+  completeness_score: z.number().min(0).max(1),
+  claim: z.string(),
 })
 const evidenceGateSchema = z.object({
   status: z.enum([
@@ -142,6 +235,7 @@ export const decisionContractSchema = z
       })
     ),
     assumptions: z.array(semanticAssumptionSchema),
+    formalization: problemFormalizationSchema.nullable().optional(),
     legacy_assumptions: z.array(z.string()).default([]),
     legacy_unknowns: z.array(z.string()).default([]),
     causal_specification: causalSpecificationSchema.nullable().optional(),
@@ -173,6 +267,8 @@ export const sufficiencyQuestionSchema = z.object({
   ]),
   role: z.string().nullable().optional(),
   field: z.string().nullable().optional(),
+  hypothesis_id: z.string().nullable().optional(),
+  hypothesis_ids: z.array(z.string()).optional().default([]),
   options: z.array(z.string()),
   resolves: z.array(z.string()),
   effect: z.enum([
@@ -318,6 +414,7 @@ export const intakeAnalysisSchema = z.object({
     candidates: z.array(semanticCandidateSchema),
     clarifications: z.array(clarificationQuestionSchema).max(7),
     assumptions: z.array(semanticAssumptionSchema),
+    formalization: problemFormalizationSchema.nullable().optional(),
     legacy_clarifications: z.array(z.string()).default([]),
     legacy_assumptions: z.array(z.string()).default([]),
     legacy_unknowns: z.array(z.string()).default([]),
@@ -339,6 +436,8 @@ export const intakeAnswersSchema = z
   .object({
     candidate_statuses_by_id: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     information_availability: z.record(z.string(), availabilitySchema).optional(),
+    formalization_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
+    accept_timing_suggestions: z.boolean().optional(),
     candidate_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     semantic_mappings: z
       .array(
@@ -560,4 +659,5 @@ export type ContractResponse = z.infer<typeof contractResponseSchema>
 export type SufficiencyQuestion = z.infer<typeof sufficiencyQuestionSchema>
 export type CausalSpecification = z.infer<typeof causalSpecificationSchema>
 export type IntakeAnswers = z.infer<typeof intakeAnswersSchema>
+export type ProblemFormalization = z.infer<typeof problemFormalizationSchema>
 export type CompiledResourceAllocation = z.infer<typeof compiledResourceAllocationSchema>
