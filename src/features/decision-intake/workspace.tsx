@@ -702,7 +702,10 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   {t.columns}: <b className="text-white">{analysis.profile.column_count}</b>
                 </span>
                 <span>
-                  {t.contractVersion}: <b className="text-white">{analysis.contract.version}</b>
+                  {t.contractVersion}:{' '}
+                  <b data-testid="decision-intake-contract-version" className="text-white">
+                    {analysis.contract.version}
+                  </b>
                 </span>
               </div>
               <div className="mt-5 grid gap-3">
