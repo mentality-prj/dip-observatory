@@ -20,10 +20,7 @@ export const formalizationAssumptionProvenanceSchema = z.enum([
   'system_default',
   'compiler_default',
 ])
-export const formalizationAssumptionImpactSchema = z.enum([
-  'decision_neutral',
-  'decision_relevant',
-])
+export const formalizationAssumptionImpactSchema = z.enum(['decision_neutral', 'decision_relevant'])
 export const decisionTimingSchema = z.enum(['pre_decision', 'post_decision', 'decision_variable', 'ambiguous'])
 export const formalizationQuestionKindSchema = z.enum([
   'confirm_decision_variable',
