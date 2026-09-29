@@ -698,7 +698,6 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setCompileError('')
     setCompiled(null)
     setExecuted(null)
-    setExecuted(null)
     setExecutionError('')
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
