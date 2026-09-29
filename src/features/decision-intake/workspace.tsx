@@ -8,6 +8,7 @@ import type { Locale } from '@/lib/observatory-i18n'
 import {
   compiledResourceAllocationSchema,
   contractResponseSchema,
+  decisionArchetypeSchema,
   intakeAnalysisSchema,
   semanticRoleSchema,
   type CausalSpecification,
@@ -85,6 +86,7 @@ const copy = {
     gateStatuses: {
       no_opportunity: 'No opportunity',
       discovered: 'Discovered',
+      ready_for_structural_intake: 'Structural intake ready',
       ready_for_decision: 'Ready for decision',
       ready_for_historical_evaluation: 'Ready for historical evaluation',
       needs_more_data: 'Needs more data',
@@ -227,6 +229,7 @@ const copy = {
     gateStatuses: {
       no_opportunity: 'Немає можливості',
       discovered: 'Виявлено',
+      ready_for_structural_intake: 'Структурний intake готовий',
       ready_for_decision: 'Готово до рішення',
       ready_for_historical_evaluation: 'Готово до історичної оцінки',
       needs_more_data: 'Потрібно більше даних',
@@ -371,6 +374,7 @@ const copy = {
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
       discovered: 'Wykryto',
+      ready_for_structural_intake: 'Strukturalny intake gotowy',
       ready_for_decision: 'Gotowe do decyzji',
       ready_for_historical_evaluation: 'Gotowe do oceny historycznej',
       needs_more_data: 'Potrzeba więcej danych',
@@ -549,13 +553,7 @@ function verifiedRoleField(analysis: IntakeAnalysis, role: string) {
     ?.field
 }
 
-type IntakeAnswerBody = {
-  candidate_statuses?: Record<string, string>
-  information_availability?: Record<string, string>
-  semantic_mappings?: Record<string, string>
-  archetype?: string
-  causal_specification?: CausalSpecification
-}
+type IntakeAnswerBody = IntakeAnswers
 
 export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const t = copy[locale]
@@ -682,6 +680,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               ...current,
               contract: result.contract,
               evidence_gate: result.evidence_gate,
+              sufficiency: result.sufficiency,
               interpretation: {
                 ...current.interpretation,
                 candidates: result.contract.candidates,
@@ -781,13 +780,19 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     const body: IntakeAnswerBody = {}
 
     if (question.kind === 'confirm_semantic' && question.field && question.role) {
-      body.candidate_statuses = {
-        [`${question.role}:${question.field}`]: action === 'reject' ? 'rejected' : 'user_confirmed',
+      const candidate = analysis.contract.candidates.find(
+        (item) => item.field === question.field && item.role === question.role
+      )
+      if (!candidate) return
+      body.candidate_statuses_by_id = {
+        [candidate.candidate_id]: action === 'reject' ? 'rejected' : 'user_confirmed',
       }
     }
 
     if (question.kind === 'select_field' && question.role && selectedField) {
-      body.semantic_mappings = { [question.role]: selectedField }
+      const role = semanticRoleSchema.safeParse(question.role)
+      if (!role.success) return
+      body.semantic_mappings = [{ field: selectedField, role: role.data }]
     }
 
     if (question.kind === 'select_available_fields') {
@@ -809,12 +814,16 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     const question = analysis?.sufficiency.compilation_next_question
     if (!question || !selectedCompilerField) return
 
-    const body: IntakeAnswerBody =
-      question.kind === 'select_archetype'
-        ? { archetype: selectedCompilerField }
-        : question.role
-          ? { semantic_mappings: { [question.role]: selectedCompilerField } }
-          : {}
+    let body: IntakeAnswerBody = {}
+    if (question.kind === 'select_archetype') {
+      const archetype = decisionArchetypeSchema.safeParse(selectedCompilerField)
+      if (!archetype.success) return
+      body = { archetype: archetype.data }
+    } else if (question.role) {
+      const role = semanticRoleSchema.safeParse(question.role)
+      if (!role.success) return
+      body = { semantic_mappings: [{ field: selectedCompilerField, role: role.data }] }
+    }
 
     if (!Object.keys(body).length) return
 
@@ -1206,7 +1215,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               >
                 <ShieldCheck className="h-4 w-4" /> {verifying ? t.verifying : t.verify}
               </button>
-              {analysis.evidence_gate.status === 'ready_for_decision' &&
+              {analysis.sufficiency.compilation_status === 'ready' &&
               analysis.contract.archetype === 'constrained_resource_allocation' ? (
                 <button
                   type="button"
