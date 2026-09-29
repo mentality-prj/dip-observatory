@@ -36,6 +36,8 @@ const copy = {
     compilationReady: 'ready for supported compiler',
     compilationBlocked: 'compiler mappings incomplete',
     compilationUnsupported: 'no supported compiler for this archetype',
+    compilerNextStep: 'Compiler next required step',
+    compilerMapping: 'Required compiler mapping',
     causal: 'Causal identifiability',
     causalNeedsModel: 'not assessed — causal query and graph required',
     causalIdentified: 'identified',
@@ -127,6 +129,8 @@ const copy = {
     compilationReady: 'готово до supported compiler',
     compilationBlocked: 'compiler mappings неповні',
     compilationUnsupported: 'для цього archetype немає supported compiler',
+    compilerNextStep: 'Наступний необхідний крок compiler',
+    compilerMapping: 'Обов’язковий compiler mapping',
     causal: 'Каузальна ідентифікованість',
     causalNeedsModel: 'не перевірено — потрібні каузальний запит і граф',
     causalIdentified: 'ідентифіковано',
@@ -220,6 +224,8 @@ const copy = {
     compilationReady: 'gotowe dla obsługiwanego kompilatora',
     compilationBlocked: 'mapowania kompilatora są niekompletne',
     compilationUnsupported: 'brak obsługiwanego kompilatora dla tego archetypu',
+    compilerNextStep: 'Następny wymagany krok kompilatora',
+    compilerMapping: 'Wymagane mapowanie kompilatora',
     causal: 'Identyfikowalność przyczynowa',
     causalNeedsModel: 'nie oceniono — wymagane są zapytanie przyczynowe i graf',
     causalIdentified: 'zidentyfikowano',
@@ -559,10 +565,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       }
 
       await submitAnswerPayload({ causal_specification: specification })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Invalid causal specification.')
     }
   }
 
   const nextQuestion = analysis?.sufficiency.next_question ?? null
+  const compilationNextQuestion =
+    analysis?.sufficiency.compilation_next_question ?? null
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 text-white md:px-8 md:pt-12">
@@ -665,6 +675,40 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 <dd className="text-right text-xs text-slate-500">{analysis.sufficiency.planner_strategy}</dd>
               </div>
             </dl>
+
+            {compilationNextQuestion ? (
+              <div className="mt-5 border-t border-white/10 pt-4">
+                <b className="text-sm">{t.compilerNextStep}</b>
+                <p className="mt-2 text-xs leading-5 text-slate-400">
+                  {t.compilerMapping}: <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
+                </p>
+                <p className="mt-1 text-[11px] leading-5 text-slate-600">
+                  {compilationNextQuestion.rationale}
+                </p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <select
+                    value={selectedCompilerField}
+                    onChange={(event) => setSelectedCompilerField(event.target.value)}
+                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
+                  >
+                    <option value="">{t.choose}</option>
+                    {compilationNextQuestion.options.map((field) => (
+                      <option key={field} value={field}>
+                        {field}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!selectedCompilerField || answerBusy}
+                    onClick={() => void applyCompilationAnswer()}
+                    className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                  >
+                    {answerBusy ? t.answerBusy : t.apply}
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <details className="mt-5 border-t border-white/10 pt-4">
               <summary className="cursor-pointer text-sm font-semibold text-white">{t.requirements}</summary>
