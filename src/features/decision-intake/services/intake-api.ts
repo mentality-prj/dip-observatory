@@ -84,10 +84,7 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
   return normalizeIntakeAnalysis(await requestV2WithFallback('/v2/analyze', '/analyze', { method: 'POST', body: form }))
 }
 
-export async function submitDecisionIntakeAnswers(
-  sessionId: string,
-  input: IntakeAnswers
-): Promise<ContractResponse> {
+export async function submitDecisionIntakeAnswers(sessionId: string, input: IntakeAnswers): Promise<ContractResponse> {
   if (input.candidate_statuses_by_id && input.candidate_statuses) {
     throw new DecisionIntakeApiError('Use one semantic confirmation identity mode.', 422)
   }
@@ -174,7 +171,6 @@ export async function compileDecisionIntake(sessionId: string) {
     await requestV2WithFallback(`/v2/${encoded}/compile`, `/${encoded}/compile`, { method: 'POST' })
   )
 }
-
 
 export async function executeDecisionIntake(sessionId: string) {
   const encoded = encodeURIComponent(sessionId)

@@ -1482,10 +1482,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       </div>
                       <details className="mt-3 border-t border-white/10 pt-2">
                         <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
-                        <form
-                          className="mt-2 grid gap-2"
-                          onSubmit={(event) => void overrideConstraint(event, item.id)}
-                        >
+                        <form className="mt-2 grid gap-2" onSubmit={(event) => void overrideConstraint(event, item.id)}>
                           <div className="grid grid-cols-2 gap-2">
                             <select
                               name="kind"
@@ -1586,7 +1583,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                           ) : null}
                           <span className="text-slate-600"> · {candidate.status}</span>
                           <details className="mt-1">
-                            <summary className="cursor-pointer text-[11px] text-slate-500">{t.editFormalization}</summary>
+                            <summary className="cursor-pointer text-[11px] text-slate-500">
+                              {t.editFormalization}
+                            </summary>
                             <form
                               className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
                               onSubmit={(event) => void overrideCandidateScope(event, candidate.candidate_id)}

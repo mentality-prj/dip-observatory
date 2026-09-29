@@ -435,7 +435,6 @@ test('human verification can create missing semantics and compile a ready RA con
   await expect(page.getByText(/team-a/)).toBeVisible()
 })
 
-
 test('automatic formalization can be accepted and executed end to end', async ({ page }) => {
   const compilerCandidates = [
     ['community', 'community_id'],
@@ -646,10 +645,9 @@ test('automatic formalization can be accepted and executed end to end', async ({
 
   await page.goto('/uk/decision-intake')
   const dropzone = page.getByTestId('decision-intake-dropzone')
-  const csv = [
-    'community,team_id,capacity,demand,service,priority,budget',
-    'north,team-a,10,8,medical,high,100',
-  ].join('\n')
+  const csv = ['community,team_id,capacity,demand,service,priority,budget', 'north,team-a,10,8,medical,high,100'].join(
+    '\n'
+  )
   await dropzone.evaluate((element, contents) => {
     const transfer = new DataTransfer()
     transfer.items.add(new File([contents], 'auto-ra.csv', { type: 'text/csv' }))
