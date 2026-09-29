@@ -194,7 +194,7 @@ test('legacy Decision Intake semantics remain available without leaking into the
   }, csv)
   await page.getByRole('button', { name: 'Проаналізувати дані' }).click()
 
-  await expect(page.getByText('Custom AI clarification?')).toHaveCount(0)
+  await expect(page.getByText('Custom AI clarification?')).toBeHidden()
   await page.getByText('Legacy-семантика v1 (оригінальне формулювання)').click()
   await expect(page.getByText('Custom AI clarification?')).toBeVisible()
   await expect(page.getByText('Custom legacy assumption')).toBeVisible()
