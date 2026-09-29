@@ -12,6 +12,7 @@ type AnswerPayload = {
   candidate_statuses?: Record<string, string>
   information_availability?: Record<string, string>
   semantic_mappings?: Record<string, string>
+  archetype?: string
   causal_specification?: CausalSpecification
 }
 
