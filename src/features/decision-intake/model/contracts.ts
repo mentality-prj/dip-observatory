@@ -104,13 +104,6 @@ const evidenceGateSchema = z.object({
   blocking_assumptions: z.array(semanticAssumptionSchema),
   recommended_next_step: nextStepSchema,
 })
-const semanticCandidateSchema = z.object({
-  field: z.string(),
-  role: z.string(),
-  source_columns: z.array(z.string()),
-  reason: z.string(),
-  status: semanticStatusSchema,
-})
 const causalEdgeSchema = z.object({
   source: z.string(),
   target: z.string(),
@@ -148,10 +141,11 @@ export const decisionContractSchema = z
         status: semanticStatusSchema,
       })
     ),
-    assumptions: z.array(z.string()),
-    unknowns: z.array(z.string()),
+    assumptions: z.array(semanticAssumptionSchema),
+    legacy_assumptions: z.array(z.string()).default([]),
+    legacy_unknowns: z.array(z.string()).default([]),
     causal_specification: causalSpecificationSchema.nullable().optional(),
-    validation_status: z.string(),
+    validation_status: contractValidationStatusSchema,
   })
   .passthrough()
 
@@ -333,13 +327,19 @@ export const intakeAnalysisSchema = z.object({
   }),
   contract: decisionContractSchema,
   evidence_gate: evidenceGateSchema,
+  sufficiency: decisionSufficiencySchema,
 })
-export const contractResponseSchema = z.object({ contract: decisionContractSchema, evidence_gate: evidenceGateSchema })
+export const contractResponseSchema = z.object({
+  contract: decisionContractSchema,
+  evidence_gate: evidenceGateSchema,
+  sufficiency: decisionSufficiencySchema,
+})
 
 export const intakeAnswersSchema = z
   .object({
     candidate_statuses_by_id: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     information_availability: z.record(z.string(), availabilitySchema).optional(),
+    candidate_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     semantic_mappings: z
       .array(
         z
@@ -351,6 +351,8 @@ export const intakeAnswersSchema = z
       )
       .max(50)
       .optional(),
+    archetype: decisionArchetypeSchema.optional(),
+    causal_specification: causalSpecificationSchema.optional(),
   })
   .strict()
 
@@ -394,15 +396,155 @@ const legacyAnalysisSchema = z.object({
     provider: z.string(),
     model: z.string().nullable(),
   }),
-  contract: decisionContractSchema,
-  evidence_gate: evidenceGateSchema,
-  sufficiency: decisionSufficiencySchema,
+  contract: legacyContractSchema,
+  evidence_gate: legacyGateSchema,
 })
-export const contractResponseSchema = z.object({
-  contract: decisionContractSchema,
-  evidence_gate: evidenceGateSchema,
-  sufficiency: decisionSufficiencySchema,
-})
+const legacyContractResponseSchema = z.object({ contract: legacyContractSchema, evidence_gate: legacyGateSchema })
+
+const legacySufficiency = {
+  structural_status: 'blocked' as const,
+  compilation_status: 'unsupported' as const,
+  causal_identifiability: 'requires_causal_model' as const,
+  blockers: ['legacy_v1:structural_sufficiency_not_available'],
+  compilation_blockers: ['legacy_v1:compiler_readiness_not_available'],
+  causal_blockers: ['legacy_v1:causal_model_not_available'],
+  statistical_blockers: ['legacy_v1:statistical_support_not_available'],
+  requirements: [],
+  questions: [],
+  next_question: null,
+  compilation_questions: [],
+  compilation_next_question: null,
+  certificate: {
+    issued: false,
+    scope: 'legacy-v1-compatibility',
+    satisfied_requirements: [],
+    blocking_requirements: ['legacy_v1'],
+    claim: 'Legacy Decision Intake v1 does not carry a deterministic sufficiency certificate.',
+  },
+  causal_certificate: null,
+  causal_evidence_plan: null,
+  estimand_requirements: null,
+  empirical_support: null,
+  planner_strategy: 'legacy-v1-compatibility',
+  proof_scope: 'legacy-v1-compatibility',
+} as const
+
+const role = (value: string) =>
+  semanticRoleSchema.safeParse(value).success ? semanticRoleSchema.parse(value) : 'information'
+const emptyParams = { field: null, role: null } as const
+const questionCode: Record<string, z.infer<typeof clarificationQuestionCodeSchema>> = {
+  'Which field represents the action a decision maker can control?': 'clarification.controllable_action',
+  'What business objective should QDIP optimize?': 'clarification.business_objective',
+  'Which constraints were known and binding at decision time?': 'clarification.binding_constraints',
+  'Which fields were available before the action was chosen?': 'clarification.decision_time_information',
+  'Which field records the realized outcome?': 'clarification.realized_outcome',
+}
+const nextCode: Record<string, z.infer<typeof nextStepCodeSchema>> = {
+  'Confirm or reject every inferred critical semantic.': 'next_step.confirm_or_reject_inferred_critical_semantic',
+  'Confirm the controllable action and business objective.':
+    'next_step.confirm_controllable_action_and_business_objective',
+  'Resolve competing controllable-action or business-objective semantics.': 'next_step.resolve_critical_semantics',
+  'Verify the required semantic mappings for the selected decision archetype.':
+    'next_step.verify_archetype_requirements',
+  'Verify decision-time availability for every input field.': 'next_step.verify_decision_time_availability',
+  'Compile through the constrained resource-allocation adapter.': 'next_step.compile_resource_allocation',
+  'Select a compatible decision adapter for this contract.': 'next_step.select_decision_adapter',
+}
+const reasonCode = (text: string): z.infer<typeof evidenceReasonCodeSchema> =>
+  text.includes('AI-inferred')
+    ? 'evidence_reason.critical_semantics_ai_inferred'
+    : text.includes('archetype mappings')
+      ? 'evidence_reason.archetype_requirements_unresolved'
+      : text.includes('ambiguous')
+        ? 'evidence_reason.critical_semantics_ambiguous'
+        : text.includes('information set')
+          ? 'evidence_reason.information_set_unresolved_or_unverified'
+          : text.includes('minimum verified')
+            ? 'evidence_reason.minimum_verified_semantics_present'
+            : 'evidence_reason.verified_critical_semantics_missing'
+
+function legacyCandidate(value: z.infer<typeof legacyCandidateSchema>) {
+  const semanticRole = role(value.role)
+  return {
+    ...value,
+    candidate_id: `semantic:${semanticRole}:${value.field}`,
+    role: semanticRole,
+    reason: {
+      code: 'semantic_reason.model_inference' as const,
+      params: { field: value.field, role: semanticRole },
+    },
+    legacy_reason: value.reason,
+  }
+}
+function legacyContract(value: z.infer<typeof legacyContractSchema>) {
+  return {
+    ...value,
+    schema_version: 2 as const,
+    archetype: decisionArchetypeSchema.safeParse(value.archetype).success
+      ? decisionArchetypeSchema.parse(value.archetype)
+      : ('generic_decision' as const),
+    candidates: value.candidates.map(legacyCandidate),
+    assumptions: value.assumptions.length
+      ? [{ code: 'assumption.business_semantics_require_confirmation' as const, params: emptyParams }]
+      : [],
+    legacy_assumptions: value.assumptions,
+    legacy_unknowns: value.unknowns,
+  }
+}
+function legacyGate(value: z.infer<typeof legacyGateSchema>) {
+  return {
+    ...value,
+    reasons: value.reasons.map((text) => ({ code: reasonCode(text), params: emptyParams })),
+    blocking_assumptions: value.blocking_assumptions.length
+      ? [{ code: 'assumption.business_semantics_require_confirmation' as const, params: emptyParams }]
+      : [],
+    recommended_next_step: {
+      code: nextCode[value.recommended_next_step] ?? 'next_step.confirm_controllable_action_and_business_objective',
+      params: emptyParams,
+    },
+  }
+}
+export function normalizeIntakeAnalysis(payload: unknown): IntakeAnalysis {
+  const v2 = intakeAnalysisSchema.safeParse(payload)
+  if (v2.success) return v2.data
+  const legacy = legacyAnalysisSchema.parse(payload)
+  const contract = legacyContract(legacy.contract)
+  return intakeAnalysisSchema.parse({
+    schema_version: 2,
+    profile: legacy.profile,
+    interpretation: {
+      archetype: contract.archetype,
+      candidates: legacy.interpretation.candidates.map(legacyCandidate),
+      clarifications: legacy.interpretation.clarification_questions
+        .map((text) => questionCode[text])
+        .filter((code): code is z.infer<typeof clarificationQuestionCodeSchema> => Boolean(code))
+        .map((code) => ({ code, params: emptyParams })),
+      legacy_clarifications: legacy.interpretation.clarification_questions.filter((text) => !questionCode[text]),
+      legacy_assumptions: legacy.interpretation.assumptions,
+      legacy_unknowns: legacy.interpretation.unknowns,
+      legacy_ambiguities: legacy.interpretation.ambiguities,
+      assumptions: legacy.interpretation.assumptions.length
+        ? [{ code: 'assumption.business_semantics_require_confirmation', params: emptyParams }]
+        : [],
+      provider: legacy.interpretation.provider,
+      model: legacy.interpretation.model,
+    },
+    contract,
+    evidence_gate: legacyGate(legacy.evidence_gate),
+    sufficiency: legacySufficiency,
+  })
+}
+export function normalizeContractResponse(payload: unknown): ContractResponse {
+  const v2 = contractResponseSchema.safeParse(payload)
+  if (v2.success) return v2.data
+  const legacy = legacyContractResponseSchema.parse(payload)
+  return contractResponseSchema.parse({
+    contract: legacyContract(legacy.contract),
+    evidence_gate: legacyGate(legacy.evidence_gate),
+    sufficiency: legacySufficiency,
+  })
+}
+
 export const compiledResourceAllocationSchema = z.object({
   archetype: z.literal('constrained_resource_allocation'),
   request: z.record(z.string(), z.unknown()),
@@ -416,5 +558,6 @@ export type NextStep = z.infer<typeof nextStepSchema>
 export type IntakeAnalysis = z.infer<typeof intakeAnalysisSchema>
 export type ContractResponse = z.infer<typeof contractResponseSchema>
 export type SufficiencyQuestion = z.infer<typeof sufficiencyQuestionSchema>
-
 export type CausalSpecification = z.infer<typeof causalSpecificationSchema>
+export type IntakeAnswers = z.infer<typeof intakeAnswersSchema>
+export type CompiledResourceAllocation = z.infer<typeof compiledResourceAllocationSchema>
