@@ -105,10 +105,7 @@ export async function submitDecisionIntakeAnswers(
   }
 
   if (input.semantic_mappings?.length) {
-    throw new DecisionIntakeApiError(
-      'Human semantic mapping requires Decision Intake v2.',
-      409
-    )
+    throw new DecisionIntakeApiError('Human semantic mapping requires Decision Intake v2.', 409)
   }
 
   const legacyContract = normalizeContractResponse(await request(`/${encoded}/contract`))
