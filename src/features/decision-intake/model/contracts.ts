@@ -132,6 +132,7 @@ export const problemFormalizationSchema = z.object({
       value_field: z.string().nullable(),
       score: z.number().min(0).max(1),
       evidence: z.array(z.string()),
+      supported_compilers: z.array(z.string()),
       status: semanticStatusSchema,
     })
   ),
@@ -152,10 +153,13 @@ export const problemFormalizationSchema = z.object({
       id: z.string(),
       kind: constraintKindSchema,
       expression: z.string(),
+      parameter: z.string().nullable(),
       field: z.string().nullable(),
       operator: z.string().nullable(),
+      value: z.union([z.number(), z.string(), z.boolean()]).nullable(),
       score: z.number().min(0).max(1),
       evidence: z.array(z.string()),
+      supported_compilers: z.array(z.string()),
       status: semanticStatusSchema,
     })
   ),
@@ -385,6 +389,7 @@ export const decisionSufficiencySchema = z.object({
   ]),
   blockers: z.array(z.string()),
   compilation_blockers: z.array(z.string()),
+  compilation_validation_error: z.string().nullable(),
   causal_blockers: z.array(z.string()),
   statistical_blockers: z.array(z.string()),
   requirements: z.array(requirementNodeSchema),
@@ -441,6 +446,27 @@ export const intakeAnswersSchema = z
     candidate_statuses_by_id: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     information_availability: z.record(z.string(), availabilitySchema).optional(),
     formalization_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
+    decision_variable_overrides: z
+      .record(
+        z.string(),
+        z.object({
+          expression: z.string().optional(),
+          indexed_by: z.array(z.string()).optional(),
+        })
+      )
+      .optional(),
+    constraint_overrides: z
+      .record(
+        z.string(),
+        z.object({
+          kind: constraintKindSchema.optional(),
+          expression: z.string().optional(),
+          operator: z.string().optional(),
+          value: z.union([z.number(), z.string(), z.boolean()]).optional(),
+        })
+      )
+      .optional(),
+    candidate_scope_overrides: z.record(z.string(), semanticScopeSchema.nullable()).optional(),
     accept_timing_suggestions: z.boolean().optional(),
     candidate_statuses: z.record(z.string(), z.enum(['user_confirmed', 'rejected'])).optional(),
     semantic_mappings: z
@@ -510,6 +536,7 @@ const legacySufficiency = {
   causal_identifiability: 'requires_causal_model' as const,
   blockers: ['legacy_v1:structural_sufficiency_not_available'],
   compilation_blockers: ['legacy_v1:compiler_readiness_not_available'],
+  compilation_validation_error: null,
   causal_blockers: ['legacy_v1:causal_model_not_available'],
   statistical_blockers: ['legacy_v1:statistical_support_not_available'],
   requirements: [],
@@ -652,6 +679,10 @@ export const compiledResourceAllocationSchema = z.object({
   archetype: z.literal('constrained_resource_allocation'),
   request: z.record(z.string(), z.unknown()),
 })
+
+export const executedDecisionIntakeSchema = compiledResourceAllocationSchema.extend({
+  result: z.record(z.string(), z.unknown()),
+})
 export type SemanticParams = z.infer<typeof semanticParamsSchema>
 export type ClarificationQuestion = z.infer<typeof clarificationQuestionSchema>
 export type SemanticReason = z.infer<typeof semanticReasonSchema>
@@ -665,3 +696,4 @@ export type CausalSpecification = z.infer<typeof causalSpecificationSchema>
 export type IntakeAnswers = z.infer<typeof intakeAnswersSchema>
 export type ProblemFormalization = z.infer<typeof problemFormalizationSchema>
 export type CompiledResourceAllocation = z.infer<typeof compiledResourceAllocationSchema>
+export type ExecutedDecisionIntake = z.infer<typeof executedDecisionIntakeSchema>
