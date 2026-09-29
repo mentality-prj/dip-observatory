@@ -90,6 +90,9 @@ const copy = {
     supportNot: 'not assessed',
     treatmentLevels: 'Treatment levels',
     checkedStrata: 'Checked strata',
+    checkedObligations: 'Checked estimand obligations',
+    failedObligations: 'Unsupported estimand obligations',
+    deferredObligations: 'Obligations requiring full analysis',
     evidenceVerifyQuestion: 'Can independent domain evidence justify absence of latent confounding for {variables}?',
     evidenceRandomizeQuestion: 'Can you collect prospective interventional data for {variables}?',
   },
@@ -171,6 +174,9 @@ const copy = {
     supportNot: 'не перевірено',
     treatmentLevels: 'Рівні treatment',
     checkedStrata: 'Перевірено strata',
+    checkedObligations: 'Перевірені estimand obligations',
+    failedObligations: 'Estimand obligations без support',
+    deferredObligations: 'Obligations, що потребують full analysis',
     evidenceVerifyQuestion:
       'Чи підтверджують незалежні domain evidence відсутність latent confounding для {variables}?',
     evidenceRandomizeQuestion: 'Чи можете ви зібрати prospective interventional data для {variables}?',
@@ -252,6 +258,9 @@ const copy = {
     supportNot: 'nie oceniono',
     treatmentLevels: 'Poziomy treatment',
     checkedStrata: 'Sprawdzone strata',
+    checkedObligations: 'Sprawdzone obowiązki estimandy',
+    failedObligations: 'Obowiązki estimandy bez wsparcia',
+    deferredObligations: 'Obowiązki wymagające pełnej analizy',
     evidenceVerifyQuestion: 'Czy niezależne dowody dziedzinowe uzasadniają brak latent confounding dla {variables}?',
     evidenceRandomizeQuestion: 'Czy możesz zebrać prospektywne dane interwencyjne dla {variables}?',
   },
@@ -879,6 +888,24 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   {' · '}
                   {t.checkedStrata}: {analysis.sufficiency.empirical_support.checked_strata}
                 </div>
+                {analysis.sufficiency.empirical_support.checked_obligations.length ? (
+                  <div className="mt-2 text-[11px] leading-5 text-emerald-200/80">
+                    {t.checkedObligations}:{' '}
+                    {analysis.sufficiency.empirical_support.checked_obligations.join(', ')}
+                  </div>
+                ) : null}
+                {analysis.sufficiency.empirical_support.failed_obligations.length ? (
+                  <div className="mt-2 text-[11px] leading-5 text-rose-200/80">
+                    {t.failedObligations}:{' '}
+                    {analysis.sufficiency.empirical_support.failed_obligations.join(', ')}
+                  </div>
+                ) : null}
+                {analysis.sufficiency.empirical_support.deferred_obligations.length ? (
+                  <div className="mt-2 text-[11px] leading-5 text-amber-200/80">
+                    {t.deferredObligations}:{' '}
+                    {analysis.sufficiency.empirical_support.deferred_obligations.join(', ')}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
