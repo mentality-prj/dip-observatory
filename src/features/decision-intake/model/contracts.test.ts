@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  decisionArchetypeSchema,
   decisionSufficiencySchema,
   intakeAnswersSchema,
   problemFormalizationSchema,
@@ -261,8 +262,13 @@ describe('Decision Intake sufficiency contract', () => {
     expect(result.decision_variables[0]?.expression).toContain('assign each team')
   })
 
+  it('accepts unclassified contracts before verified archetype selection', () => {
+    expect(decisionArchetypeSchema.parse('unclassified')).toBe('unclassified')
+  })
+
   it('accepts one-shot formalization and timing verification payloads', () => {
     const result = intakeAnswersSchema.parse({
+      archetype: 'constrained_resource_allocation',
       formalization_statuses: {
         'decision_variable:resource_allocation': 'user_confirmed',
         'objective:resource_allocation_score': 'user_confirmed',
@@ -274,6 +280,7 @@ describe('Decision Intake sufficiency contract', () => {
       },
     })
 
+    expect(result.archetype).toBe('constrained_resource_allocation')
     expect(result.accept_timing_suggestions).toBe(true)
   })
 
