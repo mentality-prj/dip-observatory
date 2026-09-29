@@ -249,6 +249,18 @@ describe('Decision Intake sufficiency contract', () => {
           status: 'inferred',
         },
       ],
+      assumptions: [
+        {
+          id: 'assumption:resource_allocation:skills',
+          parameter: 'skills',
+          value: 'all_demand_services',
+          provenance: 'compiler_default',
+          impact: 'decision_relevant',
+          rationale: 'Missing team skills require explicit confirmation.',
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
       timing: [
         {
           field: 'capacity',
@@ -265,6 +277,7 @@ describe('Decision Intake sufficiency contract', () => {
 
     expect(result.objectives[0]?.supported_compilers).toEqual(['resource_allocation.v1'])
     expect(result.decision_variables[0]?.expression).toContain('assign each team')
+    expect(result.assumptions[0]?.impact).toBe('decision_relevant')
   })
 
   it('accepts unclassified contracts before verified archetype selection', () => {
