@@ -2,11 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
-import {
-  analyzeDecisionDataset,
-  executeDecisionIntake,
-  submitDecisionIntakeAnswers,
-} from './intake-api'
+import { analyzeDecisionDataset, executeDecisionIntake, submitDecisionIntakeAnswers } from './intake-api'
 
 const legacyGate = {
   status: 'discovered',
@@ -212,9 +208,7 @@ describe('Decision Intake API compatibility transport', () => {
     const result = await executeDecisionIntake('verified')
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      'https://dip.example/api/v1/intake/v2/verified/execute'
-    )
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('https://dip.example/api/v1/intake/v2/verified/execute')
     expect(result.result.status).toBe('ok')
   })
 
