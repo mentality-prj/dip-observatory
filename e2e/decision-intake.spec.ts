@@ -162,8 +162,9 @@ test('Decision Intake preserves structured AI semantics and localizes them witho
   await expect(page.getByText(/next_step\./)).toHaveCount(0)
 })
 
-
-test('legacy Decision Intake semantics remain available without leaking into the primary localized flow', async ({ page }) => {
+test('legacy Decision Intake semantics remain available without leaking into the primary localized flow', async ({
+  page,
+}) => {
   const legacyAnalysis = {
     ...analysis,
     interpretation: {
