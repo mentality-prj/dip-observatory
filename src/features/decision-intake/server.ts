@@ -7,6 +7,7 @@ export {
 } from './services/intake-api'
 export {
   compiledResourceAllocationSchema,
+  executedDecisionIntakeSchema,
   contractResponseSchema,
   intakeAnalysisSchema,
   intakeAnswersSchema,
@@ -15,6 +16,7 @@ export {
 export type {
   CausalSpecification,
   CompiledResourceAllocation,
+  ExecutedDecisionIntake,
   ContractResponse,
   IntakeAnalysis,
   IntakeAnswers,
