@@ -132,7 +132,6 @@ export const problemFormalizationSchema = z.object({
       value_field: z.string().nullable(),
       score: z.number().min(0).max(1),
       evidence: z.array(z.string()),
-      supported_compilers: z.array(z.string()),
       status: semanticStatusSchema,
     })
   ),
@@ -144,6 +143,7 @@ export const problemFormalizationSchema = z.object({
       field: z.string().nullable(),
       score: z.number().min(0).max(1),
       evidence: z.array(z.string()),
+      supported_compilers: z.array(z.string()),
       status: semanticStatusSchema,
     })
   ),
