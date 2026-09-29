@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  compiledDecisionIntakeSchema,
   decisionArchetypeSchema,
   decisionSufficiencySchema,
   intakeAnswersSchema,
@@ -278,6 +279,62 @@ describe('Decision Intake sufficiency contract', () => {
     expect(result.objectives[0]?.supported_compilers).toEqual(['resource_allocation.v1'])
     expect(result.decision_variables[0]?.expression).toContain('assign each team')
     expect(result.assumptions[0]?.impact).toBe('decision_relevant')
+  })
+
+  it('accepts plugin-defined archetypes, roles and decision-variable kinds', () => {
+    expect(decisionArchetypeSchema.parse('toy_selection')).toBe('toy_selection')
+
+    const formalization = problemFormalizationSchema.parse({
+      version: 1,
+      archetype_hypotheses: [
+        {
+          archetype: 'toy_selection',
+          score: 0.99,
+          evidence: ['registered plugin'],
+        },
+      ],
+      row_subtypes: [],
+      decision_variables: [
+        {
+          id: 'decision_variable:toy:choice',
+          kind: 'ranking',
+          expression: 'choose one choice',
+          indexed_by: ['choice'],
+          value_field: null,
+          score: 0.99,
+          evidence: ['choice'],
+          supported_compilers: ['toy_selection.v1'],
+          status: 'inferred',
+        },
+      ],
+      objectives: [
+        {
+          id: 'objective:toy:utility',
+          sense: 'maximize',
+          expression: 'maximize utility',
+          field: 'utility',
+          score: 0.99,
+          evidence: ['utility'],
+          supported_compilers: ['toy_selection.v1'],
+          status: 'inferred',
+        },
+      ],
+      constraints: [],
+      assumptions: [],
+      timing: [],
+      questions: [],
+      discovery_completeness_score: 1,
+      completeness_score: 1,
+      claim: 'Plugin-defined formalization.',
+    })
+
+    const compiled = compiledDecisionIntakeSchema.parse({
+      archetype: 'toy_selection',
+      request: { selected: 'b' },
+    })
+
+    expect(formalization.decision_variables[0]?.kind).toBe('ranking')
+    expect(compiled.archetype).toBe('toy_selection')
   })
 
   it('accepts unclassified contracts before verified archetype selection', () => {
