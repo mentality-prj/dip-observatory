@@ -6,6 +6,7 @@ import { Check, FileUp, Plus, ShieldCheck, Trash2, Wrench, X } from 'lucide-reac
 import { FileUploader } from '@/components/file-uploader'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
+  builtInSemanticRoles,
   compiledResourceAllocationSchema,
   contractResponseSchema,
   executedDecisionIntakeSchema,
@@ -893,10 +894,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       }
     }
 
-    const acceptedSemanticRoles = new Set(['community_id', 'team_id', 'capacity', 'demand', 'service'])
+    const compilerCandidateIds = new Set(
+      formalization.questions
+        .filter((question) => question.kind === 'confirm_compiler_mapping')
+        .flatMap((question) => question.hypothesis_ids)
+    )
     const compilerStatuses: Record<string, CandidateChoice> = {}
     for (const candidate of analysis.contract.candidates) {
-      if (acceptedSemanticRoles.has(candidate.role) && candidate.status === 'inferred') {
+      if (compilerCandidateIds.has(candidate.candidate_id) && candidate.status === 'inferred') {
         compilerStatuses[candidate.candidate_id] = 'user_confirmed'
       }
     }
@@ -1257,6 +1262,13 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
   const nextQuestion = analysis?.sufficiency.next_question ?? null
   const compilationNextQuestion = analysis?.sufficiency.compilation_next_question ?? null
+  const mappingRoleOptions = Array.from(
+    new Set([
+      ...builtInSemanticRoles,
+      ...(analysis?.contract.candidates.map((candidate) => candidate.role) ?? []),
+      ...(compilationNextQuestion?.role ? [compilationNextQuestion.role] : []),
+    ])
+  )
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 text-white md:px-8 md:pt-12">
@@ -2029,7 +2041,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     onChange={(event) => setMappingRole(event.target.value as SemanticMapping['role'])}
                     className="border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
                   >
-                    {semanticRoleSchema.options.map((role) => (
+                    {mappingRoleOptions.map((role) => (
                       <option key={role} value={role}>
                         {renderSemanticRole(locale, role)}
                       </option>
@@ -2122,8 +2134,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               >
                 <ShieldCheck className="h-4 w-4" /> {verifying ? t.verifying : t.verify}
               </button>
-              {analysis.sufficiency.compilation_status === 'ready' &&
-              analysis.contract.archetype === 'constrained_resource_allocation' ? (
+              {analysis.sufficiency.compilation_status === 'ready' ? (
                 <>
                   <button
                     type="button"
