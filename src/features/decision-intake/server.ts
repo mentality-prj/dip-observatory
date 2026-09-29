@@ -10,6 +10,7 @@ export {
   contractResponseSchema,
   intakeAnalysisSchema,
   intakeAnswersSchema,
+  problemFormalizationSchema,
 } from './model/contracts'
 export type {
   CausalSpecification,
@@ -17,5 +18,6 @@ export type {
   ContractResponse,
   IntakeAnalysis,
   IntakeAnswers,
+  ProblemFormalization,
 } from './model/contracts'
 export { assertDecisionIntakeSameOrigin, DecisionIntakeAccessError } from './server/access'
