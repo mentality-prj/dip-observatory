@@ -60,7 +60,7 @@ const fallback = {
 } as const
 
 export function renderSemanticRole(locale: Locale, role: string): string {
-  return roleLabels[locale][role] ?? role || fallback[locale].role
+  return (roleLabels[locale][role] ?? role) || fallback[locale].role
 }
 
 function fieldParam(locale: Locale, params: SemanticParams): string {
