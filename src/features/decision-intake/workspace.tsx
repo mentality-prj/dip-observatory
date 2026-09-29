@@ -1248,124 +1248,67 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 </pre>
               </div>
             ) : null}
-
           </section>
 
           <section className="mt-6">
             <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
               <h2 className="text-xl font-medium">{t.questions}</h2>
-            <dl className="mt-4 grid gap-3 text-sm">
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                <dt className="text-slate-400">{t.structural}</dt>
-                <dd className="text-cyan-200">
-                  {analysis.sufficiency.structural_status === 'ready' ? t.structuralReady : t.structuralBlocked}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                <dt className="text-slate-400">{t.compilation}</dt>
-                <dd className="text-right text-cyan-200">
-                  {analysis.sufficiency.compilation_status === 'ready'
-                    ? t.compilationReady
-                    : analysis.sufficiency.compilation_status === 'unsupported'
-                      ? t.compilationUnsupported
-                      : t.compilationBlocked}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                <dt className="text-slate-400">{t.causal}</dt>
-                <dd className="text-right text-cyan-200">
-                  {causalStatusText(locale, analysis.sufficiency.causal_identifiability)}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                <dt className="text-slate-400">{t.certificate}</dt>
-                <dd className="text-right text-cyan-200">
-                  {analysis.sufficiency.certificate.issued ? t.certificateIssued : t.certificateBlocked}
-                  <span className="ml-2 text-xs text-slate-500">{analysis.sufficiency.certificate.scope}</span>
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                <dt className="text-slate-400">{t.planner}</dt>
-                <dd className="text-right text-xs text-slate-500">{analysis.sufficiency.planner_strategy}</dd>
-              </div>
-            </dl>
-
-            {compilationNextQuestion ? (
-              <div className="mt-5 border-t border-white/10 pt-4">
-                <b className="text-sm">{t.compilerNextStep}</b>
-                <p className="mt-2 text-xs leading-5 text-slate-400">
-                  {compilationNextQuestion.kind === 'select_archetype' ? t.decisionArchetype : t.compilerMapping}
-                  {compilationNextQuestion.role ? (
-                    <>
-                      : <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
-                    </>
-                  ) : null}
-                </p>
-                <p className="mt-1 text-[11px] leading-5 text-slate-600">{compilationNextQuestion.rationale}</p>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                  <select
-                    value={selectedCompilerField}
-                    onChange={(event) => setSelectedCompilerField(event.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
-                  >
-                    <option value="">{t.choose}</option>
-                    {compilationNextQuestion.options.map((field) => (
-                      <option key={field} value={field}>
-                        {field}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!selectedCompilerField || answerBusy}
-                    onClick={() => void applyCompilationAnswer()}
-                    className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
-                  >
-                    {answerBusy ? t.answerBusy : t.apply}
-                  </button>
+              <dl className="mt-4 grid gap-3 text-sm">
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                  <dt className="text-slate-400">{t.structural}</dt>
+                  <dd className="text-cyan-200">
+                    {analysis.sufficiency.structural_status === 'ready' ? t.structuralReady : t.structuralBlocked}
+                  </dd>
                 </div>
-              </div>
-            ) : null}
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                  <dt className="text-slate-400">{t.compilation}</dt>
+                  <dd className="text-right text-cyan-200">
+                    {analysis.sufficiency.compilation_status === 'ready'
+                      ? t.compilationReady
+                      : analysis.sufficiency.compilation_status === 'unsupported'
+                        ? t.compilationUnsupported
+                        : t.compilationBlocked}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                  <dt className="text-slate-400">{t.causal}</dt>
+                  <dd className="text-right text-cyan-200">
+                    {causalStatusText(locale, analysis.sufficiency.causal_identifiability)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                  <dt className="text-slate-400">{t.certificate}</dt>
+                  <dd className="text-right text-cyan-200">
+                    {analysis.sufficiency.certificate.issued ? t.certificateIssued : t.certificateBlocked}
+                    <span className="ml-2 text-xs text-slate-500">{analysis.sufficiency.certificate.scope}</span>
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
+                  <dt className="text-slate-400">{t.planner}</dt>
+                  <dd className="text-right text-xs text-slate-500">{analysis.sufficiency.planner_strategy}</dd>
+                </div>
+              </dl>
 
-            <details className="mt-5 border-t border-white/10 pt-4">
-              <summary className="cursor-pointer text-sm font-semibold text-white">{t.requirements}</summary>
-              <div className="mt-3 grid gap-2">
-                {analysis.sufficiency.requirements.map((requirement) => (
-                  <div
-                    key={requirement.id}
-                    className="flex items-start justify-between gap-4 rounded-lg border border-white/10 bg-slate-900/40 p-3 text-xs"
-                  >
-                    <div>
-                      <div className="font-medium text-slate-200">{requirement.id}</div>
-                      {requirement.depends_on.length ? (
-                        <div className="mt-1 text-slate-600">depends on: {requirement.depends_on.join(', ')}</div>
-                      ) : null}
-                    </div>
-                    <span className="whitespace-nowrap text-cyan-200">{requirement.state}</span>
-                  </div>
-                ))}
-              </div>
-            </details>
-
-            {nextQuestion ? (
-              <div className="mt-6 border-t border-white/10 pt-4">
-                <b className="text-sm">{t.nextQuestion}</b>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{questionText(locale, nextQuestion)}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{questionEffect(locale, nextQuestion)}</p>
-                <p className="mt-1 text-[11px] leading-5 text-slate-600">
-                  {t.priority}: {nextQuestion.priority_score.toFixed(2)} · {t.estimatedCost}:{' '}
-                  {nextQuestion.estimated_cost}
-                </p>
-
-                {nextQuestion.kind === 'select_field' ? (
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              {compilationNextQuestion ? (
+                <div className="mt-5 border-t border-white/10 pt-4">
+                  <b className="text-sm">{t.compilerNextStep}</b>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">
+                    {compilationNextQuestion.kind === 'select_archetype' ? t.decisionArchetype : t.compilerMapping}
+                    {compilationNextQuestion.role ? (
+                      <>
+                        : <span className="font-mono text-cyan-200">{compilationNextQuestion.role}</span>
+                      </>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-5 text-slate-600">{compilationNextQuestion.rationale}</p>
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                     <select
-                      value={selectedField}
-                      onChange={(event) => setSelectedField(event.target.value)}
+                      value={selectedCompilerField}
+                      onChange={(event) => setSelectedCompilerField(event.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
                     >
                       <option value="">{t.choose}</option>
-                      {nextQuestion.options.map((field) => (
+                      {compilationNextQuestion.options.map((field) => (
                         <option key={field} value={field}>
                           {field}
                         </option>
@@ -1373,258 +1316,319 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     </select>
                     <button
                       type="button"
-                      disabled={!selectedField || answerBusy}
-                      onClick={() => void applyAnswer()}
+                      disabled={!selectedCompilerField || answerBusy}
+                      onClick={() => void applyCompilationAnswer()}
                       className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
                     >
                       {answerBusy ? t.answerBusy : t.apply}
                     </button>
                   </div>
-                ) : null}
+                </div>
+              ) : null}
 
-                {nextQuestion.kind === 'confirm_semantic' ? (
-                  <div className="mt-4 flex gap-3">
-                    <button
-                      type="button"
-                      disabled={answerBusy}
-                      onClick={() => void applyAnswer('confirm')}
-                      className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+              <details className="mt-5 border-t border-white/10 pt-4">
+                <summary className="cursor-pointer text-sm font-semibold text-white">{t.requirements}</summary>
+                <div className="mt-3 grid gap-2">
+                  {analysis.sufficiency.requirements.map((requirement) => (
+                    <div
+                      key={requirement.id}
+                      className="flex items-start justify-between gap-4 rounded-lg border border-white/10 bg-slate-900/40 p-3 text-xs"
                     >
-                      {t.confirm}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={answerBusy}
-                      onClick={() => void applyAnswer('reject')}
-                      className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                    >
-                      {t.reject}
-                    </button>
-                  </div>
-                ) : null}
+                      <div>
+                        <div className="font-medium text-slate-200">{requirement.id}</div>
+                        {requirement.depends_on.length ? (
+                          <div className="mt-1 text-slate-600">depends on: {requirement.depends_on.join(', ')}</div>
+                        ) : null}
+                      </div>
+                      <span className="whitespace-nowrap text-cyan-200">{requirement.state}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
 
-                {nextQuestion.kind === 'select_available_fields' ? (
-                  <div className="mt-4 grid gap-2">
-                    <div className="grid max-h-56 gap-2 overflow-auto rounded-lg border border-white/10 bg-slate-900/70 p-3">
-                      {nextQuestion.options.map((field) => (
-                        <label key={field} className="flex items-center gap-2 text-sm text-slate-300">
+              {nextQuestion ? (
+                <div className="mt-6 border-t border-white/10 pt-4">
+                  <b className="text-sm">{t.nextQuestion}</b>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{questionText(locale, nextQuestion)}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{questionEffect(locale, nextQuestion)}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-slate-600">
+                    {t.priority}: {nextQuestion.priority_score.toFixed(2)} · {t.estimatedCost}:{' '}
+                    {nextQuestion.estimated_cost}
+                  </p>
+
+                  {nextQuestion.kind === 'select_field' ? (
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <select
+                        value={selectedField}
+                        onChange={(event) => setSelectedField(event.target.value)}
+                        className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
+                      >
+                        <option value="">{t.choose}</option>
+                        {nextQuestion.options.map((field) => (
+                          <option key={field} value={field}>
+                            {field}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={!selectedField || answerBusy}
+                        onClick={() => void applyAnswer()}
+                        className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                      >
+                        {answerBusy ? t.answerBusy : t.apply}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {nextQuestion.kind === 'confirm_semantic' ? (
+                    <div className="mt-4 flex gap-3">
+                      <button
+                        type="button"
+                        disabled={answerBusy}
+                        onClick={() => void applyAnswer('confirm')}
+                        className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                      >
+                        {t.confirm}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={answerBusy}
+                        onClick={() => void applyAnswer('reject')}
+                        className="rounded-lg border border-white/15 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {t.reject}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {nextQuestion.kind === 'select_available_fields' ? (
+                    <div className="mt-4 grid gap-2">
+                      <div className="grid max-h-56 gap-2 overflow-auto rounded-lg border border-white/10 bg-slate-900/70 p-3">
+                        {nextQuestion.options.map((field) => (
+                          <label key={field} className="flex items-center gap-2 text-sm text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={availableFields.includes(field)}
+                              onChange={(event) =>
+                                setAvailableFields((current) =>
+                                  event.target.checked ? [...current, field] : current.filter((item) => item !== field)
+                                )
+                              }
+                            />
+                            {field}
+                          </label>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={answerBusy}
+                        onClick={() => void applyAnswer()}
+                        className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                      >
+                        {answerBusy ? t.answerBusy : t.apply}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {nextQuestion.kind === 'define_causal_model' ? (
+                    <div className="mt-4 grid gap-3">
+                      <p className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
+                        {t.boundary}
+                      </p>
+                      <label className="grid gap-2 text-xs text-slate-400">
+                        <span className="font-medium text-slate-200">{t.causalEdges}</span>
+                        <textarea
+                          rows={6}
+                          value={causalEdges}
+                          onChange={(event) => setCausalEdges(event.target.value)}
+                          placeholder={t.causalEdgesHint}
+                          className="rounded-lg border border-white/10 bg-slate-900 p-3 font-mono text-xs text-white"
+                        />
+                        <p className="text-[11px] leading-5 text-amber-200/80">{t.graphWarning}</p>
+                      </label>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <label className="grid gap-2 text-xs text-slate-400">
+                          <span className="font-medium text-slate-200">{t.treatments}</span>
                           <input
-                            type="checkbox"
-                            checked={availableFields.includes(field)}
-                            onChange={(event) =>
-                              setAvailableFields((current) =>
-                                event.target.checked ? [...current, field] : current.filter((item) => item !== field)
-                              )
-                            }
+                            value={causalTreatments}
+                            onChange={(event) => setCausalTreatments(event.target.value)}
+                            placeholder={verifiedRoleField(analysis, 'action') ?? t.commaSeparated}
+                            className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
                           />
-                          {field}
                         </label>
-                      ))}
+                        <label className="grid gap-2 text-xs text-slate-400">
+                          <span className="font-medium text-slate-200">{t.outcomes}</span>
+                          <input
+                            value={causalOutcomes}
+                            onChange={(event) => setCausalOutcomes(event.target.value)}
+                            placeholder={verifiedRoleField(analysis, 'outcome') ?? t.commaSeparated}
+                            className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
+                          />
+                        </label>
+                        <label className="grid gap-2 text-xs text-slate-400">
+                          <span className="font-medium text-slate-200">{t.conditioning}</span>
+                          <input
+                            value={causalConditioning}
+                            onChange={(event) => setCausalConditioning(event.target.value)}
+                            placeholder={t.commaSeparated}
+                            className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
+                          />
+                        </label>
+                      </div>
+                      <label className="flex items-start gap-2 text-xs leading-5 text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={causalAssumptionsVerified}
+                          onChange={(event) => setCausalAssumptionsVerified(event.target.checked)}
+                          className="mt-1"
+                        />
+                        <span>{t.verifyCausalAssumptions}</span>
+                      </label>
+                      <button
+                        type="button"
+                        disabled={!causalAssumptionsVerified || answerBusy}
+                        onClick={() => void applyCausalSpecification()}
+                        className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
+                      >
+                        {answerBusy ? t.answerBusy : t.runIdentification}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      disabled={answerBusy}
-                      onClick={() => void applyAnswer()}
-                      className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
-                    >
-                      {answerBusy ? t.answerBusy : t.apply}
-                    </button>
-                  </div>
-                ) : null}
+                  ) : null}
 
-                {nextQuestion.kind === 'define_causal_model' ? (
-                  <div className="mt-4 grid gap-3">
-                    <p className="rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
-                      {t.boundary}
-                    </p>
-                    <label className="grid gap-2 text-xs text-slate-400">
-                      <span className="font-medium text-slate-200">{t.causalEdges}</span>
-                      <textarea
-                        rows={6}
-                        value={causalEdges}
-                        onChange={(event) => setCausalEdges(event.target.value)}
-                        placeholder={t.causalEdgesHint}
-                        className="rounded-lg border border-white/10 bg-slate-900 p-3 font-mono text-xs text-white"
-                      />
-                      <p className="text-[11px] leading-5 text-amber-200/80">{t.graphWarning}</p>
-                    </label>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <label className="grid gap-2 text-xs text-slate-400">
-                        <span className="font-medium text-slate-200">{t.treatments}</span>
-                        <input
-                          value={causalTreatments}
-                          onChange={(event) => setCausalTreatments(event.target.value)}
-                          placeholder={verifiedRoleField(analysis, 'action') ?? t.commaSeparated}
-                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-xs text-slate-400">
-                        <span className="font-medium text-slate-200">{t.outcomes}</span>
-                        <input
-                          value={causalOutcomes}
-                          onChange={(event) => setCausalOutcomes(event.target.value)}
-                          placeholder={verifiedRoleField(analysis, 'outcome') ?? t.commaSeparated}
-                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-xs text-slate-400">
-                        <span className="font-medium text-slate-200">{t.conditioning}</span>
-                        <input
-                          value={causalConditioning}
-                          onChange={(event) => setCausalConditioning(event.target.value)}
-                          placeholder={t.commaSeparated}
-                          className="rounded-lg border border-white/10 bg-slate-900 p-2.5 text-white"
-                        />
-                      </label>
+                  {nextQuestion.kind === 'plan_causal_evidence' ? (
+                    <div className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
+                      {t.effectEvidence}
+                      {analysis.sufficiency.causal_certificate?.failure_witness ? (
+                        <div className="mt-2 font-mono text-[11px] text-amber-50">
+                          outer C-component = [
+                          {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}],
+                          inner C-component = [
+                          {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
+                        </div>
+                      ) : null}
                     </div>
-                    <label className="flex items-start gap-2 text-xs leading-5 text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={causalAssumptionsVerified}
-                        onChange={(event) => setCausalAssumptionsVerified(event.target.checked)}
-                        className="mt-1"
-                      />
-                      <span>{t.verifyCausalAssumptions}</span>
-                    </label>
-                    <button
-                      type="button"
-                      disabled={!causalAssumptionsVerified || answerBusy}
-                      onClick={() => void applyCausalSpecification()}
-                      className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-50"
-                    >
-                      {answerBusy ? t.answerBusy : t.runIdentification}
-                    </button>
-                  </div>
-                ) : null}
+                  ) : null}
 
-                {nextQuestion.kind === 'plan_causal_evidence' ? (
-                  <div className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">
-                    {t.effectEvidence}
-                    {analysis.sufficiency.causal_certificate?.failure_witness ? (
-                      <div className="mt-2 font-mono text-[11px] text-amber-50">
+                  {nextQuestion.kind === 'assess_estimability' ? (
+                    <div className="mt-4 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-3 text-xs leading-5 text-cyan-50">
+                      <div>{nextQuestion.rationale}</div>
+                      {nextQuestion.evidence_variables.length ? (
+                        <div className="mt-2 font-mono text-[11px] text-cyan-100/70">
+                          {nextQuestion.evidence_variables.join(', ')}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {analysis.sufficiency.causal_certificate ? (
+                <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <b className="text-sm">{t.causalCertificate}</b>
+                    <span className="text-xs text-cyan-200">
+                      {analysis.sufficiency.causal_certificate.method} ·{' '}
+                      {analysis.sufficiency.causal_certificate.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">
+                    {analysis.sufficiency.causal_certificate.claim}
+                  </p>
+                  {analysis.sufficiency.causal_certificate.estimand ? (
+                    <div className="mt-3">
+                      <div className="text-xs font-medium text-slate-300">{t.estimand}</div>
+                      <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-[11px] leading-5 text-cyan-100">
+                        {analysis.sufficiency.causal_certificate.estimand}
+                      </pre>
+                    </div>
+                  ) : null}
+                  {analysis.sufficiency.causal_certificate.failure_witness ? (
+                    <div className="mt-3">
+                      <div className="text-xs font-medium text-slate-300">{t.failureWitness}</div>
+                      <div className="mt-1 font-mono text-[11px] text-amber-200">
                         outer C-component = [
                         {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}],
                         inner C-component = [
                         {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                       </div>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {nextQuestion.kind === 'assess_estimability' ? (
-                  <div className="mt-4 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-3 text-xs leading-5 text-cyan-50">
-                    <div>{nextQuestion.rationale}</div>
-                    {nextQuestion.evidence_variables.length ? (
-                      <div className="mt-2 font-mono text-[11px] text-cyan-100/70">
-                        {nextQuestion.evidence_variables.join(', ')}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {analysis.sufficiency.causal_certificate ? (
-              <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <b className="text-sm">{t.causalCertificate}</b>
-                  <span className="text-xs text-cyan-200">
-                    {analysis.sufficiency.causal_certificate.method} · {analysis.sufficiency.causal_certificate.status}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-slate-400">{analysis.sufficiency.causal_certificate.claim}</p>
-                {analysis.sufficiency.causal_certificate.estimand ? (
-                  <div className="mt-3">
-                    <div className="text-xs font-medium text-slate-300">{t.estimand}</div>
-                    <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-[11px] leading-5 text-cyan-100">
-                      {analysis.sufficiency.causal_certificate.estimand}
-                    </pre>
-                  </div>
-                ) : null}
-                {analysis.sufficiency.causal_certificate.failure_witness ? (
-                  <div className="mt-3">
-                    <div className="text-xs font-medium text-slate-300">{t.failureWitness}</div>
-                    <div className="mt-1 font-mono text-[11px] text-amber-200">
-                      outer C-component = [
-                      {analysis.sufficiency.causal_certificate.failure_witness.outer_component_nodes.join(', ')}], inner
-                      C-component = [
-                      {analysis.sufficiency.causal_certificate.failure_witness.inner_component_nodes.join(', ')}]
                     </div>
-                  </div>
-                ) : null}
-                {analysis.sufficiency.causal_certificate.proof_steps.length ? (
-                  <details className="mt-3">
-                    <summary className="cursor-pointer text-xs font-medium text-slate-300">{t.proof}</summary>
-                    <ol className="mt-2 grid gap-1 pl-4 text-[11px] leading-5 text-slate-500">
-                      {analysis.sufficiency.causal_certificate.proof_steps.map((step, index) => (
-                        <li key={`${index}:${step}`}>{step}</li>
-                      ))}
-                    </ol>
-                  </details>
-                ) : null}
-              </div>
-            ) : null}
+                  ) : null}
+                  {analysis.sufficiency.causal_certificate.proof_steps.length ? (
+                    <details className="mt-3">
+                      <summary className="cursor-pointer text-xs font-medium text-slate-300">{t.proof}</summary>
+                      <ol className="mt-2 grid gap-1 pl-4 text-[11px] leading-5 text-slate-500">
+                        {analysis.sufficiency.causal_certificate.proof_steps.map((step, index) => (
+                          <li key={`${index}:${step}`}>{step}</li>
+                        ))}
+                      </ol>
+                    </details>
+                  ) : null}
+                </div>
+              ) : null}
 
-            {analysis.sufficiency.causal_evidence_plan ? (
-              <div className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4">
-                <b className="text-sm text-amber-100">{t.evidencePlan}</b>
-                <div className="mt-3 grid gap-2">
-                  {analysis.sufficiency.causal_evidence_plan.actions.map((action) => (
-                    <div key={action.id} className="rounded-lg border border-amber-200/10 bg-slate-950/40 p-3 text-xs">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium text-amber-50">{evidenceActionText(locale, action.kind)}</span>
-                        {analysis.sufficiency.causal_evidence_plan?.preferred_action_id === action.id ? (
-                          <span className="text-[10px] uppercase tracking-wide text-cyan-200">{t.preferred}</span>
-                        ) : null}
+              {analysis.sufficiency.causal_evidence_plan ? (
+                <div className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4">
+                  <b className="text-sm text-amber-100">{t.evidencePlan}</b>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.sufficiency.causal_evidence_plan.actions.map((action) => (
+                      <div
+                        key={action.id}
+                        className="rounded-lg border border-amber-200/10 bg-slate-950/40 p-3 text-xs"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-amber-50">{evidenceActionText(locale, action.kind)}</span>
+                          {analysis.sufficiency.causal_evidence_plan?.preferred_action_id === action.id ? (
+                            <span className="text-[10px] uppercase tracking-wide text-cyan-200">{t.preferred}</span>
+                          ) : null}
+                        </div>
+                        <div className="mt-1 font-mono text-[11px] text-slate-400">
+                          {action.variables.join(', ')} · {t.estimatedCost}: {action.estimated_cost}
+                        </div>
                       </div>
-                      <div className="mt-1 font-mono text-[11px] text-slate-400">
-                        {action.variables.join(', ')} · {t.estimatedCost}: {action.estimated_cost}
-                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {analysis.sufficiency.empirical_support ? (
+                <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <b className="text-sm">{t.empiricalSupport}</b>
+                    <span className="text-xs text-cyan-200">{analysis.sufficiency.empirical_support.status}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">
+                    {supportStatusText(locale, analysis.sufficiency.empirical_support.status)}
+                  </p>
+                  <div className="mt-2 text-[11px] text-slate-500">
+                    {t.treatmentLevels}:{' '}
+                    {Object.entries(analysis.sufficiency.empirical_support.treatment_levels)
+                      .map(([field, count]) => `${field}=${count}`)
+                      .join(', ') || '—'}
+                    {' · '}
+                    {t.checkedStrata}: {analysis.sufficiency.empirical_support.checked_strata}
+                  </div>
+                  {analysis.sufficiency.empirical_support.checked_obligations.length ? (
+                    <div className="mt-2 text-[11px] leading-5 text-emerald-200/80">
+                      {t.checkedObligations}: {analysis.sufficiency.empirical_support.checked_obligations.join(', ')}
                     </div>
-                  ))}
+                  ) : null}
+                  {analysis.sufficiency.empirical_support.failed_obligations.length ? (
+                    <div className="mt-2 text-[11px] leading-5 text-rose-200/80">
+                      {t.failedObligations}: {analysis.sufficiency.empirical_support.failed_obligations.join(', ')}
+                    </div>
+                  ) : null}
+                  {analysis.sufficiency.empirical_support.deferred_obligations.length ? (
+                    <div className="mt-2 text-[11px] leading-5 text-amber-200/80">
+                      {t.deferredObligations}: {analysis.sufficiency.empirical_support.deferred_obligations.join(', ')}
+                    </div>
+                  ) : null}
                 </div>
+              ) : null}
+
+              <div className="mt-6 border-t border-white/10 pt-4 text-sm">
+                <b>{t.gate}:</b> <span className="text-cyan-200">{analysis.evidence_gate.status}</span>
               </div>
-            ) : null}
-
-            {analysis.sufficiency.empirical_support ? (
-              <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/40 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <b className="text-sm">{t.empiricalSupport}</b>
-                  <span className="text-xs text-cyan-200">{analysis.sufficiency.empirical_support.status}</span>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-slate-400">
-                  {supportStatusText(locale, analysis.sufficiency.empirical_support.status)}
-                </p>
-                <div className="mt-2 text-[11px] text-slate-500">
-                  {t.treatmentLevels}:{' '}
-                  {Object.entries(analysis.sufficiency.empirical_support.treatment_levels)
-                    .map(([field, count]) => `${field}=${count}`)
-                    .join(', ') || '—'}
-                  {' · '}
-                  {t.checkedStrata}: {analysis.sufficiency.empirical_support.checked_strata}
-                </div>
-                {analysis.sufficiency.empirical_support.checked_obligations.length ? (
-                  <div className="mt-2 text-[11px] leading-5 text-emerald-200/80">
-                    {t.checkedObligations}: {analysis.sufficiency.empirical_support.checked_obligations.join(', ')}
-                  </div>
-                ) : null}
-                {analysis.sufficiency.empirical_support.failed_obligations.length ? (
-                  <div className="mt-2 text-[11px] leading-5 text-rose-200/80">
-                    {t.failedObligations}: {analysis.sufficiency.empirical_support.failed_obligations.join(', ')}
-                  </div>
-                ) : null}
-                {analysis.sufficiency.empirical_support.deferred_obligations.length ? (
-                  <div className="mt-2 text-[11px] leading-5 text-amber-200/80">
-                    {t.deferredObligations}: {analysis.sufficiency.empirical_support.deferred_obligations.join(', ')}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="mt-6 border-t border-white/10 pt-4 text-sm">
-              <b>{t.gate}:</b> <span className="text-cyan-200">{analysis.evidence_gate.status}</span>
-            </div>
-
             </article>
           </section>
         </>
