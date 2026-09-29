@@ -820,7 +820,6 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   </div>
                 ) : null}
 
-
                 {nextQuestion.kind === 'assess_estimability' ? (
                   <div className="mt-4 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-3 text-xs leading-5 text-cyan-50">
                     <div>{nextQuestion.rationale}</div>
