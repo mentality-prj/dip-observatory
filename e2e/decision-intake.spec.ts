@@ -522,7 +522,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
         parameter: 'operation',
         value: 'optimize',
         provenance: 'system_default',
-        impact: 'decision_neutral',
+        impact: 'decision_relevant',
         rationale: 'Optimize is the selected Decision Intake adapter operation.',
         supported_compilers: ['resource_allocation.v1'],
         status: 'inferred',
@@ -635,6 +635,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
       'constraint:budget': 'user_confirmed',
       'assumption:resource_allocation:skills': 'user_confirmed',
       'assumption:resource_allocation:travel': 'user_confirmed',
+      'assumption:resource_allocation:operation': 'user_confirmed',
     })
     expect(body.candidate_statuses_by_id).toEqual({
       'semantic:community_id:community': 'user_confirmed',
@@ -710,6 +711,7 @@ test('automatic formalization can be accepted and executed end to end', async ({
   await expect(page.getByTestId('decision-intake-timing-community')).toContainText('pre_decision')
   await expect(page.getByTestId('decision-intake-timing-budget')).toContainText('pre_decision')
   await expect(page.getByTestId('decision-intake-accept-formalization')).toBeDisabled()
+  await page.getByTestId('formalization-objective-objective:resource_allocation_score').check()
   await page.getByTestId('decision-intake-review-timing').check()
   await page.getByTestId('decision-intake-accept-formalization').click()
 
