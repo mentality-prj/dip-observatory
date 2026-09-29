@@ -128,6 +128,8 @@ const copy = {
     causalNotIdentified: 'not identified',
     nextQuestion: 'Next required step',
     actionQuestion: 'Which field represents the action a decision maker can control?',
+    causalActionQuestion:
+      'Which observed field records the historical action or treatment for causal analysis?',
     objectiveQuestion: 'Which field represents the business objective QDIP should optimize?',
     outcomeQuestion: 'Which field records the realized outcome?',
     availableQuestion: 'Which fields were available before the action was chosen?',
@@ -289,6 +291,8 @@ const copy = {
     causalNotIdentified: 'не ідентифіковано',
     nextQuestion: 'Наступний необхідний крок',
     actionQuestion: 'Яке поле представляє дію, яку може контролювати особа, що приймає рішення?',
+    causalActionQuestion:
+      'Яке observed поле фіксує історичну дію або treatment для каузального аналізу?',
     objectiveQuestion: 'Яке поле представляє бізнес-мету, яку QDIP має оптимізувати?',
     outcomeQuestion: 'Яке поле фіксує фактично отриманий результат?',
     availableQuestion: 'Які поля були доступні до моменту вибору дії?',
@@ -452,6 +456,8 @@ const copy = {
     causalNotIdentified: 'nie zidentyfikowano',
     nextQuestion: 'Następny wymagany krok',
     actionQuestion: 'Które pole reprezentuje działanie kontrolowane przez osobę podejmującą decyzję?',
+    causalActionQuestion:
+      'Które obserwowane pole zapisuje historyczne działanie lub treatment dla analizy przyczynowej?',
     objectiveQuestion: 'Które pole reprezentuje cel biznesowy, który QDIP ma optymalizować?',
     outcomeQuestion: 'Które pole zapisuje zrealizowany wynik?',
     availableQuestion: 'Które pola były dostępne przed wyborem działania?',
@@ -519,6 +525,7 @@ const copy = {
 function questionText(locale: Locale, question: SufficiencyQuestion) {
   const t = copy[locale]
   if (question.kind === 'select_field') {
+    if (question.id === 'select-causal-action') return t.causalActionQuestion
     if (question.role === 'action') return t.actionQuestion
     if (question.role === 'objective') return t.objectiveQuestion
     if (question.role === 'outcome') return t.outcomeQuestion
