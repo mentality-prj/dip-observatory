@@ -183,5 +183,4 @@ describe('Decision Intake API compatibility transport', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
-
 })
