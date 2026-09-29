@@ -619,7 +619,16 @@ test('automatic formalization can be accepted and executed end to end', async ({
   await page.route('**/api/decision-intake/auto-contract/answers', async (route) => {
     const body = route.request().postDataJSON()
     expect(body.archetype).toBe('constrained_resource_allocation')
-    expect(body.accept_timing_suggestions).toBe(true)
+    expect(body.accept_timing_suggestions).toBeUndefined()
+    expect(body.information_availability).toEqual({
+      community: 'available',
+      team_id: 'available',
+      capacity: 'available',
+      demand: 'available',
+      service: 'available',
+      priority: 'available',
+      budget: 'available',
+    })
     expect(body.formalization_statuses).toEqual({
       'decision_variable:resource_allocation': 'user_confirmed',
       'objective:resource_allocation_score': 'user_confirmed',
@@ -698,6 +707,10 @@ test('automatic formalization can be accepted and executed end to end', async ({
   await expect(page.getByText('skills = all_demand_services')).toBeVisible()
   await expect(page.getByText('travel = zero_cost_unrestricted')).toBeVisible()
   await expect(page.getByText('operation = optimize')).toBeVisible()
+  await expect(page.getByTestId('decision-intake-timing-community')).toContainText('pre_decision')
+  await expect(page.getByTestId('decision-intake-timing-budget')).toContainText('pre_decision')
+  await expect(page.getByTestId('decision-intake-accept-formalization')).toBeDisabled()
+  await page.getByTestId('decision-intake-review-timing').check()
   await page.getByTestId('decision-intake-accept-formalization').click()
 
   await expect(page.getByTestId('decision-intake-execute')).toBeVisible()
