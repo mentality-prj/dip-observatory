@@ -108,6 +108,7 @@ export async function submitDecisionIntakeAnswers(sessionId: string, input: Inta
     input.causal_specification ||
     Object.keys(input.formalization_statuses ?? {}).length ||
     Object.keys(input.decision_variable_overrides ?? {}).length ||
+    Object.keys(input.objective_overrides ?? {}).length ||
     Object.keys(input.constraint_overrides ?? {}).length ||
     Object.keys(input.candidate_scope_overrides ?? {}).length ||
     input.accept_timing_suggestions
