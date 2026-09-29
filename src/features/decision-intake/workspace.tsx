@@ -1211,6 +1211,40 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         <div className="mt-1 text-[11px] text-slate-500">
                           {item.kind} · {Math.round(item.score * 100)}% · {item.status}
                         </div>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            disabled={answerBusy}
+                            onClick={() =>
+                              void submitAnswerPayload({
+                                formalization_statuses: { [item.id]: 'user_confirmed' },
+                              })
+                            }
+                            className={
+                              item.status === 'user_confirmed'
+                                ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                                : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                            }
+                          >
+                            {t.confirm}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={answerBusy}
+                            onClick={() =>
+                              void submitAnswerPayload({
+                                formalization_statuses: { [item.id]: 'rejected' },
+                              })
+                            }
+                            className={
+                              item.status === 'rejected'
+                                ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                                : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                            }
+                          >
+                            {t.reject}
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {!analysis.contract.formalization.decision_variables.length ? (
@@ -1233,7 +1267,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                           data-testid={`formalization-objective-${item.id}`}
                           checked={selectedObjectiveId === item.id}
                           onChange={() => setSelectedObjectiveId(item.id)}
-                          disabled={item.status === 'rejected' || formalizationAccepting}
+                          disabled={formalizationAccepting}
                           className="mt-1"
                         />
                         <span className="min-w-0">
@@ -1278,6 +1312,40 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       </div>
                       <div className="mt-1 text-[11px] text-slate-600">
                         {Math.round(item.score * 100)}% · {item.status}
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          disabled={answerBusy}
+                          onClick={() =>
+                            void submitAnswerPayload({
+                              formalization_statuses: { [item.id]: 'user_confirmed' },
+                            })
+                          }
+                          className={
+                            item.status === 'user_confirmed'
+                              ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                              : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                          }
+                        >
+                          {t.confirm}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={answerBusy}
+                          onClick={() =>
+                            void submitAnswerPayload({
+                              formalization_statuses: { [item.id]: 'rejected' },
+                            })
+                          }
+                          className={
+                            item.status === 'rejected'
+                              ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                              : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                          }
+                        >
+                          {t.reject}
+                        </button>
                       </div>
                     </div>
                   ))}
