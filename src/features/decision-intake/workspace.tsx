@@ -59,7 +59,23 @@ const copy = {
     uploadTooLarge: 'The dataset exceeds Decision Intake limits.',
     verificationTitle: 'Human verification',
     verificationBody:
-      'Confirm or reject inferred semantics, add missing field-role mappings, and verify which fields existed before the decision.',
+      'Review QDIP’s candidate mathematical formulation. Confirm the model; edit only material exceptions.',
+    formalizationTitle: 'Candidate problem formalization',
+    formalizationBody:
+      'QDIP inferred the decision structure, objective candidates, constraints, compiler mappings and decision-time inputs. These remain hypotheses until you confirm them.',
+    completeness: 'Formalization completeness',
+    decisionVariable: 'Decision variable',
+    objectiveCandidates: 'Objective candidates',
+    constraintsTitle: 'Inferred constraints',
+    compilerMappings: 'Compiler mappings',
+    timingSuggestions: 'Decision-time suggestions',
+    acceptFormalization: 'Accept suggested formalization',
+    acceptingFormalization: 'Applying formalization…',
+    selectObjective: 'Select objective',
+    hardConstraint: 'hard',
+    softConstraint: 'soft',
+    ambiguousConstraint: 'ambiguous',
+    scopedTo: 'when',
     contractVersion: 'Contract version',
     candidateReview: 'Semantic hypotheses',
     mappingTitle: 'Add a missing semantic mapping',
@@ -202,7 +218,23 @@ const copy = {
     uploadTooLarge: 'Набір даних перевищує ліміти Decision Intake.',
     verificationTitle: 'Перевірка людиною',
     verificationBody:
-      'Підтвердьте або відхиліть запропоновану семантику, додайте відсутні зіставлення поле-роль і перевірте, які поля існували до рішення.',
+      'Перевірте candidate mathematical formalization, яку побудував QDIP. Підтверджуйте модель, а вручну змінюйте лише суттєві винятки.',
+    formalizationTitle: 'Кандидатна формалізація задачі',
+    formalizationBody:
+      'QDIP сам визначив структуру рішення, варіанти objective, constraints, compiler mappings і decision-time inputs. До підтвердження це гіпотези.',
+    completeness: 'Повнота формалізації',
+    decisionVariable: 'Decision variable',
+    objectiveCandidates: 'Варіанти objective',
+    constraintsTitle: 'Виявлені constraints',
+    compilerMappings: 'Compiler mappings',
+    timingSuggestions: 'Припущення про decision-time',
+    acceptFormalization: 'Прийняти запропоновану formalization',
+    acceptingFormalization: 'Застосовую formalization…',
+    selectObjective: 'Оберіть objective',
+    hardConstraint: 'hard',
+    softConstraint: 'soft',
+    ambiguousConstraint: 'ambiguous',
+    scopedTo: 'коли',
     contractVersion: 'Версія контракту',
     candidateReview: 'Семантичні гіпотези',
     mappingTitle: 'Додати відсутнє семантичне зіставлення',
@@ -347,7 +379,23 @@ const copy = {
     uploadTooLarge: 'Zbiór przekracza limity Decision Intake.',
     verificationTitle: 'Weryfikacja przez człowieka',
     verificationBody:
-      'Potwierdź lub odrzuć proponowaną semantykę, dodaj brakujące mapowania pole-rola i sprawdź, które pola istniały przed decyzją.',
+      'Sprawdź kandydacką formalizację matematyczną zbudowaną przez QDIP. Potwierdź model i edytuj ręcznie tylko istotne wyjątki.',
+    formalizationTitle: 'Kandydacka formalizacja problemu',
+    formalizationBody:
+      'QDIP wywnioskował strukturę decyzji, kandydatów celu, ograniczenia, mapowania kompilatora i dane dostępne przed decyzją. Do potwierdzenia są to hipotezy.',
+    completeness: 'Kompletność formalizacji',
+    decisionVariable: 'Zmienna decyzyjna',
+    objectiveCandidates: 'Kandydaci celu',
+    constraintsTitle: 'Wywnioskowane ograniczenia',
+    compilerMappings: 'Mapowania kompilatora',
+    timingSuggestions: 'Sugestie dostępności w czasie decyzji',
+    acceptFormalization: 'Zaakceptuj proponowaną formalizację',
+    acceptingFormalization: 'Stosowanie formalizacji…',
+    selectObjective: 'Wybierz cel',
+    hardConstraint: 'twarde',
+    softConstraint: 'miękkie',
+    ambiguousConstraint: 'niejednoznaczne',
+    scopedTo: 'gdy',
     contractVersion: 'Wersja kontraktu',
     candidateReview: 'Hipotezy semantyczne',
     mappingTitle: 'Dodaj brakujące mapowanie semantyczne',
@@ -483,6 +531,12 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
     return t.causalEvidenceQuestion
   }
   if (question.kind === 'confirm_semantic') {
+    if (question.hypothesis_id) {
+      return question.rationale || question.hypothesis_id
+    }
+    if (question.hypothesis_ids.length) {
+      return question.rationale || question.hypothesis_ids.join(', ')
+    }
     return t.confirmQuestion.replace('{field}', question.field ?? '').replace('{role}', question.role ?? '')
   }
   return question.id
