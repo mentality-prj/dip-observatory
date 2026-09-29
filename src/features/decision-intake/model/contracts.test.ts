@@ -296,6 +296,12 @@ describe('Decision Intake sufficiency contract', () => {
           expression: 'x[team, community, day] in {0,1}',
         },
       },
+      objective_overrides: {
+        'objective:resource_allocation_score': {
+          sense: 'maximize',
+          expression: 'maximize fairness_adjusted_coverage',
+        },
+      },
       constraint_overrides: {
         'constraint:budget': {
           kind: 'hard',
@@ -311,6 +317,9 @@ describe('Decision Intake sufficiency contract', () => {
       },
     })
 
+    expect(result.objective_overrides?.['objective:resource_allocation_score']?.expression).toBe(
+      'maximize fairness_adjusted_coverage'
+    )
     expect(result.constraint_overrides?.['constraint:budget']?.value).toBe(80)
     expect(result.candidate_scope_overrides?.['semantic:team_id:id']?.values).toEqual(['team'])
   })
