@@ -6,12 +6,27 @@ import { Check, FileUp, Plus, ShieldCheck, Trash2, Wrench, X } from 'lucide-reac
 import { FileUploader } from '@/components/file-uploader'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
+  compiledResourceAllocationSchema,
   contractResponseSchema,
   intakeAnalysisSchema,
+  semanticRoleSchema,
   type CausalSpecification,
+  type CompiledResourceAllocation,
   type IntakeAnalysis,
+  type IntakeAnswers,
   type SufficiencyQuestion,
 } from './model/contracts'
+import {
+  renderAssumption,
+  renderClarification,
+  renderNextStep,
+  renderSemanticReason,
+  renderSemanticRole,
+} from './semantic-copy'
+
+type CandidateChoice = 'user_confirmed' | 'rejected'
+type AvailabilityChoice = 'available' | 'not_available'
+type SemanticMapping = NonNullable<IntakeAnswers['semantic_mappings']>[number]
 
 const copy = {
   en: {
@@ -38,6 +53,45 @@ const copy = {
     legacySemantics: 'Legacy v1 semantics (original wording)',
     legacySemanticsHint: 'These opaque v1 items are preserved verbatim because they cannot be localized safely.',
     privacy: 'Do not upload unnecessary personal data.',
+    requestFailed: 'Decision Intake request failed.',
+    invalidDataset: 'The dataset could not be analyzed. Check its structure and values.',
+    uploadTooLarge: 'The dataset exceeds Decision Intake limits.',
+    verificationTitle: 'Human verification',
+    verificationBody:
+      'Confirm or reject inferred semantics, add missing field-role mappings, and verify which fields existed before the decision.',
+    contractVersion: 'Contract version',
+    candidateReview: 'Semantic hypotheses',
+    mappingTitle: 'Add a missing semantic mapping',
+    mappingHint: 'Use this when QDIP did not propose a required field-role mapping.',
+    field: 'Field',
+    role: 'Role',
+    addMapping: 'Add mapping',
+    pendingMappings: 'Pending mappings',
+    remove: 'Remove',
+    availabilityTitle: 'Decision-time availability',
+    availabilityHint: 'For each input field, state whether it was available before the action was chosen.',
+    notReviewed: 'Not reviewed',
+    available: 'Available before decision',
+    unavailable: 'Not available before decision',
+    verify: 'Verify evidence',
+    verifying: 'Verifying…',
+    verificationFailed: 'Decision Intake verification failed.',
+    missingEvidence: 'Missing evidence',
+    compile: 'Compile resource-allocation request',
+    compiling: 'Compiling…',
+    compileFailed: 'Decision Intake compilation failed.',
+    compiledTitle: 'Compiled adapter request',
+    noCandidates: 'No semantic hypotheses were proposed. Add the required mappings manually.',
+    gateStatuses: {
+      no_opportunity: 'No opportunity',
+      discovered: 'Discovered',
+      ready_for_decision: 'Ready for decision',
+      ready_for_historical_evaluation: 'Ready for historical evaluation',
+      needs_more_data: 'Needs more data',
+      needs_prospective_pilot: 'Needs prospective pilot',
+      invalid: 'Invalid',
+    },
+
     structural: 'Structural decision',
     structuralBlocked: 'insufficient',
     structuralReady: 'structural intake requirements satisfied',
@@ -141,6 +195,45 @@ const copy = {
     legacySemanticsHint:
       'Ці елементи v1 збережено дослівно, оскільки їх неможливо безпечно локалізувати без втрати змісту.',
     privacy: 'Не завантажуйте зайві персональні дані.',
+    requestFailed: 'Не вдалося виконати запит Decision Intake.',
+    invalidDataset: 'Набір даних не вдалося проаналізувати. Перевірте його структуру та значення.',
+    uploadTooLarge: 'Набір даних перевищує ліміти Decision Intake.',
+    verificationTitle: 'Перевірка людиною',
+    verificationBody:
+      'Підтвердьте або відхиліть запропоновану семантику, додайте відсутні зіставлення поле-роль і перевірте, які поля існували до рішення.',
+    contractVersion: 'Версія контракту',
+    candidateReview: 'Семантичні гіпотези',
+    mappingTitle: 'Додати відсутнє семантичне зіставлення',
+    mappingHint: 'Використовуйте, якщо QDIP не запропонував потрібне зіставлення поля з роллю.',
+    field: 'Поле',
+    role: 'Роль',
+    addMapping: 'Додати зіставлення',
+    pendingMappings: 'Нові зіставлення',
+    remove: 'Видалити',
+    availabilityTitle: 'Доступність на момент рішення',
+    availabilityHint: 'Для кожного вхідного поля вкажіть, чи було воно доступне до вибору дії.',
+    notReviewed: 'Не перевірено',
+    available: 'Було доступне до рішення',
+    unavailable: 'Не було доступне до рішення',
+    verify: 'Перевірити докази',
+    verifying: 'Перевіряю…',
+    verificationFailed: 'Не вдалося виконати перевірку Decision Intake.',
+    missingEvidence: 'Відсутні докази',
+    compile: 'Скомпілювати запит розподілу ресурсів',
+    compiling: 'Компілюю…',
+    compileFailed: 'Не вдалося скомпілювати Decision Intake.',
+    compiledTitle: 'Скомпільований запит адаптера',
+    noCandidates: 'Семантичних гіпотез немає. Додайте потрібні зіставлення вручну.',
+    gateStatuses: {
+      no_opportunity: 'Немає можливості',
+      discovered: 'Виявлено',
+      ready_for_decision: 'Готово до рішення',
+      ready_for_historical_evaluation: 'Готово до історичної оцінки',
+      needs_more_data: 'Потрібно більше даних',
+      needs_prospective_pilot: 'Потрібен проспективний пілот',
+      invalid: 'Некоректно',
+    },
+
     structural: 'Структура рішення',
     structuralBlocked: 'недостатньо даних',
     structuralReady: 'структурні вимоги intake виконано',
@@ -246,6 +339,45 @@ const copy = {
     legacySemanticsHint:
       'Te elementy v1 zachowano dosłownie, ponieważ nie można ich bezpiecznie zlokalizować bez utraty znaczenia.',
     privacy: 'Nie przesyłaj zbędnych danych osobowych.',
+    requestFailed: 'Nie udało się wykonać żądania Decision Intake.',
+    invalidDataset: 'Nie udało się przeanalizować zbioru. Sprawdź jego strukturę i wartości.',
+    uploadTooLarge: 'Zbiór przekracza limity Decision Intake.',
+    verificationTitle: 'Weryfikacja przez człowieka',
+    verificationBody:
+      'Potwierdź lub odrzuć proponowaną semantykę, dodaj brakujące mapowania pole-rola i sprawdź, które pola istniały przed decyzją.',
+    contractVersion: 'Wersja kontraktu',
+    candidateReview: 'Hipotezy semantyczne',
+    mappingTitle: 'Dodaj brakujące mapowanie semantyczne',
+    mappingHint: 'Użyj, jeśli QDIP nie zaproponował wymaganego mapowania pola do roli.',
+    field: 'Pole',
+    role: 'Rola',
+    addMapping: 'Dodaj mapowanie',
+    pendingMappings: 'Nowe mapowania',
+    remove: 'Usuń',
+    availabilityTitle: 'Dostępność w momencie decyzji',
+    availabilityHint: 'Dla każdego pola wejściowego określ, czy było dostępne przed wyborem działania.',
+    notReviewed: 'Niezweryfikowane',
+    available: 'Dostępne przed decyzją',
+    unavailable: 'Niedostępne przed decyzją',
+    verify: 'Zweryfikuj dowody',
+    verifying: 'Weryfikowanie…',
+    verificationFailed: 'Weryfikacja Decision Intake nie powiodła się.',
+    missingEvidence: 'Brakujące dowody',
+    compile: 'Skompiluj żądanie alokacji zasobów',
+    compiling: 'Kompilowanie…',
+    compileFailed: 'Kompilacja Decision Intake nie powiodła się.',
+    compiledTitle: 'Skompilowane żądanie adaptera',
+    noCandidates: 'Brak hipotez semantycznych. Dodaj wymagane mapowania ręcznie.',
+    gateStatuses: {
+      no_opportunity: 'Brak możliwości',
+      discovered: 'Wykryto',
+      ready_for_decision: 'Gotowe do decyzji',
+      ready_for_historical_evaluation: 'Gotowe do oceny historycznej',
+      needs_more_data: 'Potrzeba więcej danych',
+      needs_prospective_pilot: 'Wymagany pilotaż prospektywny',
+      invalid: 'Nieprawidłowe',
+    },
+
     structural: 'Struktura decyzji',
     structuralBlocked: 'niewystarczająca',
     structuralReady: 'wymagania strukturalne intake spełnione',
@@ -431,6 +563,16 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [compiling, setCompiling] = useState(false)
+  const [verificationError, setVerificationError] = useState('')
+  const [compileError, setCompileError] = useState('')
+  const [candidateAnswers, setCandidateAnswers] = useState<Record<string, CandidateChoice>>({})
+  const [availabilityAnswers, setAvailabilityAnswers] = useState<Record<string, AvailabilityChoice>>({})
+  const [semanticMappings, setSemanticMappings] = useState<SemanticMapping[]>([])
+  const [mappingField, setMappingField] = useState('')
+  const [mappingRole, setMappingRole] = useState<SemanticMapping['role']>('action')
+  const [compiled, setCompiled] = useState<CompiledResourceAllocation | null>(null)
   const [answerBusy, setAnswerBusy] = useState(false)
   const [selectedField, setSelectedField] = useState('')
   const [selectedCompilerField, setSelectedCompilerField] = useState('')
@@ -492,6 +634,98 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       setBusy(false)
     }
   }
+
+  function addSemanticMapping() {
+    if (!analysis || !mappingField) return
+    const existing = analysis.contract.candidates.find(
+      (candidate) => candidate.field === mappingField && candidate.role === mappingRole
+    )
+    if (existing) {
+      setCandidateAnswers((current) => ({ ...current, [existing.candidate_id]: 'user_confirmed' }))
+      return
+    }
+    const duplicate = semanticMappings.some((mapping) => mapping.field === mappingField && mapping.role === mappingRole)
+    if (duplicate) return
+    setSemanticMappings((current) => [...current, { field: mappingField, role: mappingRole }])
+  }
+
+  async function verifyEvidence() {
+    if (!analysis) return
+    setVerifying(true)
+    setVerificationError('')
+    setCompileError('')
+    setCompiled(null)
+
+    const input: IntakeAnswers = {}
+    if (Object.keys(candidateAnswers).length) input.candidate_statuses_by_id = candidateAnswers
+    if (Object.keys(availabilityAnswers).length) input.information_availability = availabilityAnswers
+    if (semanticMappings.length) input.semantic_mappings = semanticMappings
+
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(input),
+        }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setVerificationError(t.verificationFailed)
+        return
+      }
+      const result = contractResponseSchema.parse(payload)
+      setAnalysis((current) =>
+        current
+          ? {
+              ...current,
+              contract: result.contract,
+              evidence_gate: result.evidence_gate,
+              interpretation: {
+                ...current.interpretation,
+                candidates: result.contract.candidates,
+              },
+            }
+          : current
+      )
+      setCandidateAnswers({})
+      setAvailabilityAnswers({})
+      setSemanticMappings([])
+    } catch {
+      setVerificationError(t.verificationFailed)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  async function compileContract() {
+    if (!analysis) return
+    setCompiling(true)
+    setCompileError('')
+    setCompiled(null)
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/compile`,
+        { method: 'POST' }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setCompileError(t.compileFailed)
+        return
+      }
+      setCompiled(compiledResourceAllocationSchema.parse(payload))
+    } catch {
+      setCompileError(t.compileFailed)
+    } finally {
+      setCompiling(false)
+    }
+  }
+
+  const hasPendingVerification =
+    Object.keys(candidateAnswers).length > 0 ||
+    Object.keys(availabilityAnswers).length > 0 ||
+    semanticMappings.length > 0
 
   async function submitAnswerPayload(body: IntakeAnswerBody) {
     if (!analysis) return false
@@ -924,10 +1158,93 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 </div>
               ) : null}
             </div>
-          </article>
 
-          <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
-            <h2 className="text-xl font-medium">{t.questions}</h2>
+            <details className="mt-7 border-t border-white/10 pt-6" open>
+              <summary className="cursor-pointer text-sm font-semibold">{t.availabilityTitle}</summary>
+              <p className="mt-2 text-xs leading-5 text-slate-500">{t.availabilityHint}</p>
+              <div className="mt-4 grid gap-2 md:grid-cols-2">
+                {analysis.contract.information_set.map((item) => {
+                  const value =
+                    availabilityAnswers[item.field] ?? (item.availability === 'unknown' ? '' : item.availability)
+                  return (
+                    <label
+                      key={item.field}
+                      className="grid grid-cols-[minmax(0,1fr)_minmax(150px,auto)] items-center gap-3 border border-white/10 bg-white/[0.02] px-3 py-2 text-xs"
+                    >
+                      <span className="truncate text-slate-300">{item.field}</span>
+                      <select
+                        data-testid={`availability-${item.field}`}
+                        value={value}
+                        onChange={(event) => {
+                          const next = event.target.value as AvailabilityChoice | ''
+                          setAvailabilityAnswers((current) => {
+                            const updated = { ...current }
+                            if (next) updated[item.field] = next
+                            else delete updated[item.field]
+                            return updated
+                          })
+                        }}
+                        className="border border-white/10 bg-slate-900 px-2 py-1.5 text-xs text-white"
+                      >
+                        <option value="">{t.notReviewed}</option>
+                        <option value="available">{t.available}</option>
+                        <option value="not_available">{t.unavailable}</option>
+                      </select>
+                    </label>
+                  )
+                })}
+              </div>
+            </details>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                data-testid="decision-intake-verify"
+                disabled={verifying || !hasPendingVerification}
+                onClick={verifyEvidence}
+                className="inline-flex items-center gap-2 bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
+              >
+                <ShieldCheck className="h-4 w-4" /> {verifying ? t.verifying : t.verify}
+              </button>
+              {analysis.evidence_gate.status === 'ready_for_decision' &&
+              analysis.contract.archetype === 'constrained_resource_allocation' ? (
+                <button
+                  type="button"
+                  data-testid="decision-intake-compile"
+                  disabled={compiling}
+                  onClick={compileContract}
+                  className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-300/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 disabled:opacity-40"
+                >
+                  <Wrench className="h-4 w-4" /> {compiling ? t.compiling : t.compile}
+                </button>
+              ) : null}
+            </div>
+
+            {verificationError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {verificationError}
+              </p>
+            ) : null}
+            {compileError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {compileError}
+              </p>
+            ) : null}
+
+            {compiled ? (
+              <div data-testid="decision-intake-compiled" className="mt-6 border-t border-white/10 pt-5">
+                <h3 className="text-sm font-semibold text-emerald-200">{t.compiledTitle}</h3>
+                <pre className="mt-3 max-h-80 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
+                  {JSON.stringify(compiled.request, null, 2)}
+                </pre>
+              </div>
+            ) : null}
+
+          </section>
+
+          <section className="mt-6">
+            <article className="rounded-xl border border-white/10 bg-slate-950/70 p-6">
+              <h2 className="text-xl font-medium">{t.questions}</h2>
             <dl className="mt-4 grid gap-3 text-sm">
               <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
                 <dt className="text-slate-400">{t.structural}</dt>
@@ -1299,25 +1616,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               <b>{t.gate}:</b> <span className="text-cyan-200">{analysis.evidence_gate.status}</span>
             </div>
 
-            {verificationError ? (
-              <p role="alert" className="mt-3 text-sm text-rose-300">
-                {verificationError}
-              </p>
-            ) : null}
-            {compileError ? (
-              <p role="alert" className="mt-3 text-sm text-rose-300">
-                {compileError}
-              </p>
-            ) : null}
-
-            {compiled ? (
-              <div data-testid="decision-intake-compiled" className="mt-6 border-t border-white/10 pt-5">
-                <h3 className="text-sm font-semibold text-emerald-200">{t.compiledTitle}</h3>
-                <pre className="mt-3 max-h-80 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
-                  {JSON.stringify(compiled.request, null, 2)}
-                </pre>
-              </div>
-            ) : null}
+            </article>
           </section>
         </>
       ) : null}
