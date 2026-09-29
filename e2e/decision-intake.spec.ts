@@ -16,7 +16,7 @@ const analysis = {
     archetype: 'generic_decision',
     candidates: [
       {
-        candidate_id: 'semantic-action',
+        candidate_id: 'semantic:action:action',
         field: 'action',
         role: 'action',
         source_columns: ['action'],
@@ -61,8 +61,24 @@ const analysis = {
     version: 1,
     source_hash: 'test-source',
     archetype: 'generic_decision',
-    candidates: [],
-    information_set: [],
+    candidates: [
+      {
+        candidate_id: 'semantic:action:action',
+        field: 'action',
+        role: 'action',
+        source_columns: ['action'],
+        reason: {
+          code: 'semantic_reason.business_context_match',
+          params: { field: 'action', role: 'action' },
+        },
+        status: 'inferred',
+      },
+    ],
+    information_set: [
+      { field: 'action', availability: 'unknown', status: 'inferred' },
+      { field: 'capacity', availability: 'unknown', status: 'inferred' },
+      { field: 'outcome', availability: 'unknown', status: 'inferred' },
+    ],
     assumptions: [
       {
         code: 'assumption.business_semantics_require_confirmation',
@@ -198,4 +214,166 @@ test('legacy Decision Intake semantics remain available without leaking into the
   await page.getByText('Legacy-семантика v1 (оригінальне формулювання)').click()
   await expect(page.getByText('Custom AI clarification?')).toBeVisible()
   await expect(page.getByText('Custom legacy assumption')).toBeVisible()
+})
+
+
+test('human verification can create missing semantics and compile a ready RA contract', async ({ page }) => {
+  const candidates = [
+    ['team_id', 'action'],
+    ['community', 'community_id'],
+    ['team_id', 'team_id'],
+    ['capacity', 'capacity'],
+    ['demand', 'demand'],
+  ].map(([field, role]) => ({
+    candidate_id: `semantic:${role}:${field}`,
+    field,
+    role,
+    source_columns: [field],
+    reason: {
+      code: 'semantic_reason.model_inference',
+      params: { field, role },
+    },
+    status: 'inferred',
+  }))
+  const informationSet = ['community', 'team_id', 'capacity', 'demand'].map((field) => ({
+    field,
+    availability: 'unknown',
+    status: 'inferred',
+  }))
+  const raAnalysis = {
+    ...analysis,
+    interpretation: {
+      ...analysis.interpretation,
+      archetype: 'constrained_resource_allocation',
+      candidates,
+    },
+    contract: {
+      ...analysis.contract,
+      contract_id: 'ra-contract',
+      archetype: 'constrained_resource_allocation',
+      candidates,
+      information_set: informationSet,
+    },
+    evidence_gate: {
+      ...analysis.evidence_gate,
+      status: 'needs_more_data',
+      missing_evidence: ['objective'],
+      recommended_next_step: {
+        code: 'next_step.confirm_controllable_action_and_business_objective',
+        params: { field: null, role: null },
+      },
+    },
+  }
+
+  const verifiedCandidates = [
+    ...candidates.map((candidate) => ({ ...candidate, status: 'user_confirmed' })),
+    {
+      candidate_id: 'semantic:objective:demand',
+      field: 'demand',
+      role: 'objective',
+      source_columns: ['demand'],
+      reason: {
+        code: 'semantic_reason.user_selection',
+        params: { field: 'demand', role: 'objective' },
+      },
+      status: 'user_confirmed',
+    },
+  ]
+  const verifiedContract = {
+    ...raAnalysis.contract,
+    version: 2,
+    previous_version: 1,
+    candidates: verifiedCandidates,
+    information_set: informationSet.map((item) => ({
+      ...item,
+      availability: 'available',
+      status: 'user_confirmed',
+    })),
+    validation_status: 'verified',
+  }
+
+  await page.route('**/api/decision-intake/analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(raAnalysis),
+    })
+  })
+  await page.route('**/api/decision-intake/ra-contract/answers', async (route) => {
+    const body = route.request().postDataJSON()
+    expect(body.semantic_mappings).toEqual([{ field: 'demand', role: 'objective' }])
+    expect(body.candidate_statuses_by_id).toHaveProperty('semantic:action:team_id', 'user_confirmed')
+    expect(body.information_availability).toEqual({
+      community: 'available',
+      team_id: 'available',
+      capacity: 'available',
+      demand: 'available',
+    })
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        contract: verifiedContract,
+        evidence_gate: {
+          status: 'ready_for_decision',
+          reasons: [
+            {
+              code: 'evidence_reason.minimum_verified_semantics_present',
+              params: { field: null, role: null },
+            },
+          ],
+          missing_evidence: [],
+          blocking_assumptions: [],
+          recommended_next_step: {
+            code: 'next_step.compile_resource_allocation',
+            params: { field: null, role: null },
+          },
+        },
+      }),
+    })
+  })
+  await page.route('**/api/decision-intake/ra-contract/compile', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        archetype: 'constrained_resource_allocation',
+        request: {
+          teams: [{ id: 'team-a', capacity: 10 }],
+          communities: [{ id: 'north', demand: [{ service: 'default', units: 8 }] }],
+        },
+      }),
+    })
+  })
+
+  await page.goto('/uk/decision-intake')
+  const dropzone = page.getByTestId('decision-intake-dropzone')
+  const csv = ['community,team_id,capacity,demand', 'north,team-a,10,8'].join('\n')
+  await dropzone.evaluate((element, contents) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([contents], 'ra.csv', { type: 'text/csv' }))
+    element.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
+  }, csv)
+  await page.getByRole('button', { name: 'Проаналізувати дані' }).click()
+
+  for (const candidate of candidates) {
+    await page.getByTestId(`confirm-${candidate.candidate_id}`).click()
+  }
+
+  await page.getByTestId('decision-intake-mapping-field').selectOption('demand')
+  await page.getByTestId('decision-intake-mapping-role').selectOption('objective')
+  await page.getByTestId('decision-intake-add-mapping').click()
+
+  for (const field of ['community', 'team_id', 'capacity', 'demand']) {
+    await page.getByTestId(`availability-${field}`).selectOption('available')
+  }
+
+  await page.getByTestId('decision-intake-verify').click()
+  await expect(page.getByText('Готово до рішення')).toBeVisible()
+  await expect(page.getByText('Версія контракту:')).toBeVisible()
+  await expect(page.getByText('2', { exact: true })).toBeVisible()
+
+  await page.getByTestId('decision-intake-compile').click()
+  await expect(page.getByTestId('decision-intake-compiled')).toBeVisible()
+  await expect(page.getByText(/team-a/)).toBeVisible()
 })
