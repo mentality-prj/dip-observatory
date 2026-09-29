@@ -909,9 +909,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             formalization_statuses: formalizationStatuses,
             candidate_statuses_by_id: compilerStatuses,
             information_availability:
-              Object.keys(explicitInformationAvailability).length > 0
-                ? explicitInformationAvailability
-                : undefined,
+              Object.keys(explicitInformationAvailability).length > 0 ? explicitInformationAvailability : undefined,
           } satisfies IntakeAnswers),
         }
       )
