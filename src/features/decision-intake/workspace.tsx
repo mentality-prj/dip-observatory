@@ -119,6 +119,7 @@ const copy = {
     editFormalization: 'Edit exception',
     saveOverride: 'Save override',
     expression: 'Expression',
+    indexedBy: 'Indexed by (comma-separated)',
     operator: 'Operator',
     value: 'Value',
     scopeField: 'Scope field',
@@ -302,6 +303,7 @@ const copy = {
     editFormalization: 'Редагувати виняток',
     saveOverride: 'Зберегти override',
     expression: 'Вираз',
+    indexedBy: 'Індекси через кому',
     operator: 'Оператор',
     value: 'Значення',
     scopeField: 'Поле scope',
@@ -487,6 +489,7 @@ const copy = {
     editFormalization: 'Edytuj wyjątek',
     saveOverride: 'Zapisz nadpisanie',
     expression: 'Wyrażenie',
+    indexedBy: 'Indeksy (po przecinku)',
     operator: 'Operator',
     value: 'Wartość',
     scopeField: 'Pole zakresu',
@@ -729,7 +732,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setExecutionError('')
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
-    setSelectedObjectiveId(nextAnalysis?.contract.formalization?.objectives[0]?.id ?? '')
+    setSelectedObjectiveId('')
     setTimingReviewed(false)
   }
 
@@ -1045,10 +1048,17 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     const expression = String(form.get('expression') ?? '').trim()
-    if (!expression) return
+    const indexedBy = String(form.get('indexedBy') ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    if (!expression && !indexedBy.length) return
     await submitAnswerPayload({
       decision_variable_overrides: {
-        [id]: { expression },
+        [id]: {
+          expression: expression || undefined,
+          indexed_by: indexedBy.length ? indexedBy : undefined,
+        },
       },
     })
   }
@@ -1087,6 +1097,28 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
           expression: String(form.get('expression') ?? '').trim() || undefined,
           value,
         },
+      },
+    })
+  }
+
+  async function overrideAssumption(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const rawValue = String(form.get('value') ?? '').trim()
+    let value: unknown = rawValue
+    if (rawValue === 'null') value = null
+    else if (rawValue === 'true' || rawValue === 'false') value = rawValue === 'true'
+    else if (rawValue && !Number.isNaN(Number(rawValue))) value = Number(rawValue)
+    else if (rawValue.startsWith('{') || rawValue.startsWith('[')) {
+      try {
+        value = JSON.parse(rawValue)
+      } catch {
+        value = rawValue
+      }
+    }
+    await submitAnswerPayload({
+      assumption_overrides: {
+        [id]: { value },
       },
     })
   }
@@ -1427,22 +1459,31 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         <details className="mt-3 border-t border-white/10 pt-2">
                           <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
                           <form
-                            className="mt-2 flex gap-2"
+                            className="mt-2 grid gap-2"
                             onSubmit={(event) => void overrideDecisionVariable(event, item.id)}
                           >
                             <input
                               name="expression"
                               defaultValue={item.expression}
                               aria-label={t.expression}
-                              className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                              className="min-w-0 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
                             />
-                            <button
-                              type="submit"
-                              disabled={answerBusy}
-                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
-                            >
-                              {t.saveOverride}
-                            </button>
+                            <div className="flex gap-2">
+                              <input
+                                name="indexedBy"
+                                defaultValue={item.indexed_by.join(', ')}
+                                aria-label={t.indexedBy}
+                                placeholder={t.indexedBy}
+                                className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={answerBusy}
+                                className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                              >
+                                {t.saveOverride}
+                              </button>
+                            </div>
                           </form>
                         </details>
                         <div className="mt-3 flex gap-2">
@@ -1682,6 +1723,33 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         <div className="mt-1 text-[11px] text-slate-600">
                           {t.assumptionSource}: {item.provenance} · {item.status}
                         </div>
+                        <details className="mt-2 border-t border-white/10 pt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                          <form
+                            className="mt-2 flex gap-2"
+                            onSubmit={(event) => void overrideAssumption(event, item.id)}
+                          >
+                            <input
+                              name="value"
+                              defaultValue={
+                                typeof item.value === 'string'
+                                  ? item.value
+                                  : item.value == null
+                                    ? 'null'
+                                    : JSON.stringify(item.value)
+                              }
+                              aria-label={t.value}
+                              className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                            <button
+                              type="submit"
+                              disabled={answerBusy}
+                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                            >
+                              {t.saveOverride}
+                            </button>
+                          </form>
+                        </details>
                         {item.impact === 'decision_relevant' ? (
                           <div className="mt-3 flex gap-2">
                             <button
