@@ -168,17 +168,19 @@ export const problemFormalizationSchema = z.object({
       status: semanticStatusSchema,
     })
   ),
-  questions: z.array(
-    z.object({
-      id: z.string(),
-      kind: formalizationQuestionKindSchema,
-      hypothesis_ids: z.array(z.string()),
-      field: z.string().nullable(),
-      options: z.array(z.string()),
-      score: z.number().nonnegative(),
-      rationale: z.string(),
-    })
-  ).max(12),
+  questions: z
+    .array(
+      z.object({
+        id: z.string(),
+        kind: formalizationQuestionKindSchema,
+        hypothesis_ids: z.array(z.string()),
+        field: z.string().nullable(),
+        options: z.array(z.string()),
+        score: z.number().nonnegative(),
+        rationale: z.string(),
+      })
+    )
+    .max(12),
   completeness_score: z.number().min(0).max(1),
   claim: z.string(),
 })

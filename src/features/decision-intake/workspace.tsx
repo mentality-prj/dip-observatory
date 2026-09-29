@@ -128,8 +128,7 @@ const copy = {
     causalNotIdentified: 'not identified',
     nextQuestion: 'Next required step',
     actionQuestion: 'Which field represents the action a decision maker can control?',
-    causalActionQuestion:
-      'Which observed field records the historical action or treatment for causal analysis?',
+    causalActionQuestion: 'Which observed field records the historical action or treatment for causal analysis?',
     objectiveQuestion: 'Which field represents the business objective QDIP should optimize?',
     outcomeQuestion: 'Which field records the realized outcome?',
     availableQuestion: 'Which fields were available before the action was chosen?',
@@ -291,8 +290,7 @@ const copy = {
     causalNotIdentified: 'не ідентифіковано',
     nextQuestion: 'Наступний необхідний крок',
     actionQuestion: 'Яке поле представляє дію, яку може контролювати особа, що приймає рішення?',
-    causalActionQuestion:
-      'Яке observed поле фіксує історичну дію або treatment для каузального аналізу?',
+    causalActionQuestion: 'Яке observed поле фіксує історичну дію або treatment для каузального аналізу?',
     objectiveQuestion: 'Яке поле представляє бізнес-мету, яку QDIP має оптимізувати?',
     outcomeQuestion: 'Яке поле фіксує фактично отриманий результат?',
     availableQuestion: 'Які поля були доступні до моменту вибору дії?',
@@ -795,13 +793,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
     }
 
-    const acceptedSemanticRoles = new Set([
-      'community_id',
-      'team_id',
-      'capacity',
-      'demand',
-      'service',
-    ])
+    const acceptedSemanticRoles = new Set(['community_id', 'team_id', 'capacity', 'demand', 'service'])
     const compilerStatuses: Record<string, CandidateChoice> = {}
     for (const candidate of analysis.contract.candidates) {
       if (acceptedSemanticRoles.has(candidate.role) && candidate.status === 'inferred') {
@@ -1235,7 +1227,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
               <div className="mt-6 grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.decisionVariable}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.decisionVariable}
+                  </div>
                   <div className="mt-3 grid gap-2">
                     {analysis.contract.formalization.decision_variables.map((item) => (
                       <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
@@ -1286,7 +1280,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.objectiveCandidates}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.objectiveCandidates}
+                  </div>
                   <div className="mt-3 grid gap-2">
                     {analysis.contract.formalization.objectives.map((item) => (
                       <label
@@ -1386,7 +1382,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.compilerMappings}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.compilerMappings}
+                  </div>
                   <div className="mt-3 grid gap-2">
                     {analysis.contract.candidates
                       .filter((candidate) =>
@@ -1410,12 +1408,18 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.timingSuggestions}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.timingSuggestions}
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
                     {(['pre_decision', 'post_decision', 'ambiguous'] as const).map((timing) => {
-                      const count = analysis.contract.formalization?.timing.filter((item) => item.timing === timing).length ?? 0
+                      const count =
+                        analysis.contract.formalization?.timing.filter((item) => item.timing === timing).length ?? 0
                       return (
-                        <span key={timing} className="rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-slate-300">
+                        <span
+                          key={timing}
+                          className="rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-slate-300"
+                        >
                           {timing}: <b className="text-white">{count}</b>
                         </span>
                       )
@@ -1438,9 +1442,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   <ShieldCheck className="h-4 w-4" />
                   {formalizationAccepting ? t.acceptingFormalization : t.acceptFormalization}
                 </button>
-                <span className="text-xs leading-5 text-slate-500">
-                  {analysis.contract.formalization.claim}
-                </span>
+                <span className="text-xs leading-5 text-slate-500">{analysis.contract.formalization.claim}</span>
               </div>
             </section>
           ) : null}

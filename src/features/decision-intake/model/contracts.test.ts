@@ -299,5 +299,4 @@ describe('Decision Intake sufficiency contract', () => {
 
     expect(result.kind).toBe('select_objective')
   })
-
 })
