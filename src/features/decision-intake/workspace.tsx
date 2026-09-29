@@ -794,7 +794,6 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     }
 
     const acceptedSemanticRoles = new Set([
-      'constraint',
       'community_id',
       'team_id',
       'capacity',
