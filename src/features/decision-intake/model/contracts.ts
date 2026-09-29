@@ -75,7 +75,7 @@ export const decisionContractSchema = z
 
 export const requirementNodeSchema = z.object({
   id: z.string(),
-  layer: z.enum(['structural', 'causal', 'statistical']),
+  layer: z.enum(['structural', 'compilation', 'causal', 'statistical']),
   state: z.enum(['satisfied', 'blocked', 'waiting']),
   mode: z.enum(['all', 'any']),
   depends_on: z.array(z.string()),
@@ -198,6 +198,7 @@ export const empiricalSupportSchema = z.object({
 
 export const decisionSufficiencySchema = z.object({
   structural_status: z.enum(['blocked', 'ready']),
+  compilation_status: z.enum(['blocked', 'ready', 'unsupported']),
   causal_identifiability: z.enum([
     'requires_causal_model',
     'requires_verification',
@@ -206,6 +207,7 @@ export const decisionSufficiencySchema = z.object({
     'invalid_model',
   ]),
   blockers: z.array(z.string()),
+  compilation_blockers: z.array(z.string()),
   causal_blockers: z.array(z.string()),
   statistical_blockers: z.array(z.string()),
   requirements: z.array(requirementNodeSchema),
