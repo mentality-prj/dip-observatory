@@ -90,6 +90,7 @@ export const sufficiencyQuestionSchema = z.object({
     'confirm_semantic',
     'select_field',
     'select_available_fields',
+    'select_archetype',
     'define_causal_model',
     'plan_causal_evidence',
     'assess_estimability',
