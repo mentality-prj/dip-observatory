@@ -1000,6 +1000,22 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     })
   }
 
+  async function overrideObjective(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const expression = String(form.get('expression') ?? '').trim()
+    const sense = String(form.get('sense') ?? '').trim()
+    if (!expression && !sense) return
+    await submitAnswerPayload({
+      objective_overrides: {
+        [id]: {
+          sense: sense === 'minimize' ? 'minimize' : sense === 'maximize' ? 'maximize' : undefined,
+          expression: expression || undefined,
+        },
+      },
+    })
+  }
+
   async function overrideConstraint(event: FormEvent<HTMLFormElement>, id: string) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
@@ -1424,31 +1440,63 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   </div>
                   <div className="mt-3 grid gap-2">
                     {analysis.contract.formalization.objectives.map((item) => (
-                      <label
+                      <div
                         key={item.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-md border border-white/10 bg-white/[0.025] p-3"
+                        className="rounded-md border border-white/10 bg-white/[0.025] p-3"
                       >
-                        <input
-                          type="radio"
-                          name="formalization-objective"
-                          data-testid={`formalization-objective-${item.id}`}
-                          checked={selectedObjectiveId === item.id}
-                          onChange={() => setSelectedObjectiveId(item.id)}
-                          disabled={formalizationAccepting}
-                          className="mt-1"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-sm text-slate-200">
-                            {item.sense} · {item.expression}
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="radio"
+                            name="formalization-objective"
+                            data-testid={`formalization-objective-${item.id}`}
+                            checked={selectedObjectiveId === item.id}
+                            onChange={() => setSelectedObjectiveId(item.id)}
+                            disabled={formalizationAccepting}
+                            className="mt-1"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm text-slate-200">
+                              {item.sense} · {item.expression}
+                            </span>
+                            <span className="mt-1 block text-[11px] text-slate-500">
+                              {Math.round(item.score * 100)}% · {item.status} ·{' '}
+                              {item.supported_compilers.includes('resource_allocation.v1')
+                                ? t.supportedByCompiler
+                                : t.requiresDifferentCompiler}
+                            </span>
                           </span>
-                          <span className="mt-1 block text-[11px] text-slate-500">
-                            {Math.round(item.score * 100)}% · {item.status} ·{' '}
-                            {item.supported_compilers.includes('resource_allocation.v1')
-                              ? t.supportedByCompiler
-                              : t.requiresDifferentCompiler}
-                          </span>
-                        </span>
-                      </label>
+                        </label>
+                        <details className="mt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">
+                            {t.editFormalization}
+                          </summary>
+                          <form
+                            className="mt-2 grid gap-2 sm:grid-cols-[auto_1fr_auto]"
+                            onSubmit={(event) => void overrideObjective(event, item.id)}
+                          >
+                            <select
+                              name="sense"
+                              defaultValue={item.sense}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                            >
+                              <option value="maximize">maximize</option>
+                              <option value="minimize">minimize</option>
+                            </select>
+                            <input
+                              name="expression"
+                              defaultValue={item.expression}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                            />
+                            <button
+                              type="submit"
+                              disabled={answerBusy}
+                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                            >
+                              {t.saveOverride}
+                            </button>
+                          </form>
+                        </details>
+                      </div>
                     ))}
                   </div>
                 </div>
