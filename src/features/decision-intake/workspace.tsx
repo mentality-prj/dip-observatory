@@ -71,6 +71,10 @@ const copy = {
     constraintsTitle: 'Inferred constraints',
     compilerMappings: 'Compiler mappings',
     timingSuggestions: 'Decision-time suggestions',
+    defaultAssumptions: 'Default assumptions',
+    decisionRelevant: 'decision-relevant',
+    decisionNeutral: 'decision-neutral',
+    assumptionSource: 'source',
     acceptFormalization: 'Accept suggested formalization',
     acceptingFormalization: 'Applying formalization…',
     selectObjective: 'Select objective',
@@ -245,6 +249,10 @@ const copy = {
     constraintsTitle: 'Виявлені constraints',
     compilerMappings: 'Compiler mappings',
     timingSuggestions: 'Припущення про decision-time',
+    defaultAssumptions: 'Default assumptions',
+    decisionRelevant: 'впливає на рішення',
+    decisionNeutral: 'нейтральне для optimize',
+    assumptionSource: 'джерело',
     acceptFormalization: 'Прийняти запропоновану formalization',
     acceptingFormalization: 'Застосовую formalization…',
     selectObjective: 'Оберіть objective',
@@ -421,6 +429,10 @@ const copy = {
     constraintsTitle: 'Wywnioskowane ograniczenia',
     compilerMappings: 'Mapowania kompilatora',
     timingSuggestions: 'Sugestie dostępności w czasie decyzji',
+    defaultAssumptions: 'Założenia domyślne',
+    decisionRelevant: 'wpływa na decyzję',
+    decisionNeutral: 'neutralne dla optimize',
+    assumptionSource: 'źródło',
     acceptFormalization: 'Zaakceptuj proponowaną formalizację',
     acceptingFormalization: 'Stosowanie formalizacji…',
     selectObjective: 'Wybierz cel',
@@ -835,6 +847,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       }
     }
     for (const item of formalization.constraints) {
+      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+    }
+    for (const item of formalization.assumptions) {
       if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
     }
 
@@ -1602,6 +1617,74 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                   ))}
                 </div>
               </div>
+
+              {analysis.contract.formalization.assumptions.length ? (
+                <div className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.defaultAssumptions}
+                  </div>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    {analysis.contract.formalization.assumptions.map((item) => (
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-xs">
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="font-mono text-cyan-100">
+                            {item.parameter} = {String(item.value)}
+                          </span>
+                          <span
+                            className={
+                              item.impact === 'decision_relevant'
+                                ? 'whitespace-nowrap text-amber-200'
+                                : 'whitespace-nowrap text-slate-400'
+                            }
+                          >
+                            {item.impact === 'decision_relevant' ? t.decisionRelevant : t.decisionNeutral}
+                          </span>
+                        </div>
+                        <div className="mt-2 leading-5 text-slate-400">{item.rationale}</div>
+                        <div className="mt-1 text-[11px] text-slate-600">
+                          {t.assumptionSource}: {item.provenance} · {item.status}
+                        </div>
+                        {item.impact === 'decision_relevant' ? (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              disabled={answerBusy}
+                              onClick={() =>
+                                void submitAnswerPayload({
+                                  formalization_statuses: { [item.id]: 'user_confirmed' },
+                                })
+                              }
+                              className={
+                                item.status === 'user_confirmed'
+                                  ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                                  : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                              }
+                            >
+                              {t.confirm}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={answerBusy}
+                              onClick={() =>
+                                void submitAnswerPayload({
+                                  formalization_statuses: { [item.id]: 'rejected' },
+                                })
+                              }
+                              className={
+                                item.status === 'rejected'
+                                  ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                                  : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                              }
+                            >
+                              {t.reject}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
