@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { decisionSufficiencySchema, sufficiencyQuestionSchema } from './contracts'
+import {
+  decisionSufficiencySchema,
+  intakeAnswersSchema,
+  problemFormalizationSchema,
+  sufficiencyQuestionSchema,
+} from './contracts'
 
 describe('Decision Intake sufficiency contract', () => {
   it('parses an identified effect that still requires estimability work', () => {
@@ -184,4 +189,115 @@ describe('Decision Intake sufficiency contract', () => {
     expect(result.kind).toBe('select_archetype')
     expect(result.options).toEqual(['constrained_resource_allocation'])
   })
+  it('parses a compiler-aware resource-allocation formalization', () => {
+    const result = problemFormalizationSchema.parse({
+      version: 1,
+      archetype_hypotheses: [
+        {
+          archetype: 'constrained_resource_allocation',
+          score: 0.99,
+          evidence: ['community dimension', 'capacity', 'demand quantity'],
+        },
+      ],
+      row_subtypes: [
+        {
+          discriminator: 'record_type',
+          value: 'team',
+          semantic_type: 'team',
+          score: 0.98,
+        },
+      ],
+      decision_variables: [
+        {
+          id: 'decision_variable:resource_allocation',
+          kind: 'allocation',
+          expression: 'x[team, community] in {0,1}: assign each team to at most one community',
+          indexed_by: ['id', 'community'],
+          value_field: null,
+          score: 0.98,
+          evidence: ['community', 'capacity', 'units'],
+          status: 'inferred',
+        },
+      ],
+      objectives: [
+        {
+          id: 'objective:resource_allocation_score',
+          sense: 'maximize',
+          expression: 'maximize the resource-allocation composite score',
+          field: 'priority',
+          score: 0.97,
+          evidence: ['priority', 'units', 'cost'],
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
+      constraints: [
+        {
+          id: 'constraint:budget',
+          kind: 'hard',
+          expression: 'total operating cost <= budget',
+          field: 'budget',
+          operator: '<=',
+          score: 0.96,
+          evidence: ['budget'],
+          status: 'inferred',
+        },
+      ],
+      timing: [
+        {
+          field: 'capacity',
+          timing: 'pre_decision',
+          score: 0.9,
+          evidence: ['operational input field'],
+          status: 'inferred',
+        },
+      ],
+      questions: [],
+      completeness_score: 0.95,
+      claim: 'Candidate mathematical formalization only.',
+    })
+
+    expect(result.objectives[0]?.supported_compilers).toEqual(['resource_allocation.v1'])
+    expect(result.decision_variables[0]?.expression).toContain('assign each team')
+  })
+
+  it('accepts one-shot formalization and timing verification payloads', () => {
+    const result = intakeAnswersSchema.parse({
+      formalization_statuses: {
+        'decision_variable:resource_allocation': 'user_confirmed',
+        'objective:resource_allocation_score': 'user_confirmed',
+        'constraint:budget': 'user_confirmed',
+      },
+      accept_timing_suggestions: true,
+      candidate_statuses_by_id: {
+        'semantic:team_id:id': 'user_confirmed',
+      },
+    })
+
+    expect(result.accept_timing_suggestions).toBe(true)
+  })
+
+  it('parses compiler objective reselection questions', () => {
+    const result = sufficiencyQuestionSchema.parse({
+      id: 'select-compiler-objective',
+      kind: 'select_objective',
+      role: 'objective',
+      field: null,
+      hypothesis_id: null,
+      hypothesis_ids: ['objective:resource_allocation_score'],
+      options: ['objective:resource_allocation_score'],
+      resolves: ['compiler:objective_not_supported:objective:minimize_operating_cost'],
+      effect: 'removes_blocker',
+      estimated_cost: 1,
+      priority_score: 1,
+      rationale: 'Choose a compiler-compatible objective.',
+      evidence_action_id: null,
+      evidence_kind: null,
+      evidence_variables: [],
+      evidence_targets: [],
+    })
+
+    expect(result.kind).toBe('select_objective')
+  })
+
 })
