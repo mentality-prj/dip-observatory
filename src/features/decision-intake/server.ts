@@ -2,6 +2,7 @@ export {
   analyzeDecisionDataset,
   compileDecisionIntake,
   DecisionIntakeApiError,
+  executeDecisionIntake,
   getDecisionIntakeContract,
   submitDecisionIntakeAnswers,
 } from './services/intake-api'
