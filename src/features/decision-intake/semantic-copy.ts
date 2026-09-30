@@ -60,7 +60,7 @@ const fallback = {
 } as const
 
 export function renderSemanticRole(locale: Locale, role: string): string {
-  return roleLabels[locale][role] ?? fallback[locale].role
+  return (roleLabels[locale][role] ?? role) || fallback[locale].role
 }
 
 function fieldParam(locale: Locale, params: SemanticParams): string {
@@ -240,6 +240,12 @@ export function renderNextStep(locale: Locale, item: NextStep): string {
         en: 'Compile through the constrained resource-allocation adapter.',
         uk: 'Скомпілюйте контракт через адаптер обмеженого розподілу ресурсів.',
         pl: 'Skompiluj kontrakt przez adapter ograniczonej alokacji zasobów.',
+      }[locale]
+    case 'next_step.compile_supported_decision':
+      return {
+        en: 'Compile through the selected registered decision adapter.',
+        uk: 'Скомпілюйте контракт через вибраний зареєстрований адаптер рішення.',
+        pl: 'Skompiluj kontrakt przez wybrany zarejestrowany adapter decyzyjny.',
       }[locale]
     case 'next_step.select_decision_adapter':
       return {

@@ -6,13 +6,16 @@ import { Check, FileUp, Plus, ShieldCheck, Trash2, Wrench, X } from 'lucide-reac
 import { FileUploader } from '@/components/file-uploader'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
+  builtInSemanticRoles,
   compiledResourceAllocationSchema,
   contractResponseSchema,
+  executedDecisionIntakeSchema,
   decisionArchetypeSchema,
   intakeAnalysisSchema,
   semanticRoleSchema,
   type CausalSpecification,
   type CompiledResourceAllocation,
+  type ExecutedDecisionIntake,
   type IntakeAnalysis,
   type IntakeAnswers,
   type SufficiencyQuestion,
@@ -59,7 +62,34 @@ const copy = {
     uploadTooLarge: 'The dataset exceeds Decision Intake limits.',
     verificationTitle: 'Human verification',
     verificationBody:
-      'Confirm or reject inferred semantics, add missing field-role mappings, and verify which fields existed before the decision.',
+      'Review QDIP’s candidate mathematical formulation. Confirm the model; edit only material exceptions.',
+    formalizationTitle: 'Candidate problem formalization',
+    formalizationBody:
+      'QDIP inferred the decision structure, objective candidates, constraints, compiler mappings and decision-time inputs. These remain hypotheses until you confirm them.',
+    completeness: 'Formalization completeness',
+    heuristicScore: 'heuristic score',
+    decisionVariable: 'Decision variable',
+    objectiveCandidates: 'Objective candidates',
+    constraintsTitle: 'Inferred constraints',
+    compilerMappings: 'Compiler mappings',
+    timingSuggestions: 'Decision-time suggestions',
+    timingReviewHint:
+      'Review the concrete fields below. Confirming them marks only the visible pre/post suggestions as human-verified.',
+    timingReviewConfirm: 'I reviewed these decision-time suggestions',
+    timingAmbiguous: 'Ambiguous timing is never accepted automatically; classify those fields manually below.',
+    defaultAssumptions: 'Default assumptions',
+    decisionRelevant: 'decision-relevant',
+    decisionNeutral: 'decision-neutral',
+    assumptionSource: 'source',
+    acceptFormalization: 'Accept suggested formalization',
+    acceptingFormalization: 'Applying formalization…',
+    selectObjective: 'Select objective',
+    supportedByCompiler: 'supported by compiler',
+    requiresDifferentCompiler: 'requires another compiler',
+    hardConstraint: 'hard',
+    softConstraint: 'soft',
+    ambiguousConstraint: 'ambiguous',
+    scopedTo: 'when',
     contractVersion: 'Contract version',
     candidateReview: 'Semantic hypotheses',
     mappingTitle: 'Add a missing semantic mapping',
@@ -82,6 +112,19 @@ const copy = {
     compiling: 'Compiling…',
     compileFailed: 'Decision Intake compilation failed.',
     compiledTitle: 'Compiled adapter request',
+    execute: 'Run decision',
+    executing: 'Running decision…',
+    executionFailed: 'Decision execution failed.',
+    executedTitle: 'QDIP decision result',
+    preflightError: 'Compiler preflight',
+    editFormalization: 'Edit exception',
+    saveOverride: 'Save override',
+    expression: 'Expression',
+    indexedBy: 'Indexed by (comma-separated)',
+    operator: 'Operator',
+    value: 'Value',
+    scopeField: 'Scope field',
+    scopeValues: 'Scope values (comma-separated)',
     noCandidates: 'No semantic hypotheses were proposed. Add the required mappings manually.',
     gateStatuses: {
       no_opportunity: 'No opportunity',
@@ -110,6 +153,7 @@ const copy = {
     causalNotIdentified: 'not identified',
     nextQuestion: 'Next required step',
     actionQuestion: 'Which field represents the action a decision maker can control?',
+    causalActionQuestion: 'Which observed field records the historical action or treatment for causal analysis?',
     objectiveQuestion: 'Which field represents the business objective QDIP should optimize?',
     outcomeQuestion: 'Which field records the realized outcome?',
     availableQuestion: 'Which fields were available before the action was chosen?',
@@ -202,7 +246,34 @@ const copy = {
     uploadTooLarge: 'Набір даних перевищує ліміти Decision Intake.',
     verificationTitle: 'Перевірка людиною',
     verificationBody:
-      'Підтвердьте або відхиліть запропоновану семантику, додайте відсутні зіставлення поле-роль і перевірте, які поля існували до рішення.',
+      'Перевірте candidate mathematical formalization, яку побудував QDIP. Підтверджуйте модель, а вручну змінюйте лише суттєві винятки.',
+    formalizationTitle: 'Кандидатна формалізація задачі',
+    formalizationBody:
+      'QDIP сам визначив структуру рішення, варіанти objective, constraints, compiler mappings і decision-time inputs. До підтвердження це гіпотези.',
+    completeness: 'Повнота формалізації',
+    heuristicScore: 'евристичний score',
+    decisionVariable: 'Decision variable',
+    objectiveCandidates: 'Варіанти objective',
+    constraintsTitle: 'Виявлені constraints',
+    compilerMappings: 'Compiler mappings',
+    timingSuggestions: 'Припущення про decision-time',
+    timingReviewHint:
+      'Перегляньте конкретні поля нижче. Підтвердження позначить як перевірені людиною лише видимі pre/post suggestions.',
+    timingReviewConfirm: 'Я переглянув ці decision-time suggestions',
+    timingAmbiguous: 'Ambiguous timing не підтверджується автоматично; класифікуйте такі поля вручну нижче.',
+    defaultAssumptions: 'Default assumptions',
+    decisionRelevant: 'впливає на рішення',
+    decisionNeutral: 'нейтральне для optimize',
+    assumptionSource: 'джерело',
+    acceptFormalization: 'Прийняти запропоновану formalization',
+    acceptingFormalization: 'Застосовую formalization…',
+    selectObjective: 'Оберіть objective',
+    supportedByCompiler: 'підтримується compiler',
+    requiresDifferentCompiler: 'потрібен інший compiler',
+    hardConstraint: 'hard',
+    softConstraint: 'soft',
+    ambiguousConstraint: 'ambiguous',
+    scopedTo: 'коли',
     contractVersion: 'Версія контракту',
     candidateReview: 'Семантичні гіпотези',
     mappingTitle: 'Додати відсутнє семантичне зіставлення',
@@ -225,6 +296,19 @@ const copy = {
     compiling: 'Компілюю…',
     compileFailed: 'Не вдалося скомпілювати Decision Intake.',
     compiledTitle: 'Скомпільований запит адаптера',
+    execute: 'Запустити рішення',
+    executing: 'Виконую рішення…',
+    executionFailed: 'Не вдалося виконати рішення.',
+    executedTitle: 'Результат рішення QDIP',
+    preflightError: 'Compiler preflight',
+    editFormalization: 'Редагувати виняток',
+    saveOverride: 'Зберегти override',
+    expression: 'Вираз',
+    indexedBy: 'Індекси через кому',
+    operator: 'Оператор',
+    value: 'Значення',
+    scopeField: 'Поле scope',
+    scopeValues: 'Значення scope через кому',
     noCandidates: 'Семантичних гіпотез немає. Додайте потрібні зіставлення вручну.',
     gateStatuses: {
       no_opportunity: 'Немає можливості',
@@ -253,6 +337,7 @@ const copy = {
     causalNotIdentified: 'не ідентифіковано',
     nextQuestion: 'Наступний необхідний крок',
     actionQuestion: 'Яке поле представляє дію, яку може контролювати особа, що приймає рішення?',
+    causalActionQuestion: 'Яке observed поле фіксує історичну дію або treatment для каузального аналізу?',
     objectiveQuestion: 'Яке поле представляє бізнес-мету, яку QDIP має оптимізувати?',
     outcomeQuestion: 'Яке поле фіксує фактично отриманий результат?',
     availableQuestion: 'Які поля були доступні до моменту вибору дії?',
@@ -347,7 +432,34 @@ const copy = {
     uploadTooLarge: 'Zbiór przekracza limity Decision Intake.',
     verificationTitle: 'Weryfikacja przez człowieka',
     verificationBody:
-      'Potwierdź lub odrzuć proponowaną semantykę, dodaj brakujące mapowania pole-rola i sprawdź, które pola istniały przed decyzją.',
+      'Sprawdź kandydacką formalizację matematyczną zbudowaną przez QDIP. Potwierdź model i edytuj ręcznie tylko istotne wyjątki.',
+    formalizationTitle: 'Kandydacka formalizacja problemu',
+    formalizationBody:
+      'QDIP wywnioskował strukturę decyzji, kandydatów celu, ograniczenia, mapowania kompilatora i dane dostępne przed decyzją. Do potwierdzenia są to hipotezy.',
+    completeness: 'Kompletność formalizacji',
+    heuristicScore: 'wynik heurystyczny',
+    decisionVariable: 'Zmienna decyzyjna',
+    objectiveCandidates: 'Kandydaci celu',
+    constraintsTitle: 'Wywnioskowane ograniczenia',
+    compilerMappings: 'Mapowania kompilatora',
+    timingSuggestions: 'Sugestie dostępności w czasie decyzji',
+    timingReviewHint:
+      'Sprawdź konkretne pola poniżej. Potwierdzenie oznaczy jako zweryfikowane tylko widoczne sugestie pre/post.',
+    timingReviewConfirm: 'Sprawdziłem te sugestie czasu decyzji',
+    timingAmbiguous: 'Niejednoznaczny timing nie jest akceptowany automatycznie; sklasyfikuj te pola ręcznie poniżej.',
+    defaultAssumptions: 'Założenia domyślne',
+    decisionRelevant: 'wpływa na decyzję',
+    decisionNeutral: 'neutralne dla optimize',
+    assumptionSource: 'źródło',
+    acceptFormalization: 'Zaakceptuj proponowaną formalizację',
+    acceptingFormalization: 'Stosowanie formalizacji…',
+    selectObjective: 'Wybierz cel',
+    supportedByCompiler: 'obsługiwane przez kompilator',
+    requiresDifferentCompiler: 'wymaga innego kompilatora',
+    hardConstraint: 'twarde',
+    softConstraint: 'miękkie',
+    ambiguousConstraint: 'niejednoznaczne',
+    scopedTo: 'gdy',
     contractVersion: 'Wersja kontraktu',
     candidateReview: 'Hipotezy semantyczne',
     mappingTitle: 'Dodaj brakujące mapowanie semantyczne',
@@ -370,6 +482,19 @@ const copy = {
     compiling: 'Kompilowanie…',
     compileFailed: 'Kompilacja Decision Intake nie powiodła się.',
     compiledTitle: 'Skompilowane żądanie adaptera',
+    execute: 'Uruchom decyzję',
+    executing: 'Uruchamianie decyzji…',
+    executionFailed: 'Wykonanie decyzji nie powiodło się.',
+    executedTitle: 'Wynik decyzji QDIP',
+    preflightError: 'Compiler preflight',
+    editFormalization: 'Edytuj wyjątek',
+    saveOverride: 'Zapisz nadpisanie',
+    expression: 'Wyrażenie',
+    indexedBy: 'Indeksy (po przecinku)',
+    operator: 'Operator',
+    value: 'Wartość',
+    scopeField: 'Pole zakresu',
+    scopeValues: 'Wartości zakresu (po przecinku)',
     noCandidates: 'Brak hipotez semantycznych. Dodaj wymagane mapowania ręcznie.',
     gateStatuses: {
       no_opportunity: 'Brak możliwości',
@@ -398,6 +523,8 @@ const copy = {
     causalNotIdentified: 'nie zidentyfikowano',
     nextQuestion: 'Następny wymagany krok',
     actionQuestion: 'Które pole reprezentuje działanie kontrolowane przez osobę podejmującą decyzję?',
+    causalActionQuestion:
+      'Które obserwowane pole zapisuje historyczne działanie lub treatment dla analizy przyczynowej?',
     objectiveQuestion: 'Które pole reprezentuje cel biznesowy, który QDIP ma optymalizować?',
     outcomeQuestion: 'Które pole zapisuje zrealizowany wynik?',
     availableQuestion: 'Które pola były dostępne przed wyborem działania?',
@@ -465,10 +592,12 @@ const copy = {
 function questionText(locale: Locale, question: SufficiencyQuestion) {
   const t = copy[locale]
   if (question.kind === 'select_field') {
+    if (question.id === 'select-causal-action') return t.causalActionQuestion
     if (question.role === 'action') return t.actionQuestion
     if (question.role === 'objective') return t.objectiveQuestion
     if (question.role === 'outcome') return t.outcomeQuestion
   }
+  if (question.kind === 'select_objective') return t.selectObjective
   if (question.kind === 'select_available_fields') return t.availableQuestion
   if (question.kind === 'define_causal_model') return t.causalModelQuestion
   if (question.kind === 'plan_causal_evidence') {
@@ -483,6 +612,12 @@ function questionText(locale: Locale, question: SufficiencyQuestion) {
     return t.causalEvidenceQuestion
   }
   if (question.kind === 'confirm_semantic') {
+    if (question.hypothesis_id) {
+      return question.rationale || question.hypothesis_id
+    }
+    if (question.hypothesis_ids.length) {
+      return question.rationale || question.hypothesis_ids.join(', ')
+    }
     return t.confirmQuestion.replace('{field}', question.field ?? '').replace('{role}', question.role ?? '')
   }
   return question.id
@@ -562,7 +697,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [formalizationAccepting, setFormalizationAccepting] = useState(false)
   const [compiling, setCompiling] = useState(false)
+  const [executing, setExecuting] = useState(false)
   const [verificationError, setVerificationError] = useState('')
   const [compileError, setCompileError] = useState('')
   const [candidateAnswers, setCandidateAnswers] = useState<Record<string, CandidateChoice>>({})
@@ -571,6 +708,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [mappingField, setMappingField] = useState('')
   const [mappingRole, setMappingRole] = useState<SemanticMapping['role']>('action')
   const [compiled, setCompiled] = useState<CompiledResourceAllocation | null>(null)
+  const [executed, setExecuted] = useState<ExecutedDecisionIntake | null>(null)
+  const [executionError, setExecutionError] = useState('')
   const [answerBusy, setAnswerBusy] = useState(false)
   const [selectedField, setSelectedField] = useState('')
   const [selectedCompilerField, setSelectedCompilerField] = useState('')
@@ -580,6 +719,8 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
   const [causalOutcomes, setCausalOutcomes] = useState('')
   const [causalConditioning, setCausalConditioning] = useState('')
   const [causalAssumptionsVerified, setCausalAssumptionsVerified] = useState(false)
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState('')
+  const [timingReviewed, setTimingReviewed] = useState(false)
 
   function resetVerification(nextAnalysis?: IntakeAnalysis | null) {
     setCandidateAnswers({})
@@ -588,8 +729,12 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setVerificationError('')
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
+    setExecutionError('')
     setMappingRole('action')
     setMappingField(nextAnalysis?.contract.information_set[0]?.field ?? '')
+    setSelectedObjectiveId('')
+    setTimingReviewed(false)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -653,6 +798,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     setVerificationError('')
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
 
     const input: IntakeAnswers = {}
     if (Object.keys(candidateAnswers).length) input.candidate_statuses_by_id = candidateAnswers
@@ -684,6 +830,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               interpretation: {
                 ...current.interpretation,
                 candidates: result.contract.candidates,
+                formalization: result.contract.formalization,
               },
             }
           : current
@@ -698,11 +845,119 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     }
   }
 
+  async function acceptSuggestedFormalization() {
+    if (!analysis?.contract.formalization) return
+    const formalization = analysis.contract.formalization
+    const preferredArchetype = formalization.archetype_hypotheses[0]?.archetype
+    if (!preferredArchetype) return
+    if (formalization.objectives.length && !selectedObjectiveId) return
+    const hasReviewableTiming = formalization.timing.some(
+      (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+    )
+    if (hasReviewableTiming && !timingReviewed) return
+
+    const explicitInformationAvailability: Record<string, AvailabilityChoice> = {
+      ...availabilityAnswers,
+    }
+    if (timingReviewed) {
+      for (const item of formalization.timing) {
+        if (explicitInformationAvailability[item.field]) continue
+        if (item.timing === 'pre_decision') {
+          explicitInformationAvailability[item.field] = 'available'
+        } else if (item.timing === 'post_decision') {
+          explicitInformationAvailability[item.field] = 'not_available'
+        }
+      }
+    }
+
+    setFormalizationAccepting(true)
+    setVerificationError('')
+    setCompileError('')
+    setCompiled(null)
+    setExecuted(null)
+
+    const formalizationStatuses: Record<string, CandidateChoice> = {}
+    for (const item of formalization.decision_variables) {
+      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+    }
+    for (const item of formalization.objectives) {
+      if (item.id === selectedObjectiveId) {
+        formalizationStatuses[item.id] = 'user_confirmed'
+      }
+    }
+    for (const item of formalization.constraints) {
+      if (item.status === 'inferred') formalizationStatuses[item.id] = 'user_confirmed'
+    }
+    for (const item of formalization.assumptions) {
+      if (item.status === 'inferred' && item.impact === 'decision_relevant') {
+        formalizationStatuses[item.id] = 'user_confirmed'
+      }
+    }
+
+    const compilerCandidateIds = new Set(
+      formalization.questions
+        .filter((question) => question.kind === 'confirm_compiler_mapping')
+        .flatMap((question) => question.hypothesis_ids)
+    )
+    const compilerStatuses: Record<string, CandidateChoice> = {}
+    for (const candidate of analysis.contract.candidates) {
+      if (compilerCandidateIds.has(candidate.candidate_id) && candidate.status === 'inferred') {
+        compilerStatuses[candidate.candidate_id] = 'user_confirmed'
+      }
+    }
+
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/answers`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            archetype: preferredArchetype,
+            formalization_statuses: formalizationStatuses,
+            candidate_statuses_by_id: compilerStatuses,
+            information_availability:
+              Object.keys(explicitInformationAvailability).length > 0 ? explicitInformationAvailability : undefined,
+          } satisfies IntakeAnswers),
+        }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setVerificationError(t.verificationFailed)
+        return
+      }
+      const result = contractResponseSchema.parse(payload)
+      setAnalysis((current) =>
+        current
+          ? {
+              ...current,
+              contract: result.contract,
+              evidence_gate: result.evidence_gate,
+              sufficiency: result.sufficiency,
+              interpretation: {
+                ...current.interpretation,
+                candidates: result.contract.candidates,
+                formalization: result.contract.formalization,
+              },
+            }
+          : current
+      )
+      setCandidateAnswers({})
+      setAvailabilityAnswers({})
+      setSemanticMappings([])
+    } catch {
+      setVerificationError(t.verificationFailed)
+    } finally {
+      setFormalizationAccepting(false)
+    }
+  }
+
   async function compileContract() {
     if (!analysis) return
     setCompiling(true)
     setCompileError('')
     setCompiled(null)
+    setExecuted(null)
     try {
       const response = await fetch(
         `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/compile`,
@@ -718,6 +973,29 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       setCompileError(t.compileFailed)
     } finally {
       setCompiling(false)
+    }
+  }
+
+  async function executeContract() {
+    if (!analysis) return
+    setExecuting(true)
+    setExecutionError('')
+    setExecuted(null)
+    try {
+      const response = await fetch(
+        `/api/decision-intake/${encodeURIComponent(analysis.contract.contract_id)}/execute`,
+        { method: 'POST' }
+      )
+      const payload: unknown = await response.json()
+      if (!response.ok) {
+        setExecutionError(t.executionFailed)
+        return
+      }
+      setExecuted(executedDecisionIntakeSchema.parse(payload))
+    } catch {
+      setExecutionError(t.executionFailed)
+    } finally {
+      setExecuting(false)
     }
   }
 
@@ -754,6 +1032,11 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               contract: updated.contract,
               evidence_gate: updated.evidence_gate,
               sufficiency: updated.sufficiency,
+              interpretation: {
+                ...current.interpretation,
+                candidates: updated.contract.candidates,
+                formalization: updated.contract.formalization,
+              },
             }
           : current
       )
@@ -764,6 +1047,100 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     } finally {
       setAnswerBusy(false)
     }
+  }
+
+  async function overrideDecisionVariable(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const expression = String(form.get('expression') ?? '').trim()
+    const indexedBy = String(form.get('indexedBy') ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    if (!expression && !indexedBy.length) return
+    await submitAnswerPayload({
+      decision_variable_overrides: {
+        [id]: {
+          expression: expression || undefined,
+          indexed_by: indexedBy.length ? indexedBy : undefined,
+        },
+      },
+    })
+  }
+
+  async function overrideObjective(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const expression = String(form.get('expression') ?? '').trim()
+    const sense = String(form.get('sense') ?? '').trim()
+    if (!expression && !sense) return
+    await submitAnswerPayload({
+      objective_overrides: {
+        [id]: {
+          sense: sense === 'minimize' ? 'minimize' : sense === 'maximize' ? 'maximize' : undefined,
+          expression: expression || undefined,
+        },
+      },
+    })
+  }
+
+  async function overrideConstraint(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const rawValue = String(form.get('value') ?? '').trim()
+    let value: string | number | boolean | undefined
+    if (rawValue) {
+      if (rawValue === 'true' || rawValue === 'false') value = rawValue === 'true'
+      else if (!Number.isNaN(Number(rawValue))) value = Number(rawValue)
+      else value = rawValue
+    }
+    await submitAnswerPayload({
+      constraint_overrides: {
+        [id]: {
+          kind: String(form.get('kind') ?? 'hard') as 'hard' | 'soft' | 'ambiguous',
+          operator: String(form.get('operator') ?? '').trim() || undefined,
+          expression: String(form.get('expression') ?? '').trim() || undefined,
+          value,
+        },
+      },
+    })
+  }
+
+  async function overrideAssumption(event: FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const rawValue = String(form.get('value') ?? '').trim()
+    let value: unknown = rawValue
+    if (rawValue === 'null') value = null
+    else if (rawValue === 'true' || rawValue === 'false') value = rawValue === 'true'
+    else if (rawValue && !Number.isNaN(Number(rawValue))) value = Number(rawValue)
+    else if (rawValue.startsWith('{') || rawValue.startsWith('[')) {
+      try {
+        value = JSON.parse(rawValue)
+      } catch {
+        value = rawValue
+      }
+    }
+    await submitAnswerPayload({
+      assumption_overrides: {
+        [id]: { value },
+      },
+    })
+  }
+
+  async function overrideCandidateScope(event: FormEvent<HTMLFormElement>, candidateId: string) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const field = String(form.get('scopeField') ?? '').trim()
+    const values = String(form.get('scopeValues') ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    await submitAnswerPayload({
+      candidate_scope_overrides: {
+        [candidateId]: field && values.length ? { field, values } : null,
+      },
+    })
   }
 
   async function applyAnswer(action?: 'confirm' | 'reject') {
@@ -779,7 +1156,15 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
     const body: IntakeAnswerBody = {}
 
-    if (question.kind === 'confirm_semantic' && question.field && question.role) {
+    if (question.kind === 'confirm_semantic' && question.hypothesis_id) {
+      body.formalization_statuses = {
+        [question.hypothesis_id]: action === 'reject' ? 'rejected' : 'user_confirmed',
+      }
+    } else if (question.kind === 'confirm_semantic' && question.hypothesis_ids.length) {
+      body.formalization_statuses = Object.fromEntries(
+        question.hypothesis_ids.map((id) => [id, action === 'reject' ? 'rejected' : 'user_confirmed'])
+      )
+    } else if (question.kind === 'confirm_semantic' && question.field && question.role) {
       const candidate = analysis.contract.candidates.find(
         (item) => item.field === question.field && item.role === question.role
       )
@@ -819,6 +1204,12 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
       const archetype = decisionArchetypeSchema.safeParse(selectedCompilerField)
       if (!archetype.success) return
       body = { archetype: archetype.data }
+    } else if (question.kind === 'select_objective') {
+      body = {
+        formalization_statuses: {
+          [selectedCompilerField]: 'user_confirmed',
+        },
+      }
     } else if (question.role) {
       const role = semanticRoleSchema.safeParse(question.role)
       if (!role.success) return
@@ -828,6 +1219,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
     if (!Object.keys(body).length) return
 
     if (await submitAnswerPayload(body)) {
+      if (question.kind === 'select_objective') {
+        setSelectedObjectiveId(selectedCompilerField)
+      }
       setSelectedCompilerField('')
     }
   }
@@ -868,6 +1262,13 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
 
   const nextQuestion = analysis?.sufficiency.next_question ?? null
   const compilationNextQuestion = analysis?.sufficiency.compilation_next_question ?? null
+  const mappingRoleOptions = Array.from(
+    new Set([
+      ...builtInSemanticRoles,
+      ...(analysis?.contract.candidates.map((candidate) => candidate.role) ?? []),
+      ...(compilationNextQuestion?.role ? [compilationNextQuestion.role] : []),
+    ])
+  )
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 text-white md:px-8 md:pt-12">
@@ -1017,6 +1418,524 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
             </article>
           </section>
 
+          {analysis.contract.formalization ? (
+            <section
+              data-testid="decision-intake-formalization"
+              className="mt-6 rounded-xl border border-cyan-300/25 bg-cyan-300/[0.035] p-6 md:p-8"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-3xl">
+                  <h2 className="text-xl font-medium">{t.formalizationTitle}</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{t.formalizationBody}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] uppercase tracking-wide text-slate-500">{t.completeness}</div>
+                  <div className="mt-1 text-2xl font-medium text-cyan-200">
+                    {Math.round(analysis.contract.formalization.completeness_score * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {t.decisionArchetype}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {analysis.contract.formalization.archetype_hypotheses.map((item, index) => (
+                    <span
+                      key={item.archetype}
+                      className={
+                        index === 0
+                          ? 'rounded-md border border-cyan-300/30 bg-cyan-300/10 px-2.5 py-1.5 text-xs text-cyan-100'
+                          : 'rounded-md border border-white/10 bg-white/[0.025] px-2.5 py-1.5 text-xs text-slate-400'
+                      }
+                    >
+                      {item.archetype} · {t.heuristicScore} {item.score.toFixed(2)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.decisionVariable}
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.decision_variables.map((item) => (
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
+                        <div className="font-mono text-sm text-cyan-100">{item.expression}</div>
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {item.kind} · {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
+                        </div>
+                        <details className="mt-3 border-t border-white/10 pt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                          <form
+                            className="mt-2 grid gap-2"
+                            onSubmit={(event) => void overrideDecisionVariable(event, item.id)}
+                          >
+                            <input
+                              name="expression"
+                              defaultValue={item.expression}
+                              aria-label={t.expression}
+                              className="min-w-0 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                            <div className="flex gap-2">
+                              <input
+                                name="indexedBy"
+                                defaultValue={item.indexed_by.join(', ')}
+                                aria-label={t.indexedBy}
+                                placeholder={t.indexedBy}
+                                className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={answerBusy}
+                                className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                              >
+                                {t.saveOverride}
+                              </button>
+                            </div>
+                          </form>
+                        </details>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            disabled={answerBusy}
+                            onClick={() =>
+                              void submitAnswerPayload({
+                                formalization_statuses: { [item.id]: 'user_confirmed' },
+                              })
+                            }
+                            className={
+                              item.status === 'user_confirmed'
+                                ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                                : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                            }
+                          >
+                            {t.confirm}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={answerBusy}
+                            onClick={() =>
+                              void submitAnswerPayload({
+                                formalization_statuses: { [item.id]: 'rejected' },
+                              })
+                            }
+                            className={
+                              item.status === 'rejected'
+                                ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                                : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                            }
+                          >
+                            {t.reject}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {!analysis.contract.formalization.decision_variables.length ? (
+                      <div className="text-xs text-amber-200">{t.structuralBlocked}</div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.objectiveCandidates}
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.objectives.map((item) => (
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="radio"
+                            name="formalization-objective"
+                            data-testid={`formalization-objective-${item.id}`}
+                            checked={selectedObjectiveId === item.id}
+                            onChange={() => setSelectedObjectiveId(item.id)}
+                            disabled={formalizationAccepting}
+                            className="mt-1"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm text-slate-200">
+                              {item.sense} · {item.expression}
+                            </span>
+                            <span className="mt-1 block text-[11px] text-slate-500">
+                              {t.heuristicScore} {item.score.toFixed(2)} · {item.status} ·{' '}
+                              {item.supported_compilers.includes('resource_allocation.v1')
+                                ? t.supportedByCompiler
+                                : t.requiresDifferentCompiler}
+                            </span>
+                          </span>
+                        </label>
+                        <details className="mt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                          <form
+                            className="mt-2 grid gap-2 sm:grid-cols-[auto_1fr_auto]"
+                            onSubmit={(event) => void overrideObjective(event, item.id)}
+                          >
+                            <select
+                              name="sense"
+                              defaultValue={item.sense}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                            >
+                              <option value="maximize">maximize</option>
+                              <option value="minimize">minimize</option>
+                            </select>
+                            <input
+                              name="expression"
+                              defaultValue={item.expression}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                            />
+                            <button
+                              type="submit"
+                              disabled={answerBusy}
+                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                            >
+                              {t.saveOverride}
+                            </button>
+                          </form>
+                        </details>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.constraintsTitle}</div>
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  {analysis.contract.formalization.constraints.map((item) => (
+                    <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-xs">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="leading-5 text-slate-300">{item.expression}</span>
+                        <span
+                          className={
+                            item.kind === 'hard'
+                              ? 'whitespace-nowrap text-rose-200'
+                              : item.kind === 'soft'
+                                ? 'whitespace-nowrap text-amber-200'
+                                : 'whitespace-nowrap text-slate-400'
+                          }
+                        >
+                          {item.kind === 'hard'
+                            ? t.hardConstraint
+                            : item.kind === 'soft'
+                              ? t.softConstraint
+                              : t.ambiguousConstraint}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-600">
+                        {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
+                      </div>
+                      <details className="mt-3 border-t border-white/10 pt-2">
+                        <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                        <form className="mt-2 grid gap-2" onSubmit={(event) => void overrideConstraint(event, item.id)}>
+                          <div className="grid grid-cols-2 gap-2">
+                            <select
+                              name="kind"
+                              defaultValue={item.kind}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            >
+                              <option value="hard">{t.hardConstraint}</option>
+                              <option value="soft">{t.softConstraint}</option>
+                              <option value="ambiguous">{t.ambiguousConstraint}</option>
+                            </select>
+                            <input
+                              name="operator"
+                              defaultValue={item.operator ?? ''}
+                              placeholder={t.operator}
+                              className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                          </div>
+                          <input
+                            name="value"
+                            defaultValue={item.value == null ? '' : String(item.value)}
+                            placeholder={t.value}
+                            className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                          />
+                          <input
+                            name="expression"
+                            defaultValue={item.expression}
+                            placeholder={t.expression}
+                            className="border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                          />
+                          <button
+                            type="submit"
+                            disabled={answerBusy}
+                            className="w-fit border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                          >
+                            {t.saveOverride}
+                          </button>
+                        </form>
+                      </details>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          disabled={answerBusy}
+                          onClick={() =>
+                            void submitAnswerPayload({
+                              formalization_statuses: { [item.id]: 'user_confirmed' },
+                            })
+                          }
+                          className={
+                            item.status === 'user_confirmed'
+                              ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                              : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                          }
+                        >
+                          {t.confirm}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={answerBusy}
+                          onClick={() =>
+                            void submitAnswerPayload({
+                              formalization_statuses: { [item.id]: 'rejected' },
+                            })
+                          }
+                          className={
+                            item.status === 'rejected'
+                              ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                              : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                          }
+                        >
+                          {t.reject}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {analysis.contract.formalization.assumptions.length ? (
+                <div className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.defaultAssumptions}
+                  </div>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    {analysis.contract.formalization.assumptions.map((item) => (
+                      <div key={item.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-xs">
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="font-mono text-cyan-100">
+                            {item.parameter} = {String(item.value)}
+                          </span>
+                          <span
+                            className={
+                              item.impact === 'decision_relevant'
+                                ? 'whitespace-nowrap text-amber-200'
+                                : 'whitespace-nowrap text-slate-400'
+                            }
+                          >
+                            {item.impact === 'decision_relevant' ? t.decisionRelevant : t.decisionNeutral}
+                          </span>
+                        </div>
+                        <div className="mt-2 leading-5 text-slate-400">{item.rationale}</div>
+                        <div className="mt-1 text-[11px] text-slate-600">
+                          {t.assumptionSource}: {item.provenance} · {item.status}
+                        </div>
+                        <details className="mt-2 border-t border-white/10 pt-2">
+                          <summary className="cursor-pointer text-[11px] text-slate-400">{t.editFormalization}</summary>
+                          <form
+                            className="mt-2 flex gap-2"
+                            onSubmit={(event) => void overrideAssumption(event, item.id)}
+                          >
+                            <input
+                              name="value"
+                              defaultValue={
+                                typeof item.value === 'string'
+                                  ? item.value
+                                  : item.value == null
+                                    ? 'null'
+                                    : JSON.stringify(item.value)
+                              }
+                              aria-label={t.value}
+                              className="min-w-0 flex-1 border border-white/10 bg-slate-900 px-2 py-1 text-xs text-white"
+                            />
+                            <button
+                              type="submit"
+                              disabled={answerBusy}
+                              className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                            >
+                              {t.saveOverride}
+                            </button>
+                          </form>
+                        </details>
+                        {item.impact === 'decision_relevant' ? (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              disabled={answerBusy}
+                              onClick={() =>
+                                void submitAnswerPayload({
+                                  formalization_statuses: { [item.id]: 'user_confirmed' },
+                                })
+                              }
+                              className={
+                                item.status === 'user_confirmed'
+                                  ? 'border border-emerald-300/50 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200'
+                                  : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                              }
+                            >
+                              {t.confirm}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={answerBusy}
+                              onClick={() =>
+                                void submitAnswerPayload({
+                                  formalization_statuses: { [item.id]: 'rejected' },
+                                })
+                              }
+                              className={
+                                item.status === 'rejected'
+                                  ? 'border border-rose-300/50 bg-rose-300/10 px-2.5 py-1 text-[11px] font-semibold text-rose-200'
+                                  : 'border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-slate-300'
+                              }
+                            >
+                              {t.reject}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.compilerMappings}
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.candidates
+                      .filter((candidate) =>
+                        ['community_id', 'team_id', 'capacity', 'demand', 'service'].includes(candidate.role)
+                      )
+                      .map((candidate) => (
+                        <div key={candidate.candidate_id} className="text-xs leading-5 text-slate-300">
+                          <span className="font-mono text-cyan-100">{candidate.field}</span>
+                          {' → '}
+                          <span>{candidate.role}</span>
+                          {candidate.scope ? (
+                            <span className="text-slate-500">
+                              {' '}
+                              · {t.scopedTo} {candidate.scope.field} ∈ [{candidate.scope.values.join(', ')}]
+                            </span>
+                          ) : null}
+                          <span className="text-slate-600"> · {candidate.status}</span>
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-[11px] text-slate-500">
+                              {t.editFormalization}
+                            </summary>
+                            <form
+                              className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+                              onSubmit={(event) => void overrideCandidateScope(event, candidate.candidate_id)}
+                            >
+                              <input
+                                name="scopeField"
+                                defaultValue={candidate.scope?.field ?? ''}
+                                placeholder={t.scopeField}
+                                className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                              />
+                              <input
+                                name="scopeValues"
+                                defaultValue={candidate.scope?.values.join(', ') ?? ''}
+                                placeholder={t.scopeValues}
+                                className="border border-white/10 bg-slate-900 px-2 py-1 text-[11px] text-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={answerBusy}
+                                className="border border-cyan-300/30 px-2 py-1 text-[11px] text-cyan-100"
+                              >
+                                {t.saveOverride}
+                              </button>
+                            </form>
+                          </details>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {t.timingSuggestions}
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">{t.timingReviewHint}</p>
+                  <div className="mt-3 grid gap-2">
+                    {analysis.contract.formalization.timing.map((item) => (
+                      <div
+                        key={item.field}
+                        data-testid={`decision-intake-timing-${item.field}`}
+                        className="rounded-md border border-white/10 bg-white/[0.025] px-3 py-2 text-xs"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-mono text-cyan-100">{item.field}</span>
+                          <span
+                            className={
+                              item.timing === 'ambiguous'
+                                ? 'text-amber-200'
+                                : item.timing === 'post_decision'
+                                  ? 'text-rose-200'
+                                  : 'text-emerald-200'
+                            }
+                          >
+                            {item.timing}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-500">
+                          {t.heuristicScore} {item.score.toFixed(2)} · {item.status}
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-600">{item.evidence.join(' · ')}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {analysis.contract.formalization.timing.some((item) => item.timing === 'ambiguous') ? (
+                    <p className="mt-3 text-xs leading-5 text-amber-200">{t.timingAmbiguous}</p>
+                  ) : null}
+                  {analysis.contract.formalization.timing.some(
+                    (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+                  ) ? (
+                    <label className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-300">
+                      <input
+                        type="checkbox"
+                        data-testid="decision-intake-review-timing"
+                        checked={timingReviewed}
+                        onChange={(event) => setTimingReviewed(event.target.checked)}
+                        className="mt-1"
+                      />
+                      <span>{t.timingReviewConfirm}</span>
+                    </label>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  data-testid="decision-intake-accept-formalization"
+                  disabled={
+                    formalizationAccepting ||
+                    (analysis.contract.formalization.objectives.length > 0 && !selectedObjectiveId) ||
+                    (analysis.contract.formalization.timing.some(
+                      (item) => item.timing === 'pre_decision' || item.timing === 'post_decision'
+                    ) &&
+                      !timingReviewed)
+                  }
+                  onClick={() => void acceptSuggestedFormalization()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {formalizationAccepting ? t.acceptingFormalization : t.acceptFormalization}
+                </button>
+                <span className="text-xs leading-5 text-slate-500">{analysis.contract.formalization.claim}</span>
+              </div>
+            </section>
+          ) : null}
+
           <section className="mt-6 rounded-xl border border-cyan-300/20 bg-slate-950/70 p-6 md:p-8">
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 h-5 w-5 text-cyan-300" />
@@ -1122,7 +2041,7 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                     onChange={(event) => setMappingRole(event.target.value as SemanticMapping['role'])}
                     className="border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white"
                   >
-                    {semanticRoleSchema.options.map((role) => (
+                    {mappingRoleOptions.map((role) => (
                       <option key={role} value={role}>
                         {renderSemanticRole(locale, role)}
                       </option>
@@ -1215,17 +2134,27 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
               >
                 <ShieldCheck className="h-4 w-4" /> {verifying ? t.verifying : t.verify}
               </button>
-              {analysis.sufficiency.compilation_status === 'ready' &&
-              analysis.contract.archetype === 'constrained_resource_allocation' ? (
-                <button
-                  type="button"
-                  data-testid="decision-intake-compile"
-                  disabled={compiling}
-                  onClick={compileContract}
-                  className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-300/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 disabled:opacity-40"
-                >
-                  <Wrench className="h-4 w-4" /> {compiling ? t.compiling : t.compile}
-                </button>
+              {analysis.sufficiency.compilation_status === 'ready' ? (
+                <>
+                  <button
+                    type="button"
+                    data-testid="decision-intake-compile"
+                    disabled={compiling}
+                    onClick={compileContract}
+                    className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-300/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 disabled:opacity-40"
+                  >
+                    <Wrench className="h-4 w-4" /> {compiling ? t.compiling : t.compile}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="decision-intake-execute"
+                    disabled={executing}
+                    onClick={executeContract}
+                    className="inline-flex items-center gap-2 bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-40"
+                  >
+                    <Wrench className="h-4 w-4" /> {executing ? t.executing : t.execute}
+                  </button>
+                </>
               ) : null}
             </div>
 
@@ -1239,12 +2168,25 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                 {compileError}
               </p>
             ) : null}
+            {executionError ? (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                {executionError}
+              </p>
+            ) : null}
 
             {compiled ? (
               <div data-testid="decision-intake-compiled" className="mt-6 border-t border-white/10 pt-5">
                 <h3 className="text-sm font-semibold text-emerald-200">{t.compiledTitle}</h3>
                 <pre className="mt-3 max-h-80 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
                   {JSON.stringify(compiled.request, null, 2)}
+                </pre>
+              </div>
+            ) : null}
+            {executed ? (
+              <div data-testid="decision-intake-executed" className="mt-6 border-t border-white/10 pt-5">
+                <h3 className="text-sm font-semibold text-emerald-200">{t.executedTitle}</h3>
+                <pre className="mt-3 max-h-96 overflow-auto bg-black/30 p-4 text-xs text-slate-300">
+                  {JSON.stringify(executed.result, null, 2)}
                 </pre>
               </div>
             ) : null}
@@ -1270,6 +2212,14 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                         : t.compilationBlocked}
                   </dd>
                 </div>
+                {analysis.sufficiency.compilation_validation_error ? (
+                  <div className="border-t border-white/10 pt-3">
+                    <dt className="text-slate-400">{t.preflightError}</dt>
+                    <dd className="mt-1 text-xs leading-5 text-rose-200">
+                      {analysis.sufficiency.compilation_validation_error}
+                    </dd>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
                   <dt className="text-slate-400">{t.causal}</dt>
                   <dd className="text-right text-cyan-200">
@@ -1307,7 +2257,9 @@ export function DecisionIntakeWorkspace({ locale }: { locale: Locale }) {
                       onChange={(event) => setSelectedCompilerField(event.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 p-2.5 text-sm"
                     >
-                      <option value="">{t.chooseField}</option>
+                      <option value="">
+                        {compilationNextQuestion.kind === 'select_objective' ? t.selectObjective : t.chooseField}
+                      </option>
                       {compilationNextQuestion.options.map((field) => (
                         <option key={field} value={field}>
                           {field}

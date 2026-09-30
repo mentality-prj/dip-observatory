@@ -6,6 +6,7 @@ const baseSufficiency = {
   causal_identifiability: 'requires_causal_model',
   blockers: ['role:action:not_verified', 'role:objective:not_verified'],
   compilation_blockers: ['compiler:unsupported_archetype:generic_decision'],
+  compilation_validation_error: null,
   causal_blockers: ['role:outcome:not_verified', 'causal_identification:not_run'],
   statistical_blockers: ['causal_identification:not_ready'],
   requirements: [],
@@ -432,4 +433,302 @@ test('human verification can create missing semantics and compile a ready RA con
   await page.getByTestId('decision-intake-compile').click()
   await expect(page.getByTestId('decision-intake-compiled')).toBeVisible()
   await expect(page.getByText(/team-a/)).toBeVisible()
+})
+
+test('automatic formalization can be accepted and executed end to end', async ({ page }) => {
+  const compilerCandidates = [
+    ['community', 'community_id'],
+    ['team_id', 'team_id'],
+    ['capacity', 'capacity'],
+    ['demand', 'demand'],
+    ['service', 'service'],
+  ].map(([field, role]) => ({
+    candidate_id: `semantic:${role}:${field}`,
+    field,
+    role,
+    source_columns: [field],
+    reason: {
+      code: 'semantic_reason.field_name_match',
+      params: { field, role },
+    },
+    scope: null,
+    status: 'inferred',
+  }))
+
+  const formalization = {
+    version: 1,
+    archetype_hypotheses: [
+      {
+        archetype: 'constrained_resource_allocation',
+        score: 0.99,
+        evidence: ['community dimension', 'capacity', 'demand quantity'],
+      },
+      {
+        archetype: 'generic_decision',
+        score: 0.05,
+        evidence: ['fallback when no supported specialized formulation is strong'],
+      },
+    ],
+    row_subtypes: [],
+    decision_variables: [
+      {
+        id: 'decision_variable:resource_allocation',
+        kind: 'allocation',
+        expression: 'x[team, community] in {0,1}: assign each team to at most one community',
+        indexed_by: ['team_id', 'community'],
+        value_field: null,
+        score: 0.98,
+        evidence: ['community', 'capacity', 'demand'],
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+    ],
+    objectives: [
+      {
+        id: 'objective:resource_allocation_score',
+        sense: 'maximize',
+        expression:
+          'maximize 1000*priority_coverage + 400*weighted_coverage + 250*total_coverage + 50*capacity_utilization - travel_cost - 2*unmet_need',
+        field: 'priority',
+        score: 0.99,
+        evidence: ['priority', 'demand'],
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+    ],
+    assumptions: [
+      {
+        id: 'assumption:resource_allocation:skills',
+        parameter: 'skills',
+        value: 'all_demand_services',
+        provenance: 'compiler_default',
+        impact: 'decision_relevant',
+        rationale: 'Missing skills require explicit confirmation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+      {
+        id: 'assumption:resource_allocation:travel',
+        parameter: 'travel',
+        value: 'zero_cost_unrestricted',
+        provenance: 'compiler_default',
+        impact: 'decision_relevant',
+        rationale: 'Missing travel graph requires explicit confirmation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+      {
+        id: 'assumption:resource_allocation:operation',
+        parameter: 'operation',
+        value: 'optimize',
+        provenance: 'system_default',
+        impact: 'decision_relevant',
+        rationale: 'Optimize is the selected Decision Intake adapter operation.',
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+    ],
+    constraints: [
+      {
+        id: 'constraint:budget',
+        kind: 'hard',
+        expression: 'total operating cost <= budget',
+        parameter: 'budget',
+        field: 'budget',
+        operator: '<=',
+        value: null,
+        score: 0.96,
+        evidence: ['budget'],
+        supported_compilers: ['resource_allocation.v1'],
+        status: 'inferred',
+      },
+    ],
+    timing: ['community', 'team_id', 'capacity', 'demand', 'service', 'priority', 'budget'].map((field) => ({
+      field,
+      timing: 'pre_decision',
+      score: 0.9,
+      evidence: ['operational input field'],
+      status: 'inferred',
+    })),
+    questions: [
+      {
+        id: 'formalization:compiler-mapping',
+        kind: 'confirm_compiler_mapping',
+        hypothesis_ids: compilerCandidates.map((item) => item.candidate_id),
+        field: null,
+        options: [],
+        score: 1,
+        rationale: 'Verify mappings required by the selected compiler adapter.',
+      },
+    ],
+    discovery_completeness_score: 1,
+    completeness_score: 1,
+    claim: 'Candidate mathematical formalization only.',
+  }
+
+  const informationSet = ['community', 'team_id', 'capacity', 'demand', 'service', 'priority', 'budget'].map(
+    (field) => ({ field, availability: 'available', status: 'inferred' })
+  )
+  const autoAnalysis = {
+    ...analysis,
+    interpretation: {
+      ...analysis.interpretation,
+      archetype: 'unclassified',
+      candidates: compilerCandidates,
+      clarifications: [],
+      formalization,
+    },
+    contract: {
+      ...analysis.contract,
+      contract_id: 'auto-contract',
+      archetype: 'unclassified',
+      candidates: compilerCandidates,
+      information_set: informationSet,
+      formalization,
+    },
+    sufficiency: {
+      ...baseSufficiency,
+      compilation_status: 'blocked',
+      compilation_blockers: ['compiler:archetype_unclassified'],
+      compilation_validation_error: null,
+    },
+  }
+
+  const verifiedFormalization = {
+    ...formalization,
+    decision_variables: formalization.decision_variables.map((item) => ({ ...item, status: 'user_confirmed' })),
+    objectives: formalization.objectives.map((item) => ({ ...item, status: 'user_confirmed' })),
+    constraints: formalization.constraints.map((item) => ({ ...item, status: 'user_confirmed' })),
+    assumptions: formalization.assumptions.map((item) => ({
+      ...item,
+      status: item.impact === 'decision_relevant' ? 'user_confirmed' : 'inferred',
+    })),
+    timing: formalization.timing.map((item) => ({ ...item, status: 'user_confirmed' })),
+  }
+  const verifiedContract = {
+    ...autoAnalysis.contract,
+    version: 2,
+    previous_version: 1,
+    archetype: 'constrained_resource_allocation',
+    candidates: compilerCandidates.map((item) => ({ ...item, status: 'user_confirmed' })),
+    information_set: informationSet.map((item) => ({
+      ...item,
+      availability: 'available',
+      status: 'user_confirmed',
+    })),
+    formalization: verifiedFormalization,
+    validation_status: 'verified',
+  }
+
+  await page.route('**/api/decision-intake/analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(autoAnalysis),
+    })
+  })
+  await page.route('**/api/decision-intake/auto-contract/answers', async (route) => {
+    const body = route.request().postDataJSON()
+    expect(body.archetype).toBe('constrained_resource_allocation')
+    expect(body.accept_timing_suggestions).toBeUndefined()
+    expect(body.information_availability).toEqual({
+      community: 'available',
+      team_id: 'available',
+      capacity: 'available',
+      demand: 'available',
+      service: 'available',
+      priority: 'available',
+      budget: 'available',
+    })
+    expect(body.formalization_statuses).toEqual({
+      'decision_variable:resource_allocation': 'user_confirmed',
+      'objective:resource_allocation_score': 'user_confirmed',
+      'constraint:budget': 'user_confirmed',
+      'assumption:resource_allocation:skills': 'user_confirmed',
+      'assumption:resource_allocation:travel': 'user_confirmed',
+      'assumption:resource_allocation:operation': 'user_confirmed',
+    })
+    expect(body.candidate_statuses_by_id).toEqual({
+      'semantic:community_id:community': 'user_confirmed',
+      'semantic:team_id:team_id': 'user_confirmed',
+      'semantic:capacity:capacity': 'user_confirmed',
+      'semantic:demand:demand': 'user_confirmed',
+      'semantic:service:service': 'user_confirmed',
+    })
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        contract: verifiedContract,
+        evidence_gate: {
+          status: 'ready_for_structural_intake',
+          reasons: [
+            {
+              code: 'evidence_reason.minimum_verified_semantics_present',
+              params: { field: null, role: null },
+            },
+          ],
+          missing_evidence: [],
+          blocking_assumptions: [],
+          recommended_next_step: {
+            code: 'next_step.compile_resource_allocation',
+            params: { field: null, role: null },
+          },
+        },
+        sufficiency: readyRaSufficiency,
+      }),
+    })
+  })
+  await page.route('**/api/decision-intake/auto-contract/execute', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        archetype: 'constrained_resource_allocation',
+        request: {
+          communities: [{ id: 'north', demand: [{ service: 'medical', units: 8 }] }],
+          teams: [{ id: 'team-a', capacity: 10, skills: ['medical'] }],
+          budget: 100,
+        },
+        result: {
+          status: 'ok',
+          recommended: {
+            assignments: { 'team-a': 'north' },
+            score: 1000,
+          },
+          alternatives: [],
+        },
+      }),
+    })
+  })
+
+  await page.goto('/uk/decision-intake')
+  const dropzone = page.getByTestId('decision-intake-dropzone')
+  const csv = ['community,team_id,capacity,demand,service,priority,budget', 'north,team-a,10,8,medical,high,100'].join(
+    '\n'
+  )
+  await dropzone.evaluate((element, contents) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([contents], 'auto-ra.csv', { type: 'text/csv' }))
+    element.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
+  }, csv)
+  await page.getByRole('button', { name: 'Проаналізувати дані' }).click()
+
+  await expect(page.getByTestId('decision-intake-formalization')).toBeVisible()
+  await expect(page.getByText(/1000\*priority_coverage/)).toBeVisible()
+  await expect(page.getByText('skills = all_demand_services')).toBeVisible()
+  await expect(page.getByText('travel = zero_cost_unrestricted')).toBeVisible()
+  await expect(page.getByText('operation = optimize')).toBeVisible()
+  await expect(page.getByTestId('decision-intake-timing-community')).toContainText('pre_decision')
+  await expect(page.getByTestId('decision-intake-timing-budget')).toContainText('pre_decision')
+  await expect(page.getByTestId('decision-intake-accept-formalization')).toBeDisabled()
+  await page.getByTestId('formalization-objective-objective:resource_allocation_score').check()
+  await page.getByTestId('decision-intake-review-timing').check()
+  await page.getByTestId('decision-intake-accept-formalization').click()
+
+  await expect(page.getByTestId('decision-intake-execute')).toBeVisible()
+  await page.getByTestId('decision-intake-execute').click()
+  await expect(page.getByTestId('decision-intake-executed')).toBeVisible()
+  await expect(page.getByText(/team-a/)).toBeVisible()
+  await expect(page.getByText(/north/)).toBeVisible()
 })

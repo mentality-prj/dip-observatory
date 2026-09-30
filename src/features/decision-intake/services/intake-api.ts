@@ -4,10 +4,11 @@ import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 import {
   compiledResourceAllocationSchema,
+  executedDecisionIntakeSchema,
   normalizeContractResponse,
   normalizeIntakeAnalysis,
 } from '../model/contracts'
-import type { CausalSpecification, ContractResponse, IntakeAnalysis } from '../model/contracts'
+import type { ContractResponse, IntakeAnalysis, IntakeAnswers } from '../model/contracts'
 
 export class DecisionIntakeApiError extends Error {
   constructor(
@@ -46,8 +47,13 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   if (!response.ok) {
     let detail = `Decision Intake failed with status ${response.status}`
     try {
-      const payload = (await response.json()) as { detail?: string }
-      if (payload.detail) detail = payload.detail
+      const payload = (await response.json()) as {
+        detail?: string | { code?: string; result?: unknown }
+        error?: { message?: string }
+      }
+      if (typeof payload.detail === 'string') detail = payload.detail
+      else if (payload.detail?.code) detail = payload.detail.code
+      else if (payload.error?.message) detail = payload.error.message
     } catch {
       // Preserve the status-derived error without exposing upstream response bodies.
     }
@@ -78,17 +84,7 @@ export async function analyzeDecisionDataset(input: { file: File; businessContex
   return normalizeIntakeAnalysis(await requestV2WithFallback('/v2/analyze', '/analyze', { method: 'POST', body: form }))
 }
 
-export async function submitDecisionIntakeAnswers(
-  sessionId: string,
-  input: {
-    candidate_statuses_by_id?: Record<string, 'user_confirmed' | 'rejected'>
-    candidate_statuses?: Record<string, 'user_confirmed' | 'rejected'>
-    information_availability?: Record<string, 'available' | 'not_available' | 'unknown'>
-    semantic_mappings?: Array<{ field: string; role: string }>
-    archetype?: 'generic_decision' | 'constrained_resource_allocation'
-    causal_specification?: CausalSpecification
-  }
-): Promise<ContractResponse> {
+export async function submitDecisionIntakeAnswers(sessionId: string, input: IntakeAnswers): Promise<ContractResponse> {
   if (input.candidate_statuses_by_id && input.candidate_statuses) {
     throw new DecisionIntakeApiError('Use one semantic confirmation identity mode.', 422)
   }
@@ -106,9 +102,18 @@ export async function submitDecisionIntakeAnswers(
     if (!isMissingV2Route(error)) throw error
   }
 
-  if (input.semantic_mappings?.length || input.archetype || input.causal_specification) {
+  if (
+    input.semantic_mappings?.length ||
+    input.archetype ||
+    input.causal_specification ||
+    Object.keys(input.formalization_statuses ?? {}).length ||
+    Object.keys(input.decision_variable_overrides ?? {}).length ||
+    Object.keys(input.objective_overrides ?? {}).length ||
+    Object.keys(input.constraint_overrides ?? {}).length ||
+    Object.keys(input.candidate_scope_overrides ?? {}).length
+  ) {
     throw new DecisionIntakeApiError(
-      'Semantic mappings, archetype selection, and causal specification require Decision Intake v2.',
+      'Problem formalization, semantic mappings, archetype selection, and causal specification require Decision Intake v2.',
       409
     )
   }
@@ -164,5 +169,14 @@ export async function compileDecisionIntake(sessionId: string) {
   const encoded = encodeURIComponent(sessionId)
   return compiledResourceAllocationSchema.parse(
     await requestV2WithFallback(`/v2/${encoded}/compile`, `/${encoded}/compile`, { method: 'POST' })
+  )
+}
+
+export async function executeDecisionIntake(sessionId: string) {
+  const encoded = encodeURIComponent(sessionId)
+  return executedDecisionIntakeSchema.parse(
+    await requestV2WithFallback(`/v2/${encoded}/execute`, `/${encoded}/execute`, {
+      method: 'POST',
+    })
   )
 }

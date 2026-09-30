@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { decisionSufficiencySchema, sufficiencyQuestionSchema } from './contracts'
+import {
+  compiledDecisionIntakeSchema,
+  decisionArchetypeSchema,
+  decisionSufficiencySchema,
+  intakeAnswersSchema,
+  problemFormalizationSchema,
+  sufficiencyQuestionSchema,
+} from './contracts'
 
 describe('Decision Intake sufficiency contract', () => {
   it('parses an identified effect that still requires estimability work', () => {
@@ -10,6 +17,7 @@ describe('Decision Intake sufficiency contract', () => {
       causal_identifiability: 'identified',
       blockers: [],
       compilation_blockers: ['compiler_role:capacity:not_verified'],
+      compilation_validation_error: null,
       causal_blockers: [],
       statistical_blockers: ['positivity:requires_full_analysis'],
       requirements: [
@@ -183,5 +191,235 @@ describe('Decision Intake sufficiency contract', () => {
 
     expect(result.kind).toBe('select_archetype')
     expect(result.options).toEqual(['constrained_resource_allocation'])
+  })
+  it('parses a compiler-aware resource-allocation formalization', () => {
+    const result = problemFormalizationSchema.parse({
+      version: 1,
+      archetype_hypotheses: [
+        {
+          archetype: 'constrained_resource_allocation',
+          score: 0.99,
+          evidence: ['community dimension', 'capacity', 'demand quantity'],
+        },
+      ],
+      row_subtypes: [
+        {
+          discriminator: 'record_type',
+          value: 'team',
+          semantic_type: 'team',
+          score: 0.98,
+        },
+      ],
+      decision_variables: [
+        {
+          id: 'decision_variable:resource_allocation',
+          kind: 'allocation',
+          expression: 'x[team, community] in {0,1}: assign each team to at most one community',
+          indexed_by: ['id', 'community'],
+          value_field: null,
+          score: 0.98,
+          evidence: ['community', 'capacity', 'units'],
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
+      objectives: [
+        {
+          id: 'objective:resource_allocation_score',
+          sense: 'maximize',
+          expression: 'maximize the resource-allocation composite score',
+          field: 'priority',
+          score: 0.97,
+          evidence: ['priority', 'units', 'cost'],
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
+      constraints: [
+        {
+          id: 'constraint:budget',
+          kind: 'hard',
+          expression: 'total operating cost <= budget',
+          parameter: 'budget',
+          field: 'budget',
+          operator: '<=',
+          value: null,
+          score: 0.96,
+          evidence: ['budget'],
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
+      assumptions: [
+        {
+          id: 'assumption:resource_allocation:skills',
+          parameter: 'skills',
+          value: 'all_demand_services',
+          provenance: 'compiler_default',
+          impact: 'decision_relevant',
+          rationale: 'Missing team skills require explicit confirmation.',
+          supported_compilers: ['resource_allocation.v1'],
+          status: 'inferred',
+        },
+      ],
+      timing: [
+        {
+          field: 'capacity',
+          timing: 'pre_decision',
+          score: 0.9,
+          evidence: ['operational input field'],
+          status: 'inferred',
+        },
+      ],
+      questions: [],
+      completeness_score: 0.95,
+      claim: 'Candidate mathematical formalization only.',
+    })
+
+    expect(result.objectives[0]?.supported_compilers).toEqual(['resource_allocation.v1'])
+    expect(result.decision_variables[0]?.expression).toContain('assign each team')
+    expect(result.assumptions[0]?.impact).toBe('decision_relevant')
+  })
+
+  it('accepts plugin-defined archetypes, roles and decision-variable kinds', () => {
+    expect(decisionArchetypeSchema.parse('toy_selection')).toBe('toy_selection')
+
+    const formalization = problemFormalizationSchema.parse({
+      version: 1,
+      archetype_hypotheses: [
+        {
+          archetype: 'toy_selection',
+          score: 0.99,
+          evidence: ['registered plugin'],
+        },
+      ],
+      row_subtypes: [],
+      decision_variables: [
+        {
+          id: 'decision_variable:toy:choice',
+          kind: 'ranking',
+          expression: 'choose one choice',
+          indexed_by: ['choice'],
+          value_field: null,
+          score: 0.99,
+          evidence: ['choice'],
+          supported_compilers: ['toy_selection.v1'],
+          status: 'inferred',
+        },
+      ],
+      objectives: [
+        {
+          id: 'objective:toy:utility',
+          sense: 'maximize',
+          expression: 'maximize utility',
+          field: 'utility',
+          score: 0.99,
+          evidence: ['utility'],
+          supported_compilers: ['toy_selection.v1'],
+          status: 'inferred',
+        },
+      ],
+      constraints: [],
+      assumptions: [],
+      timing: [],
+      questions: [],
+      discovery_completeness_score: 1,
+      completeness_score: 1,
+      claim: 'Plugin-defined formalization.',
+    })
+
+    const compiled = compiledDecisionIntakeSchema.parse({
+      archetype: 'toy_selection',
+      request: { selected: 'b' },
+    })
+
+    expect(formalization.decision_variables[0]?.kind).toBe('ranking')
+    expect(compiled.archetype).toBe('toy_selection')
+  })
+
+  it('accepts unclassified contracts before verified archetype selection', () => {
+    expect(decisionArchetypeSchema.parse('unclassified')).toBe('unclassified')
+  })
+
+  it('accepts one-shot formalization with explicit timing verification', () => {
+    const result = intakeAnswersSchema.parse({
+      archetype: 'constrained_resource_allocation',
+      formalization_statuses: {
+        'decision_variable:resource_allocation': 'user_confirmed',
+        'objective:resource_allocation_score': 'user_confirmed',
+        'constraint:budget': 'user_confirmed',
+      },
+      information_availability: {
+        capacity: 'available',
+        outcome: 'not_available',
+      },
+      candidate_statuses_by_id: {
+        'semantic:team_id:id': 'user_confirmed',
+      },
+    })
+
+    expect(result.archetype).toBe('constrained_resource_allocation')
+    expect(result.information_availability).toEqual({
+      capacity: 'available',
+      outcome: 'not_available',
+    })
+  })
+
+  it('accepts formalization and scope overrides', () => {
+    const result = intakeAnswersSchema.parse({
+      decision_variable_overrides: {
+        'decision_variable:resource_allocation': {
+          expression: 'x[team, community, day] in {0,1}',
+        },
+      },
+      objective_overrides: {
+        'objective:resource_allocation_score': {
+          sense: 'maximize',
+          expression: 'maximize fairness_adjusted_coverage',
+        },
+      },
+      constraint_overrides: {
+        'constraint:budget': {
+          kind: 'hard',
+          operator: '<=',
+          value: 80,
+        },
+      },
+      candidate_scope_overrides: {
+        'semantic:team_id:id': {
+          field: 'record_type',
+          values: ['team'],
+        },
+      },
+    })
+
+    expect(result.objective_overrides?.['objective:resource_allocation_score']?.expression).toBe(
+      'maximize fairness_adjusted_coverage'
+    )
+    expect(result.constraint_overrides?.['constraint:budget']?.value).toBe(80)
+    expect(result.candidate_scope_overrides?.['semantic:team_id:id']?.values).toEqual(['team'])
+  })
+
+  it('parses compiler objective reselection questions', () => {
+    const result = sufficiencyQuestionSchema.parse({
+      id: 'select-compiler-objective',
+      kind: 'select_objective',
+      role: 'objective',
+      field: null,
+      hypothesis_id: null,
+      hypothesis_ids: ['objective:resource_allocation_score'],
+      options: ['objective:resource_allocation_score'],
+      resolves: ['compiler:objective_not_supported:objective:minimize_operating_cost'],
+      effect: 'removes_blocker',
+      estimated_cost: 1,
+      priority_score: 1,
+      rationale: 'Choose a compiler-compatible objective.',
+      evidence_action_id: null,
+      evidence_kind: null,
+      evidence_variables: [],
+      evidence_targets: [],
+    })
+
+    expect(result.kind).toBe('select_objective')
   })
 })
