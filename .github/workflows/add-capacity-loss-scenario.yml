@@ -1,0 +1,269 @@
+name: Add capacity loss demo scenario
+
+on:
+  push:
+    branches:
+      - feature/contractor-capacity-loss-demo
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: feature/contractor-capacity-loss-demo
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Patch scenario, copy, UI and regression coverage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          demo = Path('src/use-cases/contractor-allocation/demo-data.ts')
+          s = demo.read_text()
+          s = s.replace(
+              "export type ContractorAllocationDemoPreset =\n  'NORMAL' | 'CAPACITY_CONSTRAINED' | 'CONTRACT_COMMITMENT' | 'TE_UNCERTAINTY'",
+              "export type ContractorAllocationDemoPreset =\n  | 'NORMAL'\n  | 'CAPACITY_CONSTRAINED'\n  | 'CAPACITY_LOSS'\n  | 'CONTRACT_COMMITMENT'\n  | 'TE_UNCERTAINTY'",
+          )
+          s = s.replace(
+              "  'CAPACITY_CONSTRAINED',\n  'NORMAL',",
+              "  'CAPACITY_CONSTRAINED',\n  'CAPACITY_LOSS',\n  'NORMAL',",
+          )
+          s = s.replace(
+              "function capacityFor(spec: ContractorSpec, preset: ContractorAllocationDemoPreset) {\n  if (preset === 'CAPACITY_CONSTRAINED') {",
+              "function capacityFor(spec: ContractorSpec, preset: ContractorAllocationDemoPreset) {\n  if (preset === 'CAPACITY_LOSS') {\n    const october: Record<string, number> = {\n      'arbor-north': 0,\n      'green-line': 78,\n      'canopy-works': 74,\n      'line-safe': 82,\n    }\n    return [\n      { bucket: '2026-10', availableCapacity: october[spec.id] },\n      { bucket: '2026-11', availableCapacity: 120 },\n    ]\n  }\n  if (preset === 'CAPACITY_CONSTRAINED') {",
+          )
+          s = s.replace(
+              "        territories: ['SHARED', spec.homeTerritory],",
+              "        territories: ['SHARED', 'NASHUA_AWC', spec.homeTerritory],",
+          )
+          s = s.replace(
+              "          {\n            workType: 'ROUTINE_TRIM',\n            quantityUnit: 'tree',\n            unitRate: spec.routineRate,\n            mobilizationCost: spec.mobilization,\n          },",
+              "          {\n            workType: 'ROUTINE_TRIM',\n            quantityUnit: 'tree',\n            unitRate: spec.routineRate,\n            mobilizationCost: spec.mobilization,\n          },\n          {\n            workType: 'ROUTINE_TRIM',\n            quantityUnit: 'mile',\n            unitRate: spec.routineRate * 32,\n            mobilizationCost: spec.mobilization,\n          },",
+          )
+          s = s.replace(
+              "          {\n            workType: 'HAZARD_TREE_REMOVAL',\n            quantityUnit: 'tree',\n            unitRate: spec.removalRate,\n            mobilizationCost: spec.mobilization + 45,\n          },",
+              "          {\n            workType: 'HAZARD_TREE_REMOVAL',\n            quantityUnit: 'tree',\n            unitRate: spec.removalRate,\n            mobilizationCost: spec.mobilization + 45,\n          },\n          {\n            workType: 'HAZARD_TREE_REMOVAL',\n            quantityUnit: 'mile',\n            unitRate: spec.removalRate * 24,\n            mobilizationCost: spec.mobilization + 45,\n          },",
+          )
+          anchor = "function buildUnits(preset: ContractorAllocationDemoPreset): AllocationUnit[] {\n  return Array.from({ length: 100 }, (_, offset) => {"
+          replacement = """function buildUnits(preset: ContractorAllocationDemoPreset): AllocationUnit[] {
+  if (preset === 'CAPACITY_LOSS') {
+    const awardedMiles = [42, 38, 36, 34, 32, 30, 28, 26]
+    return awardedMiles.map((quantity, offset) => {
+      const index = offset + 1
+      const id = `NASHUA-${String(index).padStart(2, '0')}`
+      const workType = index <= 6 ? 'ROUTINE_TRIM' : 'HAZARD_TREE_REMOVAL'
+      return {
+        id,
+        type: 'AWARDED_VOLUME',
+        territory: 'NASHUA_AWC',
+        workType,
+        quantity,
+        quantityUnit: 'mile',
+        executionStart: '2026-10-02',
+        executionEnd: '2026-10-28',
+        capacityRequirements: [{ bucket: '2026-10', demand: quantity }],
+        contractVolume: quantity,
+        deadline: '2026-10-31',
+        priority: 3,
+        requiredEquipment: ['bucket-truck', 'chipper'],
+        requiredCertifications: ['line-clearance'],
+        scopeId: `nashua-awc-${String(index).padStart(2, '0')}`,
+        scopeVersion: 1,
+        provenance: unitProvenance(id),
+      }
+    })
+  }
+  return Array.from({ length: 100 }, (_, offset) => {"""
+          if anchor not in s:
+              raise SystemExit('buildUnits anchor missing')
+          s = s.replace(anchor, replacement, 1)
+          anchor = """function withObservedAllocation(
+  units: AllocationUnit[],
+  contractors: Contractor[],
+  preset: ContractorAllocationDemoPreset
+) {
+  const scenario: ContractorAllocationScenario = {"""
+          replacement = """function withObservedAllocation(
+  units: AllocationUnit[],
+  contractors: Contractor[],
+  preset: ContractorAllocationDemoPreset
+) {
+  if (preset === 'CAPACITY_LOSS') {
+    return units.map((unit) => ({
+      ...unit,
+      observedContractorId: 'arbor-north',
+      observedContractId: 'arbor-north-unit-2026',
+    }))
+  }
+  const scenario: ContractorAllocationScenario = {"""
+          if anchor not in s:
+              raise SystemExit('observed allocation anchor missing')
+          s = s.replace(anchor, replacement, 1)
+          s = s.replace(
+              "    allocationLevel: 'WORK_PACKAGE',\n    constraintCoverageStatus: 'COMPLETE',\n    trustedAuthorities: trustedAuthorities.map",
+              "    allocationLevel: preset === 'CAPACITY_LOSS' ? 'AWARDED_VOLUME' : 'WORK_PACKAGE',\n    constraintCoverageStatus: 'COMPLETE',\n    trustedAuthorities: trustedAuthorities.map",
+              1,
+          )
+          demo.write_text(s)
+
+          i18n = Path('src/use-cases/contractor-allocation/i18n.ts')
+          s = i18n.read_text()
+          s = s.replace(
+              "Record<'NORMAL' | 'CAPACITY_CONSTRAINED' | 'CONTRACT_COMMITMENT' | 'TE_UNCERTAINTY', string>",
+              "Record<'NORMAL' | 'CAPACITY_CONSTRAINED' | 'CAPACITY_LOSS' | 'CONTRACT_COMMITMENT' | 'TE_UNCERTAINTY', string>",
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED: 'Capacity constrained',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED: 'Capacity constrained',\n      CAPACITY_LOSS: 'Contractor capacity loss · 266 miles',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED:\n        'Cheap contractors cannot take all work, so QDIP must preserve scarce capacity for the highest-value assignments.',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED:\n        'Cheap contractors cannot take all work, so QDIP must preserve scarce capacity for the highest-value assignments.',\n      CAPACITY_LOSS:\n        'Historical trigger: 266 Nashua AWC SMT/METT miles returned to bid after limited crew resources. QDIP rebuilds the post-shock portfolio with synthetic economics.',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED: 'Обмежена потужність',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED: 'Обмежена потужність',\n      CAPACITY_LOSS: 'Втрата потужності підрядника · 266 миль',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED:\n        'Дешеві підрядники не можуть забрати всі роботи, тому QDIP береже дефіцитну потужність для робіт із найбільшою економічною перевагою.',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED:\n        'Дешеві підрядники не можуть забрати всі роботи, тому QDIP береже дефіцитну потужність для робіт із найбільшою економічною перевагою.',\n      CAPACITY_LOSS:\n        'Історичний тригер: 266 миль SMT/METT Nashua AWC повторно виставили на торги через брак бригад. QDIP перебудовує портфель після шоку на синтетичній економіці.',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED: 'Ograniczona moc',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED: 'Ograniczona moc',\n      CAPACITY_LOSS: 'Utrata mocy wykonawcy · 266 mil',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          s = s.replace(
+              "      CAPACITY_CONSTRAINED:\n        'Tańsi wykonawcy nie mogą przejąć wszystkich prac, więc QDIP zachowuje deficytową moc dla zadań o najwyższej wartości.',\n      CONTRACT_COMMITMENT:",
+              "      CAPACITY_CONSTRAINED:\n        'Tańsi wykonawcy nie mogą przejąć wszystkich prac, więc QDIP zachowuje deficytową moc dla zadań o najwyższej wartości.',\n      CAPACITY_LOSS:\n        'Historyczny trigger: 266 mil SMT/METT Nashua AWC ponownie skierowano do przetargu z powodu ograniczonych zasobów ekip. QDIP przebudowuje portfel po szoku na syntetycznej ekonomice.',\n      CONTRACT_COMMITMENT:",
+              1,
+          )
+          i18n.write_text(s)
+
+          workspace = Path('src/use-cases/contractor-allocation/workspace.tsx')
+          s = workspace.read_text()
+          s = s.replace(
+              "import { contractorAllocationI18n } from './i18n'\n",
+              "import { CapacityLossStory } from './capacity-loss-story'\nimport { contractorAllocationI18n } from './i18n'\n",
+              1,
+          )
+          anchor = """        </section>
+
+        <section className=\"mt-5 border border-white/10 bg-white/[.02] p-5\">
+          <h2 className=\"text-lg font-medium\">{t.inputOwnership}</h2>"""
+          replacement = """        </section>
+
+        {preset === 'CAPACITY_LOSS' && view === 'QDIP' ? (
+          <CapacityLossStory locale={locale} scenario={scenario} result={result} />
+        ) : null}
+
+        <section className=\"mt-5 border border-white/10 bg-white/[.02] p-5\">
+          <h2 className=\"text-lg font-medium\">{t.inputOwnership}</h2>"""
+          if anchor not in s:
+              raise SystemExit('workspace story anchor missing')
+          s = s.replace(anchor, replacement, 1)
+          s = s.replace(
+              "<Metric label={copy.observedSpend} value={money(locale, result.observedExpectedSpend)} />",
+              "<Metric\n              label={copy.observedSpend}\n              value={preset === 'CAPACITY_LOSS' ? '—' : money(locale, result.observedExpectedSpend)}\n            />",
+              1,
+          )
+          s = s.replace(
+              "              value={money(locale, result.counterfactualAllocationAdvantage)}",
+              "              value={preset === 'CAPACITY_LOSS' ? '—' : money(locale, result.counterfactualAllocationAdvantage)}",
+              1,
+          )
+          workspace.write_text(s)
+
+          tests = Path('src/use-cases/contractor-allocation/optimizer.vitest.test.ts')
+          s = tests.read_text()
+          anchor = """  it('exposes distinct preset semantics', () => {
+    const normal = optimizeContractorAllocation(buildContractorAllocationDemoScenario('NORMAL'))"""
+          replacement = """  it('recovers all 266 awarded miles after a contractor crew-capacity loss', () => {
+    const input = buildContractorAllocationDemoScenario('CAPACITY_LOSS')
+    const result = optimizeContractorAllocation(input)
+    const recoveredMiles = result.assignments.reduce((sum, assignment) => {
+      const unit = input.units.find((item) => item.id === assignment.allocationUnitId)
+      return sum + (unit?.quantityUnit === 'mile' ? unit.quantity : 0)
+    }, 0)
+
+    expect(input.allocationLevel).toBe('AWARDED_VOLUME')
+    expect(input.units.reduce((sum, unit) => sum + unit.quantity, 0)).toBe(266)
+    expect(input.units.every((unit) => unit.quantityUnit === 'mile')).toBe(true)
+    expect(input.units.every((unit) => unit.observedContractorId === 'arbor-north')).toBe(true)
+    expect(
+      input.contractors
+        .find((contractor) => contractor.id === 'arbor-north')
+        ?.capacityBuckets.find((bucket) => bucket.bucket === '2026-10')?.availableCapacity
+    ).toBe(0)
+    expect(result.status).toBe('OPTIMAL')
+    expect(result.assignments).toHaveLength(input.units.length)
+    expect(result.assignments.every((assignment) => assignment.contractorId !== 'arbor-north')).toBe(true)
+    expect(recoveredMiles).toBe(266)
+    expect(result.observedInvalidUnitIds).toHaveLength(input.units.length)
+    expect(result.counterfactualAllocationAdvantage).toBeNull()
+    expect(result.qdipExpectedSpend).toBeGreaterThan(0)
+  })
+
+  it('exposes distinct preset semantics', () => {
+    const normal = optimizeContractorAllocation(buildContractorAllocationDemoScenario('NORMAL'))"""
+          if anchor not in s:
+              raise SystemExit('test anchor missing')
+          s = s.replace(anchor, replacement, 1)
+          tests.write_text(s)
+          PY
+
+          pnpm exec prettier --write \
+            src/use-cases/contractor-allocation/demo-data.ts \
+            src/use-cases/contractor-allocation/i18n.ts \
+            src/use-cases/contractor-allocation/workspace.tsx \
+            src/use-cases/contractor-allocation/capacity-loss-story.tsx \
+            src/use-cases/contractor-allocation/optimizer.vitest.test.ts
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and component tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: pnpm test:e2e
+
+      - name: Commit verified scenario
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/add-capacity-loss-scenario.yml
+          git add src/use-cases/contractor-allocation
+          git commit -m "feat: add contractor capacity loss recovery scenario"
+          git push origin HEAD:feature/contractor-capacity-loss-demo
