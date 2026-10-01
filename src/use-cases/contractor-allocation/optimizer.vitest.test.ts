@@ -103,6 +103,8 @@ function globalChoiceScenario(): ContractorAllocationScenario {
             pricingModel: 'UNIT_PRICE',
             maxVolume: 2,
             consumedVolumeToDate: 0,
+            remainingMinVolume: 0,
+            remainingMaxVolume: 2,
             provenance: contractProvenance('A-contract'),
             rates: [
               { workType: 'X', quantityUnit: 'job', unitRate: 1 },
@@ -129,6 +131,8 @@ function globalChoiceScenario(): ContractorAllocationScenario {
             pricingModel: 'UNIT_PRICE',
             maxVolume: 2,
             consumedVolumeToDate: 0,
+            remainingMinVolume: 0,
+            remainingMaxVolume: 2,
             provenance: contractProvenance('B-contract'),
             rates: [
               { workType: 'X', quantityUnit: 'job', unitRate: 2 },
@@ -170,6 +174,8 @@ function multiContractScenario(): ContractorAllocationScenario {
             pricingModel: 'UNIT_PRICE',
             maxVolume: 4,
             consumedVolumeToDate: 2,
+            remainingMinVolume: 0,
+            remainingMaxVolume: 2,
             provenance: contractProvenance('A-cheap'),
             rates: [{ workType: 'X', quantityUnit: 'job', unitRate: 1 }],
           },
@@ -184,6 +190,8 @@ function multiContractScenario(): ContractorAllocationScenario {
             maxVolume: 10,
             minVolume: 4,
             consumedVolumeToDate: 4,
+            remainingMinVolume: 0,
+            remainingMaxVolume: 6,
             provenance: contractProvenance('A-overflow'),
             rates: [{ workType: 'X', quantityUnit: 'job', unitRate: 3 }],
           },
@@ -209,7 +217,7 @@ describe('contractor allocation optimizer', () => {
     expect(result.optimalityGapPct).toBe(0)
   })
 
-  it('uses remaining contract volume after already-consumed volume and does not re-impose fulfilled minimums', () => {
+  it('uses authoritative remaining contract volume and does not re-impose fulfilled minimums', () => {
     const scenario = multiContractScenario()
     const analysis = analyzeAllocationUnit(scenario, scenario.units[0])
     const result = optimizeContractorAllocation(scenario)
@@ -341,6 +349,7 @@ describe('contractor allocation optimizer', () => {
     expect(first.scenarioSnapshot.algorithm).toBe('SHA-256')
     expect(first.scenarioSnapshot.id).toMatch(/^[a-f0-9]{64}$/)
     expect(first.scenarioSnapshot.canonicalInput).toContain('consumedVolumeToDate')
+    expect(first.scenarioSnapshot.canonicalInput).toContain('remainingMaxVolume')
     expect(first.scenarioSnapshot.canonicalInput).toContain('sourceRecordId')
     expect(first.assignments.every((assignment) => assignment.inputSnapshotId === first.scenarioSnapshot.id)).toBe(true)
     expect(second.scenarioSnapshot.id).not.toBe(first.scenarioSnapshot.id)
