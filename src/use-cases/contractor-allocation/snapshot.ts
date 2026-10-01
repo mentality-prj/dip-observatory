@@ -1,9 +1,4 @@
-import type {
-  AllocationInputSnapshot,
-  AllocationSnapshotInput,
-  ContractorAllocationScenario,
-  UnitDecisionAnalysis,
-} from './domain'
+import type { ContractorAllocationScenario, ScenarioInputSnapshot } from './domain'
 
 const SHA256_K = [
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98,
@@ -98,31 +93,44 @@ export function canonicalJson(value: unknown) {
   return JSON.stringify(canonicalize(value))
 }
 
-function cloneSnapshotInput(input: AllocationSnapshotInput): AllocationSnapshotInput {
-  return JSON.parse(JSON.stringify(input)) as AllocationSnapshotInput
+function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAllocationScenario {
+  return {
+    ...scenario,
+    units: [...scenario.units]
+      .sort((left, right) => left.id.localeCompare(right.id))
+      .map((unit) => ({
+        ...unit,
+        requiredEquipment: [...unit.requiredEquipment].sort(),
+        requiredCertifications: [...unit.requiredCertifications].sort(),
+        capacityRequirements: [...unit.capacityRequirements].sort((left, right) => left.bucket.localeCompare(right.bucket)),
+      })),
+    contractors: [...scenario.contractors]
+      .sort((left, right) => left.id.localeCompare(right.id))
+      .map((contractor) => ({
+        ...contractor,
+        capacityBuckets: [...contractor.capacityBuckets].sort((left, right) => left.bucket.localeCompare(right.bucket)),
+        equipment: [...contractor.equipment].sort(),
+        certifications: [...contractor.certifications].sort(),
+        contracts: [...contractor.contracts]
+          .sort((left, right) => left.id.localeCompare(right.id))
+          .map((contract) => ({
+            ...contract,
+            territories: [...contract.territories].sort(),
+            workTypes: [...contract.workTypes].sort(),
+            rates: [...contract.rates].sort(
+              (left, right) =>
+                left.workType.localeCompare(right.workType) || left.quantityUnit.localeCompare(right.quantityUnit)
+            ),
+          })),
+      })),
+  }
 }
 
-export function createAllocationInputSnapshot(
-  scenario: ContractorAllocationScenario,
-  analysis: UnitDecisionAnalysis
-): AllocationInputSnapshot {
-  const input = cloneSnapshotInput({
-    scenario: {
-      id: scenario.id,
-      asOf: scenario.asOf,
-      allocationLevel: scenario.allocationLevel,
-    },
-    unit: analysis.unit,
-    contractors: scenario.contractors,
-    feasibleAlternatives: analysis.feasible,
-    rejectedAlternatives: analysis.rejected,
-  })
-  const canonicalInput = canonicalJson(input)
-
+export function createScenarioInputSnapshot(scenario: ContractorAllocationScenario): ScenarioInputSnapshot {
+  const canonicalInput = canonicalJson(normalizeScenario(scenario))
   return {
     id: sha256Hex(canonicalInput),
     algorithm: 'SHA-256',
     canonicalInput,
-    input,
   }
 }
