@@ -7,7 +7,7 @@ const contractors: Contractor[] = [
   {
     id: 'arbor-north',
     name: 'Arbor North',
-    availableCapacity: 150,
+    availableCapacity: 500,
     availableThrough: '2026-12-31',
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
@@ -20,8 +20,8 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL'],
         workTypes: ['ROUTINE_TRIM', 'HAZARD_TREE_REMOVAL'],
         pricingModel: 'UNIT_PRICE',
-        maxVolume: 155,
-        awardedCapacity: 155,
+        maxVolume: 500,
+        awardedCapacity: 500,
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 115, mobilizationCost: 120 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 230, mobilizationCost: 180 },
@@ -35,7 +35,7 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL'],
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
-        maxVolume: 6,
+        maxVolume: 100,
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -51,7 +51,7 @@ const contractors: Contractor[] = [
   {
     id: 'green-line',
     name: 'Green Line Services',
-    availableCapacity: 160,
+    availableCapacity: 500,
     availableThrough: '2026-12-31',
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
@@ -64,8 +64,8 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL', 'SOUTH'],
         workTypes: ['ROUTINE_TRIM', 'HAZARD_TREE_REMOVAL'],
         pricingModel: 'UNIT_PRICE',
-        maxVolume: 165,
-        awardedCapacity: 165,
+        maxVolume: 500,
+        awardedCapacity: 500,
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 96, mobilizationCost: 160 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 218, mobilizationCost: 190 },
@@ -79,7 +79,7 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL', 'SOUTH'],
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
-        maxVolume: 6,
+        maxVolume: 100,
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -95,7 +95,7 @@ const contractors: Contractor[] = [
   {
     id: 'canopy-works',
     name: 'Canopy Works',
-    availableCapacity: 140,
+    availableCapacity: 500,
     availableThrough: '2026-12-31',
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
@@ -108,8 +108,8 @@ const contractors: Contractor[] = [
         territories: ['CENTRAL', 'SOUTH'],
         workTypes: ['ROUTINE_TRIM', 'HAZARD_TREE_REMOVAL'],
         pricingModel: 'UNIT_PRICE',
-        maxVolume: 145,
-        awardedCapacity: 145,
+        maxVolume: 500,
+        awardedCapacity: 500,
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 102, mobilizationCost: 100 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 185, mobilizationCost: 135 },
@@ -123,7 +123,7 @@ const contractors: Contractor[] = [
         territories: ['CENTRAL', 'SOUTH'],
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
-        maxVolume: 5,
+        maxVolume: 100,
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -139,7 +139,7 @@ const contractors: Contractor[] = [
   {
     id: 'line-safe',
     name: 'Line Safe Vegetation',
-    availableCapacity: 155,
+    availableCapacity: 500,
     availableThrough: '2026-12-31',
     equipment: ['bucket-truck', 'chipper', 'crane'],
     certifications: ['line-clearance', 'arborist', 'crane-operator'],
@@ -152,8 +152,8 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL', 'SOUTH'],
         workTypes: ['ROUTINE_TRIM', 'HAZARD_TREE_REMOVAL'],
         pricingModel: 'UNIT_PRICE',
-        maxVolume: 160,
-        awardedCapacity: 160,
+        maxVolume: 500,
+        awardedCapacity: 500,
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 108, mobilizationCost: 140 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 205, mobilizationCost: 160 },
@@ -167,7 +167,7 @@ const contractors: Contractor[] = [
         territories: ['NORTH', 'CENTRAL', 'SOUTH'],
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
-        maxVolume: 7,
+        maxVolume: 100,
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
