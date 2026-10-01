@@ -1,0 +1,35 @@
+name: Temporary readiness formatter
+
+on:
+  push:
+    branches:
+      - fix/readiness-evidence-validation
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/readiness-evidence-validation
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write src/use-cases/readiness-recovery/workspace.tsx src/use-cases/readiness-recovery/scenario-badges.vitest.test.tsx
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/use-cases/readiness-recovery/workspace.tsx src/use-cases/readiness-recovery/scenario-badges.vitest.test.tsx
+          git commit -m "style(readiness): format multi-label UI"
+          git push origin HEAD:fix/readiness-evidence-validation
