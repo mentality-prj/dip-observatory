@@ -2,6 +2,7 @@ import type {
   AllocationUnit,
   Contractor,
   ContractorAllocationScenario,
+  EvidenceKind,
   InputProvenance,
   SourceRole,
   TrustedAuthority,
@@ -36,41 +37,39 @@ export const EVERSOURCE_CAPACITY_LOSS_CIRCUITS = [
   { circuit: '3168X_21', town: 'Nashua', totalMiles: 21.19, smtMiles: 21.19, mettMiles: 0 },
 ] as const
 
+export const CAPACITY_LOSS_MODEL_ASSUMPTIONS = {
+  capacityHorizon: 'Synthetic aggregate recovery-capacity budget represented in optimizer bucket 2022-01',
+  economics: 'Synthetic post-rebid rates, capacities and productivity; no historical savings claim',
+  coverage: 'UNKNOWN',
+} as const
+
 const asOf = '2022-01-01'
 const decisionAt = '2022-01-01T00:00:00Z'
 const capacityBucket = '2022-01'
 
 const authorities: TrustedAuthority[] = [
-  { id: 'inspector-field', sourceRole: 'INSPECTOR', sourceSystem: 'field-inspection', ingress: 'TRUSTED_ADAPTER' },
-  {
-    id: 'procurement-contracts',
-    sourceRole: 'PROCUREMENT',
-    sourceSystem: 'procurement-contracts',
-    ingress: 'TRUSTED_ADAPTER',
-  },
-  { id: 'operations-work', sourceRole: 'OPERATIONS', sourceSystem: 'work-management', ingress: 'TRUSTED_ADAPTER' },
-  {
-    id: 'operations-capacity',
-    sourceRole: 'OPERATIONS',
-    sourceSystem: 'resource-planning',
-    ingress: 'TRUSTED_ADAPTER',
-  },
-  {
-    id: 'operations-registry',
-    sourceRole: 'OPERATIONS',
-    sourceSystem: 'resource-registry',
-    ingress: 'TRUSTED_ADAPTER',
-  },
-  {
-    id: 'operations-estimation',
-    sourceRole: 'OPERATIONS',
-    sourceSystem: 'work-estimation',
-    ingress: 'TRUSTED_ADAPTER',
-  },
+  { id: 'historical-public-scope', sourceRole: 'INSPECTOR', sourceSystem: 'public-eversource-vmp', ingress: 'TRUSTED_ADAPTER' },
+  { id: 'synthetic-procurement', sourceRole: 'PROCUREMENT', sourceSystem: 'synthetic-rebid-model', ingress: 'TRUSTED_ADAPTER' },
+  { id: 'synthetic-work', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-recovery-window', ingress: 'TRUSTED_ADAPTER' },
+  { id: 'synthetic-capacity', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-capacity-model', ingress: 'TRUSTED_ADAPTER' },
+  { id: 'synthetic-registry', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-resource-registry', ingress: 'TRUSTED_ADAPTER' },
+  { id: 'synthetic-estimation', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-productivity-model', ingress: 'TRUSTED_ADAPTER' },
 ]
 
-function provenance<Role extends SourceRole>(authorityId: string, sourceRecordId: string): InputProvenance<Role> {
-  return { authorityId, sourceRecordId, sourceVersion: '1', capturedAt: decisionAt }
+function provenance<Role extends SourceRole>(
+  authorityId: string,
+  sourceRecordId: string,
+  evidenceKind: EvidenceKind
+): InputProvenance<Role> {
+  return { authorityId, sourceRecordId, sourceVersion: '1', capturedAt: decisionAt, evidenceKind }
+}
+
+function synthetic<Role extends SourceRole>(authorityId: string, sourceRecordId: string): InputProvenance<Role> {
+  return provenance<Role>(authorityId, sourceRecordId, 'SYNTHETIC_ASSUMPTION')
+}
+
+function historical<Role extends SourceRole>(sourceRecordId: string): InputProvenance<Role> {
+  return provenance<Role>('historical-public-scope', sourceRecordId, 'HISTORICAL_PUBLIC')
 }
 
 function contractor(
@@ -94,10 +93,10 @@ function contractor(
       { workType: 'METT', capacityMultiplier: mettMultiplier },
     ],
     provenance: {
-      capacityBuckets: provenance<'OPERATIONS'>('operations-capacity', `${id}:capacity`),
-      equipment: provenance<'OPERATIONS'>('operations-registry', `${id}:equipment`),
-      certifications: provenance<'OPERATIONS'>('operations-registry', `${id}:certifications`),
-      executionProfiles: provenance<'OPERATIONS'>('operations-estimation', `${id}:execution-profile`),
+      capacityBuckets: synthetic<'OPERATIONS'>('synthetic-capacity', `${id}:capacity`),
+      equipment: synthetic<'OPERATIONS'>('synthetic-registry', `${id}:equipment`),
+      certifications: synthetic<'OPERATIONS'>('synthetic-registry', `${id}:certifications`),
+      executionProfiles: synthetic<'OPERATIONS'>('synthetic-estimation', `${id}:execution-profile`),
     },
     contracts: [
       {
@@ -114,9 +113,9 @@ function contractor(
         remainingMinVolume: 0,
         remainingMaxVolume: 500,
         provenance: {
-          eligibility: provenance<'PROCUREMENT'>('procurement-contracts', `${contractId}:eligibility`),
-          rates: provenance<'PROCUREMENT'>('procurement-contracts', `${contractId}:rates`),
-          volumeState: provenance<'PROCUREMENT'>('procurement-contracts', `${contractId}:volume-state`),
+          eligibility: synthetic<'PROCUREMENT'>('synthetic-procurement', `${contractId}:eligibility`),
+          rates: synthetic<'PROCUREMENT'>('synthetic-procurement', `${contractId}:rates`),
+          volumeState: synthetic<'PROCUREMENT'>('synthetic-procurement', `${contractId}:volume-state`),
         },
         rates: [
           { workType: 'SMT', quantityUnit: 'mile', unitRate: smtRate },
@@ -129,15 +128,15 @@ function contractor(
 
 function unitProvenance(id: string) {
   return {
-    scope: provenance<'INSPECTOR'>('inspector-field', `${id}:scope`),
-    quantity: provenance<'INSPECTOR'>('inspector-field', `${id}:quantity`),
-    territory: provenance<'INSPECTOR'>('inspector-field', `${id}:territory`),
-    workType: provenance<'INSPECTOR'>('inspector-field', `${id}:work-type`),
-    technicalRequirements: provenance<'INSPECTOR'>('inspector-field', `${id}:requirements`),
-    executionWindow: provenance<'OPERATIONS'>('operations-work', `${id}:execution-window`),
-    deadline: provenance<'OPERATIONS'>('operations-work', `${id}:deadline`),
-    capacityRequirements: provenance<'OPERATIONS'>('operations-capacity', `${id}:capacity-profile`),
-    contractVolume: provenance<'PROCUREMENT'>('procurement-contracts', `${id}:contract-volume`),
+    scope: historical<'INSPECTOR'>(`${id}:scope`),
+    quantity: historical<'INSPECTOR'>(`${id}:quantity`),
+    territory: historical<'INSPECTOR'>(`${id}:territory`),
+    workType: historical<'INSPECTOR'>(`${id}:work-type`),
+    technicalRequirements: synthetic<'INSPECTOR'>('historical-public-scope', `${id}:requirements`),
+    executionWindow: synthetic<'OPERATIONS'>('synthetic-work', `${id}:execution-window`),
+    deadline: synthetic<'OPERATIONS'>('synthetic-work', `${id}:deadline`),
+    capacityRequirements: synthetic<'OPERATIONS'>('synthetic-capacity', `${id}:capacity-profile`),
+    contractVolume: synthetic<'PROCUREMENT'>('synthetic-procurement', `${id}:contract-volume`),
   }
 }
 
@@ -182,7 +181,7 @@ export function buildContractorCapacityLossScenario(): ContractorAllocationScena
     asOf,
     decisionAt,
     allocationLevel: 'AWARDED_VOLUME',
-    constraintCoverageStatus: 'COMPLETE',
+    constraintCoverageStatus: 'UNKNOWN',
     trustedAuthorities: authorities.map((authority) => ({ ...authority })),
     units: awardedMiles(),
     contractors: [
