@@ -11,8 +11,7 @@ import type {
   UnitDecisionAnalysis,
 } from './domain'
 
-export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/2'
-const MAX_SEARCH_NODES = 250_000
+export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/3'
 
 type CostedCandidate = FeasibleAlternative & { expectedCost: number }
 type FixedAssignment = CostedCandidate & { unitId: string }
@@ -191,12 +190,7 @@ function buildSearchUnits(decisionAnalyses: UnitDecisionAnalysis[]): SearchUnit[
         .filter((candidate): candidate is CostedCandidate => candidate.expectedCost != null)
         .sort((a, b) => a.expectedCost - b.expectedCost || a.contractorId.localeCompare(b.contractorId)),
     }))
-    .sort((a, b) => {
-      if (a.candidates.length !== b.candidates.length) return a.candidates.length - b.candidates.length
-      const aRegret = (a.candidates[1]?.expectedCost ?? a.candidates[0].expectedCost) - a.candidates[0].expectedCost
-      const bRegret = (b.candidates[1]?.expectedCost ?? b.candidates[0].expectedCost) - b.candidates[0].expectedCost
-      return bRegret - aRegret || a.analysis.unit.id.localeCompare(b.analysis.unit.id)
-    })
+    .sort((a, b) => a.analysis.unit.id.localeCompare(b.analysis.unit.id))
 }
 
 function buildContractLimits(
@@ -252,7 +246,7 @@ function fixedState(
     remainingCapacity.set(contractorId, capacity - (contractorCounts.get(contractorId) ?? 0))
   }
 
-  return { contractorCounts, contractCounts, remainingCapacity, fixedCost }
+  return { contractCounts, remainingCapacity, fixedCost }
 }
 
 function addFlowEdge(graph: FlowEdge[][], from: number, to: number, cap: number, cost: number) {
@@ -261,6 +255,21 @@ function addFlowEdge(graph: FlowEdge[][], from: number, to: number, cap: number,
   graph[from].push(forward)
   graph[to].push(reverse)
   return forward
+}
+
+function addBoundedFlowEdge(
+  graph: FlowEdge[][],
+  balances: number[],
+  from: number,
+  to: number,
+  lower: number,
+  upper: number,
+  cost: number
+) {
+  if (lower < 0 || upper < lower) return null
+  balances[from] -= lower
+  balances[to] += lower
+  return addFlowEdge(graph, from, to, upper - lower, cost)
 }
 
 function minCostFlow(graph: FlowEdge[][], source: number, sink: number, requiredFlow: number) {
@@ -326,7 +335,7 @@ function minCostFlow(graph: FlowEdge[][], source: number, sink: number, required
   return { flow, cost, iterations }
 }
 
-function optimizeWithMinCostFlow(
+function optimizeWithMinCostCirculation(
   units: SearchUnit[],
   fixedCost: number,
   remainingCapacity: Map<string, number>,
@@ -345,20 +354,24 @@ function optimizeWithMinCostFlow(
   const contractStart = unitStart + units.length
   const contractorStart = contractStart + contractIds.length
   const sink = contractorStart + contractorIds.length
-  const graph: FlowEdge[][] = Array.from({ length: sink + 1 }, () => [])
+  const superSource = sink + 1
+  const superSink = sink + 2
+  const graph: FlowEdge[][] = Array.from({ length: superSink + 1 }, () => [])
+  const balances = new Array<number>(superSink + 1).fill(0)
   const contractNode = new Map(contractIds.map((id, index) => [id, contractStart + index]))
   const contractorNode = new Map(contractorIds.map((id, index) => [id, contractorStart + index]))
   const candidateEdges = new Map<string, { candidate: CostedCandidate; edge: FlowEdge }[]>()
+  let invalidBounds = false
 
   units.forEach((searchUnit, index) => {
     const unitNode = unitStart + index
-    addFlowEdge(graph, source, unitNode, 1, 0)
+    addBoundedFlowEdge(graph, balances, source, unitNode, 0, 1, 0)
     const refs: { candidate: CostedCandidate; edge: FlowEdge }[] = []
     for (const candidate of searchUnit.candidates) {
       const target = contractNode.get(candidate.contractId)
       if (target == null) continue
-      const edge = addFlowEdge(graph, unitNode, target, 1, candidate.expectedCost)
-      refs.push({ candidate, edge })
+      const edge = addBoundedFlowEdge(graph, balances, unitNode, target, 0, 1, candidate.expectedCost)
+      if (edge) refs.push({ candidate, edge })
     }
     candidateEdges.set(searchUnit.analysis.unit.id, refs)
   })
@@ -369,21 +382,46 @@ function optimizeWithMinCostFlow(
     const to = ownerId ? contractorNode.get(ownerId) : undefined
     if (from == null || to == null) continue
     const limit = contractLimits.get(contractId)
-    const remainingMax = Math.max(
-      0,
-      Math.floor((limit?.max ?? units.length) - (contractCounts.get(contractId) ?? 0))
-    )
-    addFlowEdge(graph, from, to, Math.min(remainingMax, units.length), 0)
+    const fixedCount = contractCounts.get(contractId) ?? 0
+    const lower = Math.max(0, Math.ceil((limit?.min ?? 0) - fixedCount))
+    const upper = Math.max(0, Math.floor((limit?.max ?? units.length) - fixedCount))
+    if (!addBoundedFlowEdge(graph, balances, from, to, lower, Math.min(upper, units.length), 0)) {
+      invalidBounds = true
+    }
   }
 
   for (const contractorId of contractorIds) {
     const from = contractorNode.get(contractorId)
     if (from == null) continue
-    addFlowEdge(graph, from, sink, Math.max(0, remainingCapacity.get(contractorId) ?? 0), 0)
+    const capacity = Math.max(0, Math.floor(remainingCapacity.get(contractorId) ?? 0))
+    addBoundedFlowEdge(graph, balances, from, sink, 0, capacity, 0)
   }
 
-  const flow = minCostFlow(graph, source, sink, units.length)
-  if (flow.flow !== units.length) {
+  if (!addBoundedFlowEdge(graph, balances, sink, source, units.length, units.length, 0)) {
+    invalidBounds = true
+  }
+
+  if (invalidBounds) {
+    return {
+      status: 'INFEASIBLE',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
+      exploredNodes: 0,
+    }
+  }
+
+  let requiredFlow = 0
+  for (let node = 0; node <= sink; node += 1) {
+    if (balances[node] > 0) {
+      addFlowEdge(graph, superSource, node, balances[node], 0)
+      requiredFlow += balances[node]
+    } else if (balances[node] < 0) {
+      addFlowEdge(graph, node, superSink, -balances[node], 0)
+    }
+  }
+
+  const flow = minCostFlow(graph, superSource, superSink, requiredFlow)
+  if (flow.flow !== requiredFlow) {
     return {
       status: 'INFEASIBLE',
       selectedByUnit: new Map(),
@@ -414,114 +452,6 @@ function optimizeWithMinCostFlow(
   }
 }
 
-function optimizeWithBranchAndBound(
-  units: SearchUnit[],
-  fixedCost: number,
-  remainingCapacity: Map<string, number>,
-  initialContractCounts: Map<string, number>,
-  contractLimits: Map<string, ContractLimit>
-): SearchResult {
-  const contractCounts = new Map(initialContractCounts)
-  const suffixMinimum = new Array<number>(units.length + 1).fill(0)
-  for (let index = units.length - 1; index >= 0; index -= 1) {
-    suffixMinimum[index] = suffixMinimum[index + 1] + units[index].candidates[0].expectedCost
-  }
-
-  const searchContractIds = [
-    ...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId))),
-  ]
-  const suffixPotential = new Map<string, number[]>()
-  for (const contractId of searchContractIds) {
-    const values = new Array<number>(units.length + 1).fill(0)
-    for (let index = units.length - 1; index >= 0; index -= 1) {
-      values[index] =
-        values[index + 1] +
-        (units[index].candidates.some((candidate) => candidate.contractId === contractId) ? 1 : 0)
-    }
-    suffixPotential.set(contractId, values)
-  }
-
-  let bestCost = Number.POSITIVE_INFINITY
-  let best = new Map<string, CostedCandidate>()
-  const selected = new Map<string, CostedCandidate>()
-  let exploredNodes = 0
-  let truncated = false
-  const bestCostByState = new Map<string, number>()
-  const contractorIds = [...remainingCapacity.keys()].sort()
-  const contractIds = [...contractLimits.keys()].sort()
-
-  const minimaRemainFeasible = (index: number) => {
-    for (const [contractId, limit] of contractLimits) {
-      if (limit.min <= 0) continue
-      const current = contractCounts.get(contractId) ?? 0
-      const possible = suffixPotential.get(contractId)?.[index] ?? 0
-      if (current + possible < limit.min) return false
-    }
-    return true
-  }
-
-  const stateKey = (index: number) =>
-    `${index}|${contractorIds.map((id) => remainingCapacity.get(id) ?? 0).join(',')}|${contractIds
-      .map((id) => contractCounts.get(id) ?? 0)
-      .join(',')}`
-
-  const visit = (index: number, cost: number) => {
-    if (truncated) return
-    exploredNodes += 1
-    if (exploredNodes > MAX_SEARCH_NODES) {
-      truncated = true
-      return
-    }
-    if (cost + suffixMinimum[index] >= bestCost) return
-    if (!minimaRemainFeasible(index)) return
-
-    const key = stateKey(index)
-    const previousBest = bestCostByState.get(key)
-    if (previousBest != null && previousBest <= cost) return
-    bestCostByState.set(key, cost)
-
-    if (index === units.length) {
-      for (const [contractId, limit] of contractLimits) {
-        if ((contractCounts.get(contractId) ?? 0) < limit.min) return
-      }
-      bestCost = cost
-      best = new Map(selected)
-      return
-    }
-
-    const searchUnit = units[index]
-    for (const candidate of searchUnit.candidates) {
-      const capacity = remainingCapacity.get(candidate.contractorId) ?? 0
-      if (capacity <= 0) continue
-      const limit = contractLimits.get(candidate.contractId)
-      const currentContractCount = contractCounts.get(candidate.contractId) ?? 0
-      if (currentContractCount >= (limit?.max ?? Number.POSITIVE_INFINITY)) continue
-
-      remainingCapacity.set(candidate.contractorId, capacity - 1)
-      contractCounts.set(candidate.contractId, currentContractCount + 1)
-      selected.set(searchUnit.analysis.unit.id, candidate)
-
-      visit(index + 1, cost + candidate.expectedCost)
-
-      selected.delete(searchUnit.analysis.unit.id)
-      contractCounts.set(candidate.contractId, currentContractCount)
-      remainingCapacity.set(candidate.contractorId, capacity)
-    }
-  }
-
-  visit(0, fixedCost)
-
-  if (!Number.isFinite(bestCost)) {
-    return { status: 'INFEASIBLE', selectedByUnit: new Map(), totalCost: bestCost, exploredNodes }
-  }
-  return {
-    status: truncated ? 'BOUNDED' : 'OPTIMAL',
-    selectedByUnit: best,
-    totalCost: bestCost,
-    exploredNodes,
-  }
-}
-
 function optimizeDecisionUnits(
   scenario: ContractorAllocationScenario,
   fixed: FixedAssignment[],
@@ -548,27 +478,13 @@ function optimizeDecisionUnits(
     }
   }
 
-  const hasOutstandingMinimum = [...contractLimits].some(
-    ([contractId, limit]) => (state.contractCounts.get(contractId) ?? 0) < limit.min
-  )
-
-  if (!hasOutstandingMinimum) {
-    return optimizeWithMinCostFlow(
-      units,
-      state.fixedCost,
-      state.remainingCapacity,
-      state.contractCounts,
-      contractLimits,
-      contractOwners
-    )
-  }
-
-  return optimizeWithBranchAndBound(
+  return optimizeWithMinCostCirculation(
     units,
     state.fixedCost,
     state.remainingCapacity,
     state.contractCounts,
-    contractLimits
+    contractLimits,
+    contractOwners
   )
 }
 
