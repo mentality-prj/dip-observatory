@@ -23,7 +23,8 @@ describe('Readiness Recovery benchmark evidence', () => {
       for (const candidate of result.frontier) {
         expect(
           result.frontier.some(
-            (other) => other.scenarioId !== candidate.scenarioId && epsilonDominates(other, candidate, input.settings.epsilon)
+            (other) =>
+              other.scenarioId !== candidate.scenarioId && epsilonDominates(other, candidate, input.settings.epsilon)
           )
         ).toBe(false)
       }
@@ -36,11 +37,14 @@ describe('Readiness Recovery benchmark evidence', () => {
       }
       const parts = result.frontier.find((scenario) => scenario.label === 'PARTS_CONSERVATIVE')
       if (parts) {
-        expect(parts.scarcePartsConsumed).toBe(Math.min(...result.frontier.map((scenario) => scenario.scarcePartsConsumed)))
+        expect(parts.scarcePartsConsumed).toBe(
+          Math.min(...result.frontier.map((scenario) => scenario.scarcePartsConsumed))
+        )
       }
       const lowRisk = result.frontier.find((scenario) => scenario.label === 'LOW_RISK')
       if (lowRisk) {
-        const risk = (scenario: (typeof result.frontier)[number]) => scenario.recoveryFailureRisk + scenario.repeatFailureRisk
+        const risk = (scenario: (typeof result.frontier)[number]) =>
+          scenario.recoveryFailureRisk + scenario.repeatFailureRisk
         expect(risk(lowRisk)).toBe(Math.min(...result.frontier.map(risk)))
       }
 
