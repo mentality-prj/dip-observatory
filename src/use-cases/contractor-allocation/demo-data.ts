@@ -254,16 +254,20 @@ function withObservedAllocation(units: AllocationUnit[]) {
         contractorRemaining.get(a.contractorId) ?? 0,
         Math.max(
           0,
-          Math.min(contractA?.maxVolume ?? Number.POSITIVE_INFINITY, contractA?.awardedCapacity ?? Number.POSITIVE_INFINITY) -
-            (contractCounts.get(a.contractId) ?? 0)
+          Math.min(
+            contractA?.maxVolume ?? Number.POSITIVE_INFINITY,
+            contractA?.awardedCapacity ?? Number.POSITIVE_INFINITY
+          ) - (contractCounts.get(a.contractId) ?? 0)
         )
       )
       const remainingB = Math.min(
         contractorRemaining.get(b.contractorId) ?? 0,
         Math.max(
           0,
-          Math.min(contractB?.maxVolume ?? Number.POSITIVE_INFINITY, contractB?.awardedCapacity ?? Number.POSITIVE_INFINITY) -
-            (contractCounts.get(b.contractId) ?? 0)
+          Math.min(
+            contractB?.maxVolume ?? Number.POSITIVE_INFINITY,
+            contractB?.awardedCapacity ?? Number.POSITIVE_INFINITY
+          ) - (contractCounts.get(b.contractId) ?? 0)
         )
       )
       if (remainingA !== remainingB) return remainingB - remainingA
