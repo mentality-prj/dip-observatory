@@ -94,10 +94,7 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const scenario = useMemo(() => buildContractorCapacityLossScenario(), [])
   const [result, setResult] = useState<ReturnType<typeof optimizeContractorAllocation> | null>(null)
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
-  const circuitById = useMemo(
-    () => new Map(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])),
-    []
-  )
+  const circuitById = useMemo(() => new Map(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])), [])
 
   const allocatedMiles =
     result?.assignments.reduce(
@@ -168,7 +165,9 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
                       const circuit = unit ? circuitById.get(unit.scopeId) : undefined
                       return (
                         <tr key={assignment.allocationUnitId} className="border-t border-white/10">
-                          <td className="px-3 py-3 font-mono text-xs">{unit?.scopeId ?? assignment.allocationUnitId}</td>
+                          <td className="px-3 py-3 font-mono text-xs">
+                            {unit?.scopeId ?? assignment.allocationUnitId}
+                          </td>
                           <td className="px-3 py-3 text-slate-400">{circuit?.town ?? '—'}</td>
                           <td className="px-3 py-3 text-slate-300">{unit?.workType ?? '—'}</td>
                           <td className="px-3 py-3 text-right text-slate-300">

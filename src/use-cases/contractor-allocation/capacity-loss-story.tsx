@@ -1,10 +1,7 @@
 'use client'
 
 import type { Locale } from '@/lib/observatory-i18n'
-import {
-  EVERSOURCE_CAPACITY_LOSS_FACTS,
-  EVERSOURCE_CAPACITY_LOSS_SOURCE_URL,
-} from './capacity-loss-scenario'
+import { EVERSOURCE_CAPACITY_LOSS_FACTS, EVERSOURCE_CAPACITY_LOSS_SOURCE_URL } from './capacity-loss-scenario'
 import type { ContractorAllocationResult, ContractorAllocationScenario } from './domain'
 
 const copy = {
@@ -128,9 +125,7 @@ export function CapacityLossStory({
     <section className="mt-6 overflow-hidden border border-sky-400/25 bg-sky-400/[.035]">
       <div className="p-5 md:p-6">
         <div className="text-[11px] font-semibold uppercase tracking-[.16em] text-sky-300">{t.eyebrow}</div>
-        <h2 className="mt-3 max-w-4xl text-2xl font-medium tracking-[-.03em] text-slate-100 md:text-3xl">
-          {t.title}
-        </h2>
+        <h2 className="mt-3 max-w-4xl text-2xl font-medium tracking-[-.03em] text-slate-100 md:text-3xl">{t.title}</h2>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">{t.body}</p>
         <a
           className="mt-3 inline-block text-xs text-sky-300 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-200"
@@ -165,7 +160,11 @@ export function CapacityLossStory({
             <StoryMetric label={t.capacity} value={`0 ${t.miles}`} />
             <StoryMetric
               label={t.reallocated}
-              value={result ? `${reallocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} ${t.miles}` : '—'}
+              value={
+                result
+                  ? `${reallocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} ${t.miles}`
+                  : '—'
+              }
             />
             <StoryMetric label={t.spend} value={result ? money(locale, result.qdipExpectedSpend) : '—'} />
           </div>
