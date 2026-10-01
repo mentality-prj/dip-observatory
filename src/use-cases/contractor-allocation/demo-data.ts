@@ -233,13 +233,43 @@ function withObservedAllocation(units: AllocationUnit[]) {
   }
   const contractorRemaining = new Map(contractors.map((contractor) => [contractor.id, contractor.availableCapacity]))
   const contractCounts = new Map<string, number>()
+  const selectedByUnit = new Map<string, string>()
+  const analyses = units
+    .map((unit) => analyzeAllocationUnit(scenario, unit))
+    .map((analysis) => ({
+      analysis,
+      costed: analysis.feasible.filter((candidate) => candidate.expectedCost != null),
+    }))
+    .filter(({ analysis }) => analysis.type === 'NO_CHOICE' || analysis.type === 'ALLOCATION_DECISION_REQUIRED')
+    .sort((a, b) => a.costed.length - b.costed.length || a.analysis.unit.id.localeCompare(b.analysis.unit.id))
 
-  return units.map((unit) => {
-    const analysis = analyzeAllocationUnit(scenario, unit)
-    const ordered = [...analysis.feasible].sort((a, b) => {
-      const choices = preference[unit.territory]
+  for (const { analysis, costed } of analyses) {
+    const choices = preference[analysis.unit.territory]
+    const ordered = [...costed].sort((a, b) => {
+      const contractorA = contractors.find((item) => item.id === a.contractorId)
+      const contractorB = contractors.find((item) => item.id === b.contractorId)
+      const contractA = contractorA?.contracts.find((item) => item.id === a.contractId)
+      const contractB = contractorB?.contracts.find((item) => item.id === b.contractId)
+      const remainingA = Math.min(
+        contractorRemaining.get(a.contractorId) ?? 0,
+        Math.max(
+          0,
+          Math.min(contractA?.maxVolume ?? Number.POSITIVE_INFINITY, contractA?.awardedCapacity ?? Number.POSITIVE_INFINITY) -
+            (contractCounts.get(a.contractId) ?? 0)
+        )
+      )
+      const remainingB = Math.min(
+        contractorRemaining.get(b.contractorId) ?? 0,
+        Math.max(
+          0,
+          Math.min(contractB?.maxVolume ?? Number.POSITIVE_INFINITY, contractB?.awardedCapacity ?? Number.POSITIVE_INFINITY) -
+            (contractCounts.get(b.contractId) ?? 0)
+        )
+      )
+      if (remainingA !== remainingB) return remainingB - remainingA
       return choices.indexOf(a.contractorId) - choices.indexOf(b.contractorId)
     })
+
     const selected = ordered.find((candidate) => {
       if ((contractorRemaining.get(candidate.contractorId) ?? 0) <= 0) return false
       const contractor = contractors.find((item) => item.id === candidate.contractorId)
@@ -251,10 +281,15 @@ function withObservedAllocation(units: AllocationUnit[]) {
       return (contractCounts.get(candidate.contractId) ?? 0) < max
     })
 
-    if (!selected) return unit
+    if (!selected) continue
     contractorRemaining.set(selected.contractorId, (contractorRemaining.get(selected.contractorId) ?? 0) - 1)
     contractCounts.set(selected.contractId, (contractCounts.get(selected.contractId) ?? 0) + 1)
-    return { ...unit, observedContractorId: selected.contractorId }
+    selectedByUnit.set(analysis.unit.id, selected.contractorId)
+  }
+
+  return units.map((unit) => {
+    const observedContractorId = selectedByUnit.get(unit.id)
+    return observedContractorId ? { ...unit, observedContractorId } : unit
   })
 }
 
