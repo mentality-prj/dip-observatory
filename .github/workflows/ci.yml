@@ -21,6 +21,20 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Repair execution-window fixture
         run: |
           python - <<'PY'
@@ -35,7 +49,7 @@ jobs:
           PY
 
       - name: Format fixture
-        run: pnpm dlx prettier@3.9.8 --write src/use-cases/contractor-allocation/optimizer.vitest.test.ts
+        run: pnpm exec prettier --write src/use-cases/contractor-allocation/optimizer.vitest.test.ts
 
       - name: Commit fixture repair
         run: |
