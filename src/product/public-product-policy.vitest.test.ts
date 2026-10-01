@@ -29,6 +29,11 @@ describe('public product naming policy', () => {
         uk: 'Оптимізація мережі постачання',
         pl: 'Optymalizacja sieci dostaw',
       },
+      'contractor-allocation': {
+        en: PUBLIC_DEMO_NAMES.contractorAllocation,
+        uk: 'Розподіл робіт між підрядниками',
+        pl: 'Przydział prac wykonawcom',
+      },
       'gtm-lab': {
         en: PUBLIC_DEMO_NAMES.gtmLab,
         uk: 'Лабораторія виходу на ринок',
