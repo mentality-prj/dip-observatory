@@ -8,9 +8,6 @@ on:
     branches:
       - dev
 
-permissions:
-  contents: write
-
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -18,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -34,36 +29,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Format contractor allocation changes
-        run: >-
-          pnpm exec prettier --write
-          src/i18n/runtime.ts
-          src/i18n/use-case-additions.ts
-          src/lib/observatory-i18n-architecture.test.ts
-          src/observatory/applications.test.ts
-          src/observatory/applications.ts
-          src/product/public-product-policy.ts
-          src/product/public-product-policy.vitest.test.ts
-          src/use-cases/application-runtime.tsx
-          src/use-cases/contractor-allocation/demo-data.ts
-          src/use-cases/contractor-allocation/domain.ts
-          src/use-cases/contractor-allocation/i18n.ts
-          src/use-cases/contractor-allocation/optimizer.ts
-          src/use-cases/contractor-allocation/optimizer.vitest.test.ts
-          src/use-cases/contractor-allocation/workspace.tsx
-          src/use-cases/registry.ts
-          src/use-cases/routing-contract.test.ts
-
-      - name: Commit formatting
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src
-          if ! git diff --cached --quiet; then
-            git commit -m "style: format contractor allocation changes"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
 
       - name: Lint
         run: pnpm lint
