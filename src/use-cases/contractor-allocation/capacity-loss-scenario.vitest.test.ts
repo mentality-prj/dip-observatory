@@ -58,7 +58,7 @@ describe('contractor capacity loss recovery scenario', () => {
     expect(
       scenario.contractors
         .find((contractor) => contractor.id === 'synthetic-incumbent')
-        ?.capacityBuckets.find((bucket) => bucket.bucket === '2022')?.availableCapacity
+        ?.capacityBuckets.find((bucket) => bucket.bucket === '2022-01')?.availableCapacity
     ).toBe(0)
 
     expect(result.status).toBe('OPTIMAL')
