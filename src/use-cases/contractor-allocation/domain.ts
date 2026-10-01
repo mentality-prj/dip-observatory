@@ -1,5 +1,37 @@
 export type AllocationUnitType = 'WORK_ORDER' | 'WORK_PACKAGE' | 'CIRCUIT' | 'AWARDED_VOLUME'
 export type PricingModel = 'UNIT_PRICE' | 'TIME_AND_EQUIPMENT'
+export type SourceRole = 'INSPECTOR' | 'PROCUREMENT' | 'OPERATIONS' | 'PLANNER'
+
+export type InputProvenance<Role extends SourceRole = SourceRole> = {
+  sourceRole: Role
+  sourceSystem: string
+  sourceRecordId: string
+  capturedAt: string
+}
+
+export type AllocationUnitProvenance = {
+  scope: InputProvenance<'INSPECTOR'>
+  quantity: InputProvenance<'INSPECTOR'>
+  territory: InputProvenance<'INSPECTOR'>
+  workType: InputProvenance<'INSPECTOR'>
+  technicalRequirements: InputProvenance<'INSPECTOR'>
+  deadline: InputProvenance<'OPERATIONS'>
+  capacityRequirements: InputProvenance<'OPERATIONS'>
+  contractVolume: InputProvenance<'PROCUREMENT'>
+  teEstimate?: InputProvenance<'OPERATIONS'>
+}
+
+export type ContractorProvenance = {
+  capacityBuckets: InputProvenance<'OPERATIONS'>
+  equipment: InputProvenance<'OPERATIONS'>
+  certifications: InputProvenance<'OPERATIONS'>
+}
+
+export type ContractProvenance = {
+  eligibility: InputProvenance<'PROCUREMENT'>
+  rates: InputProvenance<'PROCUREMENT'>
+  volumeState: InputProvenance<'PROCUREMENT'>
+}
 
 export type FeasibilityReason =
   | 'CONTRACT_EXPIRED'
@@ -7,11 +39,13 @@ export type FeasibilityReason =
   | 'TERRITORY_NOT_ALLOWED'
   | 'WORK_TYPE_NOT_ALLOWED'
   | 'NO_CAPACITY'
+  | 'CAPACITY_BUCKET_MISSING'
   | 'MISSING_EQUIPMENT'
   | 'MISSING_CERTIFICATION'
   | 'SLA_IMPOSSIBLE'
   | 'CONTRACT_VOLUME_LIMIT'
   | 'RATE_NOT_CONFIGURED'
+  | 'UNTRUSTED_INPUT'
   | 'T&E_REQUIRES_EXCEPTION'
 
 export type DecisionType = 'INFEASIBLE' | 'NO_CHOICE' | 'ALLOCATION_DECISION_REQUIRED' | 'EXCEPTION_REQUIRED'
@@ -38,17 +72,31 @@ export type ContractorContract = {
   minVolume?: number
   maxVolume?: number
   awardedCapacity?: number
+  /** Volume already consumed before scenario.asOf. */
+  consumedVolumeToDate: number
+  provenance: ContractProvenance
+}
+
+export type CapacityBucket = {
+  /** ISO calendar bucket, YYYY-MM for the current Observatory model. */
+  bucket: string
+  /** Remaining normalized workload capacity in this bucket as of scenario.asOf. */
+  availableCapacity: number
+}
+
+export type CapacityRequirement = {
+  bucket: string
+  demand: number
 }
 
 export type Contractor = {
   id: string
   name: string
-  /** Authoritative normalized workload capacity from Operations. */
-  availableCapacity: number
-  availableThrough: string
+  capacityBuckets: CapacityBucket[]
   equipment: string[]
   certifications: string[]
   contracts: ContractorContract[]
+  provenance: ContractorProvenance
 }
 
 export type AllocationUnit = {
@@ -58,9 +106,9 @@ export type AllocationUnit = {
   workType: string
   quantity: number
   quantityUnit: string
-  /** Normalized operational workload consumed when this package is assigned. */
-  capacityDemand: number
-  /** Procurement volume consumed against min/max/awarded contract limits. */
+  /** Operational workload consumed in each execution bucket. */
+  capacityRequirements: CapacityRequirement[]
+  /** Procurement volume consumed against the selected contract. */
   contractVolume: number
   deadline: string
   priority: number
@@ -72,6 +120,7 @@ export type AllocationUnit = {
   expectedEquipmentHours?: number
   observedContractorId?: string
   observedContractId?: string
+  provenance: AllocationUnitProvenance
 }
 
 export type ContractorAllocationScenario = {
@@ -105,19 +154,10 @@ export type UnitDecisionAnalysis = {
   rejected: RejectedAlternative[]
 }
 
-export type AllocationSnapshotInput = {
-  scenario: Pick<ContractorAllocationScenario, 'id' | 'asOf' | 'allocationLevel'>
-  unit: AllocationUnit
-  contractors: Contractor[]
-  feasibleAlternatives: FeasibleAlternative[]
-  rejectedAlternatives: RejectedAlternative[]
-}
-
-export type AllocationInputSnapshot = {
+export type ScenarioInputSnapshot = {
   id: string
   algorithm: 'SHA-256'
   canonicalInput: string
-  input: AllocationSnapshotInput
 }
 
 export type AllocationAssignment = {
@@ -130,10 +170,10 @@ export type AllocationAssignment = {
   observedContractId?: string
   observedExpectedCost?: number
   expectedDelta?: number
-  inputSnapshot: AllocationInputSnapshot
+  inputSnapshotId: string
 }
 
-export type OptimizerStatus = 'OPTIMAL' | 'BOUNDED' | 'INFEASIBLE'
+export type OptimizerStatus = 'OPTIMAL' | 'FEASIBLE_NOT_PROVEN' | 'INFEASIBLE' | 'UNKNOWN'
 
 export type DecisionSpaceMetrics = {
   totalUnits: number
@@ -159,4 +199,7 @@ export type ContractorAllocationResult = {
   counterfactualAllocationAdvantage: number | null
   metrics: DecisionSpaceMetrics
   exploredNodes: number
+  lowerBound: number | null
+  optimalityGapPct: number | null
+  scenarioSnapshot: ScenarioInputSnapshot
 }
