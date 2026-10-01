@@ -29,23 +29,21 @@ describe('Readiness Recovery benchmark evidence', () => {
         ).toBe(false)
       }
 
-      const fast = result.frontier.find((scenario) => scenario.label === 'FAST_RECOVERY')
-      if (fast) {
-        expect(fast.expectedRecoveryTimeHours).toBe(
-          Math.min(...result.frontier.map((scenario) => scenario.expectedRecoveryTimeHours))
+      const fast = result.frontier.filter((scenario) => scenario.label === 'FAST_RECOVERY')
+      for (const scenario of fast) {
+        expect(scenario.expectedRecoveryTimeHours).toBe(
+          Math.min(...result.frontier.map((item) => item.expectedRecoveryTimeHours))
         )
       }
-      const parts = result.frontier.find((scenario) => scenario.label === 'PARTS_CONSERVATIVE')
-      if (parts) {
-        expect(parts.scarcePartsConsumed).toBe(
-          Math.min(...result.frontier.map((scenario) => scenario.scarcePartsConsumed))
-        )
+      const parts = result.frontier.filter((scenario) => scenario.label === 'PARTS_CONSERVATIVE')
+      for (const scenario of parts) {
+        expect(scenario.scarcePartsConsumed).toBe(Math.min(...result.frontier.map((item) => item.scarcePartsConsumed)))
       }
-      const lowRisk = result.frontier.find((scenario) => scenario.label === 'LOW_RISK')
-      if (lowRisk) {
-        const risk = (scenario: (typeof result.frontier)[number]) =>
-          scenario.recoveryFailureRisk + scenario.repeatFailureRisk
-        expect(risk(lowRisk)).toBe(Math.min(...result.frontier.map(risk)))
+      const lowRisk = result.frontier.filter((scenario) => scenario.label === 'LOW_RISK')
+      const risk = (scenario: (typeof result.frontier)[number]) =>
+        scenario.recoveryFailureRisk + scenario.repeatFailureRisk
+      for (const scenario of lowRisk) {
+        expect(risk(scenario)).toBe(Math.min(...result.frontier.map(risk)))
       }
 
       if (benchmark.verdict === 'QDIP_ADVANTAGE' && benchmark.advantageKind === 'CAPABILITY') {
@@ -69,24 +67,21 @@ describe('Readiness Recovery benchmark evidence', () => {
     })
   }
 
-  it('classifies the capability-rescue report as efficiency advantage when capability outcomes are tied', () => {
+  it('locks the capability-rescue evidence contract to an efficiency advantage', () => {
     const input = buildReadinessRecoveryDemo('CAPABILITY_RESCUE')
     input.settings.simulationSamples = 180
     input.settings.maxCandidates = 72
     input.settings.beamWidth = 48
     const benchmark = benchmarkReadinessResult(planReadinessRecovery(input))
 
-    if (
-      Math.abs(benchmark.probabilityDelta) < 0.05 &&
-      Math.abs(benchmark.readinessDelta) < 0.03 &&
-      Math.abs(benchmark.shortfallReduction) < 0.5 &&
-      benchmark.recoveryTimeDeltaHours <= -4 &&
-      benchmark.technicianHoursDelta <= 0 &&
-      benchmark.scarcePartsDelta <= 0 &&
-      benchmark.failureRiskDelta <= 0
-    ) {
-      expect(benchmark.verdict).toBe('QDIP_ADVANTAGE')
-      expect(benchmark.advantageKind).toBe('EFFICIENCY')
-    }
+    expect(benchmark.verdict).toBe('QDIP_ADVANTAGE')
+    expect(benchmark.advantageKind).toBe('EFFICIENCY')
+    expect(Math.abs(benchmark.probabilityDelta)).toBeLessThan(0.05)
+    expect(Math.abs(benchmark.readinessDelta)).toBeLessThan(0.03)
+    expect(Math.abs(benchmark.shortfallReduction)).toBeLessThan(0.5)
+    expect(benchmark.recoveryTimeDeltaHours).toBeLessThanOrEqual(-4)
+    expect(benchmark.technicianHoursDelta).toBeLessThanOrEqual(0)
+    expect(benchmark.scarcePartsDelta).toBeLessThanOrEqual(0)
+    expect(benchmark.failureRiskDelta).toBeLessThanOrEqual(0)
   })
 })
