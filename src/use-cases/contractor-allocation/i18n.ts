@@ -150,7 +150,11 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       RATE_NOT_CONFIGURED: 'No authoritative rate is configured for this work.',
       'T&E_REQUIRES_EXCEPTION': 'Time-and-equipment hours cannot be estimated from trusted inputs.',
     },
-    status: { OPTIMAL: 'Optimal portfolio found', BOUNDED: 'Best portfolio within search bound', INFEASIBLE: 'Portfolio infeasible' },
+    status: {
+      OPTIMAL: 'Optimal portfolio found',
+      BOUNDED: 'Best portfolio within search bound',
+      INFEASIBLE: 'Portfolio infeasible',
+    },
     modelEstimate: 'Synthetic data · deterministic constrained allocation · no fraud or motive inference',
   },
   uk: {
@@ -182,7 +186,8 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     choiceSpread: 'Зважена за витратами різниця між варіантами',
     unresolved: 'Заблоковані роботи / винятки',
     decisionSpace: 'Простір рішень',
-    decisionSpaceHint: 'Оптимізуються лише роботи, для яких є щонайменше два допустимі підрядники з обчислюваною вартістю.',
+    decisionSpaceHint:
+      'Оптимізуються лише роботи, для яких є щонайменше два допустимі підрядники з обчислюваною вартістю.',
     allocationTable: 'Повторне програвання розподілу',
     unit: 'Робота',
     scope: 'Обсяг',
@@ -230,7 +235,11 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       RATE_NOT_CONFIGURED: 'Для цієї роботи немає підтвердженої ставки.',
       'T&E_REQUIRES_EXCEPTION': 'Години праці та обладнання неможливо оцінити з довірених даних.',
     },
-    status: { OPTIMAL: 'Знайдено оптимальний портфель', BOUNDED: 'Найкращий портфель у межах пошуку', INFEASIBLE: 'Портфель недопустимий' },
+    status: {
+      OPTIMAL: 'Знайдено оптимальний портфель',
+      BOUNDED: 'Найкращий портфель у межах пошуку',
+      INFEASIBLE: 'Портфель недопустимий',
+    },
     modelEstimate: 'Синтетичні дані · детермінований розподіл з обмеженнями · без оцінки шахрайства чи мотивів',
   },
   pl: {
@@ -262,7 +271,8 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     choiceSpread: 'Ważone wydatkami zróżnicowanie opcji',
     unresolved: 'Prace zablokowane / wyjątki',
     decisionSpace: 'Przestrzeń decyzji',
-    decisionSpaceHint: 'Optymalizowane są tylko prace z co najmniej dwoma wykonalnymi wykonawcami o obliczalnym koszcie.',
+    decisionSpaceHint:
+      'Optymalizowane są tylko prace z co najmniej dwoma wykonalnymi wykonawcami o obliczalnym koszcie.',
     allocationTable: 'Odtworzenie przydziału',
     unit: 'Praca',
     scope: 'Zakres',
@@ -310,7 +320,11 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       RATE_NOT_CONFIGURED: 'Brak zatwierdzonej stawki dla tej pracy.',
       'T&E_REQUIRES_EXCEPTION': 'Nie można oszacować godzin pracy i sprzętu na podstawie zaufanych danych.',
     },
-    status: { OPTIMAL: 'Znaleziono optymalny portfel', BOUNDED: 'Najlepszy portfel w granicach wyszukiwania', INFEASIBLE: 'Portfel niewykonalny' },
+    status: {
+      OPTIMAL: 'Znaleziono optymalny portfel',
+      BOUNDED: 'Najlepszy portfel w granicach wyszukiwania',
+      INFEASIBLE: 'Portfel niewykonalny',
+    },
     modelEstimate: 'Dane syntetyczne · deterministyczny przydział z ograniczeniami · bez oceny nadużyć ani motywów',
   },
 }

@@ -23,8 +23,7 @@ const routingContract = [
   {
     id: 'contractor-allocation',
     route: '/contractor-allocation',
-    load: () =>
-      import('./contractor-allocation/workspace').then((module) => module.ContractorAllocationWorkspace),
+    load: () => import('./contractor-allocation/workspace').then((module) => module.ContractorAllocationWorkspace),
   },
   {
     id: 'gtm-lab',

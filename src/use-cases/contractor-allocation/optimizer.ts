@@ -72,7 +72,8 @@ function candidateForContractor(
   if (!includesAll(contractor.certifications, unit.requiredCertifications)) reasons.push('MISSING_CERTIFICATION')
 
   const withVolume = forWorkType.filter(
-    (contract) => (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 && (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
+    (contract) =>
+      (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 && (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
   )
   if (forWorkType.length && !withVolume.length) reasons.push('CONTRACT_VOLUME_LIMIT')
 
@@ -117,11 +118,14 @@ export function analyzeAllocationUnit(
 ): UnitDecisionAnalysis {
   const candidates = scenario.contractors.map((contractor) => candidateForContractor(contractor, unit, scenario))
   const feasible = candidates.filter((candidate): candidate is FeasibleAlternative => 'contractId' in candidate)
-  const rejected = candidates.filter((candidate): candidate is UnitDecisionAnalysis['rejected'][number] => 'reasons' in candidate)
+  const rejected = candidates.filter(
+    (candidate): candidate is UnitDecisionAnalysis['rejected'][number] => 'reasons' in candidate
+  )
 
   let type: UnitDecisionAnalysis['type']
   if (!feasible.length) type = 'INFEASIBLE'
-  else if (feasible.some((candidate) => candidate.requiresException || candidate.expectedCost == null)) type = 'EXCEPTION_REQUIRED'
+  else if (feasible.some((candidate) => candidate.requiresException || candidate.expectedCost == null))
+    type = 'EXCEPTION_REQUIRED'
   else if (feasible.length === 1) type = 'NO_CHOICE'
   else type = 'ALLOCATION_DECISION_REQUIRED'
 
@@ -174,7 +178,9 @@ function optimizeDecisionUnits(
   fixed: (FeasibleAlternative & { expectedCost: number; unitId: string })[],
   decisionAnalyses: UnitDecisionAnalysis[]
 ): SearchResult {
-  const contractorCapacity = new Map(scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity]))
+  const contractorCapacity = new Map(
+    scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity])
+  )
   const contractLimits = new Map<string, ContractLimit>()
 
   for (const contractor of scenario.contractors) {
@@ -208,7 +214,9 @@ function optimizeDecisionUnits(
   const units: SearchUnit[] = decisionAnalyses
     .map((analysis) => {
       const candidates = analysis.feasible
-        .filter((candidate): candidate is FeasibleAlternative & { expectedCost: number } => candidate.expectedCost != null)
+        .filter(
+          (candidate): candidate is FeasibleAlternative & { expectedCost: number } => candidate.expectedCost != null
+        )
         .sort((a, b) => a.expectedCost - b.expectedCost || a.contractorId.localeCompare(b.contractorId))
       return { analysis, candidates }
     })
@@ -224,12 +232,15 @@ function optimizeDecisionUnits(
     suffixMinimum[index] = suffixMinimum[index + 1] + units[index].candidates[0].expectedCost
   }
 
-  const relevantContractIds = [...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId)))]
+  const relevantContractIds = [
+    ...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId))),
+  ]
   const suffixPotential = new Map<string, number[]>()
   for (const contractId of relevantContractIds) {
     const values = new Array<number>(units.length + 1).fill(0)
     for (let index = units.length - 1; index >= 0; index -= 1) {
-      values[index] = values[index + 1] + (units[index].candidates.some((candidate) => candidate.contractId === contractId) ? 1 : 0)
+      values[index] =
+        values[index + 1] + (units[index].candidates.some((candidate) => candidate.contractId === contractId) ? 1 : 0)
     }
     suffixPotential.set(contractId, values)
   }
@@ -355,7 +366,8 @@ export function optimizeContractorAllocation(scenario: ContractorAllocationScena
     .filter((analysis) => analysis.type === 'NO_CHOICE')
     .map((analysis) => {
       const candidate = analysis.feasible[0]
-      if (candidate.expectedCost == null) throw new Error(`NO_CHOICE unit ${analysis.unit.id} is missing an expected cost.`)
+      if (candidate.expectedCost == null)
+        throw new Error(`NO_CHOICE unit ${analysis.unit.id} is missing an expected cost.`)
       return { ...candidate, expectedCost: candidate.expectedCost, unitId: analysis.unit.id }
     })
   const decisions = analyses.filter((analysis) => analysis.type === 'ALLOCATION_DECISION_REQUIRED')
@@ -397,12 +409,13 @@ export function optimizeContractorAllocation(scenario: ContractorAllocationScena
   const observedInvalidUnitIds = comparable
     .filter((analysis) => !observedCandidate(analysis))
     .map((analysis) => analysis.unit.id)
-  const observedExpectedSpend = comparable.reduce((sum, analysis) => sum + (observedCandidate(analysis)?.expectedCost ?? 0), 0)
+  const observedExpectedSpend = comparable.reduce(
+    (sum, analysis) => sum + (observedCandidate(analysis)?.expectedCost ?? 0),
+    0
+  )
   const qdipExpectedSpend = assignments.reduce((sum, assignment) => sum + assignment.expectedCost, 0)
   const counterfactualAllocationAdvantage =
-    search.status === 'INFEASIBLE' || observedInvalidUnitIds.length
-      ? null
-      : observedExpectedSpend - qdipExpectedSpend
+    search.status === 'INFEASIBLE' || observedInvalidUnitIds.length ? null : observedExpectedSpend - qdipExpectedSpend
 
   return {
     scenarioId: scenario.id,

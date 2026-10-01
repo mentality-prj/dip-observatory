@@ -38,7 +38,13 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 12,
         rates: [
-          { workType: 'EMERGENCY_CLEARANCE', quantityUnit: 'job', laborRate: 90, equipmentRate: 75, mobilizationCost: 150 },
+          {
+            workType: 'EMERGENCY_CLEARANCE',
+            quantityUnit: 'job',
+            laborRate: 90,
+            equipmentRate: 75,
+            mobilizationCost: 150,
+          },
         ],
       },
     ],
@@ -77,7 +83,13 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 12,
         rates: [
-          { workType: 'EMERGENCY_CLEARANCE', quantityUnit: 'job', laborRate: 95, equipmentRate: 80, mobilizationCost: 165 },
+          {
+            workType: 'EMERGENCY_CLEARANCE',
+            quantityUnit: 'job',
+            laborRate: 95,
+            equipmentRate: 80,
+            mobilizationCost: 165,
+          },
         ],
       },
     ],
@@ -116,7 +128,13 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 10,
         rates: [
-          { workType: 'EMERGENCY_CLEARANCE', quantityUnit: 'job', laborRate: 88, equipmentRate: 72, mobilizationCost: 125 },
+          {
+            workType: 'EMERGENCY_CLEARANCE',
+            quantityUnit: 'job',
+            laborRate: 88,
+            equipmentRate: 72,
+            mobilizationCost: 125,
+          },
         ],
       },
     ],
@@ -155,7 +173,13 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 14,
         rates: [
-          { workType: 'EMERGENCY_CLEARANCE', quantityUnit: 'job', laborRate: 100, equipmentRate: 70, mobilizationCost: 145 },
+          {
+            workType: 'EMERGENCY_CLEARANCE',
+            quantityUnit: 'job',
+            laborRate: 100,
+            equipmentRate: 70,
+            mobilizationCost: 145,
+          },
         ],
       },
     ],
@@ -220,7 +244,10 @@ function withObservedAllocation(units: AllocationUnit[]) {
       if ((contractorRemaining.get(candidate.contractorId) ?? 0) <= 0) return false
       const contractor = contractors.find((item) => item.id === candidate.contractorId)
       const contract = contractor?.contracts.find((item) => item.id === candidate.contractId)
-      const max = Math.min(contract?.maxVolume ?? Number.POSITIVE_INFINITY, contract?.awardedCapacity ?? Number.POSITIVE_INFINITY)
+      const max = Math.min(
+        contract?.maxVolume ?? Number.POSITIVE_INFINITY,
+        contract?.awardedCapacity ?? Number.POSITIVE_INFINITY
+      )
       return (contractCounts.get(candidate.contractId) ?? 0) < max
     })
 
@@ -242,7 +269,12 @@ export function buildContractorAllocationDemoScenario(): ContractorAllocationSce
       ...contractor,
       equipment: [...contractor.equipment],
       certifications: [...contractor.certifications],
-      contracts: contractor.contracts.map((contract) => ({ ...contract, territories: [...contract.territories], workTypes: [...contract.workTypes], rates: contract.rates.map((rate) => ({ ...rate })) })),
+      contracts: contractor.contracts.map((contract) => ({
+        ...contract,
+        territories: [...contract.territories],
+        workTypes: [...contract.workTypes],
+        rates: contract.rates.map((rate) => ({ ...rate })),
+      })),
     })),
   }
 }
