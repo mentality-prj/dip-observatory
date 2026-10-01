@@ -58,10 +58,7 @@ export function QdipAdvantage({ result, locale }: { result: ReadinessRecoveryRes
             </p>
           ) : null}
         </div>
-        <ArrowUpRight
-          className={`h-6 w-6 ${qdipAdvantage ? 'text-sky-300' : 'text-slate-500'}`}
-          aria-hidden
-        />
+        <ArrowUpRight className={`h-6 w-6 ${qdipAdvantage ? 'text-sky-300' : 'text-slate-500'}`} aria-hidden />
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-3">
