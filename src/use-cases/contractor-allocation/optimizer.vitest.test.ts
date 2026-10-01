@@ -56,7 +56,13 @@ function contractorProvenance(id: string) {
   }
 }
 
-function unit(id: string, workType: string, demand: number, observedContractorId?: string, observedContractId?: string): AllocationUnit {
+function unit(
+  id: string,
+  workType: string,
+  demand: number,
+  observedContractorId?: string,
+  observedContractId?: string
+): AllocationUnit {
   return {
     id,
     type: 'WORK_PACKAGE',
@@ -132,14 +138,22 @@ function scenario(units: AllocationUnit[], contractors: Contractor[]): Contracto
 
 describe('contractor allocation optimizer', () => {
   it('optimizes indivisible workload globally instead of greedily', () => {
-    const a = contractor('A', [
-      { workType: 'X', unitRate: 1 },
-      { workType: 'Y', unitRate: 2 },
-    ], 3)
-    const b = contractor('B', [
-      { workType: 'X', unitRate: 2 },
-      { workType: 'Y', unitRate: 100 },
-    ], 3)
+    const a = contractor(
+      'A',
+      [
+        { workType: 'X', unitRate: 1 },
+        { workType: 'Y', unitRate: 2 },
+      ],
+      3
+    )
+    const b = contractor(
+      'B',
+      [
+        { workType: 'X', unitRate: 2 },
+        { workType: 'Y', unitRate: 100 },
+      ],
+      3
+    )
     const input = scenario([unit('U1', 'X', 2, 'A', 'A-contract'), unit('U2', 'Y', 3, 'B', 'B-contract')], [a, b])
     const result = optimizeContractorAllocation(input)
 
@@ -162,7 +176,10 @@ describe('contractor allocation optimizer', () => {
     const analysis = analyzeAllocationUnit(input, input.units[0])
 
     expect(analysis.feasible.some((candidate) => candidate.contractorId === 'A')).toBe(false)
-    expect(analysis.feasible.find((candidate) => candidate.contractorId === 'B')?.executionEstimate.capacityRequirements[0].demand).toBe(2)
+    expect(
+      analysis.feasible.find((candidate) => candidate.contractorId === 'B')?.executionEstimate.capacityRequirements[0]
+        .demand
+    ).toBe(2)
   })
 
   it('can select a higher hourly rate when contractor-specific T&E productivity makes it cheaper', () => {
@@ -234,7 +251,11 @@ describe('contractor allocation optimizer', () => {
   it('rejects inconsistent role ownership metadata and future information', () => {
     const input = scenario([unit('U1', 'X', 1)], [contractor('A', [{ workType: 'X', unitRate: 1 }])])
     input.units[0].provenance.deadline = source<'OPERATIONS'>('planner', 'bad')
-    input.contractors[0].provenance.executionProfiles = source<'OPERATIONS'>('operations', 'future', '2026-10-01T00:00:01Z')
+    input.contractors[0].provenance.executionProfiles = source<'OPERATIONS'>(
+      'operations',
+      'future',
+      '2026-10-01T00:00:01Z'
+    )
     const result = optimizeContractorAllocation(input)
     expect(result.status).toBe('INVALID_INPUT')
     expect(result.validationIssues.some((issue) => issue.code === 'UNTRUSTED_INPUT')).toBe(true)
@@ -246,7 +267,13 @@ describe('contractor allocation optimizer', () => {
     input.contractors[0].capacityBuckets.push({ bucket: '2026-10', availableCapacity: 1 })
     input.contractors[0].executionProfiles.push({ workType: 'X', capacityMultiplier: 1 })
     const codes = validateContractorAllocationScenario(input).map((issue) => issue.code)
-    expect(codes).toEqual(expect.arrayContaining(['DUPLICATE_UNIT_CAPACITY_BUCKET', 'DUPLICATE_CONTRACTOR_CAPACITY_BUCKET', 'DUPLICATE_EXECUTION_PROFILE']))
+    expect(codes).toEqual(
+      expect.arrayContaining([
+        'DUPLICATE_UNIT_CAPACITY_BUCKET',
+        'DUPLICATE_CONTRACTOR_CAPACITY_BUCKET',
+        'DUPLICATE_EXECUTION_PROFILE',
+      ])
+    )
   })
 
   it('reports UNKNOWN when proof search is cut off', () => {

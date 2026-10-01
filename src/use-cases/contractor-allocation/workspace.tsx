@@ -10,12 +10,7 @@ import {
   CONTRACTOR_ALLOCATION_DEMO_PRESETS,
   type ContractorAllocationDemoPreset,
 } from './demo-data'
-import type {
-  AllocationAssignment,
-  AllocationReservation,
-  DecisionType,
-  UnitDecisionAnalysis,
-} from './domain'
+import type { AllocationAssignment, AllocationReservation, DecisionType, UnitDecisionAnalysis } from './domain'
 import { contractorAllocationI18n } from './i18n'
 import { optimizeContractorAllocation } from './optimizer'
 
@@ -177,7 +172,11 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
               onClick={run}
               className="inline-flex items-center justify-center gap-2 bg-sky-400 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-sky-300"
             >
-              {result ? <RefreshCw className="h-4 w-4" aria-hidden /> : <SlidersHorizontal className="h-4 w-4" aria-hidden />}
+              {result ? (
+                <RefreshCw className="h-4 w-4" aria-hidden />
+              ) : (
+                <SlidersHorizontal className="h-4 w-4" aria-hidden />
+              )}
               {result ? t.rerun : t.run}
             </button>
           </div>
@@ -192,7 +191,12 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
         {view === 'PROCUREMENT' ? <ProcurementView locale={locale} /> : null}
         {view === 'OPERATIONS' ? <OperationsView locale={locale} /> : null}
         {view === 'PLANNER' ? (
-          <PlannerView locale={locale} result={result} assignmentByUnit={assignmentByUnit} reservationByUnit={reservationByUnit} />
+          <PlannerView
+            locale={locale}
+            result={result}
+            assignmentByUnit={assignmentByUnit}
+            reservationByUnit={reservationByUnit}
+          />
         ) : null}
         {view === 'QDIP' ? (
           <QdipView
@@ -223,7 +227,12 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
           <table className="w-full min-w-[850px] text-left text-sm">
             <thead className="bg-white/[.04] text-xs text-slate-500">
               <tr>
-                <th className="px-3 py-3">{copy.unit}</th><th className="px-3 py-3">{copy.territory}</th><th className="px-3 py-3">{copy.workType}</th><th className="px-3 py-3">{copy.quantity}</th><th className="px-3 py-3">{copy.executionWindow}</th><th className="px-3 py-3">{copy.requirements}</th>
+                <th className="px-3 py-3">{copy.unit}</th>
+                <th className="px-3 py-3">{copy.territory}</th>
+                <th className="px-3 py-3">{copy.workType}</th>
+                <th className="px-3 py-3">{copy.quantity}</th>
+                <th className="px-3 py-3">{copy.executionWindow}</th>
+                <th className="px-3 py-3">{copy.requirements}</th>
               </tr>
             </thead>
             <tbody>
@@ -232,9 +241,15 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                   <td className="px-3 py-3 font-mono text-xs">{unit.id}</td>
                   <td className="px-3 py-3 text-slate-300">{unit.territory}</td>
                   <td className="px-3 py-3 text-slate-300">{unit.workType}</td>
-                  <td className="px-3 py-3 text-slate-300">{unit.quantity} {unit.quantityUnit}</td>
-                  <td className="px-3 py-3 text-slate-400">{unit.executionStart} → {unit.executionEnd}</td>
-                  <td className="px-3 py-3 text-slate-400">{[...unit.requiredEquipment, ...unit.requiredCertifications].join(', ') || '—'}</td>
+                  <td className="px-3 py-3 text-slate-300">
+                    {unit.quantity} {unit.quantityUnit}
+                  </td>
+                  <td className="px-3 py-3 text-slate-400">
+                    {unit.executionStart} → {unit.executionEnd}
+                  </td>
+                  <td className="px-3 py-3 text-slate-400">
+                    {[...unit.requiredEquipment, ...unit.requiredCertifications].join(', ') || '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -246,21 +261,41 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
 
   function ProcurementView({ locale }: { locale: Locale }) {
     const copy = contractorAllocationI18n[locale]
-    const rows = scenario.contractors.flatMap((contractor) => contractor.contracts.map((contract) => ({ contractor, contract })))
+    const rows = scenario.contractors.flatMap((contractor) =>
+      contractor.contracts.map((contract) => ({ contractor, contract }))
+    )
     return (
       <section className="mt-6">
         <h2 className="text-xl font-medium">{copy.procurementTitle}</h2>
         <div className="mt-3 overflow-x-auto border border-white/10">
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="bg-white/[.04] text-xs text-slate-500"><tr><th className="px-3 py-3">{copy.contractor}</th><th className="px-3 py-3">{copy.contract}</th><th className="px-3 py-3">{copy.workType}</th><th className="px-3 py-3">{copy.rate}</th><th className="px-3 py-3">{copy.remainingVolume}</th></tr></thead>
+            <thead className="bg-white/[.04] text-xs text-slate-500">
+              <tr>
+                <th className="px-3 py-3">{copy.contractor}</th>
+                <th className="px-3 py-3">{copy.contract}</th>
+                <th className="px-3 py-3">{copy.workType}</th>
+                <th className="px-3 py-3">{copy.rate}</th>
+                <th className="px-3 py-3">{copy.remainingVolume}</th>
+              </tr>
+            </thead>
             <tbody>
               {rows.map(({ contractor, contract }) => (
                 <tr key={`${contractor.id}-${contract.id}`} className="border-t border-white/10">
                   <td className="px-3 py-3">{contractor.name}</td>
                   <td className="px-3 py-3 font-mono text-xs text-slate-400">{contract.id}</td>
                   <td className="px-3 py-3 text-slate-300">{contract.workTypes.join(', ')}</td>
-                  <td className="px-3 py-3 text-slate-300">{contract.rates.map((rate) => rate.unitRate != null ? `${rate.workType}: ${money(locale, rate.unitRate)}` : `${rate.workType}: ${money(locale, rate.laborRate)}/h`).join(' · ')}</td>
-                  <td className="px-3 py-3 text-slate-300">{contract.remainingMinVolume}–{contract.remainingMaxVolume}</td>
+                  <td className="px-3 py-3 text-slate-300">
+                    {contract.rates
+                      .map((rate) =>
+                        rate.unitRate != null
+                          ? `${rate.workType}: ${money(locale, rate.unitRate)}`
+                          : `${rate.workType}: ${money(locale, rate.laborRate)}/h`
+                      )
+                      .join(' · ')}
+                  </td>
+                  <td className="px-3 py-3 text-slate-300">
+                    {contract.remainingMinVolume}–{contract.remainingMaxVolume}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -280,14 +315,20 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
             <article key={contractor.id} className="border border-white/10 bg-white/[.025] p-4">
               <h3 className="font-medium text-slate-100">{contractor.name}</h3>
               <div className="mt-3 text-xs text-slate-500">{copy.capacity}</div>
-              <div className="mt-1 text-sm text-slate-300">{contractor.capacityBuckets.map((bucket) => `${bucket.bucket}: ${bucket.availableCapacity}`).join(' · ')}</div>
+              <div className="mt-1 text-sm text-slate-300">
+                {contractor.capacityBuckets
+                  .map((bucket) => `${bucket.bucket}: ${bucket.availableCapacity}`)
+                  .join(' · ')}
+              </div>
               <div className="mt-4 text-xs text-slate-500">{copy.productivity}</div>
               <div className="mt-2 space-y-2">
                 {contractor.executionProfiles.map((profile) => (
                   <div key={profile.workType} className="border-t border-white/10 pt-2 text-xs text-slate-400">
                     <span className="text-slate-200">{profile.workType}</span> · capacity ×{profile.capacityMultiplier}
                     {profile.laborHoursPerUnit != null ? ` · ${copy.labor} ${profile.laborHoursPerUnit}h/unit` : ''}
-                    {profile.equipmentHoursPerUnit != null ? ` · ${copy.equipment} ${profile.equipmentHoursPerUnit}h/unit` : ''}
+                    {profile.equipmentHoursPerUnit != null
+                      ? ` · ${copy.equipment} ${profile.equipmentHoursPerUnit}h/unit`
+                      : ''}
                   </div>
                 ))}
               </div>
@@ -313,12 +354,22 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
     return (
       <section className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <div><h2 className="text-xl font-medium">{copy.plannerTitle}</h2><p className="mt-1 text-sm text-slate-500">{copy.noManualSelection}</p></div>
+          <div>
+            <h2 className="text-xl font-medium">{copy.plannerTitle}</h2>
+            <p className="mt-1 text-sm text-slate-500">{copy.noManualSelection}</p>
+          </div>
           {result ? <span className="text-xs text-slate-500">{copy.status[result.status]}</span> : null}
         </div>
         <div className="mt-3 overflow-x-auto border border-white/10">
           <table className="w-full min-w-[850px] text-left text-sm">
-            <thead className="bg-white/[.04] text-xs text-slate-500"><tr><th className="px-3 py-3">{copy.unit}</th><th className="px-3 py-3">{copy.workType}</th><th className="px-3 py-3">{copy.executionWindow}</th><th className="px-3 py-3">{copy.assignment}</th></tr></thead>
+            <thead className="bg-white/[.04] text-xs text-slate-500">
+              <tr>
+                <th className="px-3 py-3">{copy.unit}</th>
+                <th className="px-3 py-3">{copy.workType}</th>
+                <th className="px-3 py-3">{copy.executionWindow}</th>
+                <th className="px-3 py-3">{copy.assignment}</th>
+              </tr>
+            </thead>
             <tbody>
               {scenario.units.map((unit) => {
                 const assignment = assignmentByUnit.get(unit.id)
@@ -326,11 +377,19 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                 return (
                   <tr key={unit.id} className="border-t border-white/10">
                     <td className="px-3 py-3 font-mono text-xs">{unit.id}</td>
-                    <td className="px-3 py-3 text-slate-300">{unit.workType} · {unit.quantity} {unit.quantityUnit}</td>
-                    <td className="px-3 py-3 text-slate-400">{unit.executionStart} → {unit.executionEnd}</td>
+                    <td className="px-3 py-3 text-slate-300">
+                      {unit.workType} · {unit.quantity} {unit.quantityUnit}
+                    </td>
+                    <td className="px-3 py-3 text-slate-400">
+                      {unit.executionStart} → {unit.executionEnd}
+                    </td>
                     <td className="px-3 py-3">
-                      <div className="font-medium text-slate-100">{assignment?.contractorName ?? reservation?.contractorName ?? copy.pendingAllocation}</div>
-                      {assignment || reservation ? <div className="mt-1 text-xs text-sky-300">{copy.autoAssigned}</div> : null}
+                      <div className="font-medium text-slate-100">
+                        {assignment?.contractorName ?? reservation?.contractorName ?? copy.pendingAllocation}
+                      </div>
+                      {assignment || reservation ? (
+                        <div className="mt-1 text-xs text-sky-300">{copy.autoAssigned}</div>
+                      ) : null}
                     </td>
                   </tr>
                 )
@@ -373,7 +432,10 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
     if (!result) {
       return (
         <section className="mt-6 flex min-h-44 items-center justify-center border border-dashed border-white/15 bg-white/[.02] p-6 text-center">
-          <div className="max-w-xl"><Database className="mx-auto h-9 w-9 ds-text-accent" aria-hidden /><p className="mt-4 text-sm text-slate-400">{copy.counterfactualNote}</p></div>
+          <div className="max-w-xl">
+            <Database className="mx-auto h-9 w-9 ds-text-accent" aria-hidden />
+            <p className="mt-4 text-sm text-slate-400">{copy.counterfactualNote}</p>
+          </div>
         </section>
       )
     }
@@ -381,53 +443,116 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
     return (
       <>
         <section className="mt-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-3"><h2 className="text-xl font-medium">{copy.qdipTitle}</h2><span className="text-xs text-slate-500">{copy.status[result.status]}</span></div>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-xl font-medium">{copy.qdipTitle}</h2>
+            <span className="text-xs text-slate-500">{copy.status[result.status]}</span>
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <Metric label={copy.observedSpend} value={money(locale, result.observedExpectedSpend)} />
             <Metric label={copy.qdipSpend} value={money(locale, result.qdipExpectedSpend)} />
-            <Metric label={copy.allocationAdvantage} value={money(locale, result.counterfactualAllocationAdvantage)} note={copy.counterfactualNote} />
+            <Metric
+              label={copy.allocationAdvantage}
+              value={money(locale, result.counterfactualAllocationAdvantage)}
+              note={copy.counterfactualNote}
+            />
             <Metric label={copy.spendWithChoice} value={money(locale, result.metrics.spendWithChoice)} />
-            <Metric label={copy.unitsWithChoice} value={`${result.metrics.decisionUnits}/${result.metrics.totalUnits}`} note={`${copy.coverage}: ${percent(locale, result.coverage.coverageRatio)}`} />
+            <Metric
+              label={copy.unitsWithChoice}
+              value={`${result.metrics.decisionUnits}/${result.metrics.totalUnits}`}
+              note={`${copy.coverage}: ${percent(locale, result.coverage.coverageRatio)}`}
+            />
           </div>
           <details className="mt-3 border border-white/10 bg-white/[.02] p-4 text-sm text-slate-400">
             <summary className="cursor-pointer text-slate-300">{copy.modelDiagnostics}</summary>
             <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4 text-xs">
-              <span>{copy.choiceSpread}: {result.metrics.weightedChoiceSpreadPct.toFixed(1)}%</span>
-              <span>{copy.reservations}: {result.reservations.length}</span>
-              <span>{copy.globalChoiceUnknown}: {result.metrics.globalChoiceUnknownUnits}</span>
-              <span>{copy.optimizer}: {result.optimizerVersion} · {copy.exploredNodes}: {result.exploredNodes}</span>
+              <span>
+                {copy.choiceSpread}: {result.metrics.weightedChoiceSpreadPct.toFixed(1)}%
+              </span>
+              <span>
+                {copy.reservations}: {result.reservations.length}
+              </span>
+              <span>
+                {copy.globalChoiceUnknown}: {result.metrics.globalChoiceUnknownUnits}
+              </span>
+              <span>
+                {copy.optimizer}: {result.optimizerVersion} · {copy.exploredNodes}: {result.exploredNodes}
+              </span>
             </div>
-            <div className="mt-2 break-all font-mono text-[10px] text-slate-600">{copy.snapshot}: {result.scenarioSnapshot.id}</div>
+            <div className="mt-2 break-all font-mono text-[10px] text-slate-600">
+              {copy.snapshot}: {result.scenarioSnapshot.id}
+            </div>
           </details>
         </section>
 
         <section className="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(380px,.8fr)]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
-              <div><h2 className="text-xl font-medium">{copy.allocationTable}</h2><p className="mt-1 text-xs text-slate-500">{copy.decisionSpaceHint}</p></div>
+              <div>
+                <h2 className="text-xl font-medium">{copy.allocationTable}</h2>
+                <p className="mt-1 text-xs text-slate-500">{copy.decisionSpaceHint}</p>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {(['all', 'ALLOCATION_DECISION_REQUIRED', 'NO_CHOICE', 'EXCEPTION_REQUIRED', 'INFEASIBLE'] as const).map((value) => (
-                  <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`border px-3 py-1.5 text-xs ${filter === value ? 'border-sky-400/50 bg-sky-400/10 text-sky-200' : 'border-white/10 text-slate-400'}`}>{copy.filters[value]}</button>
+                {(
+                  ['all', 'ALLOCATION_DECISION_REQUIRED', 'NO_CHOICE', 'EXCEPTION_REQUIRED', 'INFEASIBLE'] as const
+                ).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={filter === value}
+                    onClick={() => setFilter(value)}
+                    className={`border px-3 py-1.5 text-xs ${filter === value ? 'border-sky-400/50 bg-sky-400/10 text-sky-200' : 'border-white/10 text-slate-400'}`}
+                  >
+                    {copy.filters[value]}
+                  </button>
                 ))}
               </div>
             </div>
             <div className="mt-3 overflow-x-auto border border-white/10">
               <table className="w-full min-w-[980px] text-left text-sm">
-                <thead className="bg-white/[.04] text-xs text-slate-500"><tr><th className="px-3 py-3">{copy.unit}</th><th className="px-3 py-3">{copy.observed}</th><th className="px-3 py-3">{copy.qdip}</th><th className="px-3 py-3 text-right">{copy.observedCost}</th><th className="px-3 py-3 text-right">{copy.qdipCost}</th><th className="px-3 py-3 text-right">{copy.delta}</th><th className="px-3 py-3">{copy.decision}</th></tr></thead>
+                <thead className="bg-white/[.04] text-xs text-slate-500">
+                  <tr>
+                    <th className="px-3 py-3">{copy.unit}</th>
+                    <th className="px-3 py-3">{copy.observed}</th>
+                    <th className="px-3 py-3">{copy.qdip}</th>
+                    <th className="px-3 py-3 text-right">{copy.observedCost}</th>
+                    <th className="px-3 py-3 text-right">{copy.qdipCost}</th>
+                    <th className="px-3 py-3 text-right">{copy.delta}</th>
+                    <th className="px-3 py-3">{copy.decision}</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {visibleAnalyses.map((analysis) => {
                     const assignment = assignmentByUnit.get(analysis.unit.id)
                     const reservation = reservationByUnit.get(analysis.unit.id)
                     const observed = observedAlternative(analysis)
                     return (
-                      <tr key={analysis.unit.id} onClick={() => setSelectedUnitId(analysis.unit.id)} className={`cursor-pointer border-t border-white/10 ${selectedUnitId === analysis.unit.id ? 'bg-sky-400/[.08]' : 'hover:bg-white/[.025]'}`}>
-                        <td className="px-3 py-3"><div className="font-mono text-xs">{analysis.unit.id}</div><div className="mt-1 text-xs text-slate-500">{analysis.unit.workType} · {analysis.unit.quantity} {analysis.unit.quantityUnit}</div></td>
-                        <td className="px-3 py-3 text-slate-300">{contractorName(analysis, analysis.unit.observedContractorId)}</td>
-                        <td className="px-3 py-3 font-medium">{assignment?.contractorName ?? reservation?.contractorName ?? '—'}</td>
+                      <tr
+                        key={analysis.unit.id}
+                        onClick={() => setSelectedUnitId(analysis.unit.id)}
+                        className={`cursor-pointer border-t border-white/10 ${selectedUnitId === analysis.unit.id ? 'bg-sky-400/[.08]' : 'hover:bg-white/[.025]'}`}
+                      >
+                        <td className="px-3 py-3">
+                          <div className="font-mono text-xs">{analysis.unit.id}</div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {analysis.unit.workType} · {analysis.unit.quantity} {analysis.unit.quantityUnit}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-slate-300">
+                          {contractorName(analysis, analysis.unit.observedContractorId)}
+                        </td>
+                        <td className="px-3 py-3 font-medium">
+                          {assignment?.contractorName ?? reservation?.contractorName ?? '—'}
+                        </td>
                         <td className="px-3 py-3 text-right text-slate-400">{money(locale, observed?.expectedCost)}</td>
                         <td className="px-3 py-3 text-right">{money(locale, assignment?.expectedCost)}</td>
-                        <td className="px-3 py-3 text-right text-emerald-300">{money(locale, assignment?.expectedDelta)}</td>
-                        <td className="px-3 py-3"><span className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}>{copy.decisionLabels[analysis.type]}</span></td>
+                        <td className="px-3 py-3 text-right text-emerald-300">
+                          {money(locale, assignment?.expectedDelta)}
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}>
+                            {copy.decisionLabels[analysis.type]}
+                          </span>
+                        </td>
                       </tr>
                     )
                   })}
@@ -437,8 +562,19 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
           </div>
 
           <aside className="min-w-0 border border-white/10 bg-white/[.025] p-5 xl:sticky xl:top-5 xl:self-start">
-            <div className="flex items-center gap-2"><UsersRound className="h-4 w-4 ds-text-accent" aria-hidden /><h2 className="text-lg font-medium">{copy.details}</h2></div>
-            {selectedAnalysis ? <DecisionDetail locale={locale} analysis={selectedAnalysis} assignment={selectedAssignment} reservation={selectedReservation} result={result} /> : null}
+            <div className="flex items-center gap-2">
+              <UsersRound className="h-4 w-4 ds-text-accent" aria-hidden />
+              <h2 className="text-lg font-medium">{copy.details}</h2>
+            </div>
+            {selectedAnalysis ? (
+              <DecisionDetail
+                locale={locale}
+                analysis={selectedAnalysis}
+                assignment={selectedAssignment}
+                reservation={selectedReservation}
+                result={result}
+              />
+            ) : null}
           </aside>
         </section>
         <p className="mt-5 border-t border-white/10 pt-4 text-xs text-slate-500">{copy.modelEstimate}</p>
@@ -466,19 +602,30 @@ function DecisionDetail({
     <div className="mt-4 space-y-5">
       <section className="border-t border-white/10 pt-4">
         <div className="font-mono text-xs text-slate-500">{analysis.unit.id}</div>
-        <h3 className="mt-1 text-lg font-medium">{analysis.unit.territory} · {analysis.unit.workType}</h3>
-        <div className="mt-2 text-xs text-slate-500">{analysis.unit.executionStart} → {analysis.unit.executionEnd}</div>
+        <h3 className="mt-1 text-lg font-medium">
+          {analysis.unit.territory} · {analysis.unit.workType}
+        </h3>
+        <div className="mt-2 text-xs text-slate-500">
+          {analysis.unit.executionStart} → {analysis.unit.executionEnd}
+        </div>
       </section>
 
       {assignment ? (
         <section className="border border-sky-400/20 bg-sky-400/[.04] p-4">
           <div className="text-xs uppercase tracking-[.12em] text-sky-300">{t.selectedContractor}</div>
           <strong className="mt-2 block text-xl font-medium">{assignment.contractorName}</strong>
-          <div className="mt-2 text-sm text-slate-300">{t.localCost}: {money(locale, assignment.expectedCost)}</div>
-          <div className="mt-1 text-xs text-slate-500">{t.contract}: {assignment.contractId}</div>
+          <div className="mt-2 text-sm text-slate-300">
+            {t.localCost}: {money(locale, assignment.expectedCost)}
+          </div>
+          <div className="mt-1 text-xs text-slate-500">
+            {t.contract}: {assignment.contractId}
+          </div>
         </section>
       ) : reservation ? (
-        <section className="border border-amber-400/20 bg-amber-400/[.04] p-4"><strong>{reservation.contractorName}</strong><div className="mt-1 text-xs text-slate-500">{t.reservations}</div></section>
+        <section className="border border-amber-400/20 bg-amber-400/[.04] p-4">
+          <strong>{reservation.contractorName}</strong>
+          <div className="mt-1 text-xs text-slate-500">{t.reservations}</div>
+        </section>
       ) : null}
 
       {impacts.length ? (
@@ -487,9 +634,29 @@ function DecisionDetail({
           <div className="mt-2 space-y-2">
             {impacts.map((impact) => (
               <div key={impact.contractorId} className="border border-white/10 p-3 text-sm">
-                <div className="flex items-center justify-between gap-3"><span className="font-medium text-slate-200">{impact.contractorName}</span><span className="text-xs text-slate-500">{impact.status === 'SELECTED' ? t.selected : impact.status === 'FEASIBLE' ? t.feasible : impact.status === 'INFEASIBLE' ? t.infeasible : t.unknown}</span></div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400"><span>{t.localCost}: {money(locale, impact.expectedCost)}</span><span>{t.forcedPortfolio}: {impact.portfolioDelta == null ? '—' : money(locale, impact.portfolioDelta)}</span></div>
-                {impact.contractId ? <div className="mt-1 font-mono text-[10px] text-slate-600">{impact.contractId}</div> : null}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium text-slate-200">{impact.contractorName}</span>
+                  <span className="text-xs text-slate-500">
+                    {impact.status === 'SELECTED'
+                      ? t.selected
+                      : impact.status === 'FEASIBLE'
+                        ? t.feasible
+                        : impact.status === 'INFEASIBLE'
+                          ? t.infeasible
+                          : t.unknown}
+                  </span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                  <span>
+                    {t.localCost}: {money(locale, impact.expectedCost)}
+                  </span>
+                  <span>
+                    {t.forcedPortfolio}: {impact.portfolioDelta == null ? '—' : money(locale, impact.portfolioDelta)}
+                  </span>
+                </div>
+                {impact.contractId ? (
+                  <div className="mt-1 font-mono text-[10px] text-slate-600">{impact.contractId}</div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -499,13 +666,31 @@ function DecisionDetail({
       <section>
         <h3 className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">{t.feasibleAlternatives}</h3>
         <div className="mt-2 space-y-2">
-          {[...analysis.feasible].sort((a, b) => (a.expectedCost ?? Number.POSITIVE_INFINITY) - (b.expectedCost ?? Number.POSITIVE_INFINITY)).map((candidate) => (
-            <div key={`${candidate.contractorId}-${candidate.contractId}`} className="border border-white/10 p-3 text-sm">
-              <div className="flex justify-between gap-3"><span className="font-medium text-slate-200">{candidate.contractorName}</span><span>{money(locale, candidate.expectedCost)}</span></div>
-              <div className="mt-1 text-xs text-slate-500">{candidate.contractId} · capacity {candidate.executionEstimate.capacityRequirements.map((item) => `${item.bucket}:${item.demand.toFixed(1)}`).join(', ')}</div>
-              {candidate.executionEstimate.expectedLaborHours != null ? <div className="mt-1 text-xs text-slate-500">{t.labor}: {candidate.executionEstimate.expectedLaborHours.toFixed(1)}h · {t.equipment}: {candidate.executionEstimate.expectedEquipmentHours?.toFixed(1) ?? '—'}h</div> : null}
-            </div>
-          ))}
+          {[...analysis.feasible]
+            .sort((a, b) => (a.expectedCost ?? Number.POSITIVE_INFINITY) - (b.expectedCost ?? Number.POSITIVE_INFINITY))
+            .map((candidate) => (
+              <div
+                key={`${candidate.contractorId}-${candidate.contractId}`}
+                className="border border-white/10 p-3 text-sm"
+              >
+                <div className="flex justify-between gap-3">
+                  <span className="font-medium text-slate-200">{candidate.contractorName}</span>
+                  <span>{money(locale, candidate.expectedCost)}</span>
+                </div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {candidate.contractId} · capacity{' '}
+                  {candidate.executionEstimate.capacityRequirements
+                    .map((item) => `${item.bucket}:${item.demand.toFixed(1)}`)
+                    .join(', ')}
+                </div>
+                {candidate.executionEstimate.expectedLaborHours != null ? (
+                  <div className="mt-1 text-xs text-slate-500">
+                    {t.labor}: {candidate.executionEstimate.expectedLaborHours.toFixed(1)}h · {t.equipment}:{' '}
+                    {candidate.executionEstimate.expectedEquipmentHours?.toFixed(1) ?? '—'}h
+                  </div>
+                ) : null}
+              </div>
+            ))}
         </div>
       </section>
 
@@ -514,7 +699,10 @@ function DecisionDetail({
           <h3 className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">{t.rejectedAlternatives}</h3>
           <div className="mt-2 space-y-2">
             {analysis.rejected.map((candidate) => (
-              <div key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`} className="border border-white/10 p-3 text-xs text-slate-500">
+              <div
+                key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`}
+                className="border border-white/10 p-3 text-xs text-slate-500"
+              >
                 <div className="font-medium text-slate-300">{candidate.contractorName}</div>
                 <div className="mt-1">{candidate.reasons.map((reason) => t.reasons[reason] ?? reason).join(' · ')}</div>
               </div>

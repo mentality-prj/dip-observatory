@@ -9,10 +9,7 @@ import type {
 import { analyzeAllocationUnit } from './optimizer'
 
 export type ContractorAllocationDemoPreset =
-  | 'NORMAL'
-  | 'CAPACITY_CONSTRAINED'
-  | 'CONTRACT_COMMITMENT'
-  | 'TE_UNCERTAINTY'
+  'NORMAL' | 'CAPACITY_CONSTRAINED' | 'CONTRACT_COMMITMENT' | 'TE_UNCERTAINTY'
 
 export const CONTRACTOR_ALLOCATION_DEMO_PRESETS: ContractorAllocationDemoPreset[] = [
   'CAPACITY_CONSTRAINED',
@@ -26,11 +23,31 @@ const decisionAt = '2026-10-01T00:00:00Z'
 
 const trustedAuthorities: TrustedAuthority[] = [
   { id: 'inspector-field', sourceRole: 'INSPECTOR', sourceSystem: 'field-inspection', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'procurement-contracts', sourceRole: 'PROCUREMENT', sourceSystem: 'procurement-contracts', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'procurement-contracts',
+    sourceRole: 'PROCUREMENT',
+    sourceSystem: 'procurement-contracts',
+    ingress: 'TRUSTED_ADAPTER',
+  },
   { id: 'operations-work', sourceRole: 'OPERATIONS', sourceSystem: 'work-management', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-capacity', sourceRole: 'OPERATIONS', sourceSystem: 'resource-planning', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-registry', sourceRole: 'OPERATIONS', sourceSystem: 'resource-registry', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-estimation', sourceRole: 'OPERATIONS', sourceSystem: 'work-estimation', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'operations-capacity',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'resource-planning',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'operations-registry',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'resource-registry',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'operations-estimation',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'work-estimation',
+    ingress: 'TRUSTED_ADAPTER',
+  },
 ]
 
 function provenance<Role extends SourceRole>(authorityId: string, sourceRecordId: string): InputProvenance<Role> {
@@ -199,8 +216,18 @@ function makeContractor(spec: ContractorSpec, preset: ContractorAllocationDemoPr
         remainingMaxVolume: 600,
         provenance: contractProvenance(unitContractId),
         rates: [
-          { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: spec.routineRate, mobilizationCost: spec.mobilization },
-          { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: spec.removalRate, mobilizationCost: spec.mobilization + 45 },
+          {
+            workType: 'ROUTINE_TRIM',
+            quantityUnit: 'tree',
+            unitRate: spec.routineRate,
+            mobilizationCost: spec.mobilization,
+          },
+          {
+            workType: 'HAZARD_TREE_REMOVAL',
+            quantityUnit: 'tree',
+            unitRate: spec.removalRate,
+            mobilizationCost: spec.mobilization + 45,
+          },
         ],
       },
       {
@@ -310,8 +337,10 @@ function withObservedAllocation(
   const capacityRemaining = new Map<string, number>()
   const contractRemaining = new Map<string, number>()
   for (const contractor of contractors) {
-    for (const bucket of contractor.capacityBuckets) capacityRemaining.set(capacityKey(contractor.id, bucket.bucket), bucket.availableCapacity)
-    for (const contract of contractor.contracts) contractRemaining.set(contractKey(contractor.id, contract.id), contract.remainingMaxVolume)
+    for (const bucket of contractor.capacityBuckets)
+      capacityRemaining.set(capacityKey(contractor.id, bucket.bucket), bucket.availableCapacity)
+    for (const contract of contractor.contracts)
+      contractRemaining.set(contractKey(contractor.id, contract.id), contract.remainingMaxVolume)
   }
   const preference = preset === 'CONTRACT_COMMITMENT' ? commitmentPreference : defaultPreference
 
@@ -319,11 +348,17 @@ function withObservedAllocation(
     const analysis = analyzeAllocationUnit(scenario, unit)
     const ordered = analysis.feasible
       .filter((candidate) => candidate.expectedCost != null && !candidate.requiresException)
-      .sort((left, right) => preference.indexOf(left.contractorId) - preference.indexOf(right.contractorId) || left.contractId.localeCompare(right.contractId))
+      .sort(
+        (left, right) =>
+          preference.indexOf(left.contractorId) - preference.indexOf(right.contractorId) ||
+          left.contractId.localeCompare(right.contractId)
+      )
     const selected = ordered.find((candidate) => {
-      if ((contractRemaining.get(contractKey(candidate.contractorId, candidate.contractId)) ?? 0) < unit.contractVolume) return false
+      if ((contractRemaining.get(contractKey(candidate.contractorId, candidate.contractId)) ?? 0) < unit.contractVolume)
+        return false
       return candidate.executionEstimate.capacityRequirements.every(
-        (requirement) => (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
+        (requirement) =>
+          (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
       )
     })
     if (!selected) return unit

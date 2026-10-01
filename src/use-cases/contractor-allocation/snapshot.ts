@@ -101,7 +101,9 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
         ...unit,
         requiredEquipment: [...unit.requiredEquipment].sort(),
         requiredCertifications: [...unit.requiredCertifications].sort(),
-        capacityRequirements: [...unit.capacityRequirements].sort((left, right) => left.bucket.localeCompare(right.bucket)),
+        capacityRequirements: [...unit.capacityRequirements].sort((left, right) =>
+          left.bucket.localeCompare(right.bucket)
+        ),
       })),
     contractors: [...scenario.contractors]
       .sort((left, right) => left.id.localeCompare(right.id))
@@ -110,7 +112,9 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
         capacityBuckets: [...contractor.capacityBuckets].sort((left, right) => left.bucket.localeCompare(right.bucket)),
         equipment: [...contractor.equipment].sort(),
         certifications: [...contractor.certifications].sort(),
-        executionProfiles: [...contractor.executionProfiles].sort((left, right) => left.workType.localeCompare(right.workType)),
+        executionProfiles: [...contractor.executionProfiles].sort((left, right) =>
+          left.workType.localeCompare(right.workType)
+        ),
         contracts: [...contractor.contracts]
           .sort((left, right) => left.id.localeCompare(right.id))
           .map((contract) => ({
@@ -118,7 +122,8 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
             territories: [...contract.territories].sort(),
             workTypes: [...contract.workTypes].sort(),
             rates: [...contract.rates].sort(
-              (left, right) => left.workType.localeCompare(right.workType) || left.quantityUnit.localeCompare(right.quantityUnit)
+              (left, right) =>
+                left.workType.localeCompare(right.workType) || left.quantityUnit.localeCompare(right.quantityUnit)
             ),
           })),
       })),
