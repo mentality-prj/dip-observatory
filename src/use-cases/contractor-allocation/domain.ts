@@ -2,11 +2,21 @@ export type AllocationUnitType = 'WORK_ORDER' | 'WORK_PACKAGE' | 'CIRCUIT' | 'AW
 export type PricingModel = 'UNIT_PRICE' | 'TIME_AND_EQUIPMENT'
 export type SourceRole = 'INSPECTOR' | 'PROCUREMENT' | 'OPERATIONS' | 'PLANNER'
 
-export type InputProvenance<Role extends SourceRole = SourceRole> = {
+export type TrustedAuthority<Role extends SourceRole = SourceRole> = {
+  id: string
   sourceRole: Role
   sourceSystem: string
+  ingress: 'TRUSTED_ADAPTER'
+}
+
+export type InputProvenance<Role extends SourceRole = SourceRole> = {
+  /** References an authority from scenario.trustedAuthorities. The role is resolved server-side from that registry. */
+  authorityId: string
   sourceRecordId: string
+  sourceVersion: string
   capturedAt: string
+  /** Phantom role marker for compile-time ownership only; never supplied by callers. */
+  readonly __role?: Role
 }
 
 export type AllocationUnitProvenance = {
@@ -15,6 +25,7 @@ export type AllocationUnitProvenance = {
   territory: InputProvenance<'INSPECTOR'>
   workType: InputProvenance<'INSPECTOR'>
   technicalRequirements: InputProvenance<'INSPECTOR'>
+  executionWindow: InputProvenance<'OPERATIONS'>
   deadline: InputProvenance<'OPERATIONS'>
   capacityRequirements: InputProvenance<'OPERATIONS'>
   contractVolume: InputProvenance<'PROCUREMENT'>
@@ -34,7 +45,7 @@ export type ContractProvenance = {
 }
 
 export type FeasibilityReason =
-  | 'CONTRACT_EXPIRED'
+  | 'CONTRACT_OUTSIDE_EXECUTION_WINDOW'
   | 'NOT_APPROVED'
   | 'TERRITORY_NOT_ALLOWED'
   | 'WORK_TYPE_NOT_ALLOWED'
@@ -46,6 +57,7 @@ export type FeasibilityReason =
   | 'CONTRACT_VOLUME_LIMIT'
   | 'RATE_NOT_CONFIGURED'
   | 'UNTRUSTED_INPUT'
+  | 'INVALID_SCENARIO_INPUT'
   | 'T&E_REQUIRES_EXCEPTION'
 
 export type DecisionType = 'INFEASIBLE' | 'NO_CHOICE' | 'ALLOCATION_DECISION_REQUIRED' | 'EXCEPTION_REQUIRED'
@@ -110,6 +122,9 @@ export type AllocationUnit = {
   workType: string
   quantity: number
   quantityUnit: string
+  /** Planned execution window. Contract validity must cover this interval. */
+  executionStart: string
+  executionEnd: string
   /** Operational workload consumed in each execution bucket. */
   capacityRequirements: CapacityRequirement[]
   /** Procurement volume consumed against the selected contract. */
@@ -129,8 +144,13 @@ export type AllocationUnit = {
 
 export type ContractorAllocationScenario = {
   id: string
+  /** Decision-effective date used for contracts and allocation horizon. */
   asOf: string
+  /** Exact timestamp after which new information is forbidden in replay. */
+  decisionAt: string
   allocationLevel: AllocationUnitType
+  /** Server-owned registry produced by authenticated adapters. */
+  trustedAuthorities: TrustedAuthority[]
   units: AllocationUnit[]
   contractors: Contractor[]
 }
@@ -177,14 +197,46 @@ export type AllocationAssignment = {
   inputSnapshotId: string
 }
 
-export type OptimizerStatus = 'OPTIMAL' | 'FEASIBLE_NOT_PROVEN' | 'INFEASIBLE' | 'UNKNOWN'
+export type AllocationReservation = {
+  allocationUnitId: string
+  contractorId: string
+  contractorName: string
+  contractId: string
+  reason: 'COST_UNCERTAIN'
+  inputSnapshotId: string
+}
+
+export type OptimizerStatus =
+  | 'OPTIMAL'
+  | 'PARTIAL_OPTIMAL'
+  | 'FEASIBLE_NOT_PROVEN'
+  | 'PARTIAL_FEASIBLE_NOT_PROVEN'
+  | 'INFEASIBLE'
+  | 'UNKNOWN'
+  | 'INVALID_INPUT'
+
+export type ScenarioValidationIssue = {
+  code: string
+  path: string
+  message: string
+}
+
+export type PortfolioCoverage = {
+  totalUnits: number
+  coveredUnits: number
+  exceptionUnits: number
+  infeasibleUnits: number
+  coverageRatio: number
+  coveredObservedExpectedSpend: number
+}
 
 export type DecisionSpaceMetrics = {
   totalUnits: number
   infeasibleUnits: number
   noChoiceUnits: number
+  localDecisionUnits: number
   decisionUnits: number
-  exceptionUnits: number
+  globalChoiceUnknownUnits: number
   decisionSpaceRatio: number
   spendWithChoice: number
   weightedChoiceSpreadPct: number
@@ -196,14 +248,17 @@ export type ContractorAllocationResult = {
   status: OptimizerStatus
   analyses: UnitDecisionAnalysis[]
   assignments: AllocationAssignment[]
+  reservations: AllocationReservation[]
   unresolvedUnitIds: string[]
   observedInvalidUnitIds: string[]
   observedExpectedSpend: number
   qdipExpectedSpend: number
   counterfactualAllocationAdvantage: number | null
+  coverage: PortfolioCoverage
   metrics: DecisionSpaceMetrics
   exploredNodes: number
   lowerBound: number | null
   optimalityGapPct: number | null
+  validationIssues: ScenarioValidationIssue[]
   scenarioSnapshot: ScenarioInputSnapshot
 }
