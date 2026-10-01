@@ -8,9 +8,6 @@ on:
     branches:
       - dev
 
-permissions:
-  contents: write
-
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -18,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,16 +32,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-      - name: Format readiness files
-        run: |
-          pnpm exec prettier --write src/use-cases/readiness-recovery/workspace.tsx src/use-cases/readiness-recovery/scenario-badges.vitest.test.tsx
-          if git diff --quiet; then exit 0; fi
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/use-cases/readiness-recovery/workspace.tsx src/use-cases/readiness-recovery/scenario-badges.vitest.test.tsx
-          git commit -m "style(readiness): format multi-label UI"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Prettier
         run: pnpm prettier
