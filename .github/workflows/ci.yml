@@ -33,8 +33,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Prettier
-        run: pnpm prettier
+      - name: Prettier diagnostic
+        run: |
+          pnpm exec prettier --write src/use-cases/readiness-recovery/benchmark.vitest.test.ts
+          git diff -- src/use-cases/readiness-recovery/benchmark.vitest.test.ts
+          exit 1
 
       - name: Typecheck
         run: pnpm typecheck
