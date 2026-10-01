@@ -365,7 +365,9 @@ function DecisionDetail({
           <div>
             <dt className="text-slate-500">capacity demand</dt>
             <dd className="mt-1 text-slate-300">
-              {unit.capacityRequirements.map((requirement) => `${requirement.bucket}: ${requirement.demand}`).join(', ')}
+              {unit.capacityRequirements
+                .map((requirement) => `${requirement.bucket}: ${requirement.demand}`)
+                .join(', ')}
             </dd>
           </div>
           <div>

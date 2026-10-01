@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildContractorAllocationDemoScenario } from './demo-data'
-import type {
-  AllocationUnit,
-  ContractorAllocationScenario,
-  InputProvenance,
-  SourceRole,
-} from './domain'
+import type { AllocationUnit, ContractorAllocationScenario, InputProvenance, SourceRole } from './domain'
 import { analyzeAllocationUnit, optimizeContractorAllocation } from './optimizer'
 import { sha256Hex } from './snapshot'
 
@@ -80,10 +75,7 @@ function globalChoiceScenario(): ContractorAllocationScenario {
     id: 'global-choice-test',
     asOf: '2026-10-01',
     allocationLevel: 'WORK_PACKAGE',
-    units: [
-      unit('U1', 'X', 2, '2026-10', 'A', 'A-contract'),
-      unit('U2', 'Y', 3, '2026-10', 'B', 'B-contract'),
-    ],
+    units: [unit('U1', 'X', 2, '2026-10', 'A', 'A-contract'), unit('U2', 'Y', 3, '2026-10', 'B', 'B-contract')],
     contractors: [
       {
         id: 'A',

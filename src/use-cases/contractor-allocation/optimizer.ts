@@ -48,17 +48,13 @@ function isFiniteNonNegative(value: number) {
   return Number.isFinite(value) && value >= 0
 }
 
-function isTrustedSource(
-  provenance: InputProvenance | undefined,
-  expectedRole: SourceRole,
-  asOf: string
-) {
+function isTrustedSource(provenance: InputProvenance | undefined, expectedRole: SourceRole, asOf: string) {
   return Boolean(
     provenance &&
-      provenance.sourceRole === expectedRole &&
-      provenance.sourceSystem.trim() &&
-      provenance.sourceRecordId.trim() &&
-      provenance.capturedAt.slice(0, 10) <= asOf
+    provenance.sourceRole === expectedRole &&
+    provenance.sourceSystem.trim() &&
+    provenance.sourceRecordId.trim() &&
+    provenance.capturedAt.slice(0, 10) <= asOf
   )
 }
 
@@ -119,7 +115,8 @@ function contractInputsTrusted(contract: ContractorContract, scenario: Contracto
   if (!isTrustedSource(provenance.rates, 'PROCUREMENT', scenario.asOf)) return false
   if (!isTrustedSource(provenance.volumeState, 'PROCUREMENT', scenario.asOf)) return false
   if (!isFiniteNonNegative(contract.consumedVolumeToDate)) return false
-  if (!isFiniteNonNegative(contract.remainingMinVolume) || !isFiniteNonNegative(contract.remainingMaxVolume)) return false
+  if (!isFiniteNonNegative(contract.remainingMinVolume) || !isFiniteNonNegative(contract.remainingMaxVolume))
+    return false
   return contract.remainingMinVolume <= contract.remainingMaxVolume + EPSILON
 }
 
@@ -344,7 +341,12 @@ function canConsumeCapacity(remaining: Map<string, number>, contractorId: string
   )
 }
 
-function consumeCapacity(remaining: Map<string, number>, contractorId: string, unit: AllocationUnit, direction: 1 | -1) {
+function consumeCapacity(
+  remaining: Map<string, number>,
+  contractorId: string,
+  unit: AllocationUnit,
+  direction: 1 | -1
+) {
   for (const requirement of unit.capacityRequirements) {
     const key = capacityKey(contractorId, requirement.bucket)
     remaining.set(key, (remaining.get(key) ?? 0) - direction * requirement.demand)
@@ -586,10 +588,7 @@ function observedCandidate(analysis: UnitDecisionAnalysis) {
   return costed.length === 1 ? costed[0] : undefined
 }
 
-function validateObservedPortfolio(
-  scenario: ContractorAllocationScenario,
-  analyses: UnitDecisionAnalysis[]
-) {
+function validateObservedPortfolio(scenario: ContractorAllocationScenario, analyses: UnitDecisionAnalysis[]) {
   const invalid = new Set<string>()
   const capacityUsage = new Map<string, { total: number; unitIds: string[] }>()
   const contractUsage = new Map<string, { total: number; unitIds: string[] }>()

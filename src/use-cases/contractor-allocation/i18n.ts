@@ -84,12 +84,22 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     synthetic: 'Synthetic historical replay',
     counterfactualNote: 'Counterfactual model estimate, not realized savings.',
     authorityTitle: 'Trusted input boundary',
-    authorityIntro: 'Decision-driving inputs are accepted only from their authoritative source and only if captured by the decision date.',
+    authorityIntro:
+      'Decision-driving inputs are accepted only from their authoritative source and only if captured by the decision date.',
     authority: {
       inspector: { title: 'Inspector', body: 'Owns scope, quantity, location and technical requirements.' },
-      procurement: { title: 'Procurement', body: 'Owns approved contractors, rates, eligibility and remaining contract volume.' },
-      operations: { title: 'Operations', body: 'Owns execution deadlines, time-bucketed capacity, equipment and resource estimates.' },
-      planner: { title: 'Planner', body: 'Sequences execution. Contractor selection and authoritative allocation inputs are not writeable.' },
+      procurement: {
+        title: 'Procurement',
+        body: 'Owns approved contractors, rates, eligibility and remaining contract volume.',
+      },
+      operations: {
+        title: 'Operations',
+        body: 'Owns execution deadlines, time-bucketed capacity, equipment and resource estimates.',
+      },
+      planner: {
+        title: 'Planner',
+        body: 'Sequences execution. Contractor selection and authoritative allocation inputs are not writeable.',
+      },
     },
     stressTitle: 'Capacity stress',
     stressNone: 'All contractors available',
@@ -171,12 +181,22 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     synthetic: 'Синтетичне історичне відтворення',
     counterfactualNote: 'Контрфактична модельна оцінка, а не фактично отримана економія.',
     authorityTitle: 'Межа довірених даних',
-    authorityIntro: 'Дані, що визначають рішення, приймаються лише від їхнього відповідального джерела і лише якщо вони були доступні на дату рішення.',
+    authorityIntro:
+      'Дані, що визначають рішення, приймаються лише від їхнього відповідального джерела і лише якщо вони були доступні на дату рішення.',
     authority: {
       inspector: { title: 'Інспектор', body: 'Визначає обсяг робіт, кількість, місце та технічні вимоги.' },
-      procurement: { title: 'Закупівлі', body: 'Визначають дозволених підрядників, ставки, допустимість і залишок обсягу договору.' },
-      operations: { title: 'Операції', body: 'Надають строки виконання, потужність за часовими періодами, обладнання та оцінки ресурсів.' },
-      planner: { title: 'Планувальник', body: 'Керує послідовністю виконання. Вибір підрядника та авторитетні входи розподілу не можуть задаватися вручну.' },
+      procurement: {
+        title: 'Закупівлі',
+        body: 'Визначають дозволених підрядників, ставки, допустимість і залишок обсягу договору.',
+      },
+      operations: {
+        title: 'Операції',
+        body: 'Надають строки виконання, потужність за часовими періодами, обладнання та оцінки ресурсів.',
+      },
+      planner: {
+        title: 'Планувальник',
+        body: 'Керує послідовністю виконання. Вибір підрядника та авторитетні входи розподілу не можуть задаватися вручну.',
+      },
     },
     stressTitle: 'Стрес потужності',
     stressNone: 'Усі підрядники доступні',
@@ -190,7 +210,8 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     choiceSpread: 'Зважена за витратами різниця між варіантами',
     unresolved: 'Заблоковані роботи / винятки',
     decisionSpace: 'Простір рішень',
-    decisionSpaceHint: 'До оптимізації портфеля входять лише роботи з допустимими підрядниками та обчислюваною вартістю.',
+    decisionSpaceHint:
+      'До оптимізації портфеля входять лише роботи з допустимими підрядниками та обчислюваною вартістю.',
     allocationTable: 'Повторне програвання розподілу',
     unit: 'Робота',
     scope: 'Обсяг',
@@ -258,12 +279,22 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     synthetic: 'Syntetyczne odtworzenie historyczne',
     counterfactualNote: 'Kontrfaktyczna estymacja modelu, a nie zrealizowana oszczędność.',
     authorityTitle: 'Granica zaufanych danych',
-    authorityIntro: 'Dane wpływające na decyzję są akceptowane wyłącznie od odpowiedzialnego źródła i tylko wtedy, gdy były dostępne w dniu decyzji.',
+    authorityIntro:
+      'Dane wpływające na decyzję są akceptowane wyłącznie od odpowiedzialnego źródła i tylko wtedy, gdy były dostępne w dniu decyzji.',
     authority: {
       inspector: { title: 'Inspektor', body: 'Określa zakres, ilość, lokalizację i wymagania techniczne.' },
-      procurement: { title: 'Zakupy', body: 'Określają zatwierdzonych wykonawców, stawki, dopuszczalność i pozostały wolumen umowy.' },
-      operations: { title: 'Operacje', body: 'Dostarczają terminy, moc w przedziałach czasu, sprzęt i estymacje zasobów.' },
-      planner: { title: 'Planista', body: 'Ustala kolejność wykonania. Wybór wykonawcy i autorytatywne dane przydziału nie są ręcznie zapisywalne.' },
+      procurement: {
+        title: 'Zakupy',
+        body: 'Określają zatwierdzonych wykonawców, stawki, dopuszczalność i pozostały wolumen umowy.',
+      },
+      operations: {
+        title: 'Operacje',
+        body: 'Dostarczają terminy, moc w przedziałach czasu, sprzęt i estymacje zasobów.',
+      },
+      planner: {
+        title: 'Planista',
+        body: 'Ustala kolejność wykonania. Wybór wykonawcy i autorytatywne dane przydziału nie są ręcznie zapisywalne.',
+      },
     },
     stressTitle: 'Test dostępnej mocy',
     stressNone: 'Wszyscy wykonawcy dostępni',
@@ -324,7 +355,8 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       SLA_IMPOSSIBLE: 'Przedział wykonania wykracza poza wymagany termin.',
       CONTRACT_VOLUME_LIMIT: 'Pozostały wolumen umowy jest niewystarczający.',
       RATE_NOT_CONFIGURED: 'Brak zatwierdzonej stawki dla tej pracy.',
-      UNTRUSTED_INPUT: 'Dane wpływające na decyzję nie mają autorytatywnego pochodzenia albo powstały po dacie decyzji.',
+      UNTRUSTED_INPUT:
+        'Dane wpływające na decyzję nie mają autorytatywnego pochodzenia albo powstały po dacie decyzji.',
       'T&E_REQUIRES_EXCEPTION': 'Nie można oszacować godzin pracy i sprzętu na podstawie zaufanych danych.',
     },
     status: {

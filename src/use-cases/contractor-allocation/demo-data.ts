@@ -1,10 +1,4 @@
-import type {
-  AllocationUnit,
-  Contractor,
-  ContractorAllocationScenario,
-  InputProvenance,
-  SourceRole,
-} from './domain'
+import type { AllocationUnit, Contractor, ContractorAllocationScenario, InputProvenance, SourceRole } from './domain'
 import { analyzeAllocationUnit } from './optimizer'
 
 const asOf = '2026-10-01'
@@ -267,9 +261,7 @@ function unitProvenance(unitId: string, hasTeEstimate: boolean) {
     deadline: source('OPERATIONS', 'work-management', `${unitId}:deadline`),
     capacityRequirements: source('OPERATIONS', 'resource-planning', `${unitId}:capacity-profile`),
     contractVolume: source('PROCUREMENT', 'procurement-contracts', `${unitId}:contract-volume`),
-    ...(hasTeEstimate
-      ? { teEstimate: source('OPERATIONS', 'work-estimation', `${unitId}:te-estimate`) }
-      : {}),
+    ...(hasTeEstimate ? { teEstimate: source('OPERATIONS', 'work-estimation', `${unitId}:te-estimate`) } : {}),
   }
 }
 

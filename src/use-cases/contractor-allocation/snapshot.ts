@@ -102,7 +102,9 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
         ...unit,
         requiredEquipment: [...unit.requiredEquipment].sort(),
         requiredCertifications: [...unit.requiredCertifications].sort(),
-        capacityRequirements: [...unit.capacityRequirements].sort((left, right) => left.bucket.localeCompare(right.bucket)),
+        capacityRequirements: [...unit.capacityRequirements].sort((left, right) =>
+          left.bucket.localeCompare(right.bucket)
+        ),
       })),
     contractors: [...scenario.contractors]
       .sort((left, right) => left.id.localeCompare(right.id))
