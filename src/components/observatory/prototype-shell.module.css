@@ -9,18 +9,23 @@
   max-width: var(--ds-content-max);
   padding-inline: clamp(var(--ds-space-4), 3vw, var(--ds-space-10));
 }
+.desktopNavigation {
+  width: 100%;
+  min-width: 0;
+}
 .navigation {
   display: flex;
   min-width: 0;
   flex: 1;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--ds-space-1);
-  overflow-x: auto;
+  overflow: visible;
 }
 .navLink {
   display: flex;
   min-height: 40px;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
   align-items: center;
   justify-content: center;
@@ -33,7 +38,7 @@
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  white-space: normal;
+  white-space: nowrap;
   transition:
     background 150ms ease,
     color 150ms ease,

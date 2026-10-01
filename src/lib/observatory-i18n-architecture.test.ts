@@ -9,6 +9,7 @@ const renderDirectories = [
   new URL('../features/decision-challenge/', import.meta.url),
   new URL('../features/gtm-lab/components/', import.meta.url),
   new URL('../use-cases/contractor-allocation/', import.meta.url),
+  new URL('../use-cases/readiness-recovery/', import.meta.url),
   new URL('../app/[locale]/challenges/', import.meta.url),
 ]
 

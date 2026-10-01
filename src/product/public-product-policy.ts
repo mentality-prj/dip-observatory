@@ -2,6 +2,7 @@ export const PUBLIC_DEMO_NAMES = {
   resourceAllocation: 'Resource Allocation',
   supplyNetworkOptimization: 'Supply Network Optimization',
   contractorAllocation: 'Contractor Allocation',
+  readinessRecovery: 'Readiness Recovery Planner',
   gtmLab: 'GTM Lab',
 } as const
 
@@ -13,6 +14,7 @@ export const PUBLIC_PRODUCT_NAMES = [
   PUBLIC_DEMO_NAMES.resourceAllocation,
   PUBLIC_DEMO_NAMES.supplyNetworkOptimization,
   PUBLIC_DEMO_NAMES.contractorAllocation,
+  PUBLIC_DEMO_NAMES.readinessRecovery,
   PUBLIC_DEMO_NAMES.gtmLab,
 ] as const
 
