@@ -7,8 +7,38 @@ import type {
   TrustedAuthority,
 } from './domain'
 
-const asOf = '2026-10-01'
-const decisionAt = '2026-10-01T00:00:00Z'
+export const EVERSOURCE_CAPACITY_LOSS_SOURCE_URL =
+  'https://www.puc.nh.gov/Regulatory/Docketbk/2019/19-057/LETTERS-MEMOS-TARIFFS/19-057_2021-11-20_EVERSOURCE_2022-VMP-PLAN.PDF'
+
+export const EVERSOURCE_CAPACITY_LOSS_FACTS = {
+  awc: 'NASHUA',
+  circuitCount: 14,
+  totalMiles: 266.21,
+  smtMiles: 254.86,
+  mettMiles: 11.35,
+  returnedToBidRoundedMiles: 266,
+} as const
+
+export const EVERSOURCE_CAPACITY_LOSS_CIRCUITS = [
+  { circuit: '3154X1_21', town: 'Nashua', totalMiles: 22.62, smtMiles: 21.47, mettMiles: 1.15 },
+  { circuit: '3154X2_21', town: 'Hollis', totalMiles: 38.99, smtMiles: 34.76, mettMiles: 4.23 },
+  { circuit: '314X4_22', town: 'Wilton', totalMiles: 97.5, smtMiles: 91.53, mettMiles: 5.97 },
+  { circuit: '40W1_21', town: 'Nashua', totalMiles: 11.21, smtMiles: 11.21, mettMiles: 0 },
+  { circuit: '3159X_21', town: 'Merrimack', totalMiles: 48.25, smtMiles: 48.25, mettMiles: 0 },
+  { circuit: '353X3_21', town: 'Nashua', totalMiles: 3.37, smtMiles: 3.37, mettMiles: 0 },
+  { circuit: '353X4_21', town: 'Nashua', totalMiles: 3.59, smtMiles: 3.59, mettMiles: 0 },
+  { circuit: '353X5_21', town: 'Nashua', totalMiles: 4.72, smtMiles: 4.72, mettMiles: 0 },
+  { circuit: '353X6_21', town: 'Nashua', totalMiles: 1.08, smtMiles: 1.08, mettMiles: 0 },
+  { circuit: '383X2', town: 'Litchfield', totalMiles: 8.91, smtMiles: 8.91, mettMiles: 0 },
+  { circuit: '389X8_21', town: 'Hudson', totalMiles: 1.17, smtMiles: 1.17, mettMiles: 0 },
+  { circuit: '3175X3_21', town: 'Hudson', totalMiles: 1.72, smtMiles: 1.72, mettMiles: 0 },
+  { circuit: '3175X5_21', town: 'Hudson', totalMiles: 1.89, smtMiles: 1.89, mettMiles: 0 },
+  { circuit: '3168X_21', town: 'Nashua', totalMiles: 21.19, smtMiles: 21.19, mettMiles: 0 },
+] as const
+
+const asOf = '2022-01-01'
+const decisionAt = '2022-01-01T00:00:00Z'
+const capacityBucket = '2022'
 
 const authorities: TrustedAuthority[] = [
   { id: 'inspector-field', sourceRole: 'INSPECTOR', sourceSystem: 'field-inspection', ingress: 'TRUSTED_ADAPTER' },
@@ -52,11 +82,11 @@ function contractor(
   smtMultiplier: number,
   mettMultiplier: number
 ): Contractor {
-  const contractId = `${id}-2026`
+  const contractId = `${id}-synthetic-bid`
   return {
     id,
     name,
-    capacityBuckets: [{ bucket: '2026-10', availableCapacity: capacity }],
+    capacityBuckets: [{ bucket: capacityBucket, availableCapacity: capacity }],
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
     executionProfiles: [
@@ -73,8 +103,8 @@ function contractor(
       {
         id: contractId,
         approved: true,
-        validFrom: '2026-01-01',
-        validTo: '2026-12-31',
+        validFrom: '2022-01-01',
+        validTo: '2022-12-31',
         territories: ['NASHUA_AWC'],
         workTypes: ['SMT', 'METT'],
         pricingModel: 'UNIT_PRICE',
@@ -89,8 +119,8 @@ function contractor(
           volumeState: provenance<'PROCUREMENT'>('procurement-contracts', `${contractId}:volume-state`),
         },
         rates: [
-          { workType: 'SMT', quantityUnit: 'mile', unitRate: smtRate, mobilizationCost: 2000 },
-          { workType: 'METT', quantityUnit: 'mile', unitRate: mettRate, mobilizationCost: 3000 },
+          { workType: 'SMT', quantityUnit: 'mile', unitRate: smtRate },
+          { workType: 'METT', quantityUnit: 'mile', unitRate: mettRate },
         ],
       },
     ],
@@ -112,32 +142,37 @@ function unitProvenance(id: string) {
 }
 
 function awardedMiles(): AllocationUnit[] {
-  const batches = [42, 38, 36, 34, 32, 30, 28, 26]
-  return batches.map((quantity, offset) => {
-    const index = offset + 1
-    const id = `NASHUA-${String(index).padStart(2, '0')}`
-    const workType = index <= 6 ? 'SMT' : 'METT'
-    return {
-      id,
-      type: 'AWARDED_VOLUME',
-      territory: 'NASHUA_AWC',
-      workType,
-      quantity,
-      quantityUnit: 'mile',
-      executionStart: '2026-10-02',
-      executionEnd: '2026-10-28',
-      capacityRequirements: [{ bucket: '2026-10', demand: quantity }],
-      contractVolume: quantity,
-      deadline: '2026-10-31',
-      priority: 3,
-      requiredEquipment: ['bucket-truck', 'chipper'],
-      requiredCertifications: ['line-clearance'],
-      scopeId: `nashua-awc-${String(index).padStart(2, '0')}`,
-      scopeVersion: 1,
-      observedContractorId: 'arbor-north',
-      observedContractId: 'arbor-north-2026',
-      provenance: unitProvenance(id),
+  return EVERSOURCE_CAPACITY_LOSS_CIRCUITS.flatMap((row) => {
+    const slices: AllocationUnit[] = []
+    const addSlice = (workType: 'SMT' | 'METT', quantity: number) => {
+      if (quantity <= 0) return
+      const id = `${row.circuit}-${workType}`
+      slices.push({
+        id,
+        type: 'AWARDED_VOLUME',
+        territory: 'NASHUA_AWC',
+        workType,
+        quantity,
+        quantityUnit: 'mile',
+        executionStart: '2022-01-01',
+        executionEnd: '2022-12-31',
+        capacityRequirements: [{ bucket: capacityBucket, demand: quantity }],
+        contractVolume: quantity,
+        deadline: '2022-12-31',
+        priority: 3,
+        requiredEquipment: ['bucket-truck', 'chipper'],
+        requiredCertifications: ['line-clearance'],
+        scopeId: row.circuit,
+        scopeVersion: 1,
+        observedContractorId: 'synthetic-incumbent',
+        observedContractId: 'synthetic-incumbent-synthetic-bid',
+        provenance: unitProvenance(id),
+      })
     }
+
+    addSlice('SMT', row.smtMiles)
+    addSlice('METT', row.mettMiles)
+    return slices
   })
 }
 
@@ -151,10 +186,10 @@ export function buildContractorCapacityLossScenario(): ContractorAllocationScena
     trustedAuthorities: authorities.map((authority) => ({ ...authority })),
     units: awardedMiles(),
     contractors: [
-      contractor('arbor-north', 'Arbor North', 0, 3200, 4400, 1, 1),
-      contractor('green-line', 'Green Line Services', 90, 3300, 5200, 0.85, 0.9),
-      contractor('canopy-works', 'Canopy Works', 90, 3500, 4600, 0.95, 0.8),
-      contractor('line-safe', 'Line Safe Vegetation', 100, 3700, 4900, 1, 0.9),
+      contractor('synthetic-incumbent', 'Synthetic incumbent', 0, 3200, 4400, 1, 1),
+      contractor('synthetic-bidder-a', 'Synthetic bidder A', 90, 3300, 5200, 0.85, 0.9),
+      contractor('synthetic-bidder-b', 'Synthetic bidder B', 100, 3500, 4600, 0.95, 0.8),
+      contractor('synthetic-bidder-c', 'Synthetic bidder C', 120, 3700, 4900, 1, 0.9),
     ],
   }
 }
