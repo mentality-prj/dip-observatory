@@ -37,9 +37,7 @@ export function sha256Hex(value: string) {
   const words = new Uint32Array(64)
 
   for (let offset = 0; offset < paddedLength; offset += 64) {
-    for (let index = 0; index < 16; index += 1) {
-      words[index] = view.getUint32(offset + index * 4, false)
-    }
+    for (let index = 0; index < 16; index += 1) words[index] = view.getUint32(offset + index * 4, false)
     for (let index = 16; index < 64; index += 1) {
       const s0 = rotateRight(words[index - 15], 7) ^ rotateRight(words[index - 15], 18) ^ (words[index - 15] >>> 3)
       const s1 = rotateRight(words[index - 2], 17) ^ rotateRight(words[index - 2], 19) ^ (words[index - 2] >>> 10)
@@ -103,9 +101,7 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
         ...unit,
         requiredEquipment: [...unit.requiredEquipment].sort(),
         requiredCertifications: [...unit.requiredCertifications].sort(),
-        capacityRequirements: [...unit.capacityRequirements].sort((left, right) =>
-          left.bucket.localeCompare(right.bucket)
-        ),
+        capacityRequirements: [...unit.capacityRequirements].sort((left, right) => left.bucket.localeCompare(right.bucket)),
       })),
     contractors: [...scenario.contractors]
       .sort((left, right) => left.id.localeCompare(right.id))
@@ -114,6 +110,7 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
         capacityBuckets: [...contractor.capacityBuckets].sort((left, right) => left.bucket.localeCompare(right.bucket)),
         equipment: [...contractor.equipment].sort(),
         certifications: [...contractor.certifications].sort(),
+        executionProfiles: [...contractor.executionProfiles].sort((left, right) => left.workType.localeCompare(right.workType)),
         contracts: [...contractor.contracts]
           .sort((left, right) => left.id.localeCompare(right.id))
           .map((contract) => ({
@@ -121,8 +118,7 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
             territories: [...contract.territories].sort(),
             workTypes: [...contract.workTypes].sort(),
             rates: [...contract.rates].sort(
-              (left, right) =>
-                left.workType.localeCompare(right.workType) || left.quantityUnit.localeCompare(right.quantityUnit)
+              (left, right) => left.workType.localeCompare(right.workType) || left.quantityUnit.localeCompare(right.quantityUnit)
             ),
           })),
       })),
@@ -131,9 +127,5 @@ function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAl
 
 export function createScenarioInputSnapshot(scenario: ContractorAllocationScenario): ScenarioInputSnapshot {
   const canonicalInput = canonicalJson(normalizeScenario(scenario))
-  return {
-    id: sha256Hex(canonicalInput),
-    algorithm: 'SHA-256',
-    canonicalInput,
-  }
+  return { id: sha256Hex(canonicalInput), algorithm: 'SHA-256', canonicalInput }
 }
