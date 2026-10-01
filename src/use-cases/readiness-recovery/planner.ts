@@ -370,8 +370,8 @@ function assignLabels(frontier: RecoveryScenario[]) {
   if (!frontier.length) return frontier
   const selected = new Map<string, ScenarioLabel>()
   const pick = (label: ScenarioLabel, compare: (a: RecoveryScenario, b: RecoveryScenario) => number) => {
-    const candidate = [...frontier].sort(compare).find((scenario) => !selected.has(scenario.scenarioId))
-    if (candidate) selected.set(candidate.scenarioId, label)
+    const candidate = [...frontier].sort(compare)[0]
+    if (candidate && !selected.has(candidate.scenarioId)) selected.set(candidate.scenarioId, label)
   }
   pick(
     'MAXIMUM_READINESS',

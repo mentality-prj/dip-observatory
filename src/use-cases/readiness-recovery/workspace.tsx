@@ -13,6 +13,7 @@ import {
 } from './demo-data'
 import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario, ScenarioLabel } from './domain'
 import { readinessRecoveryI18n } from './i18n'
+import { ScenarioBadges, scenarioRoles } from './scenario-badges'
 
 const LABEL_ORDER: ScenarioLabel[] = [
   'MAXIMUM_READINESS',
@@ -43,7 +44,9 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
 function featuredScenarios(frontier: RecoveryScenario[]) {
   const selected: RecoveryScenario[] = []
   for (const label of LABEL_ORDER) {
-    const scenario = frontier.find((item) => item.label === label && !selected.includes(item))
+    const scenario = frontier.find(
+      (item) => scenarioRoles(item.label, item.labels).includes(label) && !selected.includes(item)
+    )
     if (scenario) selected.push(scenario)
   }
   for (const scenario of frontier) {
@@ -307,8 +310,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
                     className={`border p-4 text-left ${selected?.scenarioId === scenario.scenarioId ? 'border-sky-400/60 bg-sky-400/[.08]' : 'border-white/10 bg-white/[.025]'}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <strong className="text-base font-medium text-slate-100">{t.labels[scenario.label]}</strong>
-                      <span className="font-mono text-xs text-slate-600">{scenario.selectedActions.length}</span>
+                      <ScenarioBadges label={scenario.label} labels={scenario.labels} translations={t.labels} />
+                      <span className="shrink-0 font-mono text-xs text-slate-600">
+                        {scenario.selectedActions.length}
+                      </span>
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                       <SmallMetric label={t.probability} value={percent(locale, scenario.probabilityDemandSatisfied)} />
@@ -369,9 +374,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
       <section className="mt-5 border border-white/10 bg-white/[.02] p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[.12em] text-sky-300">
-              {translations.labels[scenario.label]}
-            </div>
+            <ScenarioBadges label={scenario.label} labels={scenario.labels} translations={translations.labels} />
             <h2 className="mt-2 text-xl font-medium">{scenario.scenarioId}</h2>
           </div>
           <span className="border border-white/10 px-3 py-1 font-mono text-xs text-slate-400">

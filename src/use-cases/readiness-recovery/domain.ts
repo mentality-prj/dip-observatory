@@ -113,7 +113,10 @@ export type ScenarioLabel = 'MAXIMUM_READINESS' | 'FAST_RECOVERY' | 'PARTS_CONSE
 
 export type RecoveryScenario = {
   scenarioId: string
+  /** Primary display label kept for backwards compatibility. */
   label: ScenarioLabel
+  /** All objective roles held by this scenario; one scenario may be optimal for several objectives. */
+  labels?: ScenarioLabel[]
   selectedActions: string[]
   expectedCapabilityReadiness: number
   probabilityDemandSatisfied: number
