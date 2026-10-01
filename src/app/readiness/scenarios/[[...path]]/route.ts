@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { ReadinessRecoveryInput } from '@/use-cases/readiness-recovery/domain'
 import { planReadinessRecovery } from '@/use-cases/readiness-recovery/planner'
+import { decorateObjectiveLabels } from '@/use-cases/readiness-recovery/scenario-labels'
 import { readinessScenarioRepository } from '@/use-cases/readiness-recovery/scenario-repository'
 
 type RouteContext = { params: Promise<{ path?: string[] }> }
@@ -30,7 +31,8 @@ function assertPublicPlannerLimits(input: ReadinessRecoveryInput) {
 
 function storedPayload(input: ReadinessRecoveryInput) {
   assertPublicPlannerLimits(input)
-  const result = planReadinessRecovery(input)
+  const planned = planReadinessRecovery(input)
+  const result = { ...planned, frontier: decorateObjectiveLabels(planned.frontier) }
   return { input, result, updatedAt: new Date().toISOString() }
 }
 
