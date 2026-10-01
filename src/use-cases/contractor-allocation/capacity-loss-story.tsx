@@ -10,8 +10,7 @@ const copy = {
   en: {
     eyebrow: 'Historical capacity-loss trigger',
     title: '266 awarded miles require recovery allocation',
-    body:
-      'Eversource reported that a vegetation contractor could not complete all awarded 2022 miles because of limited crew resources. The Nashua AWC SMT and METT miles — 266 miles — were put back out to bid.',
+    body: 'Eversource reported that a vegetation contractor could not complete all awarded 2022 miles because of limited crew resources. The Nashua AWC SMT and METT miles — 266 miles — were put back out to bid.',
     source: 'Public Eversource 2022 NH Vegetation Management Plan',
     replay: 'QDIP synthetic recovery replay',
     replayNote:
@@ -30,8 +29,7 @@ const copy = {
   uk: {
     eyebrow: 'Історичний тригер втрати потужності',
     title: '266 присуджених миль потребують нового розподілу',
-    body:
-      'Eversource повідомляла, що підрядник з vegetation management не міг виконати весь присуджений обсяг 2022 року через брак бригад. 266 миль SMT і METT для Nashua AWC були повторно виставлені на торги.',
+    body: 'Eversource повідомляла, що підрядник з vegetation management не міг виконати весь присуджений обсяг 2022 року через брак бригад. 266 миль SMT і METT для Nashua AWC були повторно виставлені на торги.',
     source: 'Публічний Eversource 2022 NH Vegetation Management Plan',
     replay: 'Синтетичне відтворення recovery у QDIP',
     replayNote:
@@ -50,8 +48,7 @@ const copy = {
   pl: {
     eyebrow: 'Historyczny przypadek utraty zdolności',
     title: '266 przyznanych mil wymaga ponownego przydziału',
-    body:
-      'Eversource informował, że wykonawca vegetation management nie mógł zrealizować wszystkich przyznanych mil na 2022 r. z powodu ograniczonych zasobów ekip. 266 mil SMT i METT dla Nashua AWC ponownie skierowano do przetargu.',
+    body: 'Eversource informował, że wykonawca vegetation management nie mógł zrealizować wszystkich przyznanych mil na 2022 r. z powodu ograniczonych zasobów ekip. 266 mil SMT i METT dla Nashua AWC ponownie skierowano do przetargu.',
     source: 'Publiczny Eversource 2022 NH Vegetation Management Plan',
     replay: 'Syntetyczny replay recovery w QDIP',
     replayNote:
@@ -88,10 +85,7 @@ export function CapacityLossStory({
   result: ContractorAllocationResult | null
 }) {
   const t = copy[locale]
-  const awardedMiles = scenario.units.reduce(
-    (sum, unit) => sum + (unit.quantityUnit === 'mile' ? unit.quantity : 0),
-    0
-  )
+  const awardedMiles = scenario.units.reduce((sum, unit) => sum + (unit.quantityUnit === 'mile' ? unit.quantity : 0), 0)
   const unitById = new Map(scenario.units.map((unit) => [unit.id, unit]))
   const recoveredByContractor = new Map<string, number>()
   for (const assignment of result?.assignments ?? []) {
@@ -110,7 +104,9 @@ export function CapacityLossStory({
       <div className="grid gap-0 xl:grid-cols-[1.05fr_.95fr]">
         <div className="p-5 md:p-6">
           <div className="text-[11px] font-semibold uppercase tracking-[.16em] text-sky-300">{t.eyebrow}</div>
-          <h2 className="mt-3 max-w-3xl text-2xl font-medium tracking-[-.03em] text-slate-100 md:text-3xl">{t.title}</h2>
+          <h2 className="mt-3 max-w-3xl text-2xl font-medium tracking-[-.03em] text-slate-100 md:text-3xl">
+            {t.title}
+          </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">{t.body}</p>
           <a
             className="mt-3 inline-block text-xs text-sky-300 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-200"

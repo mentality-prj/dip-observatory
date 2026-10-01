@@ -43,7 +43,15 @@ function provenance<Role extends SourceRole>(authorityId: string, sourceRecordId
   return { authorityId, sourceRecordId, sourceVersion: '1', capturedAt: decisionAt }
 }
 
-function contractor(id: string, name: string, capacity: number, smtRate: number, mettRate: number, smtMultiplier: number, mettMultiplier: number): Contractor {
+function contractor(
+  id: string,
+  name: string,
+  capacity: number,
+  smtRate: number,
+  mettRate: number,
+  smtMultiplier: number,
+  mettMultiplier: number
+): Contractor {
   const contractId = `${id}-2026`
   return {
     id,

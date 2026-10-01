@@ -89,7 +89,10 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
 
   const recoveredMiles =
-    result?.assignments.reduce((sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0), 0) ?? 0
+    result?.assignments.reduce(
+      (sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0),
+      0
+    ) ?? 0
   const recoveryContractors = new Set(result?.assignments.map((assignment) => assignment.contractorId) ?? []).size
 
   return (
@@ -107,7 +110,11 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
             onClick={() => setResult(optimizeContractorAllocation(scenario))}
             className="mt-6 inline-flex items-center justify-center gap-2 bg-sky-400 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-sky-300"
           >
-            {result ? <RefreshCw className="h-4 w-4" aria-hidden /> : <SlidersHorizontal className="h-4 w-4" aria-hidden />}
+            {result ? (
+              <RefreshCw className="h-4 w-4" aria-hidden />
+            ) : (
+              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            )}
             {result ? t.rerun : t.run}
           </button>
         </header>
@@ -150,7 +157,9 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
                           <td className="px-3 py-3 text-right text-slate-300">{unit?.quantity ?? '—'}</td>
                           <td className="px-3 py-3 text-slate-500 line-through">Arbor North</td>
                           <td className="px-3 py-3 font-medium text-slate-100">{assignment.contractorName}</td>
-                          <td className="px-3 py-3 text-right text-slate-300">{money(locale, assignment.expectedCost)}</td>
+                          <td className="px-3 py-3 text-right text-slate-300">
+                            {money(locale, assignment.expectedCost)}
+                          </td>
                         </tr>
                       )
                     })}
