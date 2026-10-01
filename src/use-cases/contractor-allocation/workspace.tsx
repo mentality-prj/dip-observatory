@@ -158,7 +158,11 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
             onClick={run}
             className="inline-flex items-center justify-center gap-2 bg-sky-400 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-sky-300"
           >
-            {result ? <RefreshCw className="h-4 w-4" aria-hidden /> : <SlidersHorizontal className="h-4 w-4" aria-hidden />}
+            {result ? (
+              <RefreshCw className="h-4 w-4" aria-hidden />
+            ) : (
+              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            )}
             {result ? t.rerun : t.run}
           </button>
         </section>
@@ -260,7 +264,9 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                             <td className="px-3 py-3 text-slate-300">
                               {contractorName(analysis, analysis.unit.observedContractorId)}
                             </td>
-                            <td className="px-3 py-3 font-medium text-slate-100">{assignment?.contractorName ?? '—'}</td>
+                            <td className="px-3 py-3 font-medium text-slate-100">
+                              {assignment?.contractorName ?? '—'}
+                            </td>
                             <td className="px-3 py-3 text-right tabular-nums text-slate-400">
                               {money(locale, observed?.expectedCost)}
                             </td>
@@ -271,7 +277,9 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                               {money(locale, assignment?.expectedDelta)}
                             </td>
                             <td className="px-3 py-3">
-                              <span className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}>
+                              <span
+                                className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}
+                              >
                                 {t.decisionLabels[analysis.type]}
                               </span>
                             </td>
@@ -416,9 +424,14 @@ function DecisionDetail({
         {analysis.rejected.length ? (
           <div className="mt-2 space-y-2">
             {analysis.rejected.map((candidate) => (
-              <div key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`} className="border border-white/10 p-3">
+              <div
+                key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`}
+                className="border border-white/10 p-3"
+              >
                 <div className="text-sm font-medium text-slate-300">{candidate.contractorName}</div>
-                {candidate.contractId ? <div className="mt-1 text-xs text-slate-600">{candidate.contractId}</div> : null}
+                {candidate.contractId ? (
+                  <div className="mt-1 text-xs text-slate-600">{candidate.contractId}</div>
+                ) : null}
                 <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-500">
                   {candidate.reasons.map((reason) => (
                     <li key={reason}>• {t.reasons[reason] ?? reason}</li>

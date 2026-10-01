@@ -223,10 +223,7 @@ function numericState(value: number) {
   return Number(value.toFixed(6)).toString()
 }
 
-function optimizeDecisionUnits(
-  scenario: ContractorAllocationScenario,
-  analyses: UnitDecisionAnalysis[]
-): SearchResult {
+function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses: UnitDecisionAnalysis[]): SearchResult {
   const units = buildSearchUnits(analyses)
   if (!units.length) {
     return { status: 'OPTIMAL', selectedByUnit: new Map(), totalCost: 0, exploredNodes: 0 }

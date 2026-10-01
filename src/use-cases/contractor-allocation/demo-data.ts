@@ -245,9 +245,7 @@ function withObservedAllocation(units: AllocationUnit[]) {
     .map((unit) => analyzeAllocationUnit(scenario, unit))
     .map((analysis) => ({
       analysis,
-      costed: analysis.feasible.filter(
-        (candidate) => candidate.expectedCost != null && !candidate.requiresException
-      ),
+      costed: analysis.feasible.filter((candidate) => candidate.expectedCost != null && !candidate.requiresException),
     }))
     .filter(({ analysis }) => analysis.type === 'NO_CHOICE' || analysis.type === 'ALLOCATION_DECISION_REQUIRED')
     .sort(
