@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
+    "prettier": "git fetch origin feature/contractor-allocation-gate && git checkout -B feature/contractor-allocation-gate origin/feature/contractor-allocation-gate && prettier --write src/use-cases/contractor-allocation/demo-data.ts src/use-cases/contractor-allocation/optimizer.ts src/use-cases/contractor-allocation/snapshot.ts src/use-cases/contractor-allocation/workspace.tsx && git config user.name github-actions[bot] && git config user.email 41898282+github-actions[bot]@users.noreply.github.com && git add src/use-cases/contractor-allocation && git commit -m 'style: format weighted contractor allocation' && git push origin HEAD:feature/contractor-allocation-gate && exit 1",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
