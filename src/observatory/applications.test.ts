@@ -12,6 +12,7 @@ test('Observatory discovery exposes system applications and domain use cases fro
       ['resource-allocation', '/resource-allocation'],
       ['supply-network-optimization', '/supply-network-optimization'],
       ['contractor-allocation', '/contractor-allocation'],
+      ['readiness-recovery', '/readiness-recovery'],
       ['gtm-lab', '/gtm-lab'],
     ]
   )
@@ -21,4 +22,5 @@ test('route lookup resolves application subroutes', () => {
   assert.equal(findObservatoryApplicationByRoute('/decision-intake/review')?.id, 'decision-intake')
   assert.equal(findObservatoryApplicationByRoute('/challenges')?.id, 'decision-challenge')
   assert.equal(findObservatoryApplicationByRoute('/contractor-allocation/replay')?.id, 'contractor-allocation')
+  assert.equal(findObservatoryApplicationByRoute('/readiness-recovery/replay')?.id, 'readiness-recovery')
 })

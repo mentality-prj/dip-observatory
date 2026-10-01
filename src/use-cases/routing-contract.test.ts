@@ -26,6 +26,11 @@ const routingContract = [
     load: () => import('./contractor-allocation/workspace').then((module) => module.ContractorAllocationWorkspace),
   },
   {
+    id: 'readiness-recovery',
+    route: '/readiness-recovery',
+    load: () => import('./readiness-recovery/workspace').then((module) => module.ReadinessRecoveryWorkspace),
+  },
+  {
     id: 'gtm-lab',
     route: '/gtm-lab',
     load: () => import('../features/gtm-lab/components/gtm-lab-workspace').then((module) => module.GtmLabWorkspace),
