@@ -343,16 +343,29 @@ function withObservedAllocation(
       contractRemaining.set(contractKey(contractor.id, contract.id), contract.remainingMaxVolume)
   }
   const preference = preset === 'CONTRACT_COMMITMENT' ? commitmentPreference : defaultPreference
-
-  return units.map((unit) => {
-    const analysis = analyzeAllocationUnit(scenario, unit)
-    const ordered = analysis.feasible
-      .filter((candidate) => candidate.expectedCost != null && !candidate.requiresException)
-      .sort(
-        (left, right) =>
-          preference.indexOf(left.contractorId) - preference.indexOf(right.contractorId) ||
-          left.contractId.localeCompare(right.contractId)
+  const observedByUnit = new Map<string, { contractorId: string; contractId: string }>()
+  const work = units
+    .map((unit) => {
+      const analysis = analyzeAllocationUnit(scenario, unit)
+      const costed = analysis.feasible.filter(
+        (candidate) => candidate.expectedCost != null && !candidate.requiresException
       )
+      const contractorChoices = new Set(costed.map((candidate) => candidate.contractorId)).size
+      return { unit, costed, contractorChoices }
+    })
+    .sort(
+      (left, right) =>
+        left.contractorChoices - right.contractorChoices ||
+        right.unit.priority - left.unit.priority ||
+        left.unit.id.localeCompare(right.unit.id)
+    )
+
+  for (const { unit, costed } of work) {
+    const ordered = [...costed].sort(
+      (left, right) =>
+        preference.indexOf(left.contractorId) - preference.indexOf(right.contractorId) ||
+        left.contractId.localeCompare(right.contractId)
+    )
     const selected = ordered.find((candidate) => {
       if ((contractRemaining.get(contractKey(candidate.contractorId, candidate.contractId)) ?? 0) < unit.contractVolume)
         return false
@@ -361,14 +374,29 @@ function withObservedAllocation(
           (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
       )
     })
-    if (!selected) return unit
+    if (!selected) continue
+
     for (const requirement of selected.executionEstimate.capacityRequirements) {
       const key = capacityKey(selected.contractorId, requirement.bucket)
       capacityRemaining.set(key, (capacityRemaining.get(key) ?? 0) - requirement.demand)
     }
     const volumeKey = contractKey(selected.contractorId, selected.contractId)
     contractRemaining.set(volumeKey, (contractRemaining.get(volumeKey) ?? 0) - unit.contractVolume)
-    return { ...unit, observedContractorId: selected.contractorId, observedContractId: selected.contractId }
+    observedByUnit.set(unit.id, {
+      contractorId: selected.contractorId,
+      contractId: selected.contractId,
+    })
+  }
+
+  return units.map((unit) => {
+    const observed = observedByUnit.get(unit.id)
+    return observed
+      ? {
+          ...unit,
+          observedContractorId: observed.contractorId,
+          observedContractId: observed.contractId,
+        }
+      : unit
   })
 }
 

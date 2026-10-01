@@ -324,7 +324,8 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
               <div className="mt-2 space-y-2">
                 {contractor.executionProfiles.map((profile) => (
                   <div key={profile.workType} className="border-t border-white/10 pt-2 text-xs text-slate-400">
-                    <span className="text-slate-200">{profile.workType}</span> · capacity ×{profile.capacityMultiplier}
+                    <span className="text-slate-200">{profile.workType}</span> · {copy.capacity} ×
+                    {profile.capacityMultiplier}
                     {profile.laborHoursPerUnit != null ? ` · ${copy.labor} ${profile.laborHoursPerUnit}h/unit` : ''}
                     {profile.equipmentHoursPerUnit != null
                       ? ` · ${copy.equipment} ${profile.equipmentHoursPerUnit}h/unit`
