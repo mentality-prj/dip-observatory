@@ -1,6 +1,10 @@
 import type { BaselineKind, ReadinessRecoveryResult, RecoveryScenario } from './domain'
 
-export type BenchmarkVerdict = 'QDIP_ADVANTAGE' | 'HEURISTIC_PARITY' | 'HEURISTIC_ADVANTAGE' | 'INSUFFICIENT_EVIDENCE'
+export type BenchmarkVerdict =
+  | 'QDIP_ADVANTAGE'
+  | 'HEURISTIC_PARITY'
+  | 'HEURISTIC_ADVANTAGE'
+  | 'INSUFFICIENT_EVIDENCE'
 export type BenchmarkAdvantageKind = 'CAPABILITY' | 'EFFICIENCY' | 'NONE'
 
 export type ReadinessBenchmark = {
@@ -71,10 +75,13 @@ export function benchmarkReadinessResult(result: ReadinessRecoveryResult): Readi
   const scarcePartsDelta = round(qdip.scarcePartsConsumed - baseline.scarcePartsConsumed)
   const failureRiskDelta = round(qdip.recoveryFailureRisk - baseline.recoveryFailureRisk)
 
-  const qdipCapabilityGain = atLeast(probabilityDelta, 0.05) || atLeast(readinessDelta, 0.03) || atLeast(shortfallReduction, 0.5)
-  const heuristicCapabilityGain = atMost(probabilityDelta, -0.05) || atMost(readinessDelta, -0.03) || atMost(shortfallReduction, -0.5)
+  const qdipCapabilityGain =
+    atLeast(probabilityDelta, 0.05) || atLeast(readinessDelta, 0.03) || atLeast(shortfallReduction, 0.5)
+  const heuristicCapabilityGain =
+    atMost(probabilityDelta, -0.05) || atMost(readinessDelta, -0.03) || atMost(shortfallReduction, -0.5)
   const qdipResourceRegression = technicianHoursDelta > 8 || scarcePartsDelta > 0.75 || failureRiskDelta > 0.1
-  const heuristicResourceRegression = technicianHoursDelta < -8 || scarcePartsDelta < -0.75 || failureRiskDelta < -0.1
+  const heuristicResourceRegression =
+    technicianHoursDelta < -8 || scarcePartsDelta < -0.75 || failureRiskDelta < -0.1
 
   const capabilityEquivalent =
     Math.abs(probabilityDelta) < 0.05 && Math.abs(readinessDelta) < 0.03 && Math.abs(shortfallReduction) < 0.5
@@ -84,7 +91,10 @@ export function benchmarkReadinessResult(result: ReadinessRecoveryResult): Readi
     technicianHoursDelta <= 0 &&
     scarcePartsDelta <= 0 &&
     failureRiskDelta <= 0 &&
-    (recoveryTimeDeltaHours <= -4 || technicianHoursDelta <= -4 || scarcePartsDelta <= -0.5 || failureRiskDelta <= -0.05)
+    (recoveryTimeDeltaHours <= -4 ||
+      technicianHoursDelta <= -4 ||
+      scarcePartsDelta <= -0.5 ||
+      failureRiskDelta <= -0.05)
   const heuristicEfficiencyGain =
     capabilityEquivalent &&
     recoveryTimeDeltaHours >= 0 &&
