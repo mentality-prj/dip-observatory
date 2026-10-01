@@ -13,9 +13,11 @@ const translations: Record<ScenarioLabel, string> = {
 
 describe('Readiness Recovery scenario badges', () => {
   it('keeps every objective role instead of collapsing to the primary label', () => {
-    expect(
-      scenarioRoles('MAXIMUM_READINESS', ['MAXIMUM_READINESS', 'FAST_RECOVERY', 'LOW_RISK'])
-    ).toEqual(['MAXIMUM_READINESS', 'FAST_RECOVERY', 'LOW_RISK'])
+    expect(scenarioRoles('MAXIMUM_READINESS', ['MAXIMUM_READINESS', 'FAST_RECOVERY', 'LOW_RISK'])).toEqual([
+      'MAXIMUM_READINESS',
+      'FAST_RECOVERY',
+      'LOW_RISK',
+    ])
   })
 
   it('renders all objective roles for one scenario', () => {

@@ -311,7 +311,9 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <ScenarioBadges label={scenario.label} labels={scenario.labels} translations={t.labels} />
-                      <span className="shrink-0 font-mono text-xs text-slate-600">{scenario.selectedActions.length}</span>
+                      <span className="shrink-0 font-mono text-xs text-slate-600">
+                        {scenario.selectedActions.length}
+                      </span>
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                       <SmallMetric label={t.probability} value={percent(locale, scenario.probabilityDemandSatisfied)} />
