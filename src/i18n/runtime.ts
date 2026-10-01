@@ -2,14 +2,25 @@ import en from './messages/en.json'
 import uk from './messages/uk.json'
 import pl from './messages/pl.json'
 import { LOCALE_TAGS, type Locale } from './config'
+import { USE_CASE_MESSAGE_ADDITIONS } from './use-case-additions'
 
 export type MessageCatalog = typeof en
 type MessageValue = string | number | boolean | null | MessageValue[] | { [key: string]: MessageValue }
 
+function withUseCaseAdditions(catalog: MessageCatalog, locale: Locale): MessageCatalog {
+  return {
+    ...catalog,
+    useCases: {
+      ...catalog.useCases,
+      ...USE_CASE_MESSAGE_ADDITIONS[locale],
+    },
+  } as MessageCatalog
+}
+
 const catalogs: Record<Locale, MessageCatalog> = {
-  en,
-  uk: uk as MessageCatalog,
-  pl: pl as MessageCatalog,
+  en: withUseCaseAdditions(en, 'en'),
+  uk: withUseCaseAdditions(uk as MessageCatalog, 'uk'),
+  pl: withUseCaseAdditions(pl as MessageCatalog, 'pl'),
 }
 
 function resolvePath(root: MessageValue, path: string): MessageValue | undefined {
