@@ -148,7 +148,10 @@ function ScenarioSnapshot({
   locale: Locale
 }) {
   const formatter = new Intl.NumberFormat(LOCALE_TAGS[locale], { maximumFractionDigits: 2 })
-  const percentFormatter = new Intl.NumberFormat(LOCALE_TAGS[locale], { style: 'percent', maximumFractionDigits: 1 })
+  const percentFormatter = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  })
   return (
     <div className="border border-white/10 bg-black/10 p-4">
       <div className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">{label}</div>
