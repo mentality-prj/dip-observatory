@@ -6,6 +6,7 @@ import { GtmLabWorkspace } from '@/features/gtm-lab/components/gtm-lab-workspace
 import { ResourceAllocationWorkspace } from '@/features/resource-allocation/components/resource-allocation-workspace'
 import { SupplyNetworkOptimizationWorkspace } from '@/features/supply-network-optimization/workspace'
 import type { Locale } from '@/lib/observatory-i18n'
+import { ContractorAllocationWorkspace } from '@/use-cases/contractor-allocation/workspace'
 import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
 export type ApplicationFrontendProps = { locale: Locale }
@@ -13,6 +14,7 @@ export type ApplicationFrontendProps = { locale: Locale }
 const frontends = {
   'resource-allocation': ResourceAllocationWorkspace,
   'supply-network-optimization': SupplyNetworkOptimizationWorkspace,
+  'contractor-allocation': ContractorAllocationWorkspace,
   'gtm-lab': GtmLabWorkspace,
 } satisfies Record<UseCaseId, ComponentType<ApplicationFrontendProps>>
 
