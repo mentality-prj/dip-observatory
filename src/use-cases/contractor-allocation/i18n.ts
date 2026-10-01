@@ -27,6 +27,9 @@ export type ContractorAllocationCopy = {
   allocationAdvantage: string
   choiceSpread: string
   unresolved: string
+  coverage: string
+  reservations: string
+  globalChoiceUnknown: string
   decisionSpace: string
   decisionSpaceHint: string
   allocationTable: string
@@ -66,9 +69,12 @@ export type ContractorAllocationCopy = {
   reasons: Record<string, string>
   status: {
     OPTIMAL: string
+    PARTIAL_OPTIMAL: string
     FEASIBLE_NOT_PROVEN: string
+    PARTIAL_FEASIBLE_NOT_PROVEN: string
     INFEASIBLE: string
     UNKNOWN: string
+    INVALID_INPUT: string
   }
   modelEstimate: string
 }
@@ -78,14 +84,14 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     eyebrow: 'QDIP · CONTRACTOR ALLOCATION',
     title: 'Contractor Allocation',
     subtitle:
-      'Replay approved work against independently supplied scope, contract and time-bucketed capacity inputs. QDIP assigns only where a costable feasible contractor exists.',
+      'Replay approved work against trusted scope, contract and time-bucketed capacity inputs. Cost-uncertain work reserves resources but is never presented as an economic assignment.',
     run: 'Run allocation gate',
     rerun: 'Recalculate allocation',
     synthetic: 'Synthetic historical replay',
     counterfactualNote: 'Counterfactual model estimate, not realized savings.',
     authorityTitle: 'Trusted input boundary',
     authorityIntro:
-      'Decision-driving inputs are accepted only from their authoritative source and only if captured by the decision date.',
+      'Decision-driving provenance references a server-owned trusted-adapter registry; callers cannot self-declare an authoritative role.',
     authority: {
       inspector: { title: 'Inspector', body: 'Owns scope, quantity, location and technical requirements.' },
       procurement: {
@@ -94,7 +100,7 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       },
       operations: {
         title: 'Operations',
-        body: 'Owns execution deadlines, time-bucketed capacity, equipment and resource estimates.',
+        body: 'Owns execution windows, deadlines, time-bucketed capacity, equipment and resource estimates.',
       },
       planner: {
         title: 'Planner',
@@ -105,15 +111,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     stressNone: 'All contractors available',
     stressHelp: 'Set all capacity buckets for one contractor to zero and recalculate the portfolio.',
     summaryTitle: 'Economic decision summary',
-    spendWithChoice: 'Spend with contractor choice',
-    unitsWithChoice: 'Units with choice',
+    spendWithChoice: 'Spend with global contractor choice',
+    unitsWithChoice: 'Units with global choice',
     observedSpend: 'Observed expected spend',
     qdipSpend: 'QDIP expected spend',
     allocationAdvantage: 'Counterfactual allocation advantage',
-    choiceSpread: 'Spend-weighted choice spread',
+    choiceSpread: 'Spend-weighted global choice spread',
     unresolved: 'Blocked / exception units',
-    decisionSpace: 'Decision space',
-    decisionSpaceHint: 'Only units with costable feasible contractors enter portfolio optimization.',
+    coverage: 'Economic coverage',
+    reservations: 'Cost-uncertain reservations',
+    globalChoiceUnknown: 'Choice feasibility unresolved',
+    decisionSpace: 'Global decision space',
+    decisionSpaceHint:
+      'A unit counts as discretionary only when at least two contractor choices can each belong to a globally feasible portfolio under the same constraints.',
     allocationTable: 'Allocation replay',
     unit: 'Unit',
     scope: 'Scope',
@@ -137,19 +147,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     exploredNodes: 'Search nodes',
     filters: {
       all: 'All',
-      ALLOCATION_DECISION_REQUIRED: 'Choice',
-      NO_CHOICE: 'No choice',
+      ALLOCATION_DECISION_REQUIRED: 'Local choice',
+      NO_CHOICE: 'No local choice',
       EXCEPTION_REQUIRED: 'Exception',
       INFEASIBLE: 'Blocked',
     },
     decisionLabels: {
-      ALLOCATION_DECISION_REQUIRED: 'Allocation decision',
-      NO_CHOICE: 'No contractor choice',
+      ALLOCATION_DECISION_REQUIRED: 'Local allocation alternatives',
+      NO_CHOICE: 'No local contractor choice',
       EXCEPTION_REQUIRED: 'Cost exception required',
       INFEASIBLE: 'No feasible contractor',
     },
     reasons: {
-      CONTRACT_EXPIRED: 'Contract is not active at the decision date.',
+      CONTRACT_OUTSIDE_EXECUTION_WINDOW: 'Contract validity does not cover the planned execution window.',
       NOT_APPROVED: 'Contractor is not approved.',
       TERRITORY_NOT_ALLOWED: 'Contract does not cover this territory.',
       WORK_TYPE_NOT_ALLOWED: 'Contract does not cover this work type.',
@@ -157,17 +167,21 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       CAPACITY_BUCKET_MISSING: 'No authoritative capacity exists for a required execution bucket.',
       MISSING_EQUIPMENT: 'Required equipment is unavailable.',
       MISSING_CERTIFICATION: 'Required certification is unavailable.',
-      SLA_IMPOSSIBLE: 'The execution bucket is later than the required deadline.',
+      SLA_IMPOSSIBLE: 'The planned execution window exceeds the operational deadline.',
       CONTRACT_VOLUME_LIMIT: 'Remaining contract volume is insufficient.',
       RATE_NOT_CONFIGURED: 'No authoritative rate is configured for this work.',
-      UNTRUSTED_INPUT: 'A decision-driving input is missing authoritative provenance or uses future information.',
+      UNTRUSTED_INPUT: 'A decision-driving input does not resolve to the required trusted adapter or uses future information.',
+      INVALID_SCENARIO_INPUT: 'Scenario invariants are invalid.',
       'T&E_REQUIRES_EXCEPTION': 'Time-and-equipment hours cannot be estimated from trusted inputs.',
     },
     status: {
-      OPTIMAL: 'Optimal portfolio proven',
-      FEASIBLE_NOT_PROVEN: 'Feasible portfolio found; optimum not proven',
-      INFEASIBLE: 'Portfolio infeasible',
+      OPTIMAL: 'Complete optimal portfolio proven',
+      PARTIAL_OPTIMAL: 'Covered work optimized; unknown-cost work reserved',
+      FEASIBLE_NOT_PROVEN: 'Complete feasible portfolio found; optimum not proven',
+      PARTIAL_FEASIBLE_NOT_PROVEN: 'Partial feasible portfolio found; optimum not proven',
+      INFEASIBLE: 'Complete portfolio infeasible',
       UNKNOWN: 'Search limit reached before feasibility was established',
+      INVALID_INPUT: 'Scenario rejected: invalid or untrusted input',
     },
     modelEstimate: 'Synthetic data · deterministic constrained allocation · no fraud or motive inference',
   },
@@ -175,14 +189,14 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     eyebrow: 'QDIP · РОЗПОДІЛ РОБІТ МІЖ ПІДРЯДНИКАМИ',
     title: 'Розподіл робіт між підрядниками',
     subtitle:
-      'Повторне програвання затверджених робіт на незалежно отриманих даних про обсяг, договори та потужність за часовими періодами. QDIP призначає підрядника лише за наявності допустимого варіанта з обчислюваною вартістю.',
+      'Повторне програвання затверджених робіт на довірених даних про обсяг, договори та потужність за часовими періодами. Роботи з невідомою вартістю резервують ресурси, але не видаються за економічне призначення.',
     run: 'Запустити контроль розподілу',
     rerun: 'Перерахувати розподіл',
     synthetic: 'Синтетичне історичне відтворення',
     counterfactualNote: 'Контрфактична модельна оцінка, а не фактично отримана економія.',
     authorityTitle: 'Межа довірених даних',
     authorityIntro:
-      'Дані, що визначають рішення, приймаються лише від їхнього відповідального джерела і лише якщо вони були доступні на дату рішення.',
+      'Походження входів посилається на серверний реєстр довірених адаптерів; виклик не може сам оголосити себе авторитетною роллю.',
     authority: {
       inspector: { title: 'Інспектор', body: 'Визначає обсяг робіт, кількість, місце та технічні вимоги.' },
       procurement: {
@@ -191,7 +205,7 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       },
       operations: {
         title: 'Операції',
-        body: 'Надають строки виконання, потужність за часовими періодами, обладнання та оцінки ресурсів.',
+        body: 'Надають вікна виконання, строки, потужність за періодами, обладнання та оцінки ресурсів.',
       },
       planner: {
         title: 'Планувальник',
@@ -202,16 +216,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     stressNone: 'Усі підрядники доступні',
     stressHelp: 'Встановіть одному підряднику нульову потужність у всіх часових періодах і перерахуйте портфель.',
     summaryTitle: 'Економічний підсумок рішення',
-    spendWithChoice: 'Витрати, де є вибір підрядника',
-    unitsWithChoice: 'Роботи з вибором',
+    spendWithChoice: 'Витрати з глобальним вибором підрядника',
+    unitsWithChoice: 'Роботи з глобальним вибором',
     observedSpend: 'Очікувані витрати фактичного розподілу',
     qdipSpend: 'Очікувані витрати QDIP',
     allocationAdvantage: 'Контрфактична перевага розподілу',
-    choiceSpread: 'Зважена за витратами різниця між варіантами',
+    choiceSpread: 'Зважена різниця глобально допустимих варіантів',
     unresolved: 'Заблоковані роботи / винятки',
-    decisionSpace: 'Простір рішень',
+    coverage: 'Економічне покриття',
+    reservations: 'Резервування з невідомою вартістю',
+    globalChoiceUnknown: 'Глобальний вибір не доведено',
+    decisionSpace: 'Глобальний простір рішень',
     decisionSpaceHint:
-      'До оптимізації портфеля входять лише роботи з допустимими підрядниками та обчислюваною вартістю.',
+      'Робота вважається дискреційною лише якщо щонайменше два варіанти підрядника можуть входити до глобально допустимого портфеля за тих самих обмежень.',
     allocationTable: 'Повторне програвання розподілу',
     unit: 'Робота',
     scope: 'Обсяг',
@@ -235,19 +252,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     exploredNodes: 'Перевірено вузлів пошуку',
     filters: {
       all: 'Усі',
-      ALLOCATION_DECISION_REQUIRED: 'Є вибір',
-      NO_CHOICE: 'Без вибору',
+      ALLOCATION_DECISION_REQUIRED: 'Локальний вибір',
+      NO_CHOICE: 'Без локального вибору',
       EXCEPTION_REQUIRED: 'Виняток',
       INFEASIBLE: 'Заблоковано',
     },
     decisionLabels: {
-      ALLOCATION_DECISION_REQUIRED: 'Потрібен розподіл',
-      NO_CHOICE: 'Немає вибору підрядника',
+      ALLOCATION_DECISION_REQUIRED: 'Локальні альтернативи розподілу',
+      NO_CHOICE: 'Немає локального вибору підрядника',
       EXCEPTION_REQUIRED: 'Потрібен виняток для вартості',
       INFEASIBLE: 'Немає допустимого підрядника',
     },
     reasons: {
-      CONTRACT_EXPIRED: 'Договір не чинний на дату рішення.',
+      CONTRACT_OUTSIDE_EXECUTION_WINDOW: 'Строк дії договору не покриває заплановане вікно виконання.',
       NOT_APPROVED: 'Підрядник не затверджений.',
       TERRITORY_NOT_ALLOWED: 'Договір не покриває цю територію.',
       WORK_TYPE_NOT_ALLOWED: 'Договір не покриває цей тип робіт.',
@@ -255,17 +272,21 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       CAPACITY_BUCKET_MISSING: 'Для потрібного періоду немає підтверджених даних про потужність.',
       MISSING_EQUIPMENT: 'Немає необхідного обладнання.',
       MISSING_CERTIFICATION: 'Немає необхідної сертифікації.',
-      SLA_IMPOSSIBLE: 'Період виконання виходить за потрібний строк.',
+      SLA_IMPOSSIBLE: 'Заплановане вікно виконання виходить за операційний строк.',
       CONTRACT_VOLUME_LIMIT: 'Залишку обсягу договору недостатньо.',
       RATE_NOT_CONFIGURED: 'Для цієї роботи немає підтвердженої ставки.',
-      UNTRUSTED_INPUT: 'Вхід, що впливає на рішення, не має авторитетного походження або зʼявився після дати рішення.',
+      UNTRUSTED_INPUT: 'Вхід не посилається на потрібний довірений адаптер або містить інформацію з майбутнього.',
+      INVALID_SCENARIO_INPUT: 'Порушено інваріанти сценарію.',
       'T&E_REQUIRES_EXCEPTION': 'Години праці та обладнання неможливо оцінити з довірених даних.',
     },
     status: {
-      OPTIMAL: 'Оптимальність портфеля доведено',
-      FEASIBLE_NOT_PROVEN: 'Допустимий портфель знайдено, але оптимальність не доведено',
-      INFEASIBLE: 'Портфель недопустимий',
+      OPTIMAL: 'Повну оптимальність портфеля доведено',
+      PARTIAL_OPTIMAL: 'Покриті роботи оптимізовано; роботи з невідомою вартістю зарезервовано',
+      FEASIBLE_NOT_PROVEN: 'Повний допустимий портфель знайдено, але оптимальність не доведено',
+      PARTIAL_FEASIBLE_NOT_PROVEN: 'Частковий допустимий портфель знайдено, але оптимальність не доведено',
+      INFEASIBLE: 'Повний портфель недопустимий',
       UNKNOWN: 'Ліміт пошуку досягнуто до встановлення допустимості',
+      INVALID_INPUT: 'Сценарій відхилено через недійсні або недовірені входи',
     },
     modelEstimate: 'Синтетичні дані · детермінований розподіл з обмеженнями · без оцінки шахрайства чи мотивів',
   },
@@ -273,14 +294,14 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     eyebrow: 'QDIP · PRZYDZIAŁ PRAC WYKONAWCOM',
     title: 'Przydział prac wykonawcom',
     subtitle:
-      'Odtworzenie zatwierdzonych prac na niezależnie dostarczonych danych o zakresie, umowach i mocy w przedziałach czasu. QDIP przydziela wykonawcę tylko wtedy, gdy istnieje wykonalna opcja z obliczalnym kosztem.',
+      'Odtworzenie zatwierdzonych prac na zaufanych danych o zakresie, umowach i mocy w przedziałach czasu. Prace o nieznanym koszcie rezerwują zasoby, ale nie są prezentowane jako ekonomiczny przydział.',
     run: 'Uruchom kontrolę przydziału',
     rerun: 'Przelicz przydział',
     synthetic: 'Syntetyczne odtworzenie historyczne',
     counterfactualNote: 'Kontrfaktyczna estymacja modelu, a nie zrealizowana oszczędność.',
     authorityTitle: 'Granica zaufanych danych',
     authorityIntro:
-      'Dane wpływające na decyzję są akceptowane wyłącznie od odpowiedzialnego źródła i tylko wtedy, gdy były dostępne w dniu decyzji.',
+      'Pochodzenie danych odwołuje się do serwerowego rejestru zaufanych adapterów; wywołujący nie może sam nadać sobie roli źródła autorytatywnego.',
     authority: {
       inspector: { title: 'Inspektor', body: 'Określa zakres, ilość, lokalizację i wymagania techniczne.' },
       procurement: {
@@ -289,7 +310,7 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       },
       operations: {
         title: 'Operacje',
-        body: 'Dostarczają terminy, moc w przedziałach czasu, sprzęt i estymacje zasobów.',
+        body: 'Dostarczają okna wykonania, terminy, moc w przedziałach czasu, sprzęt i estymacje zasobów.',
       },
       planner: {
         title: 'Planista',
@@ -300,15 +321,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     stressNone: 'Wszyscy wykonawcy dostępni',
     stressHelp: 'Ustaw jednemu wykonawcy zerową moc we wszystkich przedziałach i przelicz portfel.',
     summaryTitle: 'Ekonomiczne podsumowanie decyzji',
-    spendWithChoice: 'Wydatki z wyborem wykonawcy',
-    unitsWithChoice: 'Prace z wyborem',
+    spendWithChoice: 'Wydatki z globalnym wyborem wykonawcy',
+    unitsWithChoice: 'Prace z globalnym wyborem',
     observedSpend: 'Oczekiwany koszt obserwowanego przydziału',
     qdipSpend: 'Oczekiwany koszt QDIP',
     allocationAdvantage: 'Kontrfaktyczna przewaga przydziału',
-    choiceSpread: 'Ważone wydatkami zróżnicowanie opcji',
+    choiceSpread: 'Ważone wydatkami zróżnicowanie globalnie wykonalnych opcji',
     unresolved: 'Prace zablokowane / wyjątki',
-    decisionSpace: 'Przestrzeń decyzji',
-    decisionSpaceHint: 'Do optymalizacji trafiają tylko prace z wykonalnymi wykonawcami i obliczalnym kosztem.',
+    coverage: 'Pokrycie ekonomiczne',
+    reservations: 'Rezerwacje o nieznanym koszcie',
+    globalChoiceUnknown: 'Nieustalona wykonalność wyboru',
+    decisionSpace: 'Globalna przestrzeń decyzji',
+    decisionSpaceHint:
+      'Praca jest uznawana za dyskrecjonalną tylko wtedy, gdy co najmniej dwa wybory wykonawcy mogą należeć do globalnie wykonalnego portfela przy tych samych ograniczeniach.',
     allocationTable: 'Odtworzenie przydziału',
     unit: 'Praca',
     scope: 'Zakres',
@@ -332,19 +357,19 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
     exploredNodes: 'Węzły wyszukiwania',
     filters: {
       all: 'Wszystkie',
-      ALLOCATION_DECISION_REQUIRED: 'Jest wybór',
-      NO_CHOICE: 'Bez wyboru',
+      ALLOCATION_DECISION_REQUIRED: 'Wybór lokalny',
+      NO_CHOICE: 'Bez wyboru lokalnego',
       EXCEPTION_REQUIRED: 'Wyjątek',
       INFEASIBLE: 'Zablokowane',
     },
     decisionLabels: {
-      ALLOCATION_DECISION_REQUIRED: 'Decyzja przydziału',
-      NO_CHOICE: 'Brak wyboru wykonawcy',
+      ALLOCATION_DECISION_REQUIRED: 'Lokalne alternatywy przydziału',
+      NO_CHOICE: 'Brak lokalnego wyboru wykonawcy',
       EXCEPTION_REQUIRED: 'Wymagany wyjątek kosztowy',
       INFEASIBLE: 'Brak wykonalnego wykonawcy',
     },
     reasons: {
-      CONTRACT_EXPIRED: 'Umowa nie jest aktywna w dniu decyzji.',
+      CONTRACT_OUTSIDE_EXECUTION_WINDOW: 'Okres obowiązywania umowy nie obejmuje planowanego okna wykonania.',
       NOT_APPROVED: 'Wykonawca nie jest zatwierdzony.',
       TERRITORY_NOT_ALLOWED: 'Umowa nie obejmuje tego obszaru.',
       WORK_TYPE_NOT_ALLOWED: 'Umowa nie obejmuje tego rodzaju pracy.',
@@ -352,18 +377,21 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       CAPACITY_BUCKET_MISSING: 'Brakuje autorytatywnych danych o mocy dla wymaganego przedziału.',
       MISSING_EQUIPMENT: 'Brak wymaganego sprzętu.',
       MISSING_CERTIFICATION: 'Brak wymaganej certyfikacji.',
-      SLA_IMPOSSIBLE: 'Przedział wykonania wykracza poza wymagany termin.',
+      SLA_IMPOSSIBLE: 'Planowane okno wykonania wykracza poza termin operacyjny.',
       CONTRACT_VOLUME_LIMIT: 'Pozostały wolumen umowy jest niewystarczający.',
       RATE_NOT_CONFIGURED: 'Brak zatwierdzonej stawki dla tej pracy.',
-      UNTRUSTED_INPUT:
-        'Dane wpływające na decyzję nie mają autorytatywnego pochodzenia albo powstały po dacie decyzji.',
+      UNTRUSTED_INPUT: 'Dane nie wskazują wymaganego zaufanego adaptera albo wykorzystują informacje z przyszłości.',
+      INVALID_SCENARIO_INPUT: 'Naruszono niezmienniki scenariusza.',
       'T&E_REQUIRES_EXCEPTION': 'Nie można oszacować godzin pracy i sprzętu na podstawie zaufanych danych.',
     },
     status: {
-      OPTIMAL: 'Optymalność portfela została udowodniona',
-      FEASIBLE_NOT_PROVEN: 'Znaleziono wykonalny portfel, ale nie udowodniono optymalności',
-      INFEASIBLE: 'Portfel niewykonalny',
+      OPTIMAL: 'Udowodniono optymalność pełnego portfela',
+      PARTIAL_OPTIMAL: 'Pokryte prace zoptymalizowano; prace o nieznanym koszcie zarezerwowano',
+      FEASIBLE_NOT_PROVEN: 'Znaleziono pełny wykonalny portfel, ale nie udowodniono optymalności',
+      PARTIAL_FEASIBLE_NOT_PROVEN: 'Znaleziono częściowy wykonalny portfel, ale nie udowodniono optymalności',
+      INFEASIBLE: 'Pełny portfel jest niewykonalny',
       UNKNOWN: 'Osiągnięto limit wyszukiwania przed ustaleniem wykonalności',
+      INVALID_INPUT: 'Scenariusz odrzucono z powodu nieprawidłowych lub niezaufanych danych',
     },
     modelEstimate: 'Dane syntetyczne · deterministyczny przydział z ograniczeniami · bez oceny nadużyć ani motywów',
   },
