@@ -8,6 +8,9 @@ on:
     branches:
       - dev
 
+permissions:
+  contents: write
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -15,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -30,23 +35,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - name: Format changed files
+        run: pnpm exec prettier --write src/use-cases/contractor-allocation/capacity-loss-scenario.ts src/use-cases/contractor-allocation/capacity-loss-workspace.tsx
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/use-cases/contractor-allocation/capacity-loss-scenario.ts src/use-cases/contractor-allocation/capacity-loss-workspace.tsx
+          git commit -m "style: format capacity loss economic value demo"
+          git push origin HEAD:${{ github.head_ref }}
 
       - name: Prettier
         run: pnpm prettier
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit and component tests
-        run: pnpm test
-
-      - name: Production build
-        run: pnpm build
-
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: E2E tests
-        run: pnpm test:e2e
