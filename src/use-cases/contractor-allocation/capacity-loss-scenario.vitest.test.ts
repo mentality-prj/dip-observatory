@@ -28,6 +28,40 @@ describe('contractor capacity loss recovery scenario', () => {
     expect(scenario.units.some((unit) => unit.id === '314X4_22-METT' && unit.quantity === 5.97)).toBe(true)
   })
 
+  it('keeps historical evidence separate from synthetic recovery assumptions', () => {
+    const scenario = buildContractorCapacityLossScenario()
+
+    expect(scenario.constraintCoverageStatus).toBe('UNKNOWN')
+    expect(
+      scenario.units.every(
+        (unit) =>
+          unit.provenance.scope.evidenceKind === 'HISTORICAL_PUBLIC' &&
+          unit.provenance.quantity.evidenceKind === 'HISTORICAL_PUBLIC' &&
+          unit.provenance.workType.evidenceKind === 'HISTORICAL_PUBLIC'
+      )
+    ).toBe(true)
+    expect(
+      scenario.units.every(
+        (unit) =>
+          unit.provenance.executionWindow.evidenceKind === 'SYNTHETIC_ASSUMPTION' &&
+          unit.provenance.capacityRequirements.evidenceKind === 'SYNTHETIC_ASSUMPTION' &&
+          unit.provenance.contractVolume.evidenceKind === 'SYNTHETIC_ASSUMPTION'
+      )
+    ).toBe(true)
+    expect(
+      scenario.contractors.every(
+        (contractor) =>
+          contractor.provenance.capacityBuckets.evidenceKind === 'SYNTHETIC_ASSUMPTION' &&
+          contractor.provenance.executionProfiles.evidenceKind === 'SYNTHETIC_ASSUMPTION' &&
+          contractor.contracts.every(
+            (contract) =>
+              contract.provenance.eligibility.evidenceKind === 'SYNTHETIC_ASSUMPTION' &&
+              contract.provenance.rates.evidenceKind === 'SYNTHETIC_ASSUMPTION'
+          )
+      )
+    ).toBe(true)
+  })
+
   it('models procurement as a completed synthetic rebid handoff without per-slice mobilization artifacts', () => {
     const scenario = buildContractorCapacityLossScenario()
     const recoveryBidders = scenario.contractors.filter((contractor) => contractor.id !== 'synthetic-incumbent')
@@ -43,7 +77,7 @@ describe('contractor capacity loss recovery scenario', () => {
     ).toBe(true)
   })
 
-  it('reallocates the full 266.21-mile scope across multiple recovery bidders after the incumbent loses capacity', () => {
+  it('reallocates the full 266.21-mile scope without manufacturing an economic-advantage claim', () => {
     const scenario = buildContractorCapacityLossScenario()
     const result = optimizeContractorAllocation(scenario)
     const unitById = new Map(scenario.units.map((unit) => [unit.id, unit]))
