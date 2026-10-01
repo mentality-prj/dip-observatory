@@ -6,6 +6,7 @@ import { RefreshCw, SlidersHorizontal } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
   buildContractorCapacityLossScenario,
+  CAPACITY_LOSS_MODEL_ASSUMPTIONS,
   EVERSOURCE_CAPACITY_LOSS_CIRCUITS,
   EVERSOURCE_CAPACITY_LOSS_FACTS,
 } from './capacity-loss-scenario'
@@ -21,7 +22,7 @@ const copy = {
     run: 'Run QDIP recovery allocation',
     rerun: 'Recalculate recovery allocation',
     status: 'Model status',
-    feasible: 'Feasible minimum-cost portfolio',
+    feasible: 'Feasible minimum-cost synthetic portfolio',
     miles: 'Allocated scope',
     contractors: 'Synthetic recovery bidders used',
     spend: 'Synthetic expected recovery spend',
@@ -34,6 +35,17 @@ const copy = {
     after: 'QDIP recovery bidder',
     cost: 'Synthetic expected cost',
     synthetic: 'Historically grounded simulation · synthetic post-rebid economics',
+    auditTitle: 'Evidence & economic-value gate',
+    historicalEvidence: 'Historical evidence',
+    historicalEvidenceValue: 'Circuit IDs + SMT/METT miles',
+    syntheticEvidence: 'Synthetic assumptions',
+    syntheticEvidenceValue: 'Bids, capacity, productivity, eligibility',
+    coverage: 'Constraint coverage',
+    coverageValue: 'UNKNOWN · demo assumptions',
+    economicValue: 'Economic advantage',
+    economicValueValue: 'NOT ESTABLISHED',
+    auditNote:
+      'This replay proves feasible portfolio reallocation under stated synthetic assumptions. It does not prove historical savings or realized economic value. Capacity is an aggregate synthetic recovery budget represented by the optimizer bucket 2022-01.',
   },
   uk: {
     eyebrow: 'QDIP · RECOVERY ПІСЛЯ ВТРАТИ ПОТУЖНОСТІ EVERSOURCE',
@@ -43,7 +55,7 @@ const copy = {
     run: 'Запустити recovery allocation QDIP',
     rerun: 'Перерахувати recovery allocation',
     status: 'Статус моделі',
-    feasible: 'Допустимий мінімальний за вартістю портфель',
+    feasible: 'Допустимий мінімальний за вартістю synthetic portfolio',
     miles: 'Розподілений scope',
     contractors: 'Використані synthetic recovery bidders',
     spend: 'Синтетична очікувана вартість recovery',
@@ -56,6 +68,17 @@ const copy = {
     after: 'Recovery bidder QDIP',
     cost: 'Синтетична очікувана вартість',
     synthetic: 'Історично обґрунтована симуляція · синтетична post-rebid economics',
+    auditTitle: 'Evidence & economic-value gate',
+    historicalEvidence: 'Історичні дані',
+    historicalEvidenceValue: 'Circuit IDs + SMT/METT miles',
+    syntheticEvidence: 'Синтетичні припущення',
+    syntheticEvidenceValue: 'Bids, capacity, productivity, eligibility',
+    coverage: 'Покриття constraints',
+    coverageValue: 'UNKNOWN · demo assumptions',
+    economicValue: 'Економічна перевага',
+    economicValueValue: 'НЕ ДОВЕДЕНА',
+    auditNote:
+      'Цей replay доводить допустимість портфельного перерозподілу за заданих synthetic assumptions. Він не доводить історичну економію або realized economic value. Capacity — агрегований synthetic recovery budget, представлений optimizer bucket 2022-01.',
   },
   pl: {
     eyebrow: 'QDIP · RECOVERY PO UTRACIE MOCY EVERSOURCE',
@@ -65,7 +88,7 @@ const copy = {
     run: 'Uruchom recovery allocation QDIP',
     rerun: 'Przelicz recovery allocation',
     status: 'Status modelu',
-    feasible: 'Wykonalny portfel o minimalnym koszcie',
+    feasible: 'Wykonalny syntetyczny portfel o minimalnym koszcie',
     miles: 'Przydzielony zakres',
     contractors: 'Użyci syntetyczni oferenci recovery',
     spend: 'Syntetyczny oczekiwany koszt recovery',
@@ -78,6 +101,17 @@ const copy = {
     after: 'Oferent recovery QDIP',
     cost: 'Syntetyczny oczekiwany koszt',
     synthetic: 'Historycznie ugruntowana symulacja · syntetyczna ekonomika po rebid',
+    auditTitle: 'Evidence & economic-value gate',
+    historicalEvidence: 'Dane historyczne',
+    historicalEvidenceValue: 'Circuit IDs + SMT/METT miles',
+    syntheticEvidence: 'Założenia syntetyczne',
+    syntheticEvidenceValue: 'Bids, capacity, productivity, eligibility',
+    coverage: 'Pokrycie constraints',
+    coverageValue: 'UNKNOWN · demo assumptions',
+    economicValue: 'Przewaga ekonomiczna',
+    economicValueValue: 'NIE POTWIERDZONA',
+    auditNote:
+      'Replay potwierdza wykonalną realokację portfela przy zadanych syntetycznych założeniach. Nie potwierdza historycznych oszczędności ani realized economic value. Capacity jest agregowanym syntetycznym recovery budget reprezentowanym przez bucket optymalizatora 2022-01.',
   },
 } as const
 
@@ -124,25 +158,30 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
             onClick={() => setResult(optimizeContractorAllocation(scenario))}
             className="mt-6 inline-flex items-center justify-center gap-2 bg-sky-400 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-sky-300"
           >
-            {result ? (
-              <RefreshCw className="h-4 w-4" aria-hidden />
-            ) : (
-              <SlidersHorizontal className="h-4 w-4" aria-hidden />
-            )}
+            {result ? <RefreshCw className="h-4 w-4" aria-hidden /> : <SlidersHorizontal className="h-4 w-4" aria-hidden />}
             {result ? t.rerun : t.run}
           </button>
         </header>
 
         <CapacityLossStory locale={locale} scenario={scenario} result={result} />
 
+        <section className="mt-5 border border-amber-300/20 bg-amber-300/[.035] p-4 md:p-5">
+          <div className="text-xs font-semibold uppercase tracking-[.12em] text-amber-200">{t.auditTitle}</div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Metric label={t.historicalEvidence} value={t.historicalEvidenceValue} />
+            <Metric label={t.syntheticEvidence} value={t.syntheticEvidenceValue} />
+            <Metric label={t.coverage} value={t.coverageValue} />
+            <Metric label={t.economicValue} value={t.economicValueValue} />
+          </div>
+          <p className="mt-4 max-w-5xl text-xs leading-5 text-slate-400">{t.auditNote}</p>
+          <span className="sr-only">{CAPACITY_LOSS_MODEL_ASSUMPTIONS.capacityHorizon}</span>
+        </section>
+
         {result ? (
           <>
             <section className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <Metric label={t.status} value={result.status === 'OPTIMAL' ? t.feasible : result.status} />
-              <Metric
-                label={t.miles}
-                value={`${allocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} mi`}
-              />
+              <Metric label={t.miles} value={`${allocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} mi`} />
               <Metric label={t.contractors} value={String(recoveryBidders)} />
               <Metric label={t.spend} value={money(locale, result.qdipExpectedSpend)} />
             </section>
@@ -171,19 +210,13 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
                       const circuit = unit ? circuitById.get(unit.scopeId) : undefined
                       return (
                         <tr key={assignment.allocationUnitId} className="border-t border-white/10">
-                          <td className="px-3 py-3 font-mono text-xs">
-                            {unit?.scopeId ?? assignment.allocationUnitId}
-                          </td>
+                          <td className="px-3 py-3 font-mono text-xs">{unit?.scopeId ?? assignment.allocationUnitId}</td>
                           <td className="px-3 py-3 text-slate-400">{circuit?.town ?? '—'}</td>
                           <td className="px-3 py-3 text-slate-300">{unit?.workType ?? '—'}</td>
-                          <td className="px-3 py-3 text-right text-slate-300">
-                            {unit?.quantity != null ? unit.quantity.toFixed(2) : '—'}
-                          </td>
+                          <td className="px-3 py-3 text-right text-slate-300">{unit?.quantity != null ? unit.quantity.toFixed(2) : '—'}</td>
                           <td className="px-3 py-3 text-slate-500 line-through">Synthetic incumbent</td>
                           <td className="px-3 py-3 font-medium text-slate-100">{assignment.contractorName}</td>
-                          <td className="px-3 py-3 text-right text-slate-300">
-                            {money(locale, assignment.expectedCost)}
-                          </td>
+                          <td className="px-3 py-3 text-right text-slate-300">{money(locale, assignment.expectedCost)}</td>
                         </tr>
                       )
                     })}
