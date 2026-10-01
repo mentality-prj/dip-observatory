@@ -77,7 +77,12 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
     () => ({
       ...baseScenario,
       contractors: baseScenario.contractors.map((contractor) =>
-        contractor.id === unavailableContractorId ? { ...contractor, availableCapacity: 0 } : contractor
+        contractor.id === unavailableContractorId
+          ? {
+              ...contractor,
+              capacityBuckets: contractor.capacityBuckets.map((bucket) => ({ ...bucket, availableCapacity: 0 })),
+            }
+          : contractor
       ),
     }),
     [baseScenario, unavailableContractorId]
@@ -359,7 +364,9 @@ function DecisionDetail({
           </div>
           <div>
             <dt className="text-slate-500">capacity demand</dt>
-            <dd className="mt-1 text-slate-300">{unit.capacityDemand}</dd>
+            <dd className="mt-1 text-slate-300">
+              {unit.capacityRequirements.map((requirement) => `${requirement.bucket}: ${requirement.demand}`).join(', ')}
+            </dd>
           </div>
           <div>
             <dt className="text-slate-500">contract volume</dt>
@@ -387,7 +394,7 @@ function DecisionDetail({
             {t.contract}: {assignment.contractId}
           </div>
           <div className="mt-1 break-all font-mono text-[10px] text-slate-600">
-            {t.snapshot}: {assignment.inputSnapshot.algorithm} {assignment.inputSnapshot.id}
+            {t.snapshot}: {result.scenarioSnapshot.algorithm} {assignment.inputSnapshotId}
           </div>
         </section>
       ) : analysis.type === 'INFEASIBLE' || analysis.type === 'EXCEPTION_REQUIRED' ? (
