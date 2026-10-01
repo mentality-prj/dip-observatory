@@ -72,8 +72,12 @@ export type ContractorContract = {
   minVolume?: number
   maxVolume?: number
   awardedCapacity?: number
-  /** Volume already consumed before scenario.asOf. */
+  /** Audit context: volume consumed before scenario.asOf. */
   consumedVolumeToDate: number
+  /** Authoritative commitment still required inside this allocation horizon. */
+  remainingMinVolume: number
+  /** Authoritative volume still allocatable inside this allocation horizon. */
+  remainingMaxVolume: number
   provenance: ContractProvenance
 }
 
