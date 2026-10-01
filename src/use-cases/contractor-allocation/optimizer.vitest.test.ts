@@ -156,9 +156,11 @@ describe('contractor allocation optimizer', () => {
     )
     const input = scenario([unit('U1', 'X', 2, 'A', 'A-contract'), unit('U2', 'Y', 3, 'B', 'B-contract')], [a, b])
     const result = optimizeContractorAllocation(input)
+    const repeated = optimizeContractorAllocation(input)
 
     expect(result.status).toBe('OPTIMAL')
     expect(result.qdipExpectedSpend).toBe(4)
+    expect(repeated.assignments).toEqual(result.assignments)
     expect(result.assignments).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ allocationUnitId: 'U1', contractorId: 'B' }),
@@ -299,7 +301,6 @@ describe('contractor allocation optimizer', () => {
   it('keeps the default constrained 100-unit demo fully covered with real global choice', () => {
     const input = buildContractorAllocationDemoScenario('CAPACITY_CONSTRAINED')
     const first = optimizeContractorAllocation(input)
-    const second = optimizeContractorAllocation(input)
 
     expect(first.status).toBe('OPTIMAL')
     expect(first.metrics.totalUnits).toBe(100)
@@ -310,7 +311,6 @@ describe('contractor allocation optimizer', () => {
     expect(first.observedInvalidUnitIds).toEqual([])
     expect(first.counterfactualAllocationAdvantage ?? 0).toBeGreaterThan(0)
     expect(first.portfolioImpacts['AU-001']?.length ?? 0).toBeGreaterThan(1)
-    expect(second.assignments).toEqual(first.assignments)
   })
 
   it('exposes distinct preset semantics', () => {
