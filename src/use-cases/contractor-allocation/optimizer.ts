@@ -184,9 +184,7 @@ function optimizeDecisionUnits(
   const relevantContractIds = new Set([
     ...fixed.map((assignment) => assignment.contractId),
     ...decisionAnalyses.flatMap((analysis) =>
-      analysis.feasible
-        .filter((candidate) => candidate.expectedCost != null)
-        .map((candidate) => candidate.contractId)
+      analysis.feasible.filter((candidate) => candidate.expectedCost != null).map((candidate) => candidate.contractId)
     ),
   ])
   const contractLimits = new Map<string, ContractLimit>()
