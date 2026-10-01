@@ -2,6 +2,7 @@ export type AllocationUnitType = 'WORK_ORDER' | 'WORK_PACKAGE' | 'CIRCUIT' | 'AW
 export type PricingModel = 'UNIT_PRICE' | 'TIME_AND_EQUIPMENT'
 export type SourceRole = 'INSPECTOR' | 'PROCUREMENT' | 'OPERATIONS' | 'PLANNER'
 export type ConstraintCoverageStatus = 'COMPLETE' | 'INCOMPLETE' | 'UNKNOWN'
+export type EvidenceKind = 'HISTORICAL_PUBLIC' | 'SYNTHETIC_ASSUMPTION' | 'OPERATIONAL_INPUT'
 
 export type TrustedAuthority<Role extends SourceRole = SourceRole> = {
   id: string
@@ -15,6 +16,7 @@ export type InputProvenance<Role extends SourceRole = SourceRole> = {
   sourceRecordId: string
   sourceVersion: string
   capturedAt: string
+  evidenceKind?: EvidenceKind
   readonly __role?: Role
 }
 
