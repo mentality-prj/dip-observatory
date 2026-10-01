@@ -8,13 +8,15 @@ import type {
   DecisionSpaceMetrics,
   FeasibleAlternative,
   FeasibilityReason,
+  InputProvenance,
   RejectedAlternative,
+  SourceRole,
   UnitDecisionAnalysis,
 } from './domain'
-import { createAllocationInputSnapshot } from './snapshot'
+import { createScenarioInputSnapshot } from './snapshot'
 
-export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/4'
-const MAX_SEARCH_NODES = 750_000
+export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/5'
+const DEFAULT_MAX_SEARCH_NODES = 750_000
 const EPSILON = 1e-9
 
 type CostedCandidate = FeasibleAlternative & { expectedCost: number }
@@ -23,12 +25,15 @@ type SearchUnit = {
   analysis: UnitDecisionAnalysis
   candidates: CostedCandidate[]
 }
+type OptimizerOptions = { maxSearchNodes?: number }
 
 type SearchResult = {
   status: ContractorAllocationResult['status']
   selectedByUnit: Map<string, CostedCandidate>
   totalCost: number
   exploredNodes: number
+  lowerBound: number | null
+  optimalityGapPct: number | null
 }
 
 function includesAll(available: string[], required: string[]) {
@@ -37,6 +42,83 @@ function includesAll(available: string[], required: string[]) {
 
 function isActive(contract: ContractorContract, asOf: string) {
   return contract.validFrom <= asOf && asOf <= contract.validTo
+}
+
+function isFiniteNonNegative(value: number) {
+  return Number.isFinite(value) && value >= 0
+}
+
+function isTrustedSource(
+  provenance: InputProvenance | undefined,
+  expectedRole: SourceRole,
+  asOf: string
+) {
+  return Boolean(
+    provenance &&
+      provenance.sourceRole === expectedRole &&
+      provenance.sourceSystem.trim() &&
+      provenance.sourceRecordId.trim() &&
+      provenance.capturedAt.slice(0, 10) <= asOf
+  )
+}
+
+function unitInputsTrusted(unit: AllocationUnit, scenario: ContractorAllocationScenario) {
+  const provenance = unit.provenance
+  if (!provenance) return false
+
+  const inspectorInputs = [
+    provenance.scope,
+    provenance.quantity,
+    provenance.territory,
+    provenance.workType,
+    provenance.technicalRequirements,
+  ]
+  const operationsInputs = [provenance.deadline, provenance.capacityRequirements]
+
+  if (!inspectorInputs.every((input) => isTrustedSource(input, 'INSPECTOR', scenario.asOf))) return false
+  if (!operationsInputs.every((input) => isTrustedSource(input, 'OPERATIONS', scenario.asOf))) return false
+  if (!isTrustedSource(provenance.contractVolume, 'PROCUREMENT', scenario.asOf)) return false
+  if (
+    (unit.expectedLaborHours != null || unit.expectedEquipmentHours != null) &&
+    !isTrustedSource(provenance.teEstimate, 'OPERATIONS', scenario.asOf)
+  ) {
+    return false
+  }
+  if (!isFiniteNonNegative(unit.quantity) || !isFiniteNonNegative(unit.contractVolume)) return false
+  if (!unit.capacityRequirements.length) return false
+  if (
+    unit.capacityRequirements.some(
+      (requirement) =>
+        !/^\d{4}-\d{2}$/.test(requirement.bucket) ||
+        !Number.isFinite(requirement.demand) ||
+        requirement.demand <= 0 ||
+        requirement.bucket < scenario.asOf.slice(0, 7)
+    )
+  ) {
+    return false
+  }
+
+  return true
+}
+
+function contractorInputsTrusted(contractor: Contractor, scenario: ContractorAllocationScenario) {
+  const provenance = contractor.provenance
+  if (!provenance) return false
+  if (!isTrustedSource(provenance.capacityBuckets, 'OPERATIONS', scenario.asOf)) return false
+  if (!isTrustedSource(provenance.equipment, 'OPERATIONS', scenario.asOf)) return false
+  if (!isTrustedSource(provenance.certifications, 'OPERATIONS', scenario.asOf)) return false
+  return contractor.capacityBuckets.every(
+    (bucket) => /^\d{4}-\d{2}$/.test(bucket.bucket) && isFiniteNonNegative(bucket.availableCapacity)
+  )
+}
+
+function contractInputsTrusted(contract: ContractorContract, scenario: ContractorAllocationScenario) {
+  const provenance = contract.provenance
+  if (!provenance) return false
+  if (!isTrustedSource(provenance.eligibility, 'PROCUREMENT', scenario.asOf)) return false
+  if (!isTrustedSource(provenance.rates, 'PROCUREMENT', scenario.asOf)) return false
+  if (!isTrustedSource(provenance.volumeState, 'PROCUREMENT', scenario.asOf)) return false
+  return isFiniteNonNegative(contract.consumedVolumeToDate)
 }
 
 function matchingRate(contract: ContractorContract, unit: AllocationUnit) {
@@ -57,17 +139,41 @@ function estimateCost(contract: ContractorContract, unit: AllocationUnit): numbe
   return unit.expectedLaborHours * rate.laborRate + unit.expectedEquipmentHours * rate.equipmentRate + fixed
 }
 
-function contractVolumeLimit(contract: ContractorContract) {
-  return Math.min(contract.maxVolume ?? Number.POSITIVE_INFINITY, contract.awardedCapacity ?? Number.POSITIVE_INFINITY)
+function remainingContractLimit(contract: ContractorContract): ContractLimit {
+  const grossMax = Math.min(
+    contract.maxVolume ?? Number.POSITIVE_INFINITY,
+    contract.awardedCapacity ?? Number.POSITIVE_INFINITY
+  )
+  return {
+    min: Math.max(0, (contract.minVolume ?? 0) - contract.consumedVolumeToDate),
+    max: Math.max(0, grossMax - contract.consumedVolumeToDate),
+  }
 }
 
-function contractorLevelReasons(contractor: Contractor, unit: AllocationUnit): FeasibilityReason[] {
+function contractorLevelReasons(
+  contractor: Contractor,
+  unit: AllocationUnit,
+  scenario: ContractorAllocationScenario
+): FeasibilityReason[] {
   const reasons: FeasibilityReason[] = []
-  if (contractor.availableCapacity + EPSILON < unit.capacityDemand) reasons.push('NO_CAPACITY')
-  if (contractor.availableThrough < unit.deadline) reasons.push('SLA_IMPOSSIBLE')
+  if (!unitInputsTrusted(unit, scenario) || !contractorInputsTrusted(contractor, scenario)) {
+    reasons.push('UNTRUSTED_INPUT')
+    return reasons
+  }
+
+  const capacity = new Map(contractor.capacityBuckets.map((bucket) => [bucket.bucket, bucket.availableCapacity]))
+  for (const requirement of unit.capacityRequirements) {
+    if (!capacity.has(requirement.bucket)) {
+      reasons.push('CAPACITY_BUCKET_MISSING')
+      continue
+    }
+    if ((capacity.get(requirement.bucket) ?? 0) + EPSILON < requirement.demand) reasons.push('NO_CAPACITY')
+    if (requirement.bucket > unit.deadline.slice(0, 7)) reasons.push('SLA_IMPOSSIBLE')
+  }
+
   if (!includesAll(contractor.equipment, unit.requiredEquipment)) reasons.push('MISSING_EQUIPMENT')
   if (!includesAll(contractor.certifications, unit.requiredCertifications)) reasons.push('MISSING_CERTIFICATION')
-  return reasons
+  return [...new Set(reasons)]
 }
 
 function evaluateContract(
@@ -77,6 +183,7 @@ function evaluateContract(
   scenario: ContractorAllocationScenario
 ): FeasibleAlternative | RejectedAlternative {
   const reasons: FeasibilityReason[] = []
+  if (!contractInputsTrusted(contract, scenario)) reasons.push('UNTRUSTED_INPUT')
   if (!contract.approved) reasons.push('NOT_APPROVED')
   if (contract.approved && !isActive(contract, scenario.asOf)) reasons.push('CONTRACT_EXPIRED')
   if (contract.approved && isActive(contract, scenario.asOf) && !contract.territories.includes(unit.territory)) {
@@ -90,7 +197,9 @@ function evaluateContract(
   ) {
     reasons.push('WORK_TYPE_NOT_ALLOWED')
   }
-  if (contractVolumeLimit(contract) + EPSILON < unit.contractVolume) reasons.push('CONTRACT_VOLUME_LIMIT')
+
+  const remaining = remainingContractLimit(contract)
+  if (remaining.max + EPSILON < unit.contractVolume) reasons.push('CONTRACT_VOLUME_LIMIT')
 
   const rate = matchingRate(contract, unit)
   if (!rate && !reasons.length) reasons.push('RATE_NOT_CONFIGURED')
@@ -120,7 +229,7 @@ function candidatesForContractor(
   unit: AllocationUnit,
   scenario: ContractorAllocationScenario
 ): { feasible: FeasibleAlternative[]; rejected: RejectedAlternative[] } {
-  const hardReasons = contractorLevelReasons(contractor, unit)
+  const hardReasons = contractorLevelReasons(contractor, unit, scenario)
   if (hardReasons.length) {
     return {
       feasible: [],
@@ -194,9 +303,9 @@ function buildSearchUnits(analyses: UnitDecisionAnalysis[]): SearchUnit[] {
       const rightRegret =
         (right.candidates[1]?.expectedCost ?? right.candidates[0].expectedCost) - right.candidates[0].expectedCost
       if (Math.abs(leftRegret - rightRegret) > EPSILON) return rightRegret - leftRegret
-      if (Math.abs(left.analysis.unit.capacityDemand - right.analysis.unit.capacityDemand) > EPSILON) {
-        return right.analysis.unit.capacityDemand - left.analysis.unit.capacityDemand
-      }
+      const leftDemand = left.analysis.unit.capacityRequirements.reduce((sum, item) => sum + item.demand, 0)
+      const rightDemand = right.analysis.unit.capacityRequirements.reduce((sum, item) => sum + item.demand, 0)
+      if (Math.abs(leftDemand - rightDemand) > EPSILON) return rightDemand - leftDemand
       return left.analysis.unit.id.localeCompare(right.analysis.unit.id)
     })
 }
@@ -208,25 +317,68 @@ function buildContractLimits(scenario: ContractorAllocationScenario, units: Sear
   for (const contractor of scenario.contractors) {
     for (const contract of contractor.contracts) {
       if (!relevantContractIds.has(contract.id)) continue
-      limits.set(contract.id, {
-        min: contract.minVolume ?? 0,
-        max: contractVolumeLimit(contract),
-      })
+      limits.set(contract.id, remainingContractLimit(contract))
     }
   }
 
   return limits
 }
 
-function numericState(value: number) {
-  if (!Number.isFinite(value)) return 'inf'
-  return Number(value.toFixed(6)).toString()
+function capacityKey(contractorId: string, bucket: string) {
+  return `${contractorId}|${bucket}`
 }
 
-function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses: UnitDecisionAnalysis[]): SearchResult {
+function buildRemainingCapacity(scenario: ContractorAllocationScenario) {
+  const remaining = new Map<string, number>()
+  for (const contractor of scenario.contractors) {
+    for (const bucket of contractor.capacityBuckets) {
+      remaining.set(capacityKey(contractor.id, bucket.bucket), bucket.availableCapacity)
+    }
+  }
+  return remaining
+}
+
+function canConsumeCapacity(remaining: Map<string, number>, contractorId: string, unit: AllocationUnit) {
+  return unit.capacityRequirements.every(
+    (requirement) =>
+      (remaining.get(capacityKey(contractorId, requirement.bucket)) ?? Number.NEGATIVE_INFINITY) + EPSILON >=
+      requirement.demand
+  )
+}
+
+function consumeCapacity(remaining: Map<string, number>, contractorId: string, unit: AllocationUnit, direction: 1 | -1) {
+  for (const requirement of unit.capacityRequirements) {
+    const key = capacityKey(contractorId, requirement.bucket)
+    remaining.set(key, (remaining.get(key) ?? 0) - direction * requirement.demand)
+  }
+}
+
+function stateNumber(value: number) {
+  if (!Number.isFinite(value)) return value > 0 ? 'inf' : '-inf'
+  return String(value)
+}
+
+function computeGapPct(bestCost: number, lowerBound: number) {
+  if (!Number.isFinite(bestCost) || !Number.isFinite(lowerBound)) return null
+  const denominator = Math.max(Math.abs(bestCost), EPSILON)
+  return Math.max(0, ((bestCost - lowerBound) / denominator) * 100)
+}
+
+function optimizeDecisionUnits(
+  scenario: ContractorAllocationScenario,
+  analyses: UnitDecisionAnalysis[],
+  options: OptimizerOptions
+): SearchResult {
   const units = buildSearchUnits(analyses)
   if (!units.length) {
-    return { status: 'OPTIMAL', selectedByUnit: new Map(), totalCost: 0, exploredNodes: 0 }
+    return {
+      status: 'OPTIMAL',
+      selectedByUnit: new Map(),
+      totalCost: 0,
+      exploredNodes: 0,
+      lowerBound: 0,
+      optimalityGapPct: 0,
+    }
   }
   if (units.some((unit) => !unit.candidates.length)) {
     return {
@@ -234,23 +386,22 @@ function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses:
       selectedByUnit: new Map(),
       totalCost: Number.POSITIVE_INFINITY,
       exploredNodes: 0,
+      lowerBound: null,
+      optimalityGapPct: null,
     }
   }
 
-  const contractorIds = [
-    ...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractorId))),
-  ].sort()
   const contractLimits = buildContractLimits(scenario, units)
   const contractIds = [...contractLimits.keys()].sort()
-  const remainingCapacity = new Map(
-    scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity])
-  )
+  const remainingCapacity = buildRemainingCapacity(scenario)
+  const capacityKeys = [...remainingCapacity.keys()].sort()
   const contractUsedVolume = new Map<string, number>(contractIds.map((contractId) => [contractId, 0]))
 
   const suffixMinimum = new Array<number>(units.length + 1).fill(0)
   for (let index = units.length - 1; index >= 0; index -= 1) {
     suffixMinimum[index] = suffixMinimum[index + 1] + units[index].candidates[0].expectedCost
   }
+  const rootLowerBound = suffixMinimum[0]
 
   const suffixContractPotential = new Map<string, number[]>()
   for (const contractId of contractIds) {
@@ -265,10 +416,46 @@ function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses:
     suffixContractPotential.set(contractId, potential)
   }
 
-  const suffixCapacityDemand = new Array<number>(units.length + 1).fill(0)
-  for (let index = units.length - 1; index >= 0; index -= 1) {
-    suffixCapacityDemand[index] = suffixCapacityDemand[index + 1] + units[index].analysis.unit.capacityDemand
+  const validateContractMinimums = () =>
+    contractIds.every((contractId) => {
+      const limit = contractLimits.get(contractId)
+      return !limit || (contractUsedVolume.get(contractId) ?? 0) + EPSILON >= limit.min
+    })
+
+  const cheapestSelection = new Map<string, CostedCandidate>()
+  let cheapestCombinationFeasible = true
+  for (const searchUnit of units) {
+    const candidate = searchUnit.candidates[0]
+    const limit = contractLimits.get(candidate.contractId)
+    const used = contractUsedVolume.get(candidate.contractId) ?? 0
+    if (!canConsumeCapacity(remainingCapacity, candidate.contractorId, searchUnit.analysis.unit)) {
+      cheapestCombinationFeasible = false
+      break
+    }
+    if (used + searchUnit.analysis.unit.contractVolume > (limit?.max ?? Number.POSITIVE_INFINITY) + EPSILON) {
+      cheapestCombinationFeasible = false
+      break
+    }
+    consumeCapacity(remainingCapacity, candidate.contractorId, searchUnit.analysis.unit, 1)
+    contractUsedVolume.set(candidate.contractId, used + searchUnit.analysis.unit.contractVolume)
+    cheapestSelection.set(searchUnit.analysis.unit.id, candidate)
   }
+
+  if (cheapestCombinationFeasible && validateContractMinimums()) {
+    return {
+      status: 'OPTIMAL',
+      selectedByUnit: cheapestSelection,
+      totalCost: rootLowerBound,
+      exploredNodes: units.length,
+      lowerBound: rootLowerBound,
+      optimalityGapPct: 0,
+    }
+  }
+
+  remainingCapacity.clear()
+  for (const [key, value] of buildRemainingCapacity(scenario)) remainingCapacity.set(key, value)
+  contractUsedVolume.clear()
+  for (const contractId of contractIds) contractUsedVolume.set(contractId, 0)
 
   let bestCost = Number.POSITIVE_INFINITY
   let best = new Map<string, CostedCandidate>()
@@ -276,6 +463,7 @@ function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses:
   const bestCostByState = new Map<string, number>()
   let exploredNodes = 0
   let truncated = false
+  const maxSearchNodes = Math.max(0, options.maxSearchNodes ?? DEFAULT_MAX_SEARCH_NODES)
 
   const minimaCanStillBeMet = (index: number) => {
     for (const contractId of contractIds) {
@@ -288,26 +476,20 @@ function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses:
     return true
   }
 
-  const totalCapacityCanCoverRemainder = (index: number) => {
-    const capacity = contractorIds.reduce((sum, contractorId) => sum + (remainingCapacity.get(contractorId) ?? 0), 0)
-    return capacity + EPSILON >= suffixCapacityDemand[index]
-  }
-
   const stateKey = (index: number) =>
-    `${index}|${contractorIds.map((id) => numericState(remainingCapacity.get(id) ?? 0)).join(',')}|${contractIds
-      .map((id) => numericState(contractUsedVolume.get(id) ?? 0))
+    `${index}|${capacityKeys.map((key) => stateNumber(remainingCapacity.get(key) ?? 0)).join(',')}|${contractIds
+      .map((id) => stateNumber(contractUsedVolume.get(id) ?? 0))
       .join(',')}`
 
   const visit = (index: number, cost: number) => {
     if (truncated) return
     exploredNodes += 1
-    if (exploredNodes > MAX_SEARCH_NODES) {
+    if (exploredNodes > maxSearchNodes) {
       truncated = true
       return
     }
     if (cost + suffixMinimum[index] >= bestCost - EPSILON) return
     if (!minimaCanStillBeMet(index)) return
-    if (!totalCapacityCanCoverRemainder(index)) return
 
     const key = stateKey(index)
     const previousBest = bestCostByState.get(key)
@@ -315,55 +497,78 @@ function optimizeDecisionUnits(scenario: ContractorAllocationScenario, analyses:
     bestCostByState.set(key, cost)
 
     if (index === units.length) {
-      for (const contractId of contractIds) {
-        const limit = contractLimits.get(contractId)
-        const used = contractUsedVolume.get(contractId) ?? 0
-        if (limit && used + EPSILON < limit.min) return
-      }
+      if (!validateContractMinimums()) return
       bestCost = cost
       best = new Map(selected)
       return
     }
 
     const searchUnit = units[index]
-    const { capacityDemand, contractVolume } = searchUnit.analysis.unit
-
     for (const candidate of searchUnit.candidates) {
-      const capacity = remainingCapacity.get(candidate.contractorId) ?? 0
-      if (capacity + EPSILON < capacityDemand) continue
+      if (!canConsumeCapacity(remainingCapacity, candidate.contractorId, searchUnit.analysis.unit)) continue
 
       const limit = contractLimits.get(candidate.contractId)
       const currentVolume = contractUsedVolume.get(candidate.contractId) ?? 0
-      if (currentVolume + contractVolume > (limit?.max ?? Number.POSITIVE_INFINITY) + EPSILON) continue
+      if (
+        currentVolume + searchUnit.analysis.unit.contractVolume >
+        (limit?.max ?? Number.POSITIVE_INFINITY) + EPSILON
+      ) {
+        continue
+      }
 
-      remainingCapacity.set(candidate.contractorId, capacity - capacityDemand)
-      contractUsedVolume.set(candidate.contractId, currentVolume + contractVolume)
+      consumeCapacity(remainingCapacity, candidate.contractorId, searchUnit.analysis.unit, 1)
+      contractUsedVolume.set(candidate.contractId, currentVolume + searchUnit.analysis.unit.contractVolume)
       selected.set(searchUnit.analysis.unit.id, candidate)
 
       visit(index + 1, cost + candidate.expectedCost)
 
       selected.delete(searchUnit.analysis.unit.id)
       contractUsedVolume.set(candidate.contractId, currentVolume)
-      remainingCapacity.set(candidate.contractorId, capacity)
+      consumeCapacity(remainingCapacity, candidate.contractorId, searchUnit.analysis.unit, -1)
     }
   }
 
   visit(0, 0)
 
+  if (truncated) {
+    if (Number.isFinite(bestCost)) {
+      return {
+        status: 'FEASIBLE_NOT_PROVEN',
+        selectedByUnit: best,
+        totalCost: bestCost,
+        exploredNodes,
+        lowerBound: rootLowerBound,
+        optimalityGapPct: computeGapPct(bestCost, rootLowerBound),
+      }
+    }
+    return {
+      status: 'UNKNOWN',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
+      exploredNodes,
+      lowerBound: rootLowerBound,
+      optimalityGapPct: null,
+    }
+  }
+
   if (!Number.isFinite(bestCost)) {
     return {
-      status: truncated ? 'BOUNDED' : 'INFEASIBLE',
-      selectedByUnit: best,
-      totalCost: bestCost,
+      status: 'INFEASIBLE',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
       exploredNodes,
+      lowerBound: null,
+      optimalityGapPct: null,
     }
   }
 
   return {
-    status: truncated ? 'BOUNDED' : 'OPTIMAL',
+    status: 'OPTIMAL',
     selectedByUnit: best,
     totalCost: bestCost,
     exploredNodes,
+    lowerBound: bestCost,
+    optimalityGapPct: 0,
   }
 }
 
@@ -381,6 +586,59 @@ function observedCandidate(analysis: UnitDecisionAnalysis) {
   }
 
   return costed.length === 1 ? costed[0] : undefined
+}
+
+function validateObservedPortfolio(
+  scenario: ContractorAllocationScenario,
+  analyses: UnitDecisionAnalysis[]
+) {
+  const invalid = new Set<string>()
+  const capacityUsage = new Map<string, { total: number; unitIds: string[] }>()
+  const contractUsage = new Map<string, { total: number; unitIds: string[] }>()
+  const contractById = new Map<string, ContractorContract>()
+  for (const contractor of scenario.contractors) {
+    for (const contract of contractor.contracts) contractById.set(contract.id, contract)
+  }
+
+  for (const analysis of relevantAnalyses(analyses)) {
+    const candidate = observedCandidate(analysis)
+    if (!candidate) {
+      invalid.add(analysis.unit.id)
+      continue
+    }
+    for (const requirement of analysis.unit.capacityRequirements) {
+      const key = capacityKey(candidate.contractorId, requirement.bucket)
+      const entry = capacityUsage.get(key) ?? { total: 0, unitIds: [] }
+      entry.total += requirement.demand
+      entry.unitIds.push(analysis.unit.id)
+      capacityUsage.set(key, entry)
+    }
+    const volume = contractUsage.get(candidate.contractId) ?? { total: 0, unitIds: [] }
+    volume.total += analysis.unit.contractVolume
+    volume.unitIds.push(analysis.unit.id)
+    contractUsage.set(candidate.contractId, volume)
+  }
+
+  const availableCapacity = buildRemainingCapacity(scenario)
+  for (const [key, usage] of capacityUsage) {
+    if (usage.total > (availableCapacity.get(key) ?? 0) + EPSILON) {
+      usage.unitIds.forEach((unitId) => invalid.add(unitId))
+    }
+  }
+
+  for (const [contractId, usage] of contractUsage) {
+    const contract = contractById.get(contractId)
+    if (!contract) {
+      usage.unitIds.forEach((unitId) => invalid.add(unitId))
+      continue
+    }
+    const limit = remainingContractLimit(contract)
+    if (usage.total > limit.max + EPSILON || usage.total + EPSILON < limit.min) {
+      usage.unitIds.forEach((unitId) => invalid.add(unitId))
+    }
+  }
+
+  return [...invalid].sort()
 }
 
 function decisionSpaceMetrics(analyses: UnitDecisionAnalysis[]): DecisionSpaceMetrics {
@@ -426,15 +684,19 @@ function decisionSpaceMetrics(analyses: UnitDecisionAnalysis[]): DecisionSpaceMe
   }
 }
 
-export function optimizeContractorAllocation(scenario: ContractorAllocationScenario): ContractorAllocationResult {
+export function optimizeContractorAllocation(
+  scenario: ContractorAllocationScenario,
+  options: OptimizerOptions = {}
+): ContractorAllocationResult {
+  const scenarioSnapshot = createScenarioInputSnapshot(scenario)
   const analyses = analyzeDecisionSpace(scenario)
-  const search = optimizeDecisionUnits(scenario, analyses)
+  const search = optimizeDecisionUnits(scenario, analyses, options)
   const assignments: AllocationAssignment[] = []
   const unresolvedUnitIds = analyses
     .filter((analysis) => analysis.type === 'INFEASIBLE' || analysis.type === 'EXCEPTION_REQUIRED')
     .map((analysis) => analysis.unit.id)
 
-  if (search.status !== 'INFEASIBLE') {
+  if (search.status === 'OPTIMAL' || search.status === 'FEASIBLE_NOT_PROVEN') {
     for (const analysis of relevantAnalyses(analyses)) {
       const selected = search.selectedByUnit.get(analysis.unit.id)
       if (!selected) continue
@@ -449,24 +711,22 @@ export function optimizeContractorAllocation(scenario: ContractorAllocationScena
         observedContractId: analysis.unit.observedContractId,
         observedExpectedCost: observed?.expectedCost,
         expectedDelta: observed ? observed.expectedCost - selected.expectedCost : undefined,
-        inputSnapshot: createAllocationInputSnapshot(scenario, analysis),
+        inputSnapshotId: scenarioSnapshot.id,
       })
     }
   }
 
   const comparable = relevantAnalyses(analyses)
-  const observedInvalidUnitIds = comparable
-    .filter((analysis) => !observedCandidate(analysis))
-    .map((analysis) => analysis.unit.id)
+  const observedInvalidUnitIds = validateObservedPortfolio(scenario, analyses)
   const observedExpectedSpend = comparable.reduce(
     (sum, analysis) => sum + (observedCandidate(analysis)?.expectedCost ?? 0),
     0
   )
   const qdipExpectedSpend = assignments.reduce((sum, assignment) => sum + assignment.expectedCost, 0)
   const counterfactualAllocationAdvantage =
-    search.status === 'INFEASIBLE' || observedInvalidUnitIds.length || assignments.length !== comparable.length
-      ? null
-      : observedExpectedSpend - qdipExpectedSpend
+    search.status === 'OPTIMAL' && !observedInvalidUnitIds.length && assignments.length === comparable.length
+      ? observedExpectedSpend - qdipExpectedSpend
+      : null
 
   return {
     scenarioId: scenario.id,
@@ -481,5 +741,8 @@ export function optimizeContractorAllocation(scenario: ContractorAllocationScena
     counterfactualAllocationAdvantage,
     metrics: decisionSpaceMetrics(analyses),
     exploredNodes: search.exploredNodes,
+    lowerBound: search.lowerBound,
+    optimalityGapPct: search.optimalityGapPct,
+    scenarioSnapshot,
   }
 }
