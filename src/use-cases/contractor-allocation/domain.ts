@@ -1,6 +1,7 @@
 export type AllocationUnitType = 'WORK_ORDER' | 'WORK_PACKAGE' | 'CIRCUIT' | 'AWARDED_VOLUME'
 export type PricingModel = 'UNIT_PRICE' | 'TIME_AND_EQUIPMENT'
 export type SourceRole = 'INSPECTOR' | 'PROCUREMENT' | 'OPERATIONS' | 'PLANNER'
+export type ConstraintCoverageStatus = 'COMPLETE' | 'INCOMPLETE' | 'UNKNOWN'
 
 export type TrustedAuthority<Role extends SourceRole = SourceRole> = {
   id: string
@@ -10,12 +11,10 @@ export type TrustedAuthority<Role extends SourceRole = SourceRole> = {
 }
 
 export type InputProvenance<Role extends SourceRole = SourceRole> = {
-  /** References an authority from scenario.trustedAuthorities. The role is resolved server-side from that registry. */
   authorityId: string
   sourceRecordId: string
   sourceVersion: string
   capturedAt: string
-  /** Phantom role marker for compile-time ownership only; never supplied by callers. */
   readonly __role?: Role
 }
 
@@ -36,6 +35,7 @@ export type ContractorProvenance = {
   capacityBuckets: InputProvenance<'OPERATIONS'>
   equipment: InputProvenance<'OPERATIONS'>
   certifications: InputProvenance<'OPERATIONS'>
+  executionProfiles: InputProvenance<'OPERATIONS'>
 }
 
 export type ContractProvenance = {
@@ -84,19 +84,14 @@ export type ContractorContract = {
   minVolume?: number
   maxVolume?: number
   awardedCapacity?: number
-  /** Audit context: volume consumed before scenario.asOf. */
   consumedVolumeToDate: number
-  /** Authoritative commitment still required inside this allocation horizon. */
   remainingMinVolume: number
-  /** Authoritative volume still allocatable inside this allocation horizon. */
   remainingMaxVolume: number
   provenance: ContractProvenance
 }
 
 export type CapacityBucket = {
-  /** ISO calendar bucket, YYYY-MM for the current Observatory model. */
   bucket: string
-  /** Remaining normalized workload capacity in this bucket as of scenario.asOf. */
   availableCapacity: number
 }
 
@@ -105,12 +100,26 @@ export type CapacityRequirement = {
   demand: number
 }
 
+export type ContractorExecutionProfile = {
+  workType: string
+  capacityMultiplier: number
+  laborHoursPerUnit?: number
+  equipmentHoursPerUnit?: number
+}
+
+export type CandidateExecutionEstimate = {
+  capacityRequirements: CapacityRequirement[]
+  expectedLaborHours: number | null
+  expectedEquipmentHours: number | null
+}
+
 export type Contractor = {
   id: string
   name: string
   capacityBuckets: CapacityBucket[]
   equipment: string[]
   certifications: string[]
+  executionProfiles: ContractorExecutionProfile[]
   contracts: ContractorContract[]
   provenance: ContractorProvenance
 }
@@ -122,12 +131,9 @@ export type AllocationUnit = {
   workType: string
   quantity: number
   quantityUnit: string
-  /** Planned execution window. Contract validity must cover this interval. */
   executionStart: string
   executionEnd: string
-  /** Operational workload consumed in each execution bucket. */
   capacityRequirements: CapacityRequirement[]
-  /** Procurement volume consumed against the selected contract. */
   contractVolume: number
   deadline: string
   priority: number
@@ -144,12 +150,10 @@ export type AllocationUnit = {
 
 export type ContractorAllocationScenario = {
   id: string
-  /** Decision-effective date used for contracts and allocation horizon. */
   asOf: string
-  /** Exact timestamp after which new information is forbidden in replay. */
   decisionAt: string
   allocationLevel: AllocationUnitType
-  /** Server-owned registry produced by authenticated adapters. */
+  constraintCoverageStatus: ConstraintCoverageStatus
   trustedAuthorities: TrustedAuthority[]
   units: AllocationUnit[]
   contractors: Contractor[]
@@ -169,6 +173,7 @@ export type FeasibleAlternative = {
   pricingModel: PricingModel
   expectedCost: number | null
   requiresException: boolean
+  executionEstimate: CandidateExecutionEstimate
 }
 
 export type UnitDecisionAnalysis = {
@@ -176,6 +181,16 @@ export type UnitDecisionAnalysis = {
   type: DecisionType
   feasible: FeasibleAlternative[]
   rejected: RejectedAlternative[]
+}
+
+export type PortfolioAlternativeImpact = {
+  contractorId: string
+  contractorName: string
+  contractId: string | null
+  expectedCost: number | null
+  portfolioExpectedCost: number | null
+  portfolioDelta: number | null
+  status: 'SELECTED' | 'FEASIBLE' | 'INFEASIBLE' | 'UNKNOWN'
 }
 
 export type ScenarioInputSnapshot = {
@@ -249,6 +264,7 @@ export type ContractorAllocationResult = {
   analyses: UnitDecisionAnalysis[]
   assignments: AllocationAssignment[]
   reservations: AllocationReservation[]
+  portfolioImpacts: Record<string, PortfolioAlternativeImpact[]>
   unresolvedUnitIds: string[]
   observedInvalidUnitIds: string[]
   observedExpectedSpend: number
