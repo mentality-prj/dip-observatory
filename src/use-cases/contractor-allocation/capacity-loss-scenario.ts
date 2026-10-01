@@ -38,7 +38,7 @@ export const EVERSOURCE_CAPACITY_LOSS_CIRCUITS = [
 
 const asOf = '2022-01-01'
 const decisionAt = '2022-01-01T00:00:00Z'
-const capacityBucket = '2022'
+const capacityBucket = '2022-01'
 
 const authorities: TrustedAuthority[] = [
   { id: 'inspector-field', sourceRole: 'INSPECTOR', sourceSystem: 'field-inspection', ingress: 'TRUSTED_ADAPTER' },
