@@ -11,8 +11,27 @@ import type {
   UnitDecisionAnalysis,
 } from './domain'
 
-export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/1'
+export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/2'
 const MAX_SEARCH_NODES = 250_000
+
+type CostedCandidate = FeasibleAlternative & { expectedCost: number }
+type FixedAssignment = CostedCandidate & { unitId: string }
+type ContractLimit = { min: number; max: number }
+type SearchUnit = { analysis: UnitDecisionAnalysis; candidates: CostedCandidate[] }
+
+type SearchResult = {
+  status: ContractorAllocationResult['status']
+  selectedByUnit: Map<string, CostedCandidate>
+  totalCost: number
+  exploredNodes: number
+}
+
+type FlowEdge = {
+  to: number
+  rev: number
+  cap: number
+  cost: number
+}
 
 function includesAll(available: string[], required: string[]) {
   return required.every((value) => available.includes(value))
@@ -73,7 +92,8 @@ function candidateForContractor(
 
   const withVolume = forWorkType.filter(
     (contract) =>
-      (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 && (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
+      (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 &&
+      (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
   )
   if (forWorkType.length && !withVolume.length) reasons.push('CONTRACT_VOLUME_LIMIT')
 
@@ -163,39 +183,53 @@ function snapshotId(
   )
 }
 
-type ContractLimit = { min: number; max: number }
-type SearchUnit = { analysis: UnitDecisionAnalysis; candidates: (FeasibleAlternative & { expectedCost: number })[] }
-
-type SearchResult = {
-  status: ContractorAllocationResult['status']
-  selectedByUnit: Map<string, FeasibleAlternative & { expectedCost: number }>
-  totalCost: number
-  exploredNodes: number
+function buildSearchUnits(decisionAnalyses: UnitDecisionAnalysis[]): SearchUnit[] {
+  return decisionAnalyses
+    .map((analysis) => ({
+      analysis,
+      candidates: analysis.feasible
+        .filter((candidate): candidate is CostedCandidate => candidate.expectedCost != null)
+        .sort((a, b) => a.expectedCost - b.expectedCost || a.contractorId.localeCompare(b.contractorId)),
+    }))
+    .sort((a, b) => {
+      if (a.candidates.length !== b.candidates.length) return a.candidates.length - b.candidates.length
+      const aRegret = (a.candidates[1]?.expectedCost ?? a.candidates[0].expectedCost) - a.candidates[0].expectedCost
+      const bRegret = (b.candidates[1]?.expectedCost ?? b.candidates[0].expectedCost) - b.candidates[0].expectedCost
+      return bRegret - aRegret || a.analysis.unit.id.localeCompare(b.analysis.unit.id)
+    })
 }
 
-function optimizeDecisionUnits(
+function buildContractLimits(
   scenario: ContractorAllocationScenario,
-  fixed: (FeasibleAlternative & { expectedCost: number; unitId: string })[],
-  decisionAnalyses: UnitDecisionAnalysis[]
-): SearchResult {
-  const contractorCapacity = new Map(
-    scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity])
-  )
+  fixed: FixedAssignment[],
+  units: SearchUnit[]
+) {
   const relevantContractIds = new Set([
     ...fixed.map((assignment) => assignment.contractId),
-    ...decisionAnalyses.flatMap((analysis) =>
-      analysis.feasible.filter((candidate) => candidate.expectedCost != null).map((candidate) => candidate.contractId)
-    ),
+    ...units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId)),
   ])
-  const contractLimits = new Map<string, ContractLimit>()
+  const limits = new Map<string, ContractLimit>()
+  const owners = new Map<string, string>()
 
   for (const contractor of scenario.contractors) {
     for (const contract of contractor.contracts) {
       if (!relevantContractIds.has(contract.id) || !contract.approved || !isActive(contract, scenario.asOf)) continue
-      contractLimits.set(contract.id, { min: contract.minVolume ?? 0, max: contractLimit(contract) })
+      limits.set(contract.id, { min: contract.minVolume ?? 0, max: contractLimit(contract) })
+      owners.set(contract.id, contractor.id)
     }
   }
 
+  return { limits, owners }
+}
+
+function fixedState(
+  scenario: ContractorAllocationScenario,
+  fixed: FixedAssignment[],
+  contractLimits: Map<string, ContractLimit>
+) {
+  const contractorCapacity = new Map(
+    scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity])
+  )
   const contractorCounts = new Map<string, number>()
   const contractCounts = new Map<string, number>()
   let fixedCost = 0
@@ -207,32 +241,187 @@ function optimizeDecisionUnits(
   }
 
   for (const [contractorId, count] of contractorCounts) {
-    if (count > (contractorCapacity.get(contractorId) ?? 0)) {
-      return { status: 'INFEASIBLE', selectedByUnit: new Map(), totalCost: Number.POSITIVE_INFINITY, exploredNodes: 0 }
-    }
+    if (count > (contractorCapacity.get(contractorId) ?? 0)) return null
   }
   for (const [contractId, count] of contractCounts) {
-    if (count > (contractLimits.get(contractId)?.max ?? Number.POSITIVE_INFINITY)) {
-      return { status: 'INFEASIBLE', selectedByUnit: new Map(), totalCost: Number.POSITIVE_INFINITY, exploredNodes: 0 }
+    if (count > (contractLimits.get(contractId)?.max ?? Number.POSITIVE_INFINITY)) return null
+  }
+
+  const remainingCapacity = new Map<string, number>()
+  for (const [contractorId, capacity] of contractorCapacity) {
+    remainingCapacity.set(contractorId, capacity - (contractorCounts.get(contractorId) ?? 0))
+  }
+
+  return { contractorCounts, contractCounts, remainingCapacity, fixedCost }
+}
+
+function addFlowEdge(graph: FlowEdge[][], from: number, to: number, cap: number, cost: number) {
+  const forward: FlowEdge = { to, rev: graph[to].length, cap, cost }
+  const reverse: FlowEdge = { to: from, rev: graph[from].length, cap: 0, cost: -cost }
+  graph[from].push(forward)
+  graph[to].push(reverse)
+  return forward
+}
+
+function minCostFlow(graph: FlowEdge[][], source: number, sink: number, requiredFlow: number) {
+  let flow = 0
+  let cost = 0
+  let iterations = 0
+
+  while (flow < requiredFlow) {
+    const dist = new Array<number>(graph.length).fill(Number.POSITIVE_INFINITY)
+    const prevNode = new Array<number>(graph.length).fill(-1)
+    const prevEdge = new Array<number>(graph.length).fill(-1)
+    const inQueue = new Array<boolean>(graph.length).fill(false)
+    const queue: number[] = [source]
+    let head = 0
+    dist[source] = 0
+    inQueue[source] = true
+
+    while (head < queue.length) {
+      const node = queue[head]
+      head += 1
+      inQueue[node] = false
+
+      for (let edgeIndex = 0; edgeIndex < graph[node].length; edgeIndex += 1) {
+        const edge = graph[node][edgeIndex]
+        if (edge.cap <= 0) continue
+        const candidateDistance = dist[node] + edge.cost
+        if (candidateDistance >= dist[edge.to]) continue
+        dist[edge.to] = candidateDistance
+        prevNode[edge.to] = node
+        prevEdge[edge.to] = edgeIndex
+        if (!inQueue[edge.to]) {
+          queue.push(edge.to)
+          inQueue[edge.to] = true
+        }
+      }
+    }
+
+    if (!Number.isFinite(dist[sink])) break
+
+    let augment = requiredFlow - flow
+    for (let node = sink; node !== source; node = prevNode[node]) {
+      const from = prevNode[node]
+      if (from < 0) {
+        augment = 0
+        break
+      }
+      augment = Math.min(augment, graph[from][prevEdge[node]].cap)
+    }
+    if (augment <= 0) break
+
+    for (let node = sink; node !== source; node = prevNode[node]) {
+      const from = prevNode[node]
+      const edge = graph[from][prevEdge[node]]
+      edge.cap -= augment
+      graph[node][edge.rev].cap += augment
+    }
+
+    flow += augment
+    cost += augment * dist[sink]
+    iterations += 1
+  }
+
+  return { flow, cost, iterations }
+}
+
+function optimizeWithMinCostFlow(
+  units: SearchUnit[],
+  fixedCost: number,
+  remainingCapacity: Map<string, number>,
+  contractCounts: Map<string, number>,
+  contractLimits: Map<string, ContractLimit>,
+  contractOwners: Map<string, string>
+): SearchResult {
+  const source = 0
+  const unitStart = 1
+  const contractIds = [
+    ...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId))),
+  ].sort()
+  const contractorIds = [
+    ...new Set(contractIds.map((contractId) => contractOwners.get(contractId)).filter(Boolean) as string[]),
+  ].sort()
+  const contractStart = unitStart + units.length
+  const contractorStart = contractStart + contractIds.length
+  const sink = contractorStart + contractorIds.length
+  const graph: FlowEdge[][] = Array.from({ length: sink + 1 }, () => [])
+  const contractNode = new Map(contractIds.map((id, index) => [id, contractStart + index]))
+  const contractorNode = new Map(contractorIds.map((id, index) => [id, contractorStart + index]))
+  const candidateEdges = new Map<string, { candidate: CostedCandidate; edge: FlowEdge }[]>()
+
+  units.forEach((searchUnit, index) => {
+    const unitNode = unitStart + index
+    addFlowEdge(graph, source, unitNode, 1, 0)
+    const refs: { candidate: CostedCandidate; edge: FlowEdge }[] = []
+    for (const candidate of searchUnit.candidates) {
+      const target = contractNode.get(candidate.contractId)
+      if (target == null) continue
+      const edge = addFlowEdge(graph, unitNode, target, 1, candidate.expectedCost)
+      refs.push({ candidate, edge })
+    }
+    candidateEdges.set(searchUnit.analysis.unit.id, refs)
+  })
+
+  for (const contractId of contractIds) {
+    const ownerId = contractOwners.get(contractId)
+    const from = contractNode.get(contractId)
+    const to = ownerId ? contractorNode.get(ownerId) : undefined
+    if (from == null || to == null) continue
+    const limit = contractLimits.get(contractId)
+    const remainingMax = Math.max(
+      0,
+      Math.floor((limit?.max ?? units.length) - (contractCounts.get(contractId) ?? 0))
+    )
+    addFlowEdge(graph, from, to, Math.min(remainingMax, units.length), 0)
+  }
+
+  for (const contractorId of contractorIds) {
+    const from = contractorNode.get(contractorId)
+    if (from == null) continue
+    addFlowEdge(graph, from, sink, Math.max(0, remainingCapacity.get(contractorId) ?? 0), 0)
+  }
+
+  const flow = minCostFlow(graph, source, sink, units.length)
+  if (flow.flow !== units.length) {
+    return {
+      status: 'INFEASIBLE',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
+      exploredNodes: flow.iterations,
     }
   }
 
-  const units: SearchUnit[] = decisionAnalyses
-    .map((analysis) => {
-      const candidates = analysis.feasible
-        .filter(
-          (candidate): candidate is FeasibleAlternative & { expectedCost: number } => candidate.expectedCost != null
-        )
-        .sort((a, b) => a.expectedCost - b.expectedCost || a.contractorId.localeCompare(b.contractorId))
-      return { analysis, candidates }
-    })
-    .sort((a, b) => {
-      if (a.candidates.length !== b.candidates.length) return a.candidates.length - b.candidates.length
-      const aRegret = (a.candidates[1]?.expectedCost ?? a.candidates[0].expectedCost) - a.candidates[0].expectedCost
-      const bRegret = (b.candidates[1]?.expectedCost ?? b.candidates[0].expectedCost) - b.candidates[0].expectedCost
-      return bRegret - aRegret || a.analysis.unit.id.localeCompare(b.analysis.unit.id)
-    })
+  const selectedByUnit = new Map<string, CostedCandidate>()
+  for (const searchUnit of units) {
+    const selected = candidateEdges.get(searchUnit.analysis.unit.id)?.find(({ edge }) => edge.cap === 0)
+    if (!selected) {
+      return {
+        status: 'INFEASIBLE',
+        selectedByUnit: new Map(),
+        totalCost: Number.POSITIVE_INFINITY,
+        exploredNodes: flow.iterations,
+      }
+    }
+    selectedByUnit.set(searchUnit.analysis.unit.id, selected.candidate)
+  }
 
+  return {
+    status: 'OPTIMAL',
+    selectedByUnit,
+    totalCost: fixedCost + flow.cost,
+    exploredNodes: flow.iterations,
+  }
+}
+
+function optimizeWithBranchAndBound(
+  units: SearchUnit[],
+  fixedCost: number,
+  remainingCapacity: Map<string, number>,
+  initialContractCounts: Map<string, number>,
+  contractLimits: Map<string, ContractLimit>
+): SearchResult {
+  const contractCounts = new Map(initialContractCounts)
   const suffixMinimum = new Array<number>(units.length + 1).fill(0)
   for (let index = units.length - 1; index >= 0; index -= 1) {
     suffixMinimum[index] = suffixMinimum[index + 1] + units[index].candidates[0].expectedCost
@@ -246,23 +435,19 @@ function optimizeDecisionUnits(
     const values = new Array<number>(units.length + 1).fill(0)
     for (let index = units.length - 1; index >= 0; index -= 1) {
       values[index] =
-        values[index + 1] + (units[index].candidates.some((candidate) => candidate.contractId === contractId) ? 1 : 0)
+        values[index + 1] +
+        (units[index].candidates.some((candidate) => candidate.contractId === contractId) ? 1 : 0)
     }
     suffixPotential.set(contractId, values)
   }
 
-  const remainingCapacity = new Map<string, number>()
-  for (const [contractorId, capacity] of contractorCapacity) {
-    remainingCapacity.set(contractorId, capacity - (contractorCounts.get(contractorId) ?? 0))
-  }
-
   let bestCost = Number.POSITIVE_INFINITY
-  let best = new Map<string, FeasibleAlternative & { expectedCost: number }>()
-  const selected = new Map<string, FeasibleAlternative & { expectedCost: number }>()
+  let best = new Map<string, CostedCandidate>()
+  const selected = new Map<string, CostedCandidate>()
   let exploredNodes = 0
   let truncated = false
   const bestCostByState = new Map<string, number>()
-  const contractorIds = [...contractorCapacity.keys()].sort()
+  const contractorIds = [...remainingCapacity.keys()].sort()
   const contractIds = [...contractLimits.keys()].sort()
 
   const minimaRemainFeasible = (index: number) => {
@@ -337,11 +522,61 @@ function optimizeDecisionUnits(
   }
 }
 
+function optimizeDecisionUnits(
+  scenario: ContractorAllocationScenario,
+  fixed: FixedAssignment[],
+  decisionAnalyses: UnitDecisionAnalysis[]
+): SearchResult {
+  const units = buildSearchUnits(decisionAnalyses)
+  if (units.some((unit) => !unit.candidates.length)) {
+    return {
+      status: 'INFEASIBLE',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
+      exploredNodes: 0,
+    }
+  }
+
+  const { limits: contractLimits, owners: contractOwners } = buildContractLimits(scenario, fixed, units)
+  const state = fixedState(scenario, fixed, contractLimits)
+  if (!state) {
+    return {
+      status: 'INFEASIBLE',
+      selectedByUnit: new Map(),
+      totalCost: Number.POSITIVE_INFINITY,
+      exploredNodes: 0,
+    }
+  }
+
+  const hasOutstandingMinimum = [...contractLimits].some(
+    ([contractId, limit]) => (state.contractCounts.get(contractId) ?? 0) < limit.min
+  )
+
+  if (!hasOutstandingMinimum) {
+    return optimizeWithMinCostFlow(
+      units,
+      state.fixedCost,
+      state.remainingCapacity,
+      state.contractCounts,
+      contractLimits,
+      contractOwners
+    )
+  }
+
+  return optimizeWithBranchAndBound(
+    units,
+    state.fixedCost,
+    state.remainingCapacity,
+    state.contractCounts,
+    contractLimits
+  )
+}
+
 function observedCandidate(analysis: UnitDecisionAnalysis) {
   if (!analysis.unit.observedContractorId) return undefined
   return analysis.feasible.find(
     (candidate) => candidate.contractorId === analysis.unit.observedContractorId && candidate.expectedCost != null
-  ) as (FeasibleAlternative & { expectedCost: number }) | undefined
+  ) as CostedCandidate | undefined
 }
 
 function decisionSpaceMetrics(analyses: UnitDecisionAnalysis[]): DecisionSpaceMetrics {
@@ -398,7 +633,7 @@ export function optimizeContractorAllocation(scenario: ContractorAllocationScena
 
   if (search.status !== 'INFEASIBLE') {
     for (const analysis of analyses) {
-      let selected: (FeasibleAlternative & { expectedCost: number }) | undefined
+      let selected: CostedCandidate | undefined
       if (analysis.type === 'NO_CHOICE') {
         const candidate = analysis.feasible[0]
         if (candidate.expectedCost != null) selected = { ...candidate, expectedCost: candidate.expectedCost }
