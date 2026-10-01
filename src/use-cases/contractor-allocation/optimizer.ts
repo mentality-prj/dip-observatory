@@ -15,7 +15,7 @@ import type {
 } from './domain'
 import { createScenarioInputSnapshot } from './snapshot'
 
-export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/5'
+export const CONTRACTOR_ALLOCATION_OPTIMIZER_VERSION = 'contractor-allocation/6'
 const DEFAULT_MAX_SEARCH_NODES = 750_000
 const EPSILON = 1e-9
 
@@ -118,7 +118,9 @@ function contractInputsTrusted(contract: ContractorContract, scenario: Contracto
   if (!isTrustedSource(provenance.eligibility, 'PROCUREMENT', scenario.asOf)) return false
   if (!isTrustedSource(provenance.rates, 'PROCUREMENT', scenario.asOf)) return false
   if (!isTrustedSource(provenance.volumeState, 'PROCUREMENT', scenario.asOf)) return false
-  return isFiniteNonNegative(contract.consumedVolumeToDate)
+  if (!isFiniteNonNegative(contract.consumedVolumeToDate)) return false
+  if (!isFiniteNonNegative(contract.remainingMinVolume) || !isFiniteNonNegative(contract.remainingMaxVolume)) return false
+  return contract.remainingMinVolume <= contract.remainingMaxVolume + EPSILON
 }
 
 function matchingRate(contract: ContractorContract, unit: AllocationUnit) {
@@ -140,13 +142,9 @@ function estimateCost(contract: ContractorContract, unit: AllocationUnit): numbe
 }
 
 function remainingContractLimit(contract: ContractorContract): ContractLimit {
-  const grossMax = Math.min(
-    contract.maxVolume ?? Number.POSITIVE_INFINITY,
-    contract.awardedCapacity ?? Number.POSITIVE_INFINITY
-  )
   return {
-    min: Math.max(0, (contract.minVolume ?? 0) - contract.consumedVolumeToDate),
-    max: Math.max(0, grossMax - contract.consumedVolumeToDate),
+    min: contract.remainingMinVolume,
+    max: contract.remainingMaxVolume,
   }
 }
 
