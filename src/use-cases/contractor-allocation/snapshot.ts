@@ -96,6 +96,7 @@ export function canonicalJson(value: unknown) {
 function normalizeScenario(scenario: ContractorAllocationScenario): ContractorAllocationScenario {
   return {
     ...scenario,
+    trustedAuthorities: [...scenario.trustedAuthorities].sort((left, right) => left.id.localeCompare(right.id)),
     units: [...scenario.units]
       .sort((left, right) => left.id.localeCompare(right.id))
       .map((unit) => ({
