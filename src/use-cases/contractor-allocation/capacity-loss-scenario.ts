@@ -48,12 +48,42 @@ const decisionAt = '2022-01-01T00:00:00Z'
 const capacityBucket = '2022-01'
 
 const authorities: TrustedAuthority[] = [
-  { id: 'historical-public-scope', sourceRole: 'INSPECTOR', sourceSystem: 'public-eversource-vmp', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'synthetic-procurement', sourceRole: 'PROCUREMENT', sourceSystem: 'synthetic-rebid-model', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'synthetic-work', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-recovery-window', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'synthetic-capacity', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-capacity-model', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'synthetic-registry', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-resource-registry', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'synthetic-estimation', sourceRole: 'OPERATIONS', sourceSystem: 'synthetic-productivity-model', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'historical-public-scope',
+    sourceRole: 'INSPECTOR',
+    sourceSystem: 'public-eversource-vmp',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'synthetic-procurement',
+    sourceRole: 'PROCUREMENT',
+    sourceSystem: 'synthetic-rebid-model',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'synthetic-work',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'synthetic-recovery-window',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'synthetic-capacity',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'synthetic-capacity-model',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'synthetic-registry',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'synthetic-resource-registry',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'synthetic-estimation',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'synthetic-productivity-model',
+    ingress: 'TRUSTED_ADAPTER',
+  },
 ]
 
 function provenance<Role extends SourceRole>(
