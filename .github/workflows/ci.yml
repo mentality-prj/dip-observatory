@@ -8,9 +8,6 @@ on:
     branches:
       - dev
 
-permissions:
-  contents: write
-
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -18,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -34,43 +29,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Move determinism check to the small fixture
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('src/use-cases/contractor-allocation/optimizer.vitest.test.ts')
-          source = path.read_text()
-          source = source.replace(
-              "    const result = optimizeContractorAllocation(input)\n\n    expect(result.status).toBe('OPTIMAL')",
-              "    const result = optimizeContractorAllocation(input)\n    const repeated = optimizeContractorAllocation(input)\n\n    expect(result.status).toBe('OPTIMAL')",
-              1,
-          )
-          source = source.replace(
-              "    expect(result.assignments).toEqual(\n      expect.arrayContaining([",
-              "    expect(repeated.assignments).toEqual(result.assignments)\n    expect(result.assignments).toEqual(\n      expect.arrayContaining([",
-              1,
-          )
-          source = source.replace(
-              "    const first = optimizeContractorAllocation(input)\n    const second = optimizeContractorAllocation(input)\n",
-              "    const first = optimizeContractorAllocation(input)\n",
-              1,
-          )
-          source = source.replace("    expect(second.assignments).toEqual(first.assignments)\n", "", 1)
-          path.write_text(source)
-          PY
-          pnpm exec prettier --write src/use-cases/contractor-allocation/optimizer.vitest.test.ts
-
-      - name: Commit test stabilization
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/use-cases/contractor-allocation/optimizer.vitest.test.ts
-          if ! git diff --cached --quiet; then
-            git commit -m "test: keep heavy allocation replay single-pass"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
 
       - name: Lint
         run: pnpm lint
