@@ -303,6 +303,10 @@ describe('contractor allocation optimizer', () => {
   it('requires contract validity to cover the actual execution window', () => {
     const scenario = globalChoiceScenario()
     scenario.units = [unit('NOV', 'X', 1, '2026-11')]
+    scenario.contractors = scenario.contractors.map((contractor) => ({
+      ...contractor,
+      capacityBuckets: [...contractor.capacityBuckets, { bucket: '2026-11', availableCapacity: 3 }],
+    }))
     scenario.contractors[0].contracts[0].validTo = '2026-10-15'
 
     const analysis = analyzeAllocationUnit(scenario, scenario.units[0])
