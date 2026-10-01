@@ -4,73 +4,80 @@ import { useMemo, useState } from 'react'
 import { RefreshCw, SlidersHorizontal } from 'lucide-react'
 
 import type { Locale } from '@/lib/observatory-i18n'
+import {
+  buildContractorCapacityLossScenario,
+  EVERSOURCE_CAPACITY_LOSS_CIRCUITS,
+  EVERSOURCE_CAPACITY_LOSS_FACTS,
+} from './capacity-loss-scenario'
 import { CapacityLossStory } from './capacity-loss-story'
-import { buildContractorCapacityLossScenario } from './capacity-loss-scenario'
 import { optimizeContractorAllocation } from './optimizer'
 
 const copy = {
   en: {
     eyebrow: 'QDIP · EVERSOURCE CAPACITY-LOSS RECOVERY',
-    title: 'Rebuild awarded vegetation work after a contractor capacity shock',
+    title: 'Allocate returned Nashua vegetation scope after a contractor capacity shock',
     subtitle:
-      'A presentation replay based on the documented 2022 Nashua AWC capacity-loss event. The historical trigger is real; the contractor identities, rates, capacities and recovery economics are synthetic.',
-    run: 'Run QDIP recovery',
-    rerun: 'Recalculate recovery',
-    status: 'Recovery status',
-    feasible: 'Portfolio restored',
-    miles: 'Recovered miles',
-    contractors: 'Recovery contractors',
-    spend: 'Expected recovery spend',
-    table: 'Post-shock recovery allocation',
-    batch: 'Awarded batch',
+      'Historically grounded presentation using the published 2022 Nashua AWC circuit scope. Public circuit IDs and SMT/METT miles are retained; post-rebid bidders, rates, capacities and economics are synthetic.',
+    run: 'Run QDIP recovery allocation',
+    rerun: 'Recalculate recovery allocation',
+    status: 'Model status',
+    feasible: 'Feasible minimum-cost portfolio',
+    miles: 'Allocated scope',
+    contractors: 'Synthetic recovery bidders used',
+    spend: 'Synthetic expected recovery spend',
+    table: 'Circuit-level post-rebid allocation',
+    circuit: 'Circuit',
+    town: 'Town',
     work: 'Program',
     volume: 'Miles',
-    before: 'Original award',
-    after: 'QDIP recovery contractor',
-    cost: 'Expected cost',
-    synthetic: 'Synthetic recovery economics',
+    before: 'Demo pre-shock incumbent',
+    after: 'QDIP recovery bidder',
+    cost: 'Synthetic expected cost',
+    synthetic: 'Historically grounded simulation · synthetic post-rebid economics',
   },
   uk: {
-    eyebrow: 'QDIP · ВІДНОВЛЕННЯ ПІСЛЯ ВТРАТИ ПОТУЖНОСТІ EVERSOURCE',
-    title: 'Перебудова присуджених vegetation робіт після втрати потужності підрядника',
+    eyebrow: 'QDIP · RECOVERY ПІСЛЯ ВТРАТИ ПОТУЖНОСТІ EVERSOURCE',
+    title: 'Розподіл повернутого Nashua vegetation scope після втрати потужності підрядника',
     subtitle:
-      'Презентаційне відтворення на основі задокументованого кейсу Nashua AWC 2022 року. Історичний тригер реальний; назви підрядників, ставки, потужності та економіка recovery — синтетичні.',
-    run: 'Запустити recovery QDIP',
-    rerun: 'Перерахувати recovery',
-    status: 'Статус recovery',
-    feasible: 'Портфель відновлено',
-    miles: 'Відновлені милі',
-    contractors: 'Підрядники recovery',
-    spend: 'Очікувана вартість recovery',
-    table: 'Новий розподіл після втрати потужності',
-    batch: 'Присуджений пакет',
+      'Історично обґрунтована презентація на опублікованому circuit scope Nashua AWC 2022. Реальні circuit IDs та SMT/METT miles збережені; post-rebid bidders, rates, capacities та economics — синтетичні.',
+    run: 'Запустити recovery allocation QDIP',
+    rerun: 'Перерахувати recovery allocation',
+    status: 'Статус моделі',
+    feasible: 'Допустимий мінімальний за вартістю портфель',
+    miles: 'Розподілений scope',
+    contractors: 'Використані synthetic recovery bidders',
+    spend: 'Синтетична очікувана вартість recovery',
+    table: 'Circuit-level allocation після rebid',
+    circuit: 'Circuit',
+    town: 'Місто',
     work: 'Програма',
     volume: 'Милі',
-    before: 'Початковий award',
-    after: 'Підрядник recovery QDIP',
-    cost: 'Очікувана вартість',
-    synthetic: 'Синтетична економіка recovery',
+    before: 'Demo pre-shock incumbent',
+    after: 'Recovery bidder QDIP',
+    cost: 'Синтетична очікувана вартість',
+    synthetic: 'Історично обґрунтована симуляція · синтетична post-rebid economics',
   },
   pl: {
     eyebrow: 'QDIP · RECOVERY PO UTRACIE MOCY EVERSOURCE',
-    title: 'Przebudowa przyznanych prac vegetation po utracie mocy wykonawcy',
+    title: 'Przydział zwróconego zakresu Nashua vegetation po utracie mocy wykonawcy',
     subtitle:
-      'Replay prezentacyjny oparty na udokumentowanym przypadku Nashua AWC z 2022 r. Historyczny trigger jest rzeczywisty; nazwy wykonawców, stawki, moce i ekonomika recovery są syntetyczne.',
-    run: 'Uruchom recovery QDIP',
-    rerun: 'Przelicz recovery',
-    status: 'Status recovery',
-    feasible: 'Portfel przywrócony',
-    miles: 'Odzyskane mile',
-    contractors: 'Wykonawcy recovery',
-    spend: 'Oczekiwany koszt recovery',
-    table: 'Przydział recovery po utracie mocy',
-    batch: 'Przyznany pakiet',
+      'Historycznie ugruntowana prezentacja oparta na opublikowanym zakresie obwodów Nashua AWC 2022. Publiczne identyfikatory obwodów i mile SMT/METT są zachowane; oferenci, stawki, moce i ekonomika po rebid są syntetyczne.',
+    run: 'Uruchom recovery allocation QDIP',
+    rerun: 'Przelicz recovery allocation',
+    status: 'Status modelu',
+    feasible: 'Wykonalny portfel o minimalnym koszcie',
+    miles: 'Przydzielony zakres',
+    contractors: 'Użyci syntetyczni oferenci recovery',
+    spend: 'Syntetyczny oczekiwany koszt recovery',
+    table: 'Przydział na poziomie obwodów po rebid',
+    circuit: 'Obwód',
+    town: 'Miejscowość',
     work: 'Program',
     volume: 'Mile',
-    before: 'Pierwotny award',
-    after: 'Wykonawca recovery QDIP',
-    cost: 'Oczekiwany koszt',
-    synthetic: 'Syntetyczna ekonomika recovery',
+    before: 'Demo pre-shock incumbent',
+    after: 'Oferent recovery QDIP',
+    cost: 'Syntetyczny oczekiwany koszt',
+    synthetic: 'Historycznie ugruntowana symulacja · syntetyczna ekonomika po rebid',
   },
 } as const
 
@@ -87,13 +94,17 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const scenario = useMemo(() => buildContractorCapacityLossScenario(), [])
   const [result, setResult] = useState<ReturnType<typeof optimizeContractorAllocation> | null>(null)
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
+  const circuitById = useMemo(
+    () => new Map(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])),
+    []
+  )
 
-  const recoveredMiles =
+  const allocatedMiles =
     result?.assignments.reduce(
       (sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0),
       0
     ) ?? 0
-  const recoveryContractors = new Set(result?.assignments.map((assignment) => assignment.contractorId) ?? []).size
+  const recoveryBidders = new Set(result?.assignments.map((assignment) => assignment.contractorId) ?? []).size
 
   return (
     <main className="min-h-[calc(100vh-7rem)] text-white">
@@ -125,8 +136,11 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
           <>
             <section className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <Metric label={t.status} value={result.status === 'OPTIMAL' ? t.feasible : result.status} />
-              <Metric label={t.miles} value={`${recoveredMiles}/266`} />
-              <Metric label={t.contractors} value={String(recoveryContractors)} />
+              <Metric
+                label={t.miles}
+                value={`${allocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} mi`}
+              />
+              <Metric label={t.contractors} value={String(recoveryBidders)} />
               <Metric label={t.spend} value={money(locale, result.qdipExpectedSpend)} />
             </section>
 
@@ -136,10 +150,11 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
                 <span className="text-xs text-slate-500">{t.synthetic}</span>
               </div>
               <div className="mt-3 overflow-x-auto border border-white/10">
-                <table className="w-full min-w-[900px] text-left text-sm">
+                <table className="w-full min-w-[1100px] text-left text-sm">
                   <thead className="bg-white/[.04] text-xs text-slate-500">
                     <tr>
-                      <th className="px-3 py-3">{t.batch}</th>
+                      <th className="px-3 py-3">{t.circuit}</th>
+                      <th className="px-3 py-3">{t.town}</th>
                       <th className="px-3 py-3">{t.work}</th>
                       <th className="px-3 py-3 text-right">{t.volume}</th>
                       <th className="px-3 py-3">{t.before}</th>
@@ -150,12 +165,16 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
                   <tbody>
                     {result.assignments.map((assignment) => {
                       const unit = unitById.get(assignment.allocationUnitId)
+                      const circuit = unit ? circuitById.get(unit.scopeId) : undefined
                       return (
                         <tr key={assignment.allocationUnitId} className="border-t border-white/10">
-                          <td className="px-3 py-3 font-mono text-xs">{assignment.allocationUnitId}</td>
+                          <td className="px-3 py-3 font-mono text-xs">{unit?.scopeId ?? assignment.allocationUnitId}</td>
+                          <td className="px-3 py-3 text-slate-400">{circuit?.town ?? '—'}</td>
                           <td className="px-3 py-3 text-slate-300">{unit?.workType ?? '—'}</td>
-                          <td className="px-3 py-3 text-right text-slate-300">{unit?.quantity ?? '—'}</td>
-                          <td className="px-3 py-3 text-slate-500 line-through">Arbor North</td>
+                          <td className="px-3 py-3 text-right text-slate-300">
+                            {unit?.quantity != null ? unit.quantity.toFixed(2) : '—'}
+                          </td>
+                          <td className="px-3 py-3 text-slate-500 line-through">Synthetic incumbent</td>
                           <td className="px-3 py-3 font-medium text-slate-100">{assignment.contractorName}</td>
                           <td className="px-3 py-3 text-right text-slate-300">
                             {money(locale, assignment.expectedCost)}
