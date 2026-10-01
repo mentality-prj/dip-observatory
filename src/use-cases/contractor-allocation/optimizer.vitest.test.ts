@@ -1,9 +1,79 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildContractorAllocationDemoScenario } from './demo-data'
-import type { ContractorAllocationScenario } from './domain'
+import type {
+  AllocationUnit,
+  ContractorAllocationScenario,
+  InputProvenance,
+  SourceRole,
+} from './domain'
 import { analyzeAllocationUnit, optimizeContractorAllocation } from './optimizer'
 import { sha256Hex } from './snapshot'
+
+const capturedAt = '2026-10-01T00:00:00Z'
+
+function source<Role extends SourceRole>(role: Role, id: string): InputProvenance<Role> {
+  return { sourceRole: role, sourceSystem: `${role.toLowerCase()}-system`, sourceRecordId: id, capturedAt }
+}
+
+function unitProvenance(id: string, te = false) {
+  return {
+    scope: source('INSPECTOR', `${id}:scope`),
+    quantity: source('INSPECTOR', `${id}:quantity`),
+    territory: source('INSPECTOR', `${id}:territory`),
+    workType: source('INSPECTOR', `${id}:work-type`),
+    technicalRequirements: source('INSPECTOR', `${id}:requirements`),
+    deadline: source('OPERATIONS', `${id}:deadline`),
+    capacityRequirements: source('OPERATIONS', `${id}:capacity`),
+    contractVolume: source('PROCUREMENT', `${id}:volume`),
+    ...(te ? { teEstimate: source('OPERATIONS', `${id}:te`) } : {}),
+  }
+}
+
+function contractProvenance(id: string) {
+  return {
+    eligibility: source('PROCUREMENT', `${id}:eligibility`),
+    rates: source('PROCUREMENT', `${id}:rates`),
+    volumeState: source('PROCUREMENT', `${id}:volume-state`),
+  }
+}
+
+function contractorProvenance(id: string) {
+  return {
+    capacityBuckets: source('OPERATIONS', `${id}:capacity`),
+    equipment: source('OPERATIONS', `${id}:equipment`),
+    certifications: source('OPERATIONS', `${id}:certifications`),
+  }
+}
+
+function unit(
+  id: string,
+  workType: string,
+  demand: number,
+  bucket: string,
+  observedContractorId?: string,
+  observedContractId?: string
+): AllocationUnit {
+  return {
+    id,
+    type: 'WORK_PACKAGE',
+    territory: 'T',
+    workType,
+    quantity: 1,
+    quantityUnit: 'job',
+    capacityRequirements: [{ bucket, demand }],
+    contractVolume: 1,
+    deadline: `${bucket}-28`,
+    priority: 1,
+    requiredEquipment: [],
+    requiredCertifications: [],
+    scopeId: `S-${id}`,
+    scopeVersion: 1,
+    observedContractorId,
+    observedContractId,
+    provenance: unitProvenance(id),
+  }
+}
 
 function globalChoiceScenario(): ContractorAllocationScenario {
   return {
@@ -11,51 +81,17 @@ function globalChoiceScenario(): ContractorAllocationScenario {
     asOf: '2026-10-01',
     allocationLevel: 'WORK_PACKAGE',
     units: [
-      {
-        id: 'U1',
-        type: 'WORK_PACKAGE',
-        territory: 'T',
-        workType: 'X',
-        quantity: 1,
-        quantityUnit: 'job',
-        capacityDemand: 2,
-        contractVolume: 1,
-        deadline: '2026-10-10',
-        priority: 1,
-        requiredEquipment: [],
-        requiredCertifications: [],
-        scopeId: 'S1',
-        scopeVersion: 1,
-        observedContractorId: 'A',
-        observedContractId: 'A-contract',
-      },
-      {
-        id: 'U2',
-        type: 'WORK_PACKAGE',
-        territory: 'T',
-        workType: 'Y',
-        quantity: 1,
-        quantityUnit: 'job',
-        capacityDemand: 3,
-        contractVolume: 1,
-        deadline: '2026-10-10',
-        priority: 1,
-        requiredEquipment: [],
-        requiredCertifications: [],
-        scopeId: 'S2',
-        scopeVersion: 1,
-        observedContractorId: 'B',
-        observedContractId: 'B-contract',
-      },
+      unit('U1', 'X', 2, '2026-10', 'A', 'A-contract'),
+      unit('U2', 'Y', 3, '2026-10', 'B', 'B-contract'),
     ],
     contractors: [
       {
         id: 'A',
         name: 'A',
-        availableCapacity: 3,
-        availableThrough: '2026-12-31',
+        capacityBuckets: [{ bucket: '2026-10', availableCapacity: 3 }],
         equipment: [],
         certifications: [],
+        provenance: contractorProvenance('A'),
         contracts: [
           {
             id: 'A-contract',
@@ -66,6 +102,8 @@ function globalChoiceScenario(): ContractorAllocationScenario {
             workTypes: ['X', 'Y'],
             pricingModel: 'UNIT_PRICE',
             maxVolume: 2,
+            consumedVolumeToDate: 0,
+            provenance: contractProvenance('A-contract'),
             rates: [
               { workType: 'X', quantityUnit: 'job', unitRate: 1 },
               { workType: 'Y', quantityUnit: 'job', unitRate: 2 },
@@ -76,10 +114,10 @@ function globalChoiceScenario(): ContractorAllocationScenario {
       {
         id: 'B',
         name: 'B',
-        availableCapacity: 3,
-        availableThrough: '2026-12-31',
+        capacityBuckets: [{ bucket: '2026-10', availableCapacity: 3 }],
         equipment: [],
         certifications: [],
+        provenance: contractorProvenance('B'),
         contracts: [
           {
             id: 'B-contract',
@@ -90,6 +128,8 @@ function globalChoiceScenario(): ContractorAllocationScenario {
             workTypes: ['X', 'Y'],
             pricingModel: 'UNIT_PRICE',
             maxVolume: 2,
+            consumedVolumeToDate: 0,
+            provenance: contractProvenance('B-contract'),
             rates: [
               { workType: 'X', quantityUnit: 'job', unitRate: 2 },
               { workType: 'Y', quantityUnit: 'job', unitRate: 100 },
@@ -106,30 +146,19 @@ function multiContractScenario(): ContractorAllocationScenario {
     id: 'multi-contract-test',
     asOf: '2026-10-01',
     allocationLevel: 'WORK_PACKAGE',
-    units: ['U1', 'U2'].map((id, index) => ({
-      id,
-      type: 'WORK_PACKAGE' as const,
-      territory: 'T',
-      workType: 'X',
+    units: ['U1', 'U2'].map((id) => ({
+      ...unit(id, 'X', 2, '2026-10'),
       quantity: 2,
-      quantityUnit: 'job',
-      capacityDemand: 2,
       contractVolume: 2,
-      deadline: '2026-10-10',
-      priority: 1,
-      requiredEquipment: [],
-      requiredCertifications: [],
-      scopeId: `S${index + 1}`,
-      scopeVersion: 1,
     })),
     contractors: [
       {
         id: 'A',
         name: 'A',
-        availableCapacity: 4,
-        availableThrough: '2026-12-31',
+        capacityBuckets: [{ bucket: '2026-10', availableCapacity: 4 }],
         equipment: [],
         certifications: [],
+        provenance: contractorProvenance('A'),
         contracts: [
           {
             id: 'A-cheap',
@@ -139,7 +168,9 @@ function multiContractScenario(): ContractorAllocationScenario {
             territories: ['T'],
             workTypes: ['X'],
             pricingModel: 'UNIT_PRICE',
-            maxVolume: 2,
+            maxVolume: 4,
+            consumedVolumeToDate: 2,
+            provenance: contractProvenance('A-cheap'),
             rates: [{ workType: 'X', quantityUnit: 'job', unitRate: 1 }],
           },
           {
@@ -150,7 +181,10 @@ function multiContractScenario(): ContractorAllocationScenario {
             territories: ['T'],
             workTypes: ['X'],
             pricingModel: 'UNIT_PRICE',
-            maxVolume: 4,
+            maxVolume: 10,
+            minVolume: 4,
+            consumedVolumeToDate: 4,
+            provenance: contractProvenance('A-overflow'),
             rates: [{ workType: 'X', quantityUnit: 'job', unitRate: 3 }],
           },
         ],
@@ -160,7 +194,7 @@ function multiContractScenario(): ContractorAllocationScenario {
 }
 
 describe('contractor allocation optimizer', () => {
-  it('optimizes indivisible workload globally instead of counting packages as equal capacity', () => {
+  it('optimizes indivisible time-bucketed workload globally', () => {
     const result = optimizeContractorAllocation(globalChoiceScenario())
 
     expect(result.status).toBe('OPTIMAL')
@@ -172,9 +206,10 @@ describe('contractor allocation optimizer', () => {
       ])
     )
     expect(result.counterfactualAllocationAdvantage).toBe(97)
+    expect(result.optimalityGapPct).toBe(0)
   })
 
-  it('consumes contract volume and preserves multiple contracts for the same contractor', () => {
+  it('uses remaining contract volume after already-consumed volume and does not re-impose fulfilled minimums', () => {
     const scenario = multiContractScenario()
     const analysis = analyzeAllocationUnit(scenario, scenario.units[0])
     const result = optimizeContractorAllocation(scenario)
@@ -186,17 +221,60 @@ describe('contractor allocation optimizer', () => {
     expect(result.qdipExpectedSpend).toBe(8)
   })
 
+  it('keeps contractor capacity independent across execution buckets', () => {
+    const scenario = globalChoiceScenario()
+    scenario.units = [unit('OCT', 'X', 3, '2026-10'), unit('NOV', 'X', 3, '2026-11')]
+    scenario.contractors = scenario.contractors.map((contractor, index) => ({
+      ...contractor,
+      capacityBuckets: [
+        { bucket: '2026-10', availableCapacity: index === 0 ? 3 : 0 },
+        { bucket: '2026-11', availableCapacity: index === 0 ? 0 : 3 },
+      ],
+      contracts: contractor.contracts.map((contract) => ({ ...contract, workTypes: ['X'] })),
+    }))
+
+    const result = optimizeContractorAllocation(scenario)
+    expect(result.status).toBe('OPTIMAL')
+    expect(result.assignments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ allocationUnitId: 'OCT', contractorId: 'A' }),
+        expect.objectContaining({ allocationUnitId: 'NOV', contractorId: 'B' }),
+      ])
+    )
+  })
+
+  it('rejects decision-driving inputs when planner provenance replaces the authoritative owner', () => {
+    const scenario = globalChoiceScenario()
+    scenario.units[0].provenance.deadline = source('PLANNER', 'planner:deadline') as never
+
+    const analysis = analyzeAllocationUnit(scenario, scenario.units[0])
+    expect(analysis.type).toBe('INFEASIBLE')
+    expect(analysis.rejected.every((candidate) => candidate.reasons.includes('UNTRUSTED_INPUT'))).toBe(true)
+  })
+
+  it('rejects future information that was not available at decision time', () => {
+    const scenario = globalChoiceScenario()
+    scenario.contractors[0].provenance.capacityBuckets = {
+      ...scenario.contractors[0].provenance.capacityBuckets,
+      capturedAt: '2026-10-02T00:00:00Z',
+    }
+
+    const analysis = analyzeAllocationUnit(scenario, scenario.units[0])
+    const rejectedA = analysis.rejected.find((candidate) => candidate.contractorId === 'A')
+    expect(rejectedA?.reasons).toContain('UNTRUSTED_INPUT')
+  })
+
   it('marks time-and-equipment work as an exception when no costable alternative exists', () => {
     const scenario = globalChoiceScenario()
-    const unit = {
+    const teUnit = {
       ...scenario.units[0],
       id: 'TE',
       workType: 'TE',
-      quantityUnit: 'job',
       observedContractorId: undefined,
       observedContractId: undefined,
+      provenance: unitProvenance('TE'),
     }
-    scenario.units = [unit]
+    scenario.units = [teUnit]
     scenario.contractors = scenario.contractors.map((contractor) => ({
       ...contractor,
       contracts: [
@@ -209,12 +287,12 @@ describe('contractor allocation optimizer', () => {
       ],
     }))
 
-    expect(analyzeAllocationUnit(scenario, unit).type).toBe('EXCEPTION_REQUIRED')
+    expect(analyzeAllocationUnit(scenario, teUnit).type).toBe('EXCEPTION_REQUIRED')
   })
 
   it('does not let an uncostable T&E candidate block a costable contractor', () => {
     const scenario = globalChoiceScenario()
-    scenario.units = [{ ...scenario.units[0], observedContractorId: 'A', observedContractId: 'A-contract' }]
+    scenario.units = [scenario.units[0]]
     scenario.contractors[1] = {
       ...scenario.contractors[1],
       contracts: [
@@ -223,6 +301,7 @@ describe('contractor allocation optimizer', () => {
           id: 'B-te',
           workTypes: ['X'],
           pricingModel: 'TIME_AND_EQUIPMENT',
+          provenance: contractProvenance('B-te'),
           rates: [{ workType: 'X', quantityUnit: 'job', laborRate: 90, equipmentRate: 70 }],
         },
       ],
@@ -241,24 +320,16 @@ describe('contractor allocation optimizer', () => {
     expect(result.assignments).toEqual([expect.objectContaining({ contractorId: 'A', contractId: 'A-contract' })])
   })
 
-  it('rejects a contractor that cannot satisfy weighted capacity or equipment requirements', () => {
-    const scenario = globalChoiceScenario()
-    const capacityAnalysis = analyzeAllocationUnit(scenario, {
-      ...scenario.units[0],
-      capacityDemand: 4,
-    })
-    const equipmentAnalysis = analyzeAllocationUnit(scenario, {
-      ...scenario.units[0],
-      requiredEquipment: ['crane'],
-    })
+  it('reports UNKNOWN instead of claiming a bounded optimum when proof search is cut off', () => {
+    const result = optimizeContractorAllocation(globalChoiceScenario(), { maxSearchNodes: 0 })
 
-    expect(capacityAnalysis.type).toBe('INFEASIBLE')
-    expect(capacityAnalysis.rejected.every((candidate) => candidate.reasons.includes('NO_CAPACITY'))).toBe(true)
-    expect(equipmentAnalysis.type).toBe('INFEASIBLE')
-    expect(equipmentAnalysis.rejected.every((candidate) => candidate.reasons.includes('MISSING_EQUIPMENT'))).toBe(true)
+    expect(result.status).toBe('UNKNOWN')
+    expect(result.lowerBound).toBe(3)
+    expect(result.optimalityGapPct).toBeNull()
+    expect(result.counterfactualAllocationAdvantage).toBeNull()
   })
 
-  it('creates a canonical SHA-256 snapshot that changes with authoritative inputs', () => {
+  it('creates one canonical SHA-256 scenario snapshot referenced by every assignment', () => {
     expect(sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
 
     const scenario = globalChoiceScenario()
@@ -267,17 +338,15 @@ describe('contractor allocation optimizer', () => {
     changed.contractors[0].contracts[0].rates[0].unitRate = 7
     const second = optimizeContractorAllocation(changed)
 
-    const firstSnapshot = first.assignments.find((assignment) => assignment.allocationUnitId === 'U1')?.inputSnapshot
-    const secondSnapshot = second.assignments.find((assignment) => assignment.allocationUnitId === 'U1')?.inputSnapshot
-
-    expect(firstSnapshot?.algorithm).toBe('SHA-256')
-    expect(firstSnapshot?.id).toMatch(/^[a-f0-9]{64}$/)
-    expect(firstSnapshot?.canonicalInput).toContain('availableCapacity')
-    expect(firstSnapshot?.canonicalInput).toContain('unitRate')
-    expect(secondSnapshot?.id).not.toBe(firstSnapshot?.id)
+    expect(first.scenarioSnapshot.algorithm).toBe('SHA-256')
+    expect(first.scenarioSnapshot.id).toMatch(/^[a-f0-9]{64}$/)
+    expect(first.scenarioSnapshot.canonicalInput).toContain('consumedVolumeToDate')
+    expect(first.scenarioSnapshot.canonicalInput).toContain('sourceRecordId')
+    expect(first.assignments.every((assignment) => assignment.inputSnapshotId === first.scenarioSnapshot.id)).toBe(true)
+    expect(second.scenarioSnapshot.id).not.toBe(first.scenarioSnapshot.id)
   })
 
-  it('produces a deterministic weighted economic replay for the synthetic portfolio', () => {
+  it('produces a deterministic economic replay for the synthetic portfolio', () => {
     const scenario = buildContractorAllocationDemoScenario()
     const first = optimizeContractorAllocation(scenario)
     const second = optimizeContractorAllocation(scenario)
@@ -291,7 +360,7 @@ describe('contractor allocation optimizer', () => {
     expect(first.observedInvalidUnitIds).toEqual([])
     expect(first.counterfactualAllocationAdvantage).not.toBeNull()
     expect(first.counterfactualAllocationAdvantage ?? 0).toBeGreaterThan(0)
-    expect(first.assignments.every((assignment) => assignment.inputSnapshot.id.length === 64)).toBe(true)
+    expect(first.assignments.every((assignment) => assignment.inputSnapshotId === first.scenarioSnapshot.id)).toBe(true)
     expect(second.assignments).toEqual(first.assignments)
     expect(second.qdipExpectedSpend).toBe(first.qdipExpectedSpend)
   })
