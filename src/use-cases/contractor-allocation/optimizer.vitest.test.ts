@@ -76,7 +76,7 @@ function globalChoiceScenario(): ContractorAllocationScenario {
       {
         id: 'B',
         name: 'B',
-        availableCapacity: 2,
+        availableCapacity: 3,
         availableThrough: '2026-12-31',
         equipment: [],
         certifications: [],
