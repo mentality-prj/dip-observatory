@@ -57,6 +57,8 @@ const contractors: Contractor[] = [
         maxVolume: 500,
         awardedCapacity: 500,
         consumedVolumeToDate: 120,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 380,
         provenance: contractProvenance('an-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 115, mobilizationCost: 120 },
@@ -73,6 +75,8 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
         consumedVolumeToDate: 20,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 80,
         provenance: contractProvenance('an-te-2026'),
         rates: [
           {
@@ -108,6 +112,8 @@ const contractors: Contractor[] = [
         maxVolume: 500,
         awardedCapacity: 500,
         consumedVolumeToDate: 140,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 360,
         provenance: contractProvenance('gl-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 96, mobilizationCost: 160 },
@@ -124,6 +130,8 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
         consumedVolumeToDate: 15,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 85,
         provenance: contractProvenance('gl-te-2026'),
         rates: [
           {
@@ -159,6 +167,8 @@ const contractors: Contractor[] = [
         maxVolume: 500,
         awardedCapacity: 500,
         consumedVolumeToDate: 110,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 390,
         provenance: contractProvenance('cw-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 102, mobilizationCost: 100 },
@@ -175,6 +185,8 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
         consumedVolumeToDate: 10,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 90,
         provenance: contractProvenance('cw-te-2026'),
         rates: [
           {
@@ -210,6 +222,8 @@ const contractors: Contractor[] = [
         maxVolume: 500,
         awardedCapacity: 500,
         consumedVolumeToDate: 130,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 370,
         provenance: contractProvenance('ls-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 108, mobilizationCost: 140 },
@@ -226,6 +240,8 @@ const contractors: Contractor[] = [
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
         consumedVolumeToDate: 18,
+        remainingMinVolume: 0,
+        remainingMaxVolume: 82,
         provenance: contractProvenance('ls-te-2026'),
         rates: [
           {
@@ -321,11 +337,7 @@ function withObservedAllocation(units: AllocationUnit[]) {
   const contractRemaining = new Map<string, number>()
   for (const contractor of contractors) {
     for (const contract of contractor.contracts) {
-      const grossMax = Math.min(
-        contract.maxVolume ?? Number.POSITIVE_INFINITY,
-        contract.awardedCapacity ?? Number.POSITIVE_INFINITY
-      )
-      contractRemaining.set(contract.id, Math.max(0, grossMax - contract.consumedVolumeToDate))
+      contractRemaining.set(contract.id, contract.remainingMaxVolume)
     }
   }
 
