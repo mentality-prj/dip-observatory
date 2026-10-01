@@ -195,7 +195,13 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const [delayCost, setDelayCost] = useState(0)
   const [qdipOperatingCost, setQdipOperatingCost] = useState(5000)
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
-  const circuitById = useMemo(() => new Map(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])), [])
+  const circuitById = useMemo(
+    () =>
+      new Map<string, (typeof EVERSOURCE_CAPACITY_LOSS_CIRCUITS)[number]>(
+        EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])
+      ),
+    []
+  )
   const allocatedMiles =
     result?.assignments.reduce(
       (sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0),
