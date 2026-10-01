@@ -6,12 +6,7 @@ import { CircleAlert, Database, RefreshCw, ShieldCheck, SlidersHorizontal, Users
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
 import { buildContractorAllocationDemoScenario } from './demo-data'
-import type {
-  AllocationAssignment,
-  AllocationReservation,
-  DecisionType,
-  UnitDecisionAnalysis,
-} from './domain'
+import type { AllocationAssignment, AllocationReservation, DecisionType, UnitDecisionAnalysis } from './domain'
 import { contractorAllocationI18n } from './i18n'
 import { optimizeContractorAllocation } from './optimizer'
 
@@ -179,7 +174,11 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
             onClick={run}
             className="inline-flex items-center justify-center gap-2 bg-sky-400 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-sky-300"
           >
-            {result ? <RefreshCw className="h-4 w-4" aria-hidden /> : <SlidersHorizontal className="h-4 w-4" aria-hidden />}
+            {result ? (
+              <RefreshCw className="h-4 w-4" aria-hidden />
+            ) : (
+              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            )}
             {result ? t.rerun : t.run}
           </button>
         </section>
@@ -197,7 +196,8 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <h2 className="text-xl font-medium">{t.summaryTitle}</h2>
                 <span className="text-xs text-slate-500">
-                  {t.status[result.status]} · {t.optimizer} {result.optimizerVersion} · {t.exploredNodes} {result.exploredNodes}
+                  {t.status[result.status]} · {t.optimizer} {result.optimizerVersion} · {t.exploredNodes}{' '}
+                  {result.exploredNodes}
                 </span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -230,21 +230,23 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                     <p className="mt-1 text-xs text-slate-500">{t.decisionSpaceHint}</p>
                   </div>
                   <div className="flex flex-wrap gap-2" aria-label={t.decisionSpace}>
-                    {(['all', 'ALLOCATION_DECISION_REQUIRED', 'NO_CHOICE', 'EXCEPTION_REQUIRED', 'INFEASIBLE'] as const).map(
-                      (value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          aria-pressed={filter === value}
-                          onClick={() => setFilter(value)}
-                          className={`border px-3 py-1.5 text-xs ${
-                            filter === value ? 'border-sky-400/50 bg-sky-400/10 text-sky-200' : 'border-white/10 text-slate-400'
-                          }`}
-                        >
-                          {t.filters[value]}
-                        </button>
-                      )
-                    )}
+                    {(
+                      ['all', 'ALLOCATION_DECISION_REQUIRED', 'NO_CHOICE', 'EXCEPTION_REQUIRED', 'INFEASIBLE'] as const
+                    ).map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={filter === value}
+                        onClick={() => setFilter(value)}
+                        className={`border px-3 py-1.5 text-xs ${
+                          filter === value
+                            ? 'border-sky-400/50 bg-sky-400/10 text-sky-200'
+                            : 'border-white/10 text-slate-400'
+                        }`}
+                      >
+                        {t.filters[value]}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -276,7 +278,8 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                           >
                             <td className="px-3 py-3 font-mono text-xs text-slate-300">{analysis.unit.id}</td>
                             <td className="px-3 py-3 text-xs text-slate-400">
-                              {analysis.unit.territory} · {analysis.unit.workType} · {analysis.unit.quantity} {analysis.unit.quantityUnit}
+                              {analysis.unit.territory} · {analysis.unit.workType} · {analysis.unit.quantity}{' '}
+                              {analysis.unit.quantityUnit}
                             </td>
                             <td className="px-3 py-3 text-slate-300">
                               {contractorName(analysis, analysis.unit.observedContractorId)}
@@ -294,7 +297,9 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
                               {money(locale, assignment?.expectedDelta)}
                             </td>
                             <td className="px-3 py-3">
-                              <span className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}>
+                              <span
+                                className={`inline-block border px-2 py-1 text-[11px] ${decisionTone[analysis.type]}`}
+                              >
                                 {t.decisionLabels[analysis.type]}
                               </span>
                             </td>
@@ -384,7 +389,9 @@ function DecisionDetail({
           <div>
             <dt className="text-slate-500">capacity demand</dt>
             <dd className="mt-1 text-slate-300">
-              {unit.capacityRequirements.map((requirement) => `${requirement.bucket}: ${requirement.demand}`).join(', ')}
+              {unit.capacityRequirements
+                .map((requirement) => `${requirement.bucket}: ${requirement.demand}`)
+                .join(', ')}
             </dd>
           </div>
           <div>
@@ -436,7 +443,10 @@ function DecisionDetail({
           {[...analysis.feasible]
             .sort((a, b) => (a.expectedCost ?? Number.POSITIVE_INFINITY) - (b.expectedCost ?? Number.POSITIVE_INFINITY))
             .map((candidate) => (
-              <div key={`${candidate.contractorId}-${candidate.contractId}`} className="border border-white/10 p-3 text-sm">
+              <div
+                key={`${candidate.contractorId}-${candidate.contractId}`}
+                className="border border-white/10 p-3 text-sm"
+              >
                 <div className="flex justify-between gap-3">
                   <span className="font-medium text-slate-200">{candidate.contractorName}</span>
                   <span className="tabular-nums text-slate-300">{money(locale, candidate.expectedCost)}</span>
@@ -454,9 +464,14 @@ function DecisionDetail({
         {analysis.rejected.length ? (
           <div className="mt-2 space-y-2">
             {analysis.rejected.map((candidate) => (
-              <div key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`} className="border border-white/10 p-3">
+              <div
+                key={`${candidate.contractorId}-${candidate.contractId ?? 'contractor'}`}
+                className="border border-white/10 p-3"
+              >
                 <div className="text-sm font-medium text-slate-300">{candidate.contractorName}</div>
-                {candidate.contractId ? <div className="mt-1 text-xs text-slate-600">{candidate.contractId}</div> : null}
+                {candidate.contractId ? (
+                  <div className="mt-1 text-xs text-slate-600">{candidate.contractId}</div>
+                ) : null}
                 <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-500">
                   {candidate.reasons.map((reason) => (
                     <li key={reason}>• {t.reasons[reason] ?? reason}</li>

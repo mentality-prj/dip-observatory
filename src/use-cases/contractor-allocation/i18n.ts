@@ -170,7 +170,8 @@ export const contractorAllocationI18n: Record<Locale, ContractorAllocationCopy> 
       SLA_IMPOSSIBLE: 'The planned execution window exceeds the operational deadline.',
       CONTRACT_VOLUME_LIMIT: 'Remaining contract volume is insufficient.',
       RATE_NOT_CONFIGURED: 'No authoritative rate is configured for this work.',
-      UNTRUSTED_INPUT: 'A decision-driving input does not resolve to the required trusted adapter or uses future information.',
+      UNTRUSTED_INPUT:
+        'A decision-driving input does not resolve to the required trusted adapter or uses future information.',
       INVALID_SCENARIO_INPUT: 'Scenario invariants are invalid.',
       'T&E_REQUIRES_EXCEPTION': 'Time-and-equipment hours cannot be estimated from trusted inputs.',
     },
