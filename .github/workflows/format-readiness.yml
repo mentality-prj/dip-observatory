@@ -1,0 +1,35 @@
+name: Format readiness
+
+on:
+  push:
+    branches:
+      - feat/readiness-recovery-planner
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/readiness-recovery-planner
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write src/use-cases/readiness-recovery/advantage.tsx
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/use-cases/readiness-recovery/advantage.tsx
+          git commit -m "style(readiness): apply prettier output"
+          git push origin HEAD:feat/readiness-recovery-planner
