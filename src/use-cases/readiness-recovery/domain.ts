@@ -109,12 +109,7 @@ export type ScenarioUncertaintySummary = {
   p90RecoveryTimeHours: number
 }
 
-export type ScenarioLabel =
-  | 'MAXIMUM_READINESS'
-  | 'FAST_RECOVERY'
-  | 'PARTS_CONSERVATIVE'
-  | 'LOW_RISK'
-  | 'BALANCED'
+export type ScenarioLabel = 'MAXIMUM_READINESS' | 'FAST_RECOVERY' | 'PARTS_CONSERVATIVE' | 'LOW_RISK' | 'BALANCED'
 
 export type RecoveryScenario = {
   scenarioId: string
