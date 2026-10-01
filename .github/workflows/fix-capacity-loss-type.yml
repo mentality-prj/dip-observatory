@@ -1,21 +1,20 @@
 name: Fix capacity-loss type
 
 on:
-  pull_request:
+  push:
     branches:
-      - dev
+      - feature/contractor-capacity-loss-demo
 
 permissions:
   contents: write
 
 jobs:
   fix:
-    if: github.head_ref == 'feature/contractor-capacity-loss-demo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: feature/contractor-capacity-loss-demo
       - name: Fix circuit map key type
         run: |
           python - <<'PY'
@@ -23,7 +22,7 @@ jobs:
           p = Path('src/use-cases/contractor-allocation/capacity-loss-workspace.tsx')
           s = p.read_text()
           old = "const circuitById = useMemo(() => new Map(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])), [])"
-          new = "const circuitById = useMemo(\n    () => new Map<string, (typeof EVERSOURCE_CAPACITY_LOSS_CIRCUITS)[number]>(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])),\n    []\n  )"
+          new = "const circuitById = useMemo(\n    () =>\n      new Map<string, (typeof EVERSOURCE_CAPACITY_LOSS_CIRCUITS)[number]>(\n        EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])\n      ),\n    []\n  )"
           if old not in s:
               raise SystemExit('target line not found')
           p.write_text(s.replace(old, new))
@@ -35,4 +34,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/use-cases/contractor-allocation/capacity-loss-workspace.tsx
           git commit -m "fix(contractor-allocation): widen circuit lookup key" || exit 0
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:feature/contractor-capacity-loss-demo
