@@ -91,8 +91,7 @@ function candidateForContractor(
 
   const withVolume = forWorkType.filter(
     (contract) =>
-      (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 &&
-      (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
+      (contract.maxVolume ?? Number.POSITIVE_INFINITY) > 0 && (contract.awardedCapacity ?? Number.POSITIVE_INFINITY) > 0
   )
   if (forWorkType.length && !withVolume.length) reasons.push('CONTRACT_VOLUME_LIMIT')
 
@@ -193,11 +192,7 @@ function buildSearchUnits(decisionAnalyses: UnitDecisionAnalysis[]): SearchUnit[
     .sort((a, b) => a.analysis.unit.id.localeCompare(b.analysis.unit.id))
 }
 
-function buildContractLimits(
-  scenario: ContractorAllocationScenario,
-  fixed: FixedAssignment[],
-  units: SearchUnit[]
-) {
+function buildContractLimits(scenario: ContractorAllocationScenario, fixed: FixedAssignment[], units: SearchUnit[]) {
   const relevantContractIds = new Set([
     ...fixed.map((assignment) => assignment.contractId),
     ...units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId)),
