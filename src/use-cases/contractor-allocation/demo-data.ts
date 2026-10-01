@@ -1,16 +1,50 @@
-import type { AllocationUnit, Contractor, ContractorAllocationScenario } from './domain'
+import type {
+  AllocationUnit,
+  Contractor,
+  ContractorAllocationScenario,
+  InputProvenance,
+  SourceRole,
+} from './domain'
 import { analyzeAllocationUnit } from './optimizer'
 
 const asOf = '2026-10-01'
+const capturedAt = '2026-10-01T00:00:00Z'
+
+function source<Role extends SourceRole>(
+  sourceRole: Role,
+  sourceSystem: string,
+  sourceRecordId: string
+): InputProvenance<Role> {
+  return { sourceRole, sourceSystem, sourceRecordId, capturedAt }
+}
+
+function contractProvenance(contractId: string) {
+  return {
+    eligibility: source('PROCUREMENT', 'procurement-contracts', `${contractId}:eligibility`),
+    rates: source('PROCUREMENT', 'procurement-contracts', `${contractId}:rates`),
+    volumeState: source('PROCUREMENT', 'procurement-contracts', `${contractId}:volume-state`),
+  }
+}
+
+function contractorProvenance(contractorId: string) {
+  return {
+    capacityBuckets: source('OPERATIONS', 'resource-capacity', `${contractorId}:capacity`),
+    equipment: source('OPERATIONS', 'resource-registry', `${contractorId}:equipment`),
+    certifications: source('OPERATIONS', 'resource-registry', `${contractorId}:certifications`),
+  }
+}
 
 const contractors: Contractor[] = [
   {
     id: 'arbor-north',
     name: 'Arbor North',
-    availableCapacity: 500,
-    availableThrough: '2026-12-31',
+    capacityBuckets: [
+      { bucket: '2026-10', availableCapacity: 500 },
+      { bucket: '2026-11', availableCapacity: 500 },
+    ],
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
+    provenance: contractorProvenance('arbor-north'),
     contracts: [
       {
         id: 'an-unit-2026',
@@ -22,6 +56,8 @@ const contractors: Contractor[] = [
         pricingModel: 'UNIT_PRICE',
         maxVolume: 500,
         awardedCapacity: 500,
+        consumedVolumeToDate: 120,
+        provenance: contractProvenance('an-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 115, mobilizationCost: 120 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 230, mobilizationCost: 180 },
@@ -36,6 +72,8 @@ const contractors: Contractor[] = [
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
+        consumedVolumeToDate: 20,
+        provenance: contractProvenance('an-te-2026'),
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -51,10 +89,13 @@ const contractors: Contractor[] = [
   {
     id: 'green-line',
     name: 'Green Line Services',
-    availableCapacity: 500,
-    availableThrough: '2026-12-31',
+    capacityBuckets: [
+      { bucket: '2026-10', availableCapacity: 500 },
+      { bucket: '2026-11', availableCapacity: 500 },
+    ],
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
+    provenance: contractorProvenance('green-line'),
     contracts: [
       {
         id: 'gl-unit-2026',
@@ -66,6 +107,8 @@ const contractors: Contractor[] = [
         pricingModel: 'UNIT_PRICE',
         maxVolume: 500,
         awardedCapacity: 500,
+        consumedVolumeToDate: 140,
+        provenance: contractProvenance('gl-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 96, mobilizationCost: 160 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 218, mobilizationCost: 190 },
@@ -80,6 +123,8 @@ const contractors: Contractor[] = [
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
+        consumedVolumeToDate: 15,
+        provenance: contractProvenance('gl-te-2026'),
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -95,10 +140,13 @@ const contractors: Contractor[] = [
   {
     id: 'canopy-works',
     name: 'Canopy Works',
-    availableCapacity: 500,
-    availableThrough: '2026-12-31',
+    capacityBuckets: [
+      { bucket: '2026-10', availableCapacity: 500 },
+      { bucket: '2026-11', availableCapacity: 500 },
+    ],
     equipment: ['bucket-truck', 'chipper'],
     certifications: ['line-clearance', 'arborist'],
+    provenance: contractorProvenance('canopy-works'),
     contracts: [
       {
         id: 'cw-unit-2026',
@@ -110,6 +158,8 @@ const contractors: Contractor[] = [
         pricingModel: 'UNIT_PRICE',
         maxVolume: 500,
         awardedCapacity: 500,
+        consumedVolumeToDate: 110,
+        provenance: contractProvenance('cw-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 102, mobilizationCost: 100 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 185, mobilizationCost: 135 },
@@ -124,6 +174,8 @@ const contractors: Contractor[] = [
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
+        consumedVolumeToDate: 10,
+        provenance: contractProvenance('cw-te-2026'),
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -139,10 +191,13 @@ const contractors: Contractor[] = [
   {
     id: 'line-safe',
     name: 'Line Safe Vegetation',
-    availableCapacity: 500,
-    availableThrough: '2026-12-31',
+    capacityBuckets: [
+      { bucket: '2026-10', availableCapacity: 500 },
+      { bucket: '2026-11', availableCapacity: 500 },
+    ],
     equipment: ['bucket-truck', 'chipper', 'crane'],
     certifications: ['line-clearance', 'arborist', 'crane-operator'],
+    provenance: contractorProvenance('line-safe'),
     contracts: [
       {
         id: 'ls-unit-2026',
@@ -154,6 +209,8 @@ const contractors: Contractor[] = [
         pricingModel: 'UNIT_PRICE',
         maxVolume: 500,
         awardedCapacity: 500,
+        consumedVolumeToDate: 130,
+        provenance: contractProvenance('ls-unit-2026'),
         rates: [
           { workType: 'ROUTINE_TRIM', quantityUnit: 'tree', unitRate: 108, mobilizationCost: 140 },
           { workType: 'HAZARD_TREE_REMOVAL', quantityUnit: 'tree', unitRate: 205, mobilizationCost: 160 },
@@ -168,6 +225,8 @@ const contractors: Contractor[] = [
         workTypes: ['EMERGENCY_CLEARANCE'],
         pricingModel: 'TIME_AND_EQUIPMENT',
         maxVolume: 100,
+        consumedVolumeToDate: 18,
+        provenance: contractProvenance('ls-te-2026'),
         rates: [
           {
             workType: 'EMERGENCY_CLEARANCE',
@@ -182,9 +241,26 @@ const contractors: Contractor[] = [
   },
 ]
 
+function unitProvenance(unitId: string, hasTeEstimate: boolean) {
+  return {
+    scope: source('INSPECTOR', 'field-inspection', `${unitId}:scope`),
+    quantity: source('INSPECTOR', 'field-inspection', `${unitId}:quantity`),
+    territory: source('INSPECTOR', 'field-inspection', `${unitId}:territory`),
+    workType: source('INSPECTOR', 'field-inspection', `${unitId}:work-type`),
+    technicalRequirements: source('INSPECTOR', 'field-inspection', `${unitId}:requirements`),
+    deadline: source('OPERATIONS', 'work-management', `${unitId}:deadline`),
+    capacityRequirements: source('OPERATIONS', 'resource-planning', `${unitId}:capacity-profile`),
+    contractVolume: source('PROCUREMENT', 'procurement-contracts', `${unitId}:contract-volume`),
+    ...(hasTeEstimate
+      ? { teEstimate: source('OPERATIONS', 'work-estimation', `${unitId}:te-estimate`) }
+      : {}),
+  }
+}
+
 function buildUnits(): AllocationUnit[] {
   return Array.from({ length: 100 }, (_, offset) => {
     const index = offset + 1
+    const id = `AU-${String(index).padStart(3, '0')}`
     const territory = ['NORTH', 'CENTRAL', 'SOUTH'][offset % 3]
     const emergency = index % 10 === 0
     const removal = !emergency && index % 4 === 0
@@ -193,24 +269,27 @@ function buildUnits(): AllocationUnit[] {
     const impossible = index % 37 === 0
     const quantity = emergency ? 1 : 2 + (index % 5)
     const uncertainTimeAndEquipment = emergency && index % 30 === 0
+    const bucket = index > 62 ? '2026-11' : '2026-10'
+    const hasTeEstimate = emergency && !uncertainTimeAndEquipment
 
     return {
-      id: `AU-${String(index).padStart(3, '0')}`,
+      id,
       type: 'WORK_PACKAGE',
       territory,
       workType,
       quantity,
       quantityUnit: emergency ? 'job' : 'tree',
-      capacityDemand: emergency ? 4 : quantity,
+      capacityRequirements: [{ bucket, demand: emergency ? 4 : quantity }],
       contractVolume: emergency ? 1 : quantity,
-      deadline: `2026-${index > 62 ? '11' : '10'}-${String((index % 27) + 2).padStart(2, '0')}`,
+      deadline: `${bucket}-${String((index % 27) + 2).padStart(2, '0')}`,
       priority: 1 + (index % 3),
       requiredEquipment: impossible ? ['helicopter'] : crane ? ['crane'] : ['bucket-truck', 'chipper'],
       requiredCertifications: crane ? ['line-clearance', 'crane-operator'] : ['line-clearance'],
       scopeId: `scope-${String(index).padStart(3, '0')}`,
       scopeVersion: 1,
-      expectedLaborHours: emergency && !uncertainTimeAndEquipment ? 8 + (index % 4) : undefined,
-      expectedEquipmentHours: emergency && !uncertainTimeAndEquipment ? 4 + (index % 3) : undefined,
+      expectedLaborHours: hasTeEstimate ? 8 + (index % 4) : undefined,
+      expectedEquipmentHours: hasTeEstimate ? 4 + (index % 3) : undefined,
+      provenance: unitProvenance(id, hasTeEstimate),
     }
   })
 }
@@ -221,6 +300,10 @@ const preference: Record<string, string[]> = {
   SOUTH: ['green-line', 'line-safe', 'canopy-works', 'arbor-north'],
 }
 
+function capacityKey(contractorId: string, bucket: string) {
+  return `${contractorId}|${bucket}`
+}
+
 function withObservedAllocation(units: AllocationUnit[]) {
   const scenario: ContractorAllocationScenario = {
     id: 'contractor-allocation-demo',
@@ -229,14 +312,20 @@ function withObservedAllocation(units: AllocationUnit[]) {
     units,
     contractors,
   }
-  const contractorRemaining = new Map(contractors.map((contractor) => [contractor.id, contractor.availableCapacity]))
+  const capacityRemaining = new Map<string, number>()
+  for (const contractor of contractors) {
+    for (const bucket of contractor.capacityBuckets) {
+      capacityRemaining.set(capacityKey(contractor.id, bucket.bucket), bucket.availableCapacity)
+    }
+  }
   const contractRemaining = new Map<string, number>()
   for (const contractor of contractors) {
     for (const contract of contractor.contracts) {
-      contractRemaining.set(
-        contract.id,
-        Math.min(contract.maxVolume ?? Number.POSITIVE_INFINITY, contract.awardedCapacity ?? Number.POSITIVE_INFINITY)
+      const grossMax = Math.min(
+        contract.maxVolume ?? Number.POSITIVE_INFINITY,
+        contract.awardedCapacity ?? Number.POSITIVE_INFINITY
       )
+      contractRemaining.set(contract.id, Math.max(0, grossMax - contract.consumedVolumeToDate))
     }
   }
 
@@ -248,12 +337,15 @@ function withObservedAllocation(units: AllocationUnit[]) {
       costed: analysis.feasible.filter((candidate) => candidate.expectedCost != null && !candidate.requiresException),
     }))
     .filter(({ analysis }) => analysis.type === 'NO_CHOICE' || analysis.type === 'ALLOCATION_DECISION_REQUIRED')
-    .sort(
-      (left, right) =>
+    .sort((left, right) => {
+      const leftDemand = left.analysis.unit.capacityRequirements.reduce((sum, item) => sum + item.demand, 0)
+      const rightDemand = right.analysis.unit.capacityRequirements.reduce((sum, item) => sum + item.demand, 0)
+      return (
         left.costed.length - right.costed.length ||
-        right.analysis.unit.capacityDemand - left.analysis.unit.capacityDemand ||
+        rightDemand - leftDemand ||
         left.analysis.unit.id.localeCompare(right.analysis.unit.id)
-    )
+      )
+    })
 
   for (const { analysis, costed } of analyses) {
     const choices = preference[analysis.unit.territory]
@@ -263,17 +355,19 @@ function withObservedAllocation(units: AllocationUnit[]) {
       return left.contractId.localeCompare(right.contractId)
     })
 
-    const selected = ordered.find(
-      (candidate) =>
-        (contractorRemaining.get(candidate.contractorId) ?? 0) >= analysis.unit.capacityDemand &&
-        (contractRemaining.get(candidate.contractId) ?? 0) >= analysis.unit.contractVolume
-    )
+    const selected = ordered.find((candidate) => {
+      const capacityFits = analysis.unit.capacityRequirements.every(
+        (requirement) =>
+          (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
+      )
+      return capacityFits && (contractRemaining.get(candidate.contractId) ?? 0) >= analysis.unit.contractVolume
+    })
 
     if (!selected) continue
-    contractorRemaining.set(
-      selected.contractorId,
-      (contractorRemaining.get(selected.contractorId) ?? 0) - analysis.unit.capacityDemand
-    )
+    for (const requirement of analysis.unit.capacityRequirements) {
+      const key = capacityKey(selected.contractorId, requirement.bucket)
+      capacityRemaining.set(key, (capacityRemaining.get(key) ?? 0) - requirement.demand)
+    }
     contractRemaining.set(
       selected.contractId,
       (contractRemaining.get(selected.contractId) ?? 0) - analysis.unit.contractVolume
@@ -305,6 +399,7 @@ export function buildContractorAllocationDemoScenario(): ContractorAllocationSce
     units,
     contractors: contractors.map((contractor) => ({
       ...contractor,
+      capacityBuckets: contractor.capacityBuckets.map((bucket) => ({ ...bucket })),
       equipment: [...contractor.equipment],
       certifications: [...contractor.certifications],
       contracts: contractor.contracts.map((contract) => ({
@@ -312,7 +407,9 @@ export function buildContractorAllocationDemoScenario(): ContractorAllocationSce
         territories: [...contract.territories],
         workTypes: [...contract.workTypes],
         rates: contract.rates.map((rate) => ({ ...rate })),
+        provenance: { ...contract.provenance },
       })),
+      provenance: { ...contractor.provenance },
     })),
   }
 }
