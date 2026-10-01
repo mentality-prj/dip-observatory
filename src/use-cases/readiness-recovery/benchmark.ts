@@ -1,10 +1,6 @@
 import type { BaselineKind, ReadinessRecoveryResult, RecoveryScenario } from './domain'
 
-export type BenchmarkVerdict =
-  | 'QDIP_ADVANTAGE'
-  | 'HEURISTIC_PARITY'
-  | 'HEURISTIC_ADVANTAGE'
-  | 'INSUFFICIENT_EVIDENCE'
+export type BenchmarkVerdict = 'QDIP_ADVANTAGE' | 'HEURISTIC_PARITY' | 'HEURISTIC_ADVANTAGE' | 'INSUFFICIENT_EVIDENCE'
 export type BenchmarkAdvantageKind = 'CAPABILITY' | 'EFFICIENCY' | 'NONE'
 
 export type ReadinessBenchmark = {
@@ -80,8 +76,7 @@ export function benchmarkReadinessResult(result: ReadinessRecoveryResult): Readi
   const heuristicCapabilityGain =
     atMost(probabilityDelta, -0.05) || atMost(readinessDelta, -0.03) || atMost(shortfallReduction, -0.5)
   const qdipResourceRegression = technicianHoursDelta > 8 || scarcePartsDelta > 0.75 || failureRiskDelta > 0.1
-  const heuristicResourceRegression =
-    technicianHoursDelta < -8 || scarcePartsDelta < -0.75 || failureRiskDelta < -0.1
+  const heuristicResourceRegression = technicianHoursDelta < -8 || scarcePartsDelta < -0.75 || failureRiskDelta < -0.1
 
   const capabilityEquivalent =
     Math.abs(probabilityDelta) < 0.05 && Math.abs(readinessDelta) < 0.03 && Math.abs(shortfallReduction) < 0.5
