@@ -181,11 +181,19 @@ function optimizeDecisionUnits(
   const contractorCapacity = new Map(
     scenario.contractors.map((contractor) => [contractor.id, contractor.availableCapacity])
   )
+  const relevantContractIds = new Set([
+    ...fixed.map((assignment) => assignment.contractId),
+    ...decisionAnalyses.flatMap((analysis) =>
+      analysis.feasible
+        .filter((candidate) => candidate.expectedCost != null)
+        .map((candidate) => candidate.contractId)
+    ),
+  ])
   const contractLimits = new Map<string, ContractLimit>()
 
   for (const contractor of scenario.contractors) {
     for (const contract of contractor.contracts) {
-      if (!contract.approved || !isActive(contract, scenario.asOf)) continue
+      if (!relevantContractIds.has(contract.id) || !contract.approved || !isActive(contract, scenario.asOf)) continue
       contractLimits.set(contract.id, { min: contract.minVolume ?? 0, max: contractLimit(contract) })
     }
   }
@@ -232,11 +240,11 @@ function optimizeDecisionUnits(
     suffixMinimum[index] = suffixMinimum[index + 1] + units[index].candidates[0].expectedCost
   }
 
-  const relevantContractIds = [
+  const searchContractIds = [
     ...new Set(units.flatMap((unit) => unit.candidates.map((candidate) => candidate.contractId))),
   ]
   const suffixPotential = new Map<string, number[]>()
-  for (const contractId of relevantContractIds) {
+  for (const contractId of searchContractIds) {
     const values = new Array<number>(units.length + 1).fill(0)
     for (let index = units.length - 1; index >= 0; index -= 1) {
       values[index] =
@@ -255,6 +263,9 @@ function optimizeDecisionUnits(
   const selected = new Map<string, FeasibleAlternative & { expectedCost: number }>()
   let exploredNodes = 0
   let truncated = false
+  const bestCostByState = new Map<string, number>()
+  const contractorIds = [...contractorCapacity.keys()].sort()
+  const contractIds = [...contractLimits.keys()].sort()
 
   const minimaRemainFeasible = (index: number) => {
     for (const [contractId, limit] of contractLimits) {
@@ -266,6 +277,11 @@ function optimizeDecisionUnits(
     return true
   }
 
+  const stateKey = (index: number) =>
+    `${index}|${contractorIds.map((id) => remainingCapacity.get(id) ?? 0).join(',')}|${contractIds
+      .map((id) => contractCounts.get(id) ?? 0)
+      .join(',')}`
+
   const visit = (index: number, cost: number) => {
     if (truncated) return
     exploredNodes += 1
@@ -275,6 +291,11 @@ function optimizeDecisionUnits(
     }
     if (cost + suffixMinimum[index] >= bestCost) return
     if (!minimaRemainFeasible(index)) return
+
+    const key = stateKey(index)
+    const previousBest = bestCostByState.get(key)
+    if (previousBest != null && previousBest <= cost) return
+    bestCostByState.set(key, cost)
 
     if (index === units.length) {
       for (const [contractId, limit] of contractLimits) {
