@@ -43,6 +43,7 @@ export type ContractorContract = {
 export type Contractor = {
   id: string
   name: string
+  /** Authoritative normalized workload capacity from Operations. */
   availableCapacity: number
   availableThrough: string
   equipment: string[]
@@ -57,6 +58,10 @@ export type AllocationUnit = {
   workType: string
   quantity: number
   quantityUnit: string
+  /** Normalized operational workload consumed when this package is assigned. */
+  capacityDemand: number
+  /** Procurement volume consumed against min/max/awarded contract limits. */
+  contractVolume: number
   deadline: string
   priority: number
   requiredEquipment: string[]
@@ -66,6 +71,7 @@ export type AllocationUnit = {
   expectedLaborHours?: number
   expectedEquipmentHours?: number
   observedContractorId?: string
+  observedContractId?: string
 }
 
 export type ContractorAllocationScenario = {
@@ -79,6 +85,7 @@ export type ContractorAllocationScenario = {
 export type RejectedAlternative = {
   contractorId: string
   contractorName: string
+  contractId?: string
   reasons: FeasibilityReason[]
 }
 
@@ -98,6 +105,21 @@ export type UnitDecisionAnalysis = {
   rejected: RejectedAlternative[]
 }
 
+export type AllocationSnapshotInput = {
+  scenario: Pick<ContractorAllocationScenario, 'id' | 'asOf' | 'allocationLevel'>
+  unit: AllocationUnit
+  contractors: Contractor[]
+  feasibleAlternatives: FeasibleAlternative[]
+  rejectedAlternatives: RejectedAlternative[]
+}
+
+export type AllocationInputSnapshot = {
+  id: string
+  algorithm: 'SHA-256'
+  canonicalInput: string
+  input: AllocationSnapshotInput
+}
+
 export type AllocationAssignment = {
   allocationUnitId: string
   contractorId: string
@@ -105,9 +127,10 @@ export type AllocationAssignment = {
   contractId: string
   expectedCost: number
   observedContractorId?: string
+  observedContractId?: string
   observedExpectedCost?: number
   expectedDelta?: number
-  inputSnapshotId: string
+  inputSnapshot: AllocationInputSnapshot
 }
 
 export type OptimizerStatus = 'OPTIMAL' | 'BOUNDED' | 'INFEASIBLE'
