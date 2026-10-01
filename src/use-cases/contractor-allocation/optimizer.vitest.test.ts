@@ -8,18 +8,19 @@ import type {
   SourceRole,
   TrustedAuthority,
 } from './domain'
-import {
-  analyzeAllocationUnit,
-  optimizeContractorAllocation,
-  validateContractorAllocationScenario,
-} from './optimizer'
+import { analyzeAllocationUnit, optimizeContractorAllocation, validateContractorAllocationScenario } from './optimizer'
 import { sha256Hex } from './snapshot'
 
 const capturedAt = '2026-10-01T00:00:00Z'
 
 const trustedAuthorities: TrustedAuthority[] = [
   { id: 'inspector-adapter', sourceRole: 'INSPECTOR', sourceSystem: 'inspector-system', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'procurement-adapter', sourceRole: 'PROCUREMENT', sourceSystem: 'procurement-system', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'procurement-adapter',
+    sourceRole: 'PROCUREMENT',
+    sourceSystem: 'procurement-system',
+    ingress: 'TRUSTED_ADAPTER',
+  },
   { id: 'operations-adapter', sourceRole: 'OPERATIONS', sourceSystem: 'operations-system', ingress: 'TRUSTED_ADAPTER' },
   { id: 'planner-adapter', sourceRole: 'PLANNER', sourceSystem: 'planner-system', ingress: 'TRUSTED_ADAPTER' },
 ]
@@ -97,10 +98,7 @@ function globalChoiceScenario(): ContractorAllocationScenario {
     decisionAt: capturedAt,
     allocationLevel: 'WORK_PACKAGE',
     trustedAuthorities: trustedAuthorities.map((authority) => ({ ...authority })),
-    units: [
-      unit('U1', 'X', 2, '2026-10', 'A', 'A-contract'),
-      unit('U2', 'Y', 3, '2026-10', 'B', 'B-contract'),
-    ],
+    units: [unit('U1', 'X', 2, '2026-10', 'A', 'A-contract'), unit('U2', 'Y', 3, '2026-10', 'B', 'B-contract')],
     contractors: [
       {
         id: 'A',
@@ -371,7 +369,9 @@ describe('contractor allocation optimizer', () => {
     const result = optimizeContractorAllocation(scenario)
     expect(result.status).toBe('PARTIAL_OPTIMAL')
     expect(result.reservations).toHaveLength(1)
-    expect(result.reservations[0]).toEqual(expect.objectContaining({ allocationUnitId: 'TE', reason: 'COST_UNCERTAIN' }))
+    expect(result.reservations[0]).toEqual(
+      expect.objectContaining({ allocationUnitId: 'TE', reason: 'COST_UNCERTAIN' })
+    )
     expect(result.coverage.coverageRatio).toBe(0.5)
     expect(result.counterfactualAllocationAdvantage).toBeNull()
   })

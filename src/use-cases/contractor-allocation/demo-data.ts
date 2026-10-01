@@ -13,11 +13,31 @@ const decisionAt = '2026-10-01T00:00:00Z'
 
 const trustedAuthorities: TrustedAuthority[] = [
   { id: 'inspector-field', sourceRole: 'INSPECTOR', sourceSystem: 'field-inspection', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'procurement-contracts', sourceRole: 'PROCUREMENT', sourceSystem: 'procurement-contracts', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'procurement-contracts',
+    sourceRole: 'PROCUREMENT',
+    sourceSystem: 'procurement-contracts',
+    ingress: 'TRUSTED_ADAPTER',
+  },
   { id: 'operations-work', sourceRole: 'OPERATIONS', sourceSystem: 'work-management', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-capacity', sourceRole: 'OPERATIONS', sourceSystem: 'resource-planning', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-registry', sourceRole: 'OPERATIONS', sourceSystem: 'resource-registry', ingress: 'TRUSTED_ADAPTER' },
-  { id: 'operations-estimation', sourceRole: 'OPERATIONS', sourceSystem: 'work-estimation', ingress: 'TRUSTED_ADAPTER' },
+  {
+    id: 'operations-capacity',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'resource-planning',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'operations-registry',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'resource-registry',
+    ingress: 'TRUSTED_ADAPTER',
+  },
+  {
+    id: 'operations-estimation',
+    sourceRole: 'OPERATIONS',
+    sourceSystem: 'work-estimation',
+    ingress: 'TRUSTED_ADAPTER',
+  },
 ]
 
 function provenance<Role extends SourceRole>(authorityId: string, sourceRecordId: string): InputProvenance<Role> {
@@ -274,7 +294,8 @@ function withObservedAllocation(units: AllocationUnit[]) {
       const volumeKey = contractKey(candidate.contractorId, candidate.contractId)
       if ((contractRemaining.get(volumeKey) ?? 0) < unit.contractVolume) return false
       return unit.capacityRequirements.every(
-        (requirement) => (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
+        (requirement) =>
+          (capacityRemaining.get(capacityKey(candidate.contractorId, requirement.bucket)) ?? 0) >= requirement.demand
       )
     })
     if (!selected) return unit

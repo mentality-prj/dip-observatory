@@ -87,7 +87,8 @@ function isTrustedSource(
   const authority = authorityById(scenario).get(provenance.authorityId)
   if (!authority) return false
   if (authority.ingress !== 'TRUSTED_ADAPTER' || authority.sourceRole !== expectedRole) return false
-  if (!authority.sourceSystem.trim() || !provenance.sourceRecordId.trim() || !provenance.sourceVersion.trim()) return false
+  if (!authority.sourceSystem.trim() || !provenance.sourceRecordId.trim() || !provenance.sourceVersion.trim())
+    return false
   if (!isIsoDateTime(provenance.capturedAt) || !isIsoDateTime(scenario.decisionAt)) return false
   return Date.parse(provenance.capturedAt) <= Date.parse(scenario.decisionAt)
 }
@@ -103,11 +104,7 @@ function unitInputsTrusted(unit: AllocationUnit, scenario: ContractorAllocationS
     provenance.workType,
     provenance.technicalRequirements,
   ]
-  const operationsInputs = [
-    provenance.executionWindow,
-    provenance.deadline,
-    provenance.capacityRequirements,
-  ]
+  const operationsInputs = [provenance.executionWindow, provenance.deadline, provenance.capacityRequirements]
 
   if (!inspectorInputs.every((input) => isTrustedSource(input, 'INSPECTOR', scenario))) return false
   if (!operationsInputs.every((input) => isTrustedSource(input, 'OPERATIONS', scenario))) return false
@@ -161,7 +158,12 @@ function validateProvenance(
   scenario: ContractorAllocationScenario
 ) {
   if (!isTrustedSource(provenance, expectedRole, scenario)) {
-    pushIssue(issues, 'UNTRUSTED_INPUT', path, `Input must come from a trusted ${expectedRole} adapter before decision time.`)
+    pushIssue(
+      issues,
+      'UNTRUSTED_INPUT',
+      path,
+      `Input must come from a trusted ${expectedRole} adapter before decision time.`
+    )
   }
 }
 
@@ -183,7 +185,12 @@ export function validateContractorAllocationScenario(
   }
   for (const [index, authority] of scenario.trustedAuthorities.entries()) {
     if (!authority.id.trim() || !authority.sourceSystem.trim() || authority.ingress !== 'TRUSTED_ADAPTER') {
-      pushIssue(issues, 'INVALID_AUTHORITY', `trustedAuthorities[${index}]`, 'Trusted authority registry entry is invalid.')
+      pushIssue(
+        issues,
+        'INVALID_AUTHORITY',
+        `trustedAuthorities[${index}]`,
+        'Trusted authority registry entry is invalid.'
+      )
     }
   }
 
@@ -199,17 +206,29 @@ export function validateContractorAllocationScenario(
     if (!unit.id.trim() || !unit.scopeId.trim() || !unit.workType.trim() || !unit.territory.trim()) {
       pushIssue(issues, 'INVALID_UNIT_IDENTITY', path, 'Unit identity, scope, territory and work type are required.')
     }
-    if (!isFinitePositive(unit.quantity)) pushIssue(issues, 'INVALID_QUANTITY', `${path}.quantity`, 'Quantity must be positive.')
+    if (!isFinitePositive(unit.quantity))
+      pushIssue(issues, 'INVALID_QUANTITY', `${path}.quantity`, 'Quantity must be positive.')
     if (!isFinitePositive(unit.contractVolume)) {
       pushIssue(issues, 'INVALID_CONTRACT_VOLUME', `${path}.contractVolume`, 'Contract volume must be positive.')
     }
-    if (!Number.isFinite(unit.priority)) pushIssue(issues, 'INVALID_PRIORITY', `${path}.priority`, 'Priority must be finite.')
+    if (!Number.isFinite(unit.priority))
+      pushIssue(issues, 'INVALID_PRIORITY', `${path}.priority`, 'Priority must be finite.')
 
     if (!isIsoDate(unit.executionStart) || !isIsoDate(unit.executionEnd) || !isIsoDate(unit.deadline)) {
-      pushIssue(issues, 'INVALID_EXECUTION_DATE', path, 'Execution start, execution end and deadline must be ISO dates.')
+      pushIssue(
+        issues,
+        'INVALID_EXECUTION_DATE',
+        path,
+        'Execution start, execution end and deadline must be ISO dates.'
+      )
     } else {
       if (unit.executionStart < scenario.asOf) {
-        pushIssue(issues, 'EXECUTION_BEFORE_DECISION', `${path}.executionStart`, 'Execution cannot start before the decision date.')
+        pushIssue(
+          issues,
+          'EXECUTION_BEFORE_DECISION',
+          `${path}.executionStart`,
+          'Execution cannot start before the decision date.'
+        )
       }
       if (unit.executionStart > unit.executionEnd) {
         pushIssue(issues, 'INVALID_EXECUTION_WINDOW', path, 'executionStart must be on or before executionEnd.')
@@ -220,11 +239,21 @@ export function validateContractorAllocationScenario(
     }
 
     if (!unit.capacityRequirements.length) {
-      pushIssue(issues, 'MISSING_CAPACITY_REQUIREMENTS', `${path}.capacityRequirements`, 'At least one capacity requirement is required.')
+      pushIssue(
+        issues,
+        'MISSING_CAPACITY_REQUIREMENTS',
+        `${path}.capacityRequirements`,
+        'At least one capacity requirement is required.'
+      )
     }
     const requirementBuckets = unit.capacityRequirements.map((requirement) => requirement.bucket)
     for (const bucket of duplicates(requirementBuckets)) {
-      pushIssue(issues, 'DUPLICATE_UNIT_CAPACITY_BUCKET', `${path}.capacityRequirements`, `Duplicate capacity bucket: ${bucket}`)
+      pushIssue(
+        issues,
+        'DUPLICATE_UNIT_CAPACITY_BUCKET',
+        `${path}.capacityRequirements`,
+        `Duplicate capacity bucket: ${bucket}`
+      )
     }
     for (const [requirementIndex, requirement] of unit.capacityRequirements.entries()) {
       const requirementPath = `${path}.capacityRequirements[${requirementIndex}]`
@@ -235,7 +264,12 @@ export function validateContractorAllocationScenario(
         isIsoDate(unit.executionEnd) &&
         (requirement.bucket < monthOf(unit.executionStart) || requirement.bucket > monthOf(unit.executionEnd))
       ) {
-        pushIssue(issues, 'CAPACITY_OUTSIDE_EXECUTION_WINDOW', requirementPath, 'Capacity bucket must fall inside the execution window.')
+        pushIssue(
+          issues,
+          'CAPACITY_OUTSIDE_EXECUTION_WINDOW',
+          requirementPath,
+          'Capacity bucket must fall inside the execution window.'
+        )
       }
     }
 
@@ -246,7 +280,12 @@ export function validateContractorAllocationScenario(
       pushIssue(issues, 'INVALID_TE_ESTIMATE', `${path}.expectedLaborHours`, 'Labor hours must be non-negative.')
     }
     if (unit.expectedEquipmentHours != null && !isFiniteNonNegative(unit.expectedEquipmentHours)) {
-      pushIssue(issues, 'INVALID_TE_ESTIMATE', `${path}.expectedEquipmentHours`, 'Equipment hours must be non-negative.')
+      pushIssue(
+        issues,
+        'INVALID_TE_ESTIMATE',
+        `${path}.expectedEquipmentHours`,
+        'Equipment hours must be non-negative.'
+      )
     }
 
     validateProvenance(issues, `${path}.provenance.scope`, unit.provenance?.scope, 'INSPECTOR', scenario)
@@ -260,7 +299,13 @@ export function validateContractorAllocationScenario(
       'INSPECTOR',
       scenario
     )
-    validateProvenance(issues, `${path}.provenance.executionWindow`, unit.provenance?.executionWindow, 'OPERATIONS', scenario)
+    validateProvenance(
+      issues,
+      `${path}.provenance.executionWindow`,
+      unit.provenance?.executionWindow,
+      'OPERATIONS',
+      scenario
+    )
     validateProvenance(issues, `${path}.provenance.deadline`, unit.provenance?.deadline, 'OPERATIONS', scenario)
     validateProvenance(
       issues,
@@ -269,7 +314,13 @@ export function validateContractorAllocationScenario(
       'OPERATIONS',
       scenario
     )
-    validateProvenance(issues, `${path}.provenance.contractVolume`, unit.provenance?.contractVolume, 'PROCUREMENT', scenario)
+    validateProvenance(
+      issues,
+      `${path}.provenance.contractVolume`,
+      unit.provenance?.contractVolume,
+      'PROCUREMENT',
+      scenario
+    )
     if (unit.expectedLaborHours != null || unit.expectedEquipmentHours != null) {
       validateProvenance(issues, `${path}.provenance.teEstimate`, unit.provenance?.teEstimate, 'OPERATIONS', scenario)
     }
@@ -280,35 +331,73 @@ export function validateContractorAllocationScenario(
     if (!contractor.id.trim()) pushIssue(issues, 'INVALID_CONTRACTOR_ID', `${path}.id`, 'Contractor id is required.')
 
     for (const bucket of duplicates(contractor.capacityBuckets.map((item) => item.bucket))) {
-      pushIssue(issues, 'DUPLICATE_CONTRACTOR_CAPACITY_BUCKET', `${path}.capacityBuckets`, `Duplicate capacity bucket: ${bucket}`)
+      pushIssue(
+        issues,
+        'DUPLICATE_CONTRACTOR_CAPACITY_BUCKET',
+        `${path}.capacityBuckets`,
+        `Duplicate capacity bucket: ${bucket}`
+      )
     }
     for (const [bucketIndex, bucket] of contractor.capacityBuckets.entries()) {
       if (!/^\d{4}-\d{2}$/.test(bucket.bucket) || !isFiniteNonNegative(bucket.availableCapacity)) {
-        pushIssue(issues, 'INVALID_CAPACITY_BUCKET', `${path}.capacityBuckets[${bucketIndex}]`, 'Capacity bucket is invalid.')
+        pushIssue(
+          issues,
+          'INVALID_CAPACITY_BUCKET',
+          `${path}.capacityBuckets[${bucketIndex}]`,
+          'Capacity bucket is invalid.'
+        )
       }
     }
 
-    validateProvenance(issues, `${path}.provenance.capacityBuckets`, contractor.provenance?.capacityBuckets, 'OPERATIONS', scenario)
+    validateProvenance(
+      issues,
+      `${path}.provenance.capacityBuckets`,
+      contractor.provenance?.capacityBuckets,
+      'OPERATIONS',
+      scenario
+    )
     validateProvenance(issues, `${path}.provenance.equipment`, contractor.provenance?.equipment, 'OPERATIONS', scenario)
-    validateProvenance(issues, `${path}.provenance.certifications`, contractor.provenance?.certifications, 'OPERATIONS', scenario)
+    validateProvenance(
+      issues,
+      `${path}.provenance.certifications`,
+      contractor.provenance?.certifications,
+      'OPERATIONS',
+      scenario
+    )
 
     for (const id of duplicates(contractor.contracts.map((contract) => contract.id))) {
-      pushIssue(issues, 'DUPLICATE_CONTRACT_ID', `${path}.contracts`, `Duplicate contract id for contractor ${contractor.id}: ${id}`)
+      pushIssue(
+        issues,
+        'DUPLICATE_CONTRACT_ID',
+        `${path}.contracts`,
+        `Duplicate contract id for contractor ${contractor.id}: ${id}`
+      )
     }
 
     for (const [contractIndex, contract] of contractor.contracts.entries()) {
       const contractPath = `${path}.contracts[${contractIndex}]`
-      if (!contract.id.trim()) pushIssue(issues, 'INVALID_CONTRACT_ID', `${contractPath}.id`, 'Contract id is required.')
+      if (!contract.id.trim())
+        pushIssue(issues, 'INVALID_CONTRACT_ID', `${contractPath}.id`, 'Contract id is required.')
       if (!isIsoDate(contract.validFrom) || !isIsoDate(contract.validTo) || contract.validFrom > contract.validTo) {
         pushIssue(issues, 'INVALID_CONTRACT_DATES', contractPath, 'Contract validity dates are invalid.')
       }
       if (!isFiniteNonNegative(contract.consumedVolumeToDate)) {
-        pushIssue(issues, 'INVALID_CONSUMED_VOLUME', `${contractPath}.consumedVolumeToDate`, 'Consumed volume must be non-negative.')
+        pushIssue(
+          issues,
+          'INVALID_CONSUMED_VOLUME',
+          `${contractPath}.consumedVolumeToDate`,
+          'Consumed volume must be non-negative.'
+        )
       }
       if (!isFiniteNonNegative(contract.remainingMinVolume) || !isFiniteNonNegative(contract.remainingMaxVolume)) {
         pushIssue(issues, 'INVALID_REMAINING_VOLUME', contractPath, 'Remaining contract volume must be non-negative.')
       } else if (contract.remainingMinVolume > contract.remainingMaxVolume + EPSILON) {
-        pushIssue(issues, 'INVALID_REMAINING_VOLUME', contractPath, 'remainingMinVolume cannot exceed remainingMaxVolume.')
+        pushIssue(
+          issues,
+          'INVALID_REMAINING_VOLUME',
+          contractPath,
+          'remainingMinVolume cannot exceed remainingMaxVolume.'
+        )
       }
       if (contract.maxVolume != null && !isFiniteNonNegative(contract.maxVolume)) {
         pushIssue(issues, 'INVALID_MAX_VOLUME', `${contractPath}.maxVolume`, 'maxVolume must be non-negative.')
@@ -317,10 +406,20 @@ export function validateContractorAllocationScenario(
         contract.maxVolume != null &&
         contract.consumedVolumeToDate + contract.remainingMaxVolume > contract.maxVolume + EPSILON
       ) {
-        pushIssue(issues, 'INCONSISTENT_VOLUME_STATE', contractPath, 'Consumed plus remaining volume exceeds maxVolume.')
+        pushIssue(
+          issues,
+          'INCONSISTENT_VOLUME_STATE',
+          contractPath,
+          'Consumed plus remaining volume exceeds maxVolume.'
+        )
       }
       if (contract.awardedCapacity != null && !isFiniteNonNegative(contract.awardedCapacity)) {
-        pushIssue(issues, 'INVALID_AWARDED_CAPACITY', `${contractPath}.awardedCapacity`, 'awardedCapacity must be non-negative.')
+        pushIssue(
+          issues,
+          'INVALID_AWARDED_CAPACITY',
+          `${contractPath}.awardedCapacity`,
+          'awardedCapacity must be non-negative.'
+        )
       }
 
       const rateKeys = contract.rates.map((rate) => `${rate.workType}::${rate.quantityUnit}`)
@@ -330,13 +429,36 @@ export function validateContractorAllocationScenario(
       for (const [rateIndex, rate] of contract.rates.entries()) {
         const numeric = [rate.unitRate, rate.laborRate, rate.equipmentRate, rate.mobilizationCost, rate.overtimeCost]
         if (numeric.some((value) => value != null && !isFiniteNonNegative(value))) {
-          pushIssue(issues, 'INVALID_RATE', `${contractPath}.rates[${rateIndex}]`, 'Rate components must be finite and non-negative.')
+          pushIssue(
+            issues,
+            'INVALID_RATE',
+            `${contractPath}.rates[${rateIndex}]`,
+            'Rate components must be finite and non-negative.'
+          )
         }
       }
 
-      validateProvenance(issues, `${contractPath}.provenance.eligibility`, contract.provenance?.eligibility, 'PROCUREMENT', scenario)
-      validateProvenance(issues, `${contractPath}.provenance.rates`, contract.provenance?.rates, 'PROCUREMENT', scenario)
-      validateProvenance(issues, `${contractPath}.provenance.volumeState`, contract.provenance?.volumeState, 'PROCUREMENT', scenario)
+      validateProvenance(
+        issues,
+        `${contractPath}.provenance.eligibility`,
+        contract.provenance?.eligibility,
+        'PROCUREMENT',
+        scenario
+      )
+      validateProvenance(
+        issues,
+        `${contractPath}.provenance.rates`,
+        contract.provenance?.rates,
+        'PROCUREMENT',
+        scenario
+      )
+      validateProvenance(
+        issues,
+        `${contractPath}.provenance.volumeState`,
+        contract.provenance?.volumeState,
+        'PROCUREMENT',
+        scenario
+      )
     }
   }
 
@@ -489,7 +611,10 @@ function searchableAnalyses(analyses: UnitDecisionAnalysis[]) {
   return analyses.filter((analysis) => analysis.type !== 'INFEASIBLE')
 }
 
-function buildSearchUnits(analyses: UnitDecisionAnalysis[], forcedContractorByUnit?: Map<string, string>): SearchUnit[] {
+function buildSearchUnits(
+  analyses: UnitDecisionAnalysis[],
+  forcedContractorByUnit?: Map<string, string>
+): SearchUnit[] {
   return searchableAnalyses(analyses)
     .map((analysis) => {
       const reservation = analysis.type === 'EXCEPTION_REQUIRED'
@@ -497,11 +622,13 @@ function buildSearchUnits(analyses: UnitDecisionAnalysis[], forcedContractorByUn
         ? analysis.feasible.map((candidate) => ({ candidate, objectiveCost: 0, reservation: true }))
         : analysis.feasible
             .filter(
-              (candidate): candidate is CostedCandidate => candidate.expectedCost != null && !candidate.requiresException
+              (candidate): candidate is CostedCandidate =>
+                candidate.expectedCost != null && !candidate.requiresException
             )
             .map((candidate) => ({ candidate, objectiveCost: candidate.expectedCost, reservation: false }))
       const forcedContractor = forcedContractorByUnit?.get(analysis.unit.id)
-      if (forcedContractor) candidates = candidates.filter(({ candidate }) => candidate.contractorId === forcedContractor)
+      if (forcedContractor)
+        candidates = candidates.filter(({ candidate }) => candidate.contractorId === forcedContractor)
       candidates.sort(
         (left, right) =>
           left.objectiveCost - right.objectiveCost ||
@@ -897,7 +1024,8 @@ function globalDecisionSpaceMetrics(
       for (const candidate of analysis.feasible) {
         if (candidate.expectedCost == null || candidate.requiresException) continue
         const current = contractorCosts.get(candidate.contractorId)
-        if (current == null || candidate.expectedCost < current) contractorCosts.set(candidate.contractorId, candidate.expectedCost)
+        if (current == null || candidate.expectedCost < current)
+          contractorCosts.set(candidate.contractorId, candidate.expectedCost)
       }
 
       const globallyFeasible = new Map<string, number>()
@@ -971,9 +1099,8 @@ export function optimizeContractorAllocation(
     exceptionUnits: analyses.filter((analysis) => analysis.type === 'EXCEPTION_REQUIRED').length,
     infeasibleUnits: analyses.filter((analysis) => analysis.type === 'INFEASIBLE').length,
     coverageRatio: analyses.length
-      ? analyses.filter(
-          (analysis) => analysis.type === 'NO_CHOICE' || analysis.type === 'ALLOCATION_DECISION_REQUIRED'
-        ).length / analyses.length
+      ? analyses.filter((analysis) => analysis.type === 'NO_CHOICE' || analysis.type === 'ALLOCATION_DECISION_REQUIRED')
+          .length / analyses.length
       : 0,
     coveredObservedExpectedSpend: analyses.reduce(
       (sum, analysis) => sum + (observedCostedCandidate(analysis)?.expectedCost ?? 0),
