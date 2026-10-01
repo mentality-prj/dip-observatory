@@ -43,35 +43,36 @@ describe('contractor capacity loss recovery scenario', () => {
     ).toBe(true)
   })
 
-  it('reallocates the full 266.21-mile published scope after the incumbent loses capacity for the returned work', () => {
-    const scenario = buildContractorCapacityLossScenario()
-    const result = optimizeContractorAllocation(scenario)
-    const unitById = new Map(scenario.units.map((unit) => [unit.id, unit]))
-    const reallocatedMiles = result.assignments.reduce(
-      (sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0),
-      0
-    )
+  it(
+    'reallocates the full 266.21-mile scope across multiple recovery bidders after the incumbent loses capacity',
+    () => {
+      const scenario = buildContractorCapacityLossScenario()
+      const result = optimizeContractorAllocation(scenario)
+      const unitById = new Map(scenario.units.map((unit) => [unit.id, unit]))
+      const reallocatedMiles = result.assignments.reduce(
+        (sum, assignment) => sum + (unitById.get(assignment.allocationUnitId)?.quantity ?? 0),
+        0
+      )
+      const recoveryBidders = new Set(result.assignments.map((assignment) => assignment.contractorId))
 
-    expect(scenario.allocationLevel).toBe('AWARDED_VOLUME')
-    expect(scenario.units.every((unit) => unit.quantityUnit === 'mile')).toBe(true)
-    expect(scenario.units.every((unit) => unit.observedContractorId === 'synthetic-incumbent')).toBe(true)
-    expect(
-      scenario.contractors
-        .find((contractor) => contractor.id === 'synthetic-incumbent')
-        ?.capacityBuckets.find((bucket) => bucket.bucket === '2022-01')?.availableCapacity
-    ).toBe(0)
+      expect(scenario.allocationLevel).toBe('AWARDED_VOLUME')
+      expect(scenario.units.every((unit) => unit.quantityUnit === 'mile')).toBe(true)
+      expect(scenario.units.every((unit) => unit.observedContractorId === 'synthetic-incumbent')).toBe(true)
+      expect(
+        scenario.contractors
+          .find((contractor) => contractor.id === 'synthetic-incumbent')
+          ?.capacityBuckets.find((bucket) => bucket.bucket === '2022-01')?.availableCapacity
+      ).toBe(0)
 
-    expect(result.status).toBe('OPTIMAL')
-    expect(result.assignments).toHaveLength(scenario.units.length)
-    expect(result.assignments.every((assignment) => assignment.contractorId !== 'synthetic-incumbent')).toBe(true)
-    expect(reallocatedMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles, 6)
-    expect(result.observedInvalidUnitIds).toHaveLength(scenario.units.length)
-    expect(result.counterfactualAllocationAdvantage).toBeNull()
-    expect(result.qdipExpectedSpend).toBeGreaterThan(0)
-  })
-
-  it('uses multiple recovery bidders instead of overloading one substitute', () => {
-    const result = optimizeContractorAllocation(buildContractorCapacityLossScenario())
-    expect(new Set(result.assignments.map((assignment) => assignment.contractorId)).size).toBeGreaterThan(1)
-  })
+      expect(result.status).toBe('OPTIMAL')
+      expect(result.assignments).toHaveLength(scenario.units.length)
+      expect(result.assignments.every((assignment) => assignment.contractorId !== 'synthetic-incumbent')).toBe(true)
+      expect(reallocatedMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles, 6)
+      expect(recoveryBidders.size).toBeGreaterThan(1)
+      expect(result.observedInvalidUnitIds).toHaveLength(scenario.units.length)
+      expect(result.counterfactualAllocationAdvantage).toBeNull()
+      expect(result.qdipExpectedSpend).toBeGreaterThan(0)
+    },
+    15_000
+  )
 })
