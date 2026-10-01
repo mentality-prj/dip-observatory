@@ -50,9 +50,7 @@ describe('Readiness Recovery benchmark evidence', () => {
 
       if (benchmark.verdict === 'QDIP_ADVANTAGE' && benchmark.advantageKind === 'CAPABILITY') {
         expect(
-          benchmark.probabilityDelta >= 0.05 ||
-            benchmark.readinessDelta >= 0.03 ||
-            benchmark.shortfallReduction >= 0.5
+          benchmark.probabilityDelta >= 0.05 || benchmark.readinessDelta >= 0.03 || benchmark.shortfallReduction >= 0.5
         ).toBe(true)
         expect(benchmark.technicianHoursDelta).toBeLessThanOrEqual(8)
         expect(benchmark.scarcePartsDelta).toBeLessThanOrEqual(0.75)
