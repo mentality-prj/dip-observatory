@@ -31,6 +31,14 @@ const useCases = [
     plugin: { id: 'supply-network', capability: 'supply.network.optimize' },
   },
   {
+    id: 'contractor-allocation',
+    route: '/contractor-allocation',
+    navigation: visible(25),
+    decisionPattern: 'allocate',
+    presentation: { icon: 'network', theme: 'cyan' },
+    plugin: { id: 'contractor-allocation', capability: 'operations.contractor-allocation.optimize' },
+  },
+  {
     id: 'gtm-lab',
     route: '/gtm-lab',
     navigation: visible(30),
