@@ -46,12 +46,14 @@ test.describe('Studio responsive shell', () => {
       await expect(page.locator('.ds-product-header-brand [data-studio-core-status]')).toHaveCount(0)
       await expect(languageControls).toBeVisible()
       await expect(footer).toBeVisible()
+      await expect(footer).toHaveAttribute('data-variant', 'product')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
       expect(overflow).toBeLessThanOrEqual(1)
 
       const footerBox = await footer.boundingBox()
       expect(footerBox).not.toBeNull()
+      expect(Math.abs((footerBox?.x ?? 0) - 0)).toBeLessThanOrEqual(1)
       expect(Math.abs((footerBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(2)
       await expect(footer.getByRole('navigation')).toHaveCount(0)
 
@@ -61,7 +63,26 @@ test.describe('Studio responsive shell', () => {
       expect(footerCopyrightBox).not.toBeNull()
       expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
       const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
-      expect(footerLogoFilter).not.toBe('none')
+      expect(footerLogoFilter).toBe('none')
+      const footerThemeColors = await footer.evaluate((element) => {
+        const style = getComputedStyle(element)
+        const probe = document.createElement('span')
+        probe.style.position = 'absolute'
+        probe.style.background = 'var(--ds-surface)'
+        probe.style.color = 'var(--ds-text)'
+        element.appendChild(probe)
+        const probeStyle = getComputedStyle(probe)
+        const result = {
+          background: style.backgroundColor,
+          color: style.color,
+          expectedBackground: probeStyle.backgroundColor,
+          expectedColor: probeStyle.color,
+        }
+        probe.remove()
+        return result
+      })
+      expect(footerThemeColors.background).toBe(footerThemeColors.expectedBackground)
+      expect(footerThemeColors.color).toBe(footerThemeColors.expectedColor)
 
       const lockupBox = await lockup.boundingBox()
       const wordmarkFrameBox = await wordmarkFrame.boundingBox()
