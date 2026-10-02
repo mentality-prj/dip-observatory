@@ -1,0 +1,39 @@
+name: Format readiness temp
+
+on:
+  push:
+    branches:
+      - feat/readiness-cascading-resource-conflict
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/readiness-cascading-resource-conflict
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Canonical Prettier write
+        run: pnpm exec prettier --write src/use-cases/readiness-recovery/cascading-resource-conflict.vitest.test.ts
+      - name: Commit formatted file
+        shell: bash
+        run: |
+          if git diff --quiet -- src/use-cases/readiness-recovery/cascading-resource-conflict.vitest.test.ts; then
+            echo "No formatting changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/use-cases/readiness-recovery/cascading-resource-conflict.vitest.test.ts
+          git commit -m "style(readiness): apply repository prettier"
+          git push origin HEAD:feat/readiness-cascading-resource-conflict
