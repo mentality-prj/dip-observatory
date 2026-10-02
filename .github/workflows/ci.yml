@@ -34,7 +34,10 @@ jobs:
         run: pnpm lint
 
       - name: Prettier
-        run: pnpm prettier
+        run: |
+          pnpm format
+          git diff -- src/use-cases/readiness-recovery/advantage-i18n.ts src/use-cases/readiness-recovery/scenario-labels.ts src/use-cases/readiness-recovery/scenario-labels.vitest.test.ts
+          exit 1
 
       - name: Typecheck
         run: pnpm typecheck
