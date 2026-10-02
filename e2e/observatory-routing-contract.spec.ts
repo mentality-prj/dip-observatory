@@ -10,22 +10,38 @@ const routes = [
   {
     id: 'supply-network-optimization',
     path: '/supply-network-optimization',
-    title: { en: 'Supply Network Optimization', uk: 'Оптимізація мережі постачання', pl: 'Optymalizacja sieci dostaw' },
+    title: {
+      en: 'Supply Network Optimization',
+      uk: 'Оптимізація мережі постачання',
+      pl: 'Optymalizacja sieci dostaw',
+    },
   },
   {
     id: 'contractor-allocation',
     path: '/contractor-allocation',
-    title: { en: 'Contractor Allocation', uk: 'Розподіл робіт між підрядниками', pl: 'Przydział prac wykonawcom' },
+    title: {
+      en: 'Contractor Allocation',
+      uk: 'Розподіл робіт між підрядниками',
+      pl: 'Przydział prac wykonawcom',
+    },
   },
   {
     id: 'readiness-recovery',
     path: '/readiness-recovery',
-    title: { en: 'Readiness Recovery Planner', uk: 'Планувальник відновлення готовності', pl: 'Planer odtwarzania gotowości' },
+    title: {
+      en: 'Readiness Recovery Planner',
+      uk: 'Планувальник відновлення готовності',
+      pl: 'Planer odtwarzania gotowości',
+    },
   },
   {
     id: 'gtm-lab',
     path: '/gtm-lab',
-    title: { en: 'GTM Lab', uk: 'Лабораторія виходу на ринок', pl: 'Laboratorium wejścia na rynek' },
+    title: {
+      en: 'GTM Lab',
+      uk: 'Лабораторія виходу на ринок',
+      pl: 'Laboratorium wejścia na rynek',
+    },
   },
 ] as const
 
@@ -46,17 +62,18 @@ test.describe('Observatory production routing contract', () => {
 
         expect(response?.status()).toBeLessThan(400)
         await expect(page.locator('#main-content')).toBeVisible()
-        await expect(page.getByRole('link', { name: route.title[locale], exact: true }).first()).toHaveAttribute(
-          'aria-current',
-          'page'
-        )
+        await expect(
+          page.getByRole('link', { name: route.title[locale], exact: true }).first()
+        ).toHaveAttribute('aria-current', 'page')
         await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
       })
     }
   }
 
   for (const locale of locales) {
-    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({
+      page,
+    }) => {
       const errors = capturePageErrors(page)
       const response = await page.goto(`http://observatory.localhost:3000/${locale}${routes[0].path}`, {
         waitUntil: 'domcontentloaded',
@@ -145,7 +162,9 @@ test.describe('Observatory repeated navigation regression', () => {
   for (const locale of locales) {
     test(`${locale} repeatedly navigates home and applications without runtime errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
-      const response = await page.goto(`http://observatory.localhost:3000/${locale}`, { waitUntil: 'domcontentloaded' })
+      const response = await page.goto(`http://observatory.localhost:3000/${locale}`, {
+        waitUntil: 'domcontentloaded',
+      })
       expect(response?.status()).toBeLessThan(400)
 
       for (const route of routes) {
