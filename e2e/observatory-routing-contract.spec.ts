@@ -13,6 +13,16 @@ const routes = [
     title: { en: 'Supply Network Optimization', uk: 'Оптимізація мережі постачання', pl: 'Optymalizacja sieci dostaw' },
   },
   {
+    id: 'contractor-allocation',
+    path: '/contractor-allocation',
+    title: { en: 'Contractor Allocation', uk: 'Розподіл між підрядниками', pl: 'Alokacja wykonawców' },
+  },
+  {
+    id: 'readiness-recovery',
+    path: '/readiness-recovery',
+    title: { en: 'Readiness Recovery', uk: 'Відновлення готовності', pl: 'Odtwarzanie gotowości' },
+  },
+  {
     id: 'gtm-lab',
     path: '/gtm-lab',
     title: { en: 'GTM Lab', uk: 'Лабораторія виходу на ринок', pl: 'Laboratorium wejścia na rynek' },
@@ -46,9 +56,7 @@ test.describe('Observatory production routing contract', () => {
   }
 
   for (const locale of locales) {
-    test(`${locale} application navigation can visit every registered use case without page errors`, async ({
-      page,
-    }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
       const response = await page.goto(`http://observatory.localhost:3000/${locale}${routes[0].path}`, {
         waitUntil: 'domcontentloaded',
@@ -105,7 +113,7 @@ test.describe('Observatory production routing contract', () => {
     const errors = capturePageErrors(page)
     const response = await page.goto('http://observatory.localhost:3000/en/not-a-real-use-case')
     expect(response?.status()).toBe(404)
-    expect(errors.map((error) => error.message)).toEqual([])
+    expect(errors.map((error) => error.message).toEqual([]))
   })
 })
 
