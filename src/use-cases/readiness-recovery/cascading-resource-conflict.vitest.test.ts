@@ -76,16 +76,12 @@ describe('Cascading Resource Conflict benchmark', () => {
     const input = build()
     expect(input.recoveryActions.some((action) => action.workshopHours >= 10)).toBe(true)
     expect(
-      input.recoveryActions.some((action) =>
-        action.requiredParts.some((part) => part.partId === 'PART-SCARCE-A')
-      )
+      input.recoveryActions.some((action) => action.requiredParts.some((part) => part.partId === 'PART-SCARCE-A'))
     ).toBe(true)
     expect(input.recoveryActions.some((action) => action.requiredSkills.length > 1)).toBe(true)
     expect(input.assets.some((asset) => asset.providedCapabilities.length >= 2)).toBe(true)
     expect(
-      input.capabilityDemand.some(
-        (demand) => Date.parse(demand.deadline) - Date.parse(input.asOf) <= 14 * 3_600_000
-      )
+      input.capabilityDemand.some((demand) => Date.parse(demand.deadline) - Date.parse(input.asOf) <= 14 * 3_600_000)
     ).toBe(true)
   })
 })
