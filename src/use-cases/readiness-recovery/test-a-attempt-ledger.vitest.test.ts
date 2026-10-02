@@ -136,6 +136,24 @@ describe('Test A attempt ledger', () => {
     })
   })
 
+  it('rejects SUCCESS without a valid canonical result payload and leaves the attempt open', async () => {
+    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const attempt = await ledger.allocateAttempt(EXECUTION_A)
+
+    await expect(
+      ledger.finalizeAttempt(attempt.attemptId, {
+        kind: 'SUCCESS',
+        resultPayload: undefined as never,
+        process: process(),
+      })
+    ).rejects.toThrow('Canonical JSON payload is required')
+
+    const stored = ledger.read().executions[EXECUTION_A].attempts[0]
+    expect(stored.status).toBe('ALLOCATED')
+    expect(stored.resultContentHash).toBeNull()
+    expect(stored.runProvenanceHash).toBeNull()
+  })
+
   it('keeps substantive result identity independent of volatile process metadata', async () => {
     const firstLedger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
     const secondLedger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
@@ -162,6 +180,22 @@ describe('Test A attempt ledger', () => {
     expect(first.runProvenanceHash).not.toBe(second.runProvenanceHash)
   })
 
+  it('accepts provenance with only the required process fields', async () => {
+    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const attempt = await ledger.allocateAttempt(EXECUTION_A)
+    const finalized = await ledger.finalizeAttempt(attempt.attemptId, {
+      kind: 'SUCCESS',
+      resultPayload: { terminal: 'AUDIT_INCONCLUSIVE' },
+      process: {
+        startedAt: '2026-10-02T20:00:00.000Z',
+        completedAt: '2026-10-02T20:00:01.000Z',
+      },
+    })
+
+    expect(finalized.resultContentHash).toMatch(/^[a-f0-9]{64}$/)
+    expect(finalized.runProvenanceHash).toMatch(/^[a-f0-9]{64}$/)
+  })
+
   it('atomically terminal-locks Test A on TEST_INVALIDATING and rejects later allocation', async () => {
     const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
     const invalidatingAttempt = await ledger.allocateAttempt(EXECUTION_A)
@@ -180,6 +214,25 @@ describe('Test A attempt ledger', () => {
     expect(ledger.read().testState).toBe('TERMINAL_INVALID')
     expect(ledger.read().terminalAttemptId).toBe(invalidatingAttempt.attemptId)
     await expect(ledger.allocateAttempt(EXECUTION_B)).rejects.toThrow('TEST_A_TERMINAL_LOCKED')
+  })
+
+  it('does not let a later in-flight invalidating attempt overwrite the original terminal lock identity', async () => {
+    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const first = await ledger.allocateAttempt(EXECUTION_A)
+    const second = await ledger.allocateAttempt(EXECUTION_A)
+
+    await ledger.finalizeAttempt(first.attemptId, {
+      kind: 'INVALID',
+      invalidityReason: 'FROZEN_CONTRACT_BREACH',
+      process: process(),
+    })
+    await ledger.finalizeAttempt(second.attemptId, {
+      kind: 'INVALID',
+      invalidityReason: 'FROZEN_CONTRACT_BREACH',
+      process: process({ executorId: 'executor-b' }),
+    })
+
+    expect(ledger.read().terminalAttemptId).toBe(first.attemptId)
   })
 
   it('rejects unknown invalidity reasons without partially finalizing the attempt', async () => {
