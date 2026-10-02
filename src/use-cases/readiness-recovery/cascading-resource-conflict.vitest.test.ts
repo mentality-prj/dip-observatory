@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { buildReadinessRecoveryDemo } from './demo-data'
 import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
+import { buildReadinessRecoveryDemo } from './demo-data'
 
 const build = () => buildReadinessRecoveryDemo('CASCADING_RESOURCE_CONFLICT')
 
 describe('Cascading Resource Conflict benchmark', () => {
   it('locks the preregistered scenario shape and common action space', () => {
     const input = build()
-    const impaired = input.assets.filter((asset) => asset.currentState === 'FAILED' || asset.currentState === 'DEGRADED')
+    const impaired = input.assets.filter(
+      (asset) => asset.currentState === 'FAILED' || asset.currentState === 'DEGRADED'
+    )
 
     expect(input.scenarioId).toBe('readiness-cascading-resource-conflict')
     expect(input.assets).toHaveLength(100)
@@ -69,9 +71,15 @@ describe('Cascading Resource Conflict benchmark', () => {
   it('keeps deadline, hard-resource and multi-capability constraints material to the benchmark', () => {
     const input = build()
     expect(input.recoveryActions.some((action) => action.workshopHours >= 10)).toBe(true)
-    expect(input.recoveryActions.some((action) => action.requiredParts.some((part) => part.partId === 'PART-SCARCE-A'))).toBe(true)
+    expect(
+      input.recoveryActions.some((action) => action.requiredParts.some((part) => part.partId === 'PART-SCARCE-A'))
+    ).toBe(true)
     expect(input.recoveryActions.some((action) => action.requiredSkills.length > 1)).toBe(true)
     expect(input.assets.some((asset) => asset.providedCapabilities.length >= 2)).toBe(true)
-    expect(input.capabilityDemand.some((demand) => Date.parse(demand.deadline) - Date.parse(input.asOf) <= 14 * 3_600_000)).toBe(true)
+    expect(
+      input.capabilityDemand.some(
+        (demand) => Date.parse(demand.deadline) - Date.parse(input.asOf) <= 14 * 3_600_000
+      )
+    ).toBe(true)
   })
 })
