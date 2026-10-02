@@ -1,11 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, FileSpreadsheet } from 'lucide-react'
+import { Download, FileSearch, FileSpreadsheet } from 'lucide-react'
 
+import { analyzeWithSharedDecisionIntake } from '@/components/observatory/data-intake-contract'
 import { FileUploader, type FileUploaderState } from '@/components/file-uploader'
 import { useTranslations } from '@/i18n/provider'
 import type { ResourceAllocationInput } from '../contracts'
+import {
+  downloadResourceAllocationJson,
+  importResourceAllocationExactPackage,
+  resourceAllocationExactTemplate,
+} from '../data-workspace'
 import {
   buildResourceAllocationExampleCsv,
   buildResourceAllocationTemplateCsv,
@@ -40,6 +46,7 @@ export function ResourceAllocationImport({
   const [fileMeta, setFileMeta] = useState<{ name: string; size: number } | null>(null)
   const [summary, setSummary] = useState<ResourceAllocationImportSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [smartSummary, setSmartSummary] = useState<string | null>(null)
 
   const busy = stage === 'reading' || stage === 'validating'
   const uploaderState: FileUploaderState = busy
@@ -58,17 +65,50 @@ export function ResourceAllocationImport({
     setSummary(null)
     setError(null)
     setStage('reading')
-
     try {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       setStage('validating')
       const imported = await importResourceAllocationFile(file)
-      const nextSummary = summarizeResourceAllocationImport(imported)
       onImported(imported, file.name)
-      setSummary(nextSummary)
+      setSummary(summarizeResourceAllocationImport(imported))
       setStage('ready')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Import failed')
+      setStage('error')
+    }
+  }
+
+  async function analyzeSmart(file: File | undefined) {
+    if (!file) return
+    setError(null)
+    setSmartSummary(null)
+    try {
+      const profile = await analyzeWithSharedDecisionIntake(file)
+      setSmartSummary(`${profile.rows} rows · ${profile.columns} columns`)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Smart import failed')
+    }
+  }
+
+  async function downloadExactTemplate() {
+    const example = buildResourceAllocationExampleCsv()
+    const file = new File([example], 'example.csv', { type: 'text/csv' })
+    const input = await importResourceAllocationFile(file)
+    downloadResourceAllocationJson('qdip-resource-allocation-exact.v1.json', resourceAllocationExactTemplate(input))
+  }
+
+  async function importExact(file: File | undefined) {
+    if (!file) return
+    setError(null)
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown
+      const imported = importResourceAllocationExactPackage(parsed)
+      if (!imported.input) throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
+      onImported(imported.input, file.name)
+      setSummary(summarizeResourceAllocationImport(imported.input))
+      setStage('ready')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Exact import failed')
       setStage('error')
     }
   }
@@ -83,144 +123,61 @@ export function ResourceAllocationImport({
         </div>
       </div>
 
+      <div className="mt-4 grid gap-3 border border-white/10 bg-slate-950/30 p-4">
+        <div>
+          <b className="block text-sm">Smart import</b>
+          <p className="mt-1 text-xs text-slate-500">Analyze unfamiliar CSV/XLSX/JSON through the shared Decision Intake capability before mapping it to the allocation model.</p>
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 border border-sky-400/30 px-3 py-2 text-xs text-sky-200">
+            <FileSearch className="h-4 w-4" /> Analyze business file
+            <input className="sr-only" type="file" accept=".csv,.xlsx,.json" onChange={(event) => void analyzeSmart(event.target.files?.[0])} />
+          </label>
+          {smartSummary ? <p className="mt-2 text-xs text-sky-200">{smartSummary} · review semantics, then use the strict template below.</p> : null}
+        </div>
+        <div className="border-t border-white/10 pt-3">
+          <b className="block text-sm">Exact input</b>
+          <p className="mt-1 text-xs text-slate-500">Versioned JSON bypasses semantic inference and is validated before replacing the active input.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={() => void downloadExactTemplate()} className="border border-white/15 px-3 py-2 text-xs text-slate-200">Download exact JSON template</button>
+            <label className="cursor-pointer border border-emerald-400/30 px-3 py-2 text-xs text-emerald-200">Import exact JSON<input className="sr-only" type="file" accept=".json,application/json" onChange={(event) => void importExact(event.target.files?.[0])} /></label>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-4">
         <b className="block text-sm">{t('starterTitle')}</b>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('starterBody')}</p>
         <div className="mt-3 grid grid-cols-1 gap-2">
-          <button
-            type="button"
-            data-testid="resource-download-template"
-            onClick={() => downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')}
-            className="flex min-w-0 items-start gap-2 overflow-hidden border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]"
-          >
-            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
-            <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal text-xs leading-5 text-slate-200">{t('downloadTemplate')}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
-                {t('templateHint')}
-              </span>
-            </span>
+          <button type="button" data-testid="resource-download-template" onClick={() => downloadCsv(buildResourceAllocationTemplateCsv(), 'qdip-resource-allocation-template.csv')} className="flex min-w-0 items-start gap-2 overflow-hidden border border-white/15 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.06]">
+            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" /><span className="min-w-0 flex-1"><b className="block whitespace-normal text-xs leading-5 text-slate-200">{t('downloadTemplate')}</b><span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t('templateHint')}</span></span>
           </button>
-          <button
-            type="button"
-            data-testid="resource-download-example"
-            onClick={() => downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')}
-            className="flex min-w-0 items-start gap-2 overflow-hidden border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]"
-          >
-            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
-            <span className="min-w-0 flex-1">
-              <b className="block whitespace-normal text-xs leading-5 text-rose-100">{t('downloadExample')}</b>
-              <span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">
-                {t('exampleHint')}
-              </span>
-            </span>
+          <button type="button" data-testid="resource-download-example" onClick={() => downloadCsv(buildResourceAllocationExampleCsv(), 'qdip-resource-allocation-example.csv')} className="flex min-w-0 items-start gap-2 overflow-hidden border border-rose-300/25 bg-rose-300/[0.06] px-3 py-3 text-left transition-colors hover:bg-rose-300/[0.1]">
+            <Download className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" /><span className="min-w-0 flex-1"><b className="block whitespace-normal text-xs leading-5 text-rose-100">{t('downloadExample')}</b><span className="mt-1 block whitespace-normal text-[10px] leading-4 text-slate-500">{t('exampleHint')}</span></span>
           </button>
         </div>
       </div>
 
-      <FileUploader
-        accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        copy={{
-          drop: t('drop'),
-          dropActive: t('dropActive'),
-          or: t('or'),
-          choose: t('choose'),
-          replace: t('replace'),
-          busy: t('reading'),
-          ready: t('ready'),
-        }}
-        file={fileMeta}
-        formats="CSV · XML · XLSX"
-        state={uploaderState}
-        statusLabel={
-          busy ? (stage === 'reading' ? t('reading') : t('validating')) : stage === 'ready' ? t('ready') : undefined
-        }
-        disabled={busy}
-        onFile={handleFile}
-        tone="rose"
-        testId="resource-import-dropzone"
-        fileTestId="resource-import-file"
-        dragPromptTestId="resource-import-drag-prompt"
-        className="mt-4"
-      />
+      <FileUploader accept=".csv,.xml,.xlsx,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" copy={{ drop: t('drop'), dropActive: t('dropActive'), or: t('or'), choose: t('choose'), replace: t('replace'), busy: t('reading'), ready: t('ready') }} file={fileMeta} formats="CSV · XML · XLSX" state={uploaderState} statusLabel={busy ? (stage === 'reading' ? t('reading') : t('validating')) : stage === 'ready' ? t('ready') : undefined} disabled={busy} onFile={handleFile} tone="rose" testId="resource-import-dropzone" fileTestId="resource-import-file" dragPromptTestId="resource-import-drag-prompt" className="mt-4" />
 
       {stage === 'ready' && summary ? (
-        <div
-          data-testid="resource-import-summary"
-          className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3"
-          aria-live="polite"
-        >
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-lg">{summary.communities}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-lg">{summary.teams}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-lg">{summary.horizonDemand}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-lg">{summary.days}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('days')}</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span>
-          </div>
-          <div className="rounded-lg bg-white/[0.04] p-2">
-            <b className="block text-lg">{summary.scheduledDemand}</b>
-            <span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span>
-          </div>
-          {summary.availabilityRules > 0 ? (
-            <div className="col-span-full text-[11px] text-slate-500">
-              {summary.availabilityRules} {t('rules')}
-            </div>
-          ) : null}
+        <div data-testid="resource-import-summary" className="mt-4 grid grid-cols-2 gap-2 text-left sm:grid-cols-3" aria-live="polite">
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-lg">{summary.communities}</b><span className="text-[10px] leading-tight text-slate-500">{t('communities')}</span></div>
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-lg">{summary.teams}</b><span className="text-[10px] leading-tight text-slate-500">{t('teams')}</span></div>
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-lg">{summary.horizonDemand}</b><span className="text-[10px] leading-tight text-slate-500">{t('demand')}</span></div>
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-lg">{summary.days}</b><span className="text-[10px] leading-tight text-slate-500">{t('days')}</span></div>
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-sm">{summary.baselineProvided ? t('baselineYes') : t('baselineNo')}</b><span className="text-[10px] leading-tight text-slate-500">{t('baseline')}</span></div>
+          <div className="rounded-lg bg-white/[0.04] p-2"><b className="block text-lg">{summary.scheduledDemand}</b><span className="text-[10px] leading-tight text-slate-500">{t('scheduled')}</span></div>
+          {summary.availabilityRules > 0 ? <div className="col-span-full text-[11px] text-slate-500">{summary.availabilityRules} {t('rules')}</div> : null}
         </div>
       ) : null}
 
-      {error && (
-        <div role="alert" className="mt-3 break-words text-xs text-rose-300">
-          {error}
-        </div>
-      )}
+      {error ? <div role="alert" className="mt-3 break-words text-xs text-rose-300">{error}</div> : null}
 
       <details className="mt-4 text-xs text-slate-500">
         <summary className="cursor-pointer font-semibold text-slate-400">{t('template')}</summary>
         <div className="mt-4 space-y-5 border-t border-white/10 pt-4">
           <p className="leading-relaxed">{t('templateIntro')}</p>
-          <div>
-            <b className="text-slate-300">{t('recordTypesTitle')}</b>
-            <dl className="mt-3 grid gap-2">
-              {Object.entries(recordTypes).map(([type, description]) => (
-                <div
-                  key={type}
-                  className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3"
-                >
-                  <dt>
-                    <code className="text-rose-200">{type}</code>
-                  </dt>
-                  <dd className="leading-relaxed">{description}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <div>
-            <b className="text-slate-300">{t('columnsTitle')}</b>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => (
-                <code
-                  key={column}
-                  className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400"
-                >
-                  {column}
-                </code>
-              ))}
-            </div>
-          </div>
+          <div><b className="text-slate-300">{t('recordTypesTitle')}</b><dl className="mt-3 grid gap-2">{Object.entries(recordTypes).map(([type, description]) => <div key={type} className="grid gap-1 rounded-lg bg-white/[0.025] p-3 sm:grid-cols-[110px_1fr] sm:gap-3"><dt><code className="text-rose-200">{type}</code></dt><dd className="leading-relaxed">{description}</dd></div>)}</dl></div>
+          <div><b className="text-slate-300">{t('columnsTitle')}</b><div className="mt-3 flex flex-wrap gap-1.5">{RESOURCE_ALLOCATION_IMPORT_COLUMNS.split(',').map((column) => <code key={column} className="rounded border border-white/10 bg-slate-950/40 px-2 py-1 text-[10px] text-slate-400">{column}</code>)}</div></div>
           <p className="border-l-2 border-rose-300/30 pl-3 leading-relaxed">{t('multiValueHint')}</p>
         </div>
       </details>
