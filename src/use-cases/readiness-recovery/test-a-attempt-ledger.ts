@@ -107,6 +107,10 @@ function assertHash(value: string, name: string) {
   if (!HASH_RE.test(value)) throw new Error(`${name} must be a lowercase SHA-256 hex digest`)
 }
 
+function compareCanonicalKeys(left: string, right: string) {
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
 function normalizeJson(value: JsonValue): JsonValue {
   if ((value as unknown) === undefined) throw new Error('Canonical JSON payload is required')
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value
@@ -118,13 +122,25 @@ function normalizeJson(value: JsonValue): JsonValue {
 
   return Object.fromEntries(
     Object.entries(value)
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => compareCanonicalKeys(left, right))
       .map(([key, nested]) => [key, normalizeJson(nested)])
   )
 }
 
+function serializeCanonicalJson(value: JsonValue): string {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') {
+    return JSON.stringify(value) as string
+  }
+  if (Array.isArray(value)) return `[${value.map(serializeCanonicalJson).join(',')}]`
+
+  return `{${Object.keys(value)
+    .sort(compareCanonicalKeys)
+    .map((key) => `${JSON.stringify(key)}:${serializeCanonicalJson(value[key])}`)
+    .join(',')}}`
+}
+
 export function canonicalJson(value: JsonValue) {
-  return JSON.stringify(normalizeJson(value))
+  return serializeCanonicalJson(normalizeJson(value))
 }
 
 function hashArtifact(artifactType: string, payload: JsonValue) {
