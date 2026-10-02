@@ -77,6 +77,7 @@ function assertHash(value: string, name: string) {
 }
 
 function normalizeJson(value: JsonValue): JsonValue {
+  if ((value as unknown) === undefined) throw new Error('Canonical JSON payload is required')
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new Error('Canonical JSON does not allow non-finite numbers')
@@ -92,7 +93,6 @@ function normalizeJson(value: JsonValue): JsonValue {
 }
 
 export function canonicalJson(value: JsonValue) {
-  if ((value as unknown) === undefined) throw new Error('Canonical JSON payload is required')
   return JSON.stringify(normalizeJson(value))
 }
 
