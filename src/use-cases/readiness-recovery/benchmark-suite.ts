@@ -18,6 +18,7 @@ import {
   expectedActionGain,
   extendCandidate,
   type CandidateGenerationResult,
+  type MutableCandidate,
   type OptimizationBackend,
   validateCompleteCandidate,
 } from './optimization-backend'
@@ -38,9 +39,9 @@ function riskAdjustedScore(input: ReadinessRecoveryInput, action: RecoveryAction
 
 function addWithDependencies(
   input: ReadinessRecoveryInput,
-  current: CandidatePlan,
+  current: MutableCandidate,
   action: RecoveryAction
-): CandidatePlan | null {
+): MutableCandidate | null {
   const actionById = new Map(input.recoveryActions.map((item) => [item.actionId, item]))
   let candidate = current
   const selectedActions = new Set(candidate.selectedActionIds)
@@ -109,7 +110,7 @@ function lookaheadCandidate(input: ReadinessRecoveryInput) {
       .slice(0, 12)
     if (!shortlist.length) break
 
-    let best: { candidate: CandidatePlan; actions: RecoveryAction[]; score: number } | null = null
+    let best: { candidate: MutableCandidate; actions: RecoveryAction[]; score: number } | null = null
     for (let i = 0; i < shortlist.length; i += 1) {
       const first = addWithDependencies(input, candidate, shortlist[i])
       if (first) {
