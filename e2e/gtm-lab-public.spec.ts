@@ -131,7 +131,7 @@ test('GTM Lab explains context before evaluating public CSV', async ({ page }) =
   await page.getByLabel('Типовий покупець / особа, що приймає рішення').fill('Head of Operations')
   await page.getByRole('button', { name: 'Використати цей контекст' }).click()
 
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('input[type="file"][accept=".csv,text/csv"]').setInputFiles({
     name: 'prospects.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from(

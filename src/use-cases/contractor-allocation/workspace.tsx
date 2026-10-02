@@ -3,14 +3,30 @@
 import { useMemo, useState } from 'react'
 import { Database, RefreshCw, SlidersHorizontal, UsersRound } from 'lucide-react'
 
+import { AnalystDataPanel } from '@/components/observatory/analyst-data-panel'
+import { ScenarioContextPanel, type ScenarioContextView } from '@/components/observatory/scenario-context-panel'
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
+import {
+  CONTRACTOR_DATA_DICTIONARY,
+  contractorExactTemplate,
+  contractorExportAnalysis,
+  downloadContractorJson,
+  importContractorExactPackage,
+  type ContractorValidationIssue,
+} from './data-workspace'
 import {
   buildContractorAllocationDemoScenario,
   CONTRACTOR_ALLOCATION_DEMO_PRESETS,
   type ContractorAllocationDemoPreset,
 } from './demo-data'
-import type { AllocationAssignment, AllocationReservation, DecisionType, UnitDecisionAnalysis } from './domain'
+import type {
+  AllocationAssignment,
+  AllocationReservation,
+  ContractorAllocationScenario,
+  DecisionType,
+  UnitDecisionAnalysis,
+} from './domain'
 import { contractorAllocationI18n } from './i18n'
 import { optimizeContractorAllocation } from './optimizer'
 
@@ -18,6 +34,51 @@ type Filter = 'all' | DecisionType
 type RoleView = 'INSPECTOR' | 'PROCUREMENT' | 'OPERATIONS' | 'PLANNER' | 'QDIP'
 
 const ROLE_VIEWS: RoleView[] = ['INSPECTOR', 'PROCUREMENT', 'OPERATIONS', 'PLANNER', 'QDIP']
+
+const contextCopy = {
+  en: {
+    situation:
+      'A planner must allocate work packages across contractors while preserving eligibility, technical feasibility, capacity and contract-volume constraints.',
+    decision:
+      'Which contractor/contract assignment should be used for each allocation unit without consuming scarce portfolio capacity in a locally attractive but globally worse way?',
+    units: 'allocation units',
+    contractors: 'contractors',
+    contracts: 'contracts',
+    authorities: 'trusted input authorities',
+    uncertainty:
+      'Expected execution cost can be unknown for T&E work; unknown cost is reserved rather than silently treated as cheap.',
+    purpose:
+      'The scenario tests global portfolio allocation, provenance/constraint enforcement and measurable counterfactual cost advantage over the observed allocation.',
+  },
+  uk: {
+    situation:
+      'Планувальник має розподілити пакети робіт між підрядниками, не порушуючи eligibility, технічну допустимість, потужність і ліміти контрактного обсягу.',
+    decision:
+      'Яке призначення підрядник/контракт слід використати для кожної одиниці робіт, щоб локально привабливий вибір не витратив дефіцитну портфельну потужність і не погіршив глобальний результат?',
+    units: 'одиниць розподілу',
+    contractors: 'підрядників',
+    contracts: 'контрактів',
+    authorities: 'довірених джерел input',
+    uncertainty:
+      'Очікувана вартість виконання може бути невідомою для T&E; невідома вартість резервується, а не вважається штучно дешевою.',
+    purpose:
+      'Сценарій перевіряє глобальний портфельний розподіл, provenance/constraint enforcement і вимірювану контрфактичну перевагу вартості над фактичним розподілом.',
+  },
+  pl: {
+    situation:
+      'Planista musi przydzielić pakiety prac wykonawcom z zachowaniem kwalifikacji, wykonalności technicznej, mocy i limitów wolumenu kontraktowego.',
+    decision:
+      'Który wykonawca i kontrakt powinien zostać przypisany do każdej jednostki, aby lokalnie atrakcyjny wybór nie zużył rzadkiej mocy portfela i nie pogorszył wyniku globalnego?',
+    units: 'jednostek alokacji',
+    contractors: 'wykonawców',
+    contracts: 'kontraktów',
+    authorities: 'zaufanych źródeł danych',
+    uncertainty:
+      'Oczekiwany koszt wykonania może być nieznany dla T&E; taki koszt jest rezerwowany zamiast traktowany jako sztucznie tani.',
+    purpose:
+      'Scenariusz sprawdza globalną alokację portfela, egzekwowanie pochodzenia i ograniczeń oraz mierzalną przewagę kosztową względem zaobserwowanej alokacji.',
+  },
+} as const
 
 const decisionTone: Record<DecisionType, string> = {
   ALLOCATION_DECISION_REQUIRED: 'border-sky-400/30 text-sky-200',
@@ -75,15 +136,50 @@ function contractorName(analysis: UnitDecisionAnalysis, contractorId?: string) {
   )
 }
 
+function scenarioContext(
+  locale: Locale,
+  scenario: ContractorAllocationScenario,
+  presetHelp: string
+): ScenarioContextView {
+  const c = contextCopy[locale]
+  const contractCount = scenario.contractors.reduce((sum, contractor) => sum + contractor.contracts.length, 0)
+  return {
+    situation: `${c.situation} ${presetHelp}`,
+    decisionQuestion: c.decision,
+    dataSummary: [
+      `${scenario.units.length} ${c.units}`,
+      `${scenario.contractors.length} ${c.contractors}; ${contractCount} ${c.contracts}`,
+      `${scenario.trustedAuthorities.length} ${c.authorities}`,
+    ],
+    constraints: [
+      `allocation level: ${scenario.allocationLevel}`,
+      `constraint coverage: ${scenario.constraintCoverageStatus}`,
+      `decision time: ${scenario.decisionAt}`,
+    ],
+    uncertainty: [c.uncertainty],
+    testPurpose: c.purpose,
+  }
+}
+
 export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
   const t = contractorAllocationI18n[locale]
   const [preset, setPreset] = useState<ContractorAllocationDemoPreset>('CAPACITY_CONSTRAINED')
+  const [customScenario, setCustomScenario] = useState<ContractorAllocationScenario | null>(null)
+  const [exactIssues, setExactIssues] = useState<ContractorValidationIssue[]>([])
+  const [exactStatus, setExactStatus] = useState<string | null>(null)
   const [view, setView] = useState<RoleView>('PLANNER')
   const [result, setResult] = useState<ReturnType<typeof optimizeContractorAllocation> | null>(null)
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
 
-  const scenario = useMemo(() => buildContractorAllocationDemoScenario(preset), [preset])
+  const scenario = useMemo(
+    () => customScenario ?? buildContractorAllocationDemoScenario(preset),
+    [customScenario, preset]
+  )
+  const context = useMemo(
+    () => scenarioContext(locale, scenario, customScenario ? `Exact input: ${scenario.id}.` : t.presetHelp[preset]),
+    [customScenario, locale, preset, scenario, t.presetHelp]
+  )
   const assignmentByUnit = useMemo(
     () => new Map(result?.assignments.map((assignment) => [assignment.allocationUnitId, assignment]) ?? []),
     [result]
@@ -110,9 +206,32 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
 
   function changePreset(next: ContractorAllocationDemoPreset) {
     setPreset(next)
+    setCustomScenario(null)
+    setExactIssues([])
+    setExactStatus(null)
     setResult(null)
     setSelectedUnitId(null)
     setFilter('all')
+  }
+
+  async function importExact(file: File) {
+    setExactIssues([])
+    setExactStatus(null)
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown
+      const imported = importContractorExactPackage(parsed)
+      if (!imported.input) {
+        setExactIssues(imported.issues)
+        return
+      }
+      setCustomScenario(imported.input)
+      setResult(null)
+      setSelectedUnitId(null)
+      setFilter('all')
+      setExactStatus(`${file.name} · ${imported.input.id}`)
+    } catch (reason) {
+      setExactIssues([{ path: '$', message: reason instanceof Error ? reason.message : 'Invalid JSON.' }])
+    }
   }
 
   return (
@@ -121,7 +240,9 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs font-semibold tracking-[.18em] ds-text-accent">{t.eyebrow}</span>
-            <span className="border border-white/15 px-3 py-1 text-xs text-slate-300">{t.synthetic}</span>
+            <span className="border border-white/15 px-3 py-1 text-xs text-slate-300">
+              {customScenario ? 'EXACT INPUT' : t.synthetic}
+            </span>
           </div>
           <h1 className="mt-5 max-w-5xl text-4xl font-medium tracking-[-.04em] md:text-6xl">{t.title}</h1>
           <p className="mt-4 max-w-4xl text-sm leading-6 text-slate-400 md:text-base">{t.subtitle}</p>
@@ -181,6 +302,24 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
             </button>
           </div>
         </section>
+
+        <ScenarioContextPanel locale={locale} context={context} />
+        <AnalystDataPanel
+          locale={locale}
+          dictionary={CONTRACTOR_DATA_DICTIONARY}
+          onExactFile={importExact}
+          onDownloadTemplate={() =>
+            downloadContractorJson('qdip-contractor-allocation-template.json', contractorExactTemplate(scenario))
+          }
+          onExport={() =>
+            downloadContractorJson(
+              'qdip-contractor-allocation-analysis.json',
+              contractorExportAnalysis(scenario, result ?? undefined)
+            )
+          }
+          exactStatus={exactStatus}
+          exactIssues={exactIssues}
+        />
 
         <section className="mt-5 border border-white/10 bg-white/[.02] p-5">
           <h2 className="text-lg font-medium">{t.inputOwnership}</h2>

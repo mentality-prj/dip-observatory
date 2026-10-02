@@ -1,15 +1,15 @@
 'use client'
 
 import type { Locale } from '@/lib/observatory-i18n'
-import { EVERSOURCE_CAPACITY_LOSS_FACTS, EVERSOURCE_CAPACITY_LOSS_SOURCE_URL } from './capacity-loss-scenario'
+import { CAPACITY_LOSS_FACTS } from './capacity-loss-scenario'
 import type { ContractorAllocationResult, ContractorAllocationScenario } from './domain'
 
 const copy = {
   en: {
     eyebrow: 'Historically grounded capacity-loss case',
     title: 'Nashua AWC · 266 miles returned to bid',
-    body: 'Eversource reported that a vegetation contractor could not complete all awarded 2022 miles because of limited crew resources. The Nashua AWC SMT and METT scope was returned to bid. The public circuit table totals 266.21 miles; the plan text rounds the returned scope to 266 miles.',
-    source: 'Public Eversource 2022 NH Vegetation Management Plan',
+    body: 'A public 2022 vegetation-management plan documented that a contractor could not complete all awarded miles because of limited crew resources. The Nashua AWC SMT and METT scope was returned to bid. The public circuit table totals 266.21 miles; the plan text rounds the returned scope to 266 miles.',
+    source: 'Historical public 2022 vegetation-management scope',
     historical: 'Historical public scope',
     circuits: 'Circuits',
     smt: 'SMT miles',
@@ -34,8 +34,8 @@ const copy = {
   uk: {
     eyebrow: 'Історично обґрунтований кейс втрати потужності',
     title: 'Nashua AWC · 266 миль повернуто на торги',
-    body: 'Eversource повідомляла, що vegetation-підрядник не міг виконати весь присуджений обсяг 2022 року через обмежені ресурси бригад. Scope SMT і METT для Nashua AWC повернули на торги. Публічна таблиця circuits дає 266,21 милі; у тексті плану цей обсяг округлено до 266 миль.',
-    source: 'Публічний Eversource 2022 NH Vegetation Management Plan',
+    body: 'Публічний план vegetation management за 2022 рік зафіксував, що підрядник не міг виконати весь присуджений обсяг через обмежені ресурси бригад. Scope SMT і METT для Nashua AWC повернули на торги. Публічна таблиця circuits дає 266,21 милі; у тексті плану цей обсяг округлено до 266 миль.',
+    source: 'Історичний публічний scope vegetation management 2022',
     historical: 'Історичний публічний scope',
     circuits: 'Circuits',
     smt: 'Милі SMT',
@@ -60,8 +60,8 @@ const copy = {
   pl: {
     eyebrow: 'Historycznie ugruntowany przypadek utraty zdolności',
     title: 'Nashua AWC · 266 mil zwrócono do przetargu',
-    body: 'Eversource informował, że wykonawca vegetation nie mógł zrealizować wszystkich przyznanych mil na 2022 r. z powodu ograniczonych zasobów ekip. Zakres SMT i METT dla Nashua AWC zwrócono do przetargu. Publiczna tabela obwodów sumuje 266,21 mil; tekst planu zaokrągla ten zakres do 266 mil.',
-    source: 'Publiczny Eversource 2022 NH Vegetation Management Plan',
+    body: 'Publiczny plan zarządzania roślinnością na 2022 r. dokumentował, że wykonawca nie mógł zrealizować wszystkich przyznanych mil z powodu ograniczonych zasobów ekip. Zakres SMT i METT dla Nashua AWC zwrócono do przetargu. Publiczna tabela obwodów sumuje 266,21 mil; tekst planu zaokrągla ten zakres do 266 mil.',
+    source: 'Historyczny publiczny zakres zarządzania roślinnością 2022',
     historical: 'Historyczny publiczny zakres',
     circuits: 'Obwody',
     smt: 'Mile SMT',
@@ -127,21 +127,14 @@ export function CapacityLossStory({
         <div className="text-[11px] font-semibold uppercase tracking-[.16em] text-sky-300">{t.eyebrow}</div>
         <h2 className="mt-3 max-w-4xl text-2xl font-medium tracking-[-.03em] text-slate-100 md:text-3xl">{t.title}</h2>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">{t.body}</p>
-        <a
-          className="mt-3 inline-block text-xs text-sky-300 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-200"
-          href={EVERSOURCE_CAPACITY_LOSS_SOURCE_URL}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {t.source}
-        </a>
+        <p className="mt-3 text-xs text-sky-300">{t.source}</p>
 
         <div className="mt-6 text-xs font-semibold uppercase tracking-[.12em] text-slate-400">{t.historical}</div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StoryMetric label={t.circuits} value={String(EVERSOURCE_CAPACITY_LOSS_FACTS.circuitCount)} />
-          <StoryMetric label={t.smt} value={miles(EVERSOURCE_CAPACITY_LOSS_FACTS.smtMiles, t.miles)} />
-          <StoryMetric label={t.mett} value={miles(EVERSOURCE_CAPACITY_LOSS_FACTS.mettMiles, t.miles)} />
-          <StoryMetric label={t.total} value={miles(EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles, t.miles)} />
+          <StoryMetric label={t.circuits} value={String(CAPACITY_LOSS_FACTS.circuitCount)} />
+          <StoryMetric label={t.smt} value={miles(CAPACITY_LOSS_FACTS.smtMiles, t.miles)} />
+          <StoryMetric label={t.mett} value={miles(CAPACITY_LOSS_FACTS.mettMiles, t.miles)} />
+          <StoryMetric label={t.total} value={miles(CAPACITY_LOSS_FACTS.totalMiles, t.miles)} />
         </div>
 
         <div className="mt-6 grid gap-2 md:grid-cols-4">
@@ -162,7 +155,7 @@ export function CapacityLossStory({
               label={t.reallocated}
               value={
                 result
-                  ? `${reallocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} ${t.miles}`
+                  ? `${reallocatedMiles.toFixed(2)} / ${CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} ${t.miles}`
                   : '—'
               }
             />
@@ -191,7 +184,7 @@ export function CapacityLossStory({
                     <div
                       className="h-full bg-sky-400 transition-[width] duration-700 ease-out"
                       style={{
-                        width: `${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles ? (value / EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles) * 100 : 0}%`,
+                        width: `${CAPACITY_LOSS_FACTS.totalMiles ? (value / CAPACITY_LOSS_FACTS.totalMiles) * 100 : 0}%`,
                       }}
                     />
                   </div>

@@ -2,9 +2,19 @@
 
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { RefreshCw, SlidersHorizontal, Wrench } from 'lucide-react'
+import { AnalystDataPanel } from '@/components/observatory/analyst-data-panel'
+import { ScenarioContextPanel, type ScenarioContextView } from '@/components/observatory/scenario-context-panel'
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
 import { QdipAdvantage } from './advantage'
+import {
+  READINESS_DATA_DICTIONARY,
+  downloadJson,
+  exactTemplate,
+  exportAnalysis,
+  importExactPackage,
+  type ValidationIssue,
+} from './data-workspace'
 import {
   applySensitivity,
   buildReadinessRecoveryDemo,
@@ -22,6 +32,51 @@ const LABEL_ORDER: ScenarioLabel[] = [
   'LOW_RISK',
   'BALANCED',
 ]
+
+const contextCopy = {
+  en: {
+    situation:
+      'A fleet planner must restore required operational capabilities before a shared deadline with limited repair resources.',
+    decision:
+      'Which feasible recovery plan should be considered, given capability demand, fleet state, dependencies, resources and uncertain repair outcomes?',
+    assets: 'assets',
+    impaired: 'failed/degraded',
+    demands: 'capability demands',
+    actions: 'candidate recovery actions',
+    workshop: 'workshop-hours available',
+    uncertainty: 'Repair duration, success, resulting reliability and repeat failure are stochastic.',
+    purpose:
+      'The scenario tests whether QDIP can reduce a combinatorial recovery problem to operationally meaningful nondominated alternatives without violating hard constraints.',
+  },
+  uk: {
+    situation:
+      'Планувальник парку має відновити потрібні операційні спроможності до спільного строку за обмежених ремонтних ресурсів.',
+    decision:
+      'Який допустимий план відновлення варто розглядати з урахуванням потреби у спроможностях, стану парку, залежностей, ресурсів і невизначених результатів ремонту?',
+    assets: 'активів',
+    impaired: 'несправних/деградованих',
+    demands: 'потреб у спроможностях',
+    actions: 'кандидатних дій відновлення',
+    workshop: 'доступних майстерня-годин',
+    uncertainty: 'Тривалість, успіх ремонту, результуюча надійність і повторна відмова моделюються стохастично.',
+    purpose:
+      'Сценарій перевіряє, чи QDIP перетворює комбінаторну задачу відновлення на операційно змістовний набір недомінованих альтернатив без порушення жорстких обмежень.',
+  },
+  pl: {
+    situation:
+      'Planista floty musi odtworzyć wymagane zdolności operacyjne przed wspólnym terminem przy ograniczonych zasobach naprawczych.',
+    decision:
+      'Który wykonalny plan odtworzenia należy rozważyć, biorąc pod uwagę zapotrzebowanie na zdolności, stan floty, zależności, zasoby i niepewne wyniki napraw?',
+    assets: 'aktywów',
+    impaired: 'uszkodzonych/zdegradowanych',
+    demands: 'zapotrzebowań na zdolności',
+    actions: 'kandydackich działań odtworzeniowych',
+    workshop: 'dostępnych godzin warsztatowych',
+    uncertainty: 'Czas naprawy, powodzenie, wynikowa niezawodność i ponowna awaria są modelowane stochastycznie.',
+    purpose:
+      'Scenariusz sprawdza, czy QDIP redukuje kombinatoryczny problem odtworzenia do operacyjnie sensownego zbioru niezdominowanych alternatyw bez naruszania twardych ograniczeń.',
+  },
+} as const
 
 function percent(locale: Locale, value: number) {
   return new Intl.NumberFormat(LOCALE_TAGS[locale], { style: 'percent', maximumFractionDigits: 1 }).format(value)
@@ -71,9 +126,41 @@ function deadlineHoursFromInput(input: ReadinessRecoveryInput) {
   return deadlines.length ? Math.round(Math.min(...deadlines)) : 60
 }
 
+function scenarioContext(
+  locale: Locale,
+  preset: ReadinessRecoveryDemoPreset,
+  input: ReadinessRecoveryInput,
+  presetHelp: string
+): ScenarioContextView {
+  const c = contextCopy[locale]
+  const impaired = input.assets.filter((asset) => asset.currentState !== 'READY').length
+  return {
+    situation: `${c.situation} ${presetHelp}`,
+    decisionQuestion: c.decision,
+    dataSummary: [
+      `${input.assets.length} ${c.assets}; ${impaired} ${c.impaired}`,
+      `${input.capabilityDemand.length} ${c.demands}`,
+      `${input.recoveryActions.length} ${c.actions}`,
+    ],
+    constraints: [
+      `${input.resources.workshopHours} ${c.workshop}`,
+      `technician skills: ${Object.keys(input.resources.technicianHours).join(', ') || '—'}`,
+      `spare parts: ${Object.keys(input.resources.spareParts).length}; replacement asset types: ${Object.keys(input.resources.replacementAssets).length}`,
+    ],
+    uncertainty: [
+      c.uncertainty,
+      `Monte Carlo samples: ${input.settings.simulationSamples}; seed: ${input.settings.seed}; epsilon: ${input.settings.epsilon}`,
+    ],
+    testPurpose: c.purpose,
+  }
+}
+
 export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const t = readinessRecoveryI18n[locale]
   const [preset, setPreset] = useState<ReadinessRecoveryDemoPreset>('BALANCED')
+  const [customInput, setCustomInput] = useState<ReadinessRecoveryInput | null>(null)
+  const [exactIssues, setExactIssues] = useState<ValidationIssue[]>([])
+  const [exactStatus, setExactStatus] = useState<string | null>(null)
   const [result, setResult] = useState<ReadinessRecoveryResult | null>(null)
   const [previousResult, setPreviousResult] = useState<ReadinessRecoveryResult | null>(null)
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null)
@@ -86,12 +173,22 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const baseInput = useMemo(() => buildReadinessRecoveryDemo(preset), [preset])
+  const baseInput = useMemo(() => customInput ?? buildReadinessRecoveryDemo(preset), [customInput, preset])
+  const context = useMemo(
+    () =>
+      scenarioContext(
+        locale,
+        preset,
+        baseInput,
+        customInput ? `Exact input: ${baseInput.scenarioId}.` : t.presetHelp[preset]
+      ),
+    [baseInput, customInput, locale, preset, t.presetHelp]
+  )
   const featured = useMemo(() => featuredScenarios(result?.frontier ?? []), [result])
   const selected =
     result?.frontier.find((scenario) => scenario.scenarioId === selectedScenarioId) ?? featured[0] ?? null
 
-  async function requestPlanner(input: ReturnType<typeof buildReadinessRecoveryDemo>, recalculate: boolean) {
+  async function requestPlanner(input: ReadinessRecoveryInput, recalculate: boolean) {
     const endpoint = recalculate
       ? `/readiness/scenarios/${encodeURIComponent(input.scenarioId)}/recalculate`
       : '/readiness/scenarios'
@@ -147,6 +244,9 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
 
   function changePreset(next: ReadinessRecoveryDemoPreset) {
     setPreset(next)
+    setCustomInput(null)
+    setExactIssues([])
+    setExactStatus(null)
     setResult(null)
     setPreviousResult(null)
     setSelectedScenarioId(null)
@@ -157,13 +257,36 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
     setError(null)
   }
 
+  async function importExact(file: File) {
+    setExactIssues([])
+    setExactStatus(null)
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown
+      const imported = importExactPackage(parsed)
+      if (!imported.input) {
+        setExactIssues(imported.issues)
+        return
+      }
+      setCustomInput(imported.input)
+      setResult(null)
+      setPreviousResult(null)
+      setSelectedScenarioId(null)
+      setDeadlineHours(deadlineHoursFromInput(imported.input))
+      setExactStatus(`${file.name} · ${imported.input.scenarioId}`)
+    } catch (reason) {
+      setExactIssues([{ path: '$', message: reason instanceof Error ? reason.message : 'Invalid JSON.' }])
+    }
+  }
+
   return (
     <main className="min-h-[calc(100vh-7rem)] text-white">
       <div className="mx-auto max-w-[1540px] px-4 py-7 sm:px-5 md:px-8 lg:px-10 lg:py-10">
         <header className="border-b border-white/15 pb-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs font-semibold tracking-[.18em] ds-text-accent">{t.eyebrow}</span>
-            <span className="border border-white/15 px-3 py-1 text-xs text-slate-300">{t.synthetic}</span>
+            <span className="border border-white/15 px-3 py-1 text-xs text-slate-300">
+              {customInput ? 'EXACT INPUT' : t.synthetic}
+            </span>
           </div>
           <h1 className="mt-5 max-w-5xl text-4xl font-medium tracking-[-.04em] md:text-6xl">{t.title}</h1>
           <p className="mt-4 max-w-5xl text-sm leading-6 text-slate-400 md:text-base">{t.subtitle}</p>
@@ -199,6 +322,19 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
             </button>
           </div>
         </section>
+
+        <ScenarioContextPanel locale={locale} context={context} />
+        <AnalystDataPanel
+          locale={locale}
+          dictionary={READINESS_DATA_DICTIONARY}
+          onExactFile={importExact}
+          onDownloadTemplate={() => downloadJson('qdip-readiness-recovery-template.json', exactTemplate(baseInput))}
+          onExport={() =>
+            downloadJson('qdip-readiness-recovery-analysis.json', exportAnalysis(baseInput, result ?? undefined))
+          }
+          exactStatus={exactStatus}
+          exactIssues={exactIssues}
+        />
 
         {error ? (
           <div className="mt-5 border border-rose-400/30 bg-rose-400/10 p-4 text-sm text-rose-200">{error}</div>

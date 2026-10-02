@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { CircleAlert, FileUp, LoaderCircle } from 'lucide-react'
+import { CircleAlert, Download, FileSearch, FileUp, LoaderCircle } from 'lucide-react'
+import { analyzeWithSharedDecisionIntake } from '@/components/observatory/data-intake-contract'
 import type { Locale } from '@/lib/observatory-i18n'
+import { downloadGtmJson, gtmExactTemplate, gtmExportAnalysis, importGtmExactPackage } from '../data-workspace'
 import { gtmLabI18n } from '../i18n'
 import {
   importValidationSchema,
@@ -51,6 +53,15 @@ function parseCsv(text: string): Record<string, string>[] {
   })
 }
 
+const templateContext: CommercialContext = {
+  offering: 'Describe the offering being evaluated',
+  problems_solved: ['Describe one business problem the offering solves'],
+  target_industries: [],
+  target_company_sizes: [],
+  target_geographies: [],
+  target_roles: [],
+}
+
 export function GtmProductionImport({ locale, commercialContext, onEvaluated }: Props) {
   const t = gtmLabI18n[locale].import
   const contextCopy = gtmLabI18n[locale].onboarding
@@ -58,11 +69,14 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
   const [message, setMessage] = useState<string | null>(null)
   const [issues, setIssues] = useState<string[]>([])
   const [running, setRunning] = useState(false)
+  const [lastResult, setLastResult] = useState<PipelineRun | null>(null)
+  const [smartSummary, setSmartSummary] = useState<string | null>(null)
 
   async function selectFile(file: File) {
     setMessage(null)
     setIssues([])
     setRows([])
+    setLastResult(null)
     try {
       const rawRows = parseCsv(await file.text())
       if (!rawRows.length) throw new Error(t.emptyCsv)
@@ -78,6 +92,32 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
       setRows(validation.rows)
       setIssues(validation.issues.map((issue) => t.issue(issue.row, issue.field, issue.message)))
       setMessage(validation.valid ? t.validated(validation.valid_rows) : t.invalidRows(validation.invalid_rows))
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : t.importFailed)
+    }
+  }
+
+  async function smartAnalyze(file: File | undefined) {
+    if (!file) return
+    setSmartSummary(null)
+    try {
+      const profile = await analyzeWithSharedDecisionIntake(file)
+      setSmartSummary(`${profile.rows} rows · ${profile.columns} columns`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : t.importFailed)
+    }
+  }
+
+  async function exactImport(file: File | undefined) {
+    if (!file) return
+    setMessage(null)
+    setIssues([])
+    try {
+      const imported = importGtmExactPackage(JSON.parse(await file.text()) as unknown)
+      if (!imported.input) throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
+      setRows(imported.input.rows)
+      setLastResult(imported.result ?? null)
+      setMessage(t.validated(imported.input.rows.length))
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t.importFailed)
     }
@@ -100,6 +140,7 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
       const json = await response.json()
       if (!response.ok) throw new Error(t.evaluationFailed)
       const result = pipelineRunSchema.parse(json)
+      setLastResult(result)
       onEvaluated(result)
       setMessage(
         t.completed(result.summary.evaluated_prospects, result.summary.total_prospects, result.summary.failed_prospects)
@@ -136,12 +177,82 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
           />
         </label>
       </div>
-      {message && (
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="border border-white/10 p-3">
+          <b className="text-sm">Smart import</b>
+          <p className="mt-1 text-xs text-slate-500">
+            Use shared Decision Intake to inspect unfamiliar CSV/XLSX/JSON before mapping it to the GTM contract.
+          </p>
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 border border-sky-400/30 px-3 py-2 text-xs text-sky-200">
+            <FileSearch className="h-4 w-4" />
+            Analyze file
+            <input
+              className="sr-only"
+              type="file"
+              accept=".csv,.xlsx,.json"
+              onChange={(event) => void smartAnalyze(event.target.files?.[0])}
+            />
+          </label>
+          {smartSummary ? (
+            <p className="mt-2 text-xs text-sky-200">{smartSummary} · review semantics before strict import.</p>
+          ) : null}
+        </div>
+        <div className="border border-white/10 p-3">
+          <b className="text-sm">Exact input / export</b>
+          <p className="mt-1 text-xs text-slate-500">
+            Versioned JSON bypasses inference and preserves the exact analyst input.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                downloadGtmJson(
+                  'qdip-gtm-exact.v1.json',
+                  gtmExactTemplate({
+                    rows: [{ name: 'Example prospect', metadata: {} }],
+                    commercialContext: commercialContext ?? templateContext,
+                  })
+                )
+              }
+              className="border border-white/15 px-3 py-2 text-xs text-slate-200"
+            >
+              <Download className="mr-1 inline h-4 w-4" />
+              Template
+            </button>
+            <label className="cursor-pointer border border-emerald-400/30 px-3 py-2 text-xs text-emerald-200">
+              Import exact JSON
+              <input
+                className="sr-only"
+                type="file"
+                accept=".json,application/json"
+                onChange={(event) => void exactImport(event.target.files?.[0])}
+              />
+            </label>
+            {rows.length && commercialContext ? (
+              <button
+                type="button"
+                onClick={() =>
+                  downloadGtmJson(
+                    'qdip-gtm-analysis.v1.json',
+                    gtmExportAnalysis({ rows, commercialContext }, lastResult ?? undefined)
+                  )
+                }
+                className="border border-white/15 px-3 py-2 text-xs text-slate-200"
+              >
+                Export package
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {message ? (
         <p className="mt-4 text-sm text-slate-300" aria-live="polite">
           {message}
         </p>
-      )}
-      {issues.length > 0 && (
+      ) : null}
+      {issues.length > 0 ? (
         <div className="mt-4 border border-amber-400/20 p-3 text-sm text-amber-200">
           <CircleAlert className="mr-2 inline h-4 w-4" />
           <b>{t.validationErrors}</b>
@@ -151,8 +262,8 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
             ))}
           </ul>
         </div>
-      )}
-      {rows.length > 0 && !issues.length && (
+      ) : null}
+      {rows.length > 0 && !issues.length ? (
         <button
           type="button"
           onClick={() => void runEvaluation()}
@@ -168,10 +279,10 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
             t.runFor(rows.length)
           )}
         </button>
-      )}
-      {rows.length > 0 && !commercialContext && (
+      ) : null}
+      {rows.length > 0 && !commercialContext ? (
         <p className="mt-2 text-xs text-amber-200">{contextCopy.contextRequired}</p>
-      )}
+      ) : null}
     </section>
   )
 }

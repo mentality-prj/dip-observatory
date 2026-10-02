@@ -16,7 +16,14 @@ const PUBLIC_PLANNER_LIMITS = {
 
 function assertSameOrigin(request: Request) {
   const origin = request.headers.get('origin')
-  if (!origin || origin !== new URL(request.url).origin) throw new Error('Cross-origin request rejected.')
+  const requestUrl = new URL(request.url)
+  const expectedHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? requestUrl.host
+  const expectedProtocol = request.headers.get('x-forwarded-proto') ?? requestUrl.protocol.replace(':', '')
+  if (!origin) throw new Error('Cross-origin request rejected.')
+  const originUrl = new URL(origin)
+  if (originUrl.host !== expectedHost || originUrl.protocol.replace(':', '') !== expectedProtocol) {
+    throw new Error('Cross-origin request rejected.')
+  }
 }
 
 function assertPublicPlannerLimits(input: ReadinessRecoveryInput) {

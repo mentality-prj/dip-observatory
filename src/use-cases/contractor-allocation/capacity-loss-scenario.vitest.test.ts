@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildContractorCapacityLossScenario,
-  EVERSOURCE_CAPACITY_LOSS_CIRCUITS,
-  EVERSOURCE_CAPACITY_LOSS_FACTS,
+  CAPACITY_LOSS_CIRCUITS,
+  CAPACITY_LOSS_FACTS,
 } from './capacity-loss-scenario'
 import { optimizeContractorAllocation } from './optimizer'
 
 describe('contractor capacity loss recovery scenario', () => {
-  it('uses the published Nashua AWC circuit scope and SMT/METT split', () => {
+  it('uses the published 2022 circuit scope and SMT/METT split', () => {
     const scenario = buildContractorCapacityLossScenario()
     const smtMiles = scenario.units
       .filter((unit) => unit.workType === 'SMT')
@@ -18,12 +18,12 @@ describe('contractor capacity loss recovery scenario', () => {
       .reduce((sum, unit) => sum + unit.quantity, 0)
     const totalMiles = scenario.units.reduce((sum, unit) => sum + unit.quantity, 0)
 
-    expect(EVERSOURCE_CAPACITY_LOSS_CIRCUITS).toHaveLength(14)
-    expect(new Set(EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => row.circuit)).size).toBe(14)
+    expect(CAPACITY_LOSS_CIRCUITS).toHaveLength(14)
+    expect(new Set(CAPACITY_LOSS_CIRCUITS.map((row) => row.circuit)).size).toBe(14)
     expect(scenario.units).toHaveLength(17)
-    expect(smtMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.smtMiles, 6)
-    expect(mettMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.mettMiles, 6)
-    expect(totalMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles, 6)
+    expect(smtMiles).toBeCloseTo(CAPACITY_LOSS_FACTS.smtMiles, 6)
+    expect(mettMiles).toBeCloseTo(CAPACITY_LOSS_FACTS.mettMiles, 6)
+    expect(totalMiles).toBeCloseTo(CAPACITY_LOSS_FACTS.totalMiles, 6)
     expect(scenario.units.some((unit) => unit.id === '314X4_22-SMT' && unit.quantity === 91.53)).toBe(true)
     expect(scenario.units.some((unit) => unit.id === '314X4_22-METT' && unit.quantity === 5.97)).toBe(true)
   })
@@ -99,7 +99,7 @@ describe('contractor capacity loss recovery scenario', () => {
     expect(result.status).toBe('OPTIMAL')
     expect(result.assignments).toHaveLength(scenario.units.length)
     expect(result.assignments.every((assignment) => assignment.contractorId !== 'synthetic-incumbent')).toBe(true)
-    expect(reallocatedMiles).toBeCloseTo(EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles, 6)
+    expect(reallocatedMiles).toBeCloseTo(CAPACITY_LOSS_FACTS.totalMiles, 6)
     expect(recoveryBidders.size).toBeGreaterThan(1)
     expect(result.observedInvalidUnitIds).toHaveLength(scenario.units.length)
     expect(result.counterfactualAllocationAdvantage).toBeNull()

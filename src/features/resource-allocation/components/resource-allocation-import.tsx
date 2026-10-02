@@ -1,11 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, FileSpreadsheet } from 'lucide-react'
+import { Download, FileSearch, FileSpreadsheet } from 'lucide-react'
 
+import { analyzeWithSharedDecisionIntake } from '@/components/observatory/data-intake-contract'
 import { FileUploader, type FileUploaderState } from '@/components/file-uploader'
 import { useTranslations } from '@/i18n/provider'
 import type { ResourceAllocationInput } from '../contracts'
+import {
+  downloadResourceAllocationJson,
+  importResourceAllocationExactPackage,
+  resourceAllocationExactTemplate,
+} from '../data-workspace'
 import {
   buildResourceAllocationExampleCsv,
   buildResourceAllocationTemplateCsv,
@@ -40,6 +46,7 @@ export function ResourceAllocationImport({
   const [fileMeta, setFileMeta] = useState<{ name: string; size: number } | null>(null)
   const [summary, setSummary] = useState<ResourceAllocationImportSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [smartSummary, setSmartSummary] = useState<string | null>(null)
 
   const busy = stage === 'reading' || stage === 'validating'
   const uploaderState: FileUploaderState = busy
@@ -58,17 +65,50 @@ export function ResourceAllocationImport({
     setSummary(null)
     setError(null)
     setStage('reading')
-
     try {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       setStage('validating')
       const imported = await importResourceAllocationFile(file)
-      const nextSummary = summarizeResourceAllocationImport(imported)
       onImported(imported, file.name)
-      setSummary(nextSummary)
+      setSummary(summarizeResourceAllocationImport(imported))
       setStage('ready')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Import failed')
+      setStage('error')
+    }
+  }
+
+  async function analyzeSmart(file: File | undefined) {
+    if (!file) return
+    setError(null)
+    setSmartSummary(null)
+    try {
+      const profile = await analyzeWithSharedDecisionIntake(file)
+      setSmartSummary(`${profile.rows} rows · ${profile.columns} columns`)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Smart import failed')
+    }
+  }
+
+  async function downloadExactTemplate() {
+    const example = buildResourceAllocationExampleCsv()
+    const file = new File([example], 'example.csv', { type: 'text/csv' })
+    const input = await importResourceAllocationFile(file)
+    downloadResourceAllocationJson('qdip-resource-allocation-exact.v1.json', resourceAllocationExactTemplate(input))
+  }
+
+  async function importExact(file: File | undefined) {
+    if (!file) return
+    setError(null)
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown
+      const imported = importResourceAllocationExactPackage(parsed)
+      if (!imported.input) throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
+      onImported(imported.input, file.name)
+      setSummary(summarizeResourceAllocationImport(imported.input))
+      setStage('ready')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Exact import failed')
       setStage('error')
     }
   }
@@ -80,6 +120,55 @@ export function ResourceAllocationImport({
         <div className="min-w-0">
           <b className="block">{t('title')}</b>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">{t('body')}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 border border-white/10 bg-slate-950/30 p-4">
+        <div>
+          <b className="block text-sm">Smart import</b>
+          <p className="mt-1 text-xs text-slate-500">
+            Analyze unfamiliar CSV/XLSX/JSON through the shared Decision Intake capability before mapping it to the
+            allocation model.
+          </p>
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 border border-sky-400/30 px-3 py-2 text-xs text-sky-200">
+            <FileSearch className="h-4 w-4" />
+            Analyze business file
+            <input
+              className="sr-only"
+              type="file"
+              accept=".csv,.xlsx,.json"
+              onChange={(event) => void analyzeSmart(event.target.files?.[0])}
+            />
+          </label>
+          {smartSummary ? (
+            <p className="mt-2 text-xs text-sky-200">
+              {smartSummary} · review semantics, then use the strict template below.
+            </p>
+          ) : null}
+        </div>
+        <div className="border-t border-white/10 pt-3">
+          <b className="block text-sm">Exact input</b>
+          <p className="mt-1 text-xs text-slate-500">
+            Versioned JSON bypasses semantic inference and is validated before replacing the active input.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void downloadExactTemplate()}
+              className="border border-white/15 px-3 py-2 text-xs text-slate-200"
+            >
+              Download exact JSON template
+            </button>
+            <label className="cursor-pointer border border-emerald-400/30 px-3 py-2 text-xs text-emerald-200">
+              Import exact JSON
+              <input
+                className="sr-only"
+                type="file"
+                accept=".json,application/json"
+                onChange={(event) => void importExact(event.target.files?.[0])}
+              />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -182,11 +271,11 @@ export function ResourceAllocationImport({
         </div>
       ) : null}
 
-      {error && (
+      {error ? (
         <div role="alert" className="mt-3 break-words text-xs text-rose-300">
           {error}
         </div>
-      )}
+      ) : null}
 
       <details className="mt-4 text-xs text-slate-500">
         <summary className="cursor-pointer font-semibold text-slate-400">{t('template')}</summary>
