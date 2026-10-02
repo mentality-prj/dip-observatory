@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   deriveAttemptId,
+  InMemoryTestALedgerStore,
   TestAAttemptLedger,
   type FailureInjectionStage,
   type InvalidityTaxonomy,
@@ -29,34 +30,44 @@ describe('Test A attempt ledger', () => {
     expect(deriveAttemptId(EXECUTION_A, 0)).not.toBe(deriveAttemptId(EXECUTION_B, 0))
   })
 
-  it('allocates ordinals atomically under concurrent requests', async () => {
-    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
-    const attempts = await Promise.all(Array.from({ length: 32 }, () => ledger.allocateAttempt(EXECUTION_A)))
+  it('allocates ordinals atomically across concurrent executor instances sharing a CAS store', async () => {
+    const store = new InMemoryTestALedgerStore()
+    const executors = Array.from(
+      { length: 8 },
+      () => new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    )
+    const attempts = await Promise.all(
+      Array.from({ length: 64 }, (_, index) => executors[index % executors.length].allocateAttempt(EXECUTION_A))
+    )
 
     expect(attempts.map((attempt) => attempt.attemptIndex).sort((a, b) => a - b)).toEqual(
-      Array.from({ length: 32 }, (_, index) => index)
+      Array.from({ length: 64 }, (_, index) => index)
     )
-    expect(new Set(attempts.map((attempt) => attempt.attemptId)).size).toBe(32)
-    expect(ledger.read().executions[EXECUTION_A].nextAttemptIndex).toBe(32)
+    expect(new Set(attempts.map((attempt) => attempt.attemptId)).size).toBe(64)
+    expect((await executors[0].read()).executions[EXECUTION_A].nextAttemptIndex).toBe(64)
   })
 
   it('keeps independent atomic ordinals per execution identity', async () => {
-    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const store = new InMemoryTestALedgerStore()
+    const firstExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const secondExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
     const [a0, b0, a1, b1] = await Promise.all([
-      ledger.allocateAttempt(EXECUTION_A),
-      ledger.allocateAttempt(EXECUTION_B),
-      ledger.allocateAttempt(EXECUTION_A),
-      ledger.allocateAttempt(EXECUTION_B),
+      firstExecutor.allocateAttempt(EXECUTION_A),
+      secondExecutor.allocateAttempt(EXECUTION_B),
+      secondExecutor.allocateAttempt(EXECUTION_A),
+      firstExecutor.allocateAttempt(EXECUTION_B),
     ])
 
     expect([a0.attemptIndex, a1.attemptIndex]).toEqual([0, 1])
     expect([b0.attemptIndex, b1.attemptIndex]).toEqual([0, 1])
   })
 
-  it('does not consume an ordinal when allocation fails before commit', async () => {
+  it('does not consume an ordinal when allocation fails before CAS commit', async () => {
     let fail = true
-    const ledger = new TestAAttemptLedger({
+    const store = new InMemoryTestALedgerStore()
+    const failingExecutor = new TestAAttemptLedger({
       invalidityTaxonomy: TAXONOMY,
+      store,
       failureInjector: (stage: FailureInjectionStage) => {
         if (stage === 'ALLOCATE_AFTER_DRAFT_BEFORE_COMMIT' && fail) {
           fail = false
@@ -64,18 +75,21 @@ describe('Test A attempt ledger', () => {
         }
       },
     })
+    const healthyExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
 
-    await expect(ledger.allocateAttempt(EXECUTION_A)).rejects.toThrow('injected allocation failure')
-    const firstCommitted = await ledger.allocateAttempt(EXECUTION_A)
+    await expect(failingExecutor.allocateAttempt(EXECUTION_A)).rejects.toThrow('injected allocation failure')
+    const firstCommitted = await healthyExecutor.allocateAttempt(EXECUTION_A)
 
     expect(firstCommitted.attemptIndex).toBe(0)
-    expect(ledger.read().executions[EXECUTION_A].nextAttemptIndex).toBe(1)
+    expect((await healthyExecutor.read()).executions[EXECUTION_A].nextAttemptIndex).toBe(1)
   })
 
-  it('rolls back terminalization if finalization fails before commit', async () => {
+  it('rolls back terminalization if finalization fails before CAS commit', async () => {
     let fail = true
-    const ledger = new TestAAttemptLedger({
+    const store = new InMemoryTestALedgerStore()
+    const failingExecutor = new TestAAttemptLedger({
       invalidityTaxonomy: TAXONOMY,
+      store,
       failureInjector: (stage: FailureInjectionStage) => {
         if (stage === 'FINALIZE_AFTER_DRAFT_BEFORE_COMMIT' && fail) {
           fail = false
@@ -83,26 +97,27 @@ describe('Test A attempt ledger', () => {
         }
       },
     })
-    const attempt = await ledger.allocateAttempt(EXECUTION_A)
+    const healthyExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const attempt = await failingExecutor.allocateAttempt(EXECUTION_A)
 
     await expect(
-      ledger.finalizeAttempt(attempt.attemptId, {
+      failingExecutor.finalizeAttempt(attempt.attemptId, {
         kind: 'INVALID',
         invalidityReason: 'FROZEN_CONTRACT_BREACH',
         process: process(),
       })
     ).rejects.toThrow('injected finalization failure')
 
-    expect(ledger.read().testState).toBe('OPEN')
-    expect(ledger.read().executions[EXECUTION_A].attempts[0].status).toBe('ALLOCATED')
+    expect((await healthyExecutor.read()).testState).toBe('OPEN')
+    expect((await healthyExecutor.read()).executions[EXECUTION_A].attempts[0].status).toBe('ALLOCATED')
 
-    const finalized = await ledger.finalizeAttempt(attempt.attemptId, {
+    const finalized = await healthyExecutor.finalizeAttempt(attempt.attemptId, {
       kind: 'INVALID',
       invalidityReason: 'FROZEN_CONTRACT_BREACH',
       process: process(),
     })
     expect(finalized.status).toBe('INVALID')
-    expect(ledger.read().testState).toBe('TERMINAL_INVALID')
+    expect((await healthyExecutor.read()).testState).toBe('TERMINAL_INVALID')
   })
 
   it('creates result identity only for semantic SUCCESS', async () => {
@@ -148,7 +163,7 @@ describe('Test A attempt ledger', () => {
       })
     ).rejects.toThrow('Canonical JSON payload is required')
 
-    const stored = ledger.read().executions[EXECUTION_A].attempts[0]
+    const stored = (await ledger.read()).executions[EXECUTION_A].attempts[0]
     expect(stored.status).toBe('ALLOCATED')
     expect(stored.resultContentHash).toBeNull()
     expect(stored.runProvenanceHash).toBeNull()
@@ -196,43 +211,47 @@ describe('Test A attempt ledger', () => {
     expect(finalized.runProvenanceHash).toMatch(/^[a-f0-9]{64}$/)
   })
 
-  it('atomically terminal-locks Test A on TEST_INVALIDATING and rejects later allocation', async () => {
-    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
-    const invalidatingAttempt = await ledger.allocateAttempt(EXECUTION_A)
+  it('atomically terminal-locks Test A across executors and rejects the losing allocation', async () => {
+    const store = new InMemoryTestALedgerStore()
+    const invalidatingExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const competingExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const invalidatingAttempt = await invalidatingExecutor.allocateAttempt(EXECUTION_A)
 
     const [finalization, allocation] = await Promise.allSettled([
-      ledger.finalizeAttempt(invalidatingAttempt.attemptId, {
+      invalidatingExecutor.finalizeAttempt(invalidatingAttempt.attemptId, {
         kind: 'INVALID',
         invalidityReason: 'FROZEN_CONTRACT_BREACH',
         process: process(),
       }),
-      ledger.allocateAttempt(EXECUTION_A),
+      competingExecutor.allocateAttempt(EXECUTION_A),
     ])
 
     expect(finalization.status).toBe('fulfilled')
     expect(allocation.status).toBe('rejected')
-    expect(ledger.read().testState).toBe('TERMINAL_INVALID')
-    expect(ledger.read().terminalAttemptId).toBe(invalidatingAttempt.attemptId)
-    await expect(ledger.allocateAttempt(EXECUTION_B)).rejects.toThrow('TEST_A_TERMINAL_LOCKED')
+    expect((await competingExecutor.read()).testState).toBe('TERMINAL_INVALID')
+    expect((await competingExecutor.read()).terminalAttemptId).toBe(invalidatingAttempt.attemptId)
+    await expect(competingExecutor.allocateAttempt(EXECUTION_B)).rejects.toThrow('TEST_A_TERMINAL_LOCKED')
   })
 
   it('does not let a later in-flight invalidating attempt overwrite the original terminal lock identity', async () => {
-    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
-    const first = await ledger.allocateAttempt(EXECUTION_A)
-    const second = await ledger.allocateAttempt(EXECUTION_A)
+    const store = new InMemoryTestALedgerStore()
+    const firstExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const secondExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
+    const first = await firstExecutor.allocateAttempt(EXECUTION_A)
+    const second = await secondExecutor.allocateAttempt(EXECUTION_A)
 
-    await ledger.finalizeAttempt(first.attemptId, {
+    await firstExecutor.finalizeAttempt(first.attemptId, {
       kind: 'INVALID',
       invalidityReason: 'FROZEN_CONTRACT_BREACH',
       process: process(),
     })
-    await ledger.finalizeAttempt(second.attemptId, {
+    await secondExecutor.finalizeAttempt(second.attemptId, {
       kind: 'INVALID',
       invalidityReason: 'FROZEN_CONTRACT_BREACH',
       process: process({ executorId: 'executor-b' }),
     })
 
-    expect(ledger.read().terminalAttemptId).toBe(first.attemptId)
+    expect((await secondExecutor.read()).terminalAttemptId).toBe(first.attemptId)
   })
 
   it('rejects unknown invalidity reasons without partially finalizing the attempt', async () => {
@@ -247,7 +266,7 @@ describe('Test A attempt ledger', () => {
       })
     ).rejects.toThrow('Unknown Test A invalidity reason')
 
-    const stored = ledger.read().executions[EXECUTION_A].attempts[0]
+    const stored = (await ledger.read()).executions[EXECUTION_A].attempts[0]
     expect(stored.status).toBe('ALLOCATED')
     expect(stored.resultContentHash).toBeNull()
     expect(stored.runProvenanceHash).toBeNull()
