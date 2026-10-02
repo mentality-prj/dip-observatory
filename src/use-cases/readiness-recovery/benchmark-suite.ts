@@ -67,7 +67,8 @@ function addWithDependencies(
     return true
   }
 
-  return add(action) ? candidate : null
+  if (!add(action)) return null
+  return validateCompleteCandidate(input, candidate) ? candidate : null
 }
 
 function riskAwareCandidate(input: ReadinessRecoveryInput) {
