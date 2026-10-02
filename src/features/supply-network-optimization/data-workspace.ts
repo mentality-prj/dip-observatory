@@ -30,7 +30,15 @@ export function validateSupplyNetwork(value: unknown): SupplyValidationIssue[] {
   if (!value || typeof value !== 'object') return [{ path: '$', message: 'Expected an object.' }]
   const input = value as Partial<SupplyNetwork>
   const issues: SupplyValidationIssue[] = []
-  for (const field of ['product_classes', 'demand_points', 'warehouses', 'suppliers', 'inbound_supply', 'delivery_routes', 'transfer_routes'] as const) {
+  for (const field of [
+    'product_classes',
+    'demand_points',
+    'warehouses',
+    'suppliers',
+    'inbound_supply',
+    'delivery_routes',
+    'transfer_routes',
+  ] as const) {
     if (!Array.isArray(input[field])) issues.push({ path: field, message: 'Expected an array.' })
   }
   if (!input.policy || typeof input.policy !== 'object') issues.push({ path: 'policy', message: 'Required object.' })
@@ -40,9 +48,15 @@ export function validateSupplyNetwork(value: unknown): SupplyValidationIssue[] {
       if (!positive(warehouse.capacity_units))
         issues.push({ path: `warehouses[${index}].capacity_units`, message: 'Expected a positive number.' })
       if (!positive(warehouse.receiving_capacity_units_per_day))
-        issues.push({ path: `warehouses[${index}].receiving_capacity_units_per_day`, message: 'Expected a positive number.' })
+        issues.push({
+          path: `warehouses[${index}].receiving_capacity_units_per_day`,
+          message: 'Expected a positive number.',
+        })
       if (!positive(warehouse.dispatch_capacity_units_per_day))
-        issues.push({ path: `warehouses[${index}].dispatch_capacity_units_per_day`, message: 'Expected a positive number.' })
+        issues.push({
+          path: `warehouses[${index}].dispatch_capacity_units_per_day`,
+          message: 'Expected a positive number.',
+        })
     })
   }
   if (input.policy) {

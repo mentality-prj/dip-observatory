@@ -39,12 +39,14 @@ export function validateReadinessInput(value: unknown): ValidationIssue[] {
   if (!value || typeof value !== 'object') return [{ path: '$', message: 'Expected an object.' }]
   const input = value as Partial<ReadinessRecoveryInput>
   if (!input.scenarioId?.trim()) issues.push({ path: 'scenarioId', message: 'Required non-empty string.' })
-  if (!input.asOf || Number.isNaN(Date.parse(input.asOf))) issues.push({ path: 'asOf', message: 'Expected ISO datetime.' })
+  if (!input.asOf || Number.isNaN(Date.parse(input.asOf)))
+    issues.push({ path: 'asOf', message: 'Expected ISO datetime.' })
   if (!Array.isArray(input.capabilityDemand) || input.capabilityDemand.length === 0) {
     issues.push({ path: 'capabilityDemand', message: 'At least one capability demand is required.' })
   } else {
     input.capabilityDemand.forEach((demand, index) => {
-      if (!demand.capabilityId?.trim()) issues.push({ path: `capabilityDemand[${index}].capabilityId`, message: 'Required.' })
+      if (!demand.capabilityId?.trim())
+        issues.push({ path: `capabilityDemand[${index}].capabilityId`, message: 'Required.' })
       if (!finite(demand.requiredQuantity) || demand.requiredQuantity < 0)
         issues.push({ path: `capabilityDemand[${index}].requiredQuantity`, message: 'Expected a non-negative number.' })
       if (!demand.deadline || Number.isNaN(Date.parse(demand.deadline)))
@@ -53,8 +55,10 @@ export function validateReadinessInput(value: unknown): ValidationIssue[] {
   }
   if (!Array.isArray(input.assets)) issues.push({ path: 'assets', message: 'Expected an array.' })
   if (!Array.isArray(input.recoveryActions)) issues.push({ path: 'recoveryActions', message: 'Expected an array.' })
-  if (!input.resources || typeof input.resources !== 'object') issues.push({ path: 'resources', message: 'Required object.' })
-  if (!input.settings || typeof input.settings !== 'object') issues.push({ path: 'settings', message: 'Required object.' })
+  if (!input.resources || typeof input.resources !== 'object')
+    issues.push({ path: 'resources', message: 'Required object.' })
+  if (!input.settings || typeof input.settings !== 'object')
+    issues.push({ path: 'settings', message: 'Required object.' })
   return issues
 }
 

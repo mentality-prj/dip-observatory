@@ -56,7 +56,9 @@ test.describe('Observatory production routing contract', () => {
   }
 
   for (const locale of locales) {
-    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({
+      page,
+    }) => {
       const errors = capturePageErrors(page)
       const response = await page.goto(`http://observatory.localhost:3000/${locale}${routes[0].path}`, {
         waitUntil: 'domcontentloaded',

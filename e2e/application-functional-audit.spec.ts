@@ -17,7 +17,11 @@ test.describe('application-wide analyst context contract', () => {
     })
   }
 
-  for (const path of ['/uk/readiness-recovery', '/uk/contractor-allocation', '/uk/supply-network-optimization'] as const) {
+  for (const path of [
+    '/uk/readiness-recovery',
+    '/uk/contractor-allocation',
+    '/uk/supply-network-optimization',
+  ] as const) {
     test(`${path} exposes smart and exact analyst data modes`, async ({ page }) => {
       const response = await page.goto(`http://observatory.localhost:3000${path}`, { waitUntil: 'domcontentloaded' })
       expect(response?.status()).toBeLessThan(400)

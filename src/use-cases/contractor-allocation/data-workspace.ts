@@ -17,7 +17,12 @@ export const CONTRACTOR_DATA_DICTIONARY = [
   ['decisionAt', 'Decision time used for temporal validity checks', 'ISO datetime', 'required'],
   ['allocationLevel', 'Atomic allocation unit level', 'enum', 'required'],
   ['units[]', 'Work packages/orders with scope, demand, deadline and technical requirements', 'object[]', 'required'],
-  ['contractors[]', 'Eligible contractors, contracts, rates, execution profiles and capacity buckets', 'object[]', 'required'],
+  [
+    'contractors[]',
+    'Eligible contractors, contracts, rates, execution profiles and capacity buckets',
+    'object[]',
+    'required',
+  ],
   ['trustedAuthorities[]', 'Authoritative sources allowed to contribute decision inputs', 'object[]', 'required'],
 ] as const
 
@@ -26,10 +31,12 @@ export function validateContractorInput(value: unknown): ContractorValidationIss
   const input = value as Partial<ContractorAllocationScenario>
   const issues: ContractorValidationIssue[] = []
   if (!input.id?.trim()) issues.push({ path: 'id', message: 'Required non-empty string.' })
-  if (!input.asOf || Number.isNaN(Date.parse(input.asOf))) issues.push({ path: 'asOf', message: 'Expected ISO datetime.' })
+  if (!input.asOf || Number.isNaN(Date.parse(input.asOf)))
+    issues.push({ path: 'asOf', message: 'Expected ISO datetime.' })
   if (!input.decisionAt || Number.isNaN(Date.parse(input.decisionAt)))
     issues.push({ path: 'decisionAt', message: 'Expected ISO datetime.' })
-  if (!Array.isArray(input.units) || input.units.length === 0) issues.push({ path: 'units', message: 'At least one unit is required.' })
+  if (!Array.isArray(input.units) || input.units.length === 0)
+    issues.push({ path: 'units', message: 'At least one unit is required.' })
   if (!Array.isArray(input.contractors) || input.contractors.length === 0)
     issues.push({ path: 'contractors', message: 'At least one contractor is required.' })
   if (!Array.isArray(input.trustedAuthorities) || input.trustedAuthorities.length === 0)

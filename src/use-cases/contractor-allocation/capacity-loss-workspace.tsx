@@ -197,9 +197,7 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
   const circuitById = useMemo(
     () =>
-      new Map<string, (typeof CAPACITY_LOSS_CIRCUITS)[number]>(
-        CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])
-      ),
+      new Map<string, (typeof CAPACITY_LOSS_CIRCUITS)[number]>(CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])),
     []
   )
   const allocatedMiles =

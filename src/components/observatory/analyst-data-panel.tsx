@@ -11,9 +11,11 @@ const copy = {
     title: 'Analyst data workspace',
     body: 'Use semantic parsing for unfamiliar business files or the exact versioned template when reproducibility matters.',
     smart: 'Smart import',
-    smartBody: 'CSV / XLSX / JSON is analyzed by the existing Decision Intake parser. It proposes semantics; it does not silently run the optimizer.',
+    smartBody:
+      'CSV / XLSX / JSON is analyzed by the existing Decision Intake parser. It proposes semantics; it does not silently run the optimizer.',
     exact: 'Exact template',
-    exactBody: 'Versioned JSON bypasses semantic inference. Validation must pass before it can replace the active scenario input.',
+    exactBody:
+      'Versioned JSON bypasses semantic inference. Validation must pass before it can replace the active scenario input.',
     chooseSmart: 'Analyze CSV / XLSX / JSON',
     chooseExact: 'Import exact JSON',
     template: 'Download exact template',
@@ -30,9 +32,11 @@ const copy = {
     title: 'Робоча зона даних аналітика',
     body: 'Для незнайомих бізнес-файлів використовуйте семантичний парсер, а для максимальної точності й відтворюваності — точний версійований шаблон.',
     smart: 'Розумний імпорт',
-    smartBody: 'CSV / XLSX / JSON аналізує наявний parser Decision Intake. Він пропонує семантику, але не запускає оптимізатор без підтвердження.',
+    smartBody:
+      'CSV / XLSX / JSON аналізує наявний parser Decision Intake. Він пропонує семантику, але не запускає оптимізатор без підтвердження.',
     exact: 'Точний шаблон',
-    exactBody: 'Версійований JSON обходить semantic inference. Поки validation не пройдено, він не замінює активний input сценарію.',
+    exactBody:
+      'Версійований JSON обходить semantic inference. Поки validation не пройдено, він не замінює активний input сценарію.',
     chooseSmart: 'Проаналізувати CSV / XLSX / JSON',
     chooseExact: 'Імпортувати точний JSON',
     template: 'Завантажити точний шаблон',
@@ -41,7 +45,8 @@ const copy = {
     smartReady: 'Дані проаналізовано',
     rows: 'рядків',
     columns: 'колонок',
-    semanticWarning: 'Перевірте запропоновану семантику в Decision Intake, перш ніж використовувати її як decision input.',
+    semanticWarning:
+      'Перевірте запропоновану семантику в Decision Intake, перш ніж використовувати її як decision input.',
     exactReady: 'Точний input пройшов validation і завантажений.',
     error: 'Імпорт не виконано.',
   },
@@ -49,9 +54,11 @@ const copy = {
     title: 'Obszar danych analityka',
     body: 'Dla nieznanych plików biznesowych użyj analizy semantycznej, a dla pełnej powtarzalności — dokładnego, wersjonowanego szablonu.',
     smart: 'Inteligentny import',
-    smartBody: 'CSV / XLSX / JSON analizuje istniejący parser Decision Intake. Proponuje semantykę, ale nie uruchamia optymalizatora bez potwierdzenia.',
+    smartBody:
+      'CSV / XLSX / JSON analizuje istniejący parser Decision Intake. Proponuje semantykę, ale nie uruchamia optymalizatora bez potwierdzenia.',
     exact: 'Dokładny szablon',
-    exactBody: 'Wersjonowany JSON omija wnioskowanie semantyczne. Dopiero poprawna walidacja może zastąpić aktywne dane scenariusza.',
+    exactBody:
+      'Wersjonowany JSON omija wnioskowanie semantyczne. Dopiero poprawna walidacja może zastąpić aktywne dane scenariusza.',
     chooseSmart: 'Analizuj CSV / XLSX / JSON',
     chooseExact: 'Importuj dokładny JSON',
     template: 'Pobierz dokładny szablon',
@@ -174,15 +181,28 @@ export function AnalystDataPanel({
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={onDownloadTemplate} className="border border-white/15 px-3 py-2 text-sm text-slate-200">
+            <button
+              type="button"
+              onClick={onDownloadTemplate}
+              className="border border-white/15 px-3 py-2 text-sm text-slate-200"
+            >
               {t.template}
             </button>
             <label className="cursor-pointer border border-emerald-400/30 px-3 py-2 text-sm text-emerald-200">
               {exactBusy ? '…' : t.chooseExact}
-              <input className="sr-only" type="file" accept=".json,application/json" onChange={(event) => void loadExact(event.target.files?.[0])} />
+              <input
+                className="sr-only"
+                type="file"
+                accept=".json,application/json"
+                onChange={(event) => void loadExact(event.target.files?.[0])}
+              />
             </label>
             {onExport ? (
-              <button type="button" onClick={onExport} className="border border-white/15 px-3 py-2 text-sm text-slate-200">
+              <button
+                type="button"
+                onClick={onExport}
+                className="border border-white/15 px-3 py-2 text-sm text-slate-200"
+              >
                 {t.export}
               </button>
             ) : null}

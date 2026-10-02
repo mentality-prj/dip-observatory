@@ -104,7 +104,9 @@ export function SupplyNetworkAnalystDataWorkspace({ locale }: { locale: Locale }
         locale={locale}
         dictionary={SUPPLY_DATA_DICTIONARY}
         onExactFile={importExact}
-        onDownloadTemplate={() => downloadSupplyJson('qdip-supply-network-template.json', supplyExactTemplate(SUPPLY_NETWORK_DEMO))}
+        onDownloadTemplate={() =>
+          downloadSupplyJson('qdip-supply-network-template.json', supplyExactTemplate(SUPPLY_NETWORK_DEMO))
+        }
         onExport={() =>
           downloadSupplyJson(
             'qdip-supply-network-analysis.json',

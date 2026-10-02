@@ -35,37 +35,46 @@ const LABEL_ORDER: ScenarioLabel[] = [
 
 const contextCopy = {
   en: {
-    situation: 'A fleet planner must restore required operational capabilities before a shared deadline with limited repair resources.',
-    decision: 'Which feasible recovery plan should be considered, given capability demand, fleet state, dependencies, resources and uncertain repair outcomes?',
+    situation:
+      'A fleet planner must restore required operational capabilities before a shared deadline with limited repair resources.',
+    decision:
+      'Which feasible recovery plan should be considered, given capability demand, fleet state, dependencies, resources and uncertain repair outcomes?',
     assets: 'assets',
     impaired: 'failed/degraded',
     demands: 'capability demands',
     actions: 'candidate recovery actions',
     workshop: 'workshop-hours available',
     uncertainty: 'Repair duration, success, resulting reliability and repeat failure are stochastic.',
-    purpose: 'The scenario tests whether QDIP can reduce a combinatorial recovery problem to operationally meaningful nondominated alternatives without violating hard constraints.',
+    purpose:
+      'The scenario tests whether QDIP can reduce a combinatorial recovery problem to operationally meaningful nondominated alternatives without violating hard constraints.',
   },
   uk: {
-    situation: 'Планувальник парку має відновити потрібні операційні спроможності до спільного строку за обмежених ремонтних ресурсів.',
-    decision: 'Який допустимий план відновлення варто розглядати з урахуванням потреби у спроможностях, стану парку, залежностей, ресурсів і невизначених результатів ремонту?',
+    situation:
+      'Планувальник парку має відновити потрібні операційні спроможності до спільного строку за обмежених ремонтних ресурсів.',
+    decision:
+      'Який допустимий план відновлення варто розглядати з урахуванням потреби у спроможностях, стану парку, залежностей, ресурсів і невизначених результатів ремонту?',
     assets: 'активів',
     impaired: 'несправних/деградованих',
     demands: 'потреб у спроможностях',
     actions: 'кандидатних дій відновлення',
     workshop: 'доступних майстерня-годин',
     uncertainty: 'Тривалість, успіх ремонту, результуюча надійність і повторна відмова моделюються стохастично.',
-    purpose: 'Сценарій перевіряє, чи QDIP перетворює комбінаторну задачу відновлення на операційно змістовний набір недомінованих альтернатив без порушення жорстких обмежень.',
+    purpose:
+      'Сценарій перевіряє, чи QDIP перетворює комбінаторну задачу відновлення на операційно змістовний набір недомінованих альтернатив без порушення жорстких обмежень.',
   },
   pl: {
-    situation: 'Planista floty musi odtworzyć wymagane zdolności operacyjne przed wspólnym terminem przy ograniczonych zasobach naprawczych.',
-    decision: 'Który wykonalny plan odtworzenia należy rozważyć, biorąc pod uwagę zapotrzebowanie na zdolności, stan floty, zależności, zasoby i niepewne wyniki napraw?',
+    situation:
+      'Planista floty musi odtworzyć wymagane zdolności operacyjne przed wspólnym terminem przy ograniczonych zasobach naprawczych.',
+    decision:
+      'Który wykonalny plan odtworzenia należy rozważyć, biorąc pod uwagę zapotrzebowanie na zdolności, stan floty, zależności, zasoby i niepewne wyniki napraw?',
     assets: 'aktywów',
     impaired: 'uszkodzonych/zdegradowanych',
     demands: 'zapotrzebowań na zdolności',
     actions: 'kandydackich działań odtworzeniowych',
     workshop: 'dostępnych godzin warsztatowych',
     uncertainty: 'Czas naprawy, powodzenie, wynikowa niezawodność i ponowna awaria są modelowane stochastycznie.',
-    purpose: 'Scenariusz sprawdza, czy QDIP redukuje kombinatoryczny problem odtworzenia do operacyjnie sensownego zbioru niezdominowanych alternatyw bez naruszania twardych ograniczeń.',
+    purpose:
+      'Scenariusz sprawdza, czy QDIP redukuje kombinatoryczny problem odtworzenia do operacyjnie sensownego zbioru niezdominowanych alternatyw bez naruszania twardych ograniczeń.',
   },
 } as const
 
@@ -166,7 +175,13 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
 
   const baseInput = useMemo(() => customInput ?? buildReadinessRecoveryDemo(preset), [customInput, preset])
   const context = useMemo(
-    () => scenarioContext(locale, preset, baseInput, customInput ? `Exact input: ${baseInput.scenarioId}.` : t.presetHelp[preset]),
+    () =>
+      scenarioContext(
+        locale,
+        preset,
+        baseInput,
+        customInput ? `Exact input: ${baseInput.scenarioId}.` : t.presetHelp[preset]
+      ),
     [baseInput, customInput, locale, preset, t.presetHelp]
   )
   const featured = useMemo(() => featuredScenarios(result?.frontier ?? []), [result])
@@ -313,10 +328,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
           locale={locale}
           dictionary={READINESS_DATA_DICTIONARY}
           onExactFile={importExact}
-          onDownloadTemplate={() =>
-            downloadJson('qdip-readiness-recovery-template.json', exactTemplate(baseInput))
+          onDownloadTemplate={() => downloadJson('qdip-readiness-recovery-template.json', exactTemplate(baseInput))}
+          onExport={() =>
+            downloadJson('qdip-readiness-recovery-analysis.json', exportAnalysis(baseInput, result ?? undefined))
           }
-          onExport={() => downloadJson('qdip-readiness-recovery-analysis.json', exportAnalysis(baseInput, result ?? undefined))}
           exactStatus={exactStatus}
           exactIssues={exactIssues}
         />

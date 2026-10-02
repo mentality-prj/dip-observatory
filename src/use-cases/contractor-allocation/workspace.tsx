@@ -37,34 +37,46 @@ const ROLE_VIEWS: RoleView[] = ['INSPECTOR', 'PROCUREMENT', 'OPERATIONS', 'PLANN
 
 const contextCopy = {
   en: {
-    situation: 'A planner must allocate work packages across contractors while preserving eligibility, technical feasibility, capacity and contract-volume constraints.',
-    decision: 'Which contractor/contract assignment should be used for each allocation unit without consuming scarce portfolio capacity in a locally attractive but globally worse way?',
+    situation:
+      'A planner must allocate work packages across contractors while preserving eligibility, technical feasibility, capacity and contract-volume constraints.',
+    decision:
+      'Which contractor/contract assignment should be used for each allocation unit without consuming scarce portfolio capacity in a locally attractive but globally worse way?',
     units: 'allocation units',
     contractors: 'contractors',
     contracts: 'contracts',
     authorities: 'trusted input authorities',
-    uncertainty: 'Expected execution cost can be unknown for T&E work; unknown cost is reserved rather than silently treated as cheap.',
-    purpose: 'The scenario tests global portfolio allocation, provenance/constraint enforcement and measurable counterfactual cost advantage over the observed allocation.',
+    uncertainty:
+      'Expected execution cost can be unknown for T&E work; unknown cost is reserved rather than silently treated as cheap.',
+    purpose:
+      'The scenario tests global portfolio allocation, provenance/constraint enforcement and measurable counterfactual cost advantage over the observed allocation.',
   },
   uk: {
-    situation: 'Планувальник має розподілити пакети робіт між підрядниками, не порушуючи eligibility, технічну допустимість, потужність і ліміти контрактного обсягу.',
-    decision: 'Яке призначення підрядник/контракт слід використати для кожної одиниці робіт, щоб локально привабливий вибір не витратив дефіцитну портфельну потужність і не погіршив глобальний результат?',
+    situation:
+      'Планувальник має розподілити пакети робіт між підрядниками, не порушуючи eligibility, технічну допустимість, потужність і ліміти контрактного обсягу.',
+    decision:
+      'Яке призначення підрядник/контракт слід використати для кожної одиниці робіт, щоб локально привабливий вибір не витратив дефіцитну портфельну потужність і не погіршив глобальний результат?',
     units: 'одиниць розподілу',
     contractors: 'підрядників',
     contracts: 'контрактів',
     authorities: 'довірених джерел input',
-    uncertainty: 'Очікувана вартість виконання може бути невідомою для T&E; невідома вартість резервується, а не вважається штучно дешевою.',
-    purpose: 'Сценарій перевіряє глобальний портфельний розподіл, provenance/constraint enforcement і вимірювану контрфактичну перевагу вартості над фактичним розподілом.',
+    uncertainty:
+      'Очікувана вартість виконання може бути невідомою для T&E; невідома вартість резервується, а не вважається штучно дешевою.',
+    purpose:
+      'Сценарій перевіряє глобальний портфельний розподіл, provenance/constraint enforcement і вимірювану контрфактичну перевагу вартості над фактичним розподілом.',
   },
   pl: {
-    situation: 'Planista musi przydzielić pakiety prac wykonawcom z zachowaniem kwalifikacji, wykonalności technicznej, mocy i limitów wolumenu kontraktowego.',
-    decision: 'Który wykonawca i kontrakt powinien zostać przypisany do każdej jednostki, aby lokalnie atrakcyjny wybór nie zużył rzadkiej mocy portfela i nie pogorszył wyniku globalnego?',
+    situation:
+      'Planista musi przydzielić pakiety prac wykonawcom z zachowaniem kwalifikacji, wykonalności technicznej, mocy i limitów wolumenu kontraktowego.',
+    decision:
+      'Który wykonawca i kontrakt powinien zostać przypisany do każdej jednostki, aby lokalnie atrakcyjny wybór nie zużył rzadkiej mocy portfela i nie pogorszył wyniku globalnego?',
     units: 'jednostek alokacji',
     contractors: 'wykonawców',
     contracts: 'kontraktów',
     authorities: 'zaufanych źródeł danych',
-    uncertainty: 'Oczekiwany koszt wykonania może być nieznany dla T&E; taki koszt jest rezerwowany zamiast traktowany jako sztucznie tani.',
-    purpose: 'Scenariusz sprawdza globalną alokację portfela, egzekwowanie pochodzenia i ograniczeń oraz mierzalną przewagę kosztową względem zaobserwowanej alokacji.',
+    uncertainty:
+      'Oczekiwany koszt wykonania może być nieznany dla T&E; taki koszt jest rezerwowany zamiast traktowany jako sztucznie tani.',
+    purpose:
+      'Scenariusz sprawdza globalną alokację portfela, egzekwowanie pochodzenia i ograniczeń oraz mierzalną przewagę kosztową względem zaobserwowanej alokacji.',
   },
 } as const
 
@@ -160,7 +172,10 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
 
-  const scenario = useMemo(() => customScenario ?? buildContractorAllocationDemoScenario(preset), [customScenario, preset])
+  const scenario = useMemo(
+    () => customScenario ?? buildContractorAllocationDemoScenario(preset),
+    [customScenario, preset]
+  )
   const context = useMemo(
     () => scenarioContext(locale, scenario, customScenario ? `Exact input: ${scenario.id}.` : t.presetHelp[preset]),
     [customScenario, locale, preset, scenario, t.presetHelp]
@@ -297,7 +312,10 @@ export function ContractorAllocationWorkspace({ locale }: { locale: Locale }) {
             downloadContractorJson('qdip-contractor-allocation-template.json', contractorExactTemplate(scenario))
           }
           onExport={() =>
-            downloadContractorJson('qdip-contractor-allocation-analysis.json', contractorExportAnalysis(scenario, result ?? undefined))
+            downloadContractorJson(
+              'qdip-contractor-allocation-analysis.json',
+              contractorExportAnalysis(scenario, result ?? undefined)
+            )
           }
           exactStatus={exactStatus}
           exactIssues={exactIssues}

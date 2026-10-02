@@ -10,13 +10,18 @@ import {
 
 describe('Supply network analyst data workspace', () => {
   it('round-trips a versioned exact network without inference', () => {
-    const imported = importSupplyExactPackage(JSON.parse(JSON.stringify(supplyExactTemplate(SUPPLY_NETWORK_DEMO))) as unknown)
+    const imported = importSupplyExactPackage(
+      JSON.parse(JSON.stringify(supplyExactTemplate(SUPPLY_NETWORK_DEMO))) as unknown
+    )
     expect(imported.issues).toEqual([])
     expect(imported.input).toEqual(SUPPLY_NETWORK_DEMO)
   })
 
   it('rejects incompatible schema version', () => {
-    const imported = importSupplyExactPackage({ ...supplyExactTemplate(SUPPLY_NETWORK_DEMO), schemaVersion: 'other.v2' })
+    const imported = importSupplyExactPackage({
+      ...supplyExactTemplate(SUPPLY_NETWORK_DEMO),
+      schemaVersion: 'other.v2',
+    })
     expect(imported.input).toBeUndefined()
     expect(imported.issues[0]?.path).toBe('schemaVersion')
   })
