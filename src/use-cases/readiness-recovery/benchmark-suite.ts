@@ -45,9 +45,7 @@ function addWithDependencies(
   let candidate = current
   const selectedActions = new Set(candidate.selectedActionIds)
   const selectedAssets = new Set(
-    candidate.selectedActionIds
-      .map((id) => actionById.get(id)?.assetId)
-      .filter((id): id is string => Boolean(id))
+    candidate.selectedActionIds.map((id) => actionById.get(id)?.assetId).filter((id): id is string => Boolean(id))
   )
   const visiting = new Set<string>()
 
@@ -145,7 +143,8 @@ function lookaheadCandidate(input: ReadinessRecoveryInput) {
   }
 
   for (const action of input.recoveryActions) {
-    if (MATERIAL_ACTIONS.has(action.type) && !candidate.selectedActionIds.includes(action.actionId)) rejected.add(action.actionId)
+    if (MATERIAL_ACTIONS.has(action.type) && !candidate.selectedActionIds.includes(action.actionId))
+      rejected.add(action.actionId)
   }
   return { candidate, rejected: [...rejected] }
 }
@@ -256,9 +255,15 @@ export function explainHeuristicMiss(qdip: RecoveryScenario | null, baseline: Re
   const qdipOnly = qdip.selectedActions.filter((action) => !baselineActions.has(action))
   const qdipCannibalization = qdipOnly.filter((action) => action.includes('cannibalize'))
   const explanations: string[] = []
-  if (qdipOnly.length) explanations.push(`QDIP selected ${qdipOnly.length} actions absent from the strongest heuristic plan: ${qdipOnly.slice(0, 4).join(', ')}.`)
-  if (qdipCannibalization.length) explanations.push(`The QDIP-only portfolio uses donor dependencies: ${qdipCannibalization.join(', ')}.`)
-  if (qdip.probabilityDemandSatisfied > baseline.probabilityDemandSatisfied) explanations.push('The portfolio difference increases the probability of satisfying all capability deadlines.')
-  if (qdip.capabilityShortfall < baseline.capabilityShortfall) explanations.push('The portfolio difference reduces expected capability shortfall.')
+  if (qdipOnly.length)
+    explanations.push(
+      `QDIP selected ${qdipOnly.length} actions absent from the strongest heuristic plan: ${qdipOnly.slice(0, 4).join(', ')}.`
+    )
+  if (qdipCannibalization.length)
+    explanations.push(`The QDIP-only portfolio uses donor dependencies: ${qdipCannibalization.join(', ')}.`)
+  if (qdip.probabilityDemandSatisfied > baseline.probabilityDemandSatisfied)
+    explanations.push('The portfolio difference increases the probability of satisfying all capability deadlines.')
+  if (qdip.capabilityShortfall < baseline.capabilityShortfall)
+    explanations.push('The portfolio difference reduces expected capability shortfall.')
   return explanations
 }

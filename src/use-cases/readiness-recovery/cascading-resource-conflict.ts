@@ -16,19 +16,60 @@ export function applyCascadingResourceConflict(input: ReadinessRecoveryInput) {
   // when their isolated capability gain is high; the second requires a wider
   // portfolio instead of a single critical repair.
   input.capabilityDemand = [
-    { capabilityId: 'CAP-1', requiredQuantity: 19.4, deadline: isoAfter(input.asOf, 14), minimumReliability: 0.62, priority: 1.5 },
-    { capabilityId: 'CAP-2', requiredQuantity: 19.1, deadline: isoAfter(input.asOf, 14), minimumReliability: 0.62, priority: 1.4 },
-    { capabilityId: 'CAP-3', requiredQuantity: 20.2, deadline: isoAfter(input.asOf, 30), minimumReliability: 0.65, priority: 1.2 },
-    { capabilityId: 'CAP-4', requiredQuantity: 19.3, deadline: isoAfter(input.asOf, 30), minimumReliability: 0.65, priority: 1.1 },
+    {
+      capabilityId: 'CAP-1',
+      requiredQuantity: 19.4,
+      deadline: isoAfter(input.asOf, 14),
+      minimumReliability: 0.62,
+      priority: 1.5,
+    },
+    {
+      capabilityId: 'CAP-2',
+      requiredQuantity: 19.1,
+      deadline: isoAfter(input.asOf, 14),
+      minimumReliability: 0.62,
+      priority: 1.4,
+    },
+    {
+      capabilityId: 'CAP-3',
+      requiredQuantity: 20.2,
+      deadline: isoAfter(input.asOf, 30),
+      minimumReliability: 0.65,
+      priority: 1.2,
+    },
+    {
+      capabilityId: 'CAP-4',
+      requiredQuantity: 19.3,
+      deadline: isoAfter(input.asOf, 30),
+      minimumReliability: 0.65,
+      priority: 1.1,
+    },
   ]
 
   // Keep a bounded but non-trivial common action space. This avoids making the
   // benchmark hard merely by adding irrelevant actions.
   const benchmarkAssets = new Set([
-    'ASSET-001', 'ASSET-002', 'ASSET-003', 'ASSET-004', 'ASSET-006', 'ASSET-007',
-    'ASSET-008', 'ASSET-009', 'ASSET-011', 'ASSET-012', 'ASSET-013', 'ASSET-016',
-    'ASSET-017', 'ASSET-018', 'ASSET-021', 'ASSET-022', 'ASSET-026', 'ASSET-027',
-    'ASSET-029', 'ASSET-030', 'ASSET-100',
+    'ASSET-001',
+    'ASSET-002',
+    'ASSET-003',
+    'ASSET-004',
+    'ASSET-006',
+    'ASSET-007',
+    'ASSET-008',
+    'ASSET-009',
+    'ASSET-011',
+    'ASSET-012',
+    'ASSET-013',
+    'ASSET-016',
+    'ASSET-017',
+    'ASSET-018',
+    'ASSET-021',
+    'ASSET-022',
+    'ASSET-026',
+    'ASSET-027',
+    'ASSET-029',
+    'ASSET-030',
+    'ASSET-100',
   ])
   input.recoveryActions = input.recoveryActions.filter((action) => benchmarkAssets.has(action.assetId))
 
@@ -50,20 +91,29 @@ export function applyCascadingResourceConflict(input: ReadinessRecoveryInput) {
   const scarceB = new Set(['ASSET-002', 'ASSET-007', 'ASSET-012'])
   for (const action of input.recoveryActions) {
     if (action.type !== 'LIMITED_REPAIR' && action.type !== 'FULL_REPAIR') continue
-    if (scarceA.has(action.assetId)) action.requiredParts = [{ partId: 'PART-SCARCE-A', quantity: action.type === 'FULL_REPAIR' ? 2 : 1 }]
+    if (scarceA.has(action.assetId))
+      action.requiredParts = [{ partId: 'PART-SCARCE-A', quantity: action.type === 'FULL_REPAIR' ? 2 : 1 }]
     if (scarceB.has(action.assetId)) action.requiredParts = [{ partId: 'PART-SCARCE-B', quantity: 1 }]
 
     // Full repairs offer strong isolated outcomes but consume the bottleneck
     // skill/workshop capacity and have stochastic duration beyond T1.
     if (action.type === 'FULL_REPAIR' && (scarceA.has(action.assetId) || scarceB.has(action.assetId))) {
-      action.requiredSkills = [{ skillId: 'diagnostics', technicianHours: 7 }, { skillId: 'mechanical', technicianHours: 7 }]
+      action.requiredSkills = [
+        { skillId: 'diagnostics', technicianHours: 7 },
+        { skillId: 'mechanical', technicianHours: 7 },
+      ]
       action.workshopHours = 11
       action.durationDistribution = { kind: 'TRIANGULAR', min: 12, mode: 18, max: 27 }
       action.successProbability = 0.7
       action.repeatFailureProbability = 0.08
     }
     if (action.type === 'LIMITED_REPAIR' && (scarceA.has(action.assetId) || scarceB.has(action.assetId))) {
-      action.requiredSkills = [{ skillId: action.assetId.endsWith('2') || action.assetId.endsWith('7') ? 'electrical' : 'mechanical', technicianHours: 4 }]
+      action.requiredSkills = [
+        {
+          skillId: action.assetId.endsWith('2') || action.assetId.endsWith('7') ? 'electrical' : 'mechanical',
+          technicianHours: 4,
+        },
+      ]
       action.workshopHours = 3
       action.durationDistribution = { kind: 'TRIANGULAR', min: 5, mode: 7, max: 10 }
       action.successProbability = 0.92
@@ -118,13 +168,30 @@ export function applyCascadingResourceConflict(input: ReadinessRecoveryInput) {
   // Make several assets genuinely multi-capability so local one-dimensional
   // gain is not equivalent to portfolio value.
   for (const [assetId, contributions] of Object.entries({
-    'ASSET-003': [['CAP-1', 0.8], ['CAP-3', 0.75]],
-    'ASSET-008': [['CAP-2', 0.85], ['CAP-4', 0.7]],
-    'ASSET-013': [['CAP-1', 0.55], ['CAP-4', 0.9]],
-    'ASSET-016': [['CAP-1', 1.15], ['CAP-2', 0.25]],
+    'ASSET-003': [
+      ['CAP-1', 0.8],
+      ['CAP-3', 0.75],
+    ],
+    'ASSET-008': [
+      ['CAP-2', 0.85],
+      ['CAP-4', 0.7],
+    ],
+    'ASSET-013': [
+      ['CAP-1', 0.55],
+      ['CAP-4', 0.9],
+    ],
+    'ASSET-016': [
+      ['CAP-1', 1.15],
+      ['CAP-2', 0.25],
+    ],
   }) as [string, [string, number][]][]) {
     const asset = input.assets.find((candidate) => candidate.assetId === assetId)
-    if (asset) asset.providedCapabilities = contributions.map(([capabilityId, quantity]) => ({ capabilityId, quantity, qualityFactor: 1 }))
+    if (asset)
+      asset.providedCapabilities = contributions.map(([capabilityId, quantity]) => ({
+        capabilityId,
+        quantity,
+        qualityFactor: 1,
+      }))
   }
 
   input.settings = {

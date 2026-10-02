@@ -37,7 +37,10 @@ describe('Cascading Resource Conflict benchmark', () => {
     const input = build()
     const result = planReadinessRecovery(input)
     const donor = 'ASSET-100:cannibalize-cascade'
-    for (const scenario of [...result.frontier, ...result.baselines.flatMap((item) => item.scenario ? [item.scenario] : [])]) {
+    for (const scenario of [
+      ...result.frontier,
+      ...result.baselines.flatMap((item) => (item.scenario ? [item.scenario] : [])),
+    ]) {
       if (!scenario.selectedActions.includes(donor)) continue
       expect(scenario.selectedActions.filter((id) => id.startsWith('ASSET-100:'))).toEqual([donor])
     }

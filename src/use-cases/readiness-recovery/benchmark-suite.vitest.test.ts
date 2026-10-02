@@ -46,7 +46,11 @@ describe('readiness benchmark suite', () => {
       'success-minus-10',
       'success-plus-10',
     ])
-    expect(sweep.every((item) => ['QDIP_ADVANTAGE', 'HEURISTIC_PARITY', 'HEURISTIC_ADVANTAGE', 'INSUFFICIENT_EVIDENCE'].includes(item.verdict))).toBe(true)
+    expect(
+      sweep.every((item) =>
+        ['QDIP_ADVANTAGE', 'HEURISTIC_PARITY', 'HEURISTIC_ADVANTAGE', 'INSUFFICIENT_EVIDENCE'].includes(item.verdict)
+      )
+    ).toBe(true)
     const retention = qdipAdvantageRetention(sweep)
     expect(retention.total).toBe(7)
     expect(retention.retained).toBeGreaterThanOrEqual(0)

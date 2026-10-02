@@ -43,9 +43,8 @@ function assertPublicPlannerLimits(input: ReadinessRecoveryInput) {
 function storedPayload(input: ReadinessRecoveryInput) {
   assertPublicPlannerLimits(input)
   const planned = planReadinessRecoveryWithBenchmarkSuite(input)
-  const robustnessVariants = input.scenarioId === 'readiness-cascading-resource-conflict'
-    ? runCascadingRobustnessSweep(input)
-    : null
+  const robustnessVariants =
+    input.scenarioId === 'readiness-cascading-resource-conflict' ? runCascadingRobustnessSweep(input) : null
   const robustness = robustnessVariants
     ? { ...qdipAdvantageRetention(robustnessVariants), variants: robustnessVariants }
     : undefined
