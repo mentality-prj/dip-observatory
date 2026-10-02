@@ -3,286 +3,38 @@ import type { ReadinessRecoveryDemoPreset } from './demo-data'
 import type { ScenarioLabel } from './domain'
 
 type Copy = {
-  eyebrow: string
-  title: string
-  subtitle: string
-  synthetic: string
-  scenario: string
-  presets: Record<ReadinessRecoveryDemoPreset, string>
-  presetHelp: Record<ReadinessRecoveryDemoPreset, string>
-  run: string
-  rerun: string
-  running: string
-  sensitivity: string
-  sensitivityHelp: string
-  deadline: string
-  technicianCapacity: string
-  spareParts: string
-  repairSuccess: string
-  apply: string
-  assets: string
-  impaired: string
-  evaluated: string
-  removed: string
-  frontier: string
-  frontierHelp: string
-  probability: string
-  readiness: string
-  shortfall: string
-  time: string
-  technicianHours: string
-  scarceParts: string
-  failureRisk: string
-  repeatFailureRisk: string
-  bottlenecks: string
-  bindingConstraints: string
-  drivers: string
-  actions: string
-  noConstraints: string
-  baselines: string
-  baselineHelp: string
-  comparison: string
-  comparisonHelp: string
-  previous: string
-  current: string
-  diagnostics: string
-  searchNodes: string
-  computeTime: string
-  truncated: string
-  plannerChoice: string
-  error: string
-  labels: Record<ScenarioLabel, string>
+  eyebrow: string; title: string; subtitle: string; synthetic: string; scenario: string
+  presets: Record<ReadinessRecoveryDemoPreset, string>; presetHelp: Record<ReadinessRecoveryDemoPreset, string>
+  run: string; rerun: string; running: string; sensitivity: string; sensitivityHelp: string; deadline: string
+  technicianCapacity: string; spareParts: string; repairSuccess: string; apply: string; assets: string; impaired: string
+  evaluated: string; removed: string; frontier: string; frontierHelp: string; probability: string; readiness: string
+  shortfall: string; time: string; technicianHours: string; scarceParts: string; failureRisk: string; repeatFailureRisk: string
+  bottlenecks: string; bindingConstraints: string; drivers: string; actions: string; noConstraints: string; baselines: string
+  baselineHelp: string; comparison: string; comparisonHelp: string; previous: string; current: string; diagnostics: string
+  searchNodes: string; computeTime: string; truncated: string; plannerChoice: string; error: string; labels: Record<ScenarioLabel, string>
 }
+
+const labelsEn: Record<ScenarioLabel, string> = { MAXIMUM_READINESS: 'Maximum Readiness', FAST_RECOVERY: 'Fast Recovery', PARTS_CONSERVATIVE: 'Parts Conservative', LOW_RISK: 'Low Risk', BALANCED: 'Balanced' }
+const labelsUk: Record<ScenarioLabel, string> = { MAXIMUM_READINESS: 'Максимальна готовність', FAST_RECOVERY: 'Швидке відновлення', PARTS_CONSERVATIVE: 'Економія запчастин', LOW_RISK: 'Низький ризик', BALANCED: 'Збалансований' }
+const labelsPl: Record<ScenarioLabel, string> = { MAXIMUM_READINESS: 'Maksymalna gotowość', FAST_RECOVERY: 'Szybkie odtworzenie', PARTS_CONSERVATIVE: 'Oszczędność części', LOW_RISK: 'Niskie ryzyko', BALANCED: 'Zrównoważony' }
 
 export const readinessRecoveryI18n: Record<Locale, Copy> = {
   en: {
-    eyebrow: 'QDIP OBSERVATORY · READINESS RECOVERY',
-    title: 'Readiness Recovery Scenario Planner',
-    subtitle:
-      'Convert capability demand, fleet state, constrained repair resources and uncertain outcomes into a Pareto set of feasible recovery scenarios. QDIP does not execute work orders or choose the final plan.',
-    synthetic: 'SYNTHETIC · 100 ASSETS',
-    scenario: 'Stress scenario',
-    presets: {
-      BALANCED: 'Balanced constraints',
-      SCARCE_PART: 'Single scarce part',
-      LOW_SUCCESS_CRITICAL: 'Critical repair with low success',
-      CANNIBALIZATION: 'Cannibalization unlocks repairs',
-      DEADLINE_PRESSURE: 'Deadline pressure',
-      DEMAND_SHIFT: 'Capability demand shift',
-      CAPABILITY_RESCUE: 'Capability rescue · QDIP advantage',
-    },
-    presetHelp: {
-      BALANCED: 'Multiple viable repair mixes compete across time, resources and risk.',
-      SCARCE_PART: 'One spare part becomes binding across several otherwise attractive repairs.',
-      LOW_SUCCESS_CRITICAL: 'High capability gain competes with materially lower repair success probability.',
-      CANNIBALIZATION: 'A donor asset can supply parts needed by two other recoveries.',
-      DEADLINE_PRESSURE: 'Long full repairs stop being feasible before the capability deadline.',
-      DEMAND_SHIFT: 'Changing the required capability mix changes which recoveries create readiness.',
-      CAPABILITY_RESCUE:
-        'A critical capability misses its deadline under FIFO, criticality and greedy repair ordering. QDIP can expose the non-obvious donor → two repairs path.',
-    },
-    run: 'Generate frontier',
-    rerun: 'Regenerate',
-    running: 'Evaluating scenarios…',
-    sensitivity: 'Sensitivity analysis',
-    sensitivityHelp: 'Change operational constraints and rebuild the frontier under the same normalized fleet state.',
-    deadline: 'Common deadline (hours)',
-    technicianCapacity: 'Technician capacity',
-    spareParts: 'Spare-parts availability',
-    repairSuccess: 'Repair success probability',
-    apply: 'Recalculate',
-    assets: 'Assets',
-    impaired: 'Failed / degraded',
-    evaluated: 'Feasible plans evaluated',
-    removed: 'Dominated plans removed',
-    frontier: 'Pareto frontier',
-    frontierHelp:
-      'Only nondominated evaluated plans are shown. Labels are assigned after optimization and never affect the search.',
-    probability: 'P(demand satisfied)',
-    readiness: 'Expected readiness',
-    shortfall: 'Expected shortfall',
-    time: 'Recovery time',
-    technicianHours: 'Technician-hours',
-    scarceParts: 'Scarce-parts use',
-    failureRisk: 'Recovery failure risk',
-    repeatFailureRisk: 'Repeat-failure risk',
-    bottlenecks: 'Bottlenecks',
-    bindingConstraints: 'Binding constraints',
-    drivers: 'Main result drivers',
-    actions: 'Selected actions',
-    noConstraints: 'No near-binding resource constraint detected',
-    baselines: 'Heuristic baselines',
-    baselineHelp: 'FIFO, capability-criticality and greedy readiness are evaluated with the same uncertainty model.',
-    comparison: 'Frontier change',
-    comparisonHelp: 'Previous frontier → changed constraints → rebuilt frontier.',
-    previous: 'Previous',
-    current: 'Current',
-    diagnostics: 'Planner diagnostics',
-    searchNodes: 'Search nodes',
-    computeTime: 'Compute time',
-    truncated: 'Search stopped at configured compute budget',
-    plannerChoice: 'The planner makes the final operational choice from these trade-offs.',
-    error: 'Planner request failed',
-    labels: {
-      MAXIMUM_READINESS: 'Maximum Readiness',
-      FAST_RECOVERY: 'Fast Recovery',
-      PARTS_CONSERVATIVE: 'Parts Conservative',
-      LOW_RISK: 'Low Risk',
-      BALANCED: 'Balanced',
-    },
+    eyebrow: 'QDIP OBSERVATORY · READINESS RECOVERY', title: 'Readiness Recovery Scenario Planner', subtitle: 'Convert capability demand, fleet state, constrained repair resources and uncertain outcomes into a Pareto set of feasible recovery scenarios. QDIP does not execute work orders or choose the final plan.', synthetic: 'SYNTHETIC · 100 ASSETS', scenario: 'Stress scenario',
+    presets: { BALANCED: 'Balanced constraints', SCARCE_PART: 'Single scarce part', LOW_SUCCESS_CRITICAL: 'Critical repair with low success', CANNIBALIZATION: 'Cannibalization unlocks repairs', DEADLINE_PRESSURE: 'Deadline pressure', DEMAND_SHIFT: 'Capability demand shift', CAPABILITY_RESCUE: 'Capability rescue · QDIP advantage', CASCADING_RESOURCE_CONFLICT: 'Cascading resource conflict' },
+    presetHelp: { BALANCED: 'Multiple viable repair mixes compete across time, resources and risk.', SCARCE_PART: 'One spare part becomes binding across several otherwise attractive repairs.', LOW_SUCCESS_CRITICAL: 'High capability gain competes with materially lower repair success probability.', CANNIBALIZATION: 'A donor asset can supply parts needed by two other recoveries.', DEADLINE_PRESSURE: 'Long full repairs stop being feasible before the capability deadline.', DEMAND_SHIFT: 'Changing the required capability mix changes which recoveries create readiness.', CAPABILITY_RESCUE: 'A critical capability misses its deadline under FIFO, criticality and greedy repair ordering. QDIP can expose the non-obvious donor → two repairs path.', CASCADING_RESOURCE_CONFLICT: 'Two deadlines, scarce parts, bottleneck skills, multi-capability assets and a donor create a portfolio problem where locally attractive repairs can block a better global recovery plan.' },
+    run: 'Generate frontier', rerun: 'Regenerate', running: 'Evaluating scenarios…', sensitivity: 'Sensitivity analysis', sensitivityHelp: 'Change operational constraints and rebuild the frontier under the same normalized fleet state.', deadline: 'Common deadline (hours)', technicianCapacity: 'Technician capacity', spareParts: 'Spare-parts availability', repairSuccess: 'Repair success probability', apply: 'Recalculate', assets: 'Assets', impaired: 'Failed / degraded', evaluated: 'Feasible plans evaluated', removed: 'Dominated plans removed', frontier: 'Pareto frontier', frontierHelp: 'Only nondominated evaluated plans are shown. Labels are assigned after optimization and never affect the search.', probability: 'P(demand satisfied)', readiness: 'Expected readiness', shortfall: 'Expected shortfall', time: 'Recovery time', technicianHours: 'Technician-hours', scarceParts: 'Scarce-parts use', failureRisk: 'Recovery failure risk', repeatFailureRisk: 'Repeat-failure risk', bottlenecks: 'Bottlenecks', bindingConstraints: 'Binding constraints', drivers: 'Main result drivers', actions: 'Selected actions', noConstraints: 'No near-binding resource constraint detected', baselines: 'Heuristic baselines', baselineHelp: 'FIFO, criticality, greedy readiness and stronger operational heuristics are evaluated on the same action space and uncertainty model.', comparison: 'Frontier change', comparisonHelp: 'Previous frontier → changed constraints → rebuilt frontier.', previous: 'Previous', current: 'Current', diagnostics: 'Planner diagnostics', searchNodes: 'Search nodes', computeTime: 'Compute time', truncated: 'Search stopped at configured compute budget', plannerChoice: 'The planner makes the final operational choice from these trade-offs.', error: 'Planner request failed', labels: labelsEn,
   },
   uk: {
-    eyebrow: 'QDIP OBSERVATORY · ВІДНОВЛЕННЯ ГОТОВНОСТІ',
-    title: 'Планувальник сценаріїв відновлення готовності',
-    subtitle:
-      'Перетворює потребу в спроможностях, стан парку, обмежені ремонтні ресурси та невизначені результати на Парето-набір допустимих сценаріїв. QDIP не виконує наряди й не обирає остаточний план.',
-    synthetic: 'СИНТЕТИЧНІ ДАНІ · 100 АКТИВІВ',
-    scenario: 'Стрес-сценарій',
-    presets: {
-      BALANCED: 'Збалансовані обмеження',
-      SCARCE_PART: 'Дефіцит однієї запчастини',
-      LOW_SUCCESS_CRITICAL: 'Критичний ремонт із низькою успішністю',
-      CANNIBALIZATION: 'Канібалізація відкриває ремонти',
-      DEADLINE_PRESSURE: 'Жорсткий строк',
-      DEMAND_SHIFT: 'Зміна потреби у спроможностях',
-      CAPABILITY_RESCUE: 'Порятунок спроможності · перевага QDIP',
-    },
-    presetHelp: {
-      BALANCED: 'Кілька допустимих наборів ремонту конкурують за часом, ресурсами та ризиком.',
-      SCARCE_PART: 'Одна запчастина стає обмеженням для кількох привабливих ремонтів.',
-      LOW_SUCCESS_CRITICAL: 'Великий приріст спроможності має суттєво нижчу ймовірність успішного ремонту.',
-      CANNIBALIZATION: 'Актив-донор дає запчастини, потрібні для двох інших відновлень.',
-      DEADLINE_PRESSURE: 'Тривалі повні ремонти стають недопустимими до заданого строку.',
-      DEMAND_SHIFT: 'Зміна потрібного набору спроможностей змінює цінність ремонтів.',
-      CAPABILITY_RESCUE:
-        'Критична спроможність не закривається до строку за FIFO, критичністю чи жадібною евристикою. QDIP знаходить неочевидний ланцюг донор → два ремонти.',
-    },
-    run: 'Побудувати фронт',
-    rerun: 'Побудувати знову',
-    running: 'Оцінювання сценаріїв…',
-    sensitivity: 'Аналіз чутливості',
-    sensitivityHelp: 'Змініть операційні обмеження й перебудуйте фронт для того самого нормалізованого стану парку.',
-    deadline: 'Спільний строк (години)',
-    technicianCapacity: 'Доступність техніків',
-    spareParts: 'Доступність запчастин',
-    repairSuccess: 'Ймовірність успішного ремонту',
-    apply: 'Перерахувати',
-    assets: 'Активи',
-    impaired: 'Несправні / деградовані',
-    evaluated: 'Допустимих планів оцінено',
-    removed: 'Домінованих планів відсіяно',
-    frontier: 'Парето-фронт',
-    frontierHelp:
-      'Показано лише недоміновані оцінені плани. Назви присвоюються після оптимізації й не впливають на пошук.',
-    probability: 'Ймовірність виконання потреби',
-    readiness: 'Очікувана готовність',
-    shortfall: 'Очікуваний дефіцит',
-    time: 'Час відновлення',
-    technicianHours: 'Людино-години техніків',
-    scarceParts: 'Використання дефіцитних запчастин',
-    failureRisk: 'Ризик невдалого відновлення',
-    repeatFailureRisk: 'Ризик повторної відмови',
-    bottlenecks: 'Вузькі місця',
-    bindingConstraints: 'Активні обмеження',
-    drivers: 'Головні чинники результату',
-    actions: 'Вибрані дії',
-    noConstraints: 'Близьких до межі ресурсних обмежень не виявлено',
-    baselines: 'Евристичні базові підходи',
-    baselineHelp:
-      'Порядок надходження, критичність спроможності та жадібний приріст готовності оцінюються тією самою моделлю невизначеності.',
-    comparison: 'Зміна фронту',
-    comparisonHelp: 'Попередній фронт → змінені обмеження → перебудований фронт.',
-    previous: 'До зміни',
-    current: 'Після зміни',
-    diagnostics: 'Діагностика планувальника',
-    searchNodes: 'Вузлів пошуку',
-    computeTime: 'Час обчислення',
-    truncated: 'Пошук зупинено за налаштованим лімітом обчислення',
-    plannerChoice: 'Остаточний операційний вибір між цими компромісами робить планувальник.',
-    error: 'Помилка запиту до планувальника',
-    labels: {
-      MAXIMUM_READINESS: 'Максимальна готовність',
-      FAST_RECOVERY: 'Швидке відновлення',
-      PARTS_CONSERVATIVE: 'Економія запчастин',
-      LOW_RISK: 'Низький ризик',
-      BALANCED: 'Збалансований',
-    },
+    eyebrow: 'QDIP OBSERVATORY · ВІДНОВЛЕННЯ ГОТОВНОСТІ', title: 'Планувальник сценаріїв відновлення готовності', subtitle: 'Перетворює потребу в спроможностях, стан парку, обмежені ремонтні ресурси та невизначені результати на Парето-набір допустимих сценаріїв. QDIP не виконує наряди й не обирає остаточний план.', synthetic: 'СИНТЕТИЧНІ ДАНІ · 100 АКТИВІВ', scenario: 'Стрес-сценарій',
+    presets: { BALANCED: 'Збалансовані обмеження', SCARCE_PART: 'Дефіцит однієї запчастини', LOW_SUCCESS_CRITICAL: 'Критичний ремонт із низькою успішністю', CANNIBALIZATION: 'Канібалізація відкриває ремонти', DEADLINE_PRESSURE: 'Жорсткий строк', DEMAND_SHIFT: 'Зміна потреби у спроможностях', CAPABILITY_RESCUE: 'Порятунок спроможності · перевага QDIP', CASCADING_RESOURCE_CONFLICT: 'Каскадний конфлікт ресурсів' },
+    presetHelp: { BALANCED: 'Кілька допустимих наборів ремонту конкурують за часом, ресурсами та ризиком.', SCARCE_PART: 'Одна запчастина стає обмеженням для кількох привабливих ремонтів.', LOW_SUCCESS_CRITICAL: 'Великий приріст спроможності має суттєво нижчу ймовірність успішного ремонту.', CANNIBALIZATION: 'Актив-донор дає запчастини, потрібні для двох інших відновлень.', DEADLINE_PRESSURE: 'Тривалі повні ремонти стають недопустимими до заданого строку.', DEMAND_SHIFT: 'Зміна потрібного набору спроможностей змінює цінність ремонтів.', CAPABILITY_RESCUE: 'Критична спроможність не закривається до строку за FIFO, критичністю чи жадібною евристикою. QDIP знаходить неочевидний ланцюг донор → два ремонти.', CASCADING_RESOURCE_CONFLICT: 'Два строки, дефіцитні запчастини, вузькі навички, мультиспроможні активи та донор створюють portfolio-задачу, де локально привабливий ремонт може заблокувати кращий глобальний план.' },
+    run: 'Побудувати фронт', rerun: 'Побудувати знову', running: 'Оцінювання сценаріїв…', sensitivity: 'Аналіз чутливості', sensitivityHelp: 'Змініть операційні обмеження й перебудуйте фронт для того самого нормалізованого стану парку.', deadline: 'Спільний строк (години)', technicianCapacity: 'Доступність техніків', spareParts: 'Доступність запчастин', repairSuccess: 'Ймовірність успішного ремонту', apply: 'Перерахувати', assets: 'Активи', impaired: 'Несправні / деградовані', evaluated: 'Допустимих планів оцінено', removed: 'Домінованих планів відсіяно', frontier: 'Парето-фронт', frontierHelp: 'Показано лише недоміновані оцінені плани. Назви присвоюються після оптимізації й не впливають на пошук.', probability: 'Ймовірність виконання потреби', readiness: 'Очікувана готовність', shortfall: 'Очікуваний дефіцит', time: 'Час відновлення', technicianHours: 'Людино-години техніків', scarceParts: 'Використання дефіцитних запчастин', failureRisk: 'Ризик невдалого відновлення', repeatFailureRisk: 'Ризик повторної відмови', bottlenecks: 'Вузькі місця', bindingConstraints: 'Активні обмеження', drivers: 'Головні чинники результату', actions: 'Вибрані дії', noConstraints: 'Близьких до межі ресурсних обмежень не виявлено', baselines: 'Евристичні базові підходи', baselineHelp: 'FIFO, критичність, greedy readiness та сильніші operational heuristics оцінюються на однаковому просторі дій і моделі невизначеності.', comparison: 'Зміна фронту', comparisonHelp: 'Попередній фронт → змінені обмеження → перебудований фронт.', previous: 'До зміни', current: 'Після зміни', diagnostics: 'Діагностика планувальника', searchNodes: 'Вузлів пошуку', computeTime: 'Час обчислення', truncated: 'Пошук зупинено за налаштованим лімітом обчислення', plannerChoice: 'Остаточний операційний вибір між цими компромісами робить планувальник.', error: 'Помилка запиту до планувальника', labels: labelsUk,
   },
   pl: {
-    eyebrow: 'QDIP OBSERVATORY · ODTWARZANIE GOTOWOŚCI',
-    title: 'Planer scenariuszy odtwarzania gotowości',
-    subtitle:
-      'Przekształca zapotrzebowanie na zdolności, stan floty, ograniczone zasoby naprawcze i niepewne wyniki w zbiór wykonalnych scenariuszy Pareto. QDIP nie wykonuje zleceń i nie wybiera ostatecznego planu.',
-    synthetic: 'DANE SYNTETYCZNE · 100 AKTYWÓW',
-    scenario: 'Scenariusz obciążeniowy',
-    presets: {
-      BALANCED: 'Zrównoważone ograniczenia',
-      SCARCE_PART: 'Niedobór jednej części',
-      LOW_SUCCESS_CRITICAL: 'Krytyczna naprawa o niskiej skuteczności',
-      CANNIBALIZATION: 'Kanibalizacja umożliwia naprawy',
-      DEADLINE_PRESSURE: 'Presja terminu',
-      DEMAND_SHIFT: 'Zmiana zapotrzebowania na zdolności',
-      CAPABILITY_RESCUE: 'Ratowanie zdolności · przewaga QDIP',
-    },
-    presetHelp: {
-      BALANCED: 'Kilka wykonalnych zestawów napraw konkuruje czasem, zasobami i ryzykiem.',
-      SCARCE_PART: 'Jedna część staje się ograniczeniem dla kilku atrakcyjnych napraw.',
-      LOW_SUCCESS_CRITICAL: 'Duży wzrost zdolności wiąże się z istotnie niższą szansą powodzenia naprawy.',
-      CANNIBALIZATION: 'Aktyw dawcy dostarcza części potrzebne do dwóch innych napraw.',
-      DEADLINE_PRESSURE: 'Długie pełne naprawy przestają być wykonalne przed wymaganym terminem.',
-      DEMAND_SHIFT: 'Zmiana wymaganych zdolności zmienia wartość poszczególnych napraw.',
-      CAPABILITY_RESCUE:
-        'Krytyczna zdolność nie zostaje odtworzona w terminie przez FIFO, krytyczność ani heurystykę zachłanną. QDIP ujawnia nieoczywistą ścieżkę dawca → dwie naprawy.',
-    },
-    run: 'Zbuduj front',
-    rerun: 'Zbuduj ponownie',
-    running: 'Ocena scenariuszy…',
-    sensitivity: 'Analiza wrażliwości',
-    sensitivityHelp: 'Zmień ograniczenia operacyjne i przebuduj front dla tego samego znormalizowanego stanu floty.',
-    deadline: 'Wspólny termin (godziny)',
-    technicianCapacity: 'Dostępność techników',
-    spareParts: 'Dostępność części',
-    repairSuccess: 'Prawdopodobieństwo udanej naprawy',
-    apply: 'Przelicz',
-    assets: 'Aktywa',
-    impaired: 'Uszkodzone / zdegradowane',
-    evaluated: 'Ocenione wykonalne plany',
-    removed: 'Usunięte plany zdominowane',
-    frontier: 'Front Pareto',
-    frontierHelp:
-      'Pokazane są wyłącznie niezdominowane ocenione plany. Nazwy są nadawane po optymalizacji i nie wpływają na wyszukiwanie.',
-    probability: 'Prawdopodobieństwo pokrycia potrzeb',
-    readiness: 'Oczekiwana gotowość',
-    shortfall: 'Oczekiwany niedobór',
-    time: 'Czas odtworzenia',
-    technicianHours: 'Roboczogodziny techników',
-    scarceParts: 'Zużycie deficytowych części',
-    failureRisk: 'Ryzyko nieudanej naprawy',
-    repeatFailureRisk: 'Ryzyko ponownej awarii',
-    bottlenecks: 'Wąskie gardła',
-    bindingConstraints: 'Wiążące ograniczenia',
-    drivers: 'Główne czynniki wyniku',
-    actions: 'Wybrane działania',
-    noConstraints: 'Nie wykryto zasobu bliskiego ograniczeniu',
-    baselines: 'Bazowe heurystyki',
-    baselineHelp:
-      'Kolejność zgłoszeń, krytyczność zdolności i zachłanny przyrost gotowości są oceniane tą samą metodą niepewności.',
-    comparison: 'Zmiana frontu',
-    comparisonHelp: 'Poprzedni front → zmienione ograniczenia → przebudowany front.',
-    previous: 'Przed zmianą',
-    current: 'Po zmianie',
-    diagnostics: 'Diagnostyka planera',
-    searchNodes: 'Węzły wyszukiwania',
-    computeTime: 'Czas obliczeń',
-    truncated: 'Wyszukiwanie zatrzymano po osiągnięciu ustawionego limitu obliczeń',
-    plannerChoice: 'Ostateczny wybór operacyjny spośród tych kompromisów należy do planisty.',
-    error: 'Błąd żądania planera',
-    labels: {
-      MAXIMUM_READINESS: 'Maksymalna gotowość',
-      FAST_RECOVERY: 'Szybkie odtworzenie',
-      PARTS_CONSERVATIVE: 'Oszczędność części',
-      LOW_RISK: 'Niskie ryzyko',
-      BALANCED: 'Zrównoważony',
-    },
+    eyebrow: 'QDIP OBSERVATORY · ODTWARZANIE GOTOWOŚCI', title: 'Planer scenariuszy odtwarzania gotowości', subtitle: 'Przekształca zapotrzebowanie na zdolności, stan floty, ograniczone zasoby naprawcze i niepewne wyniki w zbiór wykonalnych scenariuszy Pareto. QDIP nie wykonuje zleceń i nie wybiera ostatecznego planu.', synthetic: 'DANE SYNTETYCZNE · 100 AKTYWÓW', scenario: 'Scenariusz obciążeniowy',
+    presets: { BALANCED: 'Zrównoważone ograniczenia', SCARCE_PART: 'Niedobór jednej części', LOW_SUCCESS_CRITICAL: 'Krytyczna naprawa o niskiej skuteczności', CANNIBALIZATION: 'Kanibalizacja umożliwia naprawy', DEADLINE_PRESSURE: 'Presja terminu', DEMAND_SHIFT: 'Zmiana zapotrzebowania na zdolności', CAPABILITY_RESCUE: 'Ratowanie zdolności · przewaga QDIP', CASCADING_RESOURCE_CONFLICT: 'Kaskadowy konflikt zasobów' },
+    presetHelp: { BALANCED: 'Kilka wykonalnych zestawów napraw konkuruje czasem, zasobami i ryzykiem.', SCARCE_PART: 'Jedna część staje się ograniczeniem dla kilku atrakcyjnych napraw.', LOW_SUCCESS_CRITICAL: 'Duży wzrost zdolności wiąże się z istotnie niższą szansą powodzenia naprawy.', CANNIBALIZATION: 'Aktyw dawcy dostarcza części potrzebne do dwóch innych napraw.', DEADLINE_PRESSURE: 'Długie pełne naprawy przestają być wykonalne przed wymaganym terminem.', DEMAND_SHIFT: 'Zmiana wymaganych zdolności zmienia wartość poszczególnych napraw.', CAPABILITY_RESCUE: 'Krytyczna zdolność nie zostaje odtworzona w terminie przez FIFO, krytyczność ani heurystykę zachłanną. QDIP ujawnia nieoczywistą ścieżkę dawca → dwie naprawy.', CASCADING_RESOURCE_CONFLICT: 'Dwa terminy, deficytowe części, wąskie kompetencje, aktywa wielozdolnościowe i dawca tworzą problem portfelowy, w którym lokalnie atrakcyjna naprawa może zablokować lepszy plan globalny.' },
+    run: 'Zbuduj front', rerun: 'Zbuduj ponownie', running: 'Ocena scenariuszy…', sensitivity: 'Analiza wrażliwości', sensitivityHelp: 'Zmień ograniczenia operacyjne i przebuduj front dla tego samego znormalizowanego stanu floty.', deadline: 'Wspólny termin (godziny)', technicianCapacity: 'Dostępność techników', spareParts: 'Dostępność części', repairSuccess: 'Prawdopodobieństwo udanej naprawy', apply: 'Przelicz', assets: 'Aktywa', impaired: 'Uszkodzone / zdegradowane', evaluated: 'Ocenione wykonalne plany', removed: 'Usunięte plany zdominowane', frontier: 'Front Pareto', frontierHelp: 'Pokazane są wyłącznie niezdominowane ocenione plany. Nazwy są nadawane po optymalizacji i nie wpływają na wyszukiwanie.', probability: 'Prawdopodobieństwo pokrycia potrzeb', readiness: 'Oczekiwana gotowość', shortfall: 'Oczekiwany niedobór', time: 'Czas odtworzenia', technicianHours: 'Roboczogodziny techników', scarceParts: 'Zużycie deficytowych części', failureRisk: 'Ryzyko nieudanej naprawy', repeatFailureRisk: 'Ryzyko ponownej awarii', bottlenecks: 'Wąskie gardła', bindingConstraints: 'Wiążące ograniczenia', drivers: 'Główne czynniki wyniku', actions: 'Wybrane działania', noConstraints: 'Nie wykryto zasobu bliskiego ograniczeniu', baselines: 'Bazowe heurystyki', baselineHelp: 'FIFO, krytyczność, greedy readiness i silniejsze heurystyki operacyjne są oceniane w tej samej przestrzeni działań i modelu niepewności.', comparison: 'Zmiana frontu', comparisonHelp: 'Poprzedni front → zmienione ograniczenia → przebudowany front.', previous: 'Przed zmianą', current: 'Po zmianie', diagnostics: 'Diagnostyka planera', searchNodes: 'Węzły wyszukiwania', computeTime: 'Czas obliczeń', truncated: 'Wyszukiwanie zatrzymano po osiągnięciu ustawionego limitu obliczeń', plannerChoice: 'Ostateczny wybór operacyjny spośród tych kompromisów należy do planisty.', error: 'Błąd żądania planera', labels: labelsPl,
   },
 }
