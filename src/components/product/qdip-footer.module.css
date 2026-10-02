@@ -1,5 +1,8 @@
 .footer {
   width: 100%;
+  min-width: 0;
+  grid-column: 1 / -1;
+  align-self: stretch;
   color: #fff;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: #180b11;
@@ -10,6 +13,12 @@
   background:
     radial-gradient(circle at 12% 0%, rgb(var(--ds-accent-rgb) / 0.09), transparent 28rem),
     linear-gradient(180deg, #07101b 0%, #03070e 100%);
+}
+
+.footer[data-variant='product'] {
+  color: var(--ds-text);
+  border-top-color: var(--ds-border);
+  background: var(--ds-surface);
 }
 
 .inner {
@@ -37,6 +46,10 @@
   filter: brightness(0) invert(1);
 }
 
+.footer[data-variant='product'] .brand img {
+  filter: none;
+}
+
 .navigation {
   display: flex;
   flex-wrap: wrap;
@@ -51,12 +64,17 @@
   text-decoration: none;
 }
 
-.footer[data-variant='observatory'] .navigation a {
+.footer[data-variant='observatory'] .navigation a,
+.footer[data-variant='product'] .navigation a {
   color: var(--ds-text-muted);
 }
 
 .navigation a:hover {
   color: #fff;
+}
+
+.footer[data-variant='product'] .navigation a:hover {
+  color: var(--ds-accent);
 }
 
 .meta {
@@ -71,7 +89,8 @@
   font-size: var(--ds-text-xs);
 }
 
-.footer[data-variant='observatory'] .meta {
+.footer[data-variant='observatory'] .meta,
+.footer[data-variant='product'] .meta {
   border-top-color: var(--ds-border);
   color: var(--ds-text-muted);
 }
