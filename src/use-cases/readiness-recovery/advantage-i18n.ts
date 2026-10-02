@@ -26,8 +26,10 @@ export const readinessAdvantageI18n: Record<
     qdip: 'QDIP scenario',
     baseline: 'Best heuristic',
     pathway: 'Efficient recovery path',
-    pathwayDetected: 'The selected plan uses the donor-dependent repair chain as part of its measured efficiency advantage; the same action space is available to the heuristics.',
-    noMaterialAdvantage: 'No material advantage over the strongest heuristic is demonstrated in this scenario.',
+    pathwayDetected:
+      'The selected plan uses the donor-dependent repair chain as part of its measured efficiency advantage; the same action space is available to the heuristics.',
+    noMaterialAdvantage:
+      'No material advantage over the strongest heuristic is demonstrated in this scenario.',
   },
   uk: {
     eyebrow: 'ПЕРЕВАГА QDIP',
@@ -39,8 +41,10 @@ export const readinessAdvantageI18n: Record<
     qdip: 'Сценарій QDIP',
     baseline: 'Найкраща евристика',
     pathway: 'Ефективний шлях відновлення',
-    pathwayDetected: 'Обраний план використовує залежний від донора ланцюг ремонтів як частину виміряної переваги за ефективністю; той самий простір дій доступний евристикам.',
-    noMaterialAdvantage: 'У цьому сценарії суттєва перевага над найсильнішою евристикою не продемонстрована.',
+    pathwayDetected:
+      'Обраний план використовує залежний від донора ланцюг ремонтів як частину виміряної переваги за ефективністю; той самий простір дій доступний евристикам.',
+    noMaterialAdvantage:
+      'У цьому сценарії суттєва перевага над найсильнішою евристикою не продемонстрована.',
   },
   pl: {
     eyebrow: 'PRZEWAGA QDIP',
@@ -52,7 +56,9 @@ export const readinessAdvantageI18n: Record<
     qdip: 'Scenariusz QDIP',
     baseline: 'Najlepsza heurystyka',
     pathway: 'Efektywna ścieżka odtworzenia',
-    pathwayDetected: 'Wybrany plan wykorzystuje zależny od dawcy łańcuch napraw jako część zmierzonej przewagi efektywności; ten sam zestaw działań jest dostępny heurystykom.',
-    noMaterialAdvantage: 'W tym scenariuszu nie wykazano istotnej przewagi nad najsilniejszą heurystyką.',
+    pathwayDetected:
+      'Wybrany plan wykorzystuje zależny od dawcy łańcuch napraw jako część zmierzonej przewagi efektywności; ten sam zestaw działań jest dostępny heurystykom.',
+    noMaterialAdvantage:
+      'W tym scenariuszu nie wykazano istotnej przewagi nad najsilniejszą heurystyką.',
   },
 }
