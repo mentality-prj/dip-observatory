@@ -51,6 +51,16 @@ export type TestAAttemptLedgerSnapshot = {
   >
 }
 
+export type VersionedTestALedgerState = {
+  version: number
+  snapshot: TestAAttemptLedgerSnapshot
+}
+
+export interface TestALedgerStore {
+  read(): Promise<VersionedTestALedgerState>
+  compareAndSwap(expectedVersion: number, nextSnapshot: TestAAttemptLedgerSnapshot): Promise<boolean>
+}
+
 export type AttemptOutcome =
   | {
       kind: 'SUCCESS'
@@ -67,10 +77,20 @@ export type FailureInjectionStage = 'ALLOCATE_AFTER_DRAFT_BEFORE_COMMIT' | 'FINA
 
 export type TestALedgerOptions = {
   invalidityTaxonomy: InvalidityTaxonomy
+  store?: TestALedgerStore
   failureInjector?: (stage: FailureInjectionStage) => void
 }
 
 const HASH_RE = /^[a-f0-9]{64}$/
+const MAX_CAS_RETRIES = 10_000
+
+function emptySnapshot(): TestAAttemptLedgerSnapshot {
+  return {
+    testState: 'OPEN',
+    terminalAttemptId: null,
+    executions: {},
+  }
+}
 
 function assertHash(value: string, name: string) {
   if (!HASH_RE.test(value)) throw new Error(`${name} must be a lowercase SHA-256 hex digest`)
@@ -150,6 +170,13 @@ export function normalizeInvalidity(reason: string, taxonomy: InvalidityTaxonomy
   return { reason, class: invalidityClass, action }
 }
 
+function cloneAttempt(attempt: AttemptRecord): AttemptRecord {
+  return {
+    ...attempt,
+    invalidity: attempt.invalidity ? { ...attempt.invalidity } : null,
+  }
+}
+
 function cloneSnapshot(snapshot: TestAAttemptLedgerSnapshot): TestAAttemptLedgerSnapshot {
   return {
     testState: snapshot.testState,
@@ -159,10 +186,7 @@ function cloneSnapshot(snapshot: TestAAttemptLedgerSnapshot): TestAAttemptLedger
         executionHash,
         {
           nextAttemptIndex: execution.nextAttemptIndex,
-          attempts: execution.attempts.map((attempt) => ({
-            ...attempt,
-            invalidity: attempt.invalidity ? { ...attempt.invalidity } : null,
-          })),
+          attempts: execution.attempts.map(cloneAttempt),
         },
       ])
     ),
@@ -227,41 +251,61 @@ function findAttempt(snapshot: TestAAttemptLedgerSnapshot, attemptId: string) {
   return null
 }
 
+export class InMemoryTestALedgerStore implements TestALedgerStore {
+  private version = 0
+  private snapshot = emptySnapshot()
+
+  async read(): Promise<VersionedTestALedgerState> {
+    return { version: this.version, snapshot: cloneSnapshot(this.snapshot) }
+  }
+
+  async compareAndSwap(expectedVersion: number, nextSnapshot: TestAAttemptLedgerSnapshot): Promise<boolean> {
+    if (expectedVersion !== this.version) return false
+    validateSnapshot(nextSnapshot)
+    this.snapshot = cloneSnapshot(nextSnapshot)
+    this.version += 1
+    return true
+  }
+}
+
+type TransitionResult<T> = {
+  draft: TestAAttemptLedgerSnapshot
+  result: T
+}
+
 export class TestAAttemptLedger {
-  private snapshot: TestAAttemptLedgerSnapshot = {
-    testState: 'OPEN',
-    terminalAttemptId: null,
-    executions: {},
+  private readonly store: TestALedgerStore
+
+  constructor(private readonly options: TestALedgerOptions) {
+    this.store = options.store ?? new InMemoryTestALedgerStore()
   }
 
-  private tail: Promise<void> = Promise.resolve()
+  async read(): Promise<TestAAttemptLedgerSnapshot> {
+    const current = await this.store.read()
+    validateSnapshot(current.snapshot)
+    return cloneSnapshot(current.snapshot)
+  }
 
-  constructor(private readonly options: TestALedgerOptions) {}
-
-  private async atomic<T>(operation: () => T | Promise<T>): Promise<T> {
-    const previous = this.tail
-    let release!: () => void
-    this.tail = new Promise<void>((resolve) => {
-      release = resolve
-    })
-    await previous
-    try {
-      return await operation()
-    } finally {
-      release()
+  private async commitTransition<T>(
+    stage: FailureInjectionStage,
+    transition: (snapshot: TestAAttemptLedgerSnapshot) => TransitionResult<T>
+  ): Promise<T> {
+    for (let retry = 0; retry < MAX_CAS_RETRIES; retry += 1) {
+      const current = await this.store.read()
+      validateSnapshot(current.snapshot)
+      const { draft, result } = transition(cloneSnapshot(current.snapshot))
+      validateSnapshot(draft)
+      this.options.failureInjector?.(stage)
+      if (await this.store.compareAndSwap(current.version, draft)) return result
     }
-  }
-
-  read(): TestAAttemptLedgerSnapshot {
-    return cloneSnapshot(this.snapshot)
+    throw new Error('TEST_A_LEDGER_CAS_RETRY_EXHAUSTED')
   }
 
   async allocateAttempt(executionManifestHash: string): Promise<AttemptRecord> {
     assertHash(executionManifestHash, 'executionManifestHash')
-    return this.atomic(() => {
-      if (this.snapshot.testState !== 'OPEN') throw new Error('TEST_A_TERMINAL_LOCKED')
+    return this.commitTransition('ALLOCATE_AFTER_DRAFT_BEFORE_COMMIT', (draft) => {
+      if (draft.testState !== 'OPEN') throw new Error('TEST_A_TERMINAL_LOCKED')
 
-      const draft = cloneSnapshot(this.snapshot)
       const execution = draft.executions[executionManifestHash] ?? { nextAttemptIndex: 0, attempts: [] }
       const attemptIndex = execution.nextAttemptIndex
       const attempt: AttemptRecord = {
@@ -276,17 +320,12 @@ export class TestAAttemptLedger {
       execution.attempts.push(attempt)
       execution.nextAttemptIndex += 1
       draft.executions[executionManifestHash] = execution
-
-      validateSnapshot(draft)
-      this.options.failureInjector?.('ALLOCATE_AFTER_DRAFT_BEFORE_COMMIT')
-      this.snapshot = draft
-      return { ...attempt }
+      return { draft, result: cloneAttempt(attempt) }
     })
   }
 
   async finalizeAttempt(attemptId: string, outcome: AttemptOutcome): Promise<AttemptRecord> {
-    return this.atomic(() => {
-      const draft = cloneSnapshot(this.snapshot)
+    return this.commitTransition('FINALIZE_AFTER_DRAFT_BEFORE_COMMIT', (draft) => {
       const located = findAttempt(draft, attemptId)
       if (!located) throw new Error(`Unknown attempt: ${attemptId}`)
       if (located.attempt.status !== 'ALLOCATED') throw new Error(`Attempt already finalized: ${attemptId}`)
@@ -331,10 +370,7 @@ export class TestAAttemptLedger {
         }
       }
 
-      validateSnapshot(draft)
-      this.options.failureInjector?.('FINALIZE_AFTER_DRAFT_BEFORE_COMMIT')
-      this.snapshot = draft
-      return { ...attempt, invalidity: attempt.invalidity ? { ...attempt.invalidity } : null }
+      return { draft, result: cloneAttempt(attempt) }
     })
   }
 }
