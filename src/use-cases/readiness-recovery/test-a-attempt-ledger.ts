@@ -92,7 +92,7 @@ function normalizeJson(value: JsonValue): JsonValue {
 }
 
 export function canonicalJson(value: JsonValue) {
-  if (value === undefined) throw new Error('Canonical JSON payload is required')
+  if ((value as unknown) === undefined) throw new Error('Canonical JSON payload is required')
   return JSON.stringify(normalizeJson(value))
 }
 
@@ -104,6 +104,27 @@ function hashArtifact(artifactType: string, payload: JsonValue) {
     payload,
   }
   return createHash('sha256').update(canonicalJson(envelope), 'utf8').digest('hex')
+}
+
+function processMetadataPayload(process: ProcessMetadata): JsonValue {
+  const payload: { [key: string]: JsonValue } = {
+    started_at: process.startedAt,
+    completed_at: process.completedAt,
+  }
+  if (process.executorId !== undefined) payload.executor_id = process.executorId
+  if (process.hostFingerprint !== undefined) payload.host_fingerprint = process.hostFingerprint
+  if (process.exitCode !== undefined) payload.exit_code = process.exitCode
+  if (process.signal !== undefined) payload.signal = process.signal
+  if (process.stderrHash !== undefined) payload.stderr_hash = process.stderrHash
+  return payload
+}
+
+function invalidityPayload(invalidity: NormalizedInvalidityRecord): JsonValue {
+  return {
+    reason: invalidity.reason,
+    class: invalidity.class,
+    action: invalidity.action,
+  }
 }
 
 export function deriveAttemptId(executionManifestHash: string, attemptIndex: number) {
@@ -148,6 +169,10 @@ function cloneSnapshot(snapshot: TestAAttemptLedgerSnapshot): TestAAttemptLedger
   }
 }
 
+function allAttempts(snapshot: TestAAttemptLedgerSnapshot) {
+  return Object.values(snapshot.executions).flatMap((execution) => execution.attempts)
+}
+
 function validateSnapshot(snapshot: TestAAttemptLedgerSnapshot) {
   const attemptIds = new Set<string>()
   for (const [executionHash, execution] of Object.entries(snapshot.executions)) {
@@ -182,8 +207,15 @@ function validateSnapshot(snapshot: TestAAttemptLedgerSnapshot) {
     if (execution.nextAttemptIndex !== expectedNext) throw new Error('Attempt ordinal gap detected')
   }
 
-  if (snapshot.testState === 'TERMINAL_INVALID' && !snapshot.terminalAttemptId) {
-    throw new Error('Terminal Test A state requires the invalidating attempt identity')
+  if (snapshot.testState === 'OPEN') {
+    if (snapshot.terminalAttemptId) throw new Error('OPEN Test A cannot have a terminal attempt identity')
+    return
+  }
+
+  if (!snapshot.terminalAttemptId) throw new Error('Terminal Test A state requires the invalidating attempt identity')
+  const terminalAttempt = allAttempts(snapshot).find((attempt) => attempt.attemptId === snapshot.terminalAttemptId)
+  if (terminalAttempt?.invalidity?.class !== 'TEST_INVALIDATING') {
+    throw new Error('Terminal Test A state must point to a TEST_INVALIDATING attempt')
   }
 }
 
@@ -263,10 +295,10 @@ export class TestAAttemptLedger {
       const attempt = execution.attempts[located.attemptIndex]
 
       if (outcome.kind === 'SUCCESS') {
-        const canonicalPayload = canonicalJson(outcome.resultPayload)
+        const normalizedResult = normalizeJson(outcome.resultPayload)
         const resultContentHash = hashArtifact('test_a_result_content', {
           execution_manifest_hash: attempt.executionManifestHash,
-          result_payload: JSON.parse(canonicalPayload) as JsonValue,
+          result_payload: normalizedResult,
         })
         attempt.status = 'SUCCESS'
         attempt.resultContentHash = resultContentHash
@@ -277,7 +309,7 @@ export class TestAAttemptLedger {
           attempt_index: attempt.attemptIndex,
           result_content_hash: resultContentHash,
           invalidity: null,
-          process: outcome.process as unknown as JsonValue,
+          process: processMetadataPayload(outcome.process),
         })
       } else {
         const invalidity = normalizeInvalidity(outcome.invalidityReason, this.options.invalidityTaxonomy)
@@ -289,11 +321,11 @@ export class TestAAttemptLedger {
           attempt_id: attempt.attemptId,
           attempt_index: attempt.attemptIndex,
           result_content_hash: null,
-          invalidity: invalidity as unknown as JsonValue,
-          process: outcome.process as unknown as JsonValue,
+          invalidity: invalidityPayload(invalidity),
+          process: processMetadataPayload(outcome.process),
         })
 
-        if (invalidity.class === 'TEST_INVALIDATING') {
+        if (invalidity.class === 'TEST_INVALIDATING' && draft.testState === 'OPEN') {
           draft.testState = 'TERMINAL_INVALID'
           draft.terminalAttemptId = attempt.attemptId
         }
