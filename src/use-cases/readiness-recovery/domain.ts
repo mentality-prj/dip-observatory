@@ -25,7 +25,8 @@ export type RecoveryScenario = { scenarioId: string; label: ScenarioLabel; label
 export type BaselineKind = 'FIFO' | 'CRITICALITY' | 'GREEDY_READINESS' | 'RISK_AWARE_GREEDY' | 'LOOKAHEAD_2'
 export type BaselineResult = { kind: BaselineKind; scenario: RecoveryScenario | null; infeasibleActionIds: string[] }
 export type PlannerDiagnostics = { searchNodes: number; generatedCandidates: number; feasibleCandidates: number; evaluatedCandidates: number; dominatedPlansRemoved: number; elapsedMs: number; truncatedByNodeBudget: boolean; truncatedByTimeBudget: boolean }
-export type ReadinessRecoveryResult = { scenarioId: string; frontier: RecoveryScenario[]; baselines: BaselineResult[]; diagnostics: PlannerDiagnostics; inputSummary: { assets: number; impairedAssets: number; demands: number; actions: number } }
+export type RobustnessEvidence = { variantId: string; verdict: 'QDIP_ADVANTAGE' | 'HEURISTIC_PARITY' | 'HEURISTIC_ADVANTAGE' | 'INSUFFICIENT_EVIDENCE'; advantageKind: 'CAPABILITY' | 'EFFICIENCY' | 'NONE'; baselineKind: BaselineKind | null; probabilityDelta: number; shortfallReduction: number }
+export type ReadinessRecoveryResult = { scenarioId: string; frontier: RecoveryScenario[]; baselines: BaselineResult[]; diagnostics: PlannerDiagnostics; inputSummary: { assets: number; impairedAssets: number; demands: number; actions: number }; robustness?: { retained: number; total: number; variants: RobustnessEvidence[] } }
 export type FrontierChange = { metric: string; before: number; after: number; delta: number }
 export type FrontierComparison = { previousCount: number; currentCount: number; changes: FrontierChange[]; explanation: string[] }
 
