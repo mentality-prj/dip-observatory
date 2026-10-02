@@ -265,7 +265,7 @@ test('client data importer gives feedback and supports drag and drop', async ({ 
     'settings,,,,,,,,,,,,,,Mon|Tue|Wed|Thu|Fri,100',
   ].join('\n')
 
-  const input = page.locator('[data-testid="resource-import-file"]')
+  const input = page.locator('input[type="file"][accept*="text/csv"]')
   await input.setInputFiles({
     name: 'picker-test.csv',
     mimeType: 'text/csv',
@@ -411,7 +411,7 @@ test('real-pilot import sends weekly baseline and daily state without access-cod
     row({ record_type: 'baseline', day: 'Tue', team: 'Team B' }),
   ].join('\n')
 
-  await page.locator('[data-testid="resource-import-file"]').setInputFiles({
+  await page.locator('input[type="file"][accept*="text/csv"]').setInputFiles({
     name: 'pilot-week.csv',
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
