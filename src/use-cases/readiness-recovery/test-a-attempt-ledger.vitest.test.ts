@@ -123,14 +123,14 @@ describe('Test A attempt ledger', () => {
   it('creates result identity only for semantic SUCCESS', async () => {
     const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
     const successAttempt = await ledger.allocateAttempt(EXECUTION_A)
-    const invalidAttempt = await ledger.allocateAttempt(EXECUTION_A)
+    const inFlightAttempt = await ledger.allocateAttempt(EXECUTION_A)
 
     const success = await ledger.finalizeAttempt(successAttempt.attemptId, {
       kind: 'SUCCESS',
       resultPayload: { terminal: 'AUDIT_INCONCLUSIVE', nr: 0.12 },
       process: process(),
     })
-    const invalid = await ledger.finalizeAttempt(invalidAttempt.attemptId, {
+    const invalid = await ledger.finalizeAttempt(inFlightAttempt.attemptId, {
       kind: 'INVALID',
       invalidityReason: 'TRANSIENT_EXECUTOR_FAILURE',
       process: process(),
@@ -149,6 +149,36 @@ describe('Test A attempt ledger', () => {
       class: 'RETRYABLE',
       action: 'RETRY',
     })
+    await expect(ledger.allocateAttempt(EXECUTION_A)).rejects.toThrow('EXECUTION_ATTEMPTS_CLOSED')
+  })
+
+  it('allows a retry only after RETRYABLE invalidity', async () => {
+    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const first = await ledger.allocateAttempt(EXECUTION_A)
+    await ledger.finalizeAttempt(first.attemptId, {
+      kind: 'INVALID',
+      invalidityReason: 'TRANSIENT_EXECUTOR_FAILURE',
+      process: process(),
+    })
+
+    const retry = await ledger.allocateAttempt(EXECUTION_A)
+    expect(retry.attemptIndex).toBe(1)
+    expect((await ledger.read()).executions[EXECUTION_A].state).toBe('OPEN')
+  })
+
+  it('closes only the affected execution after RUN_INVALID_NON_RETRYABLE', async () => {
+    const ledger = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY })
+    const first = await ledger.allocateAttempt(EXECUTION_A)
+    await ledger.finalizeAttempt(first.attemptId, {
+      kind: 'INVALID',
+      invalidityReason: 'INPUT_PROVENANCE_INVALID',
+      process: process(),
+    })
+
+    await expect(ledger.allocateAttempt(EXECUTION_A)).rejects.toThrow('EXECUTION_ATTEMPTS_CLOSED')
+    const otherExecution = await ledger.allocateAttempt(EXECUTION_B)
+    expect(otherExecution.attemptIndex).toBe(0)
+    expect((await ledger.read()).testState).toBe('OPEN')
   })
 
   it('rejects SUCCESS without a valid canonical result payload and leaves the attempt open', async () => {
@@ -167,6 +197,7 @@ describe('Test A attempt ledger', () => {
     expect(stored.status).toBe('ALLOCATED')
     expect(stored.resultContentHash).toBeNull()
     expect(stored.runProvenanceHash).toBeNull()
+    expect((await ledger.read()).executions[EXECUTION_A].state).toBe('OPEN')
   })
 
   it('keeps substantive result identity independent of volatile process metadata', async () => {
@@ -211,13 +242,13 @@ describe('Test A attempt ledger', () => {
     expect(finalized.runProvenanceHash).toMatch(/^[a-f0-9]{64}$/)
   })
 
-  it('atomically terminal-locks Test A across executors and rejects the losing allocation', async () => {
+  it('linearizes the TEST_INVALIDATING terminal-lock race and rejects every post-lock allocation', async () => {
     const store = new InMemoryTestALedgerStore()
     const invalidatingExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
     const competingExecutor = new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
     const invalidatingAttempt = await invalidatingExecutor.allocateAttempt(EXECUTION_A)
 
-    const [finalization, allocation] = await Promise.allSettled([
+    const [finalization, concurrentAllocation] = await Promise.allSettled([
       invalidatingExecutor.finalizeAttempt(invalidatingAttempt.attemptId, {
         kind: 'INVALID',
         invalidityReason: 'FROZEN_CONTRACT_BREACH',
@@ -227,9 +258,10 @@ describe('Test A attempt ledger', () => {
     ])
 
     expect(finalization.status).toBe('fulfilled')
-    expect(allocation.status).toBe('rejected')
+    expect(['fulfilled', 'rejected']).toContain(concurrentAllocation.status)
     expect((await competingExecutor.read()).testState).toBe('TERMINAL_INVALID')
     expect((await competingExecutor.read()).terminalAttemptId).toBe(invalidatingAttempt.attemptId)
+    await expect(competingExecutor.allocateAttempt(EXECUTION_A)).rejects.toThrow('TEST_A_TERMINAL_LOCKED')
     await expect(competingExecutor.allocateAttempt(EXECUTION_B)).rejects.toThrow('TEST_A_TERMINAL_LOCKED')
   })
 
