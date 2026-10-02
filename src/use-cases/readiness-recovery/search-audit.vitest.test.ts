@@ -18,14 +18,12 @@ describe('Readiness Recovery strong-baseline search audit', () => {
     expect(audit.nativeGeneratedCandidates).toBeGreaterThan(0)
     expect(audit.nativeSearchNodes).toBeGreaterThan(0)
     expect(audit.injectedEvaluatedCandidates).toBeGreaterThan(0)
-    expect(
-      [
-        'NATIVE_SEARCH_RETAINED_BASELINE',
-        'BASELINE_SURVIVES_AFTER_INJECTION',
-        'BASELINE_DOMINATED_AFTER_INJECTION',
-        'BASELINE_REMOVED_BY_FRONTIER_SELECTION',
-      ]
-    ).toContain(audit.classification)
+    expect([
+      'NATIVE_SEARCH_RETAINED_BASELINE',
+      'BASELINE_SURVIVES_AFTER_INJECTION',
+      'BASELINE_DOMINATED_AFTER_INJECTION',
+      'BASELINE_REMOVED_BY_FRONTIER_SELECTION',
+    ]).toContain(audit.classification)
 
     if (!audit.nativeSearchRetained) {
       expect(audit.classification).not.toBe('NATIVE_SEARCH_RETAINED_BASELINE')
