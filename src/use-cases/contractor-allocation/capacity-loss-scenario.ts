@@ -8,11 +8,8 @@ import type {
   TrustedAuthority,
 } from './domain'
 
-export const EVERSOURCE_CAPACITY_LOSS_SOURCE_URL =
-  'https://www.puc.nh.gov/Regulatory/Docketbk/2019/19-057/LETTERS-MEMOS-TARIFFS/19-057_2021-11-20_EVERSOURCE_2022-VMP-PLAN.PDF'
-
-export const EVERSOURCE_CAPACITY_LOSS_FACTS = {
-  awc: 'NASHUA',
+export const CAPACITY_LOSS_FACTS = {
+  area: 'NASHUA',
   circuitCount: 14,
   totalMiles: 266.21,
   smtMiles: 254.86,
@@ -20,7 +17,7 @@ export const EVERSOURCE_CAPACITY_LOSS_FACTS = {
   returnedToBidRoundedMiles: 266,
 } as const
 
-export const EVERSOURCE_CAPACITY_LOSS_CIRCUITS = [
+export const CAPACITY_LOSS_CIRCUITS = [
   { circuit: '3154X1_21', town: 'Nashua', totalMiles: 22.62, smtMiles: 21.47, mettMiles: 1.15 },
   { circuit: '3154X2_21', town: 'Hollis', totalMiles: 38.99, smtMiles: 34.76, mettMiles: 4.23 },
   { circuit: '314X4_22', town: 'Wilton', totalMiles: 97.5, smtMiles: 91.53, mettMiles: 5.97 },
@@ -51,7 +48,7 @@ const authorities: TrustedAuthority[] = [
   {
     id: 'historical-public-scope',
     sourceRole: 'INSPECTOR',
-    sourceSystem: 'public-eversource-vmp',
+    sourceSystem: 'public-2022-vegetation-management-plan',
     ingress: 'TRUSTED_ADAPTER',
   },
   {
@@ -171,7 +168,7 @@ function unitProvenance(id: string) {
 }
 
 function awardedMiles(): AllocationUnit[] {
-  return EVERSOURCE_CAPACITY_LOSS_CIRCUITS.flatMap((row) => {
+  return CAPACITY_LOSS_CIRCUITS.flatMap((row) => {
     const slices: AllocationUnit[] = []
     const addSlice = (workType: 'SMT' | 'METT', quantity: number) => {
       if (quantity <= 0) return
@@ -207,7 +204,7 @@ function awardedMiles(): AllocationUnit[] {
 
 export function buildContractorCapacityLossScenario(): ContractorAllocationScenario {
   return {
-    id: 'eversource-2022-capacity-loss-recovery',
+    id: 'contractor-2022-capacity-loss-recovery',
     asOf,
     decisionAt,
     allocationLevel: 'AWARDED_VOLUME',
