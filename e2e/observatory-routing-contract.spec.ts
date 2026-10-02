@@ -62,9 +62,10 @@ test.describe('Observatory production routing contract', () => {
 
         expect(response?.status()).toBeLessThan(400)
         await expect(page.locator('#main-content')).toBeVisible()
-        await expect(
-          page.getByRole('link', { name: route.title[locale], exact: true }).first()
-        ).toHaveAttribute('aria-current', 'page')
+        await expect(page.getByRole('link', { name: route.title[locale], exact: true }).first()).toHaveAttribute(
+          'aria-current',
+          'page'
+        )
         await expect.poll(() => errors.map((error) => error.message), { timeout: 1_500 }).toEqual([])
       })
     }
