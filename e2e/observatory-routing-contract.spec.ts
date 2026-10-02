@@ -113,7 +113,7 @@ test.describe('Observatory production routing contract', () => {
     const errors = capturePageErrors(page)
     const response = await page.goto('http://observatory.localhost:3000/en/not-a-real-use-case')
     expect(response?.status()).toBe(404)
-    expect(errors.map((error) => error.message).toEqual([]))
+    expect(errors.map((error) => error.message)).toEqual([])
   })
 })
 
