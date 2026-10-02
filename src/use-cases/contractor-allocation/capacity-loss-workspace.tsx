@@ -6,9 +6,9 @@ import { RefreshCw, SlidersHorizontal } from 'lucide-react'
 import type { Locale } from '@/lib/observatory-i18n'
 import {
   buildContractorCapacityLossScenario,
+  CAPACITY_LOSS_CIRCUITS,
+  CAPACITY_LOSS_FACTS,
   CAPACITY_LOSS_MODEL_ASSUMPTIONS,
-  EVERSOURCE_CAPACITY_LOSS_CIRCUITS,
-  EVERSOURCE_CAPACITY_LOSS_FACTS,
 } from './capacity-loss-scenario'
 import { CapacityLossStory } from './capacity-loss-story'
 import { calculateEconomicValueBoundary } from './economic-value-boundary'
@@ -16,10 +16,10 @@ import { optimizeContractorAllocation } from './optimizer'
 
 const copy = {
   en: {
-    eyebrow: 'QDIP · EVERSOURCE CAPACITY-LOSS RECOVERY',
-    title: 'Allocate returned Nashua vegetation scope after a contractor capacity shock',
+    eyebrow: 'QDIP · CONTRACTOR CAPACITY-LOSS RECOVERY',
+    title: 'Allocate returned vegetation scope after a contractor capacity shock',
     subtitle:
-      'Historically grounded presentation using the published 2022 Nashua AWC circuit scope. Public circuit IDs and SMT/METT miles are retained; post-rebid bidders, rates, capacities and economics are synthetic.',
+      'Historically grounded presentation using a published 2022 circuit scope. Public circuit IDs and SMT/METT miles are retained; post-rebid bidders, rates, capacities and economics are synthetic.',
     run: 'Run QDIP recovery allocation',
     rerun: 'Recalculate recovery allocation',
     status: 'Model status',
@@ -49,7 +49,7 @@ const copy = {
       'This replay proves feasible portfolio reallocation under stated synthetic assumptions. It does not prove historical savings or realized economic value. Capacity is an aggregate synthetic recovery budget represented by the optimizer bucket 2022-01.',
     boundaryTitle: 'Economic Value Boundary',
     boundaryIntro:
-      'Use Eversource-specific current-process inputs here. QDIP value is positive only when avoided allocation premium, planner effort and delay cost exceed QDIP operating cost. Defaults are deliberately conservative and do not manufacture a business case.',
+      'Use organization-specific current-process inputs here. QDIP value is positive only when avoided allocation premium, planner effort and delay cost exceed QDIP operating cost. Defaults are deliberately conservative and do not manufacture a business case.',
     premium: 'Current allocation premium vs QDIP optimum',
     plannerHours: 'Planner / rebid effort',
     plannerRate: 'Loaded planner cost',
@@ -64,15 +64,15 @@ const copy = {
     noValue: 'NO VALUE',
     breakEvenStatus: 'BREAK-EVEN',
     boundaryDisclaimer:
-      'Decision aid, not a historical savings claim. Replace every assumption with Eversource actuals before using this as a business case.',
+      'Decision aid, not a historical savings claim. Replace every assumption with actual operational data before using this as a business case.',
     hours: 'h',
     days: 'days',
   },
   uk: {
-    eyebrow: 'QDIP · RECOVERY ПІСЛЯ ВТРАТИ ПОТУЖНОСТІ EVERSOURCE',
-    title: 'Розподіл повернутого Nashua vegetation scope після втрати потужності підрядника',
+    eyebrow: 'QDIP · RECOVERY ПІСЛЯ ВТРАТИ ПОТУЖНОСТІ ПІДРЯДНИКА',
+    title: 'Розподіл повернутого vegetation scope після втрати потужності підрядника',
     subtitle:
-      'Історично обґрунтована презентація на опублікованому circuit scope Nashua AWC 2022. Реальні circuit IDs та SMT/METT miles збережені; post-rebid bidders, rates, capacities та economics — синтетичні.',
+      'Історично обґрунтована презентація на опублікованому circuit scope 2022. Реальні circuit IDs та SMT/METT miles збережені; post-rebid bidders, rates, capacities та economics — синтетичні.',
     run: 'Запустити recovery allocation QDIP',
     rerun: 'Перерахувати recovery allocation',
     status: 'Статус моделі',
@@ -102,7 +102,7 @@ const copy = {
       'Цей replay доводить допустимість портфельного перерозподілу за заданих synthetic assumptions. Він не доводить історичну економію або realized economic value. Capacity — агрегований synthetic recovery budget, представлений optimizer bucket 2022-01.',
     boundaryTitle: 'Economic Value Boundary',
     boundaryIntro:
-      'Підставте сюди фактичні параметри поточного процесу Eversource. Цінність QDIP позитивна лише тоді, коли уникнена allocation premium, робота planner/rebid і вартість затримки перевищують operating cost QDIP. Початкові значення навмисно консервативні.',
+      'Підставте сюди фактичні параметри поточного процесу організації. Цінність QDIP позитивна лише тоді, коли уникнена allocation premium, робота planner/rebid і вартість затримки перевищують operating cost QDIP. Початкові значення навмисно консервативні.',
     premium: 'Премія поточного allocation проти optimum QDIP',
     plannerHours: 'Робота planner / rebid',
     plannerRate: 'Повна вартість години planner',
@@ -117,15 +117,15 @@ const copy = {
     noValue: 'НЕМАЄ ЦІННОСТІ',
     breakEvenStatus: 'BREAK-EVEN',
     boundaryDisclaimer:
-      'Decision aid, а не твердження про історичну економію. Перед business case усі припущення треба замінити фактичними даними Eversource.',
+      'Decision aid, а не твердження про історичну економію. Перед business case усі припущення треба замінити фактичними операційними даними.',
     hours: 'год',
     days: 'днів',
   },
   pl: {
-    eyebrow: 'QDIP · RECOVERY PO UTRACIE MOCY EVERSOURCE',
-    title: 'Przydział zwróconego zakresu Nashua vegetation po utracie mocy wykonawcy',
+    eyebrow: 'QDIP · RECOVERY PO UTRACIE MOCY WYKONAWCY',
+    title: 'Przydział zwróconego zakresu vegetation po utracie mocy wykonawcy',
     subtitle:
-      'Historycznie ugruntowana prezentacja oparta na opublikowanym zakresie obwodów Nashua AWC 2022. Publiczne identyfikatory obwodów i mile SMT/METT są zachowane; oferenci, stawki, moce i ekonomika po rebid są syntetyczne.',
+      'Historycznie ugruntowana prezentacja oparta na opublikowanym zakresie obwodów 2022. Publiczne identyfikatory obwodów i mile SMT/METT są zachowane; oferenci, stawki, moce i ekonomika po rebid są syntetyczne.',
     run: 'Uruchom recovery allocation QDIP',
     rerun: 'Przelicz recovery allocation',
     status: 'Status modelu',
@@ -155,7 +155,7 @@ const copy = {
       'Replay potwierdza wykonalną realokację portfela przy zadanych syntetycznych założeniach. Nie potwierdza historycznych oszczędności ani realized economic value. Capacity jest agregowanym syntetycznym recovery budget reprezentowanym przez bucket optymalizatora 2022-01.',
     boundaryTitle: 'Economic Value Boundary',
     boundaryIntro:
-      'Wprowadź rzeczywiste parametry obecnego procesu Eversource. Wartość QDIP jest dodatnia tylko wtedy, gdy uniknięta premia alokacyjna, praca planisty/rebid i koszt opóźnienia przekraczają koszt operacyjny QDIP. Wartości początkowe są celowo konserwatywne.',
+      'Wprowadź rzeczywiste parametry obecnego procesu organizacji. Wartość QDIP jest dodatnia tylko wtedy, gdy uniknięta premia alokacyjna, praca planisty/rebid i koszt opóźnienia przekraczają koszt operacyjny QDIP. Wartości początkowe są celowo konserwatywne.',
     premium: 'Premia obecnej alokacji względem optimum QDIP',
     plannerHours: 'Praca planner / rebid',
     plannerRate: 'Pełny koszt godziny planisty',
@@ -170,7 +170,7 @@ const copy = {
     noValue: 'BRAK WARTOŚCI',
     breakEvenStatus: 'BREAK-EVEN',
     boundaryDisclaimer:
-      'Decision aid, nie twierdzenie o historycznych oszczędnościach. Przed business case każde założenie należy zastąpić rzeczywistymi danymi Eversource.',
+      'Decision aid, nie twierdzenie o historycznych oszczędnościach. Przed business case każde założenie należy zastąpić rzeczywistymi danymi operacyjnymi.',
     hours: 'h',
     days: 'dni',
   },
@@ -197,8 +197,8 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
   const unitById = useMemo(() => new Map(scenario.units.map((unit) => [unit.id, unit])), [scenario])
   const circuitById = useMemo(
     () =>
-      new Map<string, (typeof EVERSOURCE_CAPACITY_LOSS_CIRCUITS)[number]>(
-        EVERSOURCE_CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])
+      new Map<string, (typeof CAPACITY_LOSS_CIRCUITS)[number]>(
+        CAPACITY_LOSS_CIRCUITS.map((row) => [row.circuit, row])
       ),
     []
   )
@@ -263,7 +263,7 @@ export function ContractorCapacityLossWorkspace({ locale }: { locale: Locale }) 
               <Metric label={t.status} value={result.status === 'OPTIMAL' ? t.feasible : result.status} />
               <Metric
                 label={t.miles}
-                value={`${allocatedMiles.toFixed(2)} / ${EVERSOURCE_CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} mi`}
+                value={`${allocatedMiles.toFixed(2)} / ${CAPACITY_LOSS_FACTS.totalMiles.toFixed(2)} mi`}
               />
               <Metric label={t.contractors} value={String(recoveryBidders)} />
               <Metric label={t.spend} value={money(locale, result.qdipExpectedSpend)} />
