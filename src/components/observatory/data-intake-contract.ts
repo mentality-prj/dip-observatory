@@ -28,6 +28,17 @@ export type SmartIntakeProfile = {
   raw: unknown
 }
 
+export function chooseAnalystFile(accept: string, onFile: (file: File) => void) {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = accept
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (file) onFile(file)
+  }
+  input.click()
+}
+
 export async function analyzeWithSharedDecisionIntake(file: File): Promise<SmartIntakeProfile> {
   const form = new FormData()
   form.set('file', file)
