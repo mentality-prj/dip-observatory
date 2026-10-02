@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { createTranslator } from '@/i18n/runtime'
-import { marketingHref } from '@/lib/platform-urls'
-import type { Locale } from '@/lib/observatory-i18n'
 import { QdipLogo } from '@/components/marketing/qdip-logo'
+import { createTranslator } from '@/i18n/runtime'
+import type { Locale } from '@/lib/observatory-i18n'
+import { marketingHref } from '@/lib/platform-urls'
 import styles from './qdip-footer.module.css'
 
-export type QdipFooterVariant = 'marketing' | 'observatory'
+export type QdipFooterVariant = 'marketing' | 'observatory' | 'product'
 
 const path = (locale: Locale, slug: string) => `${marketingHref(locale)}/${slug}`
 
@@ -54,6 +54,7 @@ export function QdipFooter({
   const copy = createTranslator(locale, 'footer')
   const shared = createTranslator(locale, 'shared')
   const native = variant === 'observatory'
+  const inverseLogo = variant !== 'product'
 
   return (
     <footer
@@ -69,7 +70,7 @@ export function QdipFooter({
           native={native}
           dataFooterBrand
         >
-          <QdipLogo inverse />
+          <QdipLogo inverse={inverseLogo} />
         </FooterLink>
 
         {showNavigation ? (
