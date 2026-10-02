@@ -202,7 +202,10 @@ function cloneSnapshot(snapshot: TestAAttemptLedgerSnapshot): TestAAttemptLedger
     testState: snapshot.testState,
     terminalAttemptId: snapshot.terminalAttemptId,
     executions: Object.fromEntries(
-      Object.entries(snapshot.executions).map(([executionHash, execution]) => [executionHash, cloneExecution(execution)])
+      Object.entries(snapshot.executions).map(([executionHash, execution]) => [
+        executionHash,
+        cloneExecution(execution),
+      ])
     ),
   }
 }
