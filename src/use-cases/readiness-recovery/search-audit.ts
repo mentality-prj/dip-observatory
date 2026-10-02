@@ -1,9 +1,4 @@
-import type {
-  BaselineKind,
-  CandidatePlan,
-  ReadinessRecoveryInput,
-  RecoveryScenario,
-} from './domain'
+import type { BaselineKind, CandidatePlan, ReadinessRecoveryInput, RecoveryScenario } from './domain'
 import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
 import {
   BoundedFeasibilityBackend,
