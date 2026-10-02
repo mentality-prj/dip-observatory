@@ -15,12 +15,12 @@ const routes = [
   {
     id: 'contractor-allocation',
     path: '/contractor-allocation',
-    title: { en: 'Contractor Allocation', uk: 'Розподіл між підрядниками', pl: 'Alokacja wykonawców' },
+    title: { en: 'Contractor Allocation', uk: 'Розподіл робіт між підрядниками', pl: 'Przydział prac wykonawcom' },
   },
   {
     id: 'readiness-recovery',
     path: '/readiness-recovery',
-    title: { en: 'Readiness Recovery', uk: 'Відновлення готовності', pl: 'Odtwarzanie gotowości' },
+    title: { en: 'Readiness Recovery Planner', uk: 'Планувальник відновлення готовності', pl: 'Planer odtwarzania gotowości' },
   },
   {
     id: 'gtm-lab',
@@ -56,9 +56,7 @@ test.describe('Observatory production routing contract', () => {
   }
 
   for (const locale of locales) {
-    test(`${locale} application navigation can visit every registered use case without page errors`, async ({
-      page,
-    }) => {
+    test(`${locale} application navigation can visit every registered use case without page errors`, async ({ page }) => {
       const errors = capturePageErrors(page)
       const response = await page.goto(`http://observatory.localhost:3000/${locale}${routes[0].path}`, {
         waitUntil: 'domcontentloaded',
