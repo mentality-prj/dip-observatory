@@ -4,6 +4,7 @@ import { buildReadinessRecoveryDemo } from './demo-data'
 
 const build = () => buildReadinessRecoveryDemo('CASCADING_RESOURCE_CONFLICT')
 
+// prettier-ignore
 describe('Cascading Resource Conflict benchmark', () => {
   it('locks the preregistered scenario shape and common action space', () => {
     const input = build()
