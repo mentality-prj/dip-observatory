@@ -9,6 +9,7 @@ export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue
 export type InvalidityClass = 'RETRYABLE' | 'RUN_INVALID_NON_RETRYABLE' | 'TEST_INVALIDATING'
 export type InvalidityAction = 'RETRY' | 'STOP_EXECUTION' | 'INVALIDATE_TEST'
 export type TestAState = 'OPEN' | 'TERMINAL_INVALID'
+export type ExecutionAttemptState = 'OPEN' | 'SUCCESS_LOCKED' | 'NON_RETRYABLE_INVALID'
 export type AttemptStatus = 'ALLOCATED' | 'SUCCESS' | 'INVALID'
 
 export type InvalidityTaxonomy = Readonly<Record<string, InvalidityClass>>
@@ -39,16 +40,17 @@ export type AttemptRecord = {
   runProvenanceHash: string | null
 }
 
+export type ExecutionAttemptLedger = {
+  state: ExecutionAttemptState
+  closedByAttemptId: string | null
+  nextAttemptIndex: number
+  attempts: AttemptRecord[]
+}
+
 export type TestAAttemptLedgerSnapshot = {
   testState: TestAState
   terminalAttemptId: string | null
-  executions: Record<
-    string,
-    {
-      nextAttemptIndex: number
-      attempts: AttemptRecord[]
-    }
-  >
+  executions: Record<string, ExecutionAttemptLedger>
 }
 
 export type VersionedTestALedgerState = {
@@ -89,6 +91,15 @@ function emptySnapshot(): TestAAttemptLedgerSnapshot {
     testState: 'OPEN',
     terminalAttemptId: null,
     executions: {},
+  }
+}
+
+function emptyExecutionLedger(): ExecutionAttemptLedger {
+  return {
+    state: 'OPEN',
+    closedByAttemptId: null,
+    nextAttemptIndex: 0,
+    attempts: [],
   }
 }
 
@@ -177,24 +188,48 @@ function cloneAttempt(attempt: AttemptRecord): AttemptRecord {
   }
 }
 
+function cloneExecution(execution: ExecutionAttemptLedger): ExecutionAttemptLedger {
+  return {
+    state: execution.state,
+    closedByAttemptId: execution.closedByAttemptId,
+    nextAttemptIndex: execution.nextAttemptIndex,
+    attempts: execution.attempts.map(cloneAttempt),
+  }
+}
+
 function cloneSnapshot(snapshot: TestAAttemptLedgerSnapshot): TestAAttemptLedgerSnapshot {
   return {
     testState: snapshot.testState,
     terminalAttemptId: snapshot.terminalAttemptId,
     executions: Object.fromEntries(
-      Object.entries(snapshot.executions).map(([executionHash, execution]) => [
-        executionHash,
-        {
-          nextAttemptIndex: execution.nextAttemptIndex,
-          attempts: execution.attempts.map(cloneAttempt),
-        },
-      ])
+      Object.entries(snapshot.executions).map(([executionHash, execution]) => [executionHash, cloneExecution(execution)])
     ),
   }
 }
 
 function allAttempts(snapshot: TestAAttemptLedgerSnapshot) {
   return Object.values(snapshot.executions).flatMap((execution) => execution.attempts)
+}
+
+function validateExecutionState(execution: ExecutionAttemptLedger) {
+  if (execution.state === 'OPEN') {
+    if (execution.closedByAttemptId) throw new Error('OPEN execution cannot have a closing attempt identity')
+    return
+  }
+
+  if (!execution.closedByAttemptId) throw new Error('Closed execution requires a closing attempt identity')
+  const closingAttempt = execution.attempts.find((attempt) => attempt.attemptId === execution.closedByAttemptId)
+  if (!closingAttempt) throw new Error('Closing attempt identity does not exist in execution ledger')
+
+  if (execution.state === 'SUCCESS_LOCKED' && closingAttempt.status !== 'SUCCESS') {
+    throw new Error('SUCCESS_LOCKED execution must point to a SUCCESS attempt')
+  }
+  if (
+    execution.state === 'NON_RETRYABLE_INVALID' &&
+    !['RUN_INVALID_NON_RETRYABLE', 'TEST_INVALIDATING'].includes(closingAttempt.invalidity?.class ?? '')
+  ) {
+    throw new Error('NON_RETRYABLE_INVALID execution must point to a non-retryable invalid attempt')
+  }
 }
 
 function validateSnapshot(snapshot: TestAAttemptLedgerSnapshot) {
@@ -225,10 +260,10 @@ function validateSnapshot(snapshot: TestAAttemptLedgerSnapshot) {
       }
     }
 
-    const expectedNext = execution.attempts.length
-      ? Math.max(...execution.attempts.map((attempt) => attempt.attemptIndex)) + 1
-      : 0
-    if (execution.nextAttemptIndex !== expectedNext) throw new Error('Attempt ordinal gap detected')
+    const sortedIndexes = [...indexes].sort((left, right) => left - right)
+    if (sortedIndexes.some((value, index) => value !== index)) throw new Error('Attempt ordinal gap detected')
+    if (execution.nextAttemptIndex !== execution.attempts.length) throw new Error('Attempt ordinal counter mismatch')
+    validateExecutionState(execution)
   }
 
   if (snapshot.testState === 'OPEN') {
@@ -306,7 +341,9 @@ export class TestAAttemptLedger {
     return this.commitTransition('ALLOCATE_AFTER_DRAFT_BEFORE_COMMIT', (draft) => {
       if (draft.testState !== 'OPEN') throw new Error('TEST_A_TERMINAL_LOCKED')
 
-      const execution = draft.executions[executionManifestHash] ?? { nextAttemptIndex: 0, attempts: [] }
+      const execution = draft.executions[executionManifestHash] ?? emptyExecutionLedger()
+      if (execution.state !== 'OPEN') throw new Error('EXECUTION_ATTEMPTS_CLOSED')
+
       const attemptIndex = execution.nextAttemptIndex
       const attempt: AttemptRecord = {
         executionManifestHash,
@@ -350,6 +387,10 @@ export class TestAAttemptLedger {
           invalidity: null,
           process: processMetadataPayload(outcome.process),
         })
+        if (execution.state === 'OPEN') {
+          execution.state = 'SUCCESS_LOCKED'
+          execution.closedByAttemptId = attempt.attemptId
+        }
       } else {
         const invalidity = normalizeInvalidity(outcome.invalidityReason, this.options.invalidityTaxonomy)
         attempt.status = 'INVALID'
@@ -364,6 +405,10 @@ export class TestAAttemptLedger {
           process: processMetadataPayload(outcome.process),
         })
 
+        if (invalidity.class !== 'RETRYABLE' && execution.state === 'OPEN') {
+          execution.state = 'NON_RETRYABLE_INVALID'
+          execution.closedByAttemptId = attempt.attemptId
+        }
         if (invalidity.class === 'TEST_INVALIDATING' && draft.testState === 'OPEN') {
           draft.testState = 'TERMINAL_INVALID'
           draft.terminalAttemptId = attempt.attemptId
