@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { benchmarkReadinessResult } from './benchmark'
+import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
 import { buildReadinessRecoveryDemo, READINESS_RECOVERY_DEMO_PRESETS } from './demo-data'
 import { epsilonDominates, planReadinessRecovery } from './planner'
 
@@ -10,7 +11,10 @@ describe('Readiness Recovery benchmark evidence', () => {
       input.settings.simulationSamples = 32
       input.settings.maxCandidates = 60
       input.settings.beamWidth = 32
-      const result = planReadinessRecovery(input)
+      const result =
+        preset === 'CASCADING_RESOURCE_CONFLICT'
+          ? planReadinessRecoveryWithBenchmarkSuite(input)
+          : planReadinessRecovery(input)
       const benchmark = benchmarkReadinessResult(result)
 
       expect(benchmark.qdip).not.toBeNull()
