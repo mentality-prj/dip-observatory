@@ -3,7 +3,11 @@ import 'server-only'
 import { z } from 'zod'
 
 import { dipRequest } from '@/shared/dip/server-client'
-import type { TestAAttemptLedgerSnapshot, TestALedgerStore, VersionedTestALedgerState } from './test-a-attempt-ledger'
+import type {
+  TestAAttemptLedgerSnapshot,
+  TestALedgerStore,
+  VersionedTestALedgerState,
+} from './test-a-attempt-ledger'
 
 const LEDGER_ID_RE = /^[A-Za-z0-9._:-]{1,200}$/
 
@@ -19,20 +23,32 @@ const attemptSchema = z.object({
   attemptId: z.string().regex(/^[a-f0-9]{64}$/),
   status: z.enum(['ALLOCATED', 'SUCCESS', 'INVALID']),
   invalidity: invaliditySchema.nullable(),
-  resultContentHash: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
-  runProvenanceHash: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
+  resultContentHash: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
+  runProvenanceHash: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
 })
 
 const executionSchema = z.object({
   state: z.enum(['OPEN', 'SUCCESS_LOCKED', 'NON_RETRYABLE_INVALID']),
-  closedByAttemptId: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
+  closedByAttemptId: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
   nextAttemptIndex: z.number().int().nonnegative(),
   attempts: z.array(attemptSchema),
 })
 
 const snapshotSchema = z.object({
   testState: z.enum(['OPEN', 'TERMINAL_INVALID']),
-  terminalAttemptId: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
+  terminalAttemptId: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
   executions: z.record(z.string().regex(/^[a-f0-9]{64}$/), executionSchema),
 })
 
