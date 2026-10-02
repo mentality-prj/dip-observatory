@@ -32,10 +32,7 @@ describe('Test A attempt ledger', () => {
 
   it('allocates ordinals atomically across concurrent executor instances sharing a CAS store', async () => {
     const store = new InMemoryTestALedgerStore()
-    const executors = Array.from(
-      { length: 8 },
-      () => new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store })
-    )
+    const executors = Array.from({ length: 8 }, () => new TestAAttemptLedger({ invalidityTaxonomy: TAXONOMY, store }))
     const attempts = await Promise.all(
       Array.from({ length: 64 }, (_, index) => executors[index % executors.length].allocateAttempt(EXECUTION_A))
     )
