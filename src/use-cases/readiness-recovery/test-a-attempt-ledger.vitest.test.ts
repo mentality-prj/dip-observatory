@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canonicalJson,
   deriveAttemptId,
   InMemoryTestALedgerStore,
   TestAAttemptLedger,
@@ -28,6 +29,14 @@ describe('Test A attempt ledger', () => {
     expect(deriveAttemptId(EXECUTION_A, 0)).toBe(deriveAttemptId(EXECUTION_A, 0))
     expect(deriveAttemptId(EXECUTION_A, 0)).not.toBe(deriveAttemptId(EXECUTION_A, 1))
     expect(deriveAttemptId(EXECUTION_A, 0)).not.toBe(deriveAttemptId(EXECUTION_B, 0))
+  })
+
+  it('canonicalizes keys with locale-independent lexical ordering', () => {
+    const first = canonicalJson({ ä: 'umlaut', '2': 'two', '10': 'ten', a: 'latin' })
+    const second = canonicalJson({ a: 'latin', '10': 'ten', ä: 'umlaut', '2': 'two' })
+
+    expect(first).toBe('{"10":"ten","2":"two","a":"latin","ä":"umlaut"}')
+    expect(second).toBe(first)
   })
 
   it('allocates ordinals atomically across concurrent executor instances sharing a CAS store', async () => {
