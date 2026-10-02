@@ -1,0 +1,30 @@
+name: Apply readiness benchmark fixes
+on:
+  push:
+    branches: [feat/readiness-cascading-resource-conflict]
+    paths: ['.github/scripts/patch-readiness.mjs']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node .github/scripts/patch-readiness.mjs
+      - run: pnpm exec prettier --write src/use-cases/readiness-recovery/cascading-resource-conflict.ts src/use-cases/readiness-recovery/cascading-resource-conflict.vitest.test.ts src/use-cases/readiness-recovery/demo-data.ts src/use-cases/readiness-recovery/domain.ts src/use-cases/readiness-recovery/i18n.ts src/use-cases/readiness-recovery/planner.ts
+      - run: pnpm lint && pnpm typecheck && pnpm test -- --run
+      - name: Commit generated fixes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/use-cases/readiness-recovery
+          git diff --cached --quiet || git commit -m "fix(readiness): complete benchmark baselines and formatting"
+          git push
