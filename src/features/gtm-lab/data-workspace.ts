@@ -1,4 +1,11 @@
-import { commercialContextSchema, pipelineRunSchema, prospectSeedSchema, type CommercialContext, type PipelineRun, type ProspectSeed } from './import-contracts'
+import {
+  commercialContextSchema,
+  pipelineRunSchema,
+  prospectSeedSchema,
+  type CommercialContext,
+  type PipelineRun,
+  type ProspectSeed,
+} from './import-contracts'
 
 export const GTM_DATA_VERSION = 'gtm-lab.v1' as const
 
@@ -33,12 +40,16 @@ export function validateGtmExactInput(value: unknown): GtmDataIssue[] {
     candidate.rows.forEach((row, index) => {
       const parsed = prospectSeedSchema.safeParse(row)
       if (!parsed.success)
-        parsed.error.issues.forEach((issue) => issues.push({ path: `input.rows[${index}].${issue.path.join('.')}`, message: issue.message }))
+        parsed.error.issues.forEach((issue) =>
+          issues.push({ path: `input.rows[${index}].${issue.path.join('.')}`, message: issue.message })
+        )
     })
   }
   const context = commercialContextSchema.safeParse(candidate.commercialContext)
   if (!context.success)
-    context.error.issues.forEach((issue) => issues.push({ path: `input.commercialContext.${issue.path.join('.')}`, message: issue.message }))
+    context.error.issues.forEach((issue) =>
+      issues.push({ path: `input.commercialContext.${issue.path.join('.')}`, message: issue.message })
+    )
   return issues
 }
 
@@ -50,7 +61,11 @@ export function gtmExportAnalysis(input: GtmExactInput, result?: PipelineRun): G
   return { schemaVersion: GTM_DATA_VERSION, exportedAt: new Date().toISOString(), input, result }
 }
 
-export function importGtmExactPackage(value: unknown): { input?: GtmExactInput; result?: PipelineRun; issues: GtmDataIssue[] } {
+export function importGtmExactPackage(value: unknown): {
+  input?: GtmExactInput
+  result?: PipelineRun
+  issues: GtmDataIssue[]
+} {
   if (!value || typeof value !== 'object') return { issues: [{ path: '$', message: 'Expected JSON object.' }] }
   const candidate = value as Partial<GtmDataPackage>
   if (candidate.schemaVersion !== GTM_DATA_VERSION)
@@ -58,7 +73,8 @@ export function importGtmExactPackage(value: unknown): { input?: GtmExactInput; 
   const issues = validateGtmExactInput(candidate.input)
   if (issues.length) return { issues }
   const result = candidate.result ? pipelineRunSchema.safeParse(candidate.result) : null
-  if (result && !result.success) return { issues: [{ path: 'result', message: 'Stored result does not match the current result contract.' }] }
+  if (result && !result.success)
+    return { issues: [{ path: 'result', message: 'Stored result does not match the current result contract.' }] }
   return { input: candidate.input as GtmExactInput, result: result?.data, issues: [] }
 }
 
