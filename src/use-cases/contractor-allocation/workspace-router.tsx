@@ -9,9 +9,9 @@ import { ContractorAllocationWorkspace } from './workspace'
 type Mode = 'PORTFOLIO' | 'CAPACITY_LOSS'
 
 const copy = {
-  en: { label: 'Presentation mode', portfolio: 'Portfolio allocation', loss: 'Eversource 2022 capacity-loss case' },
-  uk: { label: 'Режим презентації', portfolio: 'Розподіл портфеля', loss: 'Кейс Eversource 2022: втрата потужності' },
-  pl: { label: 'Tryb prezentacji', portfolio: 'Przydział portfela', loss: 'Eversource 2022: utrata mocy wykonawcy' },
+  en: { label: 'Presentation mode', portfolio: 'Portfolio allocation', loss: '2022 contractor capacity-loss case' },
+  uk: { label: 'Режим презентації', portfolio: 'Розподіл портфеля', loss: 'Кейс 2022: втрата потужності підрядника' },
+  pl: { label: 'Tryb prezentacji', portfolio: 'Przydział portfela', loss: 'Przypadek 2022: utrata mocy wykonawcy' },
 } as const
 
 export function ContractorAllocationDemoRouter({ locale }: { locale: Locale }) {
