@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { ReadinessRecoveryInput } from '@/use-cases/readiness-recovery/domain'
-import { planReadinessRecovery } from '@/use-cases/readiness-recovery/planner'
+import {
+  planReadinessRecoveryWithBenchmarkSuite,
+  qdipAdvantageRetention,
+  runCascadingRobustnessSweep,
+} from '@/use-cases/readiness-recovery/benchmark-suite'
 import { decorateObjectiveLabels } from '@/use-cases/readiness-recovery/scenario-labels'
 import { readinessScenarioRepository } from '@/use-cases/readiness-recovery/scenario-repository'
 
@@ -38,8 +42,13 @@ function assertPublicPlannerLimits(input: ReadinessRecoveryInput) {
 
 function storedPayload(input: ReadinessRecoveryInput) {
   assertPublicPlannerLimits(input)
-  const planned = planReadinessRecovery(input)
-  const result = { ...planned, frontier: decorateObjectiveLabels(planned.frontier) }
+  const planned = planReadinessRecoveryWithBenchmarkSuite(input)
+  const robustnessVariants =
+    input.scenarioId === 'readiness-cascading-resource-conflict' ? runCascadingRobustnessSweep(input) : null
+  const robustness = robustnessVariants
+    ? { ...qdipAdvantageRetention(robustnessVariants), variants: robustnessVariants }
+    : undefined
+  const result = { ...planned, frontier: decorateObjectiveLabels(planned.frontier), robustness }
   return { input, result, updatedAt: new Date().toISOString() }
 }
 

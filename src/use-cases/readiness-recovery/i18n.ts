@@ -54,6 +54,28 @@ type Copy = {
   labels: Record<ScenarioLabel, string>
 }
 
+const labelsEn: Record<ScenarioLabel, string> = {
+  MAXIMUM_READINESS: 'Maximum Readiness',
+  FAST_RECOVERY: 'Fast Recovery',
+  PARTS_CONSERVATIVE: 'Parts Conservative',
+  LOW_RISK: 'Low Risk',
+  BALANCED: 'Balanced',
+}
+const labelsUk: Record<ScenarioLabel, string> = {
+  MAXIMUM_READINESS: 'Максимальна готовність',
+  FAST_RECOVERY: 'Швидке відновлення',
+  PARTS_CONSERVATIVE: 'Економія запчастин',
+  LOW_RISK: 'Низький ризик',
+  BALANCED: 'Збалансований',
+}
+const labelsPl: Record<ScenarioLabel, string> = {
+  MAXIMUM_READINESS: 'Maksymalna gotowość',
+  FAST_RECOVERY: 'Szybkie odtworzenie',
+  PARTS_CONSERVATIVE: 'Oszczędność części',
+  LOW_RISK: 'Niskie ryzyko',
+  BALANCED: 'Zrównoważony',
+}
+
 export const readinessRecoveryI18n: Record<Locale, Copy> = {
   en: {
     eyebrow: 'QDIP OBSERVATORY · READINESS RECOVERY',
@@ -70,6 +92,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEADLINE_PRESSURE: 'Deadline pressure',
       DEMAND_SHIFT: 'Capability demand shift',
       CAPABILITY_RESCUE: 'Capability rescue · QDIP advantage',
+      CASCADING_RESOURCE_CONFLICT: 'Cascading resource conflict',
     },
     presetHelp: {
       BALANCED: 'Multiple viable repair mixes compete across time, resources and risk.',
@@ -80,6 +103,8 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEMAND_SHIFT: 'Changing the required capability mix changes which recoveries create readiness.',
       CAPABILITY_RESCUE:
         'A critical capability misses its deadline under FIFO, criticality and greedy repair ordering. QDIP can expose the non-obvious donor → two repairs path.',
+      CASCADING_RESOURCE_CONFLICT:
+        'Two deadlines, scarce parts, bottleneck skills, multi-capability assets and a donor create a portfolio problem where locally attractive repairs can block a better global recovery plan.',
     },
     run: 'Generate frontier',
     rerun: 'Regenerate',
@@ -112,7 +137,8 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     actions: 'Selected actions',
     noConstraints: 'No near-binding resource constraint detected',
     baselines: 'Heuristic baselines',
-    baselineHelp: 'FIFO, capability-criticality and greedy readiness are evaluated with the same uncertainty model.',
+    baselineHelp:
+      'FIFO, criticality, greedy readiness and stronger operational heuristics are evaluated on the same action space and uncertainty model.',
     comparison: 'Frontier change',
     comparisonHelp: 'Previous frontier → changed constraints → rebuilt frontier.',
     previous: 'Previous',
@@ -123,13 +149,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     truncated: 'Search stopped at configured compute budget',
     plannerChoice: 'The planner makes the final operational choice from these trade-offs.',
     error: 'Planner request failed',
-    labels: {
-      MAXIMUM_READINESS: 'Maximum Readiness',
-      FAST_RECOVERY: 'Fast Recovery',
-      PARTS_CONSERVATIVE: 'Parts Conservative',
-      LOW_RISK: 'Low Risk',
-      BALANCED: 'Balanced',
-    },
+    labels: labelsEn,
   },
   uk: {
     eyebrow: 'QDIP OBSERVATORY · ВІДНОВЛЕННЯ ГОТОВНОСТІ',
@@ -146,6 +166,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEADLINE_PRESSURE: 'Жорсткий строк',
       DEMAND_SHIFT: 'Зміна потреби у спроможностях',
       CAPABILITY_RESCUE: 'Порятунок спроможності · перевага QDIP',
+      CASCADING_RESOURCE_CONFLICT: 'Каскадний конфлікт ресурсів',
     },
     presetHelp: {
       BALANCED: 'Кілька допустимих наборів ремонту конкурують за часом, ресурсами та ризиком.',
@@ -156,6 +177,8 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEMAND_SHIFT: 'Зміна потрібного набору спроможностей змінює цінність ремонтів.',
       CAPABILITY_RESCUE:
         'Критична спроможність не закривається до строку за FIFO, критичністю чи жадібною евристикою. QDIP знаходить неочевидний ланцюг донор → два ремонти.',
+      CASCADING_RESOURCE_CONFLICT:
+        'Два строки, дефіцитні запчастини, вузькі навички, мультиспроможні активи та донор створюють portfolio-задачу, де локально привабливий ремонт може заблокувати кращий глобальний план.',
     },
     run: 'Побудувати фронт',
     rerun: 'Побудувати знову',
@@ -189,7 +212,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     noConstraints: 'Близьких до межі ресурсних обмежень не виявлено',
     baselines: 'Евристичні базові підходи',
     baselineHelp:
-      'Порядок надходження, критичність спроможності та жадібний приріст готовності оцінюються тією самою моделлю невизначеності.',
+      'FIFO, критичність, greedy readiness та сильніші operational heuristics оцінюються на однаковому просторі дій і моделі невизначеності.',
     comparison: 'Зміна фронту',
     comparisonHelp: 'Попередній фронт → змінені обмеження → перебудований фронт.',
     previous: 'До зміни',
@@ -200,13 +223,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     truncated: 'Пошук зупинено за налаштованим лімітом обчислення',
     plannerChoice: 'Остаточний операційний вибір між цими компромісами робить планувальник.',
     error: 'Помилка запиту до планувальника',
-    labels: {
-      MAXIMUM_READINESS: 'Максимальна готовність',
-      FAST_RECOVERY: 'Швидке відновлення',
-      PARTS_CONSERVATIVE: 'Економія запчастин',
-      LOW_RISK: 'Низький ризик',
-      BALANCED: 'Збалансований',
-    },
+    labels: labelsUk,
   },
   pl: {
     eyebrow: 'QDIP OBSERVATORY · ODTWARZANIE GOTOWOŚCI',
@@ -223,6 +240,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEADLINE_PRESSURE: 'Presja terminu',
       DEMAND_SHIFT: 'Zmiana zapotrzebowania na zdolności',
       CAPABILITY_RESCUE: 'Ratowanie zdolności · przewaga QDIP',
+      CASCADING_RESOURCE_CONFLICT: 'Kaskadowy konflikt zasobów',
     },
     presetHelp: {
       BALANCED: 'Kilka wykonalnych zestawów napraw konkuruje czasem, zasobami i ryzykiem.',
@@ -233,6 +251,8 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
       DEMAND_SHIFT: 'Zmiana wymaganych zdolności zmienia wartość poszczególnych napraw.',
       CAPABILITY_RESCUE:
         'Krytyczna zdolność nie zostaje odtworzona w terminie przez FIFO, krytyczność ani heurystykę zachłanną. QDIP ujawnia nieoczywistą ścieżkę dawca → dwie naprawy.',
+      CASCADING_RESOURCE_CONFLICT:
+        'Dwa terminy, deficytowe części, wąskie kompetencje, aktywa wielozdolnościowe i dawca tworzą problem portfelowy, w którym lokalnie atrakcyjna naprawa może zablokować lepszy plan globalny.',
     },
     run: 'Zbuduj front',
     rerun: 'Zbuduj ponownie',
@@ -266,7 +286,7 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     noConstraints: 'Nie wykryto zasobu bliskiego ograniczeniu',
     baselines: 'Bazowe heurystyki',
     baselineHelp:
-      'Kolejność zgłoszeń, krytyczność zdolności i zachłanny przyrost gotowości są oceniane tą samą metodą niepewności.',
+      'FIFO, krytyczność, greedy readiness i silniejsze heurystyki operacyjne są oceniane w tej samej przestrzeni działań i modelu niepewności.',
     comparison: 'Zmiana frontu',
     comparisonHelp: 'Poprzedni front → zmienione ograniczenia → przebudowany front.',
     previous: 'Przed zmianą',
@@ -277,12 +297,6 @@ export const readinessRecoveryI18n: Record<Locale, Copy> = {
     truncated: 'Wyszukiwanie zatrzymano po osiągnięciu ustawionego limitu obliczeń',
     plannerChoice: 'Ostateczny wybór operacyjny spośród tych kompromisów należy do planisty.',
     error: 'Błąd żądania planera',
-    labels: {
-      MAXIMUM_READINESS: 'Maksymalna gotowość',
-      FAST_RECOVERY: 'Szybkie odtworzenie',
-      PARTS_CONSERVATIVE: 'Oszczędność części',
-      LOW_RISK: 'Niskie ryzyko',
-      BALANCED: 'Zrównoważony',
-    },
+    labels: labelsPl,
   },
 }

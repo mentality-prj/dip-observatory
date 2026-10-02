@@ -15,7 +15,6 @@ export type CapabilityDemand = {
   minimumReliability?: number
   priority?: number
 }
-
 export type AssetCapabilityContribution = {
   capabilityId: string
   quantity: number
@@ -25,13 +24,7 @@ export type AssetCapabilityContribution = {
   dependsOnCapabilities?: string[]
   substitutableBy?: string[]
 }
-
-export type Fault = {
-  faultId: string
-  code: string
-  severity: 'MINOR' | 'MAJOR' | 'CRITICAL'
-}
-
+export type Fault = { faultId: string; code: string; severity: 'MINOR' | 'MAJOR' | 'CRITICAL' }
 export type Asset = {
   assetId: string
   type: string
@@ -40,10 +33,8 @@ export type Asset = {
   currentReliability: number
   faults: Fault[]
 }
-
 export type PartRequirement = { partId: string; quantity: number }
 export type SkillRequirement = { skillId: string; technicianHours: number }
-
 export type RecoveryAction = {
   actionId: string
   assetId: string
@@ -60,14 +51,12 @@ export type RecoveryAction = {
   incompatibleActionIds?: string[]
   replacementAssetType?: string
 }
-
 export type ResourcePool = {
   technicianHours: Record<string, number>
   workshopHours: number
   spareParts: Record<string, number>
   replacementAssets: Record<string, number>
 }
-
 export type PlannerSettings = {
   maxCandidates: number
   maxSearchNodes: number
@@ -77,7 +66,6 @@ export type PlannerSettings = {
   seed: number
   epsilon: number
 }
-
 export type ReadinessRecoveryInput = {
   scenarioId: string
   asOf: string
@@ -87,7 +75,6 @@ export type ReadinessRecoveryInput = {
   resources: ResourcePool
   settings: PlannerSettings
 }
-
 export type CandidatePlan = {
   id: string
   selectedActionIds: string[]
@@ -99,7 +86,6 @@ export type CandidatePlan = {
   replacementAssetsConsumed: Record<string, number>
   bindingConstraints: string[]
 }
-
 export type ScenarioUncertaintySummary = {
   samples: number
   seed: number
@@ -108,14 +94,10 @@ export type ScenarioUncertaintySummary = {
   p50RecoveryTimeHours: number
   p90RecoveryTimeHours: number
 }
-
 export type ScenarioLabel = 'MAXIMUM_READINESS' | 'FAST_RECOVERY' | 'PARTS_CONSERVATIVE' | 'LOW_RISK' | 'BALANCED'
-
 export type RecoveryScenario = {
   scenarioId: string
-  /** Primary display label kept for backwards compatibility. */
   label: ScenarioLabel
-  /** All objective roles held by this scenario; one scenario may be optimal for several objectives. */
   labels?: ScenarioLabel[]
   selectedActions: string[]
   expectedCapabilityReadiness: number
@@ -132,14 +114,8 @@ export type RecoveryScenario = {
   paretoExplanation: string
   drivers: string[]
 }
-
-export type BaselineKind = 'FIFO' | 'CRITICALITY' | 'GREEDY_READINESS'
-export type BaselineResult = {
-  kind: BaselineKind
-  scenario: RecoveryScenario | null
-  infeasibleActionIds: string[]
-}
-
+export type BaselineKind = 'FIFO' | 'CRITICALITY' | 'GREEDY_READINESS' | 'RISK_AWARE_GREEDY' | 'LOOKAHEAD_2'
+export type BaselineResult = { kind: BaselineKind; scenario: RecoveryScenario | null; infeasibleActionIds: string[] }
 export type PlannerDiagnostics = {
   searchNodes: number
   generatedCandidates: number
@@ -150,27 +126,23 @@ export type PlannerDiagnostics = {
   truncatedByNodeBudget: boolean
   truncatedByTimeBudget: boolean
 }
-
+export type RobustnessEvidence = {
+  variantId: string
+  verdict: 'QDIP_ADVANTAGE' | 'HEURISTIC_PARITY' | 'HEURISTIC_ADVANTAGE' | 'INSUFFICIENT_EVIDENCE'
+  advantageKind: 'CAPABILITY' | 'EFFICIENCY' | 'NONE'
+  baselineKind: BaselineKind | null
+  probabilityDelta: number
+  shortfallReduction: number
+}
 export type ReadinessRecoveryResult = {
   scenarioId: string
   frontier: RecoveryScenario[]
   baselines: BaselineResult[]
   diagnostics: PlannerDiagnostics
-  inputSummary: {
-    assets: number
-    impairedAssets: number
-    demands: number
-    actions: number
-  }
+  inputSummary: { assets: number; impairedAssets: number; demands: number; actions: number }
+  robustness?: { retained: number; total: number; variants: RobustnessEvidence[] }
 }
-
-export type FrontierChange = {
-  metric: string
-  before: number
-  after: number
-  delta: number
-}
-
+export type FrontierChange = { metric: string; before: number; after: number; delta: number }
 export type FrontierComparison = {
   previousCount: number
   currentCount: number
