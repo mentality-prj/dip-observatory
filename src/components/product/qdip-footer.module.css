@@ -1,8 +1,6 @@
 .footer {
   width: 100%;
   min-width: 0;
-  grid-column: 1 / -1;
-  align-self: stretch;
   color: #fff;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: #180b11;
@@ -16,6 +14,8 @@
 }
 
 .footer[data-variant='product'] {
+  grid-column: 1 / -1;
+  align-self: stretch;
   color: var(--ds-text);
   border-top-color: var(--ds-border);
   background: var(--ds-surface);
