@@ -3,11 +3,7 @@ import 'server-only'
 import { z } from 'zod'
 
 import { dipRequest } from '@/shared/dip/server-client'
-import type {
-  TestAAttemptLedgerSnapshot,
-  TestALedgerStore,
-  VersionedTestALedgerState,
-} from './test-a-attempt-ledger'
+import type { TestAAttemptLedgerSnapshot, TestALedgerStore, VersionedTestALedgerState } from './test-a-attempt-ledger'
 
 const LEDGER_ID_RE = /^[A-Za-z0-9._:-]{1,200}$/
 
