@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 
+// Idempotent migration for the readiness benchmark branch.
 const plannerPath = 'src/use-cases/readiness-recovery/planner.ts'
 let planner = fs.readFileSync(plannerPath, 'utf8')
 
@@ -26,8 +27,6 @@ planner = planner.replace(
   return (['FIFO', 'CRITICALITY', 'GREEDY_READINESS', 'RISK_AWARE_GREEDY', 'LOOKAHEAD_2'] as const).map((kind, index) => {`
 )
 
-// LOOKAHEAD_2 intentionally shares feasibility/dependency handling with the common baseline builder.
-// Its ranking uses the best compatible second action as a one-step continuation value.
 planner = planner.replace(
 `  const actions = input.recoveryActions
     .filter((action) => MATERIAL_ACTIONS.has(action.type))
