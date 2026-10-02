@@ -5,6 +5,7 @@ import { ObservatoryDecisionNarrative } from '@/components/observatory/decision-
 import { ScenarioContextPanel } from '@/components/observatory/scenario-context-panel'
 import { GtmLabWorkspace } from '@/features/gtm-lab/components/gtm-lab-workspace'
 import { ResourceAllocationWorkspace } from '@/features/resource-allocation/components/resource-allocation-workspace'
+import { SupplyNetworkAnalystDataWorkspace } from '@/features/supply-network-optimization/analyst-data-workspace'
 import { SupplyNetworkOptimizationWorkspace } from '@/features/supply-network-optimization/workspace'
 import type { Locale } from '@/lib/observatory-i18n'
 import { applicationScenarioContext } from '@/use-cases/application-context'
@@ -35,6 +36,7 @@ export function ApplicationFrontend({ id, locale }: { id: UseCaseId; locale: Loc
           <ScenarioContextPanel locale={locale} context={context} />
         </div>
       ) : null}
+      {id === 'supply-network-optimization' ? <SupplyNetworkAnalystDataWorkspace locale={locale} /> : null}
       <Frontend locale={locale} />
     </>
   )
