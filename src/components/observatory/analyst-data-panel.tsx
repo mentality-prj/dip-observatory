@@ -129,10 +129,7 @@ export function AnalystDataPanel({
   }
 
   return (
-    <section
-      data-testid="analyst-data-workspace"
-      className="mt-5 border border-white/10 bg-white/[.025] p-5 md:p-6"
-    >
+    <section data-testid="analyst-data-workspace" className="mt-5 border border-white/10 bg-white/[.025] p-5 md:p-6">
       <h2 className="text-lg font-medium text-slate-100">{t.title}</h2>
       <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">{t.body}</p>
       {onSynthetic ? (

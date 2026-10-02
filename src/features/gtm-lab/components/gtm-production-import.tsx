@@ -114,8 +114,7 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
     setIssues([])
     try {
       const imported = importGtmExactPackage(JSON.parse(await file.text()) as unknown)
-      if (!imported.input)
-        throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
+      if (!imported.input) throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
       setRows(imported.input.rows)
       setLastResult(imported.result ?? null)
       setMessage(t.validated(imported.input.rows.length))
@@ -154,10 +153,7 @@ export function GtmProductionImport({ locale, commercialContext, onEvaluated }: 
   }
 
   return (
-    <section
-      className="mt-6 border border-white/10 bg-white/[.03] p-5"
-      aria-labelledby="gtm-production-import"
-    >
+    <section className="mt-6 border border-white/10 bg-white/[.03] p-5" aria-labelledby="gtm-production-import">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="text-[10px] font-semibold tracking-[.18em] text-sky-300">{t.tag}</span>

@@ -94,10 +94,7 @@ export function ResourceAllocationImport({
     const example = buildResourceAllocationExampleCsv()
     const file = new File([example], 'example.csv', { type: 'text/csv' })
     const input = await importResourceAllocationFile(file)
-    downloadResourceAllocationJson(
-      'qdip-resource-allocation-exact.v1.json',
-      resourceAllocationExactTemplate(input)
-    )
+    downloadResourceAllocationJson('qdip-resource-allocation-exact.v1.json', resourceAllocationExactTemplate(input))
   }
 
   async function importExact(file: File | undefined) {
@@ -106,8 +103,7 @@ export function ResourceAllocationImport({
     try {
       const parsed = JSON.parse(await file.text()) as unknown
       const imported = importResourceAllocationExactPackage(parsed)
-      if (!imported.input)
-        throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
+      if (!imported.input) throw new Error(imported.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '))
       onImported(imported.input, file.name)
       setSummary(summarizeResourceAllocationImport(imported.input))
       setStage('ready')
