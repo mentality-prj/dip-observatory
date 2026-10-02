@@ -33,8 +33,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Prettier
-        run: pnpm prettier
+      - name: Prettier diff
+        run: |
+          pnpm exec prettier --write src/use-cases/readiness-recovery/test-a-dip-ledger-store.ts src/use-cases/readiness-recovery/test-a-dip-ledger-store.vitest.test.ts
+          git diff -- src/use-cases/readiness-recovery/test-a-dip-ledger-store.ts src/use-cases/readiness-recovery/test-a-dip-ledger-store.vitest.test.ts
+          exit 1
 
       - name: Typecheck
         run: pnpm typecheck
