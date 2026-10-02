@@ -48,7 +48,9 @@ describe('Cascading Resource Conflict benchmark', () => {
     for (const baseline of executableBaselines) {
       expect(baseline.scenario?.uncertaintySummary.seed).toBe(input.settings.seed)
       expect(baseline.scenario?.uncertaintySummary.samples).toBe(input.settings.simulationSamples)
-      for (const actionId of baseline.scenario?.selectedActions ?? []) expect(actionIds.has(actionId)).toBe(true)
+      for (const actionId of baseline.scenario?.selectedActions ?? []) {
+        expect(actionIds.has(actionId)).toBe(true)
+      }
     }
   })
 
