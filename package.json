@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --write src/use-cases/readiness-recovery/optimization-backend.ts src/use-cases/readiness-recovery/search-retention.vitest.test.ts && git diff -- src/use-cases/readiness-recovery/optimization-backend.ts src/use-cases/readiness-recovery/search-retention.vitest.test.ts && exit 1",
+    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
