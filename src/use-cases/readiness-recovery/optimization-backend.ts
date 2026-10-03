@@ -306,15 +306,18 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number,
     0.5 * normalized(candidate.scoreGain, maxGain)
 
   if (input) {
-    const bestByCardinality = new Map<number, MutableCandidate>()
+    const bestByCardinality = new Map<number, MutableCandidate[]>()
     for (const candidate of candidates) {
       const cardinality = candidate.selectedActionIds.length
-      const current = bestByCardinality.get(cardinality)
-      if (!current || objectiveProxy(candidate) < objectiveProxy(current)) {
-        bestByCardinality.set(cardinality, candidate)
-      }
+      const representatives = bestByCardinality.get(cardinality) ?? []
+      representatives.push(candidate)
+      representatives.sort((a, b) => objectiveProxy(a) - objectiveProxy(b))
+      if (representatives.length > 2) representatives.pop()
+      bestByCardinality.set(cardinality, representatives)
     }
-    for (const candidate of bestByCardinality.values()) unique.set(candidateKey(candidate), candidate)
+    for (const representatives of bestByCardinality.values()) {
+      for (const candidate of representatives) unique.set(candidateKey(candidate), candidate)
+    }
   }
 
   const remaining = Math.max(0, width - unique.size)
