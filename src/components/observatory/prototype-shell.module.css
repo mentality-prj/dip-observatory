@@ -12,6 +12,7 @@
 .desktopNavigation {
   width: 100%;
   min-width: 0;
+  padding-bottom: var(--ds-space-1);
 }
 .navigation {
   display: flex;
