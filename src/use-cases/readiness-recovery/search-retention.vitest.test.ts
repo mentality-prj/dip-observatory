@@ -84,6 +84,11 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
       const maxRisk = Math.max(1, ...next.map((candidate) => candidate.scoreRisk))
       const maxTechnicianHours = Math.max(1, ...next.map((candidate) => candidate.technicianHours))
       const skipCandidates = next.filter((candidate) => candidate.id.endsWith(':skip'))
+      const targetActionId = targetActionByAsset.get(asset.assetId)
+      const branchSuffix = targetActionId ? `:${targetActionId}` : ':skip'
+      const branchCandidates = next.filter((candidate) => candidate.id.endsWith(branchSuffix))
+      const branchChoiceCount = (actionByAsset.get(asset.assetId)?.length ?? 0) + 1
+      const fairBranchQuota = Math.max(1, Math.floor(input.settings.beamWidth / branchChoiceCount))
       const ranks = {
         gainRisk: (candidate: MutableCandidate) =>
           -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
@@ -114,6 +119,10 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
         actionCount: target.selectedActionIds.length,
         skipCount: stageIndex + 1 - target.selectedActionIds.length,
         skipCandidates: skipCandidates.length,
+        branchChoice: targetActionId ?? 'skip',
+        branchChoiceCount,
+        branchCandidates: branchCandidates.length,
+        fairBranchQuota,
         scores: {
           gain: target.scoreGain,
           time: target.scoreTime,
@@ -138,6 +147,15 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           technicianGain: rankPosition(skipCandidates, targetKey, ranks.technicianGain),
           economic: rankPosition(skipCandidates, targetKey, ranks.economic),
           gainOnly: rankPosition(skipCandidates, targetKey, ranks.gainOnly),
+        },
+        branchRankPositions: {
+          gainRisk: rankPosition(branchCandidates, targetKey, ranks.gainRisk),
+          timeGain: rankPosition(branchCandidates, targetKey, ranks.timeGain),
+          partsGain: rankPosition(branchCandidates, targetKey, ranks.partsGain),
+          riskGain: rankPosition(branchCandidates, targetKey, ranks.riskGain),
+          technicianGain: rankPosition(branchCandidates, targetKey, ranks.technicianGain),
+          economic: rankPosition(branchCandidates, targetKey, ranks.economic),
+          gainOnly: rankPosition(branchCandidates, targetKey, ranks.gainOnly),
         },
       }
     }
