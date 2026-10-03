@@ -127,8 +127,19 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
             normalized(candidate.workshopHours, maxWorkshopHours)) /
             5 -
           0.5 * normalized(candidate.scoreGain, maxGain),
+        gainPerAction: (candidate: MutableCandidate) =>
+          -candidate.scoreGain / Math.max(1, candidate.selectedActionIds.length),
+        gainPerTechnician: (candidate: MutableCandidate) =>
+          -candidate.scoreGain / Math.max(1, candidate.technicianHours),
+        gainPerWorkshop: (candidate: MutableCandidate) =>
+          -candidate.scoreGain / Math.max(1, candidate.workshopHours),
+        gainPerScarcity: (candidate: MutableCandidate) =>
+          -candidate.scoreGain / Math.max(1, scarcityScore(input, candidate)),
         gainOnly: (candidate: MutableCandidate) => -candidate.scoreGain,
       }
+      const sameCardinality = next.filter(
+        (candidate) => candidate.selectedActionIds.length === target.selectedActionIds.length
+      )
 
       return {
         stageIndex,
@@ -138,6 +149,7 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
         perRankTake: Math.max(1, Math.floor(input.settings.beamWidth / 4)),
         actionCount: target.selectedActionIds.length,
         skipCount: stageIndex + 1 - target.selectedActionIds.length,
+        sameCardinalityCandidates: sameCardinality.length,
         scores: {
           gain: target.scoreGain,
           time: target.scoreTime,
@@ -158,7 +170,18 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           techScarcityGain: rankPosition(next, targetKey, ranks.techScarcityGain),
           objectiveProxy: rankPosition(next, targetKey, ranks.objectiveProxy),
           currentJoint: rankPosition(next, targetKey, ranks.currentJoint),
+          gainPerAction: rankPosition(next, targetKey, ranks.gainPerAction),
+          gainPerTechnician: rankPosition(next, targetKey, ranks.gainPerTechnician),
+          gainPerWorkshop: rankPosition(next, targetKey, ranks.gainPerWorkshop),
+          gainPerScarcity: rankPosition(next, targetKey, ranks.gainPerScarcity),
           gainOnly: rankPosition(next, targetKey, ranks.gainOnly),
+        },
+        sameCardinalityRankPositions: {
+          gainRisk: rankPosition(sameCardinality, targetKey, ranks.gainRisk),
+          timeGain: rankPosition(sameCardinality, targetKey, ranks.timeGain),
+          objectiveProxy: rankPosition(sameCardinality, targetKey, ranks.objectiveProxy),
+          gainPerAction: rankPosition(sameCardinality, targetKey, ranks.gainPerAction),
+          gainOnly: rankPosition(sameCardinality, targetKey, ranks.gainOnly),
         },
       }
     }
