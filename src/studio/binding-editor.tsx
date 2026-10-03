@@ -88,7 +88,11 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
                 </label>
                 <label className="studio-field">
                   {copy.version}
-                  <Input required value={binding.version} onChange={(e) => update(index, { version: e.target.value })} />
+                  <Input
+                    required
+                    value={binding.version}
+                    onChange={(e) => update(index, { version: e.target.value })}
+                  />
                 </label>
                 <label className="studio-field">
                   {copy.availableOutput}
