@@ -278,116 +278,28 @@ function candidateKey(candidate: CandidatePlan) {
 function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
-function structuralKey(candidate: MutableCandidate) {
-  const producedParts = Object.entries(candidate.partsProduced)
-    .filter(([, quantity]) => quantity > 0)
-    .map(([partId]) => partId)
-    .sort()
-    .join(',')
-  const replacementTypes = Object.entries(candidate.replacementAssetsConsumed)
-    .filter(([, quantity]) => quantity > 0)
-    .map(([assetType]) => assetType)
-    .sort()
-    .join(',')
-  return `${candidate.selectedActionIds.length}|p:${producedParts}|r:${replacementTypes}|b:${[...candidate.bindingConstraints].sort().join(',')}`
-}
-function actionSetDistance(left: Set<string>, right: Set<string>) {
-  if (!left.size && !right.size) return 0
-  let intersection = 0
-  for (const actionId of left) if (right.has(actionId)) intersection += 1
-  return 1 - intersection / (left.size + right.size - intersection)
-}
-export function retainDiverseBeam(candidates: MutableCandidate[], width: number, _epsilon = 0.015) {
-  void _epsilon
+export function retainDiverseBeam(candidates: MutableCandidate[], width: number) {
   if (candidates.length <= width) return candidates
-
-  const deduplicated = [...new Map(candidates.map((candidate) => [candidateKey(candidate), candidate])).values()].sort(
-    (a, b) => candidateKey(a).localeCompare(candidateKey(b))
-  )
-  if (deduplicated.length <= width) return deduplicated
-
-  const maxGain = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreGain))
-  const maxTime = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreTime))
-  const maxParts = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreParts))
-  const maxRisk = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreRisk))
-  const balancedLoss = (candidate: MutableCandidate) =>
-    -normalized(candidate.scoreGain, maxGain) +
-    0.35 * normalized(candidate.scoreTime, maxTime) +
-    0.25 * normalized(candidate.scoreParts, maxParts) +
-    0.4 * normalized(candidate.scoreRisk, maxRisk)
+  const unique = new Map<string, MutableCandidate>()
+  const take = Math.max(1, Math.floor(width / 4))
+  const maxGain = Math.max(1, ...candidates.map((i) => i.scoreGain))
+  const maxTime = Math.max(1, ...candidates.map((i) => i.scoreTime))
+  const maxParts = Math.max(1, ...candidates.map((i) => i.scoreParts))
+  const maxRisk = Math.max(1, ...candidates.map((i) => i.scoreRisk))
   const rankings = [
-    (candidate: MutableCandidate) =>
-      -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
-    (candidate: MutableCandidate) =>
-      normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain),
-    (candidate: MutableCandidate) =>
-      normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain),
-    (candidate: MutableCandidate) =>
-      normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain),
+    (i: MutableCandidate) => -normalized(i.scoreGain, maxGain) + 0.08 * normalized(i.scoreRisk, maxRisk),
+    (i: MutableCandidate) => normalized(i.scoreTime, maxTime) - 0.25 * normalized(i.scoreGain, maxGain),
+    (i: MutableCandidate) => normalized(i.scoreParts, maxParts) - 0.2 * normalized(i.scoreGain, maxGain),
+    (i: MutableCandidate) => normalized(i.scoreRisk, maxRisk) - 0.2 * normalized(i.scoreGain, maxGain),
   ]
-
-  const selected = new Map<string, MutableCandidate>()
-  const add = (candidate: MutableCandidate) => selected.set(candidateKey(candidate), candidate)
-  const rankingTake = Math.max(1, Math.floor(width / 8))
-  for (const rank of rankings) {
-    for (const candidate of [...deduplicated]
-      .sort((a, b) => rank(a) - rank(b) || candidateKey(a).localeCompare(candidateKey(b)))
-      .slice(0, rankingTake))
-      add(candidate)
+  for (const rank of rankings)
+    for (const candidate of [...candidates].sort((a, b) => rank(a) - rank(b)).slice(0, take))
+      unique.set(candidateKey(candidate), candidate)
+  for (const candidate of [...candidates].sort((a, b) => b.scoreGain - a.scoreGain)) {
+    if (unique.size >= width) break
+    unique.set(candidateKey(candidate), candidate)
   }
-
-  const structuralBudget = Math.max(1, Math.floor(width / 4))
-  const structuralRepresentatives = new Map<string, MutableCandidate>()
-  for (const candidate of deduplicated) {
-    const key = structuralKey(candidate)
-    const incumbent = structuralRepresentatives.get(key)
-    if (!incumbent || balancedLoss(candidate) < balancedLoss(incumbent)) structuralRepresentatives.set(key, candidate)
-  }
-  for (const candidate of [...structuralRepresentatives.values()]
-    .sort((a, b) => balancedLoss(a) - balancedLoss(b) || candidateKey(a).localeCompare(candidateKey(b)))
-    .slice(0, structuralBudget))
-    add(candidate)
-
-  const actionSets = new Map(
-    deduplicated.map((candidate) => [candidateKey(candidate), new Set(candidate.selectedActionIds)])
-  )
-  const minDistance = new Map<string, number>()
-  const selectedSets = [...selected.values()].map(
-    (candidate) => actionSets.get(candidateKey(candidate)) ?? new Set<string>()
-  )
-  for (const candidate of deduplicated) {
-    const key = candidateKey(candidate)
-    if (selected.has(key)) continue
-    const candidateSet = actionSets.get(key) ?? new Set<string>()
-    minDistance.set(
-      key,
-      selectedSets.length
-        ? Math.min(...selectedSets.map((selectedSet) => actionSetDistance(candidateSet, selectedSet)))
-        : 1
-    )
-  }
-
-  while (selected.size < width && minDistance.size) {
-    const nextKey = [...minDistance.keys()].sort((leftKey, rightKey) => {
-      const distanceDelta = (minDistance.get(rightKey) ?? 0) - (minDistance.get(leftKey) ?? 0)
-      if (Math.abs(distanceDelta) > 1e-12) return distanceDelta
-      const left = deduplicated.find((candidate) => candidateKey(candidate) === leftKey)
-      const right = deduplicated.find((candidate) => candidateKey(candidate) === rightKey)
-      if (!left || !right) return leftKey.localeCompare(rightKey)
-      return balancedLoss(left) - balancedLoss(right) || leftKey.localeCompare(rightKey)
-    })[0]
-    const next = deduplicated.find((candidate) => candidateKey(candidate) === nextKey)
-    if (!next) break
-    add(next)
-    minDistance.delete(nextKey)
-    const nextSet = actionSets.get(nextKey) ?? new Set<string>()
-    for (const [key, currentDistance] of minDistance) {
-      const candidateSet = actionSets.get(key) ?? new Set<string>()
-      minDistance.set(key, Math.min(currentDistance, actionSetDistance(candidateSet, nextSet)))
-    }
-  }
-
-  return [...selected.values()].slice(0, width)
+  return [...unique.values()].slice(0, width)
 }
 export type CandidateGenerationResult = {
   candidates: CandidatePlan[]
@@ -434,7 +346,7 @@ export class BoundedFeasibilityBackend implements OptimizationBackend {
         }
         if (truncatedByNodeBudget || truncatedByTimeBudget) break
       }
-      beam = retainDiverseBeam(next, input.settings.beamWidth, input.settings.epsilon)
+      beam = retainDiverseBeam(next, input.settings.beamWidth)
       if (!beam.length || truncatedByNodeBudget || truncatedByTimeBudget) break
     }
     const unique = new Map<string, CandidatePlan>()
