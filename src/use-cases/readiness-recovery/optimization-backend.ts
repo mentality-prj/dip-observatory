@@ -332,12 +332,9 @@ function proxyPoint(
   }
 }
 function proxyDominates(a: ProxyPoint, b: ProxyPoint) {
-  const noWorse =
-    a.gainBox >= b.gainBox && a.timeBox <= b.timeBox && a.partsBox <= b.partsBox && a.riskBox <= b.riskBox
+  const noWorse = a.gainBox >= b.gainBox && a.timeBox <= b.timeBox && a.partsBox <= b.partsBox && a.riskBox <= b.riskBox
   if (!noWorse) return false
-  return (
-    a.gainBox > b.gainBox || a.timeBox < b.timeBox || a.partsBox < b.partsBox || a.riskBox < b.riskBox
-  )
+  return a.gainBox > b.gainBox || a.timeBox < b.timeBox || a.partsBox < b.partsBox || a.riskBox < b.riskBox
 }
 function paretoLayers(points: ProxyPoint[]) {
   const dominates = points.map(() => [] as number[])
@@ -428,13 +425,14 @@ function chooseDiverseLayerSubset(layer: ProxyPoint[], count: number, selected: 
     bucket.push(point)
     buckets.set(point.structuralKey, bucket)
   }
-  const representatives = [...buckets.values()].map((bucket) =>
-    [...bucket].sort((a, b) => {
-      const crowdingA = crowding.get(a.key) ?? 0
-      const crowdingB = crowding.get(b.key) ?? 0
-      if (crowdingA !== crowdingB) return crowdingB - crowdingA
-      return balancedProxyLoss(a) - balancedProxyLoss(b) || a.key.localeCompare(b.key)
-    })[0]
+  const representatives = [...buckets.values()].map(
+    (bucket) =>
+      [...bucket].sort((a, b) => {
+        const crowdingA = crowding.get(a.key) ?? 0
+        const crowdingB = crowding.get(b.key) ?? 0
+        if (crowdingA !== crowdingB) return crowdingB - crowdingA
+        return balancedProxyLoss(a) - balancedProxyLoss(b) || a.key.localeCompare(b.key)
+      })[0]
   )
   const chosen: ProxyPoint[] = []
   const availableRepresentatives = [...representatives]
