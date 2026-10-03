@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   description:
     'QDIP evaluates alternatives, priorities, constraints and uncertainty to provide a recommendation with supporting evidence. The responsible person makes the final decision.',
   icons: {
-    icon: [{ url: '/qdip-logo.png', type: 'image/png' }],
-    shortcut: ['/qdip-logo.png'],
+    icon: [{ url: '/qdip-favicon.svg', type: 'image/svg+xml' }],
+    shortcut: ['/qdip-favicon.svg'],
     apple: [{ url: '/qdip-logo.png', type: 'image/png' }],
   },
   openGraph: { siteName: 'QDIP', type: 'website' },
