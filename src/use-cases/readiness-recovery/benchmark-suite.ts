@@ -109,7 +109,18 @@ function deletionNeighborhood(input: ReadinessRecoveryInput, seed: CandidatePlan
   const unique = new Map<string, CandidatePlan>()
   if (validateCompleteCandidate(input, seed)) unique.set(candidateKey(seed.selectedActionIds), seed)
 
-  for (const removedActionId of seed.selectedActionIds) {
+  const actionById = new Map(input.recoveryActions.map((action) => [action.actionId, action]))
+  const polishingLimit = Math.max(1, Math.ceil(Math.sqrt(input.settings.beamWidth)))
+  const removableActionIds = [...seed.selectedActionIds]
+    .sort((leftId, rightId) => {
+      const left = actionById.get(leftId)
+      const right = actionById.get(rightId)
+      if (!left || !right) return leftId.localeCompare(rightId)
+      return riskAdjustedScore(input, left) - riskAdjustedScore(input, right) || leftId.localeCompare(rightId)
+    })
+    .slice(0, polishingLimit)
+
+  for (const removedActionId of removableActionIds) {
     const actionIds = seed.selectedActionIds.filter((actionId) => actionId !== removedActionId)
     const candidate = rebuildCandidate(input, actionIds)
     if (candidate) unique.set(candidateKey(candidate.selectedActionIds), candidate)
