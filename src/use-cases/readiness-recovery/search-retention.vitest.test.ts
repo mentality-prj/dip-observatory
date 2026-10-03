@@ -131,8 +131,7 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           -candidate.scoreGain / Math.max(1, candidate.selectedActionIds.length),
         gainPerTechnician: (candidate: MutableCandidate) =>
           -candidate.scoreGain / Math.max(1, candidate.technicianHours),
-        gainPerWorkshop: (candidate: MutableCandidate) =>
-          -candidate.scoreGain / Math.max(1, candidate.workshopHours),
+        gainPerWorkshop: (candidate: MutableCandidate) => -candidate.scoreGain / Math.max(1, candidate.workshopHours),
         gainPerScarcity: (candidate: MutableCandidate) =>
           -candidate.scoreGain / Math.max(1, scarcityScore(input, candidate)),
         gainOnly: (candidate: MutableCandidate) => -candidate.scoreGain,
