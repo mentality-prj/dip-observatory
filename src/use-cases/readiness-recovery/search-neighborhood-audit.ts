@@ -1,5 +1,5 @@
-import { benchmarkReadinessResult } from './benchmark'
-import type { CandidatePlan, ReadinessRecoveryInput, RecoveryAction } from './domain'
+import { benchmarkReadinessResult, type ReadinessBenchmark } from './benchmark'
+import type { CandidatePlan, ReadinessRecoveryInput, RecoveryAction, RecoveryScenario } from './domain'
 import {
   emptyCandidate,
   extendCandidate,
@@ -87,18 +87,33 @@ function buildOneAssetNeighborhood(input: ReadinessRecoveryInput, baselineSelect
   return [...unique.values()]
 }
 
+function compareAgainstBaseline(
+  result: ReturnType<typeof planReadinessRecovery>,
+  scenario: RecoveryScenario,
+  baseline: RecoveryScenario
+): ReadinessBenchmark {
+  return benchmarkReadinessResult({
+    ...result,
+    frontier: [scenario],
+    baselines: [{ kind: 'RISK_AWARE_GREEDY', scenario: baseline, infeasibleActionIds: [] }],
+  })
+}
+
 export type BaselineNeighborhoodAudit = {
   candidateCount: number
   evaluatedCandidates: number
   frontierCount: number
   baselineInFrontier: boolean
+  baselineScenarioFound: boolean
   dominatingScenarioIds: string[]
-  verdict: ReturnType<typeof benchmarkReadinessResult>['verdict']
-  advantageKind: ReturnType<typeof benchmarkReadinessResult>['advantageKind']
-  probabilityDelta: number
-  readinessDelta: number
-  shortfallReduction: number
-  qdipSelectedActions: string[]
+  materialAdvantageScenarioIds: string[]
+  bestMaterialAdvantage: {
+    scenarioId: string
+    probabilityDelta: number
+    readinessDelta: number
+    shortfallReduction: number
+    advantageKind: ReadinessBenchmark['advantageKind']
+  } | null
   baselineSelectedActions: string[]
 }
 
@@ -107,31 +122,78 @@ export function auditOneAssetNeighborhood(
   baselineSelectedActions: string[]
 ): BaselineNeighborhoodAudit {
   const candidates = buildOneAssetNeighborhood(input, baselineSelectedActions)
+  const baselineCandidate = rebuildCandidate(input, baselineSelectedActions)
   const diagnosticInput = structuredClone(input)
   diagnosticInput.settings.maxSolveTimeMs = Math.max(diagnosticInput.settings.maxSolveTimeMs, 30_000)
   diagnosticInput.settings.maxCandidates = Math.max(diagnosticInput.settings.maxCandidates, candidates.length)
 
-  const result = planReadinessRecovery(diagnosticInput, new CandidateListBackend(candidates))
-  const benchmark = benchmarkReadinessResult(result)
-  const baseline = result.baselines.find((item) => item.kind === 'RISK_AWARE_GREEDY')?.scenario ?? null
+  if (!baselineCandidate) {
+    return {
+      candidateCount: candidates.length,
+      evaluatedCandidates: 0,
+      frontierCount: 0,
+      baselineInFrontier: false,
+      baselineScenarioFound: false,
+      dominatingScenarioIds: [],
+      materialAdvantageScenarioIds: [],
+      bestMaterialAdvantage: null,
+      baselineSelectedActions,
+    }
+  }
+
+  const baselineResult = planReadinessRecovery(diagnosticInput, new CandidateListBackend([baselineCandidate]))
   const baselineKey = candidateKey(baselineSelectedActions)
+  const baselineScenario = baselineResult.frontier.find(
+    (scenario) => candidateKey(scenario.selectedActions) === baselineKey
+  )
+  const result = planReadinessRecovery(diagnosticInput, new CandidateListBackend(candidates))
   const baselineInFrontier = result.frontier.some((scenario) => candidateKey(scenario.selectedActions) === baselineKey)
-  const dominators = baseline
-    ? result.frontier.filter((scenario) => epsilonDominates(scenario, baseline, diagnosticInput.settings.epsilon))
-    : []
+
+  if (!baselineScenario) {
+    return {
+      candidateCount: candidates.length,
+      evaluatedCandidates: result.diagnostics.evaluatedCandidates,
+      frontierCount: result.frontier.length,
+      baselineInFrontier,
+      baselineScenarioFound: false,
+      dominatingScenarioIds: [],
+      materialAdvantageScenarioIds: [],
+      bestMaterialAdvantage: null,
+      baselineSelectedActions,
+    }
+  }
+
+  const dominators = result.frontier.filter((scenario) =>
+    epsilonDominates(scenario, baselineScenario, diagnosticInput.settings.epsilon)
+  )
+  const materialAdvantages = result.frontier
+    .map((scenario) => ({ scenario, comparison: compareAgainstBaseline(result, scenario, baselineScenario) }))
+    .filter(({ comparison }) => comparison.verdict === 'QDIP_ADVANTAGE')
+  const bestMaterial = [...materialAdvantages].sort((a, b) => {
+    return (
+      b.comparison.probabilityDelta - a.comparison.probabilityDelta ||
+      b.comparison.readinessDelta - a.comparison.readinessDelta ||
+      b.comparison.shortfallReduction - a.comparison.shortfallReduction
+    )
+  })[0]
 
   return {
     candidateCount: candidates.length,
     evaluatedCandidates: result.diagnostics.evaluatedCandidates,
     frontierCount: result.frontier.length,
     baselineInFrontier,
+    baselineScenarioFound: true,
     dominatingScenarioIds: dominators.map((scenario) => scenario.scenarioId),
-    verdict: benchmark.verdict,
-    advantageKind: benchmark.advantageKind,
-    probabilityDelta: benchmark.probabilityDelta,
-    readinessDelta: benchmark.readinessDelta,
-    shortfallReduction: benchmark.shortfallReduction,
-    qdipSelectedActions: benchmark.qdip?.selectedActions ?? [],
+    materialAdvantageScenarioIds: materialAdvantages.map(({ scenario }) => scenario.scenarioId),
+    bestMaterialAdvantage: bestMaterial
+      ? {
+          scenarioId: bestMaterial.scenario.scenarioId,
+          probabilityDelta: bestMaterial.comparison.probabilityDelta,
+          readinessDelta: bestMaterial.comparison.readinessDelta,
+          shortfallReduction: bestMaterial.comparison.shortfallReduction,
+          advantageKind: bestMaterial.comparison.advantageKind,
+        }
+      : null,
     baselineSelectedActions,
   }
 }
