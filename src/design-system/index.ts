@@ -11,7 +11,7 @@ export {
   type DesignTheme,
   type ProductSwitch,
 } from './components'
-export { AppShell, Container, Page, Section, Select, Textarea, Checkbox, Table, Disclosure } from './primitives'
+export { AppShell, Container, Page, Section, Stack, Select, Textarea, Checkbox, Table, Disclosure } from './primitives'
 
 export {
   Badge,
