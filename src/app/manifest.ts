@@ -9,6 +9,6 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#fcf8f9',
     theme_color: '#8e2949',
-    icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+    icons: [{ src: '/qdip-logo.png', sizes: '300x157', type: 'image/png' }],
   }
 }
