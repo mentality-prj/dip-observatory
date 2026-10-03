@@ -13,6 +13,8 @@ describe('Readiness Recovery strong-baseline search audit', () => {
 
     const audit = auditStrongBaselineInjection(input, 'RISK_AWARE_GREEDY')
 
+    console.info('RR_SEARCH_AUDIT', JSON.stringify(audit))
+
     expect(audit.baselineCandidateKey).not.toBeNull()
     expect(audit.baselineSelectedActions.length).toBeGreaterThan(0)
     expect(audit.nativeGeneratedCandidates).toBeGreaterThan(0)
