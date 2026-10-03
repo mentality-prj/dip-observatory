@@ -348,16 +348,22 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number,
     .slice(0, structuralBudget))
     add(candidate)
 
-  const actionSets = new Map(deduplicated.map((candidate) => [candidateKey(candidate), new Set(candidate.selectedActionIds)]))
+  const actionSets = new Map(
+    deduplicated.map((candidate) => [candidateKey(candidate), new Set(candidate.selectedActionIds)])
+  )
   const minDistance = new Map<string, number>()
-  const selectedSets = [...selected.values()].map((candidate) => actionSets.get(candidateKey(candidate)) ?? new Set<string>())
+  const selectedSets = [...selected.values()].map(
+    (candidate) => actionSets.get(candidateKey(candidate)) ?? new Set<string>()
+  )
   for (const candidate of deduplicated) {
     const key = candidateKey(candidate)
     if (selected.has(key)) continue
     const candidateSet = actionSets.get(key) ?? new Set<string>()
     minDistance.set(
       key,
-      selectedSets.length ? Math.min(...selectedSets.map((selectedSet) => actionSetDistance(candidateSet, selectedSet))) : 1
+      selectedSets.length
+        ? Math.min(...selectedSets.map((selectedSet) => actionSetDistance(candidateSet, selectedSet)))
+        : 1
     )
   }
 
