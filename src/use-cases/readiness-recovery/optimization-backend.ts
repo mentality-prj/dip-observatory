@@ -42,8 +42,9 @@ function normalSample(rng: () => number) {
 }
 export function sampleDistribution(distribution: NumericDistribution, rng: () => number): number {
   switch (distribution.kind) {
-    case 'DETERMINISTIC':
+    case 'DETERMINISTIC': {
       return distribution.value
+    }
     case 'TRIANGULAR': {
       const { min, mode, max } = distribution
       if (max <= min) return min
@@ -277,7 +278,7 @@ function candidateKey(candidate: CandidatePlan) {
 function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
-function retainDiverseBeam(candidates: MutableCandidate[], width: number) {
+export function retainDiverseBeam(candidates: MutableCandidate[], width: number) {
   if (candidates.length <= width) return candidates
   const unique = new Map<string, MutableCandidate>()
   const take = Math.max(1, Math.floor(width / 4))
