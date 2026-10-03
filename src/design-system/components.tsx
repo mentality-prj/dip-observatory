@@ -154,11 +154,7 @@ export function ProductHeader({
           <ProductLockup href={href} brandHref={brandHref} product={product} nativeNavigation={nativeNavigation} />
           {brandStatus ? <div className="ds-product-header-brand-status">{brandStatus}</div> : null}
         </div>
-        {navigation ? (
-          <div className="ds-product-header-center">{navigation}</div>
-        ) : (
-          <div className="ds-product-header-spacer" />
-        )}
+        <div className="ds-product-header-spacer" />
         <div className="ds-product-header-actions">
           {status}
           {siteLink ? <ProductSwitchLink {...siteLink} nativeNavigation={nativeNavigation} /> : null}
@@ -166,6 +162,7 @@ export function ProductHeader({
           {utilities}
         </div>
       </div>
+      {navigation ? <div className="ds-product-header-navigation">{navigation}</div> : null}
     </header>
   )
 }
