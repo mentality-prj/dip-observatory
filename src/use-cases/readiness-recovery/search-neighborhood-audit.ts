@@ -99,6 +99,60 @@ function compareAgainstBaseline(
   })
 }
 
+export type DominatingNeighbor = {
+  scenarioId: string
+  addedActions: string[]
+  removedActions: string[]
+  selectedActions: string[]
+  metrics: {
+    probabilityDemandSatisfied: number
+    expectedCapabilityReadiness: number
+    capabilityShortfall: number
+    expectedRecoveryTimeHours: number
+    technicianHours: number
+    scarcePartsConsumed: number
+    recoveryFailureRisk: number
+  }
+  deltasVsBaseline: {
+    probabilityDelta: number
+    readinessDelta: number
+    shortfallReduction: number
+    recoveryTimeReductionHours: number
+    technicianHoursReduction: number
+    scarcePartsReduction: number
+    failureRiskReduction: number
+  }
+}
+
+function describeDominator(scenario: RecoveryScenario, baseline: RecoveryScenario): DominatingNeighbor {
+  const selected = new Set(scenario.selectedActions)
+  const baselineSelected = new Set(baseline.selectedActions)
+  return {
+    scenarioId: scenario.scenarioId,
+    addedActions: scenario.selectedActions.filter((action) => !baselineSelected.has(action)),
+    removedActions: baseline.selectedActions.filter((action) => !selected.has(action)),
+    selectedActions: scenario.selectedActions,
+    metrics: {
+      probabilityDemandSatisfied: scenario.probabilityDemandSatisfied,
+      expectedCapabilityReadiness: scenario.expectedCapabilityReadiness,
+      capabilityShortfall: scenario.capabilityShortfall,
+      expectedRecoveryTimeHours: scenario.expectedRecoveryTimeHours,
+      technicianHours: scenario.technicianHours,
+      scarcePartsConsumed: scenario.scarcePartsConsumed,
+      recoveryFailureRisk: scenario.recoveryFailureRisk,
+    },
+    deltasVsBaseline: {
+      probabilityDelta: scenario.probabilityDemandSatisfied - baseline.probabilityDemandSatisfied,
+      readinessDelta: scenario.expectedCapabilityReadiness - baseline.expectedCapabilityReadiness,
+      shortfallReduction: baseline.capabilityShortfall - scenario.capabilityShortfall,
+      recoveryTimeReductionHours: baseline.expectedRecoveryTimeHours - scenario.expectedRecoveryTimeHours,
+      technicianHoursReduction: baseline.technicianHours - scenario.technicianHours,
+      scarcePartsReduction: baseline.scarcePartsConsumed - scenario.scarcePartsConsumed,
+      failureRiskReduction: baseline.recoveryFailureRisk - scenario.recoveryFailureRisk,
+    },
+  }
+}
+
 export type BaselineNeighborhoodAudit = {
   candidateCount: number
   evaluatedCandidates: number
@@ -106,6 +160,7 @@ export type BaselineNeighborhoodAudit = {
   baselineInFrontier: boolean
   baselineScenarioFound: boolean
   dominatingScenarioIds: string[]
+  dominatingNeighbors: DominatingNeighbor[]
   materialAdvantageScenarioIds: string[]
   bestMaterialAdvantage: {
     scenarioId: string
@@ -135,6 +190,7 @@ export function auditOneAssetNeighborhood(
       baselineInFrontier: false,
       baselineScenarioFound: false,
       dominatingScenarioIds: [],
+      dominatingNeighbors: [],
       materialAdvantageScenarioIds: [],
       bestMaterialAdvantage: null,
       baselineSelectedActions,
@@ -157,6 +213,7 @@ export function auditOneAssetNeighborhood(
       baselineInFrontier,
       baselineScenarioFound: false,
       dominatingScenarioIds: [],
+      dominatingNeighbors: [],
       materialAdvantageScenarioIds: [],
       bestMaterialAdvantage: null,
       baselineSelectedActions,
@@ -184,6 +241,7 @@ export function auditOneAssetNeighborhood(
     baselineInFrontier,
     baselineScenarioFound: true,
     dominatingScenarioIds: dominators.map((scenario) => scenario.scenarioId),
+    dominatingNeighbors: dominators.map((scenario) => describeDominator(scenario, baselineScenario)),
     materialAdvantageScenarioIds: materialAdvantages.map(({ scenario }) => scenario.scenarioId),
     bestMaterialAdvantage: bestMaterial
       ? {
