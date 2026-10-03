@@ -18,70 +18,38 @@
 }
 
 .ds-select {
+  appearance: auto;
   padding-inline-end: calc(var(--ds-space-6) + 1rem);
   cursor: pointer;
 }
 
-@supports (appearance: base-select) {
-  .ds-select,
-  .ds-select::picker(select) {
-    appearance: base-select;
-  }
+.ds-inline-disclosure > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  list-style: none;
+}
 
-  .ds-select {
-    background-image: none;
-  }
+.ds-inline-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
 
-  .ds-select::picker-icon {
-    margin-inline-start: var(--ds-space-2);
-    color: var(--ds-text-muted);
-    transition:
-      color 150ms ease,
-      transform 150ms ease;
-  }
+.ds-inline-disclosure > summary::before {
+  display: grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 1.15rem;
+  place-items: center;
+  border: 1px solid rgb(var(--ds-accent-rgb) / 0.28);
+  border-radius: 50%;
+  content: '+';
+  color: var(--ds-accent);
+  background: rgb(var(--ds-accent-rgb) / 0.06);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
 
-  .ds-select:hover::picker-icon,
-  .ds-select:focus::picker-icon {
-    color: var(--ds-text);
-  }
-
-  .ds-select:open::picker-icon {
-    transform: rotate(180deg);
-  }
-
-  .ds-select::picker(select) {
-    margin-block-start: var(--ds-space-2);
-    overflow: clip;
-    border: 1px solid var(--ds-border);
-    border-radius: var(--ds-radius-input);
-    padding: var(--ds-space-1);
-    background: var(--ds-surface-raised);
-    box-shadow: var(--ds-shadow-card);
-  }
-
-  .ds-select option {
-    min-height: 2.5rem;
-    align-items: center;
-    border: 0;
-    border-radius: calc(var(--ds-radius-input) - 4px);
-    padding: var(--ds-space-2) var(--ds-space-3);
-    color: var(--ds-text);
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .ds-select option:hover,
-  .ds-select option:focus {
-    background: var(--ds-hover);
-  }
-
-  .ds-select option:checked {
-    color: var(--ds-text);
-    background: rgb(var(--ds-accent-rgb) / 0.12);
-  }
-
-  .ds-select option::checkmark {
-    margin-inline-start: auto;
-    color: var(--ds-accent);
-  }
+.ds-inline-disclosure[open] > summary::before {
+  content: '−';
 }
