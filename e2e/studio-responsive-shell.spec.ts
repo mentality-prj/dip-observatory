@@ -58,10 +58,25 @@ test.describe('Studio responsive shell', () => {
       await expect(footer.getByRole('navigation')).toHaveCount(0)
 
       const footerBrandBox = await footer.locator('[data-footer-brand]').boundingBox()
+      const footerDisclaimer = footer.locator('[data-footer-disclaimer]')
+      const footerDisclaimerBox = await footerDisclaimer.boundingBox()
       const footerCopyrightBox = await footer.locator('[data-footer-copyright]').boundingBox()
       expect(footerBrandBox).not.toBeNull()
+      expect(footerDisclaimerBox).not.toBeNull()
       expect(footerCopyrightBox).not.toBeNull()
-      expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      expect(Math.abs((footerBrandBox?.x ?? 0) - (footerDisclaimerBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      expect(
+        await footerDisclaimer.evaluate(
+          (element) => element.nextElementSibling?.hasAttribute('data-footer-copyright') ?? false
+        )
+      ).toBe(true)
+      if (viewport.width <= 600) {
+        expect(Math.abs((footerDisclaimerBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      } else {
+        expect(footerCopyrightBox?.x ?? 0).toBeGreaterThan(
+          (footerDisclaimerBox?.x ?? 0) + (footerDisclaimerBox?.width ?? 0)
+        )
+      }
       const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
       expect(footerLogoFilter).toBe('brightness(0) invert(1)')
       const footerTheme = await footer.evaluate((element) => {
