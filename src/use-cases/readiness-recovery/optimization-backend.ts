@@ -304,9 +304,7 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number)
       .sort((a, b) => rank(a) - rank(b) || compareCandidateKeys(a, b))
       .slice(0, take))
       unique.set(candidateKey(candidate), candidate)
-  for (const candidate of [...candidates].sort(
-    (a, b) => b.scoreGain - a.scoreGain || compareCandidateKeys(a, b)
-  )) {
+  for (const candidate of [...candidates].sort((a, b) => b.scoreGain - a.scoreGain || compareCandidateKeys(a, b))) {
     if (unique.size >= width) break
     unique.set(candidateKey(candidate), candidate)
   }
@@ -401,9 +399,7 @@ export function retainResourceAwareBeam(
   const structuralTake = width - primaryTake - operationalTake
   const scores = stageScores(input, candidates)
   const scoreOf = (candidate: MutableCandidate) => scores.get(candidateKey(candidate)) ?? Number.NEGATIVE_INFINITY
-  const byPrimary = [...candidates].sort(
-    (a, b) => scoreOf(b) - scoreOf(a) || compareCandidateKeys(a, b)
-  )
+  const byPrimary = [...candidates].sort((a, b) => scoreOf(b) - scoreOf(a) || compareCandidateKeys(a, b))
 
   const maxGain = Math.max(1, ...candidates.map((candidate) => candidate.scoreGain))
   const maxRisk = Math.max(1, ...candidates.map((candidate) => candidate.scoreRisk))
@@ -451,7 +447,10 @@ type BeamRetainer = (
   processedAssetCount: number
 ) => MutableCandidate[]
 
-function generateCandidatesWithRetention(input: ReadinessRecoveryInput, retain: BeamRetainer): CandidateGenerationResult {
+function generateCandidatesWithRetention(
+  input: ReadinessRecoveryInput,
+  retain: BeamRetainer
+): CandidateGenerationResult {
   const started = Date.now()
   const actionByAsset = new Map<string, RecoveryAction[]>()
   for (const action of input.recoveryActions) {
