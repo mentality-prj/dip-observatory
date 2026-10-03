@@ -9,7 +9,6 @@ const viewports = [
 ] as const
 
 const PRODUCT_WORDMARK_FRAME_WIDTH = 124
-const MOBILE_WORDMARK_OPTICAL_INSET = 34
 
 test.describe('Studio responsive shell', () => {
   for (const viewport of viewports) {
@@ -34,20 +33,27 @@ test.describe('Studio responsive shell', () => {
       const shell = page.locator('.studio-shell')
       const lockup = page.locator('.ds-product-lockup')
       const wordmarkFrame = page.locator('.ds-product-lockup-wordmark-frame')
-      const status = page.locator('.studio-core-status')
+      const headerActions = page.locator('.ds-product-header-actions')
+      const status = page.locator('[data-studio-core-status]')
+      const languageControls = page.locator('.studio-language-controls')
       const footer = page.getByTestId('studio-footer')
-      const mobileLocale = page.locator('.studio-language-select')
+      const mobileLocale = page.locator('.studio-language-controls details')
 
       await expect(shell).toBeVisible()
       await expect(lockup).toBeVisible()
       await expect(status).toHaveAttribute('data-state', 'connected')
+      await expect(headerActions.locator(':scope > [data-studio-core-status]')).toBeVisible()
+      await expect(page.locator('.ds-product-header-brand [data-studio-core-status]')).toHaveCount(0)
+      await expect(languageControls).toBeVisible()
       await expect(footer).toBeVisible()
+      await expect(footer).toHaveAttribute('data-variant', 'product')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
       expect(overflow).toBeLessThanOrEqual(1)
 
       const footerBox = await footer.boundingBox()
       expect(footerBox).not.toBeNull()
+      expect(Math.abs((footerBox?.x ?? 0) - 0)).toBeLessThanOrEqual(1)
       expect(Math.abs((footerBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(2)
       await expect(footer.getByRole('navigation')).toHaveCount(0)
 
@@ -57,41 +63,52 @@ test.describe('Studio responsive shell', () => {
       expect(footerCopyrightBox).not.toBeNull()
       expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
       const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
-      expect(footerLogoFilter).not.toBe('none')
+      expect(footerLogoFilter).toBe('none')
+      const footerThemeColors = await footer.evaluate((element) => {
+        const style = getComputedStyle(element)
+        const probe = document.createElement('span')
+        probe.style.position = 'absolute'
+        probe.style.background = 'var(--ds-surface)'
+        probe.style.color = 'var(--ds-text)'
+        element.appendChild(probe)
+        const probeStyle = getComputedStyle(probe)
+        const result = {
+          background: style.backgroundColor,
+          color: style.color,
+          expectedBackground: probeStyle.backgroundColor,
+          expectedColor: probeStyle.color,
+        }
+        probe.remove()
+        return result
+      })
+      expect(footerThemeColors.background).toBe(footerThemeColors.expectedBackground)
+      expect(footerThemeColors.color).toBe(footerThemeColors.expectedColor)
 
       const lockupBox = await lockup.boundingBox()
       const wordmarkFrameBox = await wordmarkFrame.boundingBox()
       const statusBox = await status.boundingBox()
+      const languageBox = await languageControls.boundingBox()
       expect(lockupBox).not.toBeNull()
       expect(wordmarkFrameBox).not.toBeNull()
       expect(statusBox).not.toBeNull()
+      expect(languageBox).not.toBeNull()
 
       // The shared frame remains wide enough to avoid clipping the QDIP artwork.
       expect(Math.abs((wordmarkFrameBox?.width ?? 0) - PRODUCT_WORDMARK_FRAME_WIDTH)).toBeLessThanOrEqual(1)
       const expectedLeft = viewport.width <= 760 ? 14 : 22
       expect(Math.abs((lockupBox?.x ?? 0) - expectedLeft)).toBeLessThanOrEqual(1)
 
-      // Phones compensate for the transparent right-side whitespace inside the
-      // wordmark asset while tablet/desktop keep the shared ProductHeader geometry.
-      const brandGap = (statusBox?.x ?? 0) - ((lockupBox?.x ?? 0) + (lockupBox?.width ?? 0))
-      if (viewport.width <= 760) {
-        expect(brandGap).toBeGreaterThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET - 1)
-        expect(brandGap).toBeLessThanOrEqual(-MOBILE_WORDMARK_OPTICAL_INSET + 1)
-      } else {
-        expect(brandGap).toBeGreaterThanOrEqual(0)
-        expect(brandGap).toBeLessThanOrEqual(2)
-      }
+      // Core connectivity belongs to the right-side action group and remains
+      // immediately before the shared language control at every viewport.
+      expect(statusBox?.x ?? 0).toBeGreaterThan(lockupBox?.x ?? 0)
+      expect((statusBox?.x ?? 0) + (statusBox?.width ?? 0)).toBeLessThanOrEqual((languageBox?.x ?? 0) + 1)
+      const statusCenterY = (statusBox?.y ?? 0) + (statusBox?.height ?? 0) / 2
+      const languageCenterY = (languageBox?.y ?? 0) + (languageBox?.height ?? 0) / 2
+      expect(Math.abs(statusCenterY - languageCenterY)).toBeLessThanOrEqual(2)
 
-      const statusTopOffset = (statusBox?.y ?? 0) - (lockupBox?.y ?? 0)
-      const expectedStatusTop = viewport.width <= 760 ? { min: 20, max: 22 } : { min: 18, max: 20 }
-      expect(statusTopOffset).toBeGreaterThanOrEqual(expectedStatusTop.min)
-      expect(statusTopOffset).toBeLessThanOrEqual(expectedStatusTop.max)
-
-      if (viewport.width <= 760) {
+      if (viewport.width <= 600) {
         await expect(mobileLocale).toBeVisible()
-        const localeBox = await mobileLocale.boundingBox()
-        expect(localeBox).not.toBeNull()
-        expect(localeBox?.height).toBeGreaterThanOrEqual(44)
+        await expect(mobileLocale.locator('summary')).toBeVisible()
       }
 
       if (viewport.width <= 980) {
