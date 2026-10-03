@@ -286,10 +286,17 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number)
   const maxTime = Math.max(1, ...candidates.map((i) => i.scoreTime))
   const maxParts = Math.max(1, ...candidates.map((i) => i.scoreParts))
   const maxRisk = Math.max(1, ...candidates.map((i) => i.scoreRisk))
+  const maxTechnicianHours = Math.max(1, ...candidates.map((i) => i.technicianHours))
+  const maxWorkshopHours = Math.max(1, ...candidates.map((i) => i.workshopHours))
   const rankings = [
     (i: MutableCandidate) => -normalized(i.scoreGain, maxGain) + 0.08 * normalized(i.scoreRisk, maxRisk),
     (i: MutableCandidate) => normalized(i.scoreTime, maxTime) - 0.25 * normalized(i.scoreGain, maxGain),
-    (i: MutableCandidate) => normalized(i.scoreParts, maxParts) - 0.2 * normalized(i.scoreGain, maxGain),
+    (i: MutableCandidate) =>
+      (normalized(i.scoreParts, maxParts) +
+        normalized(i.technicianHours, maxTechnicianHours) +
+        normalized(i.workshopHours, maxWorkshopHours)) /
+        3 -
+      0.25 * normalized(i.scoreGain, maxGain),
     (i: MutableCandidate) => normalized(i.scoreRisk, maxRisk) - 0.2 * normalized(i.scoreGain, maxGain),
   ]
   for (const rank of rankings)
