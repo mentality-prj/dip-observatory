@@ -286,11 +286,7 @@ function scarcePartsPressure(input: ReadinessRecoveryInput, candidate: Candidate
     })
   )
 }
-export function retainDiverseBeam(
-  candidates: MutableCandidate[],
-  width: number,
-  input?: ReadinessRecoveryInput
-) {
+export function retainDiverseBeam(candidates: MutableCandidate[], width: number, input?: ReadinessRecoveryInput) {
   if (candidates.length <= width) return candidates
   const unique = new Map<string, MutableCandidate>()
   const maxGain = Math.max(1, ...candidates.map((i) => i.scoreGain))
@@ -314,7 +310,9 @@ export function retainDiverseBeam(
     for (const candidate of candidates) {
       const cardinality = candidate.selectedActionIds.length
       const current = bestByCardinality.get(cardinality)
-      if (!current || objectiveProxy(candidate) < objectiveProxy(current)) bestByCardinality.set(cardinality, candidate)
+      if (!current || objectiveProxy(candidate) < objectiveProxy(current)) {
+        bestByCardinality.set(cardinality, candidate)
+      }
     }
     for (const candidate of bestByCardinality.values()) unique.set(candidateKey(candidate), candidate)
   }
