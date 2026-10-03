@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
 import { buildReadinessRecoveryDemo } from './demo-data'
-import { emptyCandidate, extendCandidate, retainDiverseBeam, type MutableCandidate } from './optimization-backend'
+import {
+  emptyCandidate,
+  extendCandidate,
+  retainDiverseBeam,
+  type MutableCandidate,
+} from './optimization-backend'
 
 const key = (ids: string[]) => [...ids].sort().join('|')
 const normalized = (value: number, scale: number) => (scale > 0 ? value / scale : value)
@@ -11,7 +16,11 @@ function rank(
   targetKey: string,
   score: (candidate: MutableCandidate) => number
 ) {
-  return [...candidates].sort((a, b) => score(a) - score(b)).findIndex((candidate) => key(candidate.selectedActionIds) === targetKey) + 1
+  return (
+    [...candidates]
+      .sort((a, b) => score(a) - score(b))
+      .findIndex((candidate) => key(candidate.selectedActionIds) === targetKey) + 1
+  )
 }
 
 function traceSkipRanks(input: ReturnType<typeof buildReadinessRecoveryDemo>, targetActions: string[]) {
@@ -79,36 +88,40 @@ function traceSkipRanks(input: ReturnType<typeof buildReadinessRecoveryDemo>, ta
           gainRisk: rank(
             skips,
             targetKey,
-            (candidate) => -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk)
+            (candidate) =>
+              -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk)
           ),
           timeGain: rank(
             skips,
             targetKey,
-            (candidate) => normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain)
+            (candidate) =>
+              normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain)
           ),
           partsGain: rank(
             skips,
             targetKey,
-            (candidate) => normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain)
+            (candidate) =>
+              normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain)
           ),
           riskGain: rank(
             skips,
             targetKey,
-            (candidate) => normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain)
+            (candidate) =>
+              normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain)
           ),
           technicianGain: rank(
             skips,
             targetKey,
-            (candidate) => normalized(candidate.technicianHours, maxTech) - 0.25 * normalized(candidate.scoreGain, maxGain)
+            (candidate) =>
+              normalized(candidate.technicianHours, maxTech) - 0.25 * normalized(candidate.scoreGain, maxGain)
           ),
           gainPerTechnician: rank(
             skips,
             targetKey,
             (candidate) => -candidate.scoreGain / Math.max(1, candidate.technicianHours)
           ),
-          economic,
+          economic: rank(skips, targetKey, economic),
         },
-        economicRank: rank(skips, targetKey, economic),
       }
     }
 
