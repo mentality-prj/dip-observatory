@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
 import { buildReadinessRecoveryDemo } from './demo-data'
+import { actionPartUnits, actionTechnicianHours, expectedActionGain } from './optimization-backend'
 import { epsilonDominates, planReadinessRecovery } from './planner'
+
+function marginalScore(input: ReturnType<typeof buildReadinessRecoveryDemo>, actionId: string) {
+  const action = input.recoveryActions.find((item) => item.actionId === actionId)
+  if (!action) return Number.POSITIVE_INFINITY
+  const gain = expectedActionGain(input, action)
+  const reliability = action.successProbability * (1 - action.repeatFailureProbability)
+  const cost = Math.max(1, actionTechnicianHours(action) + action.workshopHours + actionPartUnits(action))
+  const dependencyPenalty = 1 + (action.dependsOnActionIds?.length ?? 0) * 0.12
+  return (gain * reliability) / (cost * dependencyPenalty)
+}
 
 describe('Readiness Recovery incumbent polishing', () => {
   it('finds a native epsilon-dominator of the strong greedy baseline without search truncation', () => {
@@ -16,6 +27,9 @@ describe('Readiness Recovery incumbent polishing', () => {
     const dominators = result.frontier.filter((scenario) =>
       epsilonDominates(scenario, baseline, input.settings.epsilon)
     )
+    const deletionPriority = [...baseline.selectedActions]
+      .sort((a, b) => marginalScore(input, a) - marginalScore(input, b) || a.localeCompare(b))
+      .map((actionId, index) => ({ actionId, rank: index + 1, score: marginalScore(input, actionId) }))
 
     console.log(
       'RR_INCUMBENT_POLISHING',
@@ -35,6 +49,7 @@ describe('Readiness Recovery incumbent polishing', () => {
         truncatedByTimeBudget: result.diagnostics.truncatedByTimeBudget,
         frontierCount: result.frontier.length,
         dominatorCount: dominators.length,
+        deletionPriority,
       })
     )
 
