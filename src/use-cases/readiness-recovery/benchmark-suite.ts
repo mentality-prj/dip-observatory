@@ -11,6 +11,7 @@ import { benchmarkReadinessResult, type BenchmarkAdvantageKind, type BenchmarkVe
 import { CASCADING_ROBUSTNESS_VARIANTS } from './cascading-resource-conflict'
 import { planReadinessRecovery } from './planner'
 import {
+  BoundedFeasibilityBackend,
   MATERIAL_ACTIONS,
   actionPartUnits,
   actionTechnicianHours,
@@ -27,6 +28,10 @@ const STRONG_BASELINES: BaselineKind[] = ['RISK_AWARE_GREEDY', 'LOOKAHEAD_2']
 
 function cloneInput(input: ReadinessRecoveryInput): ReadinessRecoveryInput {
   return structuredClone(input)
+}
+
+function candidateKey(actionIds: string[]) {
+  return [...actionIds].sort().join('|')
 }
 
 function riskAdjustedScore(input: ReadinessRecoveryInput, action: RecoveryAction) {
@@ -85,6 +90,50 @@ function riskAwareCandidate(input: ReadinessRecoveryInput) {
     else rejected.push(action.actionId)
   }
   return { candidate, rejected }
+}
+
+function rebuildCandidate(input: ReadinessRecoveryInput, actionIds: string[]): CandidatePlan | null {
+  const actionById = new Map(input.recoveryActions.map((action) => [action.actionId, action]))
+  let candidate: MutableCandidate = emptyCandidate()
+  for (const actionId of actionIds) {
+    const action = actionById.get(actionId)
+    if (!action) return null
+    const next = extendCandidate(input, candidate, action)
+    if (!next) return null
+    candidate = next
+  }
+  return validateCompleteCandidate(input, candidate) ? candidate : null
+}
+
+function deletionNeighborhood(input: ReadinessRecoveryInput, seed: CandidatePlan) {
+  const unique = new Map<string, CandidatePlan>()
+  if (validateCompleteCandidate(input, seed)) unique.set(candidateKey(seed.selectedActionIds), seed)
+
+  for (const removedActionId of seed.selectedActionIds) {
+    const actionIds = seed.selectedActionIds.filter((actionId) => actionId !== removedActionId)
+    const candidate = rebuildCandidate(input, actionIds)
+    if (candidate) unique.set(candidateKey(candidate.selectedActionIds), candidate)
+  }
+
+  return [...unique.values()]
+}
+
+class IncumbentPolishingBackend implements OptimizationBackend {
+  constructor(private readonly seed: CandidatePlan) {}
+
+  generateCandidates(input: ReadinessRecoveryInput): CandidateGenerationResult {
+    const native = new BoundedFeasibilityBackend().generateCandidates(input)
+    const unique = new Map<string, CandidatePlan>()
+    for (const candidate of native.candidates) unique.set(candidateKey(candidate.selectedActionIds), candidate)
+    for (const candidate of deletionNeighborhood(input, this.seed)) {
+      unique.set(candidateKey(candidate.selectedActionIds), candidate)
+    }
+
+    return {
+      ...native,
+      candidates: [...unique.values()].slice(0, input.settings.maxCandidates),
+    }
+  }
 }
 
 function pairScore(input: ReadinessRecoveryInput, a: RecoveryAction, b: RecoveryAction) {
@@ -181,7 +230,8 @@ function evaluateStrongBaseline(
 }
 
 export function planReadinessRecoveryWithBenchmarkSuite(input: ReadinessRecoveryInput): ReadinessRecoveryResult {
-  const result = planReadinessRecovery(input)
+  const riskAware = riskAwareCandidate(input)
+  const result = planReadinessRecovery(input, new IncumbentPolishingBackend(riskAware.candidate))
   const strong = STRONG_BASELINES.map((kind) => evaluateStrongBaseline(input, kind))
   return { ...result, baselines: [...result.baselines, ...strong] }
 }
