@@ -8,7 +8,7 @@ export function StudioFooter() {
   return (
     <QdipFooter
       locale={locale}
-      variant="product"
+      variant="studio"
       showNavigation={false}
       testId="studio-footer"
       className="studio-site-footer"
