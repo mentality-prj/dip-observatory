@@ -81,7 +81,7 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
       .filter((actionId): actionId is string => Boolean(actionId))
     const targetKey = candidateKey(targetPrefix)
     const target = next.find((candidate) => candidateKey(candidate.selectedActionIds) === targetKey)
-    const retained = retainDiverseBeam(next, input.settings.beamWidth)
+    const retained = retainDiverseBeam(next, input.settings.beamWidth, input)
     const targetRetained = retained.some((candidate) => candidateKey(candidate.selectedActionIds) === targetKey)
 
     if (target && !targetRetained) {
