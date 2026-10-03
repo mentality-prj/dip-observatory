@@ -25,8 +25,8 @@ describe('Readiness Recovery epsilon-Pareto search retention', () => {
     const generatedKeys = new Set(generated.candidates.map((candidate) => candidateKey(candidate.selectedActionIds)))
 
     expect(knownImprovingNeighbors.some((key) => generatedKeys.has(key))).toBe(true)
-    expect(
-      benchmarked.frontier.some((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon))
-    ).toBe(true)
+    expect(benchmarked.frontier.some((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon))).toBe(
+      true
+    )
   }, 20_000)
 })
