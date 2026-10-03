@@ -23,18 +23,18 @@
   cursor: pointer;
 }
 
-.ds-inline-disclosure > summary {
+.studio-main details > summary {
   display: inline-flex;
   align-items: center;
   gap: var(--ds-space-2);
   list-style: none;
 }
 
-.ds-inline-disclosure > summary::-webkit-details-marker {
+.studio-main details > summary::-webkit-details-marker {
   display: none;
 }
 
-.ds-inline-disclosure > summary::before {
+.studio-main details > summary::before {
   display: grid;
   width: 1.15rem;
   height: 1.15rem;
@@ -50,6 +50,6 @@
   line-height: 1;
 }
 
-.ds-inline-disclosure[open] > summary::before {
+.studio-main details[open] > summary::before {
   content: '−';
 }
