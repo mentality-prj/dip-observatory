@@ -292,11 +292,13 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number)
     (i: MutableCandidate) => -normalized(i.scoreGain, maxGain) + 0.08 * normalized(i.scoreRisk, maxRisk),
     (i: MutableCandidate) => normalized(i.scoreTime, maxTime) - 0.25 * normalized(i.scoreGain, maxGain),
     (i: MutableCandidate) =>
-      (normalized(i.scoreParts, maxParts) +
+      (normalized(i.scoreTime, maxTime) +
+        normalized(i.scoreParts, maxParts) +
+        normalized(i.scoreRisk, maxRisk) +
         normalized(i.technicianHours, maxTechnicianHours) +
         normalized(i.workshopHours, maxWorkshopHours)) /
-        3 -
-      0.25 * normalized(i.scoreGain, maxGain),
+        5 -
+      0.5 * normalized(i.scoreGain, maxGain),
     (i: MutableCandidate) => normalized(i.scoreRisk, maxRisk) - 0.2 * normalized(i.scoreGain, maxGain),
   ]
   for (const rank of rankings)
