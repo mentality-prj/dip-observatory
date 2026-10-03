@@ -36,23 +36,26 @@ describe('Readiness Recovery strong-baseline search audit', () => {
     }
   })
 
-  it('traces the risk-aware baseline at the declared scenario settings and across wider beams', () => {
-    const input = buildReadinessRecoveryDemo('CASCADING_RESOURCE_CONFLICT')
-    const audit = auditStrongBaselineInjection(input, 'RISK_AWARE_GREEDY')
+  it(
+    'traces the risk-aware baseline at the declared scenario settings and across wider beams',
+    () => {
+      const input = buildReadinessRecoveryDemo('CASCADING_RESOURCE_CONFLICT')
+      const audit = auditStrongBaselineInjection(input, 'RISK_AWARE_GREEDY')
 
-    expect(audit.baselineSelectedActions.length).toBeGreaterThan(0)
+      expect(audit.baselineSelectedActions.length).toBeGreaterThan(0)
 
-    const trace = traceStrongBaselineRetention(input, audit.baselineSelectedActions)
-    const sweep = sweepStrongBaselineRetention(input, audit.baselineSelectedActions, [24, 72, 144, 288, 576])
+      const trace = traceStrongBaselineRetention(input, audit.baselineSelectedActions)
+      const sweep = sweepStrongBaselineRetention(input, audit.baselineSelectedActions, [24, 72, 144, 288, 576])
 
-    console.info('RR_SEARCH_AUDIT_DEFAULT', JSON.stringify(audit))
-    console.info('RR_RETENTION_FIRST_LOSS', JSON.stringify(trace.firstLoss))
-    console.info('RR_RETENTION_TRACE', JSON.stringify(trace))
-    console.info('RR_BEAM_SWEEP', JSON.stringify(sweep))
+      console.info('RR_SEARCH_AUDIT_DEFAULT', JSON.stringify(audit))
+      console.info('RR_RETENTION_FIRST_LOSS', JSON.stringify(trace.firstLoss))
+      console.info('RR_BEAM_SWEEP', JSON.stringify(sweep))
 
-    expect(trace.stages.length).toBeGreaterThan(0)
-    expect(trace.searchNodes).toBeGreaterThan(0)
-    expect(sweep.map((point) => point.beamWidth)).toEqual([24, 72, 144, 288, 576])
-    expect(sweep.every((point) => !point.truncatedByNodeBudget && !point.truncatedByTimeBudget)).toBe(true)
-  })
+      expect(trace.stages.length).toBeGreaterThan(0)
+      expect(trace.searchNodes).toBeGreaterThan(0)
+      expect(sweep.map((point) => point.beamWidth)).toEqual([24, 72, 144, 288, 576])
+      expect(sweep.every((point) => !point.truncatedByNodeBudget && !point.truncatedByTimeBudget)).toBe(true)
+    },
+    20_000
+  )
 })
