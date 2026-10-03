@@ -46,7 +46,7 @@ test.describe('Studio responsive shell', () => {
       await expect(page.locator('.ds-product-header-brand [data-studio-core-status]')).toHaveCount(0)
       await expect(languageControls).toBeVisible()
       await expect(footer).toBeVisible()
-      await expect(footer).toHaveAttribute('data-variant', 'product')
+      await expect(footer).toHaveAttribute('data-variant', 'studio')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
       expect(overflow).toBeLessThanOrEqual(1)
@@ -58,31 +58,41 @@ test.describe('Studio responsive shell', () => {
       await expect(footer.getByRole('navigation')).toHaveCount(0)
 
       const footerBrandBox = await footer.locator('[data-footer-brand]').boundingBox()
+      const footerDisclaimer = footer.locator('[data-footer-disclaimer]')
+      const footerDisclaimerBox = await footerDisclaimer.boundingBox()
       const footerCopyrightBox = await footer.locator('[data-footer-copyright]').boundingBox()
       expect(footerBrandBox).not.toBeNull()
+      expect(footerDisclaimerBox).not.toBeNull()
       expect(footerCopyrightBox).not.toBeNull()
-      expect(Math.abs((footerBrandBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      expect(Math.abs((footerBrandBox?.x ?? 0) - (footerDisclaimerBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      expect(
+        await footerDisclaimer.evaluate(
+          (element) => element.nextElementSibling?.hasAttribute('data-footer-copyright') ?? false
+        )
+      ).toBe(true)
+      if (viewport.width <= 600) {
+        expect(Math.abs((footerDisclaimerBox?.x ?? 0) - (footerCopyrightBox?.x ?? 0))).toBeLessThanOrEqual(1)
+      } else {
+        expect(footerCopyrightBox?.x ?? 0).toBeGreaterThan(
+          (footerDisclaimerBox?.x ?? 0) + (footerDisclaimerBox?.width ?? 0)
+        )
+      }
       const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
-      expect(footerLogoFilter).toBe('none')
-      const footerThemeColors = await footer.evaluate((element) => {
+      expect(footerLogoFilter).toBe('brightness(0) invert(1)')
+      const footerTheme = await footer.evaluate((element) => {
         const style = getComputedStyle(element)
-        const probe = document.createElement('span')
-        probe.style.position = 'absolute'
-        probe.style.background = 'var(--ds-surface)'
-        probe.style.color = 'var(--ds-text)'
-        element.appendChild(probe)
-        const probeStyle = getComputedStyle(probe)
-        const result = {
-          background: style.backgroundColor,
+        return {
+          backgroundImage: style.backgroundImage,
           color: style.color,
-          expectedBackground: probeStyle.backgroundColor,
-          expectedColor: probeStyle.color,
+          position: style.position,
+          zIndex: style.zIndex,
         }
-        probe.remove()
-        return result
       })
-      expect(footerThemeColors.background).toBe(footerThemeColors.expectedBackground)
-      expect(footerThemeColors.color).toBe(footerThemeColors.expectedColor)
+      expect(footerTheme.backgroundImage).toContain('radial-gradient')
+      expect(footerTheme.backgroundImage).toContain('linear-gradient')
+      expect(footerTheme.color).toBe('rgb(255, 255, 255)')
+      expect(footerTheme.position).toBe('relative')
+      expect(footerTheme.zIndex).toBe('2')
 
       const lockupBox = await lockup.boundingBox()
       const wordmarkFrameBox = await wordmarkFrame.boundingBox()
