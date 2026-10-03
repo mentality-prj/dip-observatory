@@ -82,6 +82,8 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
       const maxTime = Math.max(1, ...next.map((candidate) => candidate.scoreTime))
       const maxParts = Math.max(1, ...next.map((candidate) => candidate.scoreParts))
       const maxRisk = Math.max(1, ...next.map((candidate) => candidate.scoreRisk))
+      const maxTechnicianHours = Math.max(1, ...next.map((candidate) => candidate.technicianHours))
+      const skipCandidates = next.filter((candidate) => candidate.id.endsWith(':skip'))
       const ranks = {
         gainRisk: (candidate: MutableCandidate) =>
           -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
@@ -91,6 +93,15 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain),
         riskGain: (candidate: MutableCandidate) =>
           normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain),
+        technicianGain: (candidate: MutableCandidate) =>
+          normalized(candidate.technicianHours, maxTechnicianHours) - 0.25 * normalized(candidate.scoreGain, maxGain),
+        economic: (candidate: MutableCandidate) =>
+          (normalized(candidate.scoreTime, maxTime) +
+            normalized(candidate.scoreParts, maxParts) +
+            normalized(candidate.scoreRisk, maxRisk) +
+            normalized(candidate.technicianHours, maxTechnicianHours)) /
+            4 -
+          0.5 * normalized(candidate.scoreGain, maxGain),
         gainOnly: (candidate: MutableCandidate) => -candidate.scoreGain,
       }
 
@@ -102,18 +113,31 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
         perRankTake: Math.max(1, Math.floor(input.settings.beamWidth / 4)),
         actionCount: target.selectedActionIds.length,
         skipCount: stageIndex + 1 - target.selectedActionIds.length,
+        skipCandidates: skipCandidates.length,
         scores: {
           gain: target.scoreGain,
           time: target.scoreTime,
           parts: target.scoreParts,
           risk: target.scoreRisk,
+          technicianHours: target.technicianHours,
         },
         rankPositions: {
           gainRisk: rankPosition(next, targetKey, ranks.gainRisk),
           timeGain: rankPosition(next, targetKey, ranks.timeGain),
           partsGain: rankPosition(next, targetKey, ranks.partsGain),
           riskGain: rankPosition(next, targetKey, ranks.riskGain),
+          technicianGain: rankPosition(next, targetKey, ranks.technicianGain),
+          economic: rankPosition(next, targetKey, ranks.economic),
           gainOnly: rankPosition(next, targetKey, ranks.gainOnly),
+        },
+        skipRankPositions: {
+          gainRisk: rankPosition(skipCandidates, targetKey, ranks.gainRisk),
+          timeGain: rankPosition(skipCandidates, targetKey, ranks.timeGain),
+          partsGain: rankPosition(skipCandidates, targetKey, ranks.partsGain),
+          riskGain: rankPosition(skipCandidates, targetKey, ranks.riskGain),
+          technicianGain: rankPosition(skipCandidates, targetKey, ranks.technicianGain),
+          economic: rankPosition(skipCandidates, targetKey, ranks.economic),
+          gainOnly: rankPosition(skipCandidates, targetKey, ranks.gainOnly),
         },
       }
     }
