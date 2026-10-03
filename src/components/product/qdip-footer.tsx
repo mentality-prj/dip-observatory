@@ -91,7 +91,9 @@ export function QdipFooter({
         ) : null}
 
         <div className={styles.meta}>
-          <span className={styles.disclaimer}>{copy('disclaimer')}</span>
+          <span className={styles.disclaimer} data-footer-disclaimer>
+            {copy('disclaimer')}
+          </span>
           <span className={styles.copyright} data-footer-copyright>
             © {new Date().getFullYear()} QDIP
           </span>
