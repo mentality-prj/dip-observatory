@@ -278,62 +278,27 @@ function candidateKey(candidate: CandidatePlan) {
 function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
-function scarcePartsPressure(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
-  return sum(
-    Object.entries(candidate.partsConsumed).map(([partId, quantity]) => {
-      const supply = (input.resources.spareParts[partId] ?? 0) + (candidate.partsProduced[partId] ?? 0)
-      return quantity / Math.max(1, supply)
-    })
-  )
-}
-export function retainDiverseBeam(candidates: MutableCandidate[], width: number, input?: ReadinessRecoveryInput) {
+export function retainDiverseBeam(
+  candidates: MutableCandidate[],
+  width: number,
+  input?: ReadinessRecoveryInput
+) {
+  void input
   if (candidates.length <= width) return candidates
   const unique = new Map<string, MutableCandidate>()
+  const take = Math.max(1, Math.floor(width / 4))
   const maxGain = Math.max(1, ...candidates.map((i) => i.scoreGain))
   const maxTime = Math.max(1, ...candidates.map((i) => i.scoreTime))
-  const maxParts = Math.max(1, ...candidates.map((i) => i.scoreParts))
   const maxRisk = Math.max(1, ...candidates.map((i) => i.scoreRisk))
-  const maxTechnicianHours = Math.max(1, ...candidates.map((i) => i.technicianHours))
-  const maxScarcity = input ? Math.max(1, ...candidates.map((i) => scarcePartsPressure(input, i))) : maxParts
-  const partsPressure = (candidate: MutableCandidate) =>
-    input ? scarcePartsPressure(input, candidate) : candidate.scoreParts
-  const objectiveProxy = (candidate: MutableCandidate) =>
-    (normalized(candidate.scoreTime, maxTime) +
-      normalized(candidate.scoreRisk, maxRisk) +
-      normalized(candidate.technicianHours, maxTechnicianHours) +
-      normalized(partsPressure(candidate), maxScarcity)) /
-      4 -
-    0.5 * normalized(candidate.scoreGain, maxGain)
-
-  if (input) {
-    const bestByCardinality = new Map<number, MutableCandidate[]>()
-    for (const candidate of candidates) {
-      const cardinality = candidate.selectedActionIds.length
-      const representatives = bestByCardinality.get(cardinality) ?? []
-      representatives.push(candidate)
-      representatives.sort((a, b) => objectiveProxy(a) - objectiveProxy(b))
-      if (representatives.length > 2) representatives.pop()
-      bestByCardinality.set(cardinality, representatives)
-    }
-    for (const representatives of bestByCardinality.values()) {
-      for (const candidate of representatives) unique.set(candidateKey(candidate), candidate)
-    }
-  }
-
-  const remaining = Math.max(0, width - unique.size)
-  const take = Math.max(1, Math.floor(remaining / 4))
   const rankings = [
     (i: MutableCandidate) => -normalized(i.scoreGain, maxGain) + 0.08 * normalized(i.scoreRisk, maxRisk),
     (i: MutableCandidate) => normalized(i.scoreTime, maxTime) - 0.25 * normalized(i.scoreGain, maxGain),
-    (i: MutableCandidate) => normalized(partsPressure(i), maxScarcity) - 0.2 * normalized(i.scoreGain, maxGain),
+    (i: MutableCandidate) => -i.scoreGain / Math.max(1, i.technicianHours),
     (i: MutableCandidate) => normalized(i.scoreRisk, maxRisk) - 0.2 * normalized(i.scoreGain, maxGain),
   ]
-  for (const rank of rankings) {
-    for (const candidate of [...candidates].sort((a, b) => rank(a) - rank(b)).slice(0, take)) {
-      if (unique.size >= width) break
+  for (const rank of rankings)
+    for (const candidate of [...candidates].sort((a, b) => rank(a) - rank(b)).slice(0, take))
       unique.set(candidateKey(candidate), candidate)
-    }
-  }
   for (const candidate of [...candidates].sort((a, b) => b.scoreGain - a.scoreGain)) {
     if (unique.size >= width) break
     unique.set(candidateKey(candidate), candidate)
