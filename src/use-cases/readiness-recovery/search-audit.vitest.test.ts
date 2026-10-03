@@ -46,7 +46,11 @@ describe('Readiness Recovery strong-baseline search audit', () => {
       expect(audit.baselineSelectedActions.length).toBeGreaterThan(0)
 
       const trace = traceStrongBaselineRetention(input, audit.baselineSelectedActions)
-      const sweep = sweepStrongBaselineRetention(input, audit.baselineSelectedActions, [24, 72, 144, 288, 576])
+      const sweep = sweepStrongBaselineRetention(
+        input,
+        audit.baselineSelectedActions,
+        [24, 72, 144, 288, 576]
+      )
       const neighborhood = auditOneAssetNeighborhood(input, audit.baselineSelectedActions)
 
       console.info('RR_SEARCH_AUDIT_DEFAULT', JSON.stringify(audit))
