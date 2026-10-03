@@ -24,7 +24,7 @@
   flex: 1;
   flex-wrap: nowrap;
   align-items: stretch;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--ds-space-1);
   overflow: visible;
 }
@@ -36,7 +36,7 @@
   min-height: 52px;
   flex: 1 1 0;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   padding: var(--ds-space-2);
   border: 1px solid transparent;
@@ -45,7 +45,7 @@
   font-size: var(--ds-text-sm);
   font-weight: 600;
   line-height: 1.18;
-  text-align: center;
+  text-align: left;
   text-decoration: none;
   white-space: normal;
   transition:
@@ -55,7 +55,9 @@
 }
 .navLink > span {
   min-width: 0;
+  flex: 1 1 auto;
   overflow-wrap: anywhere;
+  text-align: left;
 }
 .navIcon {
   width: 16px;
