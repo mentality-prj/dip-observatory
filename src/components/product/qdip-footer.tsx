@@ -54,7 +54,7 @@ export function QdipFooter({
   const copy = createTranslator(locale, 'footer')
   const shared = createTranslator(locale, 'shared')
   const native = variant === 'observatory' || variant === 'studio'
-  const inverseLogo = variant !== 'product'
+  const inverseLogo = variant !== 'product' && variant !== 'studio'
 
   return (
     <footer

@@ -78,7 +78,7 @@ test.describe('Studio responsive shell', () => {
         )
       }
       const footerLogoFilter = await footer.locator('img').evaluate((element) => getComputedStyle(element).filter)
-      expect(footerLogoFilter).toBe('brightness(0) invert(1)')
+      expect(footerLogoFilter).toBe('none')
       const footerTheme = await footer.evaluate((element) => {
         const style = getComputedStyle(element)
         return {
@@ -90,7 +90,7 @@ test.describe('Studio responsive shell', () => {
       })
       expect(footerTheme.backgroundImage).toContain('radial-gradient')
       expect(footerTheme.backgroundImage).toContain('linear-gradient')
-      expect(footerTheme.color).toBe('rgb(255, 255, 255)')
+      expect(footerTheme.color).toBe('rgb(23, 52, 38)')
       expect(footerTheme.position).toBe('relative')
       expect(footerTheme.zIndex).toBe('2')
 
