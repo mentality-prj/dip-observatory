@@ -279,7 +279,10 @@ export function traceStrongBaselineRetention(
 
   return {
     stages,
-    firstLoss: stages.find((stage) => stage.status === 'BEAM_PRUNED' || stage.status === 'EXTENSION_REJECTED_OR_NOT_GENERATED') ?? null,
+    firstLoss:
+      stages.find(
+        (stage) => stage.status === 'BEAM_PRUNED' || stage.status === 'EXTENSION_REJECTED_OR_NOT_GENERATED'
+      ) ?? null,
     searchNodes,
     truncatedByNodeBudget,
     truncatedByTimeBudget,
