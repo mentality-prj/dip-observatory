@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/design-system'
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Stack } from '@/design-system'
 import { pluginIdentity, studioRequest, type Binding, type Dimension, type Plugin } from './contracts'
 import { outputLabel } from './presentation'
 import { JsonField } from './schema-form'
@@ -53,128 +53,134 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
       }}
     >
       <p>{copy.intro}</p>
-      {bindings.map((binding, index) => (
-        <Card key={index}>
-          <CardHeader>
-            <CardTitle>
-              {outputLabel(binding.capability_id, binding.source_path)} →{' '}
-              {dimensions.find((d) => d.id === binding.dimension_id)?.name ?? binding.dimension_id}
-            </CardTitle>
-            <p>
-              {copy.pinnedContracts}: plugin {binding.plugin_version} · capability {binding.capability_version}
-            </p>
-          </CardHeader>
-          <CardContent>
-            {(binding.plugin_version !== plugin.version ||
-              binding.capability_version !== plugin.capability_versions[binding.capability_id]) && (
+      <Stack>
+        {bindings.map((binding, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <CardTitle>
+                {outputLabel(binding.capability_id, binding.source_path)} →{' '}
+                {dimensions.find((d) => d.id === binding.dimension_id)?.name ?? binding.dimension_id}
+              </CardTitle>
+              <p>
+                {copy.pinnedContracts}: plugin {binding.plugin_version} · capability {binding.capability_version}
+              </p>
+            </CardHeader>
+            <CardContent>
+              {(binding.plugin_version !== plugin.version ||
+                binding.capability_version !== plugin.capability_versions[binding.capability_id]) && (
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() =>
+                    update(index, {
+                      plugin_version: plugin.version,
+                      capability_version: plugin.capability_versions[binding.capability_id] ?? '',
+                    })
+                  }
+                >
+                  {copy.useInstalledVersions}
+                </Button>
+              )}
+              <div className="studio-grid">
+                <label className="studio-field">
+                  {copy.bindingId}
+                  <Input required value={binding.id} onChange={(e) => update(index, { id: e.target.value })} />
+                </label>
+                <label className="studio-field">
+                  {copy.version}
+                  <Input
+                    required
+                    value={binding.version}
+                    onChange={(e) => update(index, { version: e.target.value })}
+                  />
+                </label>
+                <label className="studio-field">
+                  {copy.availableOutput}
+                  <select
+                    className="ds-select"
+                    value={`${binding.capability_id}|${binding.dimension_id}|${binding.source_path}`}
+                    onChange={(e) => {
+                      const [capability_id, dimension_id, source_path] = e.target.value.split('|')
+                      update(index, {
+                        capability_id,
+                        capability_version: plugin.capability_versions[capability_id],
+                        dimension_id,
+                        dimension_version: dimensions.find((d) => d.id === dimension_id)?.version ?? '1.0',
+                        source_path,
+                      })
+                    }}
+                  >
+                    {plugin.dimension_outputs.map((o) => (
+                      <option
+                        key={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}
+                        value={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}
+                      >
+                        {outputLabel(o.capability_id, o.source_path)} →{' '}
+                        {dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="studio-field">
+                  {copy.dimensionVersion}
+                  <select
+                    className="ds-select"
+                    value={binding.dimension_version}
+                    onChange={(e) => update(index, { dimension_version: e.target.value })}
+                  >
+                    {!dimensions.some(
+                      (d) => d.id === binding.dimension_id && d.version === binding.dimension_version
+                    ) && (
+                      <option value={binding.dimension_version}>
+                        {binding.dimension_version} ({copy.unavailable})
+                      </option>
+                    )}
+                    {dimensions
+                      .filter((d) => d.id === binding.dimension_id)
+                      .map((d) => (
+                        <option key={d.version}>{d.version}</option>
+                      ))}
+                  </select>
+                </label>
+              </div>
+              <label className="studio-check">
+                <input
+                  type="checkbox"
+                  checked={binding.required}
+                  onChange={(e) => update(index, { required: e.target.checked })}
+                />
+                {copy.requiredOutput}
+              </label>
+              <label className="studio-check">
+                <input
+                  type="checkbox"
+                  checked={binding.enabled}
+                  onChange={(e) => update(index, { enabled: e.target.checked })}
+                />
+                {copy.enabled}
+              </label>
+              <details>
+                <summary>{copy.advancedDetails}</summary>
+                <p>
+                  {copy.internalSourcePath}: <code>{binding.source_path}</code>
+                </p>
+                <JsonField
+                  label={copy.targetPath}
+                  value={binding.mapping}
+                  onChange={(mapping) => update(index, { mapping: mapping as Binding['mapping'] })}
+                />
+              </details>
               <Button
                 variant="secondary"
                 type="button"
-                onClick={() =>
-                  update(index, {
-                    plugin_version: plugin.version,
-                    capability_version: plugin.capability_versions[binding.capability_id] ?? '',
-                  })
-                }
+                onClick={() => setBindings(bindings.filter((_, i) => i !== index))}
               >
-                {copy.useInstalledVersions}
+                {copy.removeBinding}
               </Button>
-            )}
-            <div className="studio-grid">
-              <label className="studio-field">
-                {copy.bindingId}
-                <Input required value={binding.id} onChange={(e) => update(index, { id: e.target.value })} />
-              </label>
-              <label className="studio-field">
-                {copy.version}
-                <Input required value={binding.version} onChange={(e) => update(index, { version: e.target.value })} />
-              </label>
-              <label className="studio-field">
-                {copy.availableOutput}
-                <select
-                  className="ds-select"
-                  value={`${binding.capability_id}|${binding.dimension_id}|${binding.source_path}`}
-                  onChange={(e) => {
-                    const [capability_id, dimension_id, source_path] = e.target.value.split('|')
-                    update(index, {
-                      capability_id,
-                      capability_version: plugin.capability_versions[capability_id],
-                      dimension_id,
-                      dimension_version: dimensions.find((d) => d.id === dimension_id)?.version ?? '1.0',
-                      source_path,
-                    })
-                  }}
-                >
-                  {plugin.dimension_outputs.map((o) => (
-                    <option
-                      key={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}
-                      value={`${o.capability_id}|${o.dimension_id}|${o.source_path}`}
-                    >
-                      {outputLabel(o.capability_id, o.source_path)} →{' '}
-                      {dimensions.find((d) => d.id === o.dimension_id)?.name ?? o.dimension_id}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="studio-field">
-                {copy.dimensionVersion}
-                <select
-                  className="ds-select"
-                  value={binding.dimension_version}
-                  onChange={(e) => update(index, { dimension_version: e.target.value })}
-                >
-                  {!dimensions.some(
-                    (d) => d.id === binding.dimension_id && d.version === binding.dimension_version
-                  ) && (
-                    <option value={binding.dimension_version}>
-                      {binding.dimension_version} ({copy.unavailable})
-                    </option>
-                  )}
-                  {dimensions
-                    .filter((d) => d.id === binding.dimension_id)
-                    .map((d) => (
-                      <option key={d.version}>{d.version}</option>
-                    ))}
-                </select>
-              </label>
-            </div>
-            <label className="studio-check">
-              <input
-                type="checkbox"
-                checked={binding.required}
-                onChange={(e) => update(index, { required: e.target.checked })}
-              />
-              {copy.requiredOutput}
-            </label>
-            <label className="studio-check">
-              <input
-                type="checkbox"
-                checked={binding.enabled}
-                onChange={(e) => update(index, { enabled: e.target.checked })}
-              />
-              {copy.enabled}
-            </label>
-            <details>
-              <summary>{copy.advancedDetails}</summary>
-              <p>
-                {copy.internalSourcePath}: <code>{binding.source_path}</code>
-              </p>
-              <JsonField
-                label={copy.targetPath}
-                value={binding.mapping}
-                onChange={(mapping) => update(index, { mapping: mapping as Binding['mapping'] })}
-              />
-            </details>
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => setBindings(bindings.filter((_, i) => i !== index))}
-            >
-              {copy.removeBinding}
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        ))}
+      </Stack>
       <div className="studio-toolbar">
         <Button
           type="button"

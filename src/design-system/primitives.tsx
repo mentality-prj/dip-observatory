@@ -13,6 +13,9 @@ export function Page({ className, ...props }: React.HTMLAttributes<HTMLElement>)
 export function Section({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   return <section className={cn('ds-section', className)} {...props} />
 }
+export function Stack({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('ds-stack', className)} {...props} />
+}
 
 export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
   ({ className, ...props }, ref) => <select ref={ref} className={cn('ds-select', className)} {...props} />
