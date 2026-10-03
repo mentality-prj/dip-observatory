@@ -278,6 +278,13 @@ function candidateKey(candidate: CandidatePlan) {
 function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
+function compareCandidateKeys(left: CandidatePlan, right: CandidatePlan) {
+  const leftKey = candidateKey(left)
+  const rightKey = candidateKey(right)
+  return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0
+}
+
+/** Legacy four-channel retention, preserved as a test control and for diagnostic tracing. */
 export function retainDiverseBeam(candidates: MutableCandidate[], width: number) {
   if (candidates.length <= width) return candidates
   const unique = new Map<string, MutableCandidate>()
@@ -293,14 +300,140 @@ export function retainDiverseBeam(candidates: MutableCandidate[], width: number)
     (i: MutableCandidate) => normalized(i.scoreRisk, maxRisk) - 0.2 * normalized(i.scoreGain, maxGain),
   ]
   for (const rank of rankings)
-    for (const candidate of [...candidates].sort((a, b) => rank(a) - rank(b)).slice(0, take))
+    for (const candidate of [...candidates]
+      .sort((a, b) => rank(a) - rank(b) || compareCandidateKeys(a, b))
+      .slice(0, take))
       unique.set(candidateKey(candidate), candidate)
-  for (const candidate of [...candidates].sort((a, b) => b.scoreGain - a.scoreGain)) {
+  for (const candidate of [...candidates].sort(
+    (a, b) => b.scoreGain - a.scoreGain || compareCandidateKeys(a, b)
+  )) {
     if (unique.size >= width) break
     unique.set(candidateKey(candidate), candidate)
   }
   return [...unique.values()].slice(0, width)
 }
+
+export function hasUnresolvedDependency(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
+  const selected = new Set(candidate.selectedActionIds)
+  return selectedActions(input, candidate).some((action) =>
+    (action.dependsOnActionIds ?? []).some((dependencyId) => !selected.has(dependencyId))
+  )
+}
+
+export function bindingResourceSignature(candidate: CandidatePlan) {
+  return [...candidate.bindingConstraints].sort().join('|')
+}
+
+function producesParts(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
+  return selectedActions(input, candidate).some((action) => (action.producedParts?.length ?? 0) > 0)
+}
+
+function technicianPressure(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
+  const usedBySkill: Record<string, number> = {}
+  for (const action of selectedActions(input, candidate))
+    for (const requirement of action.requiredSkills)
+      usedBySkill[requirement.skillId] = (usedBySkill[requirement.skillId] ?? 0) + requirement.technicianHours
+  const utilizations = Object.entries(usedBySkill).map(([skillId, used]) => {
+    const available = input.resources.technicianHours[skillId] ?? 0
+    if (available <= 0) return used > 0 ? 1 : 0
+    return clamp01(used / available)
+  })
+  return utilizations.length ? Math.max(...utilizations) : 0
+}
+
+function workshopPressure(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
+  const available = input.resources.workshopHours
+  if (available <= 0) return candidate.workshopHours > 0 ? 1 : 0
+  return clamp01(candidate.workshopHours / available)
+}
+
+function partPressure(input: ReadinessRecoveryInput, candidate: CandidatePlan) {
+  const utilizations = Object.entries(candidate.partsConsumed)
+    .filter(([, consumed]) => consumed > 0)
+    .map(([partId, consumed]) => {
+      const effectiveAvailable = (input.resources.spareParts[partId] ?? 0) + (candidate.partsProduced[partId] ?? 0)
+      return effectiveAvailable > 0 ? clamp01(consumed / effectiveAvailable) : 1
+    })
+  return utilizations.length ? Math.max(...utilizations) : 0
+}
+
+function stageScores(input: ReadinessRecoveryInput, candidates: MutableCandidate[]) {
+  const maxGain = Math.max(0, ...candidates.map((candidate) => candidate.scoreGain))
+  const maxRisk = Math.max(0, ...candidates.map((candidate) => candidate.scoreRisk))
+  return new Map(
+    candidates.map((candidate) => {
+      const gainUtil = maxGain > 0 ? candidate.scoreGain / maxGain : 0
+      const riskPressure = maxRisk > 0 ? clamp01(candidate.scoreRisk / maxRisk) : 0
+      const resourcePressure =
+        (technicianPressure(input, candidate) +
+          workshopPressure(input, candidate) +
+          partPressure(input, candidate) +
+          riskPressure) /
+        4
+      return [candidateKey(candidate), gainUtil - resourcePressure]
+    })
+  )
+}
+
+function structuralKey(input: ReadinessRecoveryInput, candidate: MutableCandidate, processedAssetCount: number) {
+  const actionCount = candidate.selectedActionIds.length
+  const skipCount = Math.max(0, processedAssetCount - actionCount)
+  return JSON.stringify([
+    actionCount,
+    skipCount,
+    hasUnresolvedDependency(input, candidate),
+    producesParts(input, candidate),
+    bindingResourceSignature(candidate),
+  ])
+}
+
+/** Frozen 50/25/25 resource-aware retention; at width 72 this is exactly 36/18/18. */
+export function retainResourceAwareBeam(
+  candidates: MutableCandidate[],
+  width: number,
+  input: ReadinessRecoveryInput,
+  processedAssetCount: number
+) {
+  if (candidates.length <= width) return [...candidates].sort(compareCandidateKeys)
+
+  const primaryTake = Math.floor(width / 2)
+  const operationalTake = Math.floor(width / 4)
+  const structuralTake = width - primaryTake - operationalTake
+  const scores = stageScores(input, candidates)
+  const scoreOf = (candidate: MutableCandidate) => scores.get(candidateKey(candidate)) ?? Number.NEGATIVE_INFINITY
+  const byPrimary = [...candidates].sort(
+    (a, b) => scoreOf(b) - scoreOf(a) || compareCandidateKeys(a, b)
+  )
+
+  const maxGain = Math.max(1, ...candidates.map((candidate) => candidate.scoreGain))
+  const maxRisk = Math.max(1, ...candidates.map((candidate) => candidate.scoreRisk))
+  const operationalRank = (candidate: MutableCandidate) =>
+    -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk)
+  const byOperational = [...candidates].sort(
+    (a, b) => operationalRank(a) - operationalRank(b) || compareCandidateKeys(a, b)
+  )
+
+  const bestByStructuralKey = new Map<string, MutableCandidate>()
+  for (const candidate of byPrimary) {
+    const key = structuralKey(input, candidate, processedAssetCount)
+    if (!bestByStructuralKey.has(key)) bestByStructuralKey.set(key, candidate)
+  }
+  const byStructural = [...bestByStructuralKey.values()].sort(
+    (a, b) => scoreOf(b) - scoreOf(a) || compareCandidateKeys(a, b)
+  )
+
+  const unique = new Map<string, MutableCandidate>()
+  const add = (candidate: MutableCandidate) => unique.set(candidateKey(candidate), candidate)
+  byPrimary.slice(0, primaryTake).forEach(add)
+  byOperational.slice(0, operationalTake).forEach(add)
+  byStructural.slice(0, structuralTake).forEach(add)
+  for (const candidate of byPrimary) {
+    if (unique.size >= width) break
+    add(candidate)
+  }
+  return [...unique.values()].slice(0, width)
+}
+
 export type CandidateGenerationResult = {
   candidates: CandidatePlan[]
   searchNodes: number
@@ -310,54 +443,73 @@ export type CandidateGenerationResult = {
 export interface OptimizationBackend {
   generateCandidates(input: ReadinessRecoveryInput): CandidateGenerationResult
 }
+
+type BeamRetainer = (
+  candidates: MutableCandidate[],
+  width: number,
+  input: ReadinessRecoveryInput,
+  processedAssetCount: number
+) => MutableCandidate[]
+
+function generateCandidatesWithRetention(input: ReadinessRecoveryInput, retain: BeamRetainer): CandidateGenerationResult {
+  const started = Date.now()
+  const actionByAsset = new Map<string, RecoveryAction[]>()
+  for (const action of input.recoveryActions) {
+    if (action.type === 'DEFER') continue
+    const list = actionByAsset.get(action.assetId) ?? []
+    list.push(action)
+    actionByAsset.set(action.assetId, list)
+  }
+  const impaired = input.assets
+    .filter((asset) => asset.currentState !== 'READY')
+    .sort((a, b) => a.assetId.localeCompare(b.assetId))
+  let beam: MutableCandidate[] = [emptyCandidate()]
+  let searchNodes = 0
+  let truncatedByNodeBudget = false
+  let truncatedByTimeBudget = false
+  for (let stageIndex = 0; stageIndex < impaired.length; stageIndex += 1) {
+    const asset = impaired[stageIndex]
+    const options = [...(actionByAsset.get(asset.assetId) ?? []), null]
+    const next: MutableCandidate[] = []
+    for (const candidate of beam) {
+      for (const action of options) {
+        if (searchNodes >= input.settings.maxSearchNodes) {
+          truncatedByNodeBudget = true
+          break
+        }
+        if (Date.now() - started >= input.settings.maxSolveTimeMs) {
+          truncatedByTimeBudget = true
+          break
+        }
+        searchNodes += 1
+        const extended = extendCandidate(input, candidate, action)
+        if (extended) next.push(extended)
+      }
+      if (truncatedByNodeBudget || truncatedByTimeBudget) break
+    }
+    beam = retain(next, input.settings.beamWidth, input, stageIndex + 1)
+    if (!beam.length || truncatedByNodeBudget || truncatedByTimeBudget) break
+  }
+  const unique = new Map<string, CandidatePlan>()
+  for (const candidate of beam) {
+    if (validateCompleteCandidate(input, candidate)) unique.set(candidateKey(candidate), candidate)
+  }
+  return {
+    candidates: [...unique.values()].slice(0, input.settings.maxCandidates),
+    searchNodes,
+    truncatedByNodeBudget,
+    truncatedByTimeBudget,
+  }
+}
+
+export class LegacyBoundedFeasibilityBackend implements OptimizationBackend {
+  generateCandidates(input: ReadinessRecoveryInput): CandidateGenerationResult {
+    return generateCandidatesWithRetention(input, (candidates, width) => retainDiverseBeam(candidates, width))
+  }
+}
+
 export class BoundedFeasibilityBackend implements OptimizationBackend {
   generateCandidates(input: ReadinessRecoveryInput): CandidateGenerationResult {
-    const started = Date.now()
-    const actionByAsset = new Map<string, RecoveryAction[]>()
-    for (const action of input.recoveryActions) {
-      if (action.type === 'DEFER') continue
-      const list = actionByAsset.get(action.assetId) ?? []
-      list.push(action)
-      actionByAsset.set(action.assetId, list)
-    }
-    const impaired = input.assets
-      .filter((a) => a.currentState !== 'READY')
-      .sort((a, b) => a.assetId.localeCompare(b.assetId))
-    let beam: MutableCandidate[] = [emptyCandidate()]
-    let searchNodes = 0,
-      truncatedByNodeBudget = false,
-      truncatedByTimeBudget = false
-    for (const asset of impaired) {
-      const options = [...(actionByAsset.get(asset.assetId) ?? []), null]
-      const next: MutableCandidate[] = []
-      for (const candidate of beam) {
-        for (const action of options) {
-          if (searchNodes >= input.settings.maxSearchNodes) {
-            truncatedByNodeBudget = true
-            break
-          }
-          if (Date.now() - started >= input.settings.maxSolveTimeMs) {
-            truncatedByTimeBudget = true
-            break
-          }
-          searchNodes++
-          const extended = extendCandidate(input, candidate, action)
-          if (extended) next.push(extended)
-        }
-        if (truncatedByNodeBudget || truncatedByTimeBudget) break
-      }
-      beam = retainDiverseBeam(next, input.settings.beamWidth)
-      if (!beam.length || truncatedByNodeBudget || truncatedByTimeBudget) break
-    }
-    const unique = new Map<string, CandidatePlan>()
-    for (const candidate of beam) {
-      if (validateCompleteCandidate(input, candidate)) unique.set(candidateKey(candidate), candidate)
-    }
-    return {
-      candidates: [...unique.values()].slice(0, input.settings.maxCandidates),
-      searchNodes,
-      truncatedByNodeBudget,
-      truncatedByTimeBudget,
-    }
+    return generateCandidatesWithRetention(input, retainResourceAwareBeam)
   }
 }
