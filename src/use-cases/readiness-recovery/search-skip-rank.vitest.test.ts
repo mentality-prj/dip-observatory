@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { planReadinessRecoveryWithBenchmarkSuite } from './benchmark-suite'
 import { buildReadinessRecoveryDemo } from './demo-data'
-import { emptyCandidate, extendCandidate, retainDiverseBeam, type MutableCandidate } from './optimization-backend'
+import {
+  emptyCandidate,
+  extendCandidate,
+  retainDiverseBeam,
+  type MutableCandidate,
+} from './optimization-backend'
 
 const key = (ids: string[]) => [...ids].sort().join('|')
 const normalized = (value: number, scale: number) => (scale > 0 ? value / scale : value)
@@ -65,17 +70,21 @@ function traceSkipRank(input: ReturnType<typeof buildReadinessRecoveryDemo>, tar
           4 -
         0.5 * normalized(candidate.scoreGain, maxGain)
       const rank = (fn: (candidate: MutableCandidate) => number) =>
-        [...skips].sort((a, b) => fn(a) - fn(b)).findIndex((candidate) => key(candidate.selectedActionIds) === targetKey) + 1
+        [...skips]
+          .sort((a, b) => fn(a) - fn(b))
+          .findIndex((candidate) => key(candidate.selectedActionIds) === targetKey) + 1
       return {
         stage,
         assetId: asset.assetId,
         skipCandidates: skips.length,
         objectiveRank: rank(objective),
         gainRiskRank: rank(
-          (candidate) => -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk)
+          (candidate) =>
+            -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk)
         ),
         timeGainRank: rank(
-          (candidate) => normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain)
+          (candidate) =>
+            normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain)
         ),
         technicianEfficiencyRank: rank(
           (candidate) => -candidate.scoreGain / Math.max(1, candidate.technicianHours)
@@ -96,8 +105,14 @@ describe('Readiness Recovery skip branch rank', () => {
     if (!baseline) return
 
     const traces = [
-      traceSkipRank(input, baseline.selectedActions.filter((id) => id !== 'ASSET-002:limited')),
-      traceSkipRank(input, baseline.selectedActions.filter((id) => id !== 'ASSET-022:full')),
+      traceSkipRank(
+        input,
+        baseline.selectedActions.filter((id) => id !== 'ASSET-002:limited')
+      ),
+      traceSkipRank(
+        input,
+        baseline.selectedActions.filter((id) => id !== 'ASSET-022:full')
+      ),
     ]
     console.log('RR_SKIP_RANK', JSON.stringify(traces))
     expect(traces.every(Boolean)).toBe(true)
