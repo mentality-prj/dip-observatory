@@ -2,13 +2,24 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'QDIP — Decision Engine',
+    name: 'QDIP',
     short_name: 'QDIP',
-    description: 'Decision Engine for consistent, explainable decisions',
-    start_url: '/en',
+    description: 'QDIP turns priorities, constraints and uncertainty into explainable decisions with evidence.',
+    start_url: '/',
     display: 'standalone',
     background_color: '#fcf8f9',
-    theme_color: '#8e2949',
-    icons: [{ src: '/qdip-logo.png', sizes: '300x157', type: 'image/png' }],
+    theme_color: '#7a1838',
+    icons: [
+      {
+        src: '/qdip-icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/qdip-icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
   }
 }
