@@ -50,13 +50,13 @@ test.describe('platform surface routing contract', () => {
     await page.locator('a[href="/en/plugins"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/en\/plugins$/)
 
-    await page.locator('a[data-studio-locale="uk"]:visible').first().click()
+    await page.locator('a[href="/uk/plugins"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/uk\/plugins$/)
 
     await page.locator('a[href="/uk/bindings"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/uk\/bindings$/)
 
-    await page.locator('a[data-studio-locale="pl"]:visible').first().click()
+    await page.locator('a[href="/pl/bindings"]:visible').first().click()
     await expect(page).toHaveURL(/studio\.localhost:3000\/pl\/bindings$/)
 
     await page.locator('a[href="/pl/dimensions"]:visible').first().click()
@@ -161,8 +161,7 @@ test.describe('platform surface routing contract', () => {
     await expect(page.locator('#main-content')).toBeVisible()
 
     const localized = await page.goto('http://observatory.localhost:3000/uk/decisions?decision=test-id', {
-      waitUntil: 'domcontentloaded',
-    })
+      waitUntil: 'domcontentloaded' })
     expect(localized?.status()).toBeLessThan(400)
     await expect(page).toHaveURL(/observatory\.localhost:3000\/uk\/decisions\?decision=test-id$/)
     await expect(page.locator('#main-content')).toBeVisible()
