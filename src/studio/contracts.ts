@@ -47,6 +47,7 @@ export type Binding = {
 }
 
 export type Plugin = {
+  id?: string
   name: string
   version: string
   enabled: boolean
@@ -62,6 +63,10 @@ export type Plugin = {
   }[]
   dimension_bindings: Binding[]
   ui: { label?: string; category?: string }
+}
+
+export function pluginIdentity(plugin: Plugin): string {
+  return plugin.id?.trim() || plugin.name
 }
 
 export type ProfileDimension = {
@@ -154,7 +159,7 @@ export function emptyProfile(plugin?: Plugin): Profile {
     id: '',
     name: '',
     version: '1.0',
-    plugin_id: plugin?.name ?? '',
+    plugin_id: plugin ? pluginIdentity(plugin) : '',
     plugin_version: plugin?.version ?? '',
     capability_id: capability,
     capability_version: plugin?.capability_versions[capability] ?? '',
