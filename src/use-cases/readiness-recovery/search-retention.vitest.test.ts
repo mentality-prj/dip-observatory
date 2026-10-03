@@ -36,6 +36,31 @@ function rankPosition(
   )
 }
 
+function lineageRank(
+  candidates: MutableCandidate[],
+  parentByChildKey: Map<string, string>,
+  targetKey: string,
+  rank: (candidate: MutableCandidate) => number
+) {
+  const targetParentKey = parentByChildKey.get(targetKey)
+  if (!targetParentKey) return { isParentBest: false, rank: 0 }
+
+  const bestByParent = new Map<string, MutableCandidate>()
+  for (const candidate of candidates) {
+    const childKey = candidateKey(candidate.selectedActionIds)
+    const parentKey = parentByChildKey.get(childKey)
+    if (!parentKey) continue
+    const current = bestByParent.get(parentKey)
+    if (!current || rank(candidate) < rank(current)) bestByParent.set(parentKey, candidate)
+  }
+
+  const targetBest = bestByParent.get(targetParentKey)
+  return {
+    isParentBest: targetBest ? candidateKey(targetBest.selectedActionIds) === targetKey : false,
+    rank: targetBest ? rankPosition([...bestByParent.values()], candidateKey(targetBest.selectedActionIds), rank) : 0,
+  }
+}
+
 function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecoveryDemo>, targetActions: string[]) {
   const actionByAsset = new Map<string, typeof input.recoveryActions>()
   const actionById = new Map(input.recoveryActions.map((action) => [action.actionId, action]))
@@ -62,10 +87,15 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
     const asset = impaired[stageIndex]
     processedAssets.push(asset.assetId)
     const next: MutableCandidate[] = []
+    const parentByChildKey = new Map<string, string>()
     for (const candidate of beam) {
+      const parentKey = candidateKey(candidate.selectedActionIds)
       for (const action of [...(actionByAsset.get(asset.assetId) ?? []), null]) {
         const extended = extendCandidate(input, candidate, action)
-        if (extended) next.push(extended)
+        if (extended) {
+          next.push(extended)
+          parentByChildKey.set(candidateKey(extended.selectedActionIds), parentKey)
+        }
       }
     }
 
@@ -83,12 +113,6 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
       const maxParts = Math.max(1, ...next.map((candidate) => candidate.scoreParts))
       const maxRisk = Math.max(1, ...next.map((candidate) => candidate.scoreRisk))
       const maxTechnicianHours = Math.max(1, ...next.map((candidate) => candidate.technicianHours))
-      const skipCandidates = next.filter((candidate) => candidate.id.endsWith(':skip'))
-      const targetActionId = targetActionByAsset.get(asset.assetId)
-      const branchSuffix = targetActionId ? `:${targetActionId}` : ':skip'
-      const branchCandidates = next.filter((candidate) => candidate.id.endsWith(branchSuffix))
-      const branchChoiceCount = (actionByAsset.get(asset.assetId)?.length ?? 0) + 1
-      const fairBranchQuota = Math.max(1, Math.floor(input.settings.beamWidth / branchChoiceCount))
       const ranks = {
         gainRisk: (candidate: MutableCandidate) =>
           -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
@@ -100,13 +124,6 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain),
         technicianGain: (candidate: MutableCandidate) =>
           normalized(candidate.technicianHours, maxTechnicianHours) - 0.25 * normalized(candidate.scoreGain, maxGain),
-        economic: (candidate: MutableCandidate) =>
-          (normalized(candidate.scoreTime, maxTime) +
-            normalized(candidate.scoreParts, maxParts) +
-            normalized(candidate.scoreRisk, maxRisk) +
-            normalized(candidate.technicianHours, maxTechnicianHours)) /
-            4 -
-          0.5 * normalized(candidate.scoreGain, maxGain),
         gainOnly: (candidate: MutableCandidate) => -candidate.scoreGain,
       }
 
@@ -114,48 +131,25 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
         stageIndex,
         assetId: asset.assetId,
         candidatesBeforePrune: next.length,
+        parentCount: beam.length,
         beamWidth: input.settings.beamWidth,
         perRankTake: Math.max(1, Math.floor(input.settings.beamWidth / 4)),
-        actionCount: target.selectedActionIds.length,
-        skipCount: stageIndex + 1 - target.selectedActionIds.length,
-        skipCandidates: skipCandidates.length,
-        branchChoice: targetActionId ?? 'skip',
-        branchChoiceCount,
-        branchCandidates: branchCandidates.length,
-        fairBranchQuota,
-        scores: {
-          gain: target.scoreGain,
-          time: target.scoreTime,
-          parts: target.scoreParts,
-          risk: target.scoreRisk,
-          technicianHours: target.technicianHours,
-        },
+        targetParentRetainedBeforeExpansion: parentByChildKey.has(targetKey),
         rankPositions: {
           gainRisk: rankPosition(next, targetKey, ranks.gainRisk),
           timeGain: rankPosition(next, targetKey, ranks.timeGain),
           partsGain: rankPosition(next, targetKey, ranks.partsGain),
           riskGain: rankPosition(next, targetKey, ranks.riskGain),
           technicianGain: rankPosition(next, targetKey, ranks.technicianGain),
-          economic: rankPosition(next, targetKey, ranks.economic),
           gainOnly: rankPosition(next, targetKey, ranks.gainOnly),
         },
-        skipRankPositions: {
-          gainRisk: rankPosition(skipCandidates, targetKey, ranks.gainRisk),
-          timeGain: rankPosition(skipCandidates, targetKey, ranks.timeGain),
-          partsGain: rankPosition(skipCandidates, targetKey, ranks.partsGain),
-          riskGain: rankPosition(skipCandidates, targetKey, ranks.riskGain),
-          technicianGain: rankPosition(skipCandidates, targetKey, ranks.technicianGain),
-          economic: rankPosition(skipCandidates, targetKey, ranks.economic),
-          gainOnly: rankPosition(skipCandidates, targetKey, ranks.gainOnly),
-        },
-        branchRankPositions: {
-          gainRisk: rankPosition(branchCandidates, targetKey, ranks.gainRisk),
-          timeGain: rankPosition(branchCandidates, targetKey, ranks.timeGain),
-          partsGain: rankPosition(branchCandidates, targetKey, ranks.partsGain),
-          riskGain: rankPosition(branchCandidates, targetKey, ranks.riskGain),
-          technicianGain: rankPosition(branchCandidates, targetKey, ranks.technicianGain),
-          economic: rankPosition(branchCandidates, targetKey, ranks.economic),
-          gainOnly: rankPosition(branchCandidates, targetKey, ranks.gainOnly),
+        lineageRankPositions: {
+          gainRisk: lineageRank(next, parentByChildKey, targetKey, ranks.gainRisk),
+          timeGain: lineageRank(next, parentByChildKey, targetKey, ranks.timeGain),
+          partsGain: lineageRank(next, parentByChildKey, targetKey, ranks.partsGain),
+          riskGain: lineageRank(next, parentByChildKey, targetKey, ranks.riskGain),
+          technicianGain: lineageRank(next, parentByChildKey, targetKey, ranks.technicianGain),
+          gainOnly: lineageRank(next, parentByChildKey, targetKey, ranks.gainOnly),
         },
       }
     }
@@ -167,7 +161,7 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
 }
 
 describe('Readiness Recovery superior-neighbor retention', () => {
-  it('localizes where legacy beam pruning loses the two known improving neighbors', () => {
+  it('localizes lineage collapse for the two known improving neighbors', () => {
     const input = buildReadinessRecoveryDemo('CASCADING_RESOURCE_CONFLICT')
     const benchmarked = planReadinessRecoveryWithBenchmarkSuite(input)
     const baseline = benchmarked.baselines.find((item) => item.kind === 'RISK_AWARE_GREEDY')?.scenario
@@ -196,7 +190,7 @@ describe('Readiness Recovery superior-neighbor retention', () => {
     }))
 
     console.log(
-      'RR_SUPERIOR_NEIGHBOR_TRACE',
+      'RR_LINEAGE_RETENTION_TRACE',
       JSON.stringify({
         generatedCandidates: generated.candidates.length,
         searchNodes: generated.searchNodes,
