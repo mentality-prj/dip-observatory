@@ -24,6 +24,13 @@ function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
 
+function scarcityScore(input: ReturnType<typeof buildReadinessRecoveryDemo>, candidate: MutableCandidate) {
+  return Object.entries(candidate.partsConsumed).reduce((total, [partId, quantity]) => {
+    const supply = (input.resources.spareParts[partId] ?? 0) + (candidate.partsProduced[partId] ?? 0)
+    return total + quantity / Math.max(1, supply)
+  }, 0)
+}
+
 function rankPosition(
   candidates: MutableCandidate[],
   targetKey: string,
@@ -82,6 +89,9 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
       const maxTime = Math.max(1, ...next.map((candidate) => candidate.scoreTime))
       const maxParts = Math.max(1, ...next.map((candidate) => candidate.scoreParts))
       const maxRisk = Math.max(1, ...next.map((candidate) => candidate.scoreRisk))
+      const maxTechnicianHours = Math.max(1, ...next.map((candidate) => candidate.technicianHours))
+      const maxWorkshopHours = Math.max(1, ...next.map((candidate) => candidate.workshopHours))
+      const maxScarcity = Math.max(1, ...next.map((candidate) => scarcityScore(input, candidate)))
       const ranks = {
         gainRisk: (candidate: MutableCandidate) =>
           -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
@@ -91,6 +101,32 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain),
         riskGain: (candidate: MutableCandidate) =>
           normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain),
+        technicianGain: (candidate: MutableCandidate) =>
+          normalized(candidate.technicianHours, maxTechnicianHours) - 0.25 * normalized(candidate.scoreGain, maxGain),
+        workshopGain: (candidate: MutableCandidate) =>
+          normalized(candidate.workshopHours, maxWorkshopHours) - 0.25 * normalized(candidate.scoreGain, maxGain),
+        scarcityGain: (candidate: MutableCandidate) =>
+          normalized(scarcityScore(input, candidate), maxScarcity) - 0.25 * normalized(candidate.scoreGain, maxGain),
+        techScarcityGain: (candidate: MutableCandidate) =>
+          (normalized(candidate.technicianHours, maxTechnicianHours) +
+            normalized(scarcityScore(input, candidate), maxScarcity)) /
+            2 -
+          0.35 * normalized(candidate.scoreGain, maxGain),
+        objectiveProxy: (candidate: MutableCandidate) =>
+          (normalized(candidate.scoreTime, maxTime) +
+            normalized(candidate.scoreRisk, maxRisk) +
+            normalized(candidate.technicianHours, maxTechnicianHours) +
+            normalized(scarcityScore(input, candidate), maxScarcity)) /
+            4 -
+          0.5 * normalized(candidate.scoreGain, maxGain),
+        currentJoint: (candidate: MutableCandidate) =>
+          (normalized(candidate.scoreTime, maxTime) +
+            normalized(candidate.scoreParts, maxParts) +
+            normalized(candidate.scoreRisk, maxRisk) +
+            normalized(candidate.technicianHours, maxTechnicianHours) +
+            normalized(candidate.workshopHours, maxWorkshopHours)) /
+            5 -
+          0.5 * normalized(candidate.scoreGain, maxGain),
         gainOnly: (candidate: MutableCandidate) => -candidate.scoreGain,
       }
 
@@ -107,12 +143,21 @@ function traceTargetRankAtFirstLoss(input: ReturnType<typeof buildReadinessRecov
           time: target.scoreTime,
           parts: target.scoreParts,
           risk: target.scoreRisk,
+          technicianHours: target.technicianHours,
+          workshopHours: target.workshopHours,
+          scarcity: scarcityScore(input, target),
         },
         rankPositions: {
           gainRisk: rankPosition(next, targetKey, ranks.gainRisk),
           timeGain: rankPosition(next, targetKey, ranks.timeGain),
           partsGain: rankPosition(next, targetKey, ranks.partsGain),
           riskGain: rankPosition(next, targetKey, ranks.riskGain),
+          technicianGain: rankPosition(next, targetKey, ranks.technicianGain),
+          workshopGain: rankPosition(next, targetKey, ranks.workshopGain),
+          scarcityGain: rankPosition(next, targetKey, ranks.scarcityGain),
+          techScarcityGain: rankPosition(next, targetKey, ranks.techScarcityGain),
+          objectiveProxy: rankPosition(next, targetKey, ranks.objectiveProxy),
+          currentJoint: rankPosition(next, targetKey, ranks.currentJoint),
           gainOnly: rankPosition(next, targetKey, ranks.gainOnly),
         },
       }
