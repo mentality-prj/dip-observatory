@@ -161,7 +161,8 @@ test.describe('platform surface routing contract', () => {
     await expect(page.locator('#main-content')).toBeVisible()
 
     const localized = await page.goto('http://observatory.localhost:3000/uk/decisions?decision=test-id', {
-      waitUntil: 'domcontentloaded' })
+      waitUntil: 'domcontentloaded',
+    })
     expect(localized?.status()).toBeLessThan(400)
     await expect(page).toHaveURL(/observatory\.localhost:3000\/uk\/decisions\?decision=test-id$/)
     await expect(page.locator('#main-content')).toBeVisible()
