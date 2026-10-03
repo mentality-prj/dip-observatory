@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/design-system'
-import { studioRequest, type Binding, type Dimension, type Plugin } from './contracts'
+import { pluginIdentity, studioRequest, type Binding, type Dimension, type Plugin } from './contracts'
 import { outputLabel } from './presentation'
 import { JsonField } from './schema-form'
 import { studioCopy } from './studio-copy'
@@ -10,13 +10,14 @@ import { useStudioLocale } from './use-studio-locale'
 
 export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensions: Dimension[] }) {
   const copy = studioCopy(useStudioLocale()).bindings
+  const pluginId = pluginIdentity(plugin)
   const [bindings, setBindings] = useState<Binding[] | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     let disposed = false
-    studioRequest<Binding[]>(`plugins/${encodeURIComponent(plugin.name)}/dimension-bindings`)
+    studioRequest<Binding[]>(`plugins/${encodeURIComponent(pluginId)}/dimension-bindings`)
       .then((result) => {
         if (!disposed) setBindings(result)
       })
@@ -26,7 +27,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
     return () => {
       disposed = true
     }
-  }, [plugin.name])
+  }, [pluginId])
   if (!bindings) return <p role="status">{error || copy.loading}</p>
   function update(index: number, patch: Partial<Binding>) {
     setBindings((previous) => previous!.map((b, i) => (i === index ? { ...b, ...patch } : b)))
@@ -39,7 +40,7 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
         setError('')
         setMessage('')
         try {
-          await studioRequest(`plugins/${encodeURIComponent(plugin.name)}/dimension-bindings`, {
+          await studioRequest(`plugins/${encodeURIComponent(pluginId)}/dimension-bindings`, {
             method: 'PUT',
             body: JSON.stringify(bindings),
           })
@@ -184,9 +185,9 @@ export function BindingEditor({ plugin, dimensions }: { plugin: Plugin; dimensio
             setBindings([
               ...bindings,
               {
-                id: `${plugin.name}-binding-${bindings.length + 1}`,
+                id: `${pluginId}-binding-${bindings.length + 1}`,
                 version: '1.0',
-                plugin_id: plugin.name,
+                plugin_id: pluginId,
                 plugin_version: plugin.version,
                 capability_id: output.capability_id,
                 capability_version: plugin.capability_versions[output.capability_id],
