@@ -159,7 +159,7 @@ export function emptyProfile(plugin?: Plugin): Profile {
     id: '',
     name: '',
     version: '1.0',
-    plugin_id: plugin ? pluginIdentity(plugin) : '',
+    plugin_id: plugin?.name ?? '',
     plugin_version: plugin?.version ?? '',
     capability_id: capability,
     capability_version: plugin?.capability_versions[capability] ?? '',
