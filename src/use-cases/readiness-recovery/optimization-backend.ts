@@ -278,220 +278,109 @@ function candidateKey(candidate: CandidatePlan) {
 function normalized(value: number, scale: number) {
   return scale > 0 ? value / scale : value
 }
-type ProxyPoint = {
-  candidate: MutableCandidate
-  key: string
-  gain: number
-  time: number
-  parts: number
-  risk: number
-  gainBox: number
-  timeBox: number
-  partsBox: number
-  riskBox: number
-  structuralKey: string
-}
-function structuralCandidateKey(candidate: MutableCandidate) {
-  const produced = Object.entries(candidate.partsProduced)
+function structuralKey(candidate: MutableCandidate) {
+  const producedParts = Object.entries(candidate.partsProduced)
     .filter(([, quantity]) => quantity > 0)
-    .map(([partId, quantity]) => `${partId}:${round(quantity, 3)}`)
+    .map(([partId]) => partId)
     .sort()
     .join(',')
-  const replacements = Object.entries(candidate.replacementAssetsConsumed)
+  const replacementTypes = Object.entries(candidate.replacementAssetsConsumed)
     .filter(([, quantity]) => quantity > 0)
-    .map(([assetType, quantity]) => `${assetType}:${quantity}`)
+    .map(([assetType]) => assetType)
     .sort()
     .join(',')
-  const bindings = [...candidate.bindingConstraints].sort().join(',')
-  return `${candidate.selectedActionIds.length}|p:${produced}|r:${replacements}|b:${bindings}`
+  return `${candidate.selectedActionIds.length}|p:${producedParts}|r:${replacementTypes}|b:${[...candidate.bindingConstraints].sort().join(',')}`
 }
-function epsilonBox(value: number, epsilon: number) {
-  return Math.floor(value / Math.max(epsilon, 1e-9) + 1e-12)
-}
-function proxyPoint(
-  candidate: MutableCandidate,
-  scales: { gain: number; time: number; parts: number; risk: number },
-  epsilon: number
-): ProxyPoint {
-  const gain = normalized(candidate.scoreGain, scales.gain)
-  const time = normalized(candidate.scoreTime, scales.time)
-  const parts = normalized(candidate.scoreParts, scales.parts)
-  const risk = normalized(candidate.scoreRisk, scales.risk)
-  return {
-    candidate,
-    key: candidateKey(candidate),
-    gain,
-    time,
-    parts,
-    risk,
-    gainBox: epsilonBox(gain, epsilon),
-    timeBox: epsilonBox(time, epsilon),
-    partsBox: epsilonBox(parts, epsilon),
-    riskBox: epsilonBox(risk, epsilon),
-    structuralKey: structuralCandidateKey(candidate),
-  }
-}
-function proxyDominates(a: ProxyPoint, b: ProxyPoint) {
-  const noWorse = a.gainBox >= b.gainBox && a.timeBox <= b.timeBox && a.partsBox <= b.partsBox && a.riskBox <= b.riskBox
-  if (!noWorse) return false
-  return a.gainBox > b.gainBox || a.timeBox < b.timeBox || a.partsBox < b.partsBox || a.riskBox < b.riskBox
-}
-function paretoLayers(points: ProxyPoint[]) {
-  const dominates = points.map(() => [] as number[])
-  const dominatedByCount = points.map(() => 0)
-  for (let left = 0; left < points.length; left += 1) {
-    for (let right = left + 1; right < points.length; right += 1) {
-      if (proxyDominates(points[left], points[right])) {
-        dominates[left].push(right)
-        dominatedByCount[right] += 1
-      } else if (proxyDominates(points[right], points[left])) {
-        dominates[right].push(left)
-        dominatedByCount[left] += 1
-      }
-    }
-  }
-  const layers: ProxyPoint[][] = []
-  let current = dominatedByCount.flatMap((count, index) => (count === 0 ? [index] : []))
-  const assigned = new Set(current)
-  while (current.length) {
-    layers.push(current.map((index) => points[index]))
-    const next: number[] = []
-    for (const index of current) {
-      for (const dominatedIndex of dominates[index]) {
-        dominatedByCount[dominatedIndex] -= 1
-        if (dominatedByCount[dominatedIndex] === 0 && !assigned.has(dominatedIndex)) {
-          assigned.add(dominatedIndex)
-          next.push(dominatedIndex)
-        }
-      }
-    }
-    current = next
-  }
-  if (assigned.size < points.length) {
-    layers.push(points.filter((_, index) => !assigned.has(index)))
-  }
-  return layers
-}
-function crowdingDistance(layer: ProxyPoint[]) {
-  const distances = new Map<string, number>(layer.map((point) => [point.key, 0]))
-  const objectives: Array<(point: ProxyPoint) => number> = [
-    (point) => point.gain,
-    (point) => point.time,
-    (point) => point.parts,
-    (point) => point.risk,
-  ]
-  if (layer.length <= 2) {
-    for (const point of layer) distances.set(point.key, Number.POSITIVE_INFINITY)
-    return distances
-  }
-  for (const objective of objectives) {
-    const ordered = [...layer].sort((a, b) => objective(a) - objective(b) || a.key.localeCompare(b.key))
-    const min = objective(ordered[0])
-    const max = objective(ordered[ordered.length - 1])
-    distances.set(ordered[0].key, Number.POSITIVE_INFINITY)
-    distances.set(ordered[ordered.length - 1].key, Number.POSITIVE_INFINITY)
-    if (max <= min) continue
-    for (let index = 1; index < ordered.length - 1; index += 1) {
-      const point = ordered[index]
-      if (!Number.isFinite(distances.get(point.key) ?? 0)) continue
-      const distance = (objective(ordered[index + 1]) - objective(ordered[index - 1])) / (max - min)
-      distances.set(point.key, (distances.get(point.key) ?? 0) + distance)
-    }
-  }
-  return distances
-}
-function actionSetDistance(a: ProxyPoint, b: ProxyPoint) {
-  const left = new Set(a.candidate.selectedActionIds)
-  const right = new Set(b.candidate.selectedActionIds)
-  const union = new Set([...left, ...right])
-  if (!union.size) return 0
+function actionSetDistance(left: Set<string>, right: Set<string>) {
+  if (!left.size && !right.size) return 0
   let intersection = 0
   for (const actionId of left) if (right.has(actionId)) intersection += 1
-  return 1 - intersection / union.size
+  return 1 - intersection / (left.size + right.size - intersection)
 }
-function structuralNovelty(point: ProxyPoint, selected: ProxyPoint[]) {
-  if (!selected.length) return 1
-  return Math.min(...selected.map((other) => actionSetDistance(point, other)))
-}
-function balancedProxyLoss(point: ProxyPoint) {
-  return -point.gain + point.time + point.parts + point.risk
-}
-function chooseDiverseLayerSubset(layer: ProxyPoint[], count: number, selected: ProxyPoint[]) {
-  if (layer.length <= count) return layer
-  const crowding = crowdingDistance(layer)
-  const buckets = new Map<string, ProxyPoint[]>()
-  for (const point of layer) {
-    const bucket = buckets.get(point.structuralKey) ?? []
-    bucket.push(point)
-    buckets.set(point.structuralKey, bucket)
-  }
-  const representatives = [...buckets.values()].map(
-    (bucket) =>
-      [...bucket].sort((a, b) => {
-        const crowdingA = crowding.get(a.key) ?? 0
-        const crowdingB = crowding.get(b.key) ?? 0
-        if (crowdingA !== crowdingB) return crowdingB - crowdingA
-        return balancedProxyLoss(a) - balancedProxyLoss(b) || a.key.localeCompare(b.key)
-      })[0]
-  )
-  const chosen: ProxyPoint[] = []
-  const availableRepresentatives = [...representatives]
-  const chooseNext = (available: ProxyPoint[]) => {
-    return [...available].sort((a, b) => {
-      const crowdingA = crowding.get(a.key) ?? 0
-      const crowdingB = crowding.get(b.key) ?? 0
-      const boundaryA = Number.isFinite(crowdingA) ? 0 : 1
-      const boundaryB = Number.isFinite(crowdingB) ? 0 : 1
-      if (boundaryA !== boundaryB) return boundaryB - boundaryA
-      const noveltyA = structuralNovelty(a, [...selected, ...chosen])
-      const noveltyB = structuralNovelty(b, [...selected, ...chosen])
-      if (noveltyA !== noveltyB) return noveltyB - noveltyA
-      if (crowdingA !== crowdingB) return crowdingB - crowdingA
-      return balancedProxyLoss(a) - balancedProxyLoss(b) || a.key.localeCompare(b.key)
-    })[0]
-  }
-  while (chosen.length < count && availableRepresentatives.length) {
-    const next = chooseNext(availableRepresentatives)
-    chosen.push(next)
-    availableRepresentatives.splice(
-      availableRepresentatives.findIndex((point) => point.key === next.key),
-      1
-    )
-  }
-  const chosenKeys = new Set(chosen.map((point) => point.key))
-  const remaining = layer.filter((point) => !chosenKeys.has(point.key))
-  while (chosen.length < count && remaining.length) {
-    const next = chooseNext(remaining)
-    chosen.push(next)
-    remaining.splice(
-      remaining.findIndex((point) => point.key === next.key),
-      1
-    )
-  }
-  return chosen
-}
-export function retainDiverseBeam(candidates: MutableCandidate[], width: number, epsilon = 0.015) {
+export function retainDiverseBeam(candidates: MutableCandidate[], width: number, _epsilon = 0.015) {
   if (candidates.length <= width) return candidates
-  const unique = new Map<string, MutableCandidate>()
-  for (const candidate of candidates) unique.set(candidateKey(candidate), candidate)
-  const deduplicated = [...unique.values()].sort((a, b) => candidateKey(a).localeCompare(candidateKey(b)))
+
+  const deduplicated = [...new Map(candidates.map((candidate) => [candidateKey(candidate), candidate])).values()].sort(
+    (a, b) => candidateKey(a).localeCompare(candidateKey(b))
+  )
   if (deduplicated.length <= width) return deduplicated
-  const scales = {
-    gain: Math.max(1, ...deduplicated.map((candidate) => candidate.scoreGain)),
-    time: Math.max(1, ...deduplicated.map((candidate) => candidate.scoreTime)),
-    parts: Math.max(1, ...deduplicated.map((candidate) => candidate.scoreParts)),
-    risk: Math.max(1, ...deduplicated.map((candidate) => candidate.scoreRisk)),
+
+  const maxGain = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreGain))
+  const maxTime = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreTime))
+  const maxParts = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreParts))
+  const maxRisk = Math.max(1, ...deduplicated.map((candidate) => candidate.scoreRisk))
+  const balancedLoss = (candidate: MutableCandidate) =>
+    -normalized(candidate.scoreGain, maxGain) +
+    0.35 * normalized(candidate.scoreTime, maxTime) +
+    0.25 * normalized(candidate.scoreParts, maxParts) +
+    0.4 * normalized(candidate.scoreRisk, maxRisk)
+  const rankings = [
+    (candidate: MutableCandidate) =>
+      -normalized(candidate.scoreGain, maxGain) + 0.08 * normalized(candidate.scoreRisk, maxRisk),
+    (candidate: MutableCandidate) =>
+      normalized(candidate.scoreTime, maxTime) - 0.25 * normalized(candidate.scoreGain, maxGain),
+    (candidate: MutableCandidate) =>
+      normalized(candidate.scoreParts, maxParts) - 0.2 * normalized(candidate.scoreGain, maxGain),
+    (candidate: MutableCandidate) =>
+      normalized(candidate.scoreRisk, maxRisk) - 0.2 * normalized(candidate.scoreGain, maxGain),
+  ]
+
+  const selected = new Map<string, MutableCandidate>()
+  const add = (candidate: MutableCandidate) => selected.set(candidateKey(candidate), candidate)
+  const rankingTake = Math.max(1, Math.floor(width / 8))
+  for (const rank of rankings) {
+    for (const candidate of [...deduplicated]
+      .sort((a, b) => rank(a) - rank(b) || candidateKey(a).localeCompare(candidateKey(b)))
+      .slice(0, rankingTake))
+      add(candidate)
   }
-  const points = deduplicated.map((candidate) => proxyPoint(candidate, scales, epsilon))
-  const layers = paretoLayers(points)
-  const selected: ProxyPoint[] = []
-  for (const layer of layers) {
-    const remaining = width - selected.length
-    if (remaining <= 0) break
-    if (layer.length <= remaining) selected.push(...layer)
-    else selected.push(...chooseDiverseLayerSubset(layer, remaining, selected))
+
+  const structuralBudget = Math.max(1, Math.floor(width / 4))
+  const structuralRepresentatives = new Map<string, MutableCandidate>()
+  for (const candidate of deduplicated) {
+    const key = structuralKey(candidate)
+    const incumbent = structuralRepresentatives.get(key)
+    if (!incumbent || balancedLoss(candidate) < balancedLoss(incumbent)) structuralRepresentatives.set(key, candidate)
   }
-  return selected.slice(0, width).map((point) => point.candidate)
+  for (const candidate of [...structuralRepresentatives.values()]
+    .sort((a, b) => balancedLoss(a) - balancedLoss(b) || candidateKey(a).localeCompare(candidateKey(b)))
+    .slice(0, structuralBudget))
+    add(candidate)
+
+  const actionSets = new Map(deduplicated.map((candidate) => [candidateKey(candidate), new Set(candidate.selectedActionIds)]))
+  const minDistance = new Map<string, number>()
+  const selectedSets = [...selected.values()].map((candidate) => actionSets.get(candidateKey(candidate)) ?? new Set<string>())
+  for (const candidate of deduplicated) {
+    const key = candidateKey(candidate)
+    if (selected.has(key)) continue
+    const candidateSet = actionSets.get(key) ?? new Set<string>()
+    minDistance.set(
+      key,
+      selectedSets.length ? Math.min(...selectedSets.map((selectedSet) => actionSetDistance(candidateSet, selectedSet))) : 1
+    )
+  }
+
+  while (selected.size < width && minDistance.size) {
+    const nextKey = [...minDistance.keys()].sort((leftKey, rightKey) => {
+      const distanceDelta = (minDistance.get(rightKey) ?? 0) - (minDistance.get(leftKey) ?? 0)
+      if (Math.abs(distanceDelta) > 1e-12) return distanceDelta
+      const left = deduplicated.find((candidate) => candidateKey(candidate) === leftKey)
+      const right = deduplicated.find((candidate) => candidateKey(candidate) === rightKey)
+      if (!left || !right) return leftKey.localeCompare(rightKey)
+      return balancedLoss(left) - balancedLoss(right) || leftKey.localeCompare(rightKey)
+    })[0]
+    const next = deduplicated.find((candidate) => candidateKey(candidate) === nextKey)
+    if (!next) break
+    add(next)
+    minDistance.delete(nextKey)
+    const nextSet = actionSets.get(nextKey) ?? new Set<string>()
+    for (const [key, currentDistance] of minDistance) {
+      const candidateSet = actionSets.get(key) ?? new Set<string>()
+      minDistance.set(key, Math.min(currentDistance, actionSetDistance(candidateSet, nextSet)))
+    }
+  }
+
+  return [...selected.values()].slice(0, width)
 }
 export type CandidateGenerationResult = {
   candidates: CandidatePlan[]
