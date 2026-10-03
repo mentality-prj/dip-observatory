@@ -17,7 +17,9 @@
   gap: var(--ds-space-5);
 }
 
-.ds-select {
+/* Native select behavior is a design-system contract, not a product-specific override. */
+.ds-select,
+:where([data-ds-theme] select) {
   appearance: none;
   padding-inline-end: 2.75rem;
   background-image:
