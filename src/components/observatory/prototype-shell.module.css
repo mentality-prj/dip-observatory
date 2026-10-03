@@ -5,45 +5,57 @@
   color: var(--ds-text);
   background: var(--ds-bg);
 }
-.shell :global(.ds-product-header-inner) {
+.shell :global(.ds-product-header-inner),
+.shell :global(.ds-product-header-navigation) {
   max-width: var(--ds-content-max);
   padding-inline: clamp(var(--ds-space-4), 3vw, var(--ds-space-10));
+}
+.shell :global(.ds-product-header-navigation) {
+  padding-block: var(--ds-space-2) var(--ds-space-3);
 }
 .desktopNavigation {
   width: 100%;
   min-width: 0;
-  padding-bottom: var(--ds-space-1);
 }
 .navigation {
   display: flex;
+  width: 100%;
   min-width: 0;
   flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
   gap: var(--ds-space-1);
   overflow: visible;
 }
 .navLink {
   display: flex;
-  min-height: 40px;
-  flex: 0 0 auto;
+  width: 0;
   min-width: 0;
+  max-width: 10.75rem;
+  min-height: 52px;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 var(--ds-space-2);
+  padding: var(--ds-space-2);
   border: 1px solid transparent;
   border-radius: var(--ds-radius-action);
   color: var(--ds-text-muted);
   font-size: var(--ds-text-sm);
   font-weight: 600;
+  line-height: 1.18;
   text-align: center;
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
   transition:
     background 150ms ease,
     color 150ms ease,
     border-color 150ms ease;
+}
+.navLink > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .navIcon {
   width: 16px;
@@ -202,6 +214,9 @@
   outline-offset: -3px;
 }
 @media (max-width: 1023px) {
+  .shell :global(.ds-product-header-navigation) {
+    display: none;
+  }
   .desktopNavigation {
     display: none;
   }
@@ -215,6 +230,7 @@
   }
   .mobileNavigation .navLink {
     width: 100%;
+    max-width: none;
     min-height: 40px;
     justify-content: flex-start;
     padding-inline: var(--ds-space-3);
