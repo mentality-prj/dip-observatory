@@ -7,7 +7,7 @@ import type { Locale } from '@/lib/observatory-i18n'
 import { marketingHref } from '@/lib/platform-urls'
 import styles from './qdip-footer.module.css'
 
-export type QdipFooterVariant = 'marketing' | 'observatory' | 'product'
+export type QdipFooterVariant = 'marketing' | 'observatory' | 'studio' | 'product'
 
 const path = (locale: Locale, slug: string) => `${marketingHref(locale)}/${slug}`
 
@@ -53,7 +53,7 @@ export function QdipFooter({
 }) {
   const copy = createTranslator(locale, 'footer')
   const shared = createTranslator(locale, 'shared')
-  const native = variant === 'observatory'
+  const native = variant === 'observatory' || variant === 'studio'
   const inverseLogo = variant !== 'product'
 
   return (
