@@ -47,7 +47,8 @@ function epsilonEquivalent(left: RecoveryScenario, right: RecoveryScenario, epsi
 function frontierCovered(legacy: RecoveryScenario[], current: RecoveryScenario[], epsilon: number) {
   return legacy.every((legacyPoint) =>
     current.some(
-      (newPoint) => epsilonDominates(newPoint, legacyPoint, epsilon) || epsilonEquivalent(newPoint, legacyPoint, epsilon)
+      (newPoint) =>
+        epsilonDominates(newPoint, legacyPoint, epsilon) || epsilonEquivalent(newPoint, legacyPoint, epsilon)
     )
   )
 }
@@ -159,13 +160,17 @@ describe('Readiness Recovery frozen resource-aware retention repair', () => {
         generatedCandidates: generated.candidates.length,
         searchNodes: generated.searchNodes,
         knownSuperiorRetained: [...knownSuperiorKeys].filter((key) => generatedKeys.has(key)).length,
-        epsilonDominators: evaluated.frontier.filter((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon)).map(scenarioKey),
+        epsilonDominators: evaluated.frontier
+          .filter((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon))
+          .map(scenarioKey),
       })
     )
 
     expect([...knownSuperiorKeys].some((key) => generatedKeys.has(key))).toBe(true)
     expect(evaluated.diagnostics.evaluatedCandidates).toBe(generated.candidates.length)
-    expect(evaluated.frontier.some((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon))).toBe(true)
+    expect(evaluated.frontier.some((scenario) => epsilonDominates(scenario, baseline, input.settings.epsilon))).toBe(
+      true
+    )
     expect(benchmark.verdict).toBe('QDIP_ADVANTAGE')
     expect(generated.truncatedByNodeBudget).toBe(false)
     expect(generated.truncatedByTimeBudget).toBe(false)
@@ -180,8 +185,10 @@ describe('Readiness Recovery frozen resource-aware retention repair', () => {
         covered: compared.covered,
         legacyFrontier: compared.legacy.frontier.length,
         currentFrontier: compared.current.frontier.length,
-        legacyTruncated: compared.legacy.diagnostics.truncatedByNodeBudget || compared.legacy.diagnostics.truncatedByTimeBudget,
-        currentTruncated: compared.current.diagnostics.truncatedByNodeBudget || compared.current.diagnostics.truncatedByTimeBudget,
+        legacyTruncated:
+          compared.legacy.diagnostics.truncatedByNodeBudget || compared.legacy.diagnostics.truncatedByTimeBudget,
+        currentTruncated:
+          compared.current.diagnostics.truncatedByNodeBudget || compared.current.diagnostics.truncatedByTimeBudget,
       }
     })
 
@@ -200,7 +207,8 @@ describe('Readiness Recovery frozen resource-aware retention repair', () => {
         covered: compared.covered,
         legacyFrontier: compared.legacy.frontier.length,
         currentFrontier: compared.current.frontier.length,
-        currentTruncated: compared.current.diagnostics.truncatedByNodeBudget || compared.current.diagnostics.truncatedByTimeBudget,
+        currentTruncated:
+          compared.current.diagnostics.truncatedByNodeBudget || compared.current.diagnostics.truncatedByTimeBudget,
       }
     })
 
@@ -240,7 +248,8 @@ describe('Readiness Recovery frozen resource-aware retention repair', () => {
     const rerun = new BoundedFeasibilityBackend().generateCandidates(input)
     const runtimeRatio = median(currentDurations) / Math.max(Number.EPSILON, median(legacyDurations))
     const nodeRatio = currentResult.searchNodes / Math.max(1, legacyResult.searchNodes)
-    const keys = (result: typeof currentResult) => result.candidates.map((candidate) => candidateKey(candidate.selectedActionIds))
+    const keys = (result: typeof currentResult) =>
+      result.candidates.map((candidate) => candidateKey(candidate.selectedActionIds))
 
     console.info(
       'RR_RESOURCE_AWARE_PERFORMANCE_GATE',
