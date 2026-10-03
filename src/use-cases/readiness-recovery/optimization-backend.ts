@@ -298,6 +298,7 @@ function actionSetDistance(left: Set<string>, right: Set<string>) {
   return 1 - intersection / (left.size + right.size - intersection)
 }
 export function retainDiverseBeam(candidates: MutableCandidate[], width: number, _epsilon = 0.015) {
+  void _epsilon
   if (candidates.length <= width) return candidates
 
   const deduplicated = [...new Map(candidates.map((candidate) => [candidateKey(candidate), candidate])).values()].sort(
