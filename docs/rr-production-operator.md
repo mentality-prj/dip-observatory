@@ -37,9 +37,13 @@ a separately reviewed identity layer. This password-session boundary is a
 per user or enterprise RBAC. It does not authorize real customer data.
 
 Auth is opt-in and fails closed if any required environment value is missing.
+Both session and proxy are constrained to the configured **Observatory host**.
 Mutations require the exact same origin. Session is HMAC-signed, expires in
 eight hours, uses an HttpOnly SameSite=Strict cookie and is not stored in local
-storage. HTTP is rejected except on the localhost development namespace.
+storage. Rotating the operator password or signing key invalidates prior cookies.
+A process-local limiter blocks login for 15 minutes after five failures;
+**this is not distributed rate limiting** and must be supplemented at the edge.
+HTTP is rejected except on the `observatory.localhost` development host.
 The operator password is never written to the browser's storage and the
 privileged QDIP API key is never returned in a response.
 
