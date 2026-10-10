@@ -34,7 +34,7 @@ export function ReadinessRecoveryKernelWorkspace({ locale }: { locale: Locale })
       <h1 className="text-3xl font-semibold text-slate-100">{copy.title}</h1>
       <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300">{copy.description}</p>
       <p className="mt-2 text-xs text-amber-200">{copy.warning}</p>
-      <RRProductionOperatorPanel />
+      <RRProductionOperatorPanel locale={locale} />
     </main>
   )
 }
