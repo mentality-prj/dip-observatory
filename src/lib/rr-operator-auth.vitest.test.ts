@@ -42,6 +42,9 @@ describe('RR single-tenant operator session boundary', () => {
     expect(verifyOperatorSession(session.slice(0, -1) + (session.endsWith('0') ? '1' : '0'), now)).toBe(false)
     vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'rotated-independent-session-signing-key-123456')
     expect(verifyOperatorSession(session, now)).toBe(false)
+    vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'long-independent-session-signing-key-123456789')
+    vi.stubEnv('RR_OPERATOR_PASSWORD', 'different-strong-operator-password')
+    expect(verifyOperatorSession(session, now)).toBe(false)
   })
 
   it('requires literal origin and TLS or local development transport', () => {
