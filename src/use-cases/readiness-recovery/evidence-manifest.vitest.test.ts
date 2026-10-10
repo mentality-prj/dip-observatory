@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildEvidenceManifest } from './evidence-manifest'
+import { exportAnalysis } from './data-workspace'
 import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario } from './domain'
 const selected = {
   scenarioId: 'a',
@@ -32,6 +33,14 @@ describe('evidence manifest', () => {
     expect(x.selectionBias).toBe('NOT_CORRECTED')
     expect(x.authority).toBe('OBSERVATORY_SIMULATION')
     expect(x.metrics.find((m) => m.key === 'probabilityDemandSatisfied')?.definition).toContain('n=500')
+  })
+  it('exports only model-local evidence, never a verified Kernel claim', () => {
+    const input = { asOf: '2026-10-10T00:00:00Z' } as ReadinessRecoveryInput
+    const result = { frontier: [selected] } as unknown as ReadinessRecoveryResult
+    const output = exportAnalysis(input, result, selected)
+    expect(output.evidence?.authority).toBe('OBSERVATORY_SIMULATION')
+    expect(output.evidence?.comparativeConclusion).toBe('NOT_ESTABLISHED')
+    expect(output.evidence?.quantiles).toEqual([1, 2, 4])
   })
   it('does not fabricate metrics when no plan exists', () => {
     const x = buildEvidenceManifest(
