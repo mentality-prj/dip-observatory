@@ -39,7 +39,7 @@ const settings=z.strictObject({
  maxSolveTimeMs:z.number().int().min(1).max(120000),
  beamWidth:z.number().int().min(1).max(2048),
  simulationSamples:z.number().int().min(1).max(10000),
- seed:z.number().int().safe(),
+ seed:z.number().int().refine(Number.isSafeInteger,'Safe integer required'),
  epsilon:z.number().finite().nonnegative().max(1),
 })
 const resources=z.strictObject({
