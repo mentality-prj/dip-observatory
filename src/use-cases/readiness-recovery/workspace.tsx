@@ -167,11 +167,20 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setViewPreferences(readRRViewPreferences(window.localStorage))
+    try {
+      setViewPreferences(readRRViewPreferences(window.localStorage))
+    } catch {
+      setViewPreferences(templatePreferences('BUSINESS'))
+    }
     setViewHydrated(true)
   }, [])
   useEffect(() => {
-    if (viewHydrated) saveRRViewPreferences(window.localStorage, viewPreferences)
+    if (!viewHydrated) return
+    try {
+      saveRRViewPreferences(window.localStorage, viewPreferences)
+    } catch {
+      // Storage unavailable: keep preferences in memory for this session.
+    }
   }, [viewHydrated, viewPreferences])
   const showWidget = (widget: RRWidget) => viewPreferences.widgets.includes(widget)
 
