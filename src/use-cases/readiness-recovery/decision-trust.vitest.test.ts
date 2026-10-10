@@ -49,7 +49,7 @@ describe('Observatory RR decision authority boundary', () => {
   it('fails closed on missing, invalid, or unexecuted planner results', () => {
     expect(assessObservatoryDecision('USER_IMPORTED', null).state).toBe('NOT_RUN')
     for (const invalid of [undefined, {}, { frontier: null }, { frontier: [], diagnostics: {} }]) {
-      const trust = assessObservatoryDecision('USER_IMPORTED', invalid as ReadinessRecoveryResult)
+      const trust = assessObservatoryDecision('USER_IMPORTED', invalid as unknown as ReadinessRecoveryResult)
       expect(trust.state).toBe('INVALID_RESULT')
       expect(trust.productionApplyEligible).toBe(false)
     }
@@ -102,7 +102,7 @@ describe('Observatory planner response integrity gate', () => {
   it('recognizes the existing simulated result shape without elevating authority', () => {
     expect(isObservatoryPlannerResult(response)).toBe(true)
     expect(
-      assessObservatoryDecision('USER_IMPORTED', response as ReadinessRecoveryResult).productionApplyEligible
+      assessObservatoryDecision('USER_IMPORTED', response as unknown as ReadinessRecoveryResult).productionApplyEligible
     ).toBe(false)
   })
 
@@ -122,7 +122,7 @@ describe('Observatory planner response integrity gate', () => {
   it('accepts an empty frontier as a valid negative result, not infeasibility proof', () => {
     const value = { ...response, frontier: [] }
     expect(isObservatoryPlannerResult(value)).toBe(true)
-    expect(assessObservatoryDecision('SYNTHETIC_PRESET', value as ReadinessRecoveryResult).state).toBe(
+    expect(assessObservatoryDecision('SYNTHETIC_PRESET', value as unknown as ReadinessRecoveryResult).state).toBe(
       'NO_COMPARABLE_CANDIDATES'
     )
   })
