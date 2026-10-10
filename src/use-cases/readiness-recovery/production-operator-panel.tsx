@@ -10,7 +10,23 @@ type RecordSummary = {
       execution_id?: string
       ingestion?: { payload?: { decision_id?: string } }
     }
-    runtime?: { operator_outcome?: { kind?: string; actionable?: boolean } }
+    runtime?: {
+      operator_outcome?: {
+        kind?: string
+        actionable?: boolean
+        authoritative?: boolean
+        summary?: string
+        selected_donor_ids?: string[]
+      }
+      decision?: {
+        scheduled_jobs?: Array<{
+          job_id: string
+          technician_id: string
+          start_slot: number
+          finish_slot: number
+        }>
+      } | null
+    }
   }
 }
 
@@ -206,6 +222,34 @@ export function RRProductionOperatorPanel() {
           <div className="space-y-3">
             <h3 className="font-semibold">1. Create Kernel execution</h3>
             <p className="text-xs text-slate-400">Use the exact JSON body emitted by the RR normalized-import preflight CLI. No browser-side schema inference or storage.</p>
+            <label className="block text-sm" htmlFor="rr-kernel-request-file">
+              Import normalized RR API request (JSON)
+            </label>
+            <input
+              id="rr-kernel-request-file"
+              type="file"
+              accept=".json,application/json"
+              className="block w-full text-xs"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (!file) return
+                if (file.size > 2_150_000) {
+                  setError('RR request exceeds the accepted size limit.')
+                  return
+                }
+                void file.text().then((value) => {
+                  try {
+                    const parsed: unknown = JSON.parse(value)
+                    if (!parsed || typeof parsed !== 'object' || !('execution_id' in parsed) || !('payload' in parsed))
+                      throw new Error('Expected an RR /executions API request, not a demo scenario package.')
+                    setRequestBody(JSON.stringify(parsed, null, 2))
+                    setError(null)
+                  } catch (reason) {
+                    setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
+                  }
+                }).catch(() => setError('Could not read the RR request file'))
+              }}
+            />
             <textarea
               aria-label="Kernel execution JSON"
               value={requestBody}
@@ -273,11 +317,32 @@ export function RRProductionOperatorPanel() {
             <div className="xl:col-span-2" aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
               {summary?.result?.runtime?.operator_outcome && (
-                <p className="mt-2 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
-                  Decision: {summary.result.runtime.operator_outcome.kind ?? 'UNKNOWN'}
-                  {' · '}
-                  {summary.result.runtime.operator_outcome.actionable ? 'Actionable' : 'Non-actionable — inspect evidence'}
-                </p>
+                <div className="mt-2 space-y-3 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
+                  <p>
+                    Decision: {summary.result.runtime.operator_outcome.kind ?? 'UNKNOWN'}
+                    {' · '}
+                    {summary.result.runtime.operator_outcome.authoritative ? 'Authoritative' : 'Uncertified'}
+                    {' · '}
+                    {summary.result.runtime.operator_outcome.actionable ? 'Actionable' : 'Non-actionable — inspect evidence'}
+                  </p>
+                  <p className="text-slate-300">{summary.result.runtime.operator_outcome.summary}</p>
+                  {summary.result.runtime.operator_outcome.actionable &&
+                    summary.result.runtime.decision?.scheduled_jobs && (
+                      <div>
+                        <h4 className="font-semibold">Kernel scheduled jobs (slot units)</h4>
+                        <ul className="mt-2 space-y-1">
+                          {summary.result.runtime.decision.scheduled_jobs.map((job) => (
+                            <li key={job.job_id} className="font-mono text-xs">
+                              {job.job_id} · {job.technician_id} · slots {job.start_slot}–{job.finish_slot}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-xs">
+                          Donor kits: {summary.result.runtime.operator_outcome.selected_donor_ids?.join(', ') || 'none'}
+                        </p>
+                      </div>
+                    )}
+                </div>
               )}
               <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
                 {JSON.stringify(lastResult, null, 2)}
