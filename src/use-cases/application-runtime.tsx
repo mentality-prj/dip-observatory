@@ -10,7 +10,7 @@ import { SupplyNetworkOptimizationWorkspace } from '@/features/supply-network-op
 import type { Locale } from '@/lib/observatory-i18n'
 import { applicationScenarioContext } from '@/use-cases/application-context'
 import { ContractorAllocationDemoRouter } from '@/use-cases/contractor-allocation/workspace-router'
-import { ReadinessRecoveryWorkspace } from '@/use-cases/readiness-recovery/workspace'
+import { ReadinessRecoveryKernelWorkspace } from '@/use-cases/readiness-recovery/kernel-workspace'
 import { findUseCaseById, type UseCaseId } from '@/use-cases/registry'
 
 export type ApplicationFrontendProps = { locale: Locale }
@@ -19,7 +19,7 @@ const frontends = {
   'resource-allocation': ResourceAllocationWorkspace,
   'supply-network-optimization': SupplyNetworkOptimizationWorkspace,
   'contractor-allocation': ContractorAllocationDemoRouter,
-  'readiness-recovery': ReadinessRecoveryWorkspace,
+  'readiness-recovery': ReadinessRecoveryKernelWorkspace,
   'gtm-lab': GtmLabWorkspace,
 } satisfies Record<UseCaseId, ComponentType<ApplicationFrontendProps>>
 

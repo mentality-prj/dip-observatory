@@ -28,7 +28,7 @@ const routingContract = [
   {
     id: 'readiness-recovery',
     route: '/readiness-recovery',
-    load: () => import('./readiness-recovery/workspace').then((module) => module.ReadinessRecoveryWorkspace),
+    load: () => import('./readiness-recovery/kernel-workspace').then((module) => module.ReadinessRecoveryKernelWorkspace),
   },
   {
     id: 'gtm-lab',
