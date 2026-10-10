@@ -1,16 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
-import { kernelRequestPreflight, kernelReplanPreflight } from './operator-preflight'
-import { OperatorEvidence } from './operator-evidence'
+import { OperatorEvidence, isKernelRRPresentation, type KernelRRPresentation } from './operator-evidence'
 import {
   OperatorRequestError,
   OperatorRequestGuard,
   classifyOperatorHttpStatus,
   parsedExecutionIds,
-  parseKernelRequestFile,
   type OperatorErrorKind,
 } from './operator-guards'
 import {
@@ -23,6 +21,23 @@ import {
 } from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
+type KernelPreflight = {
+  schema_version: 'readiness-recovery.presentation.v1'
+  validation_scope: 'SCHEMA_AND_ADMISSION_ONLY'
+  execution_id: string
+  decision_id: string
+  source_snapshot_id: string
+  job_count: number
+  technician_count: number
+  warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
+}
+function isKernelPreflight(value: unknown): value is KernelPreflight {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Partial<KernelPreflight>
+  return v.schema_version === 'readiness-recovery.presentation.v1' && v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    typeof v.execution_id === 'string' && typeof v.decision_id === 'string' &&
+    typeof v.source_snapshot_id === 'string' && typeof v.job_count === 'number' && typeof v.technician_count === 'number'
+}
 const initialRequest = `{
   "execution_id": "rr-reference-001",
   "source": {},
@@ -62,12 +77,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [decisionId, setDecisionId] = useState('')
   const [executionId, setExecutionId] = useState('')
   const [lastResult, setLastResult] = useState<unknown>(null)
+  const [presentation, setPresentation] = useState<KernelRRPresentation | null>(null)
+  const [preflight, setPreflight] = useState<KernelPreflight | null>(null)
+  const [preflightStatus, setPreflightStatus] = useState('')
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [errorKind, setErrorKind] = useState<OperatorErrorKind | null>(null)
   const [busy, setBusy] = useState(false)
-  const preflight = useMemo(() => kernelRequestPreflight(requestBody), [requestBody])
-  const validReplan = useMemo(() => kernelReplanPreflight(replanBody), [replanBody])
 
   useEffect(() => {
     let active = true
@@ -106,6 +122,9 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     activeController.current?.abort()
     setBusy(false)
     setLastResult(null)
+    setPresentation(null)
+    setPreflight(null)
+    setPreflightStatus('Input changed; waiting for Kernel validation')
     setOperation('')
     setErrorKind(null)
   }
@@ -121,6 +140,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     if (reason instanceof OperatorRequestError && reason.kind === 'AUTH_REQUIRED') {
       setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
       setLastResult(null)
+      setPresentation(null)
       setDecisionId('')
       setExecutionId('')
       setError(t.sessionLost)
@@ -129,6 +149,30 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setError(reason instanceof Error ? reason.message : 'RR operation failed')
     }
   }
+
+  useEffect(() => {
+    if (!session?.authenticated) return
+    const controller = new AbortController()
+    const currentBody = requestBody
+    const timeout = setTimeout(() => {
+      setPreflight(null)
+      setPreflightStatus('Checking Kernel contract…')
+      void fetch('/api/rr-operator/kernel/preflight', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: currentBody, cache: 'no-store', signal: controller.signal,
+      }).then(checkedJson).then((value) => {
+        if (controller.signal.aborted) return
+        if (!isKernelPreflight(value)) throw new Error('Unsupported Kernel preflight response')
+        setPreflight(value)
+        setPreflightStatus('')
+      }).catch((reason: unknown) => {
+        if (controller.signal.aborted) return
+        setPreflight(null)
+        setPreflightStatus(reason instanceof Error ? reason.message : 'Preflight rejected')
+      })
+    }, 250)
+    return () => { clearTimeout(timeout); controller.abort() }
+  }, [requestBody, session?.authenticated])
 
   useEffect(() => {
     let active = true
@@ -151,6 +195,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setError(null)
     setErrorKind(null)
     setLastResult(null)
+    setPresentation(null)
     try {
       const response = await fetch(url, {
         method,
@@ -165,11 +210,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
-        if (
-          !ids.executionId ||
-          !ids.decisionId ||
-          (body && kernelRequestPreflight(body).executionId !== ids.executionId)
-        )
+        if (!ids.executionId || !ids.decisionId || preflight?.execution_id !== ids.executionId || preflight?.decision_id !== ids.decisionId)
           throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
@@ -182,6 +223,25 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         if (!ids.executionId || !ids.decisionId || target !== ids.executionId) throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
+      }
+      if (method === 'POST' && (label === 'Create execution' || label === 'Replan execution')) {
+        const { executionId: id } = parsedExecutionIds(data)
+        if (id) {
+          try {
+            const projection: unknown = await checkedJson(await fetch(
+              `${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal }
+            ))
+            if (!requestGuard.current.current(epoch)) return
+            if (!isKernelRRPresentation(projection) || projection.execution_id !== id)
+              throw new Error('Kernel returned an incompatible presentation schema')
+            setPresentation(projection)
+          } catch (projectionError) {
+            if (requestGuard.current.current(epoch) && !(projectionError instanceof DOMException && projectionError.name === 'AbortError')) {
+              // A successful execution is NOT rolled back or retried because an optional read model is unavailable.
+              setError('Execution created. Plugin evidence is unavailable; do not resubmit the same request.')
+            }
+          }
+        }
       }
     } catch (reason) {
       operationFailed(reason, epoch)
@@ -291,6 +351,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       if (!requestGuard.current.current(epoch)) return
       setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
       setLastResult(null)
+      setPresentation(null)
       setExecutionId('')
       setDecisionId('')
       setRequestBody(initialRequest)
@@ -441,8 +502,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                     if (fileRevision.current !== revision) return
                     try {
                       const parsed: unknown = JSON.parse(value)
-                      const validated = parseKernelRequestFile(parsed)
-                      setRequestBody(JSON.stringify(validated, null, 2))
+                      setRequestBody(JSON.stringify(parsed, null, 2))
                       setError(null)
                     } catch (reason) {
                       setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
@@ -467,17 +527,17 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             />
             <p
               role="status"
-              className={`text-xs ${preflight.valid ? 'text-sky-200' : 'text-amber-200'}`}
+              className={`text-xs ${preflight ? 'text-sky-200' : 'text-amber-200'}`}
               data-testid="rr-kernel-preflight"
             >
-              {preflight.valid
-                ? `Kernel input · execution: ${preflight.executionId} · decision: ${preflight.decisionId} · snapshot: ${preflight.snapshotId ?? 'not recorded'} · jobs: ${preflight.jobCount ?? 'unknown'} · technicians: ${preflight.technicianCount ?? 'unknown'}`
-                : `Preflight: ${preflight.reason}`}
-              {preflight.valid ? ' · Structure only; Kernel determines validity and feasibility.' : ''}
+              {preflight
+                ? `Kernel preflight · execution: ${preflight.execution_id} · decision: ${preflight.decision_id} · snapshot: ${preflight.source_snapshot_id} · jobs: ${preflight.job_count} · technicians: ${preflight.technician_count}`
+                : `Server preflight: ${preflightStatus || 'Not validated by qdip-core'}`}
+              {preflight ? ' · No execution or feasibility proof.' : ''}
             </p>
             <button
               type="button"
-              disabled={busy || !preflight.valid}
+              disabled={busy || !preflight}
               onClick={() => void execute('Create execution', `${prefix}/executions`, 'POST', requestBody)}
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
@@ -514,7 +574,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             />
             <button
               type="button"
-              disabled={busy || !validId(executionId) || !validReplan}
+              disabled={busy || !validId(executionId) || !replanBody.trim()}
               onClick={() =>
                 void execute(
                   'Replan execution',
@@ -593,7 +653,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {lastResult !== null && (
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              <OperatorEvidence locale={locale} record={lastResult} />
+              <OperatorEvidence locale={locale} record={presentation} />
               <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
                 {JSON.stringify(lastResult, null, 2)}
               </pre>
