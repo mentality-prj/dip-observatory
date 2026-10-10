@@ -7,6 +7,8 @@ import { ScenarioContextPanel, type ScenarioContextView } from '@/components/obs
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
 import { QdipAdvantage } from './advantage'
+import { assessObservatoryDecision } from './decision-trust'
+import { DecisionTrustPanel } from './decision-trust-panel'
 import {
   READINESS_DATA_DICTIONARY,
   downloadJson,
@@ -342,6 +344,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
 
         {result ? (
           <>
+            <DecisionTrustPanel
+              locale={locale}
+              trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
+            />
             <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <Metric label={t.assets} value={String(result.inputSummary.assets)} />
               <Metric label={t.impaired} value={String(result.inputSummary.impairedAssets)} />
