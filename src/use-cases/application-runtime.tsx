@@ -30,8 +30,8 @@ export function ApplicationFrontend({ id, locale }: { id: UseCaseId; locale: Loc
 
   return (
     <>
-      {useCase ? <ObservatoryDecisionNarrative locale={locale} useCase={useCase} /> : null}
-      {context ? (
+      {useCase && id !== 'readiness-recovery' ? <ObservatoryDecisionNarrative locale={locale} useCase={useCase} /> : null}
+      {context && id !== 'readiness-recovery' ? (
         <div className="mx-auto w-full max-w-[1540px] px-4 sm:px-5 md:px-8 lg:px-10">
           <ScenarioContextPanel locale={locale} context={context} />
         </div>
