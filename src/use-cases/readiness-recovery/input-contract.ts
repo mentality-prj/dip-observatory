@@ -111,13 +111,12 @@ export function parseRRInput(value: unknown): { input?: ReadinessRecoveryInput; 
   if (parsed.success) return { input: parsed.data as ReadinessRecoveryInput, issues: [] }
   return {
     issues: parsed.error.issues.slice(0, 30).map((error) => ({
-      path: error.path.reduce<string>((path, segment) => {
-        if (typeof segment === 'number') return path + '[' + segment + ']'
-        return path ? path + '.' + segment : String(segment)
-      }, '') || 'root',
-      message: error.code === 'too_small' && error.minimum === 0
-        ? 'Expected a non-negative number.'
-        : error.message,
+      path:
+        error.path.reduce<string>((path, segment) => {
+          if (typeof segment === 'number') return path + '[' + segment + ']'
+          return path ? path + '.' + segment : String(segment)
+        }, '') || 'root',
+      message: error.code === 'too_small' && error.minimum === 0 ? 'Expected a non-negative number.' : error.message,
     })),
   }
 }
