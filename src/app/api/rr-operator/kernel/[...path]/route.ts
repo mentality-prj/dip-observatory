@@ -1,27 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
+import { allowedKernelPath } from '@/lib/rr-kernel-route-allowlist'
 import { operatorAuthorized, operatorConfigured, safeTransport, sameOrigin } from '@/lib/rr-operator-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 type Context = { params: Promise<{ path: string[] }> }
-const identifier = /^[a-zA-Z0-9_.-]{1,128}$/
-const MAX_BODY_BYTES = 2_150_000
-
-function approved(path: string[], method: string) {
-  if (path.some((part) => !identifier.test(part))) return false
-  if (path.length === 1 && path[0] === 'executions') return method === 'POST'
-  if (path[0] === 'executions' && path.length === 2) return method === 'GET'
-  if (path[0] === 'executions' && path.length === 3)
-    return (path[2] === 'replan' && method === 'POST') || (path[2] === 'replay-verification' && method === 'GET')
-  if (path[0] === 'decisions' && path.length === 3)
-    return method === 'GET' && ['history', 'history-integrity'].includes(path[2])
-  if (path[0] === 'decisions' && path.length === 4)
-    return method === 'GET' && path[2] === 'history' && path[3] === 'export'
-  return false
-}
-
 function json(error: string, status: number) {
   return NextResponse.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } })
 }
@@ -32,7 +17,7 @@ async function handle(request: NextRequest, context: Context) {
   if (!operatorAuthorized(request)) return json('RR operator login required', 401)
   if (request.method === 'POST' && !sameOrigin(request)) return json('Forbidden origin', 403)
   const { path } = await context.params
-  if (!approved(path, request.method)) return json('Unsupported RR operation', 404)
+  if (!allowedKernelPath(path, request.method)) return json('Unsupported RR operation', 404)
 
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL)
   const key = (process.env.DIP_API_KEY ?? '').trim()
