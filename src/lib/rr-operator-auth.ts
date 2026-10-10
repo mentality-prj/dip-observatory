@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import type { NextRequest } from 'next/server'
+import { isSurfaceHost } from '@/routing-config'
 
 export const RR_OPERATOR_COOKIE = 'qdip_rr_operator'
 const MAX_AGE_SECONDS = 8 * 60 * 60
@@ -72,5 +73,7 @@ export function sameOrigin(request: NextRequest) {
 
 export function safeTransport(request: NextRequest) {
   const url = request.nextUrl
-  return url.protocol === 'https:' || (url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.localhost')))
+  if (!isSurfaceHost('observatory', url.host)) return false
+  return url.protocol === 'https:' ||
+    (url.protocol === 'http:' && url.hostname.endsWith('.localhost'))
 }
