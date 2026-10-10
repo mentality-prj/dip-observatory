@@ -1,164 +1,94 @@
 import type { Locale } from '@/lib/observatory-i18n'
 
-type JsonObject = Record<string, unknown>
-const obj = (x: unknown): JsonObject | null =>
-  x !== null && typeof x === 'object' && !Array.isArray(x) ? (x as JsonObject) : null
-const field = (o: JsonObject | null, k: string) => o?.[k]
-const str = (x: unknown) => (typeof x === 'string' && x.trim() ? x : null)
-const copy = {
-  en: {
-    title: 'Kernel evidence',
-    state: 'Status',
-    execution: 'Execution',
-    decision: 'Decision',
-    source: 'Source snapshot',
-    revision: 'Revision',
-    authority: 'Authority',
-    verified: 'Backend-authoritative',
-    unverified: 'Not independently verified',
-    action: 'Execution eligibility',
-    eligible: 'Backend reports actionable',
-    blocked: 'Not actionable: inspect Kernel result',
-    jobs: 'Scheduled jobs',
-    donors: 'Donors',
-    unknown: 'Not recorded',
-    warning:
-      'This display does not issue repair orders; an actionable flag is not permission to execute real-world work.',
-  },
-  uk: {
-    title: 'Докази Kernel',
-    state: 'Статус',
-    execution: 'Виконання',
-    decision: 'Рішення',
-    source: 'Snapshot джерела',
-    revision: 'Ревізія',
-    authority: 'Джерело повноважень',
-    verified: 'Підтверджено бекендом Kernel',
-    unverified: 'Незалежно не перевірено',
-    action: 'Дозвіл до застосування',
-    eligible: 'Kernel повідомляє про виконуваність',
-    blocked: 'Не дозволено до виконання — перевірте результат',
-    jobs: 'Заплановані роботи',
-    donors: 'Донори',
-    unknown: 'Немає даних',
-    warning: 'Цей інтерфейс не видає ремонтних наказів. Ознака actionable не означає дозвіл на реальні операції.',
-  },
-  pl: {
-    title: 'Dowody Kernel',
-    state: 'Status',
-    execution: 'Wykonanie',
-    decision: 'Decyzja',
-    source: 'Migawka źródła',
-    revision: 'Rewizja',
-    authority: 'Autorytet',
-    verified: 'Potwierdzone przez backend Kernel',
-    unverified: 'Niezweryfikowane niezależnie',
-    action: 'Możliwość wykonania',
-    eligible: 'Backend zgłasza wykonalność',
-    blocked: 'Nie można wykonać: sprawdź wynik Kernel',
-    jobs: 'Zaplanowane zadania',
-    donors: 'Dawcy',
-    unknown: 'Nie zapisano',
-    warning: 'Interfejs nie zleca napraw. Flaga actionable nie oznacza uprawnienia do realnych działań.',
-  },
-} as const
-
-export type KernelEvidence = {
-  executionId: string | null
-  decisionId: string | null
-  kind: string | null
-  sourceSnapshot: string | null
-  revision: string | null
+/**
+ * This is a typed VIEW CONTRACT owned by qdip-core's RR plugin.
+ * No Monte Carlo, Pareto, optimization, capability scores or outcome
+ * classification is performed in qdip-web.
+ */
+export type KernelRRPresentation = {
+  schema_version: 'readiness-recovery.presentation.v1'
+  computation_authority: 'QDIP_KERNEL_RR_V1'
+  execution_id: string
+  decision_id: string
+  source_system: string
+  source_snapshot_id: string
+  source_version: string
+  payload_digest: string
+  change_kind: string
+  predecessor_execution_id: string | null
+  outcome_kind: string
+  backend_status: string
   authoritative: boolean
   actionable: boolean
-  jobs: Array<{ id: string; technician: string; start: number; finish: number }>
-  donors: string[]
+  summary: string
+  scheduled_jobs: { job_id: string; technician_id: string; start_slot: number; finish_slot: number }[]
+  selected_donor_ids: string[]
+  scheduled_job_count: number
+  job_count: number
+  technician_count: number
+  probability_demand_satisfied: null
+  probability_confidence_interval: null
+  field_verified: false
 }
-export function kernelEvidenceFromRecord(input: unknown): KernelEvidence {
-  const top = obj(input),
-    result = obj(field(top, 'result')),
-    workflow = obj(field(result, 'workflow'))
-  const ingestion = obj(field(workflow, 'ingestion'))
-  const payload = obj(field(ingestion, 'payload'))
-  const source = obj(field(ingestion, 'source')) ?? obj(field(workflow, 'source'))
-  const runtime = obj(field(result, 'runtime')),
-    outcome = obj(field(runtime, 'operator_outcome'))
-  const decision = obj(field(runtime, 'decision'))
-  const rawJobs = field(decision, 'scheduled_jobs')
-  const jobs = Array.isArray(rawJobs)
-    ? rawJobs.flatMap((j) => {
-        const a = obj(j),
-          id = str(field(a, 'job_id')),
-          technician = str(field(a, 'technician_id'))
-        const start = field(a, 'start_slot'),
-          finish = field(a, 'finish_slot')
-        if (
-          !id ||
-          !technician ||
-          typeof start !== 'number' ||
-          !Number.isFinite(start) ||
-          typeof finish !== 'number' ||
-          !Number.isFinite(finish) ||
-          start < 0 ||
-          finish < start
-        )
-          return []
-        return [{ id, technician, start, finish }]
-      })
-    : []
-  const donors = field(outcome, 'selected_donor_ids')
-  const authoritative = field(outcome, 'authoritative') === true
-  return {
-    executionId: str(field(workflow, 'execution_id')),
-    decisionId: str(field(payload, 'decision_id')),
-    kind: str(field(outcome, 'kind')),
-    sourceSnapshot: str(field(source, 'snapshot_id')),
-    revision: str(field(workflow, 'revision')) ?? str(field(workflow, 'revision_id')),
-    authoritative,
-    actionable: authoritative && field(outcome, 'actionable') === true,
-    jobs,
-    donors: Array.isArray(donors) ? donors.filter((v): v is string => typeof v === 'string') : [],
-  }
+
+const copy = {
+  en: { title: 'Kernel evidence', status: 'Kernel status', execution: 'Execution', decision: 'Decision',
+    source: 'Source snapshot', digest: 'Input digest', revision: 'Predecessor',
+    authority: 'Kernel evidence', allowed: 'Kernel reports actionable', denied: 'Non-actionable',
+    jobs: 'Scheduled jobs', donors: 'Donors', unknown: 'Unknown / not recorded',
+    warning: 'This view does not issue real-world work orders. Backend authority is not field acceptance.' },
+  uk: { title: 'Докази Kernel', status: 'Статус Kernel', execution: 'Виконання', decision: 'Рішення',
+    source: 'Snapshot джерела', digest: 'Хеш вхідних даних', revision: 'Попереднє виконання',
+    authority: 'Докази Kernel', allowed: 'Kernel визначив рішення придатним до виконання',
+    denied: 'Не дозволено до виконання', jobs: 'Заплановані роботи', donors: 'Донори',
+    unknown: 'Невідомо / не записано',
+    warning: 'Інтерфейс не видає реальних ремонтних наказів. Авторитет Kernel не означає польового приймання.' },
+  pl: { title: 'Dowody Kernel', status: 'Status Kernel', execution: 'Wykonanie', decision: 'Decyzja',
+    source: 'Migawka źródła', digest: 'Skrót danych wejściowych', revision: 'Poprzednik',
+    authority: 'Dowody Kernel', allowed: 'Kernel zgłasza wykonalność',
+    denied: 'Brak zgody na wykonanie', jobs: 'Zaplanowane zadania', donors: 'Dawcy',
+    unknown: 'Brak danych', warning: 'Interfejs nie wydaje zleceń napraw. Wynik Kernel nie jest akceptacją terenową.' },
+} as const
+
+/** A defensive shape gate for a *server projection*, not RR decision logic. */
+export function isKernelRRPresentation(value: unknown): value is KernelRRPresentation {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const v = value as Partial<KernelRRPresentation>
+  return v.schema_version === 'readiness-recovery.presentation.v1' &&
+    v.computation_authority === 'QDIP_KERNEL_RR_V1' &&
+    typeof v.execution_id === 'string' &&
+    typeof v.decision_id === 'string' &&
+    typeof v.authoritative === 'boolean' &&
+    typeof v.actionable === 'boolean' &&
+    typeof v.outcome_kind === 'string' &&
+    Array.isArray(v.scheduled_jobs) &&
+    Array.isArray(v.selected_donor_ids)
 }
-export function OperatorEvidence({ locale, record }: { locale: Locale; record: unknown }) {
-  const t = copy[locale],
-    e = kernelEvidenceFromRecord(record)
-  const fields = [
-    [t.execution, e.executionId],
-    [t.decision, e.decisionId],
-    [t.state, e.kind],
-    [t.source, e.sourceSnapshot],
-    [t.revision, e.revision],
-    [t.authority, e.authoritative ? t.verified : t.unverified],
-    [t.action, e.actionable ? t.eligible : t.blocked],
-    [t.jobs, String(e.jobs.length)],
-    [t.donors, e.donors.join(', ') || null],
-  ] as const
+
+export function OperatorEvidence({ locale, record }: { locale: Locale; record: KernelRRPresentation | null }) {
+  const t = copy[locale]
+  if (!record) return <p role="status" className="mt-3 text-sm text-amber-200">{t.unknown}</p>
+  const cells = [
+    [t.execution, record.execution_id], [t.decision, record.decision_id],
+    [t.status, record.outcome_kind], [t.source, record.source_snapshot_id],
+    [t.digest, record.payload_digest], [t.revision, record.predecessor_execution_id],
+    [t.authority, record.authoritative ? record.backend_status : t.denied],
+    [t.jobs, record.scheduled_job_count], [t.donors, record.selected_donor_ids.join(', ')],
+  ]
   return (
-    <section
-      data-testid="rr-kernel-evidence"
-      data-kernel-authoritative={String(e.authoritative)}
-      data-actionable={String(e.actionable)}
-      className="mt-3 border border-white/20 p-4"
-    >
+    <section data-testid="rr-kernel-evidence" data-kernel-authoritative={String(record.authoritative)}
+      data-actionable={String(record.actionable)} className="mt-3 border border-white/20 p-4">
       <h4 className="font-semibold">{t.title}</h4>
+      <p className="mt-2 text-sm">{record.actionable ? t.allowed : t.denied} · {record.summary}</p>
       <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-        {fields.map(([key, value]) => (
-          <div key={key}>
-            <dt className="text-xs text-slate-400">{key}</dt>
-            <dd className="mt-1 break-words text-slate-100">{value ?? t.unknown}</dd>
-          </div>
+        {cells.map(([label, value])=>(
+          <div key={label}><dt className="text-xs text-slate-400">{label}</dt>
+            <dd className="mt-1 break-words text-slate-100">{value ?? t.unknown}</dd></div>
         ))}
       </dl>
-      {e.actionable && e.jobs.length > 0 ? (
-        <ul className="mt-3 space-y-2">
-          {e.jobs.map((j, i) => (
-            <li key={j.id + '-' + i} className="font-mono text-xs">
-              {j.id} · {j.technician} · {j.start}–{j.finish}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <ul className="mt-3 space-y-1 text-xs font-mono">{record.scheduled_jobs.map(job=>(
+        <li key={job.job_id}>{job.job_id} · {job.technician_id} · {job.start_slot}–{job.finish_slot}</li>
+      ))}</ul>
       <p className="mt-4 text-xs text-amber-200">{t.warning}</p>
     </section>
   )
