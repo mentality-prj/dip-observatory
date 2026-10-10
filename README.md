@@ -43,6 +43,13 @@ Backend integration uses:
 - `DIP_API_BASE_URL` — DIP backend base URL
 - `DIP_API_KEY` — API key for server-side QDIP requests
 
+Protected **single-organization reference RR** operator mode also requires
+`RR_OPERATOR_PASSWORD` and `RR_OPERATOR_SESSION_SECRET` (server-only,
+never `NEXT_PUBLIC_*`). Keep the backend key org-scoped. See
+[RR operator configuration and acceptance](docs/rr-production-operator.md).
+The public stochastic RR demonstration stays independent; it no longer stores
+client-submitted scenarios for anonymous GET access.
+
 ### Decision inquiry email delivery
 
 The public Describe your decision form is delivered server-side through authenticated Zoho Mail SMTP. Configure these server-only variables in local `.env` and in the production secret store:
