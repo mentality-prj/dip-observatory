@@ -30,7 +30,7 @@ const example = (id: string, time: number, parts: number, risk: number): Recover
 describe('explicit priorities affect presentation only', () => {
   const a = example('a', 9, 0.1, 0.3),
     b = example('b', 2, 0.9, 0.1)
-  const result = { frontier: [a, b] } as ReadinessRecoveryResult
+  const result = { frontier: [a, b] } as unknown as ReadinessRecoveryResult
   it('orders time and parts priorities without mutating source candidates', () => {
     expect(orderReviewAlternatives(result, 'RECOVERY_TIME')[0].scenarioId).toBe('b')
     expect(orderReviewAlternatives(result, 'PARTS')[0].scenarioId).toBe('a')
@@ -41,6 +41,6 @@ describe('explicit priorities affect presentation only', () => {
     expect(explainReviewDifference(a, b).scarceParts).toBeCloseTo(-0.8)
   })
   it('handles empty candidate sets without inventing a winner', () => {
-    expect(orderReviewAlternatives({ frontier: [] } as ReadinessRecoveryResult, 'READINESS')).toEqual([])
+    expect(orderReviewAlternatives({ frontier: [] } as unknown as ReadinessRecoveryResult, 'READINESS')).toEqual([])
   })
 })
