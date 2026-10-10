@@ -110,8 +110,17 @@ export function parseRRInput(value: unknown): { input?: ReadinessRecoveryInput; 
   const parsed = schema.safeParse(value)
   if (parsed.success) return { input: parsed.data as ReadinessRecoveryInput, issues: [] }
   return {
-    issues: parsed.error.issues
-      .slice(0, 30)
-      .map((error) => ({ path: error.path.join('.') || '$', message: error.message })),
+    issues: parsed.error.issues.slice(0, 30).map((error) => ({
+      path: error.path.reduce<string>((path, segment) => {
+        if (typeof segment === 'number') return path + '[' + segment + ']'
+        return path ? path + '.' + segment : String(segment)
+      }, '') || '
+  }
+}
+,
+      message: error.code === 'too_small' && error.minimum === 0
+        ? 'Expected a non-negative number.'
+        : error.message,
+    })),
   }
 }
