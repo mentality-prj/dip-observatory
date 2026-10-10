@@ -1,4 +1,5 @@
-import type { ReadinessRecoveryInput, ReadinessRecoveryResult } from './domain'
+import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario } from './domain'
+import { buildEvidenceManifest, type EvidenceManifest } from './evidence-manifest'
 import { parseRRInput } from './input-contract'
 
 export const READINESS_DATA_SCHEMA_VERSION = 'readiness-recovery.v1' as const
@@ -17,6 +18,7 @@ export type ReadinessDataPackage = {
   exportedAt: string
   input: ReadinessRecoveryInput
   result?: ReadinessRecoveryResult
+  evidence?: EvidenceManifest
 }
 
 export type ValidationIssue = { path: string; message: string }
@@ -39,8 +41,18 @@ export function exactTemplate(input: ReadinessRecoveryInput): ReadinessDataPacka
   return { schemaVersion: READINESS_DATA_SCHEMA_VERSION, exportedAt: new Date(0).toISOString(), input }
 }
 
-export function exportAnalysis(input: ReadinessRecoveryInput, result?: ReadinessRecoveryResult): ReadinessDataPackage {
-  return { schemaVersion: READINESS_DATA_SCHEMA_VERSION, exportedAt: new Date().toISOString(), input, result }
+export function exportAnalysis(
+  input: ReadinessRecoveryInput,
+  result?: ReadinessRecoveryResult,
+  selected?: RecoveryScenario
+): ReadinessDataPackage {
+  return {
+    schemaVersion: READINESS_DATA_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    input,
+    result,
+    evidence: result ? buildEvidenceManifest(input, result, selected ?? null) : undefined,
+  }
 }
 
 export function importExactPackage(value: unknown): { input?: ReadinessRecoveryInput; issues: ValidationIssue[] } {
