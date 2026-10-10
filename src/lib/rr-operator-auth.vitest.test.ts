@@ -39,7 +39,7 @@ describe('RR single-tenant operator session boundary', () => {
     const session = createOperatorSession(now)
     expect(verifyOperatorSession(session, now)).toBe(true)
     expect(verifyOperatorSession(session, now + 9 * 60 * 60 * 1000)).toBe(false)
-    expect(verifyOperatorSession(session.replace(/.$/, '0'), now)).toBe(false)
+    expect(verifyOperatorSession(session.slice(0, -1) + (session.endsWith('0') ? '1' : '0'), now)).toBe(false)
     vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'rotated-independent-session-signing-key-123456')
     expect(verifyOperatorSession(session, now)).toBe(false)
   })
