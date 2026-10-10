@@ -5,7 +5,7 @@ import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
 import { kernelRequestPreflight, kernelReplanPreflight } from './operator-preflight'
 import { OperatorEvidence } from './operator-evidence'
-import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile } from './operator-guards'
+import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile, type OperatorErrorKind } from './operator-guards'
 import { defaultKernelView, moveKernelPanel, readKernelView, saveKernelView, type KernelPanel, type KernelView } from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
@@ -50,6 +50,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [lastResult, setLastResult] = useState<unknown>(null)
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [errorKind, setErrorKind] = useState<OperatorErrorKind | null>(null)
   const [busy, setBusy] = useState(false)
   const preflight = useMemo(() => kernelRequestPreflight(requestBody), [requestBody])
   const validReplan = useMemo(() => kernelReplanPreflight(replanBody), [replanBody])
@@ -75,6 +76,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setBusy(false)
     setLastResult(null)
     setOperation('')
+    setErrorKind(null)
   }
   function startOperation() {
     activeController.current?.abort()
@@ -84,6 +86,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   }
   function operationFailed(reason: unknown, epoch: number) {
     if (!requestGuard.current.current(epoch)) return
+    setErrorKind(reason instanceof OperatorRequestError ? reason.kind : 'TRANSPORT_ERROR')
     if (reason instanceof OperatorRequestError && reason.kind === 'AUTH_REQUIRED') {
       setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
       setLastResult(null)
@@ -115,6 +118,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
+    setErrorKind(null)
     setLastResult(null)
     try {
       const response = await fetch(url, {
@@ -217,6 +221,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
+    setErrorKind(null)
     try {
       await checkedJson(
         await fetch('/api/rr-operator/session', {
@@ -516,7 +521,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-4 text-sm text-rose-300">
+        <p role="alert" data-error-kind={errorKind ?? 'INVALID_INPUT'} className="mt-4 text-sm text-rose-300">
           {error}
         </p>
       )}
