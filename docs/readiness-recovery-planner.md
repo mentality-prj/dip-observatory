@@ -69,14 +69,19 @@ The Observatory surfaces a `QDIP Advantage` result only when the strongest retai
 
 ## Observatory API
 
-The demo exposes:
+The public demonstrator exposes **stateless** calls:
 
-- `POST /readiness/scenarios`
-- `GET /readiness/scenarios/:id`
-- `POST /readiness/scenarios/:id/recalculate`
-- `GET /readiness/scenarios/:id/frontier`
+- `POST /readiness/scenarios` — calculate a synthetic frontier
+- `POST /readiness/scenarios/:id/recalculate` — recalculate supplied input
+- `GET /readiness/scenarios/:id` and `GET .../frontier` — **410 Gone**
+  (not stored; results must be recalculated)
 
-The route is independent of SAP contracts. The current `ReadinessScenarioRepository` adapter is intentionally process-local because Observatory has no durable scenario database. It is suitable for the interactive demo only; a durable repository must replace it before these GET endpoints are used as a production persistence contract.
+The demo no longer stores user-submitted scenarios in a shared process-global
+`Map` or permits anonymous scenario-id reads. Its optimization remains the
+separate demonstration model. Never submit sensitive operational inputs to
+the public demo. For authenticated, persisted Kernel decisions use the
+separate reference operator on the same page (see
+[`rr-production-operator.md`](rr-production-operator.md)).
 
 ## Synthetic evaluation data
 
