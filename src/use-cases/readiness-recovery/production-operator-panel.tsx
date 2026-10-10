@@ -255,59 +255,34 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     const exportedDecisionId = decisionId
     setBusy(true)
     setError(null)
+    setPresentation(null)
     setLastResult(null)
     try {
-      const exported: unknown[] = []
-      let cursor: string | null = null
-      let expectedHead: string | null = null
-      let completed = false
-      for (let pageNumber = 0; pageNumber < 20; pageNumber++) {
-        const path = `${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export`
-        const params = new URLSearchParams({ page_size: '100' })
-        if (cursor !== null && expectedHead !== null) {
-          params.set('cursor', cursor)
-          params.set('expected_head', expectedHead)
-        }
-        const data = (await checkedJson(
-          await fetch(`${path}?${params.toString()}`, { cache: 'no-store', signal })
-        )) as {
-          head_execution_id: string
-          executions: unknown[]
-          next_cursor: string | null
-          export_complete: boolean
-        }
-        if (!data.head_execution_id || !Array.isArray(data.executions)) throw new Error('Invalid RR export contract')
-        if (expectedHead !== null && expectedHead !== data.head_execution_id)
-          throw new Error('RR decision head changed during export; restart')
-        expectedHead = data.head_execution_id
-        if (!requestGuard.current.current(epoch)) return
-        exported.push(...data.executions)
-        if (data.export_complete) {
-          completed = true
-          break
-        }
-        if (!data.next_cursor) throw new Error('RR export cursor missing')
-        cursor = data.next_cursor
-      }
-      if (!completed) throw new Error('RR export page limit reached; cannot attest complete history')
+      const response: unknown = await checkedJson(await fetch(
+        `${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export-complete`,
+        { cache: 'no-store', signal }
+      ))
       if (!requestGuard.current.current(epoch)) return
-      const exportedDocument = {
-        decision_id: exportedDecisionId,
-        head_execution_id: expectedHead,
-        executions: exported,
-        export_complete: true,
+      // Only accept the backend's attested, complete response; never aggregate
+      // pages, infer a decision head, or compute history integrity in web.
+      if (!response || typeof response !== 'object' || !('export_complete' in response) ||
+          response.export_complete !== true || !('history_verified' in response) ||
+          response.history_verified !== true || !('decision_id' in response) ||
+          response.decision_id !== exportedDecisionId || !('executions' in response) ||
+          !Array.isArray(response.executions)) {
+        throw new Error('Kernel did not attest complete decision history')
       }
       setOperation('Complete history export')
-      setLastResult(exportedDocument)
-      const blob = new Blob([JSON.stringify(exportedDocument, null, 2)], { type: 'application/json' })
-      const objectUrl = URL.createObjectURL(blob)
+      setLastResult(response)
+      const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
       try {
         const anchor = document.createElement('a')
-        anchor.href = objectUrl
+        anchor.href = url
         anchor.download = `rr-history-${exportedDecisionId}.json`
         anchor.click()
       } finally {
-        URL.revokeObjectURL(objectUrl)
+        URL.revokeObjectURL(url)
       }
     } catch (reason) {
       operationFailed(reason, epoch)
