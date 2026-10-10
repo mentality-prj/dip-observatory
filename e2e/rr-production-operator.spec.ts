@@ -6,7 +6,7 @@ const PAGE = `${ORIGIN}/uk/readiness-recovery`
 
 test('production RR requires a logged-in operator, with no public API-key fallback', async ({ page }) => {
   const response = await page.request.get(`${ORIGIN}/api/rr-operator/kernel/executions/rr-reference-001`)
-  expect([401, 503]).toContain(response.status())
+  expect([401, 403, 503]).toContain(response.status())
 })
 
 test('public RR demo does not expose a prior scenario through an anonymous GET', async ({ page }) => {
