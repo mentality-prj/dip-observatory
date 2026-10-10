@@ -10,7 +10,7 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     authoritative: true,
     actionable: true,
     outcome_kind: 'OPTIMAL_DECISION',
-    scheduled_jobs: [{job_id:'job-1',technician_id:'tech-1',start_slot:0,finish_slot:1}],
+    scheduled_jobs: [{ job_id: 'job-1', technician_id: 'tech-1', start_slot: 0, finish_slot: 1 }],
     selected_donor_ids: [],
   }
 

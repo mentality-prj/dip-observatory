@@ -48,4 +48,3 @@ export function parsedExecutionIds(value: unknown): { executionId: string; decis
   const safe = (id: unknown) => (typeof id === 'string' && /^[a-zA-Z0-9][\w.-]{0,127}$/.test(id) ? id : '')
   return { executionId: safe(executionId), decisionId: safe(decisionId) }
 }
-

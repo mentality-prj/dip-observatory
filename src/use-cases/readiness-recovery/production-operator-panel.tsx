@@ -34,9 +34,15 @@ type KernelPreflight = {
 function isKernelPreflight(value: unknown): value is KernelPreflight {
   if (!value || typeof value !== 'object') return false
   const v = value as Partial<KernelPreflight>
-  return v.schema_version === 'readiness-recovery.presentation.v1' && v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
-    typeof v.execution_id === 'string' && typeof v.decision_id === 'string' &&
-    typeof v.source_snapshot_id === 'string' && typeof v.job_count === 'number' && typeof v.technician_count === 'number'
+  return (
+    v.schema_version === 'readiness-recovery.presentation.v1' &&
+    v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    typeof v.execution_id === 'string' &&
+    typeof v.decision_id === 'string' &&
+    typeof v.source_snapshot_id === 'string' &&
+    typeof v.job_count === 'number' &&
+    typeof v.technician_count === 'number'
+  )
 }
 const initialRequest = `{
   "execution_id": "rr-reference-001",
@@ -158,20 +164,29 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setPreflight(null)
       setPreflightStatus('Checking Kernel contract…')
       void fetch('/api/rr-operator/kernel/preflight', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: currentBody, cache: 'no-store', signal: controller.signal,
-      }).then(checkedJson).then((value) => {
-        if (controller.signal.aborted) return
-        if (!isKernelPreflight(value)) throw new Error('Unsupported Kernel preflight response')
-        setPreflight(value)
-        setPreflightStatus('')
-      }).catch((reason: unknown) => {
-        if (controller.signal.aborted) return
-        setPreflight(null)
-        setPreflightStatus(reason instanceof Error ? reason.message : 'Preflight rejected')
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: currentBody,
+        cache: 'no-store',
+        signal: controller.signal,
       })
+        .then(checkedJson)
+        .then((value) => {
+          if (controller.signal.aborted) return
+          if (!isKernelPreflight(value)) throw new Error('Unsupported Kernel preflight response')
+          setPreflight(value)
+          setPreflightStatus('')
+        })
+        .catch((reason: unknown) => {
+          if (controller.signal.aborted) return
+          setPreflight(null)
+          setPreflightStatus(reason instanceof Error ? reason.message : 'Preflight rejected')
+        })
     }, 250)
-    return () => { clearTimeout(timeout); controller.abort() }
+    return () => {
+      clearTimeout(timeout)
+      controller.abort()
+    }
   }, [requestBody, session?.authenticated])
 
   useEffect(() => {
@@ -210,7 +225,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
-        if (!ids.executionId || !ids.decisionId || preflight?.execution_id !== ids.executionId || preflight?.decision_id !== ids.decisionId)
+        if (
+          !ids.executionId ||
+          !ids.decisionId ||
+          preflight?.execution_id !== ids.executionId ||
+          preflight?.decision_id !== ids.decisionId
+        )
           throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
@@ -228,15 +248,18 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         const { executionId: id } = parsedExecutionIds(data)
         if (id) {
           try {
-            const projection: unknown = await checkedJson(await fetch(
-              `${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal }
-            ))
+            const projection: unknown = await checkedJson(
+              await fetch(`${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal })
+            )
             if (!requestGuard.current.current(epoch)) return
             if (!isKernelRRPresentation(projection) || projection.execution_id !== id)
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
           } catch (projectionError) {
-            if (requestGuard.current.current(epoch) && !(projectionError instanceof DOMException && projectionError.name === 'AbortError')) {
+            if (
+              requestGuard.current.current(epoch) &&
+              !(projectionError instanceof DOMException && projectionError.name === 'AbortError')
+            ) {
               // A successful execution is NOT rolled back or retried because an optional read model is unavailable.
               setError('Execution created. Plugin evidence is unavailable; do not resubmit the same request.')
             }
@@ -258,18 +281,27 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setPresentation(null)
     setLastResult(null)
     try {
-      const response: unknown = await checkedJson(await fetch(
-        `${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export-complete`,
-        { cache: 'no-store', signal }
-      ))
+      const response: unknown = await checkedJson(
+        await fetch(`${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export-complete`, {
+          cache: 'no-store',
+          signal,
+        })
+      )
       if (!requestGuard.current.current(epoch)) return
       // Only accept the backend's attested, complete response; never aggregate
       // pages, infer a decision head, or compute history integrity in web.
-      if (!response || typeof response !== 'object' || !('export_complete' in response) ||
-          response.export_complete !== true || !('history_verified' in response) ||
-          response.history_verified !== true || !('decision_id' in response) ||
-          response.decision_id !== exportedDecisionId || !('executions' in response) ||
-          !Array.isArray(response.executions)) {
+      if (
+        !response ||
+        typeof response !== 'object' ||
+        !('export_complete' in response) ||
+        response.export_complete !== true ||
+        !('history_verified' in response) ||
+        response.history_verified !== true ||
+        !('decision_id' in response) ||
+        response.decision_id !== exportedDecisionId ||
+        !('executions' in response) ||
+        !Array.isArray(response.executions)
+      ) {
         throw new Error('Kernel did not attest complete decision history')
       }
       setOperation('Complete history export')

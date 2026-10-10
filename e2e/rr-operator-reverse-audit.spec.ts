@@ -66,7 +66,8 @@ test('editing a Kernel request invalidates its obsolete delayed response', async
       payload?: { decision_id?: string }
     }
     await route.fulfill({
-      status: 200, contentType: 'application/json',
+      status: 200,
+      contentType: 'application/json',
       body: JSON.stringify({
         schema_version: 'readiness-recovery.presentation.v1',
         validation_scope: 'SCHEMA_AND_ADMISSION_ONLY',

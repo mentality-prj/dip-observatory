@@ -35,12 +35,12 @@ The former React `ReadinessRecoveryWorkspace` was still present as an unused, br
 
 Only consider this PR code-qualified after the current SHA has passed lint, formatting, typecheck, full unit/component suite, production build and browser E2E; full backend product qualification is a separate gate.
 
-
 ## 2026-10-11: RR computation ownership migration
 
 The canonical UI is Kernel-only. All 43 retired RR TypeScript research/optimizer/Monte Carlo/Pareto/benchmark/Test A implementation and test modules have been removed from the qdip-web working tree; historical Git commits preserve the prior experiments without deploying them. The active UI is not allowed to import any deprecated RR calculation module.
 
 Added **qdip-core RR plugin** modules and endpoints on backend branch `feat/rr-plugin-computation-ownership`:
+
 - `presentation.py` computes Pydantic-validated RR preflight, execution read-model metrics, provenance and strict complete-history projection;
 - `research_math.py` hosts bounded experimental distributions, Monte Carlo and Pareto primitives with explicit `BACKEND_RESEARCH_ONLY` status, no production route, no claim of equivalence to the retired TS planner;
 - `POST /api/v1/readiness-recovery/preflight`;
