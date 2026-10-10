@@ -337,7 +337,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
           onExactFile={importExact}
           onDownloadTemplate={() => downloadJson('qdip-readiness-recovery-template.json', exactTemplate(baseInput))}
           onExport={() =>
-            downloadJson('qdip-readiness-recovery-analysis.json', exportAnalysis(baseInput, result ?? undefined, selected ?? undefined))
+            downloadJson(
+              'qdip-readiness-recovery-analysis.json',
+              exportAnalysis(baseInput, result ?? undefined, selected ?? undefined)
+            )
           }
           exactStatus={exactStatus}
           exactIssues={exactIssues}
