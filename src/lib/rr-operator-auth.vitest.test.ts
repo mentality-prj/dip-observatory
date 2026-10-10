@@ -55,6 +55,7 @@ describe('RR single-tenant operator session boundary', () => {
     expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
     expect(safeTransport(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(true)
     expect(safeTransport(make('http://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
-    expect(safeTransport(make('http://127.0.0.1:3000/api/rr-operator/session'))).toBe(true)
+    expect(safeTransport(make('http://observatory.localhost:3000/api/rr-operator/session'))).toBe(true)
+    expect(safeTransport(make('https://qdip.ai/api/rr-operator/session'))).toBe(false)
   })
 })
