@@ -2,7 +2,20 @@
 
 Issue: https://github.com/mentality-prj/dip-observatory/issues/223
 Parent product stage: https://github.com/mentality-prj/dzvin-intelligence-platform/issues/274
-Status: **INCOMPATIBLE / MAPPING NOT PROVEN / NO PRODUCTION ACTION**.
+Status: **SINGLE CANONICAL KERNEL AUTHORITY IN MAIN RR UI / REFERENCE OPERATOR ONLY / PRODUCT NOT QUALIFIED**.
+
+## 2026-10-10 — single-solver execution policy
+
+- The canonical `/readiness-recovery` workspace now mounts only the authenticated RR Kernel reference operator. It never imports or executes the local TypeScript candidate generator, Monte Carlo sampler or Pareto comparator.
+- The incompatible former public route `POST /readiness/scenarios` (and all subpaths, including recalculate) is retired with HTTP `410` and a structured code `RR_LEGACY_SOLVER_RETIRED`. It has no fallback to the local solver.
+- Old TypeScript scenario-research source files remain in the codebase for audit/regression work only; they are **not accessible as product RR calculations**. Never present a Monte Carlo probability as a CP-SAT optimization result or translate unsupported asset/capability variables into job scheduling silently.
+- The reference operator requires `RR_REFERENCE_OPERATOR_ENABLED=true`, strong server-only credentials and a scoped DIP API key. Without explicit configuration, the UI shows `Kernel RR operator unavailable` and provides **no alternative solver**.
+- This is a restricted, single-organization reference access path (shared password), **not production OIDC or general commercial acceptance**. Operator execution/replan/history/replay are server-backed; there is no browser-side production `Apply` action.
+- Future feature parity (asset/capability semantics, stochastic uncertainty, Pareto) requires new explicitly versioned Kernel-owned domain contracts; it must not revive an incompatible second scheduler in the user-facing RR UI.
+
+---
+
+Historical incompatibility audit retained below for context. Earlier statements that the public Monte Carlo solver is available are superseded by the policy above.
 This document is an inventory of the _existing_ implementations, not a claim of interoperability or a new contract.
 
 ## Execution boundaries
