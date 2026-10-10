@@ -71,6 +71,9 @@ test('reference operator: Kernel execution, reasoned replan, durable history and
   await expect(panel.getByText('"executions"', { exact: false }).last()).toBeVisible()
   await panel.getByRole('button', { name: 'Integrity' }).click()
   await expect(panel.getByText('"complete_chain": true', { exact: false }).last()).toBeVisible()
+  await panel.getByRole('button', { name: 'Export complete history' }).click()
+  await expect(panel.getByText('"export_complete": true', { exact: false }).last()).toBeVisible()
+
   await panel.getByRole('button', { name: 'Replay' }).click()
   await expect(panel.getByText('"verified": true', { exact: false }).last()).toBeVisible()
 
