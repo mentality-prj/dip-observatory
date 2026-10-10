@@ -3,37 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
+import { OperatorEvidence } from './operator-evidence'
 import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile } from './operator-guards'
 import { defaultKernelView, moveKernelPanel, readKernelView, saveKernelView, type KernelPanel, type KernelView } from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
-type RecordSummary = {
-  organization_id?: string
-  result?: {
-    workflow?: {
-      execution_id?: string
-      ingestion?: { payload?: { decision_id?: string } }
-    }
-    runtime?: {
-      operator_outcome?: {
-        kind?: string
-        actionable?: boolean
-        authoritative?: boolean
-        summary?: string
-        selected_donor_ids?: string[]
-      }
-      decision?: {
-        scheduled_jobs?: Array<{
-          job_id: string
-          technician_id: string
-          start_slot: number
-          finish_slot: number
-        }>
-      } | null
-    }
-  }
-}
-
 const initialRequest = `{
   "execution_id": "rr-reference-001",
   "source": {},
@@ -291,7 +265,6 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
 
   const validId = (id: string) => /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   const prefix = '/api/rr-operator/kernel'
-  const summary = lastResult as RecordSummary | null
 
   return (
     <section className={`mt-8 border border-sky-400/30 bg-slate-900/70 ${view.density === 'COMPACT' ? 'p-3 md:p-4 text-sm' : 'p-5 md:p-6'}`} data-testid="rr-production-operator">
@@ -515,36 +488,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {lastResult !== null && (
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              {summary?.result?.runtime?.operator_outcome && (
-                <div className="mt-2 space-y-3 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
-                  <p>
-                    Decision: {summary.result.runtime.operator_outcome.kind ?? 'UNKNOWN'}
-                    {' · '}
-                    {summary.result.runtime.operator_outcome.authoritative ? 'Authoritative' : 'Uncertified'}
-                    {' · '}
-                    {summary.result.runtime.operator_outcome.actionable
-                      ? 'Actionable'
-                      : t.nonActionable}
-                  </p>
-                  <p className="text-slate-300">{summary.result.runtime.operator_outcome.summary}</p>
-                  {summary.result.runtime.operator_outcome.actionable &&
-                    summary.result.runtime.decision?.scheduled_jobs && (
-                      <div>
-                        <h4 className="font-semibold">Kernel scheduled jobs (slot units)</h4>
-                        <ul className="mt-2 space-y-1">
-                          {summary.result.runtime.decision.scheduled_jobs.map((job) => (
-                            <li key={job.job_id} className="font-mono text-xs">
-                              {job.job_id} · {job.technician_id} · slots {job.start_slot}–{job.finish_slot}
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="mt-2 text-xs">
-                          Donor kits: {summary.result.runtime.operator_outcome.selected_donor_ids?.join(', ') || 'none'}
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
+              <OperatorEvidence locale={locale} record={lastResult} />
               <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
                 {JSON.stringify(lastResult, null, 2)}
               </pre>
