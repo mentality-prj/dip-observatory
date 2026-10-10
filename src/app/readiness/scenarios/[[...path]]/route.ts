@@ -9,6 +9,8 @@ import { decorateObjectiveLabels } from '@/use-cases/readiness-recovery/scenario
 
 type RouteContext = { params: Promise<{ path?: string[] }> }
 
+const MAX_PUBLIC_REQUEST_BYTES = 1_048_576
+
 const PUBLIC_PLANNER_LIMITS = {
   simulationSamples: 500,
   beamWidth: 128,
@@ -29,6 +31,11 @@ function assertSameOrigin(request: Request) {
 
 function assertPublicPlannerLimits(input: ReadinessRecoveryInput) {
   const { settings } = input
+  if (!Array.isArray(input.assets) || input.assets.length > 200 ||
+      !Array.isArray(input.recoveryActions) || input.recoveryActions.length > 300 ||
+      !Array.isArray(input.capabilityDemand) || input.capabilityDemand.length > 32) {
+    throw new Error('Public RR demo entity limits exceeded.')
+  }
   for (const [key, limit] of Object.entries(PUBLIC_PLANNER_LIMITS)) {
     const value = settings[key as keyof typeof PUBLIC_PLANNER_LIMITS]
     if (!Number.isFinite(value) || value < 1 || value > limit) {
@@ -59,7 +66,12 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     assertSameOrigin(request)
     const { path = [] } = await context.params
-    const body = (await request.json()) as { input?: ReadinessRecoveryInput }
+    if (Number(request.headers.get('content-length') ?? 0) > MAX_PUBLIC_REQUEST_BYTES)
+      return NextResponse.json({ error: 'RR demo request too large' }, { status: 413 })
+    const raw = await request.text()
+    if (Buffer.byteLength(raw, 'utf8') > MAX_PUBLIC_REQUEST_BYTES)
+      return NextResponse.json({ error: 'RR demo request too large' }, { status: 413 })
+    const body = JSON.parse(raw) as { input?: ReadinessRecoveryInput }
     if (!body.input) return NextResponse.json({ error: 'Readiness recovery input is required.' }, { status: 400 })
 
     if (path.length === 0) {
