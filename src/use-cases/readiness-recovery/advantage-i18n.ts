@@ -17,13 +17,13 @@ export const readinessAdvantageI18n: Record<
   }
 > = {
   en: {
-    eyebrow: 'QDIP ADVANTAGE',
-    title: 'Measured QDIP advantage over the strongest heuristic',
-    body: 'The strongest evaluated nondominated scenario is compared with the strongest FIFO, criticality or greedy baseline under the same input uncertainty assumptions.',
+    eyebrow: 'EXPLORATORY · LOCAL PLANNER COMPARISON',
+    title: 'Observatory planner outperformed the strongest local heuristic in this simulation',
+    body: 'Exploratory comparison within the Observatory simulator, not independent verification of the production QDIP Kernel. This does not establish general statistical superiority.',
     probabilityDelta: 'Demand-satisfaction delta',
     readinessDelta: 'Readiness delta',
     shortfallReduction: 'Shortfall reduction',
-    qdip: 'QDIP scenario',
+    qdip: 'Observatory scenario',
     baseline: 'Best heuristic',
     pathway: 'Efficient recovery path',
     pathwayDetected:
@@ -31,13 +31,13 @@ export const readinessAdvantageI18n: Record<
     noMaterialAdvantage: 'No material advantage over the strongest heuristic is demonstrated in this scenario.',
   },
   uk: {
-    eyebrow: 'ПЕРЕВАГА QDIP',
-    title: 'Виміряна перевага QDIP над найсильнішою евристикою',
-    body: 'Найсильніший оцінений недомінований сценарій порівнюється з найсильнішим варіантом FIFO, критичності або жадібної евристики за однакових вхідних припущень щодо невизначеності.',
+    eyebrow: 'ДОСЛІДНИЦЬКЕ · ЛОКАЛЬНЕ ПОРІВНЯННЯ',
+    title: 'Планувальник Observatory перевершив локальну евристику в цій симуляції',
+    body: 'Дослідницьке порівняння всередині симулятора Observatory, а не незалежна перевірка production QDIP Kernel. Загальну статистичну перевагу не доведено.',
     probabilityDelta: 'Приріст ймовірності виконання потреби',
     readinessDelta: 'Приріст готовності',
     shortfallReduction: 'Зменшення дефіциту',
-    qdip: 'Сценарій QDIP',
+    qdip: 'Сценарій Observatory',
     baseline: 'Найкраща евристика',
     pathway: 'Ефективний шлях відновлення',
     pathwayDetected:
@@ -45,13 +45,13 @@ export const readinessAdvantageI18n: Record<
     noMaterialAdvantage: 'У цьому сценарії суттєва перевага над найсильнішою евристикою не продемонстрована.',
   },
   pl: {
-    eyebrow: 'PRZEWAGA QDIP',
-    title: 'Zmierzona przewaga QDIP nad najsilniejszą heurystyką',
-    body: 'Najsilniejszy oceniony scenariusz niezdominowany jest porównywany z najlepszym wariantem FIFO, krytyczności lub heurystyki zachłannej przy tych samych wejściowych założeniach dotyczących niepewności.',
+    eyebrow: 'EKSPLORACYJNE · LOKALNE PORÓWNANIE',
+    title: 'Planer Observatory przewyższył lokalną heurystykę w tej symulacji',
+    body: 'Porównanie eksploracyjne w symulatorze Observatory, bez niezależnej weryfikacji produkcyjnego QDIP Kernel. Nie dowodzi ogólnej przewagi statystycznej.',
     probabilityDelta: 'Zmiana prawdopodobieństwa pokrycia potrzeb',
     readinessDelta: 'Zmiana gotowości',
     shortfallReduction: 'Zmniejszenie niedoboru',
-    qdip: 'Scenariusz QDIP',
+    qdip: 'Scenariusz Observatory',
     baseline: 'Najlepsza heurystyka',
     pathway: 'Efektywna ścieżka odtworzenia',
     pathwayDetected:
