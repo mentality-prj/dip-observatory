@@ -64,11 +64,14 @@ export async function POST(request: Request, context: RouteContext) {
     assertSameOrigin(request)
     const { path = [] } = await context.params
     const body: unknown = await request.json()
-    const rawInput = body && typeof body === 'object' && !Array.isArray(body) && 'input' in body
-      ? body.input : undefined
+    const rawInput =
+      body && typeof body === 'object' && !Array.isArray(body) && 'input' in body ? body.input : undefined
     const parsedInput = parseRRInput(rawInput)
     if (!parsedInput.input) {
-      return NextResponse.json({ error: 'Invalid readiness recovery input.', issues: parsedInput.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Invalid readiness recovery input.', issues: parsedInput.issues },
+        { status: 400 }
+      )
     }
     const input = parsedInput.input
 

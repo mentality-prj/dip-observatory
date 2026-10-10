@@ -56,18 +56,21 @@ const copy = {
       INVALID_RESULT: 'Nieprawidłowy format wyniku. Decyzja nie jest potwierdzona.',
     },
   },
-} as const satisfies Record<Locale, {
-  title: string
-  origin: string
-  synthetic: string
-  imported: string
-  authorityLabel: string
-  authority: string
-  evidenceLabel: string
-  evidence: string
-  restricted: string
-  states: Record<ObservatoryResultState, string>
-}>
+} as const satisfies Record<
+  Locale,
+  {
+    title: string
+    origin: string
+    synthetic: string
+    imported: string
+    authorityLabel: string
+    authority: string
+    evidenceLabel: string
+    evidence: string
+    restricted: string
+    states: Record<ObservatoryResultState, string>
+  }
+>
 
 export function DecisionTrustPanel({ locale, trust }: { locale: Locale; trust: ObservatoryDecisionTrust }) {
   const t = copy[locale]

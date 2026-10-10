@@ -101,7 +101,9 @@ describe('Observatory planner response integrity gate', () => {
 
   it('recognizes the existing simulated result shape without elevating authority', () => {
     expect(isObservatoryPlannerResult(response)).toBe(true)
-    expect(assessObservatoryDecision('USER_IMPORTED', response as ReadinessRecoveryResult).productionApplyEligible).toBe(false)
+    expect(
+      assessObservatoryDecision('USER_IMPORTED', response as ReadinessRecoveryResult).productionApplyEligible
+    ).toBe(false)
   })
 
   it('rejects null, incomplete data, invalid metrics and malformed alternatives', () => {
@@ -120,7 +122,8 @@ describe('Observatory planner response integrity gate', () => {
   it('accepts an empty frontier as a valid negative result, not infeasibility proof', () => {
     const value = { ...response, frontier: [] }
     expect(isObservatoryPlannerResult(value)).toBe(true)
-    expect(assessObservatoryDecision('SYNTHETIC_PRESET', value as ReadinessRecoveryResult).state)
-      .toBe('NO_COMPARABLE_CANDIDATES')
+    expect(assessObservatoryDecision('SYNTHETIC_PRESET', value as ReadinessRecoveryResult).state).toBe(
+      'NO_COMPARABLE_CANDIDATES'
+    )
   })
 })

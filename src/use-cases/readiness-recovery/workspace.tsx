@@ -13,8 +13,11 @@ import { DecisionSummary } from './decision-summary'
 import { AnalystEvidence } from './analyst-evidence'
 import { PersonalObservatory } from './personal-observatory'
 import {
-  readRRViewPreferences, saveRRViewPreferences, templatePreferences,
-  type RRViewPreferences, type RRWidget,
+  readRRViewPreferences,
+  saveRRViewPreferences,
+  templatePreferences,
+  type RRViewPreferences,
+  type RRWidget,
 } from './view-preferences'
 import { orderReviewAlternatives, type ViewingPriority } from './decision-policy'
 import {
@@ -348,19 +351,25 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
 
         {result ? (
           <>
-            {showWidget('DECISION_SUMMARY') ? <DecisionSummary
-              locale={locale}
-              input={baseInput}
-              result={result}
-              selected={selected}
-              comparator={reviewOrder.find((item) => item.scenarioId !== selected?.scenarioId) ?? null}
-              priority={viewingPriority}
-            /> : null}
+            {showWidget('DECISION_SUMMARY') ? (
+              <DecisionSummary
+                locale={locale}
+                input={baseInput}
+                result={result}
+                selected={selected}
+                comparator={reviewOrder.find((item) => item.scenarioId !== selected?.scenarioId) ?? null}
+                priority={viewingPriority}
+              />
+            ) : null}
             <DecisionTrustPanel
               locale={locale}
               trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
             />
-            {showWidget('EVIDENCE') ? <div id="rr-analyst-evidence"><AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} /></div> : null}
+            {showWidget('EVIDENCE') ? (
+              <div id="rr-analyst-evidence">
+                <AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} />
+              </div>
+            ) : null}
             <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <Metric label={t.assets} value={String(result.inputSummary.assets)} />
               <Metric label={t.impaired} value={String(result.inputSummary.impairedAssets)} />
@@ -457,9 +466,16 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               <h2 className="text-2xl font-medium">{t.frontier}</h2>
               <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">{t.frontierHelp}</p>
               <label className="mt-4 block max-w-xs text-xs text-slate-300">
-                {locale === 'uk' ? 'Пріоритет відображення (не рекомендація)' : locale === 'pl' ? 'Priorytet sortowania (nie rekomendacja)' : 'Viewing priority (not a recommendation)'}
-                <select value={viewingPriority} onChange={(event) => setViewingPriority(event.target.value as ViewingPriority)}
-                  className="mt-2 block w-full border border-white/15 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                {locale === 'uk'
+                  ? 'Пріоритет відображення (не рекомендація)'
+                  : locale === 'pl'
+                    ? 'Priorytet sortowania (nie rekomendacja)'
+                    : 'Viewing priority (not a recommendation)'}
+                <select
+                  value={viewingPriority}
+                  onChange={(event) => setViewingPriority(event.target.value as ViewingPriority)}
+                  className="mt-2 block w-full border border-white/15 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                >
                   <option value="READINESS">{t.readiness}</option>
                   <option value="RECOVERY_TIME">{t.time}</option>
                   <option value="PARTS">{t.scarceParts}</option>

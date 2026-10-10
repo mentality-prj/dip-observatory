@@ -11,13 +11,18 @@ export function orderReviewAlternatives(
   if (!result) return []
   const frontier = result.frontier.filter((s) => Number.isFinite(s.probabilityDemandSatisfied))
   return [...frontier].sort((a, b) => {
-    const primary = priority === 'RECOVERY_TIME' ? a.expectedRecoveryTimeHours - b.expectedRecoveryTimeHours
-      : priority === 'PARTS' ? a.scarcePartsConsumed - b.scarcePartsConsumed
-      : priority === 'FAILURE_RISK' ? risk(a) - risk(b)
-      : b.expectedCapabilityReadiness - a.expectedCapabilityReadiness
+    const primary =
+      priority === 'RECOVERY_TIME'
+        ? a.expectedRecoveryTimeHours - b.expectedRecoveryTimeHours
+        : priority === 'PARTS'
+          ? a.scarcePartsConsumed - b.scarcePartsConsumed
+          : priority === 'FAILURE_RISK'
+            ? risk(a) - risk(b)
+            : b.expectedCapabilityReadiness - a.expectedCapabilityReadiness
     // Readiness probability is a secondary display metric only, not a global utility.
-    return primary || b.probabilityDemandSatisfied - a.probabilityDemandSatisfied ||
-      a.scenarioId.localeCompare(b.scenarioId)
+    return (
+      primary || b.probabilityDemandSatisfied - a.probabilityDemandSatisfied || a.scenarioId.localeCompare(b.scenarioId)
+    )
   })
 }
 
