@@ -31,10 +31,16 @@ describe('canonical RR has one decision authority', () => {
       'evidence-manifest.ts',
     ]
     for (const filename of banned) expect(remaining).not.toContain(filename)
-    const source = remaining.filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'))
-      .map((file) => readFileSync(join(root, file), 'utf8')).join('\n')
-    expect(source).not.toMatch(/function\s+(planReadinessRecovery|sampleDistribution|distributionMean|paretoFrontier|applySensitivity|computeRisk)/)
-    expect(source).not.toMatch(/import\s+.*\s+from\s+['"]\.\/(planner|optimization-backend|benchmark-suite|demo-data|operator-preflight)['"]/)
+    const source = remaining
+      .filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'))
+      .map((file) => readFileSync(join(root, file), 'utf8'))
+      .join('\n')
+    expect(source).not.toMatch(
+      /function\s+(planReadinessRecovery|sampleDistribution|distributionMean|paretoFrontier|applySensitivity|computeRisk)/
+    )
+    expect(source).not.toMatch(
+      /import\s+.*\s+from\s+['"]\.\/(planner|optimization-backend|benchmark-suite|demo-data|operator-preflight)['"]/
+    )
     const allowlist = readFileSync(join(process.cwd(), 'src/lib/rr-kernel-route-allowlist.ts'), 'utf8')
     expect(allowlist).toContain("path[0] === 'preflight'")
     expect(allowlist).toContain("'presentation'")
