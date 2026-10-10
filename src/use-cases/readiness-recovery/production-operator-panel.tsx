@@ -5,8 +5,22 @@ import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
 import { kernelRequestPreflight, kernelReplanPreflight } from './operator-preflight'
 import { OperatorEvidence } from './operator-evidence'
-import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile, type OperatorErrorKind } from './operator-guards'
-import { defaultKernelView, moveKernelPanel, readKernelView, saveKernelView, type KernelPanel, type KernelView } from './operator-presentation'
+import {
+  OperatorRequestError,
+  OperatorRequestGuard,
+  classifyOperatorHttpStatus,
+  parsedExecutionIds,
+  parseKernelRequestFile,
+  type OperatorErrorKind,
+} from './operator-guards'
+import {
+  defaultKernelView,
+  moveKernelPanel,
+  readKernelView,
+  saveKernelView,
+  type KernelPanel,
+  type KernelView,
+} from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
 const initialRequest = `{
@@ -59,16 +73,33 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     let active = true
     void Promise.resolve().then(() => {
       if (!active) return
-      try { setView(readKernelView(window.localStorage)) } catch { setView(defaultKernelView()) }
+      try {
+        setView(readKernelView(window.localStorage))
+      } catch {
+        setView(defaultKernelView())
+      }
       setViewReady(true)
     })
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [])
   useEffect(() => {
     if (!viewReady) return
-    try { saveKernelView(window.localStorage, view) } catch { /* private browsing */ }
+    try {
+      saveKernelView(window.localStorage, view)
+    } catch {
+      /* private browsing */
+    }
   }, [view, viewReady])
-  useEffect(() => () => { requestGuard.current.invalidate(); activeController.current?.abort(); fileRevision.current += 1 }, [])
+  useEffect(
+    () => () => {
+      requestGuard.current.invalidate()
+      activeController.current?.abort()
+      fileRevision.current += 1
+    },
+    []
+  )
 
   function invalidateOutcome() {
     requestGuard.current.invalidate()
@@ -134,17 +165,21 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
-        if (!ids.executionId || !ids.decisionId || (body && kernelRequestPreflight(body).executionId !== ids.executionId)) throw new Error(t.requestMismatch)
+        if (
+          !ids.executionId ||
+          !ids.decisionId ||
+          (body && kernelRequestPreflight(body).executionId !== ids.executionId)
+        )
+          throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
       }
       if (method === 'POST' && label === 'Replan execution') {
         const ids = parsedExecutionIds(data)
-        const successor: unknown = body ? JSON.parse(body) as unknown : null
-        const target = successor && typeof successor === 'object' && 'execution_id' in successor
-          ? successor.execution_id : null
-        if (!ids.executionId || !ids.decisionId || target !== ids.executionId)
-          throw new Error(t.requestMismatch)
+        const successor: unknown = body ? (JSON.parse(body) as unknown) : null
+        const target =
+          successor && typeof successor === 'object' && 'execution_id' in successor ? successor.execution_id : null
+        if (!ids.executionId || !ids.decisionId || target !== ids.executionId) throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
       }
@@ -173,7 +208,9 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           params.set('cursor', cursor)
           params.set('expected_head', expectedHead)
         }
-        const data = (await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store', signal }))) as {
+        const data = (await checkedJson(
+          await fetch(`${path}?${params.toString()}`, { cache: 'no-store', signal })
+        )) as {
           head_execution_id: string
           executions: unknown[]
           next_cursor: string | null
@@ -209,7 +246,9 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         anchor.href = objectUrl
         anchor.download = `rr-history-${exportedDecisionId}.json`
         anchor.click()
-      } finally { URL.revokeObjectURL(objectUrl) }
+      } finally {
+        URL.revokeObjectURL(objectUrl)
+      }
     } catch (reason) {
       operationFailed(reason, epoch)
     } finally {
@@ -251,14 +290,17 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       await checkedJson(await fetch('/api/rr-operator/session', { method: 'DELETE', signal }))
       if (!requestGuard.current.current(epoch)) return
       setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
-    setLastResult(null)
-    setExecutionId('')
-    setDecisionId('')
-    setRequestBody(initialRequest)
-    setReplanBody('')
-    setPassword('')
-    } catch (reason) { operationFailed(reason, epoch) }
-    finally { if (requestGuard.current.current(epoch)) setBusy(false) }
+      setLastResult(null)
+      setExecutionId('')
+      setDecisionId('')
+      setRequestBody(initialRequest)
+      setReplanBody('')
+      setPassword('')
+    } catch (reason) {
+      operationFailed(reason, epoch)
+    } finally {
+      if (requestGuard.current.current(epoch)) setBusy(false)
+    }
   }
 
   if (!session)
@@ -275,9 +317,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         role="status"
       >
         <h2 className="text-lg font-semibold">{t.unavailable}</h2>
-        <p className="mt-3 text-sm text-slate-300">
-          {t.unavailableHelp}
-        </p>
+        <p className="mt-3 text-sm text-slate-300">{t.unavailableHelp}</p>
       </section>
     )
 
@@ -285,13 +325,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const prefix = '/api/rr-operator/kernel'
 
   return (
-    <section className={`mt-8 border border-sky-400/30 bg-slate-900/70 ${view.density === 'COMPACT' ? 'p-3 md:p-4 text-sm' : 'p-5 md:p-6'}`} data-testid="rr-production-operator">
+    <section
+      className={`mt-8 border border-sky-400/30 bg-slate-900/70 ${view.density === 'COMPACT' ? 'p-3 md:p-4 text-sm' : 'p-5 md:p-6'}`}
+      data-testid="rr-production-operator"
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-sky-200">{t.title}</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            {t.description}
-          </p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">{t.description}</p>
         </div>
         {session.authenticated && (
           <button type="button" onClick={() => void logout()} className="border border-slate-400 px-4 py-2 text-sm">
@@ -303,24 +344,49 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && (
         <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
           <h3 className="font-semibold">{t.display}</h3>
-          <label className="mt-2 block text-sm">{t.density}
-            <select aria-label={t.density} className="ml-3 border border-white/20 bg-slate-950 p-2"
-              value={view.density} onChange={event=>setView({...view,density:event.target.value as KernelView['density']})}>
+          <label className="mt-2 block text-sm">
+            {t.density}
+            <select
+              aria-label={t.density}
+              className="ml-3 border border-white/20 bg-slate-950 p-2"
+              value={view.density}
+              onChange={(event) => setView({ ...view, density: event.target.value as KernelView['density'] })}
+            >
               <option value="COMFORTABLE">{t.comfortable}</option>
               <option value="COMPACT">{t.compact}</option>
             </select>
           </label>
           <div className="mt-3 flex flex-wrap gap-3">
-            {view.panels.map((key:KernelPanel)=>(
+            {view.panels.map((key: KernelPanel) => (
               <div key={key} className="flex items-center gap-2 border border-white/15 px-2 py-1 text-sm">
-                <span>{key==='EXECUTE'?t.create:key==='REPLAN'?t.replan:t.evidence}</span>
-                <button type="button" aria-label={`${t.up}: ${key}`} disabled={view.panels.indexOf(key)===0}
-                  onClick={()=>setView(moveKernelPanel(view,key,-1))} className="disabled:opacity-30">{t.up}</button>
-                <button type="button" aria-label={`${t.down}: ${key}`} disabled={view.panels.indexOf(key)===view.panels.length-1}
-                  onClick={()=>setView(moveKernelPanel(view,key,1))} className="disabled:opacity-30">{t.down}</button>
+                <span>{key === 'EXECUTE' ? t.create : key === 'REPLAN' ? t.replan : t.evidence}</span>
+                <button
+                  type="button"
+                  aria-label={`${t.up}: ${key}`}
+                  disabled={view.panels.indexOf(key) === 0}
+                  onClick={() => setView(moveKernelPanel(view, key, -1))}
+                  className="disabled:opacity-30"
+                >
+                  {t.up}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${t.down}: ${key}`}
+                  disabled={view.panels.indexOf(key) === view.panels.length - 1}
+                  onClick={() => setView(moveKernelPanel(view, key, 1))}
+                  className="disabled:opacity-30"
+                >
+                  {t.down}
+                </button>
               </div>
             ))}
-            <button type="button" className="border border-white/15 px-3 py-1" onClick={()=>setView(defaultKernelView())}>{t.reset}</button>
+            <button
+              type="button"
+              className="border border-white/15 px-3 py-1"
+              onClick={() => setView(defaultKernelView())}
+            >
+              {t.reset}
+            </button>
           </div>
           <p className="mt-2 text-xs text-slate-400">{t.preferences}</p>
         </div>
@@ -351,9 +417,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         <div className={`mt-6 grid xl:grid-cols-2 ${view.density === 'COMPACT' ? 'gap-2' : 'gap-5'}`}>
           <div className="space-y-3" style={{ order: view.panels.indexOf('EXECUTE') }}>
             <h3 className="font-semibold">1. {t.create}</h3>
-            <p className="text-xs text-slate-400">
-              {t.createHelp}
-            </p>
+            <p className="text-xs text-slate-400">{t.createHelp}</p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
               {t.import}
             </label>
@@ -384,18 +448,28 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                       setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
                     }
                   })
-                  .catch(() => { if (fileRevision.current === revision) setError('Could not read the RR request file') })
+                  .catch(() => {
+                    if (fileRevision.current === revision) setError('Could not read the RR request file')
+                  })
               }}
             />
             <textarea
               aria-label="Kernel execution JSON"
               value={requestBody}
-              onChange={(event) => { fileRevision.current += 1; invalidateOutcome(); setRequestBody(event.target.value) }}
+              onChange={(event) => {
+                fileRevision.current += 1
+                invalidateOutcome()
+                setRequestBody(event.target.value)
+              }}
               spellCheck={false}
               rows={10}
               className="w-full border border-white/20 bg-slate-950 p-3 font-mono text-xs"
             />
-            <p role="status" className={`text-xs ${preflight.valid ? 'text-sky-200' : 'text-amber-200'}`} data-testid="rr-kernel-preflight">
+            <p
+              role="status"
+              className={`text-xs ${preflight.valid ? 'text-sky-200' : 'text-amber-200'}`}
+              data-testid="rr-kernel-preflight"
+            >
               {preflight.valid
                 ? `Kernel input · execution: ${preflight.executionId} · decision: ${preflight.decisionId} · snapshot: ${preflight.snapshotId ?? 'not recorded'} · jobs: ${preflight.jobCount ?? 'unknown'} · technicians: ${preflight.technicianCount ?? 'unknown'}`
                 : `Preflight: ${preflight.reason}`}
@@ -413,22 +487,26 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
 
           <div className="space-y-3" style={{ order: view.panels.indexOf('REPLAN') }}>
             <h3 className="font-semibold">2. {t.replan}</h3>
-            <p className="text-xs text-slate-400">
-              {t.replanHelp}
-            </p>
+            <p className="text-xs text-slate-400">{t.replanHelp}</p>
             <label className="block text-sm" htmlFor="rr-execution-id">
               {t.executionId}
             </label>
             <input
               id="rr-execution-id"
               value={executionId}
-              onChange={(event) => { invalidateOutcome(); setExecutionId(event.target.value) }}
+              onChange={(event) => {
+                invalidateOutcome()
+                setExecutionId(event.target.value)
+              }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <textarea
               aria-label="Kernel replan JSON"
               value={replanBody}
-              onChange={(event) => { invalidateOutcome(); setReplanBody(event.target.value) }}
+              onChange={(event) => {
+                invalidateOutcome()
+                setReplanBody(event.target.value)
+              }}
               spellCheck={false}
               placeholder="Paste explicit ReadinessRecoveryReplanRequest JSON"
               rows={7}
@@ -459,7 +537,10 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <input
               id="rr-decision-id"
               value={decisionId}
-              onChange={(event) => { invalidateOutcome(); setDecisionId(event.target.value) }}
+              onChange={(event) => {
+                invalidateOutcome()
+                setDecisionId(event.target.value)
+              }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
@@ -525,9 +606,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {error}
         </p>
       )}
-      <p className="mt-5 text-xs text-slate-400">
-        {t.restricted}
-      </p>
+      <p className="mt-5 text-xs text-slate-400">{t.restricted}</p>
     </section>
   )
 }
