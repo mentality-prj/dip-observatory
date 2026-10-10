@@ -9,6 +9,8 @@ import type { Locale } from '@/lib/observatory-i18n'
 import { QdipAdvantage } from './advantage'
 import { assessObservatoryDecision, isObservatoryPlannerResult } from './decision-trust'
 import { DecisionTrustPanel } from './decision-trust-panel'
+import { DecisionSummary } from './decision-summary'
+import { orderReviewAlternatives, type ViewingPriority } from './decision-policy'
 import {
   READINESS_DATA_DICTIONARY,
   downloadJson,
@@ -172,6 +174,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [technicianCapacity, setTechnicianCapacity] = useState(100)
   const [spareParts, setSpareParts] = useState(100)
   const [repairSuccess, setRepairSuccess] = useState(100)
+  const [viewingPriority, setViewingPriority] = useState<ViewingPriority>('READINESS')
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -186,7 +189,8 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
       ),
     [baseInput, customInput, locale, preset, t.presetHelp]
   )
-  const featured = useMemo(() => featuredScenarios(result?.frontier ?? []), [result])
+  const reviewOrder = useMemo(() => orderReviewAlternatives(result, viewingPriority), [result, viewingPriority])
+  const featured = useMemo(() => featuredScenarios(reviewOrder), [reviewOrder])
   const selected =
     result?.frontier.find((scenario) => scenario.scenarioId === selectedScenarioId) ?? featured[0] ?? null
 
@@ -348,6 +352,14 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
 
         {result ? (
           <>
+            <DecisionSummary
+              locale={locale}
+              input={baseInput}
+              result={result}
+              selected={selected}
+              comparator={reviewOrder.find((item) => item.scenarioId !== selected?.scenarioId) ?? null}
+              priority={viewingPriority}
+            />
             <DecisionTrustPanel
               locale={locale}
               trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
@@ -447,6 +459,16 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
             <section className="mt-7">
               <h2 className="text-2xl font-medium">{t.frontier}</h2>
               <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">{t.frontierHelp}</p>
+              <label className="mt-4 block max-w-xs text-xs text-slate-300">
+                {locale === 'uk' ? 'Пріоритет відображення (не рекомендація)' : locale === 'pl' ? 'Priorytet sortowania (nie rekomendacja)' : 'Viewing priority (not a recommendation)'}
+                <select value={viewingPriority} onChange={(event) => setViewingPriority(event.target.value as ViewingPriority)}
+                  className="mt-2 block w-full border border-white/15 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+                  <option value="READINESS">{t.readiness}</option>
+                  <option value="RECOVERY_TIME">{t.time}</option>
+                  <option value="PARTS">{t.scarceParts}</option>
+                  <option value="FAILURE_RISK">{t.failureRisk}</option>
+                </select>
+              </label>
               <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
                 {featured.map((scenario) => (
                   <button
