@@ -7,6 +7,8 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 type Context = { params: Promise<{ path: string[] }> }
+const MAX_BODY_BYTES = 2_150_000
+
 function json(error: string, status: number) {
   return NextResponse.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } })
 }
