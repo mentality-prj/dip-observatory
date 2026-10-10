@@ -90,6 +90,50 @@ export function RRProductionOperatorPanel() {
     }
   }
 
+  async function exportComplete() {
+    setBusy(true)
+    setError(null)
+    try {
+      const exported: unknown[] = []
+      let cursor: string | null = null
+      let expectedHead: string | null = null
+      let completed = false
+      for (let pageNumber = 0; pageNumber < 20; pageNumber++) {
+        const path = `${prefix}/decisions/${encodeURIComponent(decisionId)}/history/export`
+        const params = new URLSearchParams({ page_size: '100' })
+        if (cursor !== null && expectedHead !== null) {
+          params.set('cursor', cursor)
+          params.set('expected_head', expectedHead)
+        }
+        const data = await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store' })) as {
+          head_execution_id: string
+          executions: unknown[]
+          next_cursor: string | null
+          export_complete: boolean
+        }
+        if (!data.head_execution_id || !Array.isArray(data.executions))
+          throw new Error('Invalid RR export contract')
+        if (expectedHead !== null && expectedHead !== data.head_execution_id)
+          throw new Error('RR decision head changed during export; restart')
+        expectedHead = data.head_execution_id
+        exported.push(...data.executions)
+        if (data.export_complete) {
+          completed = true
+          break
+        }
+        if (!data.next_cursor) throw new Error('RR export cursor missing')
+        cursor = data.next_cursor
+      }
+      if (!completed) throw new Error('RR export page limit reached; cannot attest complete history')
+      setOperation('Complete history export')
+      setLastResult({ decision_id: decisionId, head_execution_id: expectedHead, executions: exported, export_complete: true })
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'RR export failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function login() {
     setBusy(true)
     setError(null)
@@ -220,7 +264,7 @@ export function RRProductionOperatorPanel() {
             <div className="flex flex-wrap gap-3">
               <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void execute('Decision history', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">History</button>
               <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void execute('History integrity', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history-integrity`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Integrity</button>
-              <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void execute('History export', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history/export`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Export page</button>
+              <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void exportComplete()} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Export complete history</button>
               <button type="button" disabled={busy || !validId(executionId)} onClick={() => void execute('Semantic replay', `${prefix}/executions/${encodeURIComponent(executionId)}/replay-verification`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Replay</button>
             </div>
           </div>
