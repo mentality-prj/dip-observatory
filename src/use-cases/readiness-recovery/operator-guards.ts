@@ -49,25 +49,3 @@ export function parsedExecutionIds(value: unknown): { executionId: string; decis
   return { executionId: safe(executionId), decisionId: safe(decisionId) }
 }
 
-/** Do not accept legacy stochastic scenario documents as a Kernel execution request. */
-export function parseKernelRequestFile(value: unknown): {
-  execution_id: string
-  source: Record<string, unknown>
-  ingested_at: string
-  payload: Record<string, unknown>
-} {
-  if (!value || typeof value !== 'object' || Array.isArray(value))
-    throw new Error('Expected normalized Kernel RR request object')
-  const x = value as Record<string, unknown>
-  if (Object.keys(x).some((k) => !['execution_id', 'source', 'ingested_at', 'payload'].includes(k)))
-    throw new Error('Unexpected Kernel request fields')
-  if (typeof x.execution_id !== 'string' || !/^[a-zA-Z0-9][\w.-]{0,127}$/.test(x.execution_id))
-    throw new Error('Invalid execution ID')
-  if (typeof x.ingested_at !== 'string' || !Number.isFinite(Date.parse(x.ingested_at)))
-    throw new Error('Invalid ingestion timestamp')
-  if (!x.source || typeof x.source !== 'object' || Array.isArray(x.source)) throw new Error('Missing source metadata')
-  if (!x.payload || typeof x.payload !== 'object' || Array.isArray(x.payload))
-    throw new Error('Missing normalized Kernel RR payload')
-  if (!('decision_id' in x.payload) || typeof x.payload.decision_id !== 'string') throw new Error('Missing decision ID')
-  return x as ReturnType<typeof parseKernelRequestFile>
-}
