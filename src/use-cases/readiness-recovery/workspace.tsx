@@ -10,6 +10,7 @@ import { QdipAdvantage } from './advantage'
 import { assessObservatoryDecision, isObservatoryPlannerResult } from './decision-trust'
 import { DecisionTrustPanel } from './decision-trust-panel'
 import { DecisionSummary } from './decision-summary'
+import { AnalystEvidence } from './analyst-evidence'
 import { orderReviewAlternatives, type ViewingPriority } from './decision-policy'
 import {
   READINESS_DATA_DICTIONARY,
@@ -27,15 +28,7 @@ import {
 } from './demo-data'
 import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario, ScenarioLabel } from './domain'
 import { readinessRecoveryI18n } from './i18n'
-import { ScenarioBadges, scenarioRoles } from './scenario-badges'
-
-const LABEL_ORDER: ScenarioLabel[] = [
-  'MAXIMUM_READINESS',
-  'FAST_RECOVERY',
-  'PARTS_CONSERVATIVE',
-  'LOW_RISK',
-  'BALANCED',
-]
+import { ScenarioBadges } from './scenario-badges'
 
 const contextCopy = {
   en: {
@@ -100,21 +93,6 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
   )
 }
 
-function featuredScenarios(frontier: RecoveryScenario[]) {
-  const selected: RecoveryScenario[] = []
-  for (const label of LABEL_ORDER) {
-    const scenario = frontier.find(
-      (item) => scenarioRoles(item.label, item.labels).includes(label) && !selected.includes(item)
-    )
-    if (scenario) selected.push(scenario)
-  }
-  for (const scenario of frontier) {
-    if (selected.length >= 6) break
-    if (!selected.includes(scenario)) selected.push(scenario)
-  }
-  return selected
-}
-
 function bestProbability(result: ReadinessRecoveryResult | null) {
   return result?.frontier.length ? Math.max(...result.frontier.map((item) => item.probabilityDemandSatisfied)) : 0
 }
@@ -175,6 +153,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [spareParts, setSpareParts] = useState(100)
   const [repairSuccess, setRepairSuccess] = useState(100)
   const [viewingPriority, setViewingPriority] = useState<ViewingPriority>('READINESS')
+  const [showEvidence, setShowEvidence] = useState(false)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -364,6 +343,12 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               locale={locale}
               trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
             />
+            <button type="button" aria-expanded={showEvidence} aria-controls="rr-analyst-evidence"
+              onClick={() => setShowEvidence((current) => !current)}
+              className="mt-4 border border-white/15 px-4 py-2 text-sm text-slate-200">
+              {locale === 'uk' ? 'Аналітичні докази' : locale === 'pl' ? 'Dowody analityczne' : 'Analyst evidence'}
+            </button>
+            {showEvidence ? <div id="rr-analyst-evidence"><AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} /></div> : null}
             <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <Metric label={t.assets} value={String(result.inputSummary.assets)} />
               <Metric label={t.impaired} value={String(result.inputSummary.impairedAssets)} />
