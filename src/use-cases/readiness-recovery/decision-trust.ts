@@ -107,7 +107,7 @@ export function isObservatoryPlannerResult(value: unknown): value is ReadinessRe
     if (!Number.isInteger(uncertainty.samples) || !finiteNonnegative(uncertainty.samples) || uncertainty.samples === 0) {
       return false
     }
-    if (!Number.isInteger(uncertainty.seed) || !finiteNonnegative(uncertainty.seed)) return false
+    if (typeof uncertainty.seed !== 'number' || !Number.isSafeInteger(uncertainty.seed)) return false
     for (const key of ['demandSatisfiedSamples', 'p10RecoveryTimeHours', 'p50RecoveryTimeHours', 'p90RecoveryTimeHours']) {
       if (!finiteNonnegative(uncertainty[key])) return false
     }
