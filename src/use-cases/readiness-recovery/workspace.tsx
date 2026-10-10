@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { RefreshCw, SlidersHorizontal, Wrench } from 'lucide-react'
 import { AnalystDataPanel } from '@/components/observatory/analyst-data-panel'
 import { ScenarioContextPanel, type ScenarioContextView } from '@/components/observatory/scenario-context-panel'
@@ -11,6 +11,11 @@ import { assessObservatoryDecision, isObservatoryPlannerResult } from './decisio
 import { DecisionTrustPanel } from './decision-trust-panel'
 import { DecisionSummary } from './decision-summary'
 import { AnalystEvidence } from './analyst-evidence'
+import { PersonalObservatory } from './personal-observatory'
+import {
+  readRRViewPreferences, saveRRViewPreferences, templatePreferences,
+  type RRViewPreferences, type RRWidget,
+} from './view-preferences'
 import { orderReviewAlternatives, type ViewingPriority } from './decision-policy'
 import {
   READINESS_DATA_DICTIONARY,
@@ -26,7 +31,7 @@ import {
   READINESS_RECOVERY_DEMO_PRESETS,
   type ReadinessRecoveryDemoPreset,
 } from './demo-data'
-import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario, ScenarioLabel } from './domain'
+import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario } from './domain'
 import { readinessRecoveryI18n } from './i18n'
 import { ScenarioBadges } from './scenario-badges'
 
@@ -153,9 +158,19 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [spareParts, setSpareParts] = useState(100)
   const [repairSuccess, setRepairSuccess] = useState(100)
   const [viewingPriority, setViewingPriority] = useState<ViewingPriority>('READINESS')
-  const [showEvidence, setShowEvidence] = useState(false)
+  const [viewPreferences, setViewPreferences] = useState<RRViewPreferences>(() => templatePreferences('BUSINESS'))
+  const [viewHydrated, setViewHydrated] = useState(false)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setViewPreferences(readRRViewPreferences(window.localStorage))
+    setViewHydrated(true)
+  }, [])
+  useEffect(() => {
+    if (viewHydrated) saveRRViewPreferences(window.localStorage, viewPreferences)
+  }, [viewHydrated, viewPreferences])
+  const showWidget = (widget: RRWidget) => viewPreferences.widgets.includes(widget)
 
   const baseInput = useMemo(() => customInput ?? buildReadinessRecoveryDemo(preset), [customInput, preset])
   const context = useMemo(
@@ -329,26 +344,23 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
           <div className="mt-5 border border-rose-400/30 bg-rose-400/10 p-4 text-sm text-rose-200">{error}</div>
         ) : null}
 
+        <PersonalObservatory locale={locale} value={viewPreferences} onChange={setViewPreferences} />
+
         {result ? (
           <>
-            <DecisionSummary
+            {showWidget('DECISION_SUMMARY') ? <DecisionSummary
               locale={locale}
               input={baseInput}
               result={result}
               selected={selected}
               comparator={reviewOrder.find((item) => item.scenarioId !== selected?.scenarioId) ?? null}
               priority={viewingPriority}
-            />
+            /> : null}
             <DecisionTrustPanel
               locale={locale}
               trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
             />
-            <button type="button" aria-expanded={showEvidence} aria-controls="rr-analyst-evidence"
-              onClick={() => setShowEvidence((current) => !current)}
-              className="mt-4 border border-white/15 px-4 py-2 text-sm text-slate-200">
-              {locale === 'uk' ? 'Аналітичні докази' : locale === 'pl' ? 'Dowody analityczne' : 'Analyst evidence'}
-            </button>
-            {showEvidence ? <div id="rr-analyst-evidence"><AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} /></div> : null}
+            {showWidget('EVIDENCE') ? <div id="rr-analyst-evidence"><AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} /></div> : null}
             <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <Metric label={t.assets} value={String(result.inputSummary.assets)} />
               <Metric label={t.impaired} value={String(result.inputSummary.impairedAssets)} />
@@ -441,7 +453,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               </section>
             ) : null}
 
-            <section className="mt-7">
+            <section className={`mt-7 ${showWidget('ALTERNATIVES') ? '' : 'hidden'}`}>
               <h2 className="text-2xl font-medium">{t.frontier}</h2>
               <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">{t.frontierHelp}</p>
               <label className="mt-4 block max-w-xs text-xs text-slate-300">
@@ -482,10 +494,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               <p className="mt-4 text-sm text-slate-500">{t.plannerChoice}</p>
             </section>
 
-            {selected ? <ScenarioDetail locale={locale} scenario={selected} /> : null}
+            {selected && showWidget('ALTERNATIVES') ? <ScenarioDetail locale={locale} scenario={selected} /> : null}
 
             <section className="mt-7 grid gap-5 xl:grid-cols-2">
-              <div className="border border-white/10 bg-white/[.02] p-5">
+              <div className={`border border-white/10 bg-white/[.02] p-5 ${showWidget('BASELINES') ? '' : 'hidden'}`}>
                 <h2 className="text-xl font-medium">{t.baselines}</h2>
                 <p className="mt-1 text-sm leading-6 text-slate-400">{t.baselineHelp}</p>
                 <div className="mt-4 space-y-2">
@@ -502,7 +514,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
                   ))}
                 </div>
               </div>
-              <div className="border border-white/10 bg-white/[.02] p-5">
+              <div className={`border border-white/10 bg-white/[.02] p-5 ${showWidget('DIAGNOSTICS') ? '' : 'hidden'}`}>
                 <h2 className="text-xl font-medium">{t.diagnostics}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <SmallMetric label={t.searchNodes} value={number(locale, result.diagnostics.searchNodes, 0)} />
