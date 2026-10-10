@@ -7,7 +7,7 @@ import { ScenarioContextPanel, type ScenarioContextView } from '@/components/obs
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
 import { QdipAdvantage } from './advantage'
-import { assessObservatoryDecision } from './decision-trust'
+import { assessObservatoryDecision, isObservatoryPlannerResult } from './decision-trust'
 import { DecisionTrustPanel } from './decision-trust-panel'
 import {
   READINESS_DATA_DICTIONARY,
@@ -199,9 +199,13 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ input }),
     })
-    const payload = (await response.json()) as ReadinessRecoveryResult | { error?: string }
-    if (!response.ok || !('frontier' in payload)) {
-      throw new Error('error' in payload && payload.error ? payload.error : t.error)
+    const payload: unknown = await response.json()
+    if (!response.ok || !isObservatoryPlannerResult(payload)) {
+      const message =
+        payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
+          ? payload.error
+          : t.error
+      throw new Error(message)
     }
     return payload
   }
