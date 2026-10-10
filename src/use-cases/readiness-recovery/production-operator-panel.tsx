@@ -1,6 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Locale } from '@/lib/observatory-i18n'
+import { rrOperatorCopy } from './operator-copy'
+import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile } from './operator-guards'
+import { defaultKernelView, moveKernelPanel, readKernelView, saveKernelView, type KernelPanel, type KernelView } from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
 type RecordSummary = {
@@ -46,7 +50,7 @@ async function checkedJson(response: Response): Promise<unknown> {
         : data && typeof data === 'object' && 'detail' in data
           ? JSON.stringify(data.detail)
           : `RR request failed (${response.status})`
-    throw new Error(message)
+    throw new OperatorRequestError(classifyOperatorHttpStatus(response.status), message)
   }
   return data
 }
@@ -55,7 +59,13 @@ async function checkedJson(response: Response): Promise<unknown> {
  * Independent reference-operator workflow. Never maps stochastic demo results
  * onto the exact Kernel job/technician/slot domain or persists credentials.
  */
-export function RRProductionOperatorPanel() {
+export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }) {
+  const t = rrOperatorCopy[locale]
+  const requestGuard = useRef(new OperatorRequestGuard())
+  const activeController = useRef<AbortController | null>(null)
+  const fileRevision = useRef(0)
+  const [view, setView] = useState<KernelView>(() => defaultKernelView())
+  const [viewReady, setViewReady] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [password, setPassword] = useState('')
   const [requestBody, setRequestBody] = useState(initialRequest)
@@ -66,6 +76,36 @@ export function RRProductionOperatorPanel() {
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    try { setView(readKernelView(window.localStorage)) } catch { setView(defaultKernelView()) }
+    setViewReady(true)
+  }, [])
+  useEffect(() => {
+    if (!viewReady) return
+    try { saveKernelView(window.localStorage, view) } catch { /* private browsing */ }
+  }, [view, viewReady])
+  useEffect(() => () => { requestGuard.current.invalidate(); activeController.current?.abort(); fileRevision.current += 1 }, [])
+
+  function startOperation() {
+    activeController.current?.abort()
+    const controller = new AbortController()
+    activeController.current = controller
+    return { epoch: requestGuard.current.begin(), signal: controller.signal }
+  }
+  function operationFailed(reason: unknown, epoch: number) {
+    if (!requestGuard.current.current(epoch)) return
+    if (reason instanceof OperatorRequestError && reason.kind === 'AUTH_REQUIRED') {
+      setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
+      setLastResult(null)
+      setDecisionId('')
+      setExecutionId('')
+      setError(t.sessionLost)
+    } else if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
+      setLastResult(null)
+      setError(reason instanceof Error ? reason.message : 'RR operation failed')
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -83,22 +123,26 @@ export function RRProductionOperatorPanel() {
   }, [])
 
   async function execute(label: string, url: string, method = 'GET', body?: string) {
+    const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
+    setLastResult(null)
     try {
       const response = await fetch(url, {
         method,
         headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
         body,
         cache: 'no-store',
+        signal,
       })
       const data = await checkedJson(response)
+      if (!requestGuard.current.current(epoch)) return
       setLastResult(data)
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
-        const record = data as RecordSummary
-        setExecutionId(record.result?.workflow?.execution_id ?? '')
-        setDecisionId(record.result?.workflow?.ingestion?.payload?.decision_id ?? '')
+        const ids = parsedExecutionIds(data)
+        setExecutionId(ids.executionId)
+        setDecisionId(ids.decisionId)
       }
       if (method === 'POST' && label === 'Replan execution') {
         const record = data as RecordSummary
@@ -106,15 +150,18 @@ export function RRProductionOperatorPanel() {
         setDecisionId(record.result?.workflow?.ingestion?.payload?.decision_id ?? '')
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RR operation failed')
+      operationFailed(reason, epoch)
     } finally {
-      setBusy(false)
+      if (requestGuard.current.current(epoch)) setBusy(false)
     }
   }
 
   async function exportComplete() {
+    const { epoch, signal } = startOperation()
+    const exportedDecisionId = decisionId
     setBusy(true)
     setError(null)
+    setLastResult(null)
     try {
       const exported: unknown[] = []
       let cursor: string | null = null
@@ -127,7 +174,7 @@ export function RRProductionOperatorPanel() {
           params.set('cursor', cursor)
           params.set('expected_head', expectedHead)
         }
-        const data = (await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store' }))) as {
+        const data = (await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store', signal }))) as {
           head_execution_id: string
           executions: unknown[]
           next_cursor: string | null
@@ -137,6 +184,7 @@ export function RRProductionOperatorPanel() {
         if (expectedHead !== null && expectedHead !== data.head_execution_id)
           throw new Error('RR decision head changed during export; restart')
         expectedHead = data.head_execution_id
+        if (!requestGuard.current.current(epoch)) return
         exported.push(...data.executions)
         if (data.export_complete) {
           completed = true
@@ -146,21 +194,32 @@ export function RRProductionOperatorPanel() {
         cursor = data.next_cursor
       }
       if (!completed) throw new Error('RR export page limit reached; cannot attest complete history')
-      setOperation('Complete history export')
-      setLastResult({
-        decision_id: decisionId,
+      if (!requestGuard.current.current(epoch)) return
+      const exportedDocument = {
+        decision_id: exportedDecisionId,
         head_execution_id: expectedHead,
         executions: exported,
         export_complete: true,
-      })
+      }
+      setOperation('Complete history export')
+      setLastResult(exportedDocument)
+      const blob = new Blob([JSON.stringify(exportedDocument, null, 2)], { type: 'application/json' })
+      const objectUrl = URL.createObjectURL(blob)
+      try {
+        const anchor = document.createElement('a')
+        anchor.href = objectUrl
+        anchor.download = `rr-history-${exportedDecisionId}.json`
+        anchor.click()
+      } finally { URL.revokeObjectURL(objectUrl) }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RR export failed')
+      operationFailed(reason, epoch)
     } finally {
-      setBusy(false)
+      if (requestGuard.current.current(epoch)) setBusy(false)
     }
   }
 
   async function login() {
+    const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
     try {
@@ -169,26 +228,37 @@ export function RRProductionOperatorPanel() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),
+          signal,
         })
       )
+      if (!requestGuard.current.current(epoch)) return
       setSession({ configured: true, authenticated: true, mode: 'single-organization-reference' })
       setPassword('')
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Login failed')
+      operationFailed(reason, epoch)
     } finally {
-      setBusy(false)
+      if (requestGuard.current.current(epoch)) setBusy(false)
     }
   }
 
   async function logout() {
-    await fetch('/api/rr-operator/session', { method: 'DELETE' })
-    setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
+    const { epoch, signal } = startOperation()
+    fileRevision.current += 1
+    setBusy(true)
+    setLastResult(null)
+    setError(null)
+    try {
+      await checkedJson(await fetch('/api/rr-operator/session', { method: 'DELETE', signal }))
+      if (!requestGuard.current.current(epoch)) return
+      setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
     setLastResult(null)
     setExecutionId('')
     setDecisionId('')
     setRequestBody(initialRequest)
     setReplanBody('')
     setPassword('')
+    } catch (reason) { operationFailed(reason, epoch) }
+    finally { if (requestGuard.current.current(epoch)) setBusy(false) }
   }
 
   if (!session)
