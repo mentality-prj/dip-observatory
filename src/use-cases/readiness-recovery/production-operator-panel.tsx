@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
+import { kernelRequestPreflight, kernelReplanPreflight } from './operator-preflight'
 import { OperatorEvidence } from './operator-evidence'
 import { OperatorRequestError, OperatorRequestGuard, classifyOperatorHttpStatus, parsedExecutionIds, parseKernelRequestFile } from './operator-guards'
 import { defaultKernelView, moveKernelPanel, readKernelView, saveKernelView, type KernelPanel, type KernelView } from './operator-presentation'
@@ -50,6 +51,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const preflight = useMemo(() => kernelRequestPreflight(requestBody), [requestBody])
+  const validReplan = useMemo(() => kernelReplanPreflight(replanBody), [replanBody])
 
   useEffect(() => {
     let active = true
@@ -127,14 +130,19 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
-        if (!ids.executionId || !ids.decisionId) throw new Error(t.requestMismatch)
+        if (!ids.executionId || !ids.decisionId || (body && kernelRequestPreflight(body).executionId !== ids.executionId)) throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
       }
       if (method === 'POST' && label === 'Replan execution') {
-        const record = data as RecordSummary
-        setExecutionId(record.result?.workflow?.execution_id ?? '')
-        setDecisionId(record.result?.workflow?.ingestion?.payload?.decision_id ?? '')
+        const ids = parsedExecutionIds(data)
+        const successor: unknown = body ? JSON.parse(body) as unknown : null
+        const target = successor && typeof successor === 'object' && 'execution_id' in successor
+          ? successor.execution_id : null
+        if (!ids.executionId || !ids.decisionId || target !== ids.executionId)
+          throw new Error(t.requestMismatch)
+        setExecutionId(ids.executionId)
+        setDecisionId(ids.decisionId)
       }
     } catch (reason) {
       operationFailed(reason, epoch)
@@ -382,9 +390,15 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               rows={10}
               className="w-full border border-white/20 bg-slate-950 p-3 font-mono text-xs"
             />
+            <p role="status" className={`text-xs ${preflight.valid ? 'text-sky-200' : 'text-amber-200'}`} data-testid="rr-kernel-preflight">
+              {preflight.valid
+                ? `Kernel input · execution: ${preflight.executionId} · decision: ${preflight.decisionId} · snapshot: ${preflight.snapshotId ?? 'not recorded'} · jobs: ${preflight.jobCount ?? 'unknown'} · technicians: ${preflight.technicianCount ?? 'unknown'}`
+                : `Preflight: ${preflight.reason}`}
+              {preflight.valid ? ' · Structure only; Kernel determines validity and feasibility.' : ''}
+            </p>
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || !preflight.valid}
               onClick={() => void execute('Create execution', `${prefix}/executions`, 'POST', requestBody)}
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
@@ -417,7 +431,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             />
             <button
               type="button"
-              disabled={busy || !validId(executionId) || !replanBody}
+              disabled={busy || !validId(executionId) || !validReplan}
               onClick={() =>
                 void execute(
                   'Replan execution',
