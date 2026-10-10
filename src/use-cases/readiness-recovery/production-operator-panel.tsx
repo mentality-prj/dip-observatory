@@ -52,8 +52,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    try { setView(readKernelView(window.localStorage)) } catch { setView(defaultKernelView()) }
-    setViewReady(true)
+    let active = true
+    void Promise.resolve().then(() => {
+      if (!active) return
+      try { setView(readKernelView(window.localStorage)) } catch { setView(defaultKernelView()) }
+      setViewReady(true)
+    })
+    return () => { active = false }
   }, [])
   useEffect(() => {
     if (!viewReady) return
