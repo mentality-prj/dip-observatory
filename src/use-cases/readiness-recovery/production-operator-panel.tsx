@@ -167,6 +167,7 @@ export function RRProductionOperatorPanel() {
 
   const validId = (id: string) => /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   const prefix = '/api/rr-operator/kernel'
+  const summary = lastResult as RecordSummary | null
 
   return (
     <section className="mt-8 border border-sky-400/30 bg-slate-900/70 p-5 md:p-6" data-testid="rr-production-operator">
@@ -271,6 +272,13 @@ export function RRProductionOperatorPanel() {
           {lastResult !== null && (
             <div className="xl:col-span-2" aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
+              {summary?.result?.runtime?.operator_outcome && (
+                <p className="mt-2 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
+                  Decision: {summary.result.runtime.operator_outcome.kind ?? 'UNKNOWN'}
+                  {' · '}
+                  {summary.result.runtime.operator_outcome.actionable ? 'Actionable' : 'Non-actionable — inspect evidence'}
+                </p>
+              )}
               <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
                 {JSON.stringify(lastResult, null, 2)}
               </pre>
