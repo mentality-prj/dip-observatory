@@ -1,5 +1,5 @@
 /** Strict, deny-by-default RR proxy surface. Never proxy arbitrary plugin paths. */
-const identifier = /^[a-zA-Z0-9_.-]{1,128}$/
+const identifier = /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/
 
 export function allowedKernelPath(path: string[], method: string) {
   if (path.some((part) => !identifier.test(part))) return false
