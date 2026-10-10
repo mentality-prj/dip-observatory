@@ -11,11 +11,16 @@ function retired() {
   return NextResponse.json(
     {
       code: 'RR_LEGACY_SOLVER_RETIRED',
-      error: 'This simulation planner is not the QDIP Kernel. Use the authenticated Kernel-backed RR operator with a normalized RR execution request.',
+      error:
+        'This simulation planner is not the QDIP Kernel. Use the authenticated Kernel-backed RR operator with a normalized RR execution request.',
     },
     { status: 410, headers: { 'Cache-Control': 'no-store' } }
   )
 }
 
-export async function GET() { return retired() }
-export async function POST() { return retired() }
+export async function GET() {
+  return retired()
+}
+export async function POST() {
+  return retired()
+}

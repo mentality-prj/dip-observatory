@@ -16,9 +16,9 @@ export function operatorConfigured() {
   return Boolean(
     process.env.RR_REFERENCE_OPERATOR_ENABLED === 'true' &&
     (process.env.RR_OPERATOR_PASSWORD ?? '').length >= 16 &&
-      secret() &&
-      (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
-      (process.env.DIP_API_KEY ?? '').trim()
+    secret() &&
+    (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
+    (process.env.DIP_API_KEY ?? '').trim()
   )
 }
 
@@ -75,6 +75,5 @@ export function sameOrigin(request: NextRequest) {
 export function safeTransport(request: NextRequest) {
   const url = request.nextUrl
   if (!isSurfaceHost('observatory', url.host)) return false
-  return url.protocol === 'https:' ||
-    (url.protocol === 'http:' && url.hostname.endsWith('.localhost'))
+  return url.protocol === 'https:' || (url.protocol === 'http:' && url.hostname.endsWith('.localhost'))
 }

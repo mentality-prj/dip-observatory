@@ -56,7 +56,9 @@ describe('RR single-tenant operator session boundary', () => {
   it('requires literal origin and TLS or local development transport', () => {
     const make = (url: string, origin?: string) =>
       ({ nextUrl: new URL(url), headers: new Headers(origin ? { origin } : {}) }) as unknown as NextRequest
-    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://observatory.qdip.ai'))).toBe(true)
+    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://observatory.qdip.ai'))).toBe(
+      true
+    )
     expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://example.com'))).toBe(false)
     expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
     expect(safeTransport(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(true)

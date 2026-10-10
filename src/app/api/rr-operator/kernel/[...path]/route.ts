@@ -25,13 +25,17 @@ async function handle(request: NextRequest, context: Context) {
   const key = (process.env.DIP_API_KEY ?? '').trim()
   if (!base || !key) return json('DIP connection is not configured', 503)
   const upstreamBase = new URL(base)
-  if (upstreamBase.protocol !== 'https:' && !(upstreamBase.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(upstreamBase.hostname)))
+  if (
+    upstreamBase.protocol !== 'https:' &&
+    !(upstreamBase.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(upstreamBase.hostname))
+  )
     return json('DIP backend requires TLS', 503)
 
   let body: string | undefined
   if (request.method === 'POST') {
     if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) return json('Request too large', 413)
-    if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json') return json('JSON required', 415)
+    if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json')
+      return json('JSON required', 415)
     body = await request.text()
     if (Buffer.byteLength(body, 'utf8') > MAX_BODY_BYTES) return json('Request too large', 413)
   }

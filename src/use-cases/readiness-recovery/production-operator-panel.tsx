@@ -71,9 +71,15 @@ export function RRProductionOperatorPanel() {
     let active = true
     fetch('/api/rr-operator/session', { cache: 'no-store' })
       .then((response) => checkedJson(response))
-      .then((data) => { if (active) setSession(data as Session) })
-      .catch(() => { if (active) setSession({ configured: false, authenticated: false, mode: 'unavailable' }) })
-    return () => { active = false }
+      .then((data) => {
+        if (active) setSession(data as Session)
+      })
+      .catch(() => {
+        if (active) setSession({ configured: false, authenticated: false, mode: 'unavailable' })
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   async function execute(label: string, url: string, method = 'GET', body?: string) {
@@ -121,14 +127,13 @@ export function RRProductionOperatorPanel() {
           params.set('cursor', cursor)
           params.set('expected_head', expectedHead)
         }
-        const data = await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store' })) as {
+        const data = (await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store' }))) as {
           head_execution_id: string
           executions: unknown[]
           next_cursor: string | null
           export_complete: boolean
         }
-        if (!data.head_execution_id || !Array.isArray(data.executions))
-          throw new Error('Invalid RR export contract')
+        if (!data.head_execution_id || !Array.isArray(data.executions)) throw new Error('Invalid RR export contract')
         if (expectedHead !== null && expectedHead !== data.head_execution_id)
           throw new Error('RR decision head changed during export; restart')
         expectedHead = data.head_execution_id
@@ -142,7 +147,12 @@ export function RRProductionOperatorPanel() {
       }
       if (!completed) throw new Error('RR export page limit reached; cannot attest complete history')
       setOperation('Complete history export')
-      setLastResult({ decision_id: decisionId, head_execution_id: expectedHead, executions: exported, export_complete: true })
+      setLastResult({
+        decision_id: decisionId,
+        head_execution_id: expectedHead,
+        executions: exported,
+        export_complete: true,
+      })
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'RR export failed')
     } finally {
@@ -154,11 +164,13 @@ export function RRProductionOperatorPanel() {
     setBusy(true)
     setError(null)
     try {
-      await checkedJson(await fetch('/api/rr-operator/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      }))
+      await checkedJson(
+        await fetch('/api/rr-operator/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        })
+      )
       setSession({ configured: true, authenticated: true, mode: 'single-organization-reference' })
       setPassword('')
     } catch (reason) {
@@ -179,13 +191,26 @@ export function RRProductionOperatorPanel() {
     setPassword('')
   }
 
-  if (!session) return <p className="mx-auto max-w-5xl px-5 py-12 text-slate-400" role="status">Checking Kernel connection settings…</p>
-  if (!session.configured) return (
-    <section data-testid="rr-kernel-unavailable" className="mx-auto max-w-5xl border border-white/15 bg-slate-900/50 p-6" role="status">
-      <h2 className="text-lg font-semibold">Kernel RR operator unavailable</h2>
-      <p className="mt-3 text-sm text-slate-300">The authenticated reference operator is not configured. RR does not fall back to a browser solver. An authorized operator must configure the approved server-side connection and access policy.</p>
-    </section>
-  )
+  if (!session)
+    return (
+      <p className="mx-auto max-w-5xl px-5 py-12 text-slate-400" role="status">
+        Checking Kernel connection settings…
+      </p>
+    )
+  if (!session.configured)
+    return (
+      <section
+        data-testid="rr-kernel-unavailable"
+        className="mx-auto max-w-5xl border border-white/15 bg-slate-900/50 p-6"
+        role="status"
+      >
+        <h2 className="text-lg font-semibold">Kernel RR operator unavailable</h2>
+        <p className="mt-3 text-sm text-slate-300">
+          The authenticated reference operator is not configured. RR does not fall back to a browser solver. An
+          authorized operator must configure the approved server-side connection and access policy.
+        </p>
+      </section>
+    )
 
   const validId = (id: string) => /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   const prefix = '/api/rr-operator/kernel'
@@ -197,9 +222,9 @@ export function RRProductionOperatorPanel() {
         <div>
           <h2 className="text-xl font-semibold text-sky-200">Kernel-backed RR — restricted reference operator</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Restricted, authenticated reference workflow. Import a normalized RR execution request.
-            Only QDIP Kernel schedules jobs; stochastic Pareto scenarios are not convertible to this contract.
-            This access mode is not final production OIDC.
+            Restricted, authenticated reference workflow. Import a normalized RR execution request. Only QDIP Kernel
+            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. This access mode is not
+            final production OIDC.
           </p>
         </div>
         {session.authenticated && (
@@ -211,7 +236,9 @@ export function RRProductionOperatorPanel() {
 
       {!session.authenticated ? (
         <div className="mt-5 flex max-w-lg flex-col gap-3">
-          <label className="text-sm" htmlFor="rr-operator-password">Operator access password</label>
+          <label className="text-sm" htmlFor="rr-operator-password">
+            Operator access password
+          </label>
           <input
             id="rr-operator-password"
             type="password"
@@ -220,7 +247,12 @@ export function RRProductionOperatorPanel() {
             onChange={(event) => setPassword(event.target.value)}
             className="border border-white/25 bg-slate-950 p-3 text-sm"
           />
-          <button type="button" disabled={busy || !password} onClick={() => void login()} className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">
+          <button
+            type="button"
+            disabled={busy || !password}
+            onClick={() => void login()}
+            className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
+          >
             Unlock reference operator
           </button>
         </div>
@@ -228,7 +260,10 @@ export function RRProductionOperatorPanel() {
         <div className="mt-6 grid gap-5 xl:grid-cols-2">
           <div className="space-y-3">
             <h3 className="font-semibold">1. Create Kernel execution</h3>
-            <p className="text-xs text-slate-400">Use the exact JSON body emitted by the RR normalized-import preflight CLI. No browser-side schema inference or storage.</p>
+            <p className="text-xs text-slate-400">
+              Use the exact JSON body emitted by the RR normalized-import preflight CLI. No browser-side schema
+              inference or storage.
+            </p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
               Import normalized RR API request (JSON)
             </label>
@@ -244,17 +279,25 @@ export function RRProductionOperatorPanel() {
                   setError('RR request exceeds the accepted size limit.')
                   return
                 }
-                void file.text().then((value) => {
-                  try {
-                    const parsed: unknown = JSON.parse(value)
-                    if (!parsed || typeof parsed !== 'object' || !('execution_id' in parsed) || !('payload' in parsed))
-                      throw new Error('Expected an RR /executions API request, not a demo scenario package.')
-                    setRequestBody(JSON.stringify(parsed, null, 2))
-                    setError(null)
-                  } catch (reason) {
-                    setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
-                  }
-                }).catch(() => setError('Could not read the RR request file'))
+                void file
+                  .text()
+                  .then((value) => {
+                    try {
+                      const parsed: unknown = JSON.parse(value)
+                      if (
+                        !parsed ||
+                        typeof parsed !== 'object' ||
+                        !('execution_id' in parsed) ||
+                        !('payload' in parsed)
+                      )
+                        throw new Error('Expected an RR /executions API request, not a demo scenario package.')
+                      setRequestBody(JSON.stringify(parsed, null, 2))
+                      setError(null)
+                    } catch (reason) {
+                      setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
+                    }
+                  })
+                  .catch(() => setError('Could not read the RR request file'))
               }}
             />
             <textarea
@@ -277,8 +320,13 @@ export function RRProductionOperatorPanel() {
 
           <div className="space-y-3">
             <h3 className="font-semibold">2. Change, override or replan</h3>
-            <p className="text-xs text-slate-400">Supply an explicit successor execution ID, change ID, kind, source and reason. No implicit overwrite of a predecessor.</p>
-            <label className="block text-sm" htmlFor="rr-execution-id">Execution ID</label>
+            <p className="text-xs text-slate-400">
+              Supply an explicit successor execution ID, change ID, kind, source and reason. No implicit overwrite of a
+              predecessor.
+            </p>
+            <label className="block text-sm" htmlFor="rr-execution-id">
+              Execution ID
+            </label>
             <input
               id="rr-execution-id"
               value={executionId}
@@ -297,7 +345,14 @@ export function RRProductionOperatorPanel() {
             <button
               type="button"
               disabled={busy || !validId(executionId) || !replanBody}
-              onClick={() => void execute('Replan execution', `${prefix}/executions/${encodeURIComponent(executionId)}/replan`, 'POST', replanBody)}
+              onClick={() =>
+                void execute(
+                  'Replan execution',
+                  `${prefix}/executions/${encodeURIComponent(executionId)}/replan`,
+                  'POST',
+                  replanBody
+                )
+              }
               className="bg-white px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
               Replan from predecessor
@@ -306,7 +361,9 @@ export function RRProductionOperatorPanel() {
 
           <div className="space-y-3 xl:col-span-2">
             <h3 className="font-semibold">3. Durable evidence and verification</h3>
-            <label className="block text-sm" htmlFor="rr-decision-id">Decision ID</label>
+            <label className="block text-sm" htmlFor="rr-decision-id">
+              Decision ID
+            </label>
             <input
               id="rr-decision-id"
               value={decisionId}
@@ -314,10 +371,50 @@ export function RRProductionOperatorPanel() {
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
-              <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void execute('Decision history', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">History</button>
-              <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void execute('History integrity', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history-integrity`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Integrity</button>
-              <button type="button" disabled={busy || !validId(decisionId)} onClick={() => void exportComplete()} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Export complete history</button>
-              <button type="button" disabled={busy || !validId(executionId)} onClick={() => void execute('Semantic replay', `${prefix}/executions/${encodeURIComponent(executionId)}/replay-verification`)} className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50">Replay</button>
+              <button
+                type="button"
+                disabled={busy || !validId(decisionId)}
+                onClick={() =>
+                  void execute('Decision history', `${prefix}/decisions/${encodeURIComponent(decisionId)}/history`)
+                }
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                History
+              </button>
+              <button
+                type="button"
+                disabled={busy || !validId(decisionId)}
+                onClick={() =>
+                  void execute(
+                    'History integrity',
+                    `${prefix}/decisions/${encodeURIComponent(decisionId)}/history-integrity`
+                  )
+                }
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                Integrity
+              </button>
+              <button
+                type="button"
+                disabled={busy || !validId(decisionId)}
+                onClick={() => void exportComplete()}
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                Export complete history
+              </button>
+              <button
+                type="button"
+                disabled={busy || !validId(executionId)}
+                onClick={() =>
+                  void execute(
+                    'Semantic replay',
+                    `${prefix}/executions/${encodeURIComponent(executionId)}/replay-verification`
+                  )
+                }
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                Replay
+              </button>
             </div>
           </div>
           {lastResult !== null && (
@@ -330,7 +427,9 @@ export function RRProductionOperatorPanel() {
                     {' · '}
                     {summary.result.runtime.operator_outcome.authoritative ? 'Authoritative' : 'Uncertified'}
                     {' · '}
-                    {summary.result.runtime.operator_outcome.actionable ? 'Actionable' : 'Non-actionable — inspect evidence'}
+                    {summary.result.runtime.operator_outcome.actionable
+                      ? 'Actionable'
+                      : 'Non-actionable — inspect evidence'}
                   </p>
                   <p className="text-slate-300">{summary.result.runtime.operator_outcome.summary}</p>
                   {summary.result.runtime.operator_outcome.actionable &&
@@ -358,8 +457,15 @@ export function RRProductionOperatorPanel() {
           )}
         </div>
       )}
-      {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
-      <p className="mt-5 text-xs text-slate-400">Single-organization reference installation only. All operational requests are authorized server-side; no privileged backend key is sent to the browser.</p>
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-rose-300">
+          {error}
+        </p>
+      )}
+      <p className="mt-5 text-xs text-slate-400">
+        Single-organization reference installation only. All operational requests are authorized server-side; no
+        privileged backend key is sent to the browser.
+      </p>
     </section>
   )
 }
