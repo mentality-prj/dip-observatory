@@ -31,7 +31,9 @@ export function verifyOperatorPassword(candidate: unknown) {
 }
 
 function signature(expiration: number, key: string) {
-  return createHmac('sha256', key).update(`rr-operator.v1:${expiration}`).digest('hex')
+  return createHmac('sha256', key)
+    .update(`rr-operator.v1:${expiration}:${digest(process.env.RR_OPERATOR_PASSWORD ?? '').toString('hex')}`)
+    .digest('hex')
 }
 
 export function createOperatorSession(now = Date.now()) {
