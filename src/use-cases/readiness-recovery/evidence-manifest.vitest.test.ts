@@ -24,7 +24,7 @@ describe('evidence manifest', () => {
   it('distinguishes observed quantiles from statistical superiority', () => {
     const x = buildEvidenceManifest(
       { asOf: '2026-10-10T00:00:00Z' } as ReadinessRecoveryInput,
-      { frontier: [selected] } as ReadinessRecoveryResult,
+      { frontier: [selected] } as unknown as ReadinessRecoveryResult,
       selected
     )
     expect(x.quantiles).toEqual([1, 2, 4])
@@ -36,7 +36,7 @@ describe('evidence manifest', () => {
   it('does not fabricate metrics when no plan exists', () => {
     const x = buildEvidenceManifest(
       { asOf: '2026-10-10T00:00:00Z' } as ReadinessRecoveryInput,
-      { frontier: [] } as ReadinessRecoveryResult,
+      { frontier: [] } as unknown as ReadinessRecoveryResult,
       null
     )
     expect(x.metrics).toEqual([])
