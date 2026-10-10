@@ -87,6 +87,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   }, [view, viewReady])
   useEffect(() => () => { requestGuard.current.invalidate(); activeController.current?.abort(); fileRevision.current += 1 }, [])
 
+  function invalidateOutcome() {
+    requestGuard.current.invalidate()
+    activeController.current?.abort()
+    setBusy(false)
+    setLastResult(null)
+    setOperation('')
+  }
   function startOperation() {
     activeController.current?.abort()
     const controller = new AbortController()
@@ -141,6 +148,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
+        if (!ids.executionId || !ids.decisionId) throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
       }
@@ -168,7 +176,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       let expectedHead: string | null = null
       let completed = false
       for (let pageNumber = 0; pageNumber < 20; pageNumber++) {
-        const path = `${prefix}/decisions/${encodeURIComponent(decisionId)}/history/export`
+        const path = `${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export`
         const params = new URLSearchParams({ page_size: '100' })
         if (cursor !== null && expectedHead !== null) {
           params.set('cursor', cursor)
@@ -296,7 +304,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         </div>
         {session.authenticated && (
           <button type="button" onClick={() => void logout()} className="border border-slate-400 px-4 py-2 text-sm">
-            Sign out
+            {t.signout}
           </button>
         )}
       </div>
@@ -345,7 +353,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             onClick={() => void login()}
             className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
           >
-            Unlock reference operator
+            {t.unlock}
           </button>
         </div>
       ) : (
@@ -367,6 +375,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 const file = event.target.files?.[0]
                 if (!file) return
                 const revision = ++fileRevision.current
+                invalidateOutcome()
                 if (file.size > 2_150_000) {
                   setError('RR request exceeds the accepted size limit.')
                   return
@@ -390,7 +399,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <textarea
               aria-label="Kernel execution JSON"
               value={requestBody}
-              onChange={(event) => { fileRevision.current += 1; setRequestBody(event.target.value) }}
+              onChange={(event) => { fileRevision.current += 1; invalidateOutcome(); setRequestBody(event.target.value) }}
               spellCheck={false}
               rows={10}
               className="w-full border border-white/20 bg-slate-950 p-3 font-mono text-xs"
@@ -401,7 +410,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               onClick={() => void execute('Create execution', `${prefix}/executions`, 'POST', requestBody)}
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
-              Create execution
+              {t.createButton}
             </button>
           </div>
 
@@ -416,13 +425,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <input
               id="rr-execution-id"
               value={executionId}
-              onChange={(event) => setExecutionId(event.target.value)}
+              onChange={(event) => { invalidateOutcome(); setExecutionId(event.target.value) }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <textarea
               aria-label="Kernel replan JSON"
               value={replanBody}
-              onChange={(event) => setReplanBody(event.target.value)}
+              onChange={(event) => { invalidateOutcome(); setReplanBody(event.target.value) }}
               spellCheck={false}
               placeholder="Paste explicit ReadinessRecoveryReplanRequest JSON"
               rows={7}
@@ -441,7 +450,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               }
               className="bg-white px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
-              Replan from predecessor
+              {t.replanButton}
             </button>
           </div>
 
@@ -453,7 +462,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <input
               id="rr-decision-id"
               value={decisionId}
-              onChange={(event) => setDecisionId(event.target.value)}
+              onChange={(event) => { invalidateOutcome(); setDecisionId(event.target.value) }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
@@ -465,7 +474,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                History
+                {t.history}
               </button>
               <button
                 type="button"
@@ -478,7 +487,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Integrity
+                {t.integrity}
               </button>
               <button
                 type="button"
@@ -486,7 +495,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 onClick={() => void exportComplete()}
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Export complete history
+                {t.export}
               </button>
               <button
                 type="button"
@@ -499,7 +508,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Replay
+                {t.replay}
               </button>
             </div>
           </div>
@@ -515,7 +524,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                     {' · '}
                     {summary.result.runtime.operator_outcome.actionable
                       ? 'Actionable'
-                      : 'Non-actionable — inspect evidence'}
+                      : t.nonActionable}
                   </p>
                   <p className="text-slate-300">{summary.result.runtime.operator_outcome.summary}</p>
                   {summary.result.runtime.operator_outcome.actionable &&
