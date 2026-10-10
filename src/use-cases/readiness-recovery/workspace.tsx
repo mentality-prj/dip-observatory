@@ -22,6 +22,7 @@ import {
   type ReadinessRecoveryDemoPreset,
 } from './demo-data'
 import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario, ScenarioLabel } from './domain'
+import { RRProductionOperatorPanel } from './production-operator-panel'
 import { readinessRecoveryI18n } from './i18n'
 import { ScenarioBadges, scenarioRoles } from './scenario-badges'
 
@@ -322,6 +323,8 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
             </button>
           </div>
         </section>
+
+        <RRProductionOperatorPanel />
 
         <ScenarioContextPanel locale={locale} context={context} />
         <AnalystDataPanel
