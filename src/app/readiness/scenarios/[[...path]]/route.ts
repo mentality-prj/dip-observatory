@@ -6,7 +6,6 @@ import {
   runCascadingRobustnessSweep,
 } from '@/use-cases/readiness-recovery/benchmark-suite'
 import { decorateObjectiveLabels } from '@/use-cases/readiness-recovery/scenario-labels'
-import { readinessScenarioRepository } from '@/use-cases/readiness-recovery/scenario-repository'
 
 type RouteContext = { params: Promise<{ path?: string[] }> }
 
@@ -21,11 +20,9 @@ const PUBLIC_PLANNER_LIMITS = {
 function assertSameOrigin(request: Request) {
   const origin = request.headers.get('origin')
   const requestUrl = new URL(request.url)
-  const expectedHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? requestUrl.host
-  const expectedProtocol = request.headers.get('x-forwarded-proto') ?? requestUrl.protocol.replace(':', '')
   if (!origin) throw new Error('Cross-origin request rejected.')
   const originUrl = new URL(origin)
-  if (originUrl.host !== expectedHost || originUrl.protocol.replace(':', '') !== expectedProtocol) {
+  if (originUrl.origin !== requestUrl.origin) {
     throw new Error('Cross-origin request rejected.')
   }
 }
@@ -49,7 +46,7 @@ function storedPayload(input: ReadinessRecoveryInput) {
     ? { ...qdipAdvantageRetention(robustnessVariants), variants: robustnessVariants }
     : undefined
   const result = { ...planned, frontier: decorateObjectiveLabels(planned.frontier), robustness }
-  return { input, result, updatedAt: new Date().toISOString() }
+  return result
 }
 
 function errorResponse(reason: unknown) {
@@ -66,9 +63,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (!body.input) return NextResponse.json({ error: 'Readiness recovery input is required.' }, { status: 400 })
 
     if (path.length === 0) {
-      const stored = storedPayload(body.input)
-      readinessScenarioRepository.put(body.input.scenarioId, stored)
-      return NextResponse.json(stored.result, { status: 201 })
+      return NextResponse.json(storedPayload(body.input), {
+        status: 201, headers: { 'Cache-Control': 'no-store' },
+      })
     }
 
     if (path.length === 2 && path[1] === 'recalculate') {
@@ -76,9 +73,9 @@ export async function POST(request: Request, context: RouteContext) {
       if (body.input.scenarioId !== id) {
         return NextResponse.json({ error: 'Path scenario id must match input scenarioId.' }, { status: 400 })
       }
-      const stored = storedPayload(body.input)
-      readinessScenarioRepository.put(id, stored)
-      return NextResponse.json(stored.result)
+      return NextResponse.json(storedPayload(body.input), {
+        headers: { 'Cache-Control': 'no-store' },
+      })
     }
 
     return NextResponse.json({ error: 'Unsupported readiness scenario operation.' }, { status: 404 })
@@ -87,14 +84,11 @@ export async function POST(request: Request, context: RouteContext) {
   }
 }
 
-export async function GET(_request: Request, context: RouteContext) {
-  const { path = [] } = await context.params
-  if (path.length !== 1 && !(path.length === 2 && path[1] === 'frontier')) {
-    return NextResponse.json({ error: 'Scenario id is required.' }, { status: 400 })
-  }
-  const id = decodeURIComponent(path[0])
-  const stored = readinessScenarioRepository.get(id)
-  if (!stored) return NextResponse.json({ error: 'Scenario not found in this Observatory process.' }, { status: 404 })
-  if (path.length === 2) return NextResponse.json({ scenarioId: id, frontier: stored.result.frontier })
-  return NextResponse.json(stored.result)
+// Public demo requests are stateless: no process-global Map or unauthenticated
+// lookup of other users' scenario results by predictable scenario ID.
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Public RR demo results are not persisted; rerun the scenario.' },
+    { status: 410, headers: { 'Cache-Control': 'no-store' } }
+  )
 }
