@@ -136,10 +136,17 @@ export function isObservatoryPlannerResult(value: unknown): value is ReadinessRe
     ]) {
       if (!finiteNonnegative(uncertainty[key])) return false
     }
-    if (uncertainty.demandSatisfiedSamples > uncertainty.samples) return false
+    const observed = uncertainty as {
+      samples: number
+      demandSatisfiedSamples: number
+      p10RecoveryTimeHours: number
+      p50RecoveryTimeHours: number
+      p90RecoveryTimeHours: number
+    }
+    if (observed.demandSatisfiedSamples > observed.samples) return false
     if (
-      uncertainty.p10RecoveryTimeHours > uncertainty.p50RecoveryTimeHours ||
-      uncertainty.p50RecoveryTimeHours > uncertainty.p90RecoveryTimeHours
+      observed.p10RecoveryTimeHours > observed.p50RecoveryTimeHours ||
+      observed.p50RecoveryTimeHours > observed.p90RecoveryTimeHours
     )
       return false
     return true
