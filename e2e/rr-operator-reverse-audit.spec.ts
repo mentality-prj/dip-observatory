@@ -60,6 +60,25 @@ test('editing a Kernel request invalidates its obsolete delayed response', async
       body: JSON.stringify({ configured: true, authenticated: true, mode: 'single-organization-reference' }),
     })
   )
+  await page.route('**/api/rr-operator/kernel/preflight', async (route) => {
+    const request = JSON.parse(route.request().postData() ?? '{}') as {
+      execution_id?: string
+      payload?: { decision_id?: string }
+    }
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        schema_version: 'readiness-recovery.presentation.v1',
+        validation_scope: 'SCHEMA_AND_ADMISSION_ONLY',
+        execution_id: request.execution_id,
+        decision_id: request.payload?.decision_id,
+        source_snapshot_id: 'mock-snapshot',
+        job_count: 1,
+        technician_count: 1,
+        warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF',
+      }),
+    })
+  })
   await page.route('**/api/rr-operator/kernel/executions', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 350))
     await route.fulfill({
@@ -75,6 +94,8 @@ test('editing a Kernel request invalidates its obsolete delayed response', async
   await input.fill(
     '{"execution_id":"first","source":{},"ingested_at":"2026-10-11T00:00:00Z","payload":{"decision_id":"first"}}'
   )
+  await expect(page.getByTestId('rr-kernel-preflight')).toContainText('Kernel preflight')
+  await expect(page.getByRole('button', { name: 'Create execution', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Create execution', exact: true }).click()
   await input.fill(
     '{"execution_id":"second","source":{},"ingested_at":"2026-10-11T00:00:00Z","payload":{"decision_id":"second"}}'
