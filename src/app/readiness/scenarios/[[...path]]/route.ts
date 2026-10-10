@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { ReadinessRecoveryInput } from '@/use-cases/readiness-recovery/domain'
+import { parseRRInput } from '@/use-cases/readiness-recovery/input-contract'
 import {
   planReadinessRecoveryWithBenchmarkSuite,
   qdipAdvantageRetention,
@@ -62,21 +63,27 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     assertSameOrigin(request)
     const { path = [] } = await context.params
-    const body = (await request.json()) as { input?: ReadinessRecoveryInput }
-    if (!body.input) return NextResponse.json({ error: 'Readiness recovery input is required.' }, { status: 400 })
+    const body: unknown = await request.json()
+    const rawInput = body && typeof body === 'object' && !Array.isArray(body) && 'input' in body
+      ? body.input : undefined
+    const parsedInput = parseRRInput(rawInput)
+    if (!parsedInput.input) {
+      return NextResponse.json({ error: 'Invalid readiness recovery input.', issues: parsedInput.issues }, { status: 400 })
+    }
+    const input = parsedInput.input
 
     if (path.length === 0) {
-      const stored = storedPayload(body.input)
-      readinessScenarioRepository.put(body.input.scenarioId, stored)
+      const stored = storedPayload(input)
+      readinessScenarioRepository.put(input.scenarioId, stored)
       return NextResponse.json(stored.result, { status: 201 })
     }
 
     if (path.length === 2 && path[1] === 'recalculate') {
       const id = decodeURIComponent(path[0])
-      if (body.input.scenarioId !== id) {
+      if (input.scenarioId !== id) {
         return NextResponse.json({ error: 'Path scenario id must match input scenarioId.' }, { status: 400 })
       }
-      const stored = storedPayload(body.input)
+      const stored = storedPayload(input)
       readinessScenarioRepository.put(id, stored)
       return NextResponse.json(stored.result)
     }
