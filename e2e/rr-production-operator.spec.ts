@@ -15,6 +15,7 @@ test('public RR demo does not expose a prior scenario through an anonymous GET',
 })
 
 test('reference operator: Kernel execution, reasoned replan, durable history and replay', async ({ page }) => {
+  test.setTimeout(180_000)
   test.skip(
     !process.env.RR_E2E_OPERATOR_PASSWORD || !process.env.RR_E2E_API_REQUEST_PATH,
     'Requires explicit operator credentials, live isolated Mongo RR backend and synthetic API request path'
@@ -45,9 +46,20 @@ test('reference operator: Kernel execution, reasoned replan, durable history and
   await expect(panel.getByRole('button', { name: 'Sign out' })).toBeVisible()
 
   await panel.getByLabel('Kernel execution JSON').fill(JSON.stringify(original, null, 2))
-  await panel.getByRole('button', { name: 'Create execution', exact: true }).click()
-  await expect(panel.getByText('Create execution', { exact: true }).last()).toBeVisible({ timeout: 60_000 })
-  await expect(panel.getByText(original.execution_id, { exact: false }).last()).toBeVisible()
+  const [created] = await Promise.all([
+    page.waitForResponse((response) =>
+      response.url().endsWith('/api/rr-operator/kernel/executions') &&
+      response.request().method() === 'POST'
+    ),
+    panel.getByRole('button', { name: 'Create execution', exact: true }).click(),
+  ])
+  expect(created.status()).toBe(201)
+  const initialRecord = await created.json() as {
+    organization_id?: string
+    result?: { workflow?: { execution_id?: string } }
+  }
+  expect(initialRecord.organization_id).toBeTruthy()
+  expect(initialRecord.result?.workflow?.execution_id).toBe(original.execution_id)
 
   const successorId = `rr-e2e-${unique}-002`
   const newer = new Date(Date.now() + 1000).toISOString()
@@ -65,17 +77,49 @@ test('reference operator: Kernel execution, reasoned replan, durable history and
     },
   }
   await panel.getByLabel('Kernel replan JSON').fill(JSON.stringify(replan, null, 2))
-  await panel.getByRole('button', { name: 'Replan from predecessor' }).click()
-  await expect(panel.getByText('Replan execution', { exact: true }).last()).toBeVisible({ timeout: 60_000 })
-  await panel.getByRole('button', { name: 'History', exact: true }).click()
-  await expect(panel.getByText('"executions"', { exact: false }).last()).toBeVisible()
-  await panel.getByRole('button', { name: 'Integrity' }).click()
-  await expect(panel.getByText('"complete_chain": true', { exact: false }).last()).toBeVisible()
+  const [replanned] = await Promise.all([
+    page.waitForResponse((response) =>
+      response.url().endsWith(`/api/rr-operator/kernel/executions/${original.execution_id}/replan`) &&
+      response.request().method() === 'POST'
+    ),
+    panel.getByRole('button', { name: 'Replan from predecessor' }).click(),
+  ])
+  expect(replanned.status()).toBe(201)
+  const revision = await replanned.json() as {
+    result?: { workflow?: { execution_id?: string; change?: { predecessor_execution_id?: string } } }
+  }
+  expect(revision.result?.workflow?.execution_id).toBe(successorId)
+  expect(revision.result?.workflow?.change?.predecessor_execution_id).toBe(original.execution_id)
+  const [history] = await Promise.all([
+    page.waitForResponse((response) =>
+      response.url().endsWith(`/decisions/${original.payload.decision_id}/history`)
+    ),
+    panel.getByRole('button', { name: 'History', exact: true }).click(),
+  ])
+  expect(history.status()).toBe(200)
+  const historical = await history.json() as { executions?: unknown[] }
+  expect(historical.executions).toHaveLength(2)
+
+  const [integrity] = await Promise.all([
+    page.waitForResponse((response) =>
+      response.url().endsWith(`/decisions/${original.payload.decision_id}/history-integrity`)
+    ),
+    panel.getByRole('button', { name: 'Integrity' }).click(),
+  ])
+  expect(integrity.status()).toBe(200)
+  expect((await integrity.json() as { complete_chain?: boolean }).complete_chain).toBe(true)
+
   await panel.getByRole('button', { name: 'Export complete history' }).click()
   await expect(panel.getByText('"export_complete": true', { exact: false }).last()).toBeVisible()
 
-  await panel.getByRole('button', { name: 'Replay' }).click()
-  await expect(panel.getByText('"verified": true', { exact: false }).last()).toBeVisible()
+  const [replay] = await Promise.all([
+    page.waitForResponse((response) =>
+      response.url().endsWith(`/executions/${successorId}/replay-verification`)
+    ),
+    panel.getByRole('button', { name: 'Replay' }).click(),
+  ])
+  expect(replay.status()).toBe(200)
+  expect((await replay.json() as { verified?: boolean }).verified).toBe(true)
 
   await panel.getByRole('button', { name: 'Sign out' }).click()
   const denied = await page.request.get(`${ORIGIN}/api/rr-operator/kernel/executions/${successorId}`)
