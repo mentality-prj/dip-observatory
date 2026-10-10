@@ -97,11 +97,38 @@ export function isObservatoryPlannerResult(value: unknown): value is ReadinessRe
     ]) {
       if (!finiteNonnegative(scenario[key])) return false
     }
-    if (!finiteNonnegative(scenario.uncertaintySummary.samples) || !finiteNonnegative(scenario.uncertaintySummary.seed)) return false
-    for (const key of ['demandSatisfiedSamples', 'p10RecoveryTimeHours', 'p50RecoveryTimeHours', 'p90RecoveryTimeHours']) {
-      if (!finiteNonnegative(scenario.uncertaintySummary[key])) return false
+    for (const key of [
+      'expectedCapabilityReadiness', 'probabilityDemandSatisfied',
+      'recoveryFailureRisk', 'repeatFailureRisk',
+    ]) {
+      if (typeof scenario[key] !== 'number' || scenario[key] > 1) return false
     }
+    const uncertainty = scenario.uncertaintySummary
+    if (!Number.isInteger(uncertainty.samples) || !finiteNonnegative(uncertainty.samples) || uncertainty.samples === 0) {
+      return false
+    }
+    if (!Number.isInteger(uncertainty.seed) || !finiteNonnegative(uncertainty.seed)) return false
+    for (const key of ['demandSatisfiedSamples', 'p10RecoveryTimeHours', 'p50RecoveryTimeHours', 'p90RecoveryTimeHours']) {
+      if (!finiteNonnegative(uncertainty[key])) return false
+    }
+    if (uncertainty.demandSatisfiedSamples > uncertainty.samples) return false
+    if (uncertainty.p10RecoveryTimeHours > uncertainty.p50RecoveryTimeHours ||
+        uncertainty.p50RecoveryTimeHours > uncertainty.p90RecoveryTimeHours) return false
     return true
+  }
+
+  if (value.robustness !== undefined) {
+    if (!record(value.robustness) || !Array.isArray(value.robustness.variants)) return false
+    if (!finiteNonnegative(value.robustness.retained) || !finiteNonnegative(value.robustness.total)) return false
+    if (value.robustness.retained > value.robustness.total ||
+        value.robustness.total !== value.robustness.variants.length) return false
+    if (!value.robustness.variants.every((variant) =>
+      record(variant) && typeof variant.variantId === 'string' &&
+      typeof variant.verdict === 'string' && typeof variant.advantageKind === 'string' &&
+      (variant.baselineKind === null || typeof variant.baselineKind === 'string') &&
+      typeof variant.probabilityDelta === 'number' && Number.isFinite(variant.probabilityDelta) &&
+      typeof variant.shortfallReduction === 'number' && Number.isFinite(variant.shortfallReduction)
+    )) return false
   }
 
   return (
