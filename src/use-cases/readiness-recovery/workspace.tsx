@@ -190,7 +190,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
     [baseInput, customInput, locale, preset, t.presetHelp]
   )
   const reviewOrder = useMemo(() => orderReviewAlternatives(result, viewingPriority), [result, viewingPriority])
-  const featured = useMemo(() => featuredScenarios(reviewOrder), [reviewOrder])
+  const featured = useMemo(() => reviewOrder.slice(0, 6), [reviewOrder])
   const selected =
     result?.frontier.find((scenario) => scenario.scenarioId === selectedScenarioId) ?? featured[0] ?? null
 
