@@ -264,7 +264,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   if (!session)
     return (
       <p className="mx-auto max-w-5xl px-5 py-12 text-slate-400" role="status">
-        Checking Kernel connection settings…
+        {t.checking}
       </p>
     )
   if (!session.configured)
@@ -274,10 +274,9 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         className="mx-auto max-w-5xl border border-white/15 bg-slate-900/50 p-6"
         role="status"
       >
-        <h2 className="text-lg font-semibold">Kernel RR operator unavailable</h2>
+        <h2 className="text-lg font-semibold">{t.unavailable}</h2>
         <p className="mt-3 text-sm text-slate-300">
-          The authenticated reference operator is not configured. RR does not fall back to a browser solver. An
-          authorized operator must configure the approved server-side connection and access policy.
+          {t.unavailableHelp}
         </p>
       </section>
     )
@@ -287,14 +286,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const summary = lastResult as RecordSummary | null
 
   return (
-    <section className="mt-8 border border-sky-400/30 bg-slate-900/70 p-5 md:p-6" data-testid="rr-production-operator">
+    <section className={`mt-8 border border-sky-400/30 bg-slate-900/70 ${view.density === 'COMPACT' ? 'p-3 md:p-4 text-sm' : 'p-5 md:p-6'}`} data-testid="rr-production-operator">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-sky-200">Kernel-backed RR — restricted reference operator</h2>
+          <h2 className="text-xl font-semibold text-sky-200">{t.title}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Restricted, authenticated reference workflow. Import a normalized RR execution request. Only QDIP Kernel
-            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. This access mode is not
-            final production OIDC.
+            {t.description}
           </p>
         </div>
         {session.authenticated && (
@@ -304,10 +301,35 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         )}
       </div>
 
+      {session.authenticated && (
+        <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
+          <h3 className="font-semibold">{t.display}</h3>
+          <label className="mt-2 block text-sm">{t.density}
+            <select aria-label={t.density} className="ml-3 border border-white/20 bg-slate-950 p-2"
+              value={view.density} onChange={event=>setView({...view,density:event.target.value as KernelView['density']})}>
+              <option value="COMFORTABLE">{t.comfortable}</option>
+              <option value="COMPACT">{t.compact}</option>
+            </select>
+          </label>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {view.panels.map((key:KernelPanel)=>(
+              <div key={key} className="flex items-center gap-2 border border-white/15 px-2 py-1 text-sm">
+                <span>{key==='EXECUTE'?t.create:key==='REPLAN'?t.replan:t.evidence}</span>
+                <button type="button" aria-label={`${t.up}: ${key}`} disabled={view.panels.indexOf(key)===0}
+                  onClick={()=>setView(moveKernelPanel(view,key,-1))} className="disabled:opacity-30">{t.up}</button>
+                <button type="button" aria-label={`${t.down}: ${key}`} disabled={view.panels.indexOf(key)===view.panels.length-1}
+                  onClick={()=>setView(moveKernelPanel(view,key,1))} className="disabled:opacity-30">{t.down}</button>
+              </div>
+            ))}
+            <button type="button" className="border border-white/15 px-3 py-1" onClick={()=>setView(defaultKernelView())}>{t.reset}</button>
+          </div>
+          <p className="mt-2 text-xs text-slate-400">{t.preferences}</p>
+        </div>
+      )}
       {!session.authenticated ? (
         <div className="mt-5 flex max-w-lg flex-col gap-3">
           <label className="text-sm" htmlFor="rr-operator-password">
-            Operator access password
+            {t.password}
           </label>
           <input
             id="rr-operator-password"
@@ -327,15 +349,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           </button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-5 xl:grid-cols-2">
-          <div className="space-y-3">
-            <h3 className="font-semibold">1. Create Kernel execution</h3>
+        <div className={`mt-6 grid xl:grid-cols-2 ${view.density === 'COMPACT' ? 'gap-2' : 'gap-5'}`}>
+          <div className="space-y-3" style={{ order: view.panels.indexOf('EXECUTE') }}>
+            <h3 className="font-semibold">1. {t.create}</h3>
             <p className="text-xs text-slate-400">
-              Use the exact JSON body emitted by the RR normalized-import preflight CLI. No browser-side schema
-              inference or storage.
+              {t.createHelp}
             </p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
-              Import normalized RR API request (JSON)
+              {t.import}
             </label>
             <input
               id="rr-kernel-request-file"
@@ -345,6 +366,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
+                const revision = ++fileRevision.current
                 if (file.size > 2_150_000) {
                   setError('RR request exceeds the accepted size limit.')
                   return
@@ -352,28 +374,23 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 void file
                   .text()
                   .then((value) => {
+                    if (fileRevision.current !== revision) return
                     try {
                       const parsed: unknown = JSON.parse(value)
-                      if (
-                        !parsed ||
-                        typeof parsed !== 'object' ||
-                        !('execution_id' in parsed) ||
-                        !('payload' in parsed)
-                      )
-                        throw new Error('Expected an RR /executions API request, not a demo scenario package.')
-                      setRequestBody(JSON.stringify(parsed, null, 2))
+                      const validated = parseKernelRequestFile(parsed)
+                      setRequestBody(JSON.stringify(validated, null, 2))
                       setError(null)
                     } catch (reason) {
                       setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
                     }
                   })
-                  .catch(() => setError('Could not read the RR request file'))
+                  .catch(() => { if (fileRevision.current === revision) setError('Could not read the RR request file') })
               }}
             />
             <textarea
               aria-label="Kernel execution JSON"
               value={requestBody}
-              onChange={(event) => setRequestBody(event.target.value)}
+              onChange={(event) => { fileRevision.current += 1; setRequestBody(event.target.value) }}
               spellCheck={false}
               rows={10}
               className="w-full border border-white/20 bg-slate-950 p-3 font-mono text-xs"
@@ -388,14 +405,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold">2. Change, override or replan</h3>
+          <div className="space-y-3" style={{ order: view.panels.indexOf('REPLAN') }}>
+            <h3 className="font-semibold">2. {t.replan}</h3>
             <p className="text-xs text-slate-400">
-              Supply an explicit successor execution ID, change ID, kind, source and reason. No implicit overwrite of a
-              predecessor.
+              {t.replanHelp}
             </p>
             <label className="block text-sm" htmlFor="rr-execution-id">
-              Execution ID
+              {t.executionId}
             </label>
             <input
               id="rr-execution-id"
@@ -429,10 +445,10 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3 xl:col-span-2">
-            <h3 className="font-semibold">3. Durable evidence and verification</h3>
+          <div className="space-y-3 xl:col-span-2" style={{ order: view.panels.indexOf('EVIDENCE') }}>
+            <h3 className="font-semibold">3. {t.evidence}</h3>
             <label className="block text-sm" htmlFor="rr-decision-id">
-              Decision ID
+              {t.decisionId}
             </label>
             <input
               id="rr-decision-id"
@@ -488,7 +504,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </div>
           </div>
           {lastResult !== null && (
-            <div className="xl:col-span-2" aria-live="polite">
+            <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
               {summary?.result?.runtime?.operator_outcome && (
                 <div className="mt-2 space-y-3 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
@@ -533,8 +549,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         </p>
       )}
       <p className="mt-5 text-xs text-slate-400">
-        Single-organization reference installation only. All operational requests are authorized server-side; no
-        privileged backend key is sent to the browser.
+        {t.restricted}
       </p>
     </section>
   )
