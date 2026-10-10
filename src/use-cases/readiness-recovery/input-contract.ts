@@ -114,7 +114,7 @@ export function parseRRInput(value: unknown): { input?: ReadinessRecoveryInput; 
       path:
         error.path.reduce<string>((path, segment) => {
           if (typeof segment === 'number') return path + '[' + segment + ']'
-          return path ? path + '.' + segment : String(segment)
+          return path ? path + '.' + String(segment) : String(segment)
         }, '') || 'root',
       message: error.code === 'too_small' && error.minimum === 0 ? 'Expected a non-negative number.' : error.message,
     })),
