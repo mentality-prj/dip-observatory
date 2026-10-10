@@ -1,48 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { kernelEvidenceFromRecord } from './operator-evidence'
-describe('Kernel-only bounded evidence contract', () => {
-  it('fails closed on client-supplied actionability without authoritative runtime result', () => {
-    const r = {
-      result: {
-        workflow: { execution_id: 'a' },
-        runtime: { operator_outcome: { actionable: true, authoritative: false } },
-      },
-    }
-    const v = kernelEvidenceFromRecord(r)
-    expect(v.actionable).toBe(false)
-    expect(v.authoritative).toBe(false)
+import { isKernelRRPresentation } from './operator-evidence'
+
+describe('RR evidence comes from the backend plugin, not UI calculations', () => {
+  const valid = {
+    schema_version: 'readiness-recovery.presentation.v1',
+    computation_authority: 'QDIP_KERNEL_RR_V1',
+    execution_id: 'rr-001',
+    decision_id: 'decision-001',
+    authoritative: true,
+    actionable: true,
+    outcome_kind: 'OPTIMAL_DECISION',
+    scheduled_jobs: [{job_id:'job-1',technician_id:'tech-1',start_slot:0,finish_slot:1}],
+    selected_donor_ids: [],
+  }
+
+  it('only accepts a versioned backend-owned RR presentation', () => {
+    expect(isKernelRRPresentation(valid)).toBe(true)
+    expect(isKernelRRPresentation({ ...valid, computation_authority: 'OBSERVATORY_SIMULATION' })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, schema_version: 'readiness-recovery.v1' })).toBe(false)
+    expect(isKernelRRPresentation({ result: { runtime: { operator_outcome: { actionable: true } } } })).toBe(false)
   })
-  it('supports normalized Kernel job slots and rejects invalid job records', () => {
-    const r = {
-      result: {
-        workflow: {
-          execution_id: 'rr-1',
-          ingestion: { payload: { decision_id: 'd-1' }, source: { snapshot_id: 'snapshot-1' } },
-        },
-        runtime: {
-          operator_outcome: {
-            kind: 'SCHEDULED',
-            actionable: true,
-            authoritative: true,
-            selected_donor_ids: ['donor-1', 42],
-          },
-          decision: {
-            scheduled_jobs: [
-              { job_id: 'j1', technician_id: 't1', start_slot: 2, finish_slot: 4 },
-              { job_id: 'bad', technician_id: 't2', start_slot: 9, finish_slot: 1 },
-            ],
-          },
-        },
-      },
-    }
-    const v = kernelEvidenceFromRecord(r)
-    expect(v.actionable).toBe(true)
-    expect(v.jobs).toEqual([{ id: 'j1', technician: 't1', start: 2, finish: 4 }])
-    expect(v.sourceSnapshot).toBe('snapshot-1')
-    expect(v.donors).toEqual(['donor-1'])
-  })
-  it('records unknown provenance as null rather than fabricated evidence', () => {
-    expect(kernelEvidenceFromRecord({}).kind).toBeNull()
-    expect(kernelEvidenceFromRecord({}).revision).toBeNull()
+
+  it('cannot accidentally display loose or incomplete legacy simulation metrics', () => {
+    expect(isKernelRRPresentation(null)).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, scheduled_jobs: null })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, actionable: 'yes' })).toBe(false)
   })
 })
