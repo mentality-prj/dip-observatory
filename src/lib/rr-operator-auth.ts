@@ -70,5 +70,5 @@ export function sameOrigin(request: NextRequest) {
 
 export function safeTransport(request: NextRequest) {
   const url = request.nextUrl
-  return url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))
+  return url.protocol === 'https:' || (url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.localhost')))
 }
