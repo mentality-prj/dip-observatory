@@ -9,6 +9,11 @@ test('production RR requires a logged-in operator, with no public API-key fallba
   expect([401, 503]).toContain(response.status())
 })
 
+test('public RR demo does not expose a prior scenario through an anonymous GET', async ({ page }) => {
+  const response = await page.request.get(`${ORIGIN}/readiness/scenarios/another-user-scenario`)
+  expect(response.status()).toBe(410)
+})
+
 test('reference operator: Kernel execution, reasoned replan, durable history and replay', async ({ page }) => {
   test.skip(
     !process.env.RR_E2E_OPERATOR_PASSWORD || !process.env.RR_E2E_API_REQUEST_PATH,
