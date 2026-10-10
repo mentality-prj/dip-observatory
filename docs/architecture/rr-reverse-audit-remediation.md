@@ -34,3 +34,19 @@ The former React `ReadinessRecoveryWorkspace` was still present as an unused, br
 ## Merge acceptance
 
 Only consider this PR code-qualified after the current SHA has passed lint, formatting, typecheck, full unit/component suite, production build and browser E2E; full backend product qualification is a separate gate.
+
+
+## 2026-10-11: RR computation ownership migration
+
+The canonical UI is Kernel-only. All 43 retired RR TypeScript research/optimizer/Monte Carlo/Pareto/benchmark/Test A implementation and test modules have been removed from the qdip-web working tree; historical Git commits preserve the prior experiments without deploying them. The active UI is not allowed to import any deprecated RR calculation module.
+
+Added **qdip-core RR plugin** modules and endpoints on backend branch `feat/rr-plugin-computation-ownership`:
+- `presentation.py` computes Pydantic-validated RR preflight, execution read-model metrics, provenance and strict complete-history projection;
+- `research_math.py` hosts bounded experimental distributions, Monte Carlo and Pareto primitives with explicit `BACKEND_RESEARCH_ONLY` status, no production route, no claim of equivalence to the retired TS planner;
+- `POST /api/v1/readiness-recovery/preflight`;
+- `GET /api/v1/readiness-recovery/executions/:id/presentation`;
+- `GET /api/v1/readiness-recovery/decisions/:id/history/export-complete`, verifying the complete stored history via the plugin's Kernel replay and audit integrity chain before reporting success.
+
+The web operator only makes server requests to these allowlisted routes and renders the versioned responses; no browser-side input risk/readiness/feasibility, result authority, Pareto, Monte Carlo, or complete-history proof is computed. Client-side controls are limited to transport cancellation, JSON syntax, display/locale and safe presentation-only settings.
+
+**Deployment blocker:** this web branch depends on the new backend routes, which are not in qdip-core `dev` until its separate backend PR merges. In an older deployment, preflight intentionally fails closed and disables execution. There is no fallback to a local optimizer. These two branches must be version-qualified together before any product release.
