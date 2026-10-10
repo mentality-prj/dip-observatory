@@ -1,12 +1,25 @@
 'use client'
 
-import { useMemo, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { RefreshCw, SlidersHorizontal, Wrench } from 'lucide-react'
 import { AnalystDataPanel } from '@/components/observatory/analyst-data-panel'
 import { ScenarioContextPanel, type ScenarioContextView } from '@/components/observatory/scenario-context-panel'
 import { LOCALE_TAGS } from '@/i18n/config'
 import type { Locale } from '@/lib/observatory-i18n'
 import { QdipAdvantage } from './advantage'
+import { assessObservatoryDecision, isObservatoryPlannerResult } from './decision-trust'
+import { DecisionTrustPanel } from './decision-trust-panel'
+import { DecisionSummary } from './decision-summary'
+import { AnalystEvidence } from './analyst-evidence'
+import { PersonalObservatory } from './personal-observatory'
+import {
+  readRRViewPreferences,
+  saveRRViewPreferences,
+  templatePreferences,
+  type RRViewPreferences,
+  type RRWidget,
+} from './view-preferences'
+import { orderReviewAlternatives, type ViewingPriority } from './decision-policy'
 import {
   READINESS_DATA_DICTIONARY,
   downloadJson,
@@ -21,17 +34,9 @@ import {
   READINESS_RECOVERY_DEMO_PRESETS,
   type ReadinessRecoveryDemoPreset,
 } from './demo-data'
-import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario, ScenarioLabel } from './domain'
+import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario } from './domain'
 import { readinessRecoveryI18n } from './i18n'
-import { ScenarioBadges, scenarioRoles } from './scenario-badges'
-
-const LABEL_ORDER: ScenarioLabel[] = [
-  'MAXIMUM_READINESS',
-  'FAST_RECOVERY',
-  'PARTS_CONSERVATIVE',
-  'LOW_RISK',
-  'BALANCED',
-]
+import { ScenarioBadges } from './scenario-badges'
 
 const contextCopy = {
   en: {
@@ -96,21 +101,6 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
   )
 }
 
-function featuredScenarios(frontier: RecoveryScenario[]) {
-  const selected: RecoveryScenario[] = []
-  for (const label of LABEL_ORDER) {
-    const scenario = frontier.find(
-      (item) => scenarioRoles(item.label, item.labels).includes(label) && !selected.includes(item)
-    )
-    if (scenario) selected.push(scenario)
-  }
-  for (const scenario of frontier) {
-    if (selected.length >= 6) break
-    if (!selected.includes(scenario)) selected.push(scenario)
-  }
-  return selected
-}
-
 function bestProbability(result: ReadinessRecoveryResult | null) {
   return result?.frontier.length ? Math.max(...result.frontier.map((item) => item.probabilityDemandSatisfied)) : 0
 }
@@ -170,8 +160,29 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
   const [technicianCapacity, setTechnicianCapacity] = useState(100)
   const [spareParts, setSpareParts] = useState(100)
   const [repairSuccess, setRepairSuccess] = useState(100)
+  const [viewingPriority, setViewingPriority] = useState<ViewingPriority>('READINESS')
+  const [viewPreferences, setViewPreferences] = useState<RRViewPreferences>(() => templatePreferences('BUSINESS'))
+  const [viewHydrated, setViewHydrated] = useState(false)
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      setViewPreferences(readRRViewPreferences(window.localStorage))
+    } catch {
+      setViewPreferences(templatePreferences('BUSINESS'))
+    }
+    setViewHydrated(true)
+  }, [])
+  useEffect(() => {
+    if (!viewHydrated) return
+    try {
+      saveRRViewPreferences(window.localStorage, viewPreferences)
+    } catch {
+      // Storage unavailable: keep preferences in memory for this session.
+    }
+  }, [viewHydrated, viewPreferences])
+  const showWidget = (widget: RRWidget) => viewPreferences.widgets.includes(widget)
 
   const baseInput = useMemo(() => customInput ?? buildReadinessRecoveryDemo(preset), [customInput, preset])
   const context = useMemo(
@@ -184,7 +195,8 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
       ),
     [baseInput, customInput, locale, preset, t.presetHelp]
   )
-  const featured = useMemo(() => featuredScenarios(result?.frontier ?? []), [result])
+  const reviewOrder = useMemo(() => orderReviewAlternatives(result, viewingPriority), [result, viewingPriority])
+  const featured = useMemo(() => reviewOrder.slice(0, 6), [reviewOrder])
   const selected =
     result?.frontier.find((scenario) => scenario.scenarioId === selectedScenarioId) ?? featured[0] ?? null
 
@@ -197,9 +209,13 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ input }),
     })
-    const payload = (await response.json()) as ReadinessRecoveryResult | { error?: string }
-    if (!response.ok || !('frontier' in payload)) {
-      throw new Error('error' in payload && payload.error ? payload.error : t.error)
+    const payload: unknown = await response.json()
+    if (!response.ok || !isObservatoryPlannerResult(payload)) {
+      const message =
+        payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
+          ? payload.error
+          : t.error
+      throw new Error(message)
     }
     return payload
   }
@@ -330,7 +346,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
           onExactFile={importExact}
           onDownloadTemplate={() => downloadJson('qdip-readiness-recovery-template.json', exactTemplate(baseInput))}
           onExport={() =>
-            downloadJson('qdip-readiness-recovery-analysis.json', exportAnalysis(baseInput, result ?? undefined))
+            downloadJson(
+              'qdip-readiness-recovery-analysis.json',
+              exportAnalysis(baseInput, result ?? undefined, selected ?? undefined)
+            )
           }
           exactStatus={exactStatus}
           exactIssues={exactIssues}
@@ -340,8 +359,29 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
           <div className="mt-5 border border-rose-400/30 bg-rose-400/10 p-4 text-sm text-rose-200">{error}</div>
         ) : null}
 
+        <PersonalObservatory locale={locale} value={viewPreferences} onChange={setViewPreferences} />
+
         {result ? (
           <>
+            {showWidget('DECISION_SUMMARY') ? (
+              <DecisionSummary
+                locale={locale}
+                input={baseInput}
+                result={result}
+                selected={selected}
+                comparator={reviewOrder.find((item) => item.scenarioId !== selected?.scenarioId) ?? null}
+                priority={viewingPriority}
+              />
+            ) : null}
+            <DecisionTrustPanel
+              locale={locale}
+              trust={assessObservatoryDecision(customInput ? 'USER_IMPORTED' : 'SYNTHETIC_PRESET', result)}
+            />
+            {showWidget('EVIDENCE') ? (
+              <div id="rr-analyst-evidence">
+                <AnalystEvidence locale={locale} input={baseInput} result={result} selected={selected} />
+              </div>
+            ) : null}
             <section className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <Metric label={t.assets} value={String(result.inputSummary.assets)} />
               <Metric label={t.impaired} value={String(result.inputSummary.impairedAssets)} />
@@ -434,9 +474,26 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               </section>
             ) : null}
 
-            <section className="mt-7">
+            <section className={`mt-7 ${showWidget('ALTERNATIVES') ? '' : 'hidden'}`}>
               <h2 className="text-2xl font-medium">{t.frontier}</h2>
               <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">{t.frontierHelp}</p>
+              <label className="mt-4 block max-w-xs text-xs text-slate-300">
+                {locale === 'uk'
+                  ? 'Пріоритет відображення (не рекомендація)'
+                  : locale === 'pl'
+                    ? 'Priorytet sortowania (nie rekomendacja)'
+                    : 'Viewing priority (not a recommendation)'}
+                <select
+                  value={viewingPriority}
+                  onChange={(event) => setViewingPriority(event.target.value as ViewingPriority)}
+                  className="mt-2 block w-full border border-white/15 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                >
+                  <option value="READINESS">{t.readiness}</option>
+                  <option value="RECOVERY_TIME">{t.time}</option>
+                  <option value="PARTS">{t.scarceParts}</option>
+                  <option value="FAILURE_RISK">{t.failureRisk}</option>
+                </select>
+              </label>
               <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
                 {featured.map((scenario) => (
                   <button
@@ -465,10 +522,10 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
               <p className="mt-4 text-sm text-slate-500">{t.plannerChoice}</p>
             </section>
 
-            {selected ? <ScenarioDetail locale={locale} scenario={selected} /> : null}
+            {selected && showWidget('ALTERNATIVES') ? <ScenarioDetail locale={locale} scenario={selected} /> : null}
 
             <section className="mt-7 grid gap-5 xl:grid-cols-2">
-              <div className="border border-white/10 bg-white/[.02] p-5">
+              <div className={`border border-white/10 bg-white/[.02] p-5 ${showWidget('BASELINES') ? '' : 'hidden'}`}>
                 <h2 className="text-xl font-medium">{t.baselines}</h2>
                 <p className="mt-1 text-sm leading-6 text-slate-400">{t.baselineHelp}</p>
                 <div className="mt-4 space-y-2">
@@ -485,7 +542,7 @@ export function ReadinessRecoveryWorkspace({ locale }: { locale: Locale }) {
                   ))}
                 </div>
               </div>
-              <div className="border border-white/10 bg-white/[.02] p-5">
+              <div className={`border border-white/10 bg-white/[.02] p-5 ${showWidget('DIAGNOSTICS') ? '' : 'hidden'}`}>
                 <h2 className="text-xl font-medium">{t.diagnostics}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <SmallMetric label={t.searchNodes} value={number(locale, result.diagnostics.searchNodes, 0)} />

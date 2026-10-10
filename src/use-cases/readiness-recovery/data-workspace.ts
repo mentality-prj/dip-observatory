@@ -1,4 +1,6 @@
-import type { ReadinessRecoveryInput, ReadinessRecoveryResult } from './domain'
+import type { ReadinessRecoveryInput, ReadinessRecoveryResult, RecoveryScenario } from './domain'
+import { buildEvidenceManifest, type EvidenceManifest } from './evidence-manifest'
+import { parseRRInput } from './input-contract'
 
 export const READINESS_DATA_SCHEMA_VERSION = 'readiness-recovery.v1' as const
 
@@ -16,6 +18,7 @@ export type ReadinessDataPackage = {
   exportedAt: string
   input: ReadinessRecoveryInput
   result?: ReadinessRecoveryResult
+  evidence?: EvidenceManifest
 }
 
 export type ValidationIssue = { path: string; message: string }
@@ -30,44 +33,26 @@ export const READINESS_DATA_DICTIONARY = [
   ['settings.seed', 'Random seed used for reproducible uncertainty evaluation', 'integer', 'required'],
 ] as const
 
-function finite(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value)
-}
-
 export function validateReadinessInput(value: unknown): ValidationIssue[] {
-  const issues: ValidationIssue[] = []
-  if (!value || typeof value !== 'object') return [{ path: '$', message: 'Expected an object.' }]
-  const input = value as Partial<ReadinessRecoveryInput>
-  if (!input.scenarioId?.trim()) issues.push({ path: 'scenarioId', message: 'Required non-empty string.' })
-  if (!input.asOf || Number.isNaN(Date.parse(input.asOf)))
-    issues.push({ path: 'asOf', message: 'Expected ISO datetime.' })
-  if (!Array.isArray(input.capabilityDemand) || input.capabilityDemand.length === 0) {
-    issues.push({ path: 'capabilityDemand', message: 'At least one capability demand is required.' })
-  } else {
-    input.capabilityDemand.forEach((demand, index) => {
-      if (!demand.capabilityId?.trim())
-        issues.push({ path: `capabilityDemand[${index}].capabilityId`, message: 'Required.' })
-      if (!finite(demand.requiredQuantity) || demand.requiredQuantity < 0)
-        issues.push({ path: `capabilityDemand[${index}].requiredQuantity`, message: 'Expected a non-negative number.' })
-      if (!demand.deadline || Number.isNaN(Date.parse(demand.deadline)))
-        issues.push({ path: `capabilityDemand[${index}].deadline`, message: 'Expected ISO datetime.' })
-    })
-  }
-  if (!Array.isArray(input.assets)) issues.push({ path: 'assets', message: 'Expected an array.' })
-  if (!Array.isArray(input.recoveryActions)) issues.push({ path: 'recoveryActions', message: 'Expected an array.' })
-  if (!input.resources || typeof input.resources !== 'object')
-    issues.push({ path: 'resources', message: 'Required object.' })
-  if (!input.settings || typeof input.settings !== 'object')
-    issues.push({ path: 'settings', message: 'Required object.' })
-  return issues
+  return parseRRInput(value).issues
 }
 
 export function exactTemplate(input: ReadinessRecoveryInput): ReadinessDataPackage {
   return { schemaVersion: READINESS_DATA_SCHEMA_VERSION, exportedAt: new Date(0).toISOString(), input }
 }
 
-export function exportAnalysis(input: ReadinessRecoveryInput, result?: ReadinessRecoveryResult): ReadinessDataPackage {
-  return { schemaVersion: READINESS_DATA_SCHEMA_VERSION, exportedAt: new Date().toISOString(), input, result }
+export function exportAnalysis(
+  input: ReadinessRecoveryInput,
+  result?: ReadinessRecoveryResult,
+  selected?: RecoveryScenario
+): ReadinessDataPackage {
+  return {
+    schemaVersion: READINESS_DATA_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    input,
+    result,
+    evidence: result ? buildEvidenceManifest(input, result, selected ?? null) : undefined,
+  }
 }
 
 export function importExactPackage(value: unknown): { input?: ReadinessRecoveryInput; issues: ValidationIssue[] } {
