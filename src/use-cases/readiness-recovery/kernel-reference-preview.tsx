@@ -69,7 +69,11 @@ const copy = {
 export function KernelReferencePreview({ locale }: { locale: Locale }) {
   const t = copy[locale]
   return (
-    <section aria-label={t.title} data-testid="rr-reference-preview" className="mt-6 border border-white/15 bg-white/[.025] p-5 md:p-6">
+    <section
+      aria-label={t.title}
+      data-testid="rr-reference-preview"
+      className="mt-6 border border-white/15 bg-white/[.025] p-5 md:p-6"
+    >
       <p className="text-xs font-semibold uppercase tracking-wider text-sky-300">{t.eyebrow}</p>
       <h2 className="mt-3 text-xl font-semibold text-white md:text-2xl">{t.title}</h2>
       <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300">{t.intro}</p>
