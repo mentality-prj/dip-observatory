@@ -4,15 +4,15 @@ import type { NextRequest } from 'next/server'
 vi.mock('server-only', () => ({}))
 
 import { operatorAuthorized, operatorConfigured, safeTransport, sameOrigin } from './rr-operator-auth'
-import { attachSession, getQdipSession, isOperatorSubject, safeReturnTo } from './qdip-oidc'
+import { attachSession, canOperateRr, getQdipSession, safeReturnTo } from './qdip-oidc'
 import { NextResponse } from 'next/server'
 
 beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', 'https://identity.example.test')
   vi.stubEnv('ZITADEL_CLIENT_ID', '394566248211424533')
   vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'a-strong-and-independent-oidc-cookie-signing-secret')
-  vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', 'user-2')
-  vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-1')
+  vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', '123456789')
+  vi.stubEnv('ZITADEL_QDIP_ORGANIZATION_ID', '987654321')
   vi.stubEnv('DIP_API_BASE_URL', 'http://127.0.0.1:8000')
   vi.stubEnv('DIP_API_KEY', 'test-org-scoped-key')
   vi.stubEnv('RR_ACTOR_ASSERTION_SECRET', 'this-is-an-independent-core-rr-actor-signing-secret')
@@ -21,25 +21,21 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe('Zitadel-backed RR session boundary', () => {
-  it('fails closed without configured identity and operator subjects', () => {
-    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', '')
+  it('fails closed without valid OIDC project scope or operator backend credentials', () => {
+    vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', '')
     expect(operatorConfigured()).toBe(false)
-    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-1')
+    vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', '123456789')
     vi.stubEnv('ZITADEL_ISSUER', '')
     expect(operatorConfigured()).toBe(false)
   })
 
-  it('derives operator permission from server allowlist, not an unverified browser field', () => {
+  it('derives operator permission from signed roles, not a matching subject ID', () => {
     expect(operatorConfigured()).toBe(true)
-    expect(isOperatorSubject('user-1')).toBe(true)
-    expect(isOperatorSubject('user-2')).toBe(false)
-    vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', '')
-    expect(operatorConfigured()).toBe(true)
-    expect(isOperatorSubject('user-1')).toBe(true)
     const req = { nextUrl: new URL('https://observatory.qdip.ai/en/readiness-recovery') } as NextRequest
     const response = NextResponse.json({})
     attachSession(response, req, {
       sub: 'user-1',
+      roles: ['rr_operator'],
       issuer: 'https://identity.example.test',
       clientId: '394566248211424533',
       expiresAt: Math.floor(Date.now() / 1000) + 300,
@@ -48,8 +44,18 @@ describe('Zitadel-backed RR session boundary', () => {
     expect(getQdipSession(cookie)?.sub).toBe('user-1')
     const request = { cookies: { get: () => ({ value: cookie }) } } as unknown as NextRequest
     expect(operatorAuthorized(request)).toBe(true)
-    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-2')
-    expect(operatorAuthorized(request)).toBe(false)
+    expect(canOperateRr(getQdipSession(cookie)!)).toBe(true)
+    const studioResponse = NextResponse.json({})
+    attachSession(studioResponse, req, {
+      sub: 'user-1',
+      roles: ['studio'],
+      issuer: 'https://identity.example.test',
+      clientId: '394566248211424533',
+      expiresAt: Math.floor(Date.now() / 1000) + 300,
+    })
+    const studioCookie = studioResponse.cookies.get('qdip_oidc_session')?.value
+    const studioRequest = { cookies: { get: () => ({ value: studioCookie }) } } as unknown as NextRequest
+    expect(operatorAuthorized(studioRequest)).toBe(false)
     expect(getQdipSession(cookie + 'tampered')).toBeNull()
   })
 
