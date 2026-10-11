@@ -5,13 +5,13 @@ vi.mock('server-only', () => ({}))
 import { loginFailurePage } from './oidc-login-error'
 
 describe('Zitadel callback error pages', () => {
-  it('explains missing role assignments without granting access', async () => {
+  it('explains unverified project/org roles without granting access', async () => {
     const response = loginFailurePage('missing-role', 'https://studio.qdip.ai/uk')
     expect(response.status).toBe(403)
     expect(response.headers.get('cache-control')).toBe('no-store')
     const html = await response.text()
     expect(html).toContain('Немає призначеної ролі QDIP')
-    expect(html).toContain('Role Assignments')
+    expect(html).toContain('Якщо ролі вже призначені')
     expect(html).toContain('https://qdip.ai/api/auth/login')
     expect(html).toContain('https%3A%2F%2Fstudio.qdip.ai%2Fuk')
     expect(html).not.toContain('id_token')
