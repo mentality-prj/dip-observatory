@@ -13,12 +13,7 @@ export default async function StudioLayout({ children }: { children: ReactNode }
   const access = await pageAccess('studio')
   if (!access.allowed) {
     return (
-      <QdipAccessGate
-        locale="en"
-        role="studio"
-        returnTo={studioHref('', 'en')}
-        authenticated={access.authenticated}
-      />
+      <QdipAccessGate locale="en" role="studio" returnTo={studioHref('', 'en')} authenticated={access.authenticated} />
     )
   }
 
