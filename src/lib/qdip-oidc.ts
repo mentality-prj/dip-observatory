@@ -16,7 +16,7 @@ const FLOW_SECONDS = 10 * 60
 const AUTH_CALLBACK_PATH = '/api/auth/callback/zitadel'
 
 function sharedSecret() {
-  const value = process.env.QDIP_AUTH_COOKIE_SECRET ?? ''
+  const value = process.env.QDIP_WEB_SESSION_SIGNING_SECRET ?? ''
   return value.length >= 32 ? value : null
 }
 
@@ -47,26 +47,33 @@ export function oidcConfigured() {
     configuredIssuer() &&
     (process.env.ZITADEL_CLIENT_ID ?? '').trim() &&
     sharedSecret() &&
-    subjects('QDIP_AUTH_ALLOWED_SUBJECTS').size
+    (subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').size > 0 ||
+      subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size > 0)
   )
 }
 
 export function operatorConfigured() {
   return Boolean(
     oidcConfigured() &&
-    subjects('QDIP_AUTH_OPERATOR_SUBJECTS').size &&
+    subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size &&
     (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
     process.env.DIP_API_KEY?.trim() &&
     (process.env.RR_ACTOR_ASSERTION_SECRET ?? '').length >= 32
   )
 }
 
-export function isAllowedSubject(sub: string) {
-  return subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(sub)
+// Authentication admits users assigned to either product surface; authorization
+// is verified independently at each privileged API boundary.
+export function isStudioSubject(sub: string) {
+  return subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').has(sub)
 }
 
 export function isOperatorSubject(sub: string) {
-  return subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(sub) && subjects('QDIP_AUTH_OPERATOR_SUBJECTS').has(sub)
+  return subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').has(sub)
+}
+
+export function isAllowedSubject(sub: string) {
+  return isStudioSubject(sub) || isOperatorSubject(sub)
 }
 
 function mac(purpose: string, payload: string, secret: string) {
@@ -303,7 +310,7 @@ export function getQdipSession(value: string | undefined): Session | null {
   if (
     !session ||
     typeof session.sub !== 'string' ||
-    !subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(session.sub) ||
+    !isAllowedSubject(session.sub) ||
     session.issuer !== configuredIssuer() ||
     session.clientId !== process.env.ZITADEL_CLIENT_ID ||
     typeof session.expiresAt !== 'number' ||

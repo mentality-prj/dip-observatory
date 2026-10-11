@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 import { isSurfaceHost } from '@/routing-config'
-import { sessionFromRequest } from '@/lib/qdip-oidc'
+import { isStudioSubject, sessionFromRequest } from '@/lib/qdip-oidc'
 
 const resource = /^[a-zA-Z0-9_.-]+$/
 function allowed(path: string[], method: string) {
@@ -27,7 +27,8 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  if (!sessionFromRequest(request)) {
+  const session = sessionFromRequest(request)
+  if (!session || !isStudioSubject(session.sub)) {
     return NextResponse.json(
       { error: 'Zitadel login required' },
       { status: 401, headers: { 'Cache-Control': 'no-store' } }

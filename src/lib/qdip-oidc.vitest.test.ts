@@ -2,7 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSign, generateKeyPairSync } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
-import { authorizationUrl, discoverOidc, oidcConfigured, safeReturnTo, verifyIdToken } from './qdip-oidc'
+import {
+  authorizationUrl,
+  discoverOidc,
+  isAllowedSubject,
+  isOperatorSubject,
+  isStudioSubject,
+  oidcConfigured,
+  safeReturnTo,
+  verifyIdToken,
+} from './qdip-oidc'
 
 const issuer = 'https://identity.example.test'
 const clientId = '394566248211424533'
@@ -42,8 +51,9 @@ function token(changes: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', issuer)
   vi.stubEnv('ZITADEL_CLIENT_ID', clientId)
-  vi.stubEnv('QDIP_AUTH_COOKIE_SECRET', 'long-cookie-secret-with-a-minimum-of-32-characters')
-  vi.stubEnv('QDIP_AUTH_ALLOWED_SUBJECTS', 'user-1')
+  vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'long-cookie-secret-with-a-minimum-of-32-characters')
+  vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', 'user-1')
+  vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', '')
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => ({
@@ -60,8 +70,21 @@ afterEach(() => {
 describe('QDIP Zitadel OIDC PKCE', () => {
   it('requires an issuer, a client ID, an allowlist and a server-side secret', () => {
     expect(oidcConfigured()).toBe(true)
-    vi.stubEnv('QDIP_AUTH_ALLOWED_SUBJECTS', '')
+    vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', '')
     expect(oidcConfigured()).toBe(false)
+    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'rr-user')
+    expect(oidcConfigured()).toBe(true)
+  })
+  it('enforces separate Studio and RR Zitadel User ID allowlists', () => {
+    vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', 'studio-only')
+    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'rr-only')
+    expect(isStudioSubject('studio-only')).toBe(true)
+    expect(isStudioSubject('rr-only')).toBe(false)
+    expect(isOperatorSubject('studio-only')).toBe(false)
+    expect(isOperatorSubject('rr-only')).toBe(true)
+    expect(isAllowedSubject('studio-only')).toBe(true)
+    expect(isAllowedSubject('rr-only')).toBe(true)
+    expect(isAllowedSubject('outsider')).toBe(false)
   })
   it('constructs an exact callback and S256 PKCE authorization request', async () => {
     const discovered = await discoverOidc()
