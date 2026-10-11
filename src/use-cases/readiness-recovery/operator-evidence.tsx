@@ -37,7 +37,7 @@ const copy = {
     total: 'Input jobs',
     scheduled: 'Scheduled jobs',
     technicians: 'Available technicians',
-    donors: 'Selected donor IDs',
+    selectedDonorCount: 'Selected donor IDs',
     src: 'Metric origin',
     unit: 'Units',
     model: 'Model-verified projection; not field-verified',
@@ -68,7 +68,7 @@ const copy = {
     total: 'Роботи у вхідних даних',
     scheduled: 'Заплановані роботи',
     technicians: 'Доступні спеціалісти',
-    donors: 'Вибрані донори',
+    selectedDonorCount: 'Вибрані донори',
     src: 'Джерело метрик',
     unit: 'Одиниці',
     model: 'Перевірено в межах моделі, не в реальних умовах',
@@ -99,7 +99,7 @@ const copy = {
     total: 'Zadania wejściowe',
     scheduled: 'Zaplanowane zadania',
     technicians: 'Dostępni technicy',
-    donors: 'Wybrani dawcy',
+    selectedDonorCount: 'Wybrani dawcy',
     src: 'Źródło metryk',
     unit: 'Jednostki',
     model: 'Wynik zweryfikowany w modelu, nie w terenie',
@@ -229,7 +229,7 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
             [t.total, record.job_count],
             [t.scheduled, record.scheduled_job_count],
             [t.technicians, record.technician_count],
-            [t.donors, record.selected_donor_ids.length],
+            [t.selectedDonorCount, record.selected_donor_ids.length],
           ].map(([label, value]) => (
             <div key={label} className="border-l border-white/20 pl-3">
               <dt className="text-xs text-slate-400">{label}</dt>
