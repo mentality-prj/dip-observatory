@@ -54,6 +54,18 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(isKernelRRPresentation({ ...valid, field_verified: true })).toBe(false)
   })
 
+  it('filters display-only metric cards, never provenance, schedule or Kernel decision', () => {
+    if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
+    const html = renderToStaticMarkup(<OperatorEvidence locale="uk" record={valid} visibleMetrics={['TECHNICIANS']} />)
+    expect(html).toContain('Доступні спеціалісти')
+    expect(html).not.toContain('Роботи у вхідних даних')
+    expect(html).not.toContain('Вибрані донори')
+    expect(html).toContain('rr-civilian-workshop-example')
+    expect(html).toContain('data-testid="rr-kernel-schedule"')
+    expect(html).toContain('job-1')
+    expect(html).toContain('не доведені')
+  })
+
   it('presents a readable schedule and keeps raw provenance optional', () => {
     if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
     const html = renderToStaticMarkup(<OperatorEvidence locale="uk" record={valid} />)
