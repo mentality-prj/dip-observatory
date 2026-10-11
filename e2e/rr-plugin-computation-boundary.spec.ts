@@ -213,6 +213,8 @@ test('changed decision head refuses complete download', async ({ page }) => {
   const downloads: string[] = []
   page.on('download', (file) => downloads.push(file.suggestedFilename()))
   await page.getByRole('button', { name: 'Export complete history' }).click()
-  await expect(page.locator('p[role="alert"][data-error-kind]')).toContainText('Kernel decision head changed during export')
+  await expect(page.locator('p[role="alert"][data-error-kind]')).toContainText(
+    'Kernel decision head changed during export'
+  )
   expect(downloads).toEqual([])
 })
