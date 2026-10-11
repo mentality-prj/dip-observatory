@@ -127,20 +127,25 @@ test('server-owned preflight and stored evidence are rendered without any browse
 
 test('mismatched normalized input digest is rejected even with the same execution ID', async ({ page }) => {
   await page.route('**/api/rr-operator/kernel/preflight', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(preflight) }))
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(preflight) })
+  )
   await page.route('**/api/rr-operator/kernel/executions', (route) =>
     route.fulfill({
-      status: 201, contentType: 'application/json',
+      status: 201,
+      contentType: 'application/json',
       body: JSON.stringify({
-        result: { workflow: {
-          execution_id: request.execution_id,
-          ingestion: {
-            payload_digest: 'b'.repeat(64),
-            payload: { decision_id: request.payload.decision_id },
+        result: {
+          workflow: {
+            execution_id: request.execution_id,
+            ingestion: {
+              payload_digest: 'b'.repeat(64),
+              payload: { decision_id: request.payload.decision_id },
+            },
           },
-        } },
+        },
       }),
-    }))
+    })
+  )
   await page.goto(PAGE_URL)
   await page.getByLabel('Kernel execution JSON').fill(JSON.stringify(request))
   await expect(page.getByRole('button', { name: 'Create execution', exact: true })).toBeEnabled()
