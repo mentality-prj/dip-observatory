@@ -28,12 +28,19 @@ type Session = { configured: boolean; authenticated: boolean; mode: string }
 type KernelPreflight = {
   schema_version: 'readiness-recovery.presentation.v1'
   validation_scope: 'SCHEMA_AND_ADMISSION_ONLY'
+  accepted_for_kernel_submission: true
   execution_id: string
   decision_id: string
+  source_system: string
   source_snapshot_id: string
+  source_version: string
   payload_digest: string
   job_count: number
   technician_count: number
+  inventory_item_types: number
+  donor_count: number
+  horizon_slots: number
+  workshop_capacity: number
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
 }
 function isKernelPreflight(value: unknown): value is KernelPreflight {
@@ -42,9 +49,17 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
   return (
     v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    v.accepted_for_kernel_submission === true &&
     typeof v.execution_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.execution_id) &&
     typeof v.decision_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.decision_id) &&
+    typeof v.source_system === 'string' &&
+    v.source_system.trim().length > 0 &&
     typeof v.source_snapshot_id === 'string' &&
+    v.source_snapshot_id.trim().length > 0 &&
+    typeof v.source_version === 'string' &&
+    v.source_version.trim().length > 0 &&
     typeof v.payload_digest === 'string' &&
     /^[0-9a-f]{64}$/.test(v.payload_digest) &&
     v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
@@ -53,7 +68,15 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     v.job_count > 0 &&
     typeof v.technician_count === 'number' &&
     Number.isSafeInteger(v.technician_count) &&
-    v.technician_count > 0
+    v.technician_count > 0 &&
+    Number.isSafeInteger(v.inventory_item_types) &&
+    v.inventory_item_types >= 0 &&
+    Number.isSafeInteger(v.donor_count) &&
+    v.donor_count >= 0 &&
+    Number.isSafeInteger(v.horizon_slots) &&
+    v.horizon_slots > 0 &&
+    Number.isSafeInteger(v.workshop_capacity) &&
+    v.workshop_capacity > 0
   )
 }
 const initialRequest = `{
