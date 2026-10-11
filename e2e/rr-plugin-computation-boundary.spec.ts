@@ -23,12 +23,19 @@ const request = {
 const preflight = {
   schema_version: 'readiness-recovery.presentation.v1',
   validation_scope: 'SCHEMA_AND_ADMISSION_ONLY',
+  accepted_for_kernel_submission: true,
   execution_id: request.execution_id,
   decision_id: request.payload.decision_id,
+  source_system: request.source.source_system,
   source_snapshot_id: request.source.snapshot_id,
+  source_version: request.source.source_version,
   payload_digest: 'a'.repeat(64),
   job_count: 1,
   technician_count: 1,
+  inventory_item_types: 0,
+  donor_count: 0,
+  horizon_slots: 6,
+  workshop_capacity: 2,
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF',
 }
 const projection = {
