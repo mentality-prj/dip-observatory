@@ -60,6 +60,9 @@ export function StudioCoreStatus() {
 
 export function StudioProductHeader() {
   const locale = useStudioLocale()
+  const login = new URL('/api/auth/login', process.env.NEXT_PUBLIC_SITE_URL ?? 'https://qdip.ai')
+  login.searchParams.set('return_to', studioSurfaceHref('', locale))
+  const loginLabel = { en: 'Sign in', uk: 'Увійти', pl: 'Zaloguj się' }[locale]
 
   return (
     <ProductHeader
@@ -67,7 +70,14 @@ export function StudioProductHeader() {
       brandHref={marketingHref(locale)}
       product="Studio"
       status={<StudioCoreStatus />}
-      utilities={<StudioLanguageSwitcher />}
+      utilities={
+        <>
+          <a href={login.toString()} aria-label={loginLabel} className="px-2 text-sm underline">
+            {loginLabel}
+          </a>
+          <StudioLanguageSwitcher />
+        </>
+      }
       nativeNavigation
     />
   )

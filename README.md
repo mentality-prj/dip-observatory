@@ -76,7 +76,7 @@ Set `QDIP_AUTH_COOKIE_SECRET` (random 32+ chars), `QDIP_AUTH_ALLOWED_SUBJECTS`
 no allowlist, no session. Logout clears the shared session cookie; sessions
 expire after 60 minutes, and removing a subject from the allowlist immediately
 blocks server-side access. Legacy RR shared-password login is retired (HTTP 410).
-Studio pages and its BFF API require a valid Zitadel session; RR additionally
+Studio pages remain publicly browsable, but privileged Studio BFF API calls require a valid Zitadel session; RR additionally
 requires the operator allowlist. Public marketing, inquiries and demonstrator
 routes are intentionally kept public. An authenticated session does not grant
 a new QDIP Core tenant: the existing server-only organization-scoped API key
