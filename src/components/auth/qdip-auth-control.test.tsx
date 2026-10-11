@@ -58,3 +58,4 @@ describe('QDIP shared authentication control', () => {
     expect(fetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({ method: 'POST' }))
     expect(screen.getByRole('button', { name: 'Wyloguj się' })).toBeEnabled()
   })
+})
