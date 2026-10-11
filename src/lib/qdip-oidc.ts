@@ -25,7 +25,7 @@ const FLOW_SECONDS = 10 * 60
 const AUTH_CALLBACK_PATH = '/api/auth/callback/zitadel'
 
 function sharedSecret() {
-  const value = process.env.QDIP_WEB_SESSION_SIGNING_SECRET ?? ''
+  const value = process.env.QDIP_AUTH_COOKIE_SECRET ?? ''
   return value.length >= 32 ? value : null
 }
 
