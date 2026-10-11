@@ -56,6 +56,41 @@ The SMTP connection is created only from the Node.js server route. Credentials a
 
 Zoho supports authenticated SMTP over SSL on port 465. If the account uses a data-center-specific SMTP hostname, use the exact value shown in the Zoho Mail account/Admin Console rather than changing application code.
 
+## Zitadel OIDC access control
+
+QDIP reuses the existing Zitadel instance with a separate Web Application. Use
+**Authorization Code + PKCE**, client authentication `none`, issuer `ZITADEL_ISSUER`,
+and client ID `ZITADEL_CLIENT_ID`. There is no client secret.
+
+Configure the application's **exact** login redirect URI:
+`https://qdip.ai/api/auth/callback/zitadel`. A single callback on the main
+domain is sufficient: login sets a secure, HttpOnly session cookie scoped to
+`qdip.ai` and available to `studio.qdip.ai` and `observatory.qdip.ai`.
+Identity is verified from Zitadel's signed ID token (JWKS, issuer, audience,
+expiry and nonce); PKCE and signed state bind the login exchange.
+No Zitadel token or QDIP API key is sent to the browser.
+
+Set `QDIP_AUTH_COOKIE_SECRET` (random 32+ chars), `QDIP_AUTH_ALLOWED_SUBJECTS`
+(comma-separated exact Zitadel `sub` values), and
+`QDIP_AUTH_OPERATOR_SUBJECTS` (authorized subset for RR). Access is **fail-closed**:
+no allowlist, no session. Logout clears the shared session cookie; sessions
+expire after 60 minutes, and removing a subject from the allowlist immediately
+blocks server-side access. Legacy RR shared-password login is retired (HTTP 410).
+Studio pages and its BFF API require a valid Zitadel session; RR additionally
+requires the operator allowlist. Public marketing, inquiries and demonstrator
+routes are intentionally kept public. An authenticated session does not grant
+a new QDIP Core tenant: the existing server-only organization-scoped API key
+continues to authorize Core operations.
+
+**Security boundary:** This is a single-organization hosted BFF integration, not
+yet production multi-tenant OIDC-to-Core authorization, per-user decision audit,
+role binding from Zitadel project grants, or a replacement for Core API keys.
+Only deploy with trusted `*.qdip.ai` subdomains and strict TLS. A shared domain
+cookie is intentionally visible (as an HttpOnly cookie) to the QDIP subdomains.
+Development on unrelated `*.localhost` hosts does not have cross-host SSO;
+use a same-origin local callback for a single surface or test on a TLS staging
+domain under `qdip.ai` after updating allowed Redirect URIs.
+
 ## Deployment
 
 Assign `qdip.ai`, `studio.qdip.ai`, and `observatory.qdip.ai` to the same deployment. Next.js selects the surface declaratively in `next.config.ts` using host conditions; no runtime middleware/proxy or separate build is required. Configure the three DNS records according to the hosting provider and set the backend and Zoho SMTP environment variables above.

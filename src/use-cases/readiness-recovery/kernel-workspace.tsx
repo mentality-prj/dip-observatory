@@ -8,19 +8,19 @@ const labels = {
     title: 'Readiness Recovery',
     description:
       'QDIP Kernel is the only decision authority for RR scheduling. Use the authenticated reference operator to create executions, review history and replan. The former asset/capability Monte Carlo planner has a different data and mathematical contract and is not offered as an alternative solver here.',
-    warning: 'Restricted reference environment — not final production identity or deployment qualification.',
+    warning: 'Zitadel authentication enabled. RR deployment and multi-tenant authorization remain subject to separate qualification.',
   },
   uk: {
     title: 'Відновлення готовності',
     description:
       'QDIP Kernel — єдине джерело рішень для планування ремонтних робіт RR. Авторизований оператор створює виконання, переглядає історію та переплановує. Попередня Monte Carlo-модель активів і спроможностей має інший контракт і не використовується як альтернативний solver.',
-    warning: 'Обмежений референсний доступ — не завершена production-авторизація або кваліфікація.',
+    warning: 'Авторизація через Zitadel. Кваліфікацію RR та багатокористувацький доступ ще не завершено.',
   },
   pl: {
     title: 'Odtwarzanie gotowości',
     description:
       'QDIP Kernel jest jedynym źródłem decyzji dla harmonogramu RR. Uprawniony operator tworzy wykonania, sprawdza historię i planuje ponownie. Poprzedni model Monte Carlo ma inny kontrakt i nie jest alternatywnym solverem.',
-    warning: 'Ograniczony dostęp referencyjny — nie jest to ostateczna kwalifikacja produkcyjna.',
+    warning: 'Logowanie przez Zitadel. Kwalifikacja RR i dostęp wieloorganizacyjny wymagają osobnej weryfikacji.',
   },
 } as const
 

@@ -57,7 +57,6 @@ async function checkedJson(response: Response): Promise<unknown> {
  */
 export function RRProductionOperatorPanel() {
   const [session, setSession] = useState<Session | null>(null)
-  const [password, setPassword] = useState('')
   const [requestBody, setRequestBody] = useState(initialRequest)
   const [replanBody, setReplanBody] = useState('')
   const [decisionId, setDecisionId] = useState('')
@@ -160,35 +159,25 @@ export function RRProductionOperatorPanel() {
     }
   }
 
-  async function login() {
-    setBusy(true)
-    setError(null)
-    try {
-      await checkedJson(
-        await fetch('/api/rr-operator/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password }),
-        })
-      )
-      setSession({ configured: true, authenticated: true, mode: 'single-organization-reference' })
-      setPassword('')
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Login failed')
-    } finally {
-      setBusy(false)
-    }
+  function login() {
+    const root = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://qdip.ai'
+    const url = new URL('/api/auth/login', root)
+    url.searchParams.set('return_to', window.location.href)
+    window.location.assign(url.toString())
   }
 
   async function logout() {
-    await fetch('/api/rr-operator/session', { method: 'DELETE' })
-    setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
+    const response = await fetch('/api/auth/logout', { method: 'POST', headers: { Origin: window.location.origin } })
+    if (!response.ok) {
+      setError('Sign out failed')
+      return
+    }
+    setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
     setLastResult(null)
     setExecutionId('')
     setDecisionId('')
     setRequestBody(initialRequest)
     setReplanBody('')
-    setPassword('')
   }
 
   if (!session)
@@ -223,8 +212,7 @@ export function RRProductionOperatorPanel() {
           <h2 className="text-xl font-semibold text-sky-200">Kernel-backed RR — restricted reference operator</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
             Restricted, authenticated reference workflow. Import a normalized RR execution request. Only QDIP Kernel
-            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. This access mode is not
-            final production OIDC.
+            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. Authentication uses Zitadel OIDC; Kernel permissions are still enforced by the server.
           </p>
         </div>
         {session.authenticated && (
@@ -236,24 +224,14 @@ export function RRProductionOperatorPanel() {
 
       {!session.authenticated ? (
         <div className="mt-5 flex max-w-lg flex-col gap-3">
-          <label className="text-sm" htmlFor="rr-operator-password">
-            Operator access password
-          </label>
-          <input
-            id="rr-operator-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="border border-white/25 bg-slate-950 p-3 text-sm"
-          />
+          <p className="text-sm text-slate-300">Sign in with your authorized Zitadel account.</p>
           <button
             type="button"
-            disabled={busy || !password}
-            onClick={() => void login()}
+            disabled={busy}
+            onClick={() => login()}
             className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
           >
-            Unlock reference operator
+            Sign in with Zitadel
           </button>
         </div>
       ) : (
@@ -463,7 +441,7 @@ export function RRProductionOperatorPanel() {
         </p>
       )}
       <p className="mt-5 text-xs text-slate-400">
-        Single-organization reference installation only. All operational requests are authorized server-side; no
+        Zitadel identity with an explicitly authorized RR operator allowlist. Single-organization reference only. All operational requests are authorized server-side; no
         privileged backend key is sent to the browser.
       </p>
     </section>

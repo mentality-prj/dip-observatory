@@ -1,0 +1,277 @@
+import 'server-only'
+
+import { createHash, createHmac, createPublicKey, randomBytes, timingSafeEqual, verify } from 'node:crypto'
+import type { NextRequest, NextResponse } from 'next/server'
+import { PLATFORM_ORIGINS } from '@/routing-config'
+
+type Session = { sub: string; issuer: string; clientId: string; expiresAt: number }
+type Pending = { state: string; nonce: string; verifier: string; returnTo: string; issuedAt: number }
+type OidcDiscovery = { issuer: string; authorization_endpoint: string; token_endpoint: string; jwks_uri: string }
+
+const FLOW_COOKIE = 'qdip_oidc_flow'
+const SESSION_COOKIE = 'qdip_oidc_session'
+const SESSION_SECONDS = 60 * 60
+const FLOW_SECONDS = 10 * 60
+const AUTH_CALLBACK_PATH = '/api/auth/callback/zitadel'
+
+function sharedSecret() {
+  const value = process.env.QDIP_AUTH_COOKIE_SECRET ?? ''
+  return value.length >= 32 ? value : null
+}
+
+function configuredIssuer() {
+  const raw = process.env.ZITADEL_ISSUER?.replace(/\/+$/, '')
+  if (!raw) return null
+  try {
+    const url = new URL(raw)
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/')
+      return null
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+function subjects(name: string) {
+  return new Set((process.env[name] ?? '').split(',').map((subject) => subject.trim()).filter(Boolean))
+}
+
+export function oidcConfigured() {
+  return Boolean(
+    configuredIssuer() &&
+      (process.env.ZITADEL_CLIENT_ID ?? '').trim() &&
+      sharedSecret() &&
+      subjects('QDIP_AUTH_ALLOWED_SUBJECTS').size
+  )
+}
+
+export function operatorConfigured() {
+  return Boolean(
+    oidcConfigured() &&
+      subjects('QDIP_AUTH_OPERATOR_SUBJECTS').size &&
+      (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
+      process.env.DIP_API_KEY?.trim()
+  )
+}
+
+export function isOperatorSubject(sub: string) {
+  return subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(sub) && subjects('QDIP_AUTH_OPERATOR_SUBJECTS').has(sub)
+}
+
+function mac(purpose: string, payload: string, secret: string) {
+  return createHmac('sha256', secret).update(purpose + ':' + payload).digest('base64url')
+}
+
+function seal(value: Session | Pending, purpose: string) {
+  const secret = sharedSecret()
+  if (!secret) throw new Error('OIDC session signing key is missing')
+  const payload = Buffer.from(JSON.stringify(value)).toString('base64url')
+  return payload + '.' + mac(purpose, payload, secret)
+}
+
+function unseal<T>(signed: string | undefined, purpose: string): T | null {
+  const secret = sharedSecret()
+  if (!secret || !signed || signed.length > 6000) return null
+  const fields = signed.split('.')
+  if (fields.length !== 2) return null
+  const [payload, signature] = fields
+  const expected = Buffer.from(mac(purpose, payload, secret))
+  const actual = Buffer.from(signature)
+  if (actual.length !== expected.length || !timingSafeEqual(expected, actual)) return null
+  try {
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as T
+  } catch {
+    return null
+  }
+}
+
+export function safeReturnTo(value: string | null | undefined) {
+  if (!value || value.length > 2048) return PLATFORM_ORIGINS.site + '/en'
+  try {
+    const url = new URL(value)
+    if (url.username || url.password) return PLATFORM_ORIGINS.site + '/en'
+    if (!Object.values(PLATFORM_ORIGINS).some((origin) => new URL(origin).origin === url.origin))
+      return PLATFORM_ORIGINS.site + '/en'
+    return url.href
+  } catch {
+    return PLATFORM_ORIGINS.site + '/en'
+  }
+}
+
+export function loginUrl(returnTo: string) {
+  const url = new URL('/api/auth/login', PLATFORM_ORIGINS.site)
+  url.searchParams.set('return_to', safeReturnTo(returnTo))
+  return url.toString()
+}
+
+export function onSiteOrigin(request: NextRequest) {
+  return request.nextUrl.origin === new URL(PLATFORM_ORIGINS.site).origin
+}
+
+function cookieOptions(request: NextRequest, maxAge: number, shared: boolean) {
+  // The authenticated cookie is intentionally shared by qdip.ai and its two product subdomains.
+  // PKCE flow cookie is host-only, preventing subdomains from reading or overwriting it.
+  const root = new URL(PLATFORM_ORIGINS.site)
+  return {
+    httpOnly: true,
+    secure: root.protocol === 'https:',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+    ...(shared && root.hostname === 'qdip.ai' ? { domain: 'qdip.ai' } : {}),
+  }
+}
+
+export function clearFlow(response: NextResponse, request: NextRequest) {
+  response.cookies.set(FLOW_COOKIE, '', cookieOptions(request, 0, false))
+}
+
+export function clearSession(response: NextResponse, request: NextRequest) {
+  response.cookies.set(SESSION_COOKIE, '', cookieOptions(request, 0, true))
+}
+
+export function startFlow(response: NextResponse, request: NextRequest, returnTo: string) {
+  const flow: Pending = {
+    state: randomBytes(32).toString('base64url'),
+    nonce: randomBytes(32).toString('base64url'),
+    verifier: randomBytes(32).toString('base64url'),
+    returnTo: safeReturnTo(returnTo),
+    issuedAt: Date.now(),
+  }
+  response.cookies.set(FLOW_COOKIE, seal(flow, 'flow-v1'), cookieOptions(request, FLOW_SECONDS, false))
+  return flow
+}
+
+export function readFlow(request: NextRequest, state: string | null) {
+  const flow = unseal<Pending>(request.cookies.get(FLOW_COOKIE)?.value, 'flow-v1')
+  if (!flow || typeof state !== 'string' || !/^[\w-]{20,100}$/.test(state)) return null
+  if (!Number.isFinite(flow.issuedAt) || Date.now() - flow.issuedAt > FLOW_SECONDS * 1000 ||
+      flow.issuedAt > Date.now() + 30_000) return null
+  if (typeof flow.state !== 'string' || typeof flow.nonce !== 'string' ||
+      typeof flow.verifier !== 'string') return null
+  const expected = Buffer.from(flow.state)
+  const actual = Buffer.from(state)
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null
+  return flow
+}
+
+function assertIssuerUrl(value: string, issuer: string) {
+  const url = new URL(value)
+  if (url.protocol !== 'https:' || url.origin !== issuer || url.username || url.password || url.hash)
+    throw new Error('Untrusted OIDC endpoint')
+  return url.toString()
+}
+
+async function readJson(url: string, init?: RequestInit) {
+  const res = await fetch(url, { ...init, redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000) })
+  if (!res.ok) throw new Error('OIDC endpoint unavailable')
+  const text = await res.text()
+  if (text.length > 200_000) throw new Error('OIDC response exceeds limit')
+  return JSON.parse(text) as Record<string, unknown>
+}
+
+export async function discoverOidc(): Promise<OidcDiscovery> {
+  const issuer = configuredIssuer()
+  if (!issuer) throw new Error('OIDC issuer missing or invalid')
+  const doc = await readJson(issuer + '/.well-known/openid-configuration')
+  if (doc.issuer !== issuer) throw new Error('OIDC issuer mismatch')
+  if (typeof doc.authorization_endpoint !== 'string' ||
+      typeof doc.token_endpoint !== 'string' || typeof doc.jwks_uri !== 'string')
+    throw new Error('Invalid OIDC discovery document')
+  return {
+    issuer,
+    authorization_endpoint: assertIssuerUrl(doc.authorization_endpoint, issuer),
+    token_endpoint: assertIssuerUrl(doc.token_endpoint, issuer),
+    jwks_uri: assertIssuerUrl(doc.jwks_uri, issuer),
+  }
+}
+
+export function authorizationUrl(config: OidcDiscovery, flow: Pending) {
+  const clientId = process.env.ZITADEL_CLIENT_ID?.trim()
+  if (!clientId) throw new Error('OIDC client ID missing')
+  const url = new URL(config.authorization_endpoint)
+  url.searchParams.set('client_id', clientId)
+  url.searchParams.set('response_type', 'code')
+  url.searchParams.set('scope', 'openid profile email')
+  url.searchParams.set('redirect_uri', new URL(AUTH_CALLBACK_PATH, PLATFORM_ORIGINS.site).toString())
+  url.searchParams.set('state', flow.state)
+  url.searchParams.set('nonce', flow.nonce)
+  url.searchParams.set('code_challenge', createHash('sha256').update(flow.verifier).digest('base64url'))
+  url.searchParams.set('code_challenge_method', 'S256')
+  return url
+}
+
+type JwtClaims = Record<string, unknown>
+
+export async function verifyIdToken(token: string, flow: Pending, config: OidcDiscovery): Promise<Session> {
+  if (token.length > 15_000) throw new Error('Invalid ID token')
+  const parts = token.split('.')
+  if (parts.length !== 3) throw new Error('Invalid ID token')
+  let header: Record<string, unknown>, claims: JwtClaims
+  try {
+    header = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'))
+    claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'))
+  } catch {
+    throw new Error('Invalid ID token')
+  }
+  if (header.alg !== 'RS256' || typeof header.kid !== 'string' || header.kid.length > 256)
+    throw new Error('Unsupported ID token signing key')
+  const jwks = await readJson(config.jwks_uri)
+  const keys = jwks.keys
+  if (!Array.isArray(keys)) throw new Error('Invalid JWKS')
+  const jwk = keys.find((key) => key && typeof key === 'object' &&
+    key.kid === header.kid && key.kty === 'RSA' &&
+    (key.use === undefined || key.use === 'sig') &&
+    (key.alg === undefined || key.alg === 'RS256'))
+  if (!jwk) throw new Error('Untrusted ID token signing key')
+  const publicKey = createPublicKey({ key: jwk as JsonWebKey, format: 'jwk' })
+  if (!verify('RSA-SHA256', Buffer.from(parts[0] + '.' + parts[1]), publicKey,
+    Buffer.from(parts[2], 'base64url'))) throw new Error('Invalid ID token signature')
+  const clientId = process.env.ZITADEL_CLIENT_ID?.trim()
+  const aud = claims.aud
+  const audiences = typeof aud === 'string' ? [aud] : Array.isArray(aud) ? aud : []
+  const now = Math.floor(Date.now() / 1000)
+  if (!clientId || !audiences.includes(clientId) || (audiences.length > 1 && claims.azp !== clientId) ||
+      claims.iss !== config.issuer || claims.nonce !== flow.nonce ||
+      typeof claims.sub !== 'string' || !claims.sub ||
+      typeof claims.exp !== 'number' || claims.exp <= now ||
+      typeof claims.iat !== 'number' || claims.iat > now + 60) throw new Error('Invalid ID token claims')
+  return { sub: claims.sub, issuer: config.issuer, clientId, expiresAt: Math.min(claims.exp, now + SESSION_SECONDS) }
+}
+
+export async function exchangeCode(code: string, flow: Pending, config: OidcDiscovery) {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    client_id: process.env.ZITADEL_CLIENT_ID?.trim() ?? '',
+    redirect_uri: new URL(AUTH_CALLBACK_PATH, PLATFORM_ORIGINS.site).toString(),
+    code_verifier: flow.verifier,
+  })
+  const payload = await readJson(config.token_endpoint, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body,
+  })
+  if (typeof payload.id_token !== 'string') throw new Error('OIDC ID token missing')
+  return verifyIdToken(payload.id_token, flow, config)
+}
+
+export function attachSession(response: NextResponse, request: NextRequest, session: Session) {
+  response.cookies.set(SESSION_COOKIE, seal(session, 'session-v1'),
+    cookieOptions(request, Math.max(0, session.expiresAt - Math.floor(Date.now() / 1000)), true))
+}
+
+export function getQdipSession(value: string | undefined): Session | null {
+  if (!oidcConfigured()) return null
+  const session = unseal<Session>(value, 'session-v1')
+  if (!session || typeof session.sub !== 'string' ||
+      !subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(session.sub) ||
+      session.issuer !== configuredIssuer() || session.clientId !== process.env.ZITADEL_CLIENT_ID ||
+      typeof session.expiresAt !== 'number' || session.expiresAt <= Math.floor(Date.now() / 1000) ||
+      session.expiresAt > Math.floor(Date.now() / 1000) + SESSION_SECONDS) return null
+  return session
+}
+
+export function sessionFromRequest(request: NextRequest) {
+  return getQdipSession(request.cookies.get(SESSION_COOKIE)?.value)
+}
+
+export const QDIP_SESSION_COOKIE = SESSION_COOKIE

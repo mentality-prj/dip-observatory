@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 import { isSurfaceHost } from '@/routing-config'
+import { sessionFromRequest } from '@/lib/qdip-oidc'
 
 const resource = /^[a-zA-Z0-9_.-]+$/
 function allowed(path: string[], method: string) {
@@ -24,6 +25,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? request.nextUrl.host
   if (!isSurfaceHost('studio', host)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  if (!sessionFromRequest(request)) {
+    return NextResponse.json({ error: 'Zitadel login required' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }
 
   const { path } = await context.params
