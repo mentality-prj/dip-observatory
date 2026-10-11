@@ -32,7 +32,7 @@ function error(message: string, status: number) {
 // preserve the original Host and overwrite x-forwarded-proto.
 function studioOrigin(request: NextRequest): string | null {
   const host = request.headers.get('host')
-  if (!host || /[,\\s@/?#]/.test(host) || !isSurfaceHost('studio', host)) return null
+  if (!host || /[,\s@/?#]/.test(host) || !isSurfaceHost('studio', host)) return null
   let parsed: URL
   try {
     parsed = new URL(`http://${host}`)
