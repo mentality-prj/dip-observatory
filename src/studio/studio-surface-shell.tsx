@@ -1,6 +1,8 @@
 import { Suspense, type ReactNode } from 'react'
+import { QdipAccessGate } from '@/components/auth/qdip-access-gate'
+import { pageAccess } from '@/lib/qdip-page-access'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
-import { marketingHref, studioSurfaceHref } from '@/lib/platform-urls'
+import { marketingHref, studioHref, studioSurfaceHref } from '@/lib/platform-urls'
 import { StudioCoreStatus, StudioProductHeader } from './studio-product-header'
 import { StudioFooter } from './studio-footer'
 import { StudioMobileNavigation } from './studio-mobile-navigation'
@@ -9,7 +11,7 @@ import { StudioLocaleProvider } from './use-studio-locale'
 import { studioCopy } from './studio-copy'
 import type { StudioLocale } from './studio-locale'
 
-export function StudioSurfaceShell({
+export async function StudioSurfaceShell({
   locale,
   route,
   children,
@@ -18,6 +20,18 @@ export function StudioSurfaceShell({
   route: string
   children: ReactNode
 }) {
+  const access = await pageAccess('studio')
+  if (!access.allowed) {
+    return (
+      <QdipAccessGate
+        locale={locale}
+        role="studio"
+        returnTo={studioHref('/' + route, locale)}
+        authenticated={access.authenticated}
+      />
+    )
+  }
+
   const c = studioCopy(locale)
   const coreStatus = <StudioCoreStatus />
 

@@ -241,14 +241,16 @@
 }
 @media (max-width: 720px) {
   .localeControls {
-    min-width: 88px;
-    flex-basis: 88px;
+    min-width: 80px;
+    flex-basis: 80px;
   }
   .locale {
     display: none;
   }
   .localeSelect {
     display: flex;
+    gap: 6px;
+    padding-inline: 6px;
   }
 }
 
