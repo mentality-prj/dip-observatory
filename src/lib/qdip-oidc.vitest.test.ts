@@ -4,6 +4,7 @@ import { createSign, generateKeyPairSync } from 'node:crypto'
 vi.mock('server-only', () => ({}))
 import {
   authorizationUrl,
+  exchangeCode,
   discoverOidc,
   canAccessStudio,
   canOperateRr,
@@ -32,6 +33,7 @@ const config = {
   authorization_endpoint: issuer + '/oauth/v2/authorize',
   token_endpoint: issuer + '/oauth/v2/token',
   jwks_uri: issuer + '/oauth/v2/keys',
+  userinfo_endpoint: issuer + '/oidc/v1/userinfo',
 }
 function token(changes: Record<string, unknown> = {}) {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'kid-1' })).toString('base64url')
@@ -52,6 +54,20 @@ function token(changes: Record<string, unknown> = {}) {
   sign.update(input)
   return input + '.' + sign.sign(privateKey).toString('base64url')
 }
+function stubExchange(idToken: string, userinfo: Record<string, unknown> = {}) {
+  const fetchMock = vi.fn(async (url: string) => {
+    const payload =
+      url === config.token_endpoint
+        ? { id_token: idToken, access_token: 'zitadel-test-access-token' }
+        : url === config.userinfo_endpoint
+          ? userinfo
+          : { keys: [jwk] }
+    return { ok: true, text: async () => JSON.stringify(payload) }
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', issuer)
   vi.stubEnv('ZITADEL_CLIENT_ID', clientId)
@@ -151,8 +167,52 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     expect(url.searchParams.get('nonce')).toBe(flow.nonce)
     expect(url.searchParams.get('scope')).toContain(`urn:zitadel:iam:org:project:id:${projectId}:aud`)
     expect(url.searchParams.get('scope')).toContain('urn:zitadel:iam:org:projects:roles')
-    expect(url.searchParams.get('scope')).toContain(`urn:zitadel:iam:org:roles:id:${organizationId}`)
+    expect(url.searchParams.get('scope')).toContain('urn:iam:org:project:roles')
+    expect(url.searchParams.get('scope')).not.toContain('urn:zitadel:iam:org:roles:id:')
   })
+  it('resolves expected project/org roles from verified Zitadel Userinfo if ID Token has no role grant', async () => {
+    const fetchMock = stubExchange(token({ [roleClaim]: undefined }), {
+      sub: 'user-1',
+      [roleClaim]: {
+        studio: { [organizationId]: 'qdip.example.test' },
+        rr_operator: { [organizationId]: 'qdip.example.test' },
+      },
+    })
+    const session = await exchangeCode('zitadel-test-auth-code', flow, config)
+    expect(session.roles).toEqual(['studio', 'rr_operator'])
+    expect(fetchMock).toHaveBeenCalledWith(
+      config.userinfo_endpoint,
+      expect.objectContaining({ headers: { Authorization: 'Bearer zitadel-test-access-token' } })
+    )
+  })
+
+  it('does not accept Userinfo roles belonging to another project or grant organization', async () => {
+    stubExchange(token({ [roleClaim]: undefined }), {
+      sub: 'user-1',
+      [roleClaim]: { studio: { '111111111': 'other.example.test' } },
+      'urn:zitadel:iam:org:project:222222222:roles': {
+        studio: { [organizationId]: 'qdip.example.test' },
+      },
+    })
+    const session = await exchangeCode('zitadel-test-auth-code', flow, config)
+    expect(isAllowedSession(session)).toBe(false)
+  })
+
+  it('rejects Userinfo belonging to a different subject even when it has valid grants', async () => {
+    stubExchange(token({ [roleClaim]: undefined }), {
+      sub: 'another-user',
+      [roleClaim]: { studio: { [organizationId]: 'qdip.example.test' } },
+    })
+    await expect(exchangeCode('zitadel-test-auth-code', flow, config)).rejects.toThrow('subject mismatch')
+  })
+
+  it('uses role-bearing ID token without fetching Userinfo', async () => {
+    const fetchMock = stubExchange(token())
+    const session = await exchangeCode('zitadel-test-auth-code', flow, config)
+    expect(session.roles).toEqual(['studio'])
+    expect(fetchMock.mock.calls.some(([url]) => url === config.userinfo_endpoint)).toBe(false)
+  })
+
   it('verifies Zitadel ID token signature, nonce, issuer and audience', async () => {
     await expect(verifyIdToken(token(), flow, config)).resolves.toMatchObject({ sub: 'user-1', roles: ['studio'] })
     await expect(verifyIdToken(token({ aud: 'another-app' }), flow, config)).rejects.toThrow()
