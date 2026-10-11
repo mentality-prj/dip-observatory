@@ -2,14 +2,14 @@
 
 import type { Locale } from '@/lib/observatory-i18n'
 import { RRProductionOperatorPanel } from './production-operator-panel'
+import { KernelReferencePreview } from './kernel-reference-preview'
 
 const labels = {
   en: {
     title: 'Readiness Recovery',
     description:
       'QDIP Kernel is the only decision authority for RR scheduling. Use the authenticated reference operator to create executions, review history and replan. The former asset/capability Monte Carlo planner has a different data and mathematical contract and is not offered as an alternative solver here.',
-    warning:
-      'Zitadel authentication enabled. RR deployment and multi-tenant authorization remain subject to separate qualification.',
+    warning: 'Zitadel authentication enabled. RR deployment and multi-tenant authorization remain subject to separate qualification.',
   },
   uk: {
     title: 'Відновлення готовності',
@@ -35,7 +35,8 @@ export function ReadinessRecoveryKernelWorkspace({ locale }: { locale: Locale })
       <h1 className="text-3xl font-semibold text-slate-100">{copy.title}</h1>
       <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300">{copy.description}</p>
       <p className="mt-2 text-xs text-amber-200">{copy.warning}</p>
-      <RRProductionOperatorPanel />
+      <KernelReferencePreview locale={locale} />
+      <RRProductionOperatorPanel locale={locale} />
     </main>
   )
 }
