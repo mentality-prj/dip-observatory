@@ -29,7 +29,10 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
     { href: observatoryHref('', locale), label: 'Observatory', icon: <Telescope size={15} /> },
     { href: studioHref('', locale), label: 'Studio', icon: <SlidersHorizontal size={15} /> },
   ]
-  const returnTo = new URL(currentPath ? marketingPath(locale, currentPath) : marketingLocaleHref(locale), PLATFORM_URLS.site).toString()
+  const returnTo = new URL(
+    currentPath ? marketingPath(locale, currentPath) : marketingLocaleHref(locale),
+    PLATFORM_URLS.site
+  ).toString()
   const hrefForLocale = (target: MarketingLocale) =>
     currentPath ? marketingPath(target, currentPath) : marketingLocaleHref(target)
 
