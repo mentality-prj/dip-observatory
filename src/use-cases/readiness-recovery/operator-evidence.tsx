@@ -441,7 +441,9 @@ export function OperatorEvidence({
             </tbody>
           </table>
           {visibleJobs.length === 0 && (
-            <p role="status" className="mt-2 text-xs text-amber-200">{t.filterEmpty}</p>
+            <p role="status" className="mt-2 text-xs text-amber-200">
+              {t.filterEmpty}
+            </p>
           )}
         </div>
       ) : (
