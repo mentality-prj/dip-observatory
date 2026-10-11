@@ -24,6 +24,7 @@ test.describe('visible Zitadel entry points', () => {
 
   for (const surface of surfaces) {
     test(`${surface.locale} exposes a visible, correct Zitadel sign-in URL`, async ({ page }) => {
+      await page.context().clearCookies()
       const response = await page.goto(surface.url)
       expect(response?.status()).toBeLessThan(400)
       const link = page.getByRole('link', { name: surface.label, exact: true })
@@ -38,6 +39,7 @@ test.describe('visible Zitadel entry points', () => {
   }
 
   test('mobile marketing header keeps sign-in visible without horizontal overflow', async ({ page }) => {
+    await page.context().clearCookies()
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/pl')
     const login = page.getByRole('link', { name: 'Zaloguj się', exact: true })
