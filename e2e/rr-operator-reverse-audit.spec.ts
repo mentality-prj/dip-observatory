@@ -74,6 +74,7 @@ test('editing a Kernel request invalidates its obsolete delayed response', async
         execution_id: request.execution_id,
         decision_id: request.payload?.decision_id,
         source_snapshot_id: 'mock-snapshot',
+        payload_digest: 'a'.repeat(64),
         job_count: 1,
         technician_count: 1,
         warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF',
