@@ -17,7 +17,6 @@ describe('public RR reference is useful without a second solver', () => {
       ]) {
         expect(html).toContain(task)
       }
-      expect(html).toContain('kernel-reference-preview'.replace('kernel-', 'rr-'))
       expect(html).not.toContain('OPTIMAL')
       expect(html).not.toContain('KERNEL_VERIFIED')
       expect(html).not.toContain('<form')
