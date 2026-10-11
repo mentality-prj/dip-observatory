@@ -48,11 +48,7 @@ describe('Studio BFF reverse proxy trust boundary', () => {
   })
 
   it('rejects forwarded-host spoofing, malformed/multiple Host headers and non-Studio hosts', async () => {
-    for (const host of [
-      'evil.localhost:3000',
-      'studio.localhost:3000,evil.localhost',
-      'studio.localhost@evil.test',
-    ]) {
+    for (const host of ['evil.localhost:3000', 'studio.localhost:3000,evil.localhost', 'studio.localhost@evil.test']) {
       const response = await GET(request('GET', host, { 'x-forwarded-host': 'studio.localhost:3000' }), context)
       expect(response.status, host).toBe(403)
     }

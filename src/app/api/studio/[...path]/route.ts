@@ -97,11 +97,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const origin = studioOrigin(request)
   if (!origin) {
     const host = request.headers.get('host')
-    if (
-      host &&
-      !/[,\s@/?#]/.test(host) &&
-      (isSurfaceHost('site', host) || isSurfaceHost('observatory', host))
-    )
+    if (host && !/[,\s@/?#]/.test(host) && (isSurfaceHost('site', host) || isSurfaceHost('observatory', host)))
       return error('Not found', 404)
     return error('Invalid Studio host or transport', 403)
   }
