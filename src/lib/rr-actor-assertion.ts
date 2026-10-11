@@ -16,19 +16,26 @@ export function signRrActor(
   subject: string,
   operation: RrActorOperation,
   sharedSecret: string,
+  apiKey: string,
   now = Date.now()
 ): string {
-  if (!issuer.startsWith('https://') || !subject || subject.length > 1024 || sharedSecret.length < 32)
+  if (!issuer.startsWith('https://') || !subject || subject.length > 1024 || sharedSecret.length < 32 || !apiKey.trim())
     throw new Error('RR operator identity assertion is not configured')
   const actorHash = createHash('sha256').update(issuer).update('\0').update(subject).digest('hex')
   const expires = Math.floor(now / 1000) + 30
-  const payload = `v1.${expires}.zitadel:${actorHash}.${operation}`
-  const signature = createHmac('sha256', sharedSecret).update(payload).digest('hex')
+  const payload = `v2.${expires}.zitadel:${actorHash}.${operation}`
+  const signature = createHmac('sha256', sharedSecret).update(payload).update('\0').update(apiKey).digest('hex')
   return payload + '.' + signature
 }
 
 export function signedRrActorFromRequest(request: NextRequest, operation: RrActorOperation): string {
   const session = sessionFromRequest(request)
   if (!session || !isOperatorSubject(session.sub)) throw new Error('RR operator permission denied')
-  return signRrActor(session.issuer, session.sub, operation, process.env.RR_ACTOR_ASSERTION_SECRET ?? '')
+  return signRrActor(
+    session.issuer,
+    session.sub,
+    operation,
+    process.env.RR_ACTOR_ASSERTION_SECRET ?? '',
+    process.env.DIP_API_KEY?.trim() ?? ''
+  )
 }
