@@ -243,7 +243,14 @@ export function OperatorEvidence({
     ['INPUT_JOBS', t.total, record.job_count, 'job_count', t.inputJobsMeaning, t.reported],
     ['SCHEDULED_JOBS', t.scheduled, record.scheduled_job_count, 'scheduled_job_count', t.scheduledMeaning, t.reported],
     ['TECHNICIANS', t.technicians, record.technician_count, 'technician_count', t.techniciansMeaning, t.reported],
-    ['DONORS', t.selectedDonorCount, record.selected_donor_ids.length, 'selected_donor_ids', t.donorsMeaning, t.counted],
+    [
+      'DONORS',
+      t.selectedDonorCount,
+      record.selected_donor_ids.length,
+      'selected_donor_ids',
+      t.donorsMeaning,
+      t.counted,
+    ],
   ]
   const cells = [
     [t.execution, record.execution_id],
@@ -277,14 +284,16 @@ export function OperatorEvidence({
       </div>
       <section className="mt-4 border border-sky-400/20 p-3" data-testid="rr-metric-provenance">
         <h5 className="font-semibold text-sky-200">{t.metric}</h5>
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {metricCards
             .filter(([key]) => visibleMetrics.includes(key))
             .map(([key, label, value, field, definition, method]) => (
               <div key={key} className="min-w-0 border-l border-white/20 pl-3" data-testid={`rr-metric-${key}`}>
-                <dt className="text-xs text-slate-400">{label}</dt>
-                <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
-                <p className="mt-1 text-xs text-slate-400">{definition}</p>
+                <dl>
+                  <dt className="text-xs text-slate-400">{label}</dt>
+                  <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+                </dl>
+                <p className="mt-1 text-xs text-slate-400">{t.definition}: {definition}</p>
                 <details className="mt-2 text-xs text-slate-300">
                   <summary className="cursor-pointer text-sky-200">{t.metricDetails}</summary>
                   <dl className="mt-2 space-y-2">
@@ -298,7 +307,9 @@ export function OperatorEvidence({
                     </div>
                     <div>
                       <dt className="text-slate-400">{t.src} / {t.source}</dt>
-                      <dd className="break-all">{record.source_system} / {record.source_version} / {record.source_snapshot_id}</dd>
+                      <dd className="break-all">
+                        {record.source_system} / {record.source_version} / {record.source_snapshot_id}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-slate-400">{t.digest}</dt>
@@ -316,7 +327,7 @@ export function OperatorEvidence({
                 </details>
               </div>
             ))}
-        </dl>
+        </div>
         <dl className="mt-3 text-xs text-slate-300">
           <div>
             <dt className="inline font-semibold">{t.src}: </dt>
