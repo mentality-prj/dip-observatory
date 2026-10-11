@@ -32,8 +32,7 @@ function rrExternalOrigin(request: NextRequest) {
   if (forwardedProtocol && forwardedProtocol !== 'https' && forwardedProtocol !== 'http') return null
   const secure = request.nextUrl.protocol === 'https:' || forwardedProtocol === 'https'
   if (secure) return `https://${normalizedHost}`
-  if (request.nextUrl.protocol === 'http:' && hostname.endsWith('.localhost'))
-    return `http://${normalizedHost}`
+  if (request.nextUrl.protocol === 'http:' && hostname.endsWith('.localhost')) return `http://${normalizedHost}`
   return null
 }
 
