@@ -98,7 +98,7 @@ const copy = {
 export function isKernelRRPresentation(value: unknown): value is KernelRRPresentation {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const v = value as Partial<KernelRRPresentation>
-  const validId = (id: unknown) => typeof id === 'string' && /^[a-zA-Z0-9][\\w.-]{0,127}$/.test(id)
+  const validId = (id: unknown) => typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(id)
   return v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.computation_authority === 'QDIP_KERNEL_RR_V1' &&
     validId(v.execution_id) && validId(v.decision_id) &&
