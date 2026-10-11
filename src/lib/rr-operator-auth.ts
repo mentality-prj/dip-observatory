@@ -20,7 +20,7 @@ export function operatorAuthorized(request: NextRequest) {
  */
 function rrExternalOrigin(request: NextRequest) {
   const host = request.headers.get('host') ?? request.nextUrl.host
-  if (!host || !isSurfaceHost('observatory', host) || /[,\\s@\\/?#]/.test(host)) return null
+  if (!host || !isSurfaceHost('observatory', host) || /[,\s@/?#]/.test(host)) return null
   const normalizedHost = host.toLowerCase()
   let hostname: string
   try {
