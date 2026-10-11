@@ -35,9 +35,21 @@ export type KernelRRPresentation = {
 const copy = {
   en: {
     metric: 'Kernel metric provenance',
+    metricDetails: 'Inspect this metric',
+    definition: 'Definition',
+    coreField: 'Core projection field',
+    measurement: 'Method',
+    reported: 'Reported by Core',
+    counted: 'Count of distinct IDs reported by Core',
+    inputJobsMeaning: 'Jobs in the admitted input, not completed work',
+    scheduledMeaning: 'Jobs returned in the Kernel schedule, not field completion',
+    techniciansMeaning: 'Technicians in the input; actual shift availability is not asserted',
+    donorsMeaning: 'Selected donor identifiers; not all available donors',
+    missingStat: 'Algorithm, sample count, seed, timestamps, source revision and uncertainty methodology',
+
     total: 'Input jobs',
     scheduled: 'Scheduled jobs',
-    technicians: 'Available technicians',
+    technicians: 'Input technicians',
     selectedDonorCount: 'Selected donor IDs',
     src: 'Metric origin',
     unit: 'Units',
@@ -66,9 +78,21 @@ const copy = {
   },
   uk: {
     metric: 'Походження метрик Kernel',
+    metricDetails: 'Перевірити метрику',
+    definition: 'Визначення',
+    coreField: 'Поле відповіді Core',
+    measurement: 'Спосіб отримання',
+    reported: 'Надано Core',
+    counted: 'Кількість унікальних ідентифікаторів із Core',
+    inputJobsMeaning: 'Роботи у вхідних даних, не факт виконання',
+    scheduledMeaning: 'Роботи у плані Kernel, не факт виконання',
+    techniciansMeaning: 'Спеціалісти у вхідних даних; доступність у зміні не підтверджена',
+    donorsMeaning: 'Ідентифікатори вибраних донорів, не всіх доступних',
+    missingStat: 'Алгоритм, вибірка, seed, часові мітки, ревізія джерела та метод невизначеності',
+
     total: 'Роботи у вхідних даних',
     scheduled: 'Заплановані роботи',
-    technicians: 'Доступні спеціалісти',
+    technicians: 'Спеціалісти у вхідних даних',
     selectedDonorCount: 'Вибрані донори',
     src: 'Джерело метрик',
     unit: 'Одиниці',
@@ -97,9 +121,21 @@ const copy = {
   },
   pl: {
     metric: 'Pochodzenie metryk Kernel',
+    metricDetails: 'Sprawdź metrykę',
+    definition: 'Definicja',
+    coreField: 'Pole projekcji Core',
+    measurement: 'Metoda',
+    reported: 'Zwrócone przez Core',
+    counted: 'Liczba unikalnych identyfikatorów zwróconych przez Core',
+    inputJobsMeaning: 'Zadania na wejściu, nie ukończone prace',
+    scheduledMeaning: 'Zadania w harmonogramie Kernel, nie realizacja w terenie',
+    techniciansMeaning: 'Technicy na wejściu; dostępność na zmianie niepotwierdzona',
+    donorsMeaning: 'Wybrane identyfikatory dawców, nie wszyscy dostępni',
+    missingStat: 'Algorytm, próby, seed, znaczniki czasu, rewizja źródła i metoda niepewności',
+
     total: 'Zadania wejściowe',
     scheduled: 'Zaplanowane zadania',
-    technicians: 'Dostępni technicy',
+    technicians: 'Technicy w danych wejściowych',
     selectedDonorCount: 'Wybrani dawcy',
     src: 'Źródło metryk',
     unit: 'Jednostki',
@@ -139,11 +175,11 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
     validId(v.execution_id) &&
     validId(v.decision_id) &&
     typeof v.source_system === 'string' &&
-    v.source_system.length > 0 &&
+    v.source_system.trim().length > 0 &&
     typeof v.source_snapshot_id === 'string' &&
-    v.source_snapshot_id.length > 0 &&
+    v.source_snapshot_id.trim().length > 0 &&
     typeof v.source_version === 'string' &&
-    v.source_version.length > 0 &&
+    v.source_version.trim().length > 0 &&
     typeof v.payload_digest === 'string' &&
     /^[a-f0-9]{64}$/.test(v.payload_digest) &&
     typeof v.change_kind === 'string' &&
@@ -169,6 +205,7 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
     v.technician_count > 0 &&
     Array.isArray(v.selected_donor_ids) &&
     v.selected_donor_ids.every(validId) &&
+    new Set(v.selected_donor_ids).size === v.selected_donor_ids.length &&
     Array.isArray(v.scheduled_jobs) &&
     v.scheduled_jobs.length === v.scheduled_job_count &&
     v.scheduled_jobs.every(
@@ -181,7 +218,8 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
         Number.isSafeInteger(item.finish_slot) &&
         item.start_slot >= 0 &&
         item.finish_slot > item.start_slot
-    )
+    ) &&
+    new Set(v.scheduled_jobs.map((job) => job.job_id)).size === v.scheduled_jobs.length
   )
 }
 
@@ -201,11 +239,18 @@ export function OperatorEvidence({
         {t.unknown}
       </p>
     )
-  const metricCards: readonly [KernelMetric, string, number][] = [
-    ['INPUT_JOBS', t.total, record.job_count],
-    ['SCHEDULED_JOBS', t.scheduled, record.scheduled_job_count],
-    ['TECHNICIANS', t.technicians, record.technician_count],
-    ['DONORS', t.selectedDonorCount, record.selected_donor_ids.length],
+  const metricCards: readonly [KernelMetric, string, number, string, string, string][] = [
+    ['INPUT_JOBS', t.total, record.job_count, 'job_count', t.inputJobsMeaning, t.reported],
+    ['SCHEDULED_JOBS', t.scheduled, record.scheduled_job_count, 'scheduled_job_count', t.scheduledMeaning, t.reported],
+    ['TECHNICIANS', t.technicians, record.technician_count, 'technician_count', t.techniciansMeaning, t.reported],
+    [
+      'DONORS',
+      t.selectedDonorCount,
+      record.selected_donor_ids.length,
+      'selected_donor_ids',
+      t.donorsMeaning,
+      t.counted,
+    ],
   ]
   const cells = [
     [t.execution, record.execution_id],
@@ -239,16 +284,54 @@ export function OperatorEvidence({
       </div>
       <section className="mt-4 border border-sky-400/20 p-3" data-testid="rr-metric-provenance">
         <h5 className="font-semibold text-sky-200">{t.metric}</h5>
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {metricCards
             .filter(([key]) => visibleMetrics.includes(key))
-            .map(([key, label, value]) => (
-              <div key={key} className="border-l border-white/20 pl-3">
-                <dt className="text-xs text-slate-400">{label}</dt>
-                <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+            .map(([key, label, value, field, definition, method]) => (
+              <div key={key} className="min-w-0 border-l border-white/20 pl-3" data-testid={`rr-metric-${key}`}>
+                <dl>
+                  <dt className="text-xs text-slate-400">{label}</dt>
+                  <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+                </dl>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t.definition}: {definition}
+                </p>
+                <details className="mt-2 text-xs text-slate-300">
+                  <summary className="cursor-pointer text-sky-200">{t.metricDetails}</summary>
+                  <dl className="mt-2 space-y-2">
+                    <div>
+                      <dt className="text-slate-400">{t.coreField}</dt>
+                      <dd className="break-all font-mono">{field}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400">{t.measurement}</dt>
+                      <dd>{method}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400">
+                        {t.src} / {t.source}
+                      </dt>
+                      <dd className="break-all">
+                        {record.source_system} / {record.source_version} / {record.source_snapshot_id}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400">{t.digest}</dt>
+                      <dd className="break-all font-mono">{record.payload_digest}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400">{t.authority}</dt>
+                      <dd>{record.computation_authority}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-400">{t.missingStat}</dt>
+                      <dd>{t.unknown}</dd>
+                    </div>
+                  </dl>
+                </details>
               </div>
             ))}
-        </dl>
+        </div>
         <dl className="mt-3 text-xs text-slate-300">
           <div>
             <dt className="inline font-semibold">{t.src}: </dt>

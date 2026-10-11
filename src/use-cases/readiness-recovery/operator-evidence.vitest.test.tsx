@@ -50,6 +50,17 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(isKernelRRPresentation({ ...valid, scheduled_job_count: -1 })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, job_count: 0 })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, scheduled_job_count: 2 })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, source_snapshot_id: '   ' })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, source_system: ' ' })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, selected_donor_ids: ['donor-1', 'donor-1'] })).toBe(false)
+    expect(
+      isKernelRRPresentation({
+        ...valid,
+        job_count: 2,
+        scheduled_job_count: 2,
+        scheduled_jobs: [valid.scheduled_jobs[0], valid.scheduled_jobs[0]],
+      })
+    ).toBe(false)
     expect(isKernelRRPresentation({ ...valid, probability_demand_satisfied: 0.99 })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, field_verified: true })).toBe(false)
   })
@@ -57,7 +68,13 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
   it('filters display-only metric cards, never provenance, schedule or Kernel decision', () => {
     if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
     const html = renderToStaticMarkup(<OperatorEvidence locale="uk" record={valid} visibleMetrics={['TECHNICIANS']} />)
-    expect(html).toContain('Доступні спеціалісти')
+    expect(html).toContain('Спеціалісти у вхідних даних')
+    expect(html).toContain('data-testid="rr-metric-TECHNICIANS"')
+    expect(html).toContain('technician_count')
+    expect(html).toContain('invented-snapshot-001')
+    expect(html).toContain('доступність у зміні не підтверджена')
+    expect(html).not.toContain('data-testid="rr-metric-INPUT_JOBS"')
+    expect(html).not.toContain('data-testid="rr-metric-DONORS"')
     expect(html).not.toContain('Роботи у вхідних даних')
     expect(html).not.toContain('Вибрані донори')
     expect(html).toContain('rr-civilian-workshop-example')
@@ -78,6 +95,13 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(html).toContain('data-testid="rr-metric-provenance"')
     expect(html).toContain('Роботи у вхідних даних')
     expect(html).toContain('Кількість робіт')
+    expect(html).toContain('data-testid="rr-metric-INPUT_JOBS"')
+    expect(html).toContain('data-testid="rr-metric-SCHEDULED_JOBS"')
+    expect(html).toContain('data-testid="rr-metric-DONORS"')
+    expect(html).toContain('selected_donor_ids')
+    expect(html).toContain('Кількість унікальних ідентифікаторів')
+    expect(html).toContain('Алгоритм, вибірка, seed')
+    expect(html).toContain('Невідомо / не записано')
     expect(html).toContain('rr-civilian-workshop-example')
     expect(html).toContain('не обчислювалися')
     expect(html).toContain('не доведені')
