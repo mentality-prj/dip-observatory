@@ -19,7 +19,8 @@ afterEach(() => vi.unstubAllEnvs())
 function signedSession(sub: string) {
   const source = new NextRequest('https://observatory.qdip.ai/api/auth/session')
   const response = NextResponse.json({})
-  const roles: Array<'studio' | 'rr_operator'> = sub === 'studio-only' ? ['studio'] : sub === 'rr-only' ? ['rr_operator'] : []
+  const roles: Array<'studio' | 'rr_operator'> =
+    sub === 'studio-only' ? ['studio'] : sub === 'rr-only' ? ['rr_operator'] : []
   attachSession(response, source, {
     sub,
     roles,
