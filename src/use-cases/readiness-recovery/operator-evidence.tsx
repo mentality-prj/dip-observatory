@@ -32,6 +32,21 @@ export type KernelRRPresentation = {
   field_verified: false
 }
 
+/**
+ * Exactly the Core runtime outcome/normalized-status relationship.
+ * Presentation validation checks consistency; it never derives feasibility.
+ */
+const expectedOutcomes = {
+  OPTIMAL_DECISION: ['OPTIMAL', true, true],
+  INFEASIBLE: ['INFEASIBLE', true, false],
+  UNBOUNDED: ['UNBOUNDED', true, false],
+  PARTIAL_UNCERTIFIED: ['FEASIBLE', false, false],
+  TIME_LIMIT: ['TIME_LIMIT', false, false],
+  CANCELLED: ['CANCELLED', false, false],
+  UNSUPPORTED: ['UNSUPPORTED', false, false],
+  ERROR: ['ERROR', false, false],
+} as const
+
 const copy = {
   en: {
     metric: 'Kernel metric provenance',
@@ -74,6 +89,16 @@ const copy = {
     details: 'Show technical provenance',
     empty: 'No jobs scheduled',
     filterEmpty: 'No scheduled jobs match this display filter',
+    statusGuidance: {
+      OPTIMAL_DECISION: 'Kernel reports model optimality; real-world completion is not verified.',
+      INFEASIBLE: 'No feasible schedule exists under the supplied model constraints.',
+      UNBOUNDED: 'Unbounded model result; review constraints.',
+      PARTIAL_UNCERTIFIED: 'Partial solution: no exact certificate. Do not treat it as approved.',
+      TIME_LIMIT: 'Execution timed out. Infeasibility was not established.',
+      CANCELLED: 'Execution was cancelled without an authoritative decision.',
+      UNSUPPORTED: 'The backend does not support this exact model.',
+      ERROR: 'Execution failed. No authoritative decision is available.',
+    },
     unknown: 'Unknown / not recorded',
     warning: 'This view does not issue real-world work orders. Backend authority is not field acceptance.',
   },
@@ -118,6 +143,16 @@ const copy = {
     details: 'Показати технічне походження даних',
     empty: 'Запланованих робіт немає',
     filterEmpty: 'У розкладі немає робіт за цим фільтром',
+    statusGuidance: {
+      OPTIMAL_DECISION: 'Kernel підтверджує оптимальність у моделі, не фактичне виконання робіт.',
+      INFEASIBLE: 'У заданих обмеженнях моделі допустимого розкладу немає.',
+      UNBOUNDED: 'Необмежена модель; перевірте обмеження.',
+      PARTIAL_UNCERTIFIED: 'Частковий результат без точного сертифіката, не погоджений план.',
+      TIME_LIMIT: 'Час виконання вичерпано. Недопустимість не доведена.',
+      CANCELLED: 'Виконання скасовано без авторитетного рішення.',
+      UNSUPPORTED: 'Backend не підтримує цей контракт моделі.',
+      ERROR: 'Помилка виконання. Авторитетне рішення відсутнє.',
+    },
     unknown: 'Невідомо / не записано',
     warning: 'Інтерфейс не видає реальних ремонтних наказів. Авторитет Kernel не означає польового приймання.',
   },
@@ -162,6 +197,16 @@ const copy = {
     details: 'Pokaż pochodzenie techniczne',
     empty: 'Brak zaplanowanych zadań',
     filterEmpty: 'Żadne zaplanowane zadania nie pasują do filtra',
+    statusGuidance: {
+      OPTIMAL_DECISION: 'Kernel potwierdza optymalność modelu, nie wykonanie prac w terenie.',
+      INFEASIBLE: 'Brak dopuszczalnego harmonogramu przy zadanych ograniczeniach modelu.',
+      UNBOUNDED: 'Wynik nieograniczony; sprawdź ograniczenia.',
+      PARTIAL_UNCERTIFIED: 'Wynik częściowy bez dokładnego certyfikatu; nie jest zatwierdzonym planem.',
+      TIME_LIMIT: 'Przekroczono czas. Niewykonalność nie została udowodniona.',
+      CANCELLED: 'Wykonanie anulowano bez autorytatywnej decyzji.',
+      UNSUPPORTED: 'Backend nie obsługuje tego kontraktu modelu.',
+      ERROR: 'Błąd wykonania. Brak autorytatywnej decyzji.',
+    },
     unknown: 'Brak danych',
     warning: 'Interfejs nie wydaje zleceń napraw. Wynik Kernel nie jest akceptacją terenową.',
   },
@@ -172,7 +217,12 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const v = value as Partial<KernelRRPresentation>
   const validId = (id: unknown) => typeof id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(id)
+  const status = expectedOutcomes[v.outcome_kind as keyof typeof expectedOutcomes]
   return (
+    Boolean(status) &&
+    v.backend_status === status?.[0] &&
+    v.authoritative === status?.[1] &&
+    v.actionable === status?.[2] &&
     v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.computation_authority === 'QDIP_KERNEL_RR_V1' &&
     validId(v.execution_id) &&
@@ -284,6 +334,9 @@ export function OperatorEvidence({
       <h4 className="font-semibold">{t.title}</h4>
       <p className="mt-2 text-sm">
         {record.actionable ? t.allowed : t.denied} · {record.summary}
+      </p>
+      <p role="status" data-testid="rr-outcome-guidance" className="mt-2 text-sm text-amber-200">
+        {t.statusGuidance[record.outcome_kind as keyof typeof t.statusGuidance] ?? t.unknown}
       </p>
       <div className="mt-4 flex flex-wrap gap-4 text-sm">
         <span>
