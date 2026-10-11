@@ -83,6 +83,18 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(html).toContain('не доведені')
   })
 
+  it('filters only schedule rows, not backend counts or evidence', () => {
+    if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
+    const html = renderToStaticMarkup(
+      <OperatorEvidence locale="en" record={valid} scheduleSearch="missing-tech" />
+    )
+    expect(html).toContain('data-testid="rr-kernel-schedule"')
+    expect(html).toContain('No scheduled jobs match this display filter')
+    expect(html).toContain('Scheduled jobs')
+    expect(html).toContain('value')
+    expect(html).not.toContain('<td class="py-2 pr-3 font-mono text-xs">job-1</td>')
+  })
+
   it('presents a readable schedule and keeps raw provenance optional', () => {
     if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
     const html = renderToStaticMarkup(<OperatorEvidence locale="uk" record={valid} />)
