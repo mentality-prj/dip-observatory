@@ -50,3 +50,17 @@ Added **qdip-core RR plugin** modules and endpoints on backend branch `feat/rr-p
 The web operator only makes server requests to these allowlisted routes and renders the versioned responses; no browser-side input risk/readiness/feasibility, result authority, Pareto, Monte Carlo, or complete-history proof is computed. Client-side controls are limited to transport cancellation, JSON syntax, display/locale and safe presentation-only settings.
 
 **Deployment blocker:** this web branch depends on the new backend routes, which are not in qdip-core `dev` until its separate backend PR merges. In an older deployment, preflight intentionally fails closed and disables execution. There is no fallback to a local optimizer. These two branches must be version-qualified together before any product release.
+
+## 2026-10-11: Decision-first repair on staged Kernel-only web branch
+
+This continuation stays on `fix/rr-ux-reverse-audit-integrity` (formerly PR #228, intentionally closed without merge while the dependent Core PR #328 is unqualified). It does not open another implementation PR or restore the legacy stochastic frontend solver.
+
+- `KernelReferencePreview`: public, read-only description of the **input** of the invented civilian four-job/three-technician reference fixture. It never fabricates a Kernel schedule, solver output, advantage or ROI. The source fixture lives in `qdip-core/app/plugins/readiness_recovery/reference_fixture.py`. The preview is available even when the restricted operator is not configured.
+- Authenticated, server-produced `ReadinessRecoveryPresentationView` is now displayed above operator controls in a decision-first schedule table. Raw JSON and provenance details are available through explicitly opened disclosures rather than dominating business UX.
+- `isKernelRRPresentation` defensively checks the versioned full field shape, stable hashes, schedule entry types and the intentionally `null` stochastic output fields. No browser code infers optimality, feasibility, risk, business utility or history completeness.
+- Business and analyst presets alter only the order of three operator panels; users can continue to adjust density and panel ordering. The validated localStorage document never stores private decisions, payloads, access tokens, credentials, client-computed evidence or tenant IDs.
+- Added focused Vitest and browser assertions for the public illustration, plugin projection, decision-first schedule, strict negative payload cases and unchanged server-bound submission.
+
+**Independent outstanding acceptance (NOT PASS):** Core PR #328 must be locally checked (Ruff/mypy/pytest), merged and deployed before this web branch. The independent `qdip-e2e` watcher run `38088423713` failed with an empty `QDIP_READ_TOKEN` secret, so no real Core + Mongo + Observatory + Chromium E2E PASS may be claimed. The user must configure the read-only secret in the public E2E repository through GitHub Settings; do not paste the token in a chat. Zitadel OIDC is separately in web PR #229 and must be reconciled on rebase; the staging password implementation is not a final authentication gate. Subsequent web CI and usability acceptance must target the exact final merged SHAs.
+
+**Scope:** this is RR-facing correction, not a universal cross-app BI/dashboard product. A global authenticated personal workspace remains a separate future product increment; do not mark UX-01/02/03 product-level acceptance complete merely because component code exists.
