@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
 import { OperatorEvidence, isKernelRRPresentation, type KernelRRPresentation } from './operator-evidence'
+import { canCompareRRExecutions, RRExecutionComparison } from './operator-comparison'
 import {
   OperatorRequestError,
   OperatorRequestGuard,
@@ -27,12 +28,19 @@ type Session = { configured: boolean; authenticated: boolean; mode: string }
 type KernelPreflight = {
   schema_version: 'readiness-recovery.presentation.v1'
   validation_scope: 'SCHEMA_AND_ADMISSION_ONLY'
+  accepted_for_kernel_submission: true
   execution_id: string
   decision_id: string
+  source_system: string
   source_snapshot_id: string
+  source_version: string
   payload_digest: string
   job_count: number
   technician_count: number
+  inventory_item_types: number
+  donor_count: number
+  horizon_slots: number
+  workshop_capacity: number
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
 }
 function isKernelPreflight(value: unknown): value is KernelPreflight {
@@ -41,9 +49,17 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
   return (
     v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    v.accepted_for_kernel_submission === true &&
     typeof v.execution_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.execution_id) &&
     typeof v.decision_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.decision_id) &&
+    typeof v.source_system === 'string' &&
+    v.source_system.trim().length > 0 &&
     typeof v.source_snapshot_id === 'string' &&
+    v.source_snapshot_id.trim().length > 0 &&
+    typeof v.source_version === 'string' &&
+    v.source_version.trim().length > 0 &&
     typeof v.payload_digest === 'string' &&
     /^[0-9a-f]{64}$/.test(v.payload_digest) &&
     v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
@@ -52,7 +68,15 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     v.job_count > 0 &&
     typeof v.technician_count === 'number' &&
     Number.isSafeInteger(v.technician_count) &&
-    v.technician_count > 0
+    v.technician_count > 0 &&
+    Number.isSafeInteger(v.inventory_item_types) &&
+    (v.inventory_item_types ?? -1) >= 0 &&
+    Number.isSafeInteger(v.donor_count) &&
+    (v.donor_count ?? -1) >= 0 &&
+    Number.isSafeInteger(v.horizon_slots) &&
+    (v.horizon_slots ?? 0) > 0 &&
+    Number.isSafeInteger(v.workshop_capacity) &&
+    (v.workshop_capacity ?? 0) > 0
   )
 }
 const initialRequest = `{
@@ -95,6 +119,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [executionId, setExecutionId] = useState('')
   const [lastResult, setLastResult] = useState<unknown>(null)
   const [presentation, setPresentation] = useState<KernelRRPresentation | null>(null)
+  const [comparisonPredecessor, setComparisonPredecessor] = useState<KernelRRPresentation | null>(null)
+  const [scheduleSearch, setScheduleSearch] = useState('')
   const [preflight, setPreflight] = useState<KernelPreflight | null>(null)
   const [validatedBody, setValidatedBody] = useState<string | null>(null)
   const [preflightStatus, setPreflightStatus] = useState('')
@@ -141,6 +167,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setBusy(false)
     setLastResult(null)
     setPresentation(null)
+    setComparisonPredecessor(null)
+    setScheduleSearch('')
     setPreflight(null)
     setValidatedBody(null)
     setPreflightStatus('Input changed; waiting for Kernel validation')
@@ -160,11 +188,19 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
       setLastResult(null)
       setPresentation(null)
+      setComparisonPredecessor(null)
       setDecisionId('')
       setExecutionId('')
       setError(t.sessionLost)
     } else if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
       setLastResult(null)
+      if (reason instanceof OperatorRequestError && reason.kind === 'ACCESS_DENIED') {
+        // A role/tenant denial invalidates previously displayed private read models.
+        setPresentation(null)
+        setComparisonPredecessor(null)
+        setPreflight(null)
+        setValidatedBody(null)
+      }
       setError(reason instanceof Error ? reason.message : 'RR operation failed')
     }
   }
@@ -222,13 +258,64 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     }
   }, [])
 
+  async function findDirectPredecessor(projection: KernelRRPresentation, epoch: number, signal: AbortSignal) {
+    setComparisonPredecessor(null)
+    if (!projection.predecessor_execution_id) return
+    try {
+      const result: unknown = await checkedJson(
+        await fetch(
+          `/api/rr-operator/kernel/executions/${encodeURIComponent(projection.predecessor_execution_id)}/presentation`,
+          { cache: 'no-store', signal }
+        )
+      )
+      if (requestGuard.current.current(epoch) && canCompareRRExecutions(result, projection)) {
+        setComparisonPredecessor(result)
+      }
+    } catch {
+      // Optional descriptive comparison must not invalidate the authoritative current execution.
+    }
+  }
+
+  async function loadExistingPresentation() {
+    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(executionId)) return
+    const { epoch, signal } = startOperation()
+    setBusy(true)
+    setError(null)
+    setLastResult(null)
+    setPresentation(null)
+    setComparisonPredecessor(null)
+    try {
+      const result: unknown = await checkedJson(
+        await fetch(`/api/rr-operator/kernel/executions/${encodeURIComponent(executionId)}/presentation`, {
+          cache: 'no-store',
+          signal,
+        })
+      )
+      if (!requestGuard.current.current(epoch)) return
+      if (!isKernelRRPresentation(result) || result.execution_id !== executionId) {
+        throw new Error('Kernel returned an incompatible presentation schema')
+      }
+      setPresentation(result)
+      setDecisionId(result.decision_id)
+      setOperation('Inspect stored execution')
+      await findDirectPredecessor(result, epoch, signal)
+    } catch (reason) {
+      operationFailed(reason, epoch)
+    } finally {
+      if (requestGuard.current.current(epoch)) setBusy(false)
+    }
+  }
+
   async function execute(label: string, url: string, method = 'GET', body?: string) {
     const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
     setErrorKind(null)
     setLastResult(null)
-    if (method !== 'GET') setPresentation(null)
+    if (method !== 'GET') {
+      setPresentation(null)
+      setComparisonPredecessor(null)
+    }
     try {
       const response = await fetch(url, {
         method,
@@ -294,6 +381,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             )
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
+            await findDirectPredecessor(projection, epoch, signal)
           } catch (projectionError) {
             if (
               requestGuard.current.current(epoch) &&
@@ -433,6 +521,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
       setLastResult(null)
       setPresentation(null)
+      setComparisonPredecessor(null)
+      setScheduleSearch('')
       setExecutionId('')
       setDecisionId('')
       setRequestBody(initialRequest)
@@ -485,7 +575,24 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && presentation ? (
         <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
           <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
-          <OperatorEvidence locale={locale} record={presentation} visibleMetrics={view.metrics} />
+          <label className="mt-4 block text-sm" htmlFor="rr-schedule-filter">
+            {t.scheduleFilter}
+          </label>
+          <input
+            id="rr-schedule-filter"
+            type="search"
+            value={scheduleSearch}
+            onChange={(event) => setScheduleSearch(event.target.value)}
+            className="mt-2 w-full max-w-md border border-white/20 bg-slate-950 p-2 text-sm"
+            autoComplete="off"
+          />
+          <OperatorEvidence
+            locale={locale}
+            record={presentation}
+            visibleMetrics={view.metrics}
+            scheduleSearch={scheduleSearch}
+          />
+          <RRExecutionComparison locale={locale} previous={comparisonPredecessor} current={presentation} />
         </section>
       ) : null}
       {session.authenticated && (
@@ -730,6 +837,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={busy || !validId(executionId)}
+                onClick={() => void loadExistingPresentation()}
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {t.inspectExecution}
+              </button>
               <button
                 type="button"
                 disabled={busy || !validId(decisionId)}
