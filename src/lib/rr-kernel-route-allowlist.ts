@@ -16,7 +16,7 @@ export function allowedKernelPath(path: string[], method: string) {
     return method === 'GET' && ['history', 'history-integrity'].includes(path[2])
   }
   if (path[0] === 'decisions' && path.length === 4) {
-    return method === 'GET' && path[2] === 'history' && ['export', 'export-complete', 'verified-export-page'].includes(path[3])
+    return method === 'GET' && path[2] === 'history' && path[3] === 'verified-export-page'
   }
   return false
 }
