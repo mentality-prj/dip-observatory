@@ -13,10 +13,11 @@ import {
   SlidersHorizontal,
   UsersRound,
 } from 'lucide-react'
+import { QdipAuthControl } from '@/components/auth/qdip-auth-control'
 import { ProductShell, type DesignTheme } from '@/design-system'
 import { useTranslations } from '@/i18n/provider'
 import { buildLocalePath, SUPPORTED_LOCALES, type Locale } from '@/lib/observatory-i18n'
-import { marketingHref, studioHref } from '@/lib/platform-urls'
+import { marketingHref, observatoryHref, studioHref } from '@/lib/platform-urls'
 import { systemApplicationCopy } from '@/observatory/application-copy'
 import { findObservatoryApplicationByRoute, observableApplications } from '@/observatory/applications'
 import { type UseCaseRoute, type UseCaseTheme } from '@/use-cases/registry'
@@ -143,7 +144,12 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         label: observatory('openStudio'),
         icon: <SlidersHorizontal size={15} />,
       }}
-      utilities={utilities}
+      utilities={
+        <>
+          <QdipAuthControl locale={locale} returnTo={observatoryHref(activeRoute, locale)} />
+          {utilities}
+        </>
+      }
     >
       <div className={styles.stage}>
         <div className={styles.breadcrumb} aria-label={shared('breadcrumb')}>
