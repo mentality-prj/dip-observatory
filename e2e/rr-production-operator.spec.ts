@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test'
 
 const ORIGIN = 'http://observatory.localhost:3000'
-const PAGE = `${ORIGIN}/uk/readiness-recovery`
 
 test('production RR requires a logged-in operator, with no public API-key fallback', async ({ page }) => {
   const response = await page.request.get(`${ORIGIN}/api/rr-operator/kernel/executions/rr-reference-001`)
