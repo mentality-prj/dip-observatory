@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const URL = 'http://observatory.localhost:3000/en/readiness-recovery'
+const PAGE_URL = 'http://observatory.localhost:3000/en/readiness-recovery'
 const request = {
   execution_id: 'plugin-only-001',
   source: {
@@ -75,7 +75,7 @@ test('web does not calculate or approve RR input when plugin preflight rejects i
       body: JSON.stringify({ detail: { code: 'invalid_rr_plugin_schema' } }),
     })
   )
-  await page.goto(URL)
+  await page.goto(PAGE_URL)
   await page.getByLabel('Kernel execution JSON').fill(JSON.stringify(request))
   await expect(page.getByTestId('rr-kernel-preflight')).toContainText('Server preflight')
   await expect(page.getByRole('button', { name: 'Create execution', exact: true })).toBeDisabled()
@@ -105,7 +105,7 @@ test('server-owned preflight and stored evidence are rendered without any browse
   await page.route('**/api/rr-operator/kernel/executions/plugin-only-001/presentation', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(projection) })
   )
-  await page.goto(URL)
+  await page.goto(PAGE_URL)
   await page.getByLabel('Kernel execution JSON').fill(JSON.stringify(request))
   await expect(page.getByTestId('rr-kernel-preflight')).toContainText('Kernel preflight')
   await page.getByRole('button', { name: 'Create execution', exact: true }).click()
@@ -126,7 +126,7 @@ test('server-owned preflight and stored evidence are rendered without any browse
 })
 
 test('transport-only multi-page export preserves server attestation and page order', async ({ page }) => {
-  await page.goto(URL)
+  await page.goto(PAGE_URL)
   await page.getByLabel('Decision ID').fill(request.payload.decision_id)
   const path = '**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*'
   const calls: string[] = []
@@ -159,7 +159,7 @@ test('transport-only multi-page export preserves server attestation and page ord
 })
 
 test('changed decision head refuses complete download', async ({ page }) => {
-  await page.goto(URL)
+  await page.goto(PAGE_URL)
   await page.getByLabel('Decision ID').fill(request.payload.decision_id)
   await page.route(
     '**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*',
