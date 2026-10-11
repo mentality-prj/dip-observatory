@@ -95,7 +95,7 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
   }
 
   return (
-    <a className={styles.action} data-qdip-auth="signed-out" href={loginHref(returnTo)}>
+    <a className={styles.action} data-qdip-auth="signed-out" href={loginHref(returnTo)} aria-label={copy.signIn} title={copy.signIn}>
       <LogIn size={16} aria-hidden />
       <span>{copy.signIn}</span>
     </a>
