@@ -40,7 +40,7 @@ describe('Core RR-ECON-v2 transport contract', () => {
   })
 
   it('rejects missing/null/array and prototype-shifted fields', () => {
-    const { actionable: _actionable, ...missing } = valid
+    const missing = Object.fromEntries(Object.entries(valid).filter(([key]) => key !== 'actionable'))
     expect(isRREconomicPreflight(missing)).toBe(false)
     expect(isRREconomicPreflight(null)).toBe(false)
     expect(isRREconomicPreflight([])).toBe(false)
