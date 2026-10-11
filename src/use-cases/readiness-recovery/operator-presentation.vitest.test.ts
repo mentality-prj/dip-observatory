@@ -7,6 +7,8 @@ import {
   readKernelView,
   saveKernelView,
   KERNEL_VIEW_KEY,
+  METRIC_KEYS,
+  toggleKernelMetric,
 } from './operator-presentation'
 describe('Kernel operator presentation stays private-data free', () => {
   it('supports real reordering and density, with strict safe schema', () => {
@@ -21,10 +23,41 @@ describe('Kernel operator presentation stays private-data free', () => {
     const analyst = templateKernelView('ANALYST')
     expect(business.panels).toEqual(['EVIDENCE', 'EXECUTE', 'REPLAN'])
     expect(analyst.panels).toEqual(['EXECUTE', 'REPLAN', 'EVIDENCE'])
-    expect(business.version).toBe(1)
+    expect(business.version).toBe(2)
+    expect(business.metrics).toEqual(['INPUT_JOBS', 'SCHEDULED_JOBS'])
+    expect(analyst.metrics).toEqual(METRIC_KEYS)
     expect(business).not.toHaveProperty('decisionId')
     expect(business).not.toHaveProperty('solver')
     expect(business).not.toHaveProperty('policy')
+  })
+
+  it('migrates v1 presentation-only settings and strictly rejects unsafe preferences', () => {
+    const v1 = { version: 1, density: 'COMPACT', panels: ['EVIDENCE', 'EXECUTE', 'REPLAN'] }
+    expect(parseKernelView(v1)).toEqual({
+      ...v1,
+      version: 2,
+      metrics: [...METRIC_KEYS],
+    })
+    expect(parseKernelView({ ...v1, decisionId: 'tenant-private' })).toEqual(defaultKernelView())
+    const current = { ...defaultKernelView(), metrics: ['DONORS'] }
+    expect(parseKernelView(current).metrics).toEqual(['DONORS'])
+    expect(parseKernelView({ ...current, metrics: [] })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...current, metrics: ['DONORS', 'DONORS'] })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...current, metrics: ['API_KEY'] })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...current, tenantId: 'secret' })).toEqual(defaultKernelView())
+  })
+
+  it('changes displayed metric selection without touching solver or evidence', () => {
+    const original = defaultKernelView()
+    const hidden = toggleKernelMetric(original, 'DONORS')
+    expect(hidden.metrics).toEqual(['INPUT_JOBS', 'SCHEDULED_JOBS', 'TECHNICIANS'])
+    expect(original.metrics).toEqual(METRIC_KEYS)
+    expect(toggleKernelMetric(hidden, 'DONORS').metrics).toEqual(METRIC_KEYS)
+    const last = parseKernelView({ ...original, metrics: ['INPUT_JOBS'] })
+    expect(toggleKernelMetric(last, 'INPUT_JOBS')).toEqual(last)
+    expect(toggleKernelMetric(last, 'UNKNOWN' as 'DONORS')).toEqual(last)
+    expect(hidden).not.toHaveProperty('decisionId')
+    expect(hidden).not.toHaveProperty('solver')
   })
 
   it('restores and fails closed without localStorage availability', () => {
