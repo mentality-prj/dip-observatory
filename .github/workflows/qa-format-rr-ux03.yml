@@ -1,0 +1,40 @@
+name: Format RR UX03 once
+
+on:
+  push:
+    branches:
+      - feat/rr-dashboard-safe-metric-views
+    paths:
+      - .github/workflows/qa-format-rr-ux03.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/rr-dashboard-safe-metric-views
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format reviewed UX03 files only
+        run: |
+          pnpm exec prettier --write             src/use-cases/readiness-recovery/operator-presentation.ts             src/use-cases/readiness-recovery/operator-presentation.vitest.test.ts             src/use-cases/readiness-recovery/operator-evidence.tsx             src/use-cases/readiness-recovery/operator-evidence.vitest.test.tsx             src/use-cases/readiness-recovery/operator-copy.ts             src/use-cases/readiness-recovery/production-operator-panel.tsx
+      - name: Commit formatting only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/use-cases/readiness-recovery/operator-presentation.ts             src/use-cases/readiness-recovery/operator-presentation.vitest.test.ts             src/use-cases/readiness-recovery/operator-evidence.tsx             src/use-cases/readiness-recovery/operator-evidence.vitest.test.tsx             src/use-cases/readiness-recovery/operator-copy.ts             src/use-cases/readiness-recovery/production-operator-panel.tsx
+          if ! git diff --cached --quiet; then
+            git commit -m "style(ux-03): apply repository Prettier to metric visibility"
+            git push origin HEAD:feat/rr-dashboard-safe-metric-views
+          fi
