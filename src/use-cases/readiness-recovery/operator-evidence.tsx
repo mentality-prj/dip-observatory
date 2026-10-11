@@ -293,7 +293,9 @@ export function OperatorEvidence({
                   <dt className="text-xs text-slate-400">{label}</dt>
                   <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
                 </dl>
-                <p className="mt-1 text-xs text-slate-400">{t.definition}: {definition}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t.definition}: {definition}
+                </p>
                 <details className="mt-2 text-xs text-slate-300">
                   <summary className="cursor-pointer text-sky-200">{t.metricDetails}</summary>
                   <dl className="mt-2 space-y-2">
@@ -306,7 +308,9 @@ export function OperatorEvidence({
                       <dd>{method}</dd>
                     </div>
                     <div>
-                      <dt className="text-slate-400">{t.src} / {t.source}</dt>
+                      <dt className="text-slate-400">
+                        {t.src} / {t.source}
+                      </dt>
                       <dd className="break-all">
                         {record.source_system} / {record.source_version} / {record.source_snapshot_id}
                       </dd>
