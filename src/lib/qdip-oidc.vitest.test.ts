@@ -151,6 +151,7 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     expect(url.searchParams.get('nonce')).toBe(flow.nonce)
     expect(url.searchParams.get('scope')).toContain(`urn:zitadel:iam:org:project:id:${projectId}:aud`)
     expect(url.searchParams.get('scope')).toContain('urn:zitadel:iam:org:projects:roles')
+    expect(url.searchParams.get('scope')).toContain(`urn:zitadel:iam:org:roles:id:${organizationId}`)
   })
   it('verifies Zitadel ID token signature, nonce, issuer and audience', async () => {
     await expect(verifyIdToken(token(), flow, config)).resolves.toMatchObject({ sub: 'user-1', roles: ['studio'] })
