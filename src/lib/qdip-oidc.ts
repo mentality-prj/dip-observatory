@@ -270,7 +270,7 @@ export function authorizationUrl(config: OidcDiscovery, flow: Pending) {
   if (!roleSettings) throw new Error('QDIP Zitadel role configuration is missing')
   url.searchParams.set(
     'scope',
-    `openid profile email urn:zitadel:iam:org:project:id:${roleSettings.projectId}:aud urn:zitadel:iam:org:projects:roles`
+    `openid profile email urn:zitadel:iam:org:project:id:${roleSettings.projectId}:aud urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:roles:id:${roleSettings.organizationId}`
   )
   url.searchParams.set('redirect_uri', new URL(AUTH_CALLBACK_PATH, PLATFORM_ORIGINS.site).toString())
   url.searchParams.set('state', flow.state)
