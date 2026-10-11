@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function StudioLayout({ children }: { children: ReactNode }) {
   const access = await pageAccess('studio')
-  if (!access.allowed)
+  if (!access.allowed) {
     return (
       <QdipAccessGate
         locale="en"
@@ -20,6 +20,7 @@ export default async function StudioLayout({ children }: { children: ReactNode }
         authenticated={access.authenticated}
       />
     )
+  }
 
   return children
 }
