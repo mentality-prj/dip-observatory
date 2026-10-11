@@ -6,6 +6,12 @@ export type KernelView = { version: 1; density: 'COMFORTABLE' | 'COMPACT'; panel
 export function defaultKernelView(): KernelView {
   return { version: 1, density: 'COMFORTABLE', panels: [...PANEL_KEYS] }
 }
+/** Presentation-only presets; never touch Kernel goals, solver parameters or evidence. */
+export function templateKernelView(template: 'BUSINESS' | 'ANALYST'): KernelView {
+  return template === 'BUSINESS'
+    ? { version: 1, density: 'COMFORTABLE', panels: ['EVIDENCE', 'EXECUTE', 'REPLAN'] }
+    : defaultKernelView()
+}
 export function parseKernelView(data: unknown): KernelView {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return defaultKernelView()
   const x = data as Record<string, unknown>
