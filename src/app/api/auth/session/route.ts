@@ -6,7 +6,12 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export function GET(request: NextRequest) {
-  if (!(['site', 'studio', 'observatory'] as const).some((surface) => isSurfaceHost(surface, request.nextUrl.host)))
+  // Next.js may expose its internal 127.0.0.1 listener through nextUrl.host
+  // behind a reverse proxy. Validate the actual Host against our exact
+  // surface allowlist, never trust x-forwarded-host.
+  const host = request.headers.get('host') ?? request.nextUrl.host
+  if (/[,\\s@/?#]/.test(host) ||
+      !(['site', 'studio', 'observatory'] as const).some((surface) => isSurfaceHost(surface, host)))
     return NextResponse.json({ error: 'Invalid host' }, { status: 403 })
   const session = sessionFromRequest(request)
   return NextResponse.json(
