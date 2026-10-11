@@ -54,7 +54,8 @@ function roleConfig(): QdipRoleConfig | null {
   const organizationId = (process.env.ZITADEL_QDIP_ORGANIZATION_ID ?? '').trim()
   const studioKey = (process.env.QDIP_STUDIO_ZITADEL_ROLE_KEY ?? 'studio').trim()
   const rrKey = (process.env.QDIP_RR_ZITADEL_ROLE_KEY ?? 'rr_operator').trim()
-  const validKey = (key: string) => /^[a-zA-Z][a-zA-Z0-9._:-]{0,127}$/.test(key)
+  // Zitadel role keys may contain spaces; reject empty/control-character keys only.
+  const validKey = (key: string) => key.length > 0 && key.length <= 128 && !/[\x00-\x1f\x7f]/.test(key)
   if (!/^\d+$/.test(projectId) || !/^\d+$/.test(organizationId) || !validKey(studioKey) || !validKey(rrKey))
     return null
   if (studioKey === rrKey) return null
