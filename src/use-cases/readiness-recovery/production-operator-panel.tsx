@@ -1,35 +1,58 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Locale } from '@/lib/observatory-i18n'
+import { rrOperatorCopy } from './operator-copy'
+import { OperatorEvidence, isKernelRRPresentation, type KernelRRPresentation } from './operator-evidence'
+import {
+  OperatorRequestError,
+  OperatorRequestGuard,
+  classifyOperatorHttpStatus,
+  parsedExecutionIds,
+  type OperatorErrorKind,
+} from './operator-guards'
+import {
+  defaultKernelView,
+  moveKernelPanel,
+  readKernelView,
+  saveKernelView,
+  templateKernelView,
+  type KernelPanel,
+  type KernelView,
+} from './operator-presentation'
 
 type Session = { configured: boolean; authenticated: boolean; mode: string }
-type RecordSummary = {
-  organization_id?: string
-  result?: {
-    workflow?: {
-      execution_id?: string
-      ingestion?: { payload?: { decision_id?: string } }
-    }
-    runtime?: {
-      operator_outcome?: {
-        kind?: string
-        actionable?: boolean
-        authoritative?: boolean
-        summary?: string
-        selected_donor_ids?: string[]
-      }
-      decision?: {
-        scheduled_jobs?: Array<{
-          job_id: string
-          technician_id: string
-          start_slot: number
-          finish_slot: number
-        }>
-      } | null
-    }
-  }
+type KernelPreflight = {
+  schema_version: 'readiness-recovery.presentation.v1'
+  validation_scope: 'SCHEMA_AND_ADMISSION_ONLY'
+  execution_id: string
+  decision_id: string
+  source_snapshot_id: string
+  payload_digest: string
+  job_count: number
+  technician_count: number
+  warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
 }
-
+function isKernelPreflight(value: unknown): value is KernelPreflight {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Partial<KernelPreflight>
+  return (
+    v.schema_version === 'readiness-recovery.presentation.v1' &&
+    v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    typeof v.execution_id === 'string' &&
+    typeof v.decision_id === 'string' &&
+    typeof v.source_snapshot_id === 'string' &&
+    typeof v.payload_digest === 'string' &&
+    /^[0-9a-f]{64}$/.test(v.payload_digest) &&
+    v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
+    typeof v.job_count === 'number' &&
+    Number.isSafeInteger(v.job_count) &&
+    v.job_count > 0 &&
+    typeof v.technician_count === 'number' &&
+    Number.isSafeInteger(v.technician_count) &&
+    v.technician_count > 0
+  )
+}
 const initialRequest = `{
   "execution_id": "rr-reference-001",
   "source": {},
@@ -46,7 +69,7 @@ async function checkedJson(response: Response): Promise<unknown> {
         : data && typeof data === 'object' && 'detail' in data
           ? JSON.stringify(data.detail)
           : `RR request failed (${response.status})`
-    throw new Error(message)
+    throw new OperatorRequestError(classifyOperatorHttpStatus(response.status), message)
   }
   return data
 }
@@ -55,17 +78,132 @@ async function checkedJson(response: Response): Promise<unknown> {
  * Independent reference-operator workflow. Never maps stochastic demo results
  * onto the exact Kernel job/technician/slot domain or persists credentials.
  */
-export function RRProductionOperatorPanel() {
+export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }) {
+  const t = rrOperatorCopy[locale]
+  const requestGuard = useRef(new OperatorRequestGuard())
+  const activeController = useRef<AbortController | null>(null)
+  const fileRevision = useRef(0)
+  const inputRevision = useRef(0)
+  const [view, setView] = useState<KernelView>(() => defaultKernelView())
+  const [viewReady, setViewReady] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
-  const [password, setPassword] = useState('')
   const [requestBody, setRequestBody] = useState(initialRequest)
   const [replanBody, setReplanBody] = useState('')
   const [decisionId, setDecisionId] = useState('')
   const [executionId, setExecutionId] = useState('')
   const [lastResult, setLastResult] = useState<unknown>(null)
+  const [presentation, setPresentation] = useState<KernelRRPresentation | null>(null)
+  const [preflight, setPreflight] = useState<KernelPreflight | null>(null)
+  const [validatedBody, setValidatedBody] = useState<string | null>(null)
+  const [preflightStatus, setPreflightStatus] = useState('')
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [errorKind, setErrorKind] = useState<OperatorErrorKind | null>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void Promise.resolve().then(() => {
+      if (!active) return
+      try {
+        setView(readKernelView(window.localStorage))
+      } catch {
+        setView(defaultKernelView())
+      }
+      setViewReady(true)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+  useEffect(() => {
+    if (!viewReady) return
+    try {
+      saveKernelView(window.localStorage, view)
+    } catch {
+      /* private browsing */
+    }
+  }, [view, viewReady])
+  useEffect(
+    () => () => {
+      requestGuard.current.invalidate()
+      activeController.current?.abort()
+      fileRevision.current += 1
+    },
+    []
+  )
+
+  function invalidateOutcome() {
+    requestGuard.current.invalidate()
+    activeController.current?.abort()
+    setBusy(false)
+    setLastResult(null)
+    setPresentation(null)
+    setPreflight(null)
+    setValidatedBody(null)
+    setPreflightStatus('Input changed; waiting for Kernel validation')
+    setOperation('')
+    setErrorKind(null)
+  }
+  function startOperation() {
+    activeController.current?.abort()
+    const controller = new AbortController()
+    activeController.current = controller
+    return { epoch: requestGuard.current.begin(), signal: controller.signal }
+  }
+  function operationFailed(reason: unknown, epoch: number) {
+    if (!requestGuard.current.current(epoch)) return
+    setErrorKind(reason instanceof OperatorRequestError ? reason.kind : 'TRANSPORT_ERROR')
+    if (reason instanceof OperatorRequestError && reason.kind === 'AUTH_REQUIRED') {
+      setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
+      setLastResult(null)
+      setPresentation(null)
+      setDecisionId('')
+      setExecutionId('')
+      setError(t.sessionLost)
+    } else if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
+      setLastResult(null)
+      setError(reason instanceof Error ? reason.message : 'RR operation failed')
+    }
+  }
+
+  useEffect(() => {
+    if (!session?.authenticated) return
+    const controller = new AbortController()
+    const currentBody = requestBody
+    const currentRevision = inputRevision.current
+    const timeout = setTimeout(() => {
+      if (currentRevision !== inputRevision.current) return
+      setPreflight(null)
+      setValidatedBody(null)
+      setPreflightStatus('Checking Kernel contract…')
+      void fetch('/api/rr-operator/kernel/preflight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: currentBody,
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+        .then(checkedJson)
+        .then((value) => {
+          if (controller.signal.aborted || currentRevision !== inputRevision.current) return
+          if (!isKernelPreflight(value)) throw new Error('Unsupported Kernel preflight response')
+          setPreflight(value)
+          setValidatedBody(currentBody)
+          setPreflightStatus('')
+        })
+        .catch((reason: unknown) => {
+          if (controller.signal.aborted || currentRevision !== inputRevision.current) return
+          setPreflight(null)
+          setValidatedBody(null)
+          setPreflightStatus(reason instanceof Error ? reason.message : 'Preflight rejected')
+        })
+    }, 250)
+    return () => {
+      clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [requestBody, session?.authenticated])
 
   useEffect(() => {
     let active = true
@@ -83,118 +221,231 @@ export function RRProductionOperatorPanel() {
   }, [])
 
   async function execute(label: string, url: string, method = 'GET', body?: string) {
+    const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
+    setErrorKind(null)
+    setLastResult(null)
+    if (method !== 'GET') setPresentation(null)
     try {
       const response = await fetch(url, {
         method,
         headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
         body,
         cache: 'no-store',
+        signal,
       })
       const data = await checkedJson(response)
-      setLastResult(data)
-      setOperation(label)
+      if (!requestGuard.current.current(epoch)) return
       if (method === 'POST' && label === 'Create execution') {
-        const record = data as RecordSummary
-        setExecutionId(record.result?.workflow?.execution_id ?? '')
-        setDecisionId(record.result?.workflow?.ingestion?.payload?.decision_id ?? '')
+        const ids = parsedExecutionIds(data)
+        const workflow =
+          data &&
+          typeof data === 'object' &&
+          'result' in data &&
+          data.result &&
+          typeof data.result === 'object' &&
+          'workflow' in data.result
+            ? data.result.workflow
+            : null
+        const ingestion =
+          workflow && typeof workflow === 'object' && 'ingestion' in workflow ? workflow.ingestion : null
+        const digest =
+          ingestion && typeof ingestion === 'object' && 'payload_digest' in ingestion ? ingestion.payload_digest : null
+        if (
+          !ids.executionId ||
+          !ids.decisionId ||
+          preflight?.execution_id !== ids.executionId ||
+          preflight?.decision_id !== ids.decisionId ||
+          digest !== preflight?.payload_digest
+        )
+          throw new Error(t.requestMismatch)
+        setExecutionId(ids.executionId)
+        setDecisionId(ids.decisionId)
       }
       if (method === 'POST' && label === 'Replan execution') {
-        const record = data as RecordSummary
-        setExecutionId(record.result?.workflow?.execution_id ?? '')
-        setDecisionId(record.result?.workflow?.ingestion?.payload?.decision_id ?? '')
+        const ids = parsedExecutionIds(data)
+        const successor: unknown = body ? (JSON.parse(body) as unknown) : null
+        const target =
+          successor && typeof successor === 'object' && 'execution_id' in successor ? successor.execution_id : null
+        if (!ids.executionId || !ids.decisionId || target !== ids.executionId) throw new Error(t.requestMismatch)
+        setExecutionId(ids.executionId)
+        setDecisionId(ids.decisionId)
+      }
+      setLastResult(data)
+      setOperation(label)
+      if (method === 'POST' && (label === 'Create execution' || label === 'Replan execution')) {
+        const { executionId: id } = parsedExecutionIds(data)
+        if (id) {
+          try {
+            const projection: unknown = await checkedJson(
+              await fetch(`${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal })
+            )
+            if (!requestGuard.current.current(epoch)) return
+            if (
+              !isKernelRRPresentation(projection) ||
+              projection.execution_id !== id ||
+              projection.decision_id !== parsedExecutionIds(data).decisionId ||
+              (label === 'Create execution' &&
+                (projection.payload_digest !== preflight?.payload_digest ||
+                  projection.source_snapshot_id !== preflight?.source_snapshot_id))
+            )
+              throw new Error('Kernel returned an incompatible presentation schema')
+            setPresentation(projection)
+          } catch (projectionError) {
+            if (
+              requestGuard.current.current(epoch) &&
+              !(projectionError instanceof DOMException && projectionError.name === 'AbortError')
+            ) {
+              // A successful execution is NOT rolled back or retried because an optional read model is unavailable.
+              setError('Execution created. Plugin evidence is unavailable; do not resubmit the same request.')
+            }
+          }
+        }
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RR operation failed')
+      operationFailed(reason, epoch)
     } finally {
-      setBusy(false)
+      if (requestGuard.current.current(epoch)) setBusy(false)
     }
   }
 
   async function exportComplete() {
+    const { epoch, signal } = startOperation()
+    const id = decisionId
     setBusy(true)
     setError(null)
+    setLastResult(null)
     try {
-      const exported: unknown[] = []
+      const records: unknown[] = []
       let cursor: string | null = null
       let expectedHead: string | null = null
-      let completed = false
-      for (let pageNumber = 0; pageNumber < 20; pageNumber++) {
-        const path = `${prefix}/decisions/${encodeURIComponent(decisionId)}/history/export`
-        const params = new URLSearchParams({ page_size: '100' })
-        if (cursor !== null && expectedHead !== null) {
-          params.set('cursor', cursor)
-          params.set('expected_head', expectedHead)
+      let manifest: string | null = null
+      let complete = false
+      // Pagination here is purely transport assembly. Every page receives
+      // a fresh full-chain attestation and is bounded by qdip-core.
+      for (let index = 0; index < 1000; index++) {
+        const params = new URLSearchParams()
+        if (cursor) params.set('cursor', cursor)
+        if (expectedHead) params.set('expected_head', expectedHead)
+        const data: unknown = await checkedJson(
+          await fetch(
+            `${prefix}/decisions/${encodeURIComponent(id)}/history/verified-export-page?${params.toString()}`,
+            { cache: 'no-store', signal }
+          )
+        )
+        if (!requestGuard.current.current(epoch)) return
+        if (
+          !data ||
+          typeof data !== 'object' ||
+          !('schema_version' in data) ||
+          data.schema_version !== 'readiness-recovery.presentation.v1' ||
+          !('history_verified' in data) ||
+          data.history_verified !== true ||
+          !('decision_id' in data) ||
+          data.decision_id !== id ||
+          !('head_execution_id' in data) ||
+          typeof data.head_execution_id !== 'string' ||
+          !('history_manifest_digest' in data) ||
+          typeof data.history_manifest_digest !== 'string' ||
+          !/^[a-f0-9]{64}$/.test(data.history_manifest_digest) ||
+          !('executions' in data) ||
+          !Array.isArray(data.executions) ||
+          !('export_complete' in data) ||
+          typeof data.export_complete !== 'boolean' ||
+          !('next_cursor' in data) ||
+          !(typeof data.next_cursor === 'string' || data.next_cursor === null)
+        ) {
+          throw new Error('Kernel did not attest the complete RR export page')
         }
-        const data = (await checkedJson(await fetch(`${path}?${params.toString()}`, { cache: 'no-store' }))) as {
-          head_execution_id: string
-          executions: unknown[]
-          next_cursor: string | null
-          export_complete: boolean
-        }
-        if (!data.head_execution_id || !Array.isArray(data.executions)) throw new Error('Invalid RR export contract')
-        if (expectedHead !== null && expectedHead !== data.head_execution_id)
-          throw new Error('RR decision head changed during export; restart')
+        if (expectedHead !== null && data.head_execution_id !== expectedHead)
+          throw new Error('Kernel decision head changed during export')
+        if (manifest !== null && data.history_manifest_digest !== manifest)
+          throw new Error('Kernel history manifest changed during export')
         expectedHead = data.head_execution_id
-        exported.push(...data.executions)
+        manifest = data.history_manifest_digest
+        if (!data.executions.length) throw new Error('Kernel returned an empty verified export page')
+        records.push(...data.executions)
         if (data.export_complete) {
-          completed = true
+          if (data.next_cursor !== null) throw new Error('Final RR export has a continuation cursor')
+          complete = true
           break
         }
-        if (!data.next_cursor) throw new Error('RR export cursor missing')
+        if (!data.next_cursor || data.next_cursor === cursor) throw new Error('Kernel export cursor did not advance')
         cursor = data.next_cursor
       }
-      if (!completed) throw new Error('RR export page limit reached; cannot attest complete history')
-      setOperation('Complete history export')
-      setLastResult({
-        decision_id: decisionId,
+      if (!complete || !manifest || !expectedHead) throw new Error('RR export has not been completely verified')
+      if (!requestGuard.current.current(epoch)) return
+      const exportedDocument = {
+        schema_version: 'readiness-recovery.presentation.v1',
+        decision_id: id,
         head_execution_id: expectedHead,
-        executions: exported,
+        history_manifest_digest: manifest,
+        executions: records,
         export_complete: true,
+        history_verified: true,
+      }
+      const blob = new Blob([JSON.stringify(exportedDocument)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      try {
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `rr-history-${id}.json`
+        anchor.click()
+      } finally {
+        URL.revokeObjectURL(url)
+      }
+      setOperation('Complete history export')
+      // Keep only the attestation manifest in the visible panel, not
+      // potentially many megabytes of historical payloads.
+      setLastResult({
+        decision_id: id,
+        head_execution_id: expectedHead,
+        history_manifest_digest: manifest,
+        export_complete: true,
+        history_verified: true,
       })
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RR export failed')
+      operationFailed(reason, epoch)
     } finally {
-      setBusy(false)
+      if (requestGuard.current.current(epoch)) setBusy(false)
     }
   }
 
-  async function login() {
-    setBusy(true)
-    setError(null)
-    try {
-      await checkedJson(
-        await fetch('/api/rr-operator/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password }),
-        })
-      )
-      setSession({ configured: true, authenticated: true, mode: 'single-organization-reference' })
-      setPassword('')
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Login failed')
-    } finally {
-      setBusy(false)
-    }
+  function login() {
+    const root = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://qdip.ai'
+    const url = new URL('/api/auth/login', root)
+    url.searchParams.set('return_to', window.location.href)
+    window.location.assign(url.toString())
   }
 
   async function logout() {
-    await fetch('/api/rr-operator/session', { method: 'DELETE' })
-    setSession({ configured: true, authenticated: false, mode: 'single-organization-reference' })
+    const { epoch, signal } = startOperation()
+    fileRevision.current += 1
+    setBusy(true)
     setLastResult(null)
-    setExecutionId('')
-    setDecisionId('')
-    setRequestBody(initialRequest)
-    setReplanBody('')
-    setPassword('')
+    setError(null)
+    try {
+      await checkedJson(await fetch('/api/auth/logout', { method: 'POST', signal }))
+      if (!requestGuard.current.current(epoch)) return
+      setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
+      setLastResult(null)
+      setPresentation(null)
+      setExecutionId('')
+      setDecisionId('')
+      setRequestBody(initialRequest)
+      setReplanBody('')
+    } catch (reason) {
+      operationFailed(reason, epoch)
+    } finally {
+      if (requestGuard.current.current(epoch)) setBusy(false)
+    }
   }
 
   if (!session)
     return (
       <p className="mx-auto max-w-5xl px-5 py-12 text-slate-400" role="status">
-        Checking Kernel connection settings…
+        {t.checking}
       </p>
     )
   if (!session.configured)
@@ -204,68 +455,132 @@ export function RRProductionOperatorPanel() {
         className="mx-auto max-w-5xl border border-white/15 bg-slate-900/50 p-6"
         role="status"
       >
-        <h2 className="text-lg font-semibold">Kernel RR operator unavailable</h2>
-        <p className="mt-3 text-sm text-slate-300">
-          The authenticated reference operator is not configured. RR does not fall back to a browser solver. An
-          authorized operator must configure the approved server-side connection and access policy.
-        </p>
+        <h2 className="text-lg font-semibold">{t.unavailable}</h2>
+        <p className="mt-3 text-sm text-slate-300">{t.unavailableHelp}</p>
       </section>
     )
 
   const validId = (id: string) => /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   const prefix = '/api/rr-operator/kernel'
-  const summary = lastResult as RecordSummary | null
 
   return (
-    <section className="mt-8 border border-sky-400/30 bg-slate-900/70 p-5 md:p-6" data-testid="rr-production-operator">
+    <section
+      className={`mt-8 border border-sky-400/30 bg-slate-900/70 ${view.density === 'COMPACT' ? 'p-3 md:p-4 text-sm' : 'p-5 md:p-6'}`}
+      data-testid="rr-production-operator"
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-sky-200">Kernel-backed RR — restricted reference operator</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-            Restricted, authenticated reference workflow. Import a normalized RR execution request. Only QDIP Kernel
-            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. This access mode is not
-            final production OIDC.
-          </p>
+          <h2 className="text-xl font-semibold text-sky-200">{t.title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">{t.description}</p>
         </div>
         {session.authenticated && (
           <button type="button" onClick={() => void logout()} className="border border-slate-400 px-4 py-2 text-sm">
-            Sign out
+            {t.signout}
           </button>
         )}
       </div>
 
+      {session.authenticated && presentation ? (
+        <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
+          <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
+          <OperatorEvidence locale={locale} record={presentation} />
+        </section>
+      ) : null}
+      {session.authenticated && (
+        <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
+          <h3 className="font-semibold">{t.display}</h3>
+          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t.templates}>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('BUSINESS'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.business}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('ANALYST'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.analyst}
+            </button>
+          </div>
+          <label className="mt-2 block text-sm">
+            {t.density}
+            <select
+              aria-label={t.density}
+              className="ml-3 border border-white/20 bg-slate-950 p-2"
+              value={view.density}
+              onChange={(event) => setView({ ...view, density: event.target.value as KernelView['density'] })}
+            >
+              <option value="COMFORTABLE">{t.comfortable}</option>
+              <option value="COMPACT">{t.compact}</option>
+            </select>
+          </label>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {view.panels.map((key: KernelPanel) => (
+              <div key={key} className="flex items-center gap-2 border border-white/15 px-2 py-1 text-sm">
+                <span>{key === 'EXECUTE' ? t.create : key === 'REPLAN' ? t.replan : t.evidence}</span>
+                <button
+                  type="button"
+                  aria-label={`${t.up}: ${key}`}
+                  disabled={view.panels.indexOf(key) === 0}
+                  onClick={() => setView(moveKernelPanel(view, key, -1))}
+                  className="disabled:opacity-30"
+                >
+                  {t.up}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${t.down}: ${key}`}
+                  disabled={view.panels.indexOf(key) === view.panels.length - 1}
+                  onClick={() => setView(moveKernelPanel(view, key, 1))}
+                  className="disabled:opacity-30"
+                >
+                  {t.down}
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="border border-white/15 px-3 py-1"
+              onClick={() => setView(defaultKernelView())}
+            >
+              {t.reset}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-slate-400">{t.preferences}</p>
+        </div>
+      )}
       {!session.authenticated ? (
         <div className="mt-5 flex max-w-lg flex-col gap-3">
-          <label className="text-sm" htmlFor="rr-operator-password">
-            Operator access password
-          </label>
-          <input
-            id="rr-operator-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="border border-white/25 bg-slate-950 p-3 text-sm"
-          />
+          <p className="text-sm text-slate-300">
+            {locale === 'uk'
+              ? 'Увійдіть через ваш обліковий запис Zitadel.'
+              : locale === 'pl'
+                ? 'Zaloguj się przez swoje konto Zitadel.'
+                : 'Sign in with your authorized Zitadel account.'}
+          </p>
           <button
             type="button"
-            disabled={busy || !password}
-            onClick={() => void login()}
+            disabled={busy}
+            onClick={() => login()}
             className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
           >
-            Unlock reference operator
+            {locale === 'uk'
+              ? 'Увійти через Zitadel'
+              : locale === 'pl'
+                ? 'Zaloguj przez Zitadel'
+                : 'Sign in with Zitadel'}
           </button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-5 xl:grid-cols-2">
-          <div className="space-y-3">
-            <h3 className="font-semibold">1. Create Kernel execution</h3>
-            <p className="text-xs text-slate-400">
-              Use the exact JSON body emitted by the RR normalized-import preflight CLI. No browser-side schema
-              inference or storage.
-            </p>
+        <div className={`mt-6 grid xl:grid-cols-2 ${view.density === 'COMPACT' ? 'gap-2' : 'gap-5'}`}>
+          <div className="space-y-3" style={{ order: view.panels.indexOf('EXECUTE') }}>
+            <h3 className="font-semibold">1. {t.create}</h3>
+            <p className="text-xs text-slate-400">{t.createHelp}</p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
-              Import normalized RR API request (JSON)
+              {t.import}
             </label>
             <input
               id="rr-kernel-request-file"
@@ -275,6 +590,8 @@ export function RRProductionOperatorPanel() {
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
+                const revision = ++fileRevision.current
+                invalidateOutcome()
                 if (file.size > 2_150_000) {
                   setError('RR request exceeds the accepted size limit.')
                   return
@@ -282,61 +599,76 @@ export function RRProductionOperatorPanel() {
                 void file
                   .text()
                   .then((value) => {
+                    if (fileRevision.current !== revision) return
                     try {
                       const parsed: unknown = JSON.parse(value)
-                      if (
-                        !parsed ||
-                        typeof parsed !== 'object' ||
-                        !('execution_id' in parsed) ||
-                        !('payload' in parsed)
-                      )
-                        throw new Error('Expected an RR /executions API request, not a demo scenario package.')
+                      inputRevision.current += 1
                       setRequestBody(JSON.stringify(parsed, null, 2))
                       setError(null)
                     } catch (reason) {
                       setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
                     }
                   })
-                  .catch(() => setError('Could not read the RR request file'))
+                  .catch(() => {
+                    if (fileRevision.current === revision) setError('Could not read the RR request file')
+                  })
               }}
             />
             <textarea
               aria-label="Kernel execution JSON"
               value={requestBody}
-              onChange={(event) => setRequestBody(event.target.value)}
+              onChange={(event) => {
+                fileRevision.current += 1
+                inputRevision.current += 1
+                invalidateOutcome()
+                setRequestBody(event.target.value)
+              }}
               spellCheck={false}
               rows={10}
               className="w-full border border-white/20 bg-slate-950 p-3 font-mono text-xs"
             />
+            <p
+              role="status"
+              className={`text-xs ${preflight ? 'text-sky-200' : 'text-amber-200'}`}
+              data-testid="rr-kernel-preflight"
+            >
+              {preflight
+                ? `Kernel preflight · execution: ${preflight.execution_id} · decision: ${preflight.decision_id} · snapshot: ${preflight.source_snapshot_id} · jobs: ${preflight.job_count} · technicians: ${preflight.technician_count}`
+                : `Server preflight: ${preflightStatus || 'Not validated by qdip-core'}`}
+              {preflight ? ' · No execution or feasibility proof.' : ''}
+            </p>
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || !preflight || validatedBody !== requestBody}
               onClick={() => void execute('Create execution', `${prefix}/executions`, 'POST', requestBody)}
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
-              Create execution
+              {t.createButton}
             </button>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold">2. Change, override or replan</h3>
-            <p className="text-xs text-slate-400">
-              Supply an explicit successor execution ID, change ID, kind, source and reason. No implicit overwrite of a
-              predecessor.
-            </p>
+          <div className="space-y-3" style={{ order: view.panels.indexOf('REPLAN') }}>
+            <h3 className="font-semibold">2. {t.replan}</h3>
+            <p className="text-xs text-slate-400">{t.replanHelp}</p>
             <label className="block text-sm" htmlFor="rr-execution-id">
-              Execution ID
+              {t.executionId}
             </label>
             <input
               id="rr-execution-id"
               value={executionId}
-              onChange={(event) => setExecutionId(event.target.value)}
+              onChange={(event) => {
+                invalidateOutcome()
+                setExecutionId(event.target.value)
+              }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <textarea
               aria-label="Kernel replan JSON"
               value={replanBody}
-              onChange={(event) => setReplanBody(event.target.value)}
+              onChange={(event) => {
+                invalidateOutcome()
+                setReplanBody(event.target.value)
+              }}
               spellCheck={false}
               placeholder="Paste explicit ReadinessRecoveryReplanRequest JSON"
               rows={7}
@@ -344,7 +676,7 @@ export function RRProductionOperatorPanel() {
             />
             <button
               type="button"
-              disabled={busy || !validId(executionId) || !replanBody}
+              disabled={busy || !validId(executionId) || !replanBody.trim()}
               onClick={() =>
                 void execute(
                   'Replan execution',
@@ -355,19 +687,22 @@ export function RRProductionOperatorPanel() {
               }
               className="bg-white px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
-              Replan from predecessor
+              {t.replanButton}
             </button>
           </div>
 
-          <div className="space-y-3 xl:col-span-2">
-            <h3 className="font-semibold">3. Durable evidence and verification</h3>
+          <div className="space-y-3 xl:col-span-2" style={{ order: view.panels.indexOf('EVIDENCE') }}>
+            <h3 className="font-semibold">3. {t.evidence}</h3>
             <label className="block text-sm" htmlFor="rr-decision-id">
-              Decision ID
+              {t.decisionId}
             </label>
             <input
               id="rr-decision-id"
               value={decisionId}
-              onChange={(event) => setDecisionId(event.target.value)}
+              onChange={(event) => {
+                invalidateOutcome()
+                setDecisionId(event.target.value)
+              }}
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
@@ -379,7 +714,7 @@ export function RRProductionOperatorPanel() {
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                History
+                {t.history}
               </button>
               <button
                 type="button"
@@ -392,7 +727,7 @@ export function RRProductionOperatorPanel() {
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Integrity
+                {t.integrity}
               </button>
               <button
                 type="button"
@@ -400,7 +735,7 @@ export function RRProductionOperatorPanel() {
                 onClick={() => void exportComplete()}
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Export complete history
+                {t.export}
               </button>
               <button
                 type="button"
@@ -413,59 +748,29 @@ export function RRProductionOperatorPanel() {
                 }
                 className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Replay
+                {t.replay}
               </button>
             </div>
           </div>
           {lastResult !== null && (
-            <div className="xl:col-span-2" aria-live="polite">
+            <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              {summary?.result?.runtime?.operator_outcome && (
-                <div className="mt-2 space-y-3 border border-white/20 p-3 text-sm" data-testid="rr-operator-outcome">
-                  <p>
-                    Decision: {summary.result.runtime.operator_outcome.kind ?? 'UNKNOWN'}
-                    {' · '}
-                    {summary.result.runtime.operator_outcome.authoritative ? 'Authoritative' : 'Uncertified'}
-                    {' · '}
-                    {summary.result.runtime.operator_outcome.actionable
-                      ? 'Actionable'
-                      : 'Non-actionable — inspect evidence'}
-                  </p>
-                  <p className="text-slate-300">{summary.result.runtime.operator_outcome.summary}</p>
-                  {summary.result.runtime.operator_outcome.actionable &&
-                    summary.result.runtime.decision?.scheduled_jobs && (
-                      <div>
-                        <h4 className="font-semibold">Kernel scheduled jobs (slot units)</h4>
-                        <ul className="mt-2 space-y-1">
-                          {summary.result.runtime.decision.scheduled_jobs.map((job) => (
-                            <li key={job.job_id} className="font-mono text-xs">
-                              {job.job_id} · {job.technician_id} · slots {job.start_slot}–{job.finish_slot}
-                            </li>
-                          ))}
-                        </ul>
-                        <p className="mt-2 text-xs">
-                          Donor kits: {summary.result.runtime.operator_outcome.selected_donor_ids?.join(', ') || 'none'}
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
-              <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
-                {JSON.stringify(lastResult, null, 2)}
-              </pre>
+              <details className="mt-3 border border-white/15 p-3" data-testid="rr-technical-response">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t.technicalPayload}</summary>
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-4 font-mono text-xs">
+                  {JSON.stringify(lastResult, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-4 text-sm text-rose-300">
+        <p role="alert" data-error-kind={errorKind ?? 'INVALID_INPUT'} className="mt-4 text-sm text-rose-300">
           {error}
         </p>
       )}
-      <p className="mt-5 text-xs text-slate-400">
-        Single-organization reference installation only. All operational requests are authorized server-side; no
-        privileged backend key is sent to the browser.
-      </p>
+      <p className="mt-5 text-xs text-slate-400">{t.restricted}</p>
     </section>
   )
 }

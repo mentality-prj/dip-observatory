@@ -1,6 +1,6 @@
 'use client'
 
-import { Cable } from 'lucide-react'
+import { Cable, LogIn } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ProductHeader } from '@/design-system'
 import { marketingHref, studioSurfaceHref } from '@/lib/platform-urls'
@@ -60,6 +60,9 @@ export function StudioCoreStatus() {
 
 export function StudioProductHeader() {
   const locale = useStudioLocale()
+  const login = new URL('/api/auth/login', process.env.NEXT_PUBLIC_SITE_URL ?? 'https://qdip.ai')
+  login.searchParams.set('return_to', studioSurfaceHref('', locale))
+  const loginLabel = { en: 'Sign in', uk: 'Увійти', pl: 'Zaloguj się' }[locale]
 
   return (
     <ProductHeader
@@ -67,7 +70,19 @@ export function StudioProductHeader() {
       brandHref={marketingHref(locale)}
       product="Studio"
       status={<StudioCoreStatus />}
-      utilities={<StudioLanguageSwitcher />}
+      utilities={
+        <>
+          <a
+            href={login.toString()}
+            aria-label={loginLabel}
+            className="inline-flex shrink-0 items-center gap-1 px-1 text-sm underline"
+          >
+            <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="hidden xl:inline">{loginLabel}</span>
+          </a>
+          <StudioLanguageSwitcher />
+        </>
+      }
       nativeNavigation
     />
   )

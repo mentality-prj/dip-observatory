@@ -1,0 +1,66 @@
+# RR Observatory reverse audit: corrective implementation
+
+This document concerns PR #228 in the renamed canonical repo `qdip-ai/qdip-web` (previously `mentality-prj/dip-observatory`). Target branch: `dev`.
+
+## Critical change since the first UX reverse audit
+
+The canonical `/readiness-recovery` application now uses `ReadinessRecoveryKernelWorkspace`, which mounts only the authenticated Kernel reference operator. The incompatible asset/capability Monte Carlo route `/readiness/scenarios` is HTTP 410 (both GET and POST). This is a **different current architecture** from the one audited immediately after PR #226.
+
+The former React `ReadinessRecoveryWorkspace` was still present as an unused, broken legacy module even after the public HTTP route was retired. This PR makes the historical export a **Kernel-only compatibility alias**; it does not restore the separate solver or convert incompatible stochastic inputs.
+
+## Reverse findings mapped to corrective code
+
+| Finding                                                 | Corrective treatment                                                                                                                                                                                                                                          | Verification                                             |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| B1: simulated result exported with original constraints | Retire stale Monte Carlo workspace entirely; Kernel operator uses typed normalized execution requests and only server-produced execution IDs. Kernel history export pins the decision head across pagination.                                                 | Kernel preflight and history E2E; no public legacy route |
+| B2: stale HTTP response across scenario/import switches | Generation-guarded async Kernel operations, AbortController cancellation on input/ID edits, logout/unmount, epoch checks before committing state. Async file import also uses a monotonically increasing generation.                                          | New race-unit and browser tests                          |
+| B3: public process-local scenario map                   | HTTP 410 for all anonymous legacy RR scenario reads/writes. Canonical Kernel route requires operator session, origin and server-side scoped DIP API key; no public result cache.                                                                              | Kernel auth negative E2E; public GET/POST 410            |
+| B4: non-equivalent solver in product RR                 | Explicit **single Kernel solver**; no mapping or fallback to stochastic asset/capability algorithms. No change to frozen Kernel v1.                                                                                                                           | Routing contract and Kernel-only browser check           |
+| H1: unclear decision workflow                           | Preflight display of explicit input IDs and record counts; restricted execute → replan → durable evidence/history/replay. No client-side execution of work orders.                                                                                            | Preflight and browser checks                             |
+| H2: incomplete negative states                          | Distinct HTTP status taxonomy (authorization, access, invalid input, conflict/stale, unsupported, backend unavailable) and fail-closed session expiry. **Kernel does not expose a supported general INFEASIBLE status in the browser here**; do not infer it. | Negative classification tests                            |
+| H3: missing evidence lineage                            | Bounded Kernel response renderer shows backend execution/decision IDs, snapshot when available, status and schedule; unknown values explicitly unrecorded. Head-pinned history export produces a full JSON file only after `export_complete=true`.            | Evidence parser tests                                    |
+| H4: overclaimed QDIP benchmark edge                     | Legacy local `QdipAdvantage` component no longer mounted in canonical RR path; product shows Kernel-native authoritative outputs only. Research files retained for audit; no false superiority claim.                                                         | Kernel-only route test                                   |
+| H5: inert personalization                               | Kernel-specific density and panel ordering now alter the live interface and persist only a fixed presentation schema (no user data or credentials).                                                                                                           | Settings unit and reload E2E                             |
+| H6: inadequate regression targets                       | Add Vitest and Playwright checks for retired endpoints, localization, isolated requests, invalid normalized JSON, evidence, and safe preferences.                                                                                                             | Canonical CI per PR SHA                                  |
+
+## Security and qualification limits
+
+1. The reference operator is **single-organization with shared operator password**, not OIDC or multiple independent tenants. A full production tenant model remains a separate backend release gate; do not mark it qualified here.
+2. The browser does not attest Kernel algorithmic optimality, statistical superiority or field performance. A backend `actionable` flag is displayed as Kernel-reported evidence, **not** permission to issue real-world orders.
+3. Input preflight checks **structure and identity**, not semantic feasibility. Backend Kernel is the decision authority.
+4. No independent external integration or full authenticated database E2E is certified by public CI without the isolated backend and credentials. Credential-free browser tests assert denial/fail-closed behavior.
+5. Existing QDIP product roadmap #270 and RR #274 stay unchanged. Never use local Docker or assume private-core GitHub Actions minutes are available.
+
+## Merge acceptance
+
+Only consider this PR code-qualified after the current SHA has passed lint, formatting, typecheck, full unit/component suite, production build and browser E2E; full backend product qualification is a separate gate.
+
+## 2026-10-11: RR computation ownership migration
+
+The canonical UI is Kernel-only. All 43 retired RR TypeScript research/optimizer/Monte Carlo/Pareto/benchmark/Test A implementation and test modules have been removed from the qdip-web working tree; historical Git commits preserve the prior experiments without deploying them. The active UI is not allowed to import any deprecated RR calculation module.
+
+Added **qdip-core RR plugin** modules and endpoints on backend branch `feat/rr-plugin-computation-ownership`:
+
+- `presentation.py` computes Pydantic-validated RR preflight with payload digest, audit/replay-checked execution read-model metrics and server-verified, bounded history pages;
+- `research_math.py`, `research_legacy_domain.py` and `research_legacy_engine.py` provide bounded backend-only distributions, Monte Carlo, Pareto, resource/dependency-aware feasibility search, capability-level evaluation and independent research comparators. There is no production route or claim of cross-language algorithmic/seed equivalence;
+- `POST /api/v1/readiness-recovery/preflight`;
+- `GET /api/v1/readiness-recovery/executions/:id/presentation`;
+- `GET /api/v1/readiness-recovery/decisions/:id/history/export-complete`, verifying the complete stored history via the plugin's Kernel replay and audit integrity chain before reporting success.
+
+The web operator only makes server requests to these allowlisted routes and renders the versioned responses; no browser-side input risk/readiness/feasibility, result authority, Pareto, Monte Carlo, or complete-history proof is computed. Client-side controls are limited to transport cancellation, JSON syntax, display/locale and safe presentation-only settings.
+
+**Deployment blocker:** this web branch depends on the new backend routes, which are not in qdip-core `dev` until its separate backend PR merges. In an older deployment, preflight intentionally fails closed and disables execution. There is no fallback to a local optimizer. These two branches must be version-qualified together before any product release.
+
+## 2026-10-11: Decision-first repair on staged Kernel-only web branch
+
+This continuation stays on `fix/rr-ux-reverse-audit-integrity` (formerly PR #228, intentionally closed without merge while the dependent Core PR #328 is unqualified). It does not open another implementation PR or restore the legacy stochastic frontend solver.
+
+- `KernelReferencePreview`: public, read-only description of the **input** of the invented civilian four-job/three-technician reference fixture. It never fabricates a Kernel schedule, solver output, advantage or ROI. The source fixture lives in `qdip-core/app/plugins/readiness_recovery/reference_fixture.py`. The preview is available even when the restricted operator is not configured.
+- Authenticated, server-produced `ReadinessRecoveryPresentationView` is now displayed above operator controls in a decision-first schedule table. Raw JSON and provenance details are available through explicitly opened disclosures rather than dominating business UX.
+- `isKernelRRPresentation` defensively checks the versioned full field shape, stable hashes, schedule entry types and the intentionally `null` stochastic output fields. No browser code infers optimality, feasibility, risk, business utility or history completeness.
+- Business and analyst presets alter only the order of three operator panels; users can continue to adjust density and panel ordering. The validated localStorage document never stores private decisions, payloads, access tokens, credentials, client-computed evidence or tenant IDs.
+- Added focused Vitest and browser assertions for the public illustration, plugin projection, decision-first schedule, strict negative payload cases and unchanged server-bound submission.
+
+**Independent outstanding acceptance (NOT PASS):** Core PR #328 must be locally checked (Ruff/mypy/pytest), merged and deployed before this web branch. The independent `qdip-e2e` watcher run `38088423713` failed with an empty `QDIP_READ_TOKEN` secret, so no real Core + Mongo + Observatory + Chromium E2E PASS may be claimed. The user must configure the read-only secret in the public E2E repository through GitHub Settings; do not paste the token in a chat. Zitadel OIDC is separately in web PR #229 and must be reconciled on rebase; the staging password implementation is not a final authentication gate. Subsequent web CI and usability acceptance must target the exact final merged SHAs.
+
+**Scope:** this is RR-facing correction, not a universal cross-app BI/dashboard product. A global authenticated personal workspace remains a separate future product increment; do not mark UX-01/02/03 product-level acceptance complete merely because component code exists.

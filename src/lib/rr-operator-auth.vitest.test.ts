@@ -3,67 +3,115 @@ import type { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
-import {
-  createOperatorSession,
-  operatorConfigured,
-  safeTransport,
-  sameOrigin,
-  verifyOperatorPassword,
-  verifyOperatorSession,
-} from './rr-operator-auth'
+import { operatorAuthorized, operatorConfigured, safeTransport, sameOrigin } from './rr-operator-auth'
+import { attachSession, getQdipSession, isOperatorSubject, safeReturnTo } from './qdip-oidc'
+import { NextResponse } from 'next/server'
 
 beforeEach(() => {
-  vi.stubEnv('RR_REFERENCE_OPERATOR_ENABLED', 'true')
-  vi.stubEnv('RR_OPERATOR_PASSWORD', 'reference-operator-long-secret')
-  vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'long-independent-session-signing-key-123456789')
+  vi.stubEnv('ZITADEL_ISSUER', 'https://identity.example.test')
+  vi.stubEnv('ZITADEL_CLIENT_ID', '394566248211424533')
+  vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'a-strong-and-independent-oidc-cookie-signing-secret')
+  vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', 'user-2')
+  vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-1')
   vi.stubEnv('DIP_API_BASE_URL', 'http://127.0.0.1:8000')
-  vi.stubEnv('DIP_API_KEY', 'org-scoped-private-test-key')
+  vi.stubEnv('DIP_API_KEY', 'test-org-scoped-key')
+  vi.stubEnv('RR_ACTOR_ASSERTION_SECRET', 'this-is-an-independent-core-rr-actor-signing-secret')
 })
 
-afterEach(() => {
-  vi.unstubAllEnvs()
-})
+afterEach(() => vi.unstubAllEnvs())
 
-describe('RR single-tenant operator session boundary', () => {
-  it('never enables the reference operator without explicit feature opt-in', () => {
-    vi.stubEnv('RR_REFERENCE_OPERATOR_ENABLED', 'false')
+describe('Zitadel-backed RR session boundary', () => {
+  it('fails closed without configured identity and operator subjects', () => {
+    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', '')
+    expect(operatorConfigured()).toBe(false)
+    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-1')
+    vi.stubEnv('ZITADEL_ISSUER', '')
     expect(operatorConfigured()).toBe(false)
   })
 
-  it('fails closed on unconfigured credentials', () => {
-    vi.stubEnv('RR_OPERATOR_SESSION_SECRET', '')
-    expect(operatorConfigured()).toBe(false)
-    expect(verifyOperatorPassword('reference-operator-long-secret')).toBe(false)
-    expect(verifyOperatorSession('v1.9999999999.bad')).toBe(false)
-  })
-
-  it('compares credentials and verifies short-lived HMAC cookies', () => {
+  it('derives operator permission from server allowlist, not an unverified browser field', () => {
     expect(operatorConfigured()).toBe(true)
-    expect(verifyOperatorPassword('reference-operator-long-secret')).toBe(true)
-    expect(verifyOperatorPassword('wrong-secret')).toBe(false)
-    const now = Date.UTC(2026, 9, 10, 12)
-    const session = createOperatorSession(now)
-    expect(verifyOperatorSession(session, now)).toBe(true)
-    expect(verifyOperatorSession(session, now + 9 * 60 * 60 * 1000)).toBe(false)
-    expect(verifyOperatorSession(session.slice(0, -1) + (session.endsWith('0') ? '1' : '0'), now)).toBe(false)
-    vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'rotated-independent-session-signing-key-123456')
-    expect(verifyOperatorSession(session, now)).toBe(false)
-    vi.stubEnv('RR_OPERATOR_SESSION_SECRET', 'long-independent-session-signing-key-123456789')
-    vi.stubEnv('RR_OPERATOR_PASSWORD', 'different-strong-operator-password')
-    expect(verifyOperatorSession(session, now)).toBe(false)
+    expect(isOperatorSubject('user-1')).toBe(true)
+    expect(isOperatorSubject('user-2')).toBe(false)
+    vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', '')
+    expect(operatorConfigured()).toBe(true)
+    expect(isOperatorSubject('user-1')).toBe(true)
+    const req = { nextUrl: new URL('https://observatory.qdip.ai/en/readiness-recovery') } as NextRequest
+    const response = NextResponse.json({})
+    attachSession(response, req, {
+      sub: 'user-1',
+      issuer: 'https://identity.example.test',
+      clientId: '394566248211424533',
+      expiresAt: Math.floor(Date.now() / 1000) + 300,
+    })
+    const cookie = response.cookies.get('qdip_oidc_session')?.value
+    expect(getQdipSession(cookie)?.sub).toBe('user-1')
+    const request = { cookies: { get: () => ({ value: cookie }) } } as unknown as NextRequest
+    expect(operatorAuthorized(request)).toBe(true)
+    vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'user-2')
+    expect(operatorAuthorized(request)).toBe(false)
+    expect(getQdipSession(cookie + 'tampered')).toBeNull()
   })
 
-  it('requires literal origin and TLS or local development transport', () => {
+  it('rejects open redirects and cross-origin mutation', () => {
+    expect(safeReturnTo('https://evil.example/path')).toBe('https://qdip.ai/en')
+    expect(safeReturnTo('https://observatory.qdip.ai/en')).toBe('https://observatory.qdip.ai/en')
     const make = (url: string, origin?: string) =>
       ({ nextUrl: new URL(url), headers: new Headers(origin ? { origin } : {}) }) as unknown as NextRequest
+    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://evil.example'))).toBe(false)
     expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://observatory.qdip.ai'))).toBe(
       true
     )
-    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://example.com'))).toBe(false)
-    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
     expect(safeTransport(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(true)
     expect(safeTransport(make('http://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
-    expect(safeTransport(make('http://observatory.localhost:3000/api/rr-operator/session'))).toBe(true)
     expect(safeTransport(make('https://qdip.ai/api/rr-operator/session'))).toBe(false)
+    // Next's request URL can be the internal listener; the original Host is authoritative.
+    const behindLocalProxy = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/kernel/preflight'),
+      headers: new Headers({
+        host: 'observatory.localhost:3000',
+        origin: 'http://observatory.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(behindLocalProxy)).toBe(true)
+    expect(sameOrigin(behindLocalProxy)).toBe(true)
+
+    const wrongHost = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/kernel/preflight'),
+      headers: new Headers({
+        host: 'attacker.localhost:3000',
+        origin: 'http://attacker.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(wrongHost)).toBe(false)
+    expect(sameOrigin(wrongHost)).toBe(false)
+
+    const originSpoofed = {
+      nextUrl: behindLocalProxy.nextUrl,
+      headers: new Headers({
+        host: 'observatory.localhost:3000',
+        origin: 'http://attacker.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(originSpoofed)).toBe(true)
+    expect(sameOrigin(originSpoofed)).toBe(false)
+
+    const behindTlsProxy = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/session'),
+      headers: new Headers({
+        host: 'observatory.qdip.ai',
+        origin: 'https://observatory.qdip.ai',
+        'x-forwarded-proto': 'https',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(behindTlsProxy)).toBe(true)
+    expect(sameOrigin(behindTlsProxy)).toBe(true)
+
+    const insecureProduction = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/session'),
+      headers: new Headers({ host: 'observatory.qdip.ai', origin: 'http://observatory.qdip.ai' }),
+    } as unknown as NextRequest
+    expect(safeTransport(insecureProduction)).toBe(false)
+    expect(sameOrigin(insecureProduction)).toBe(false)
   })
 })
