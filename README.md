@@ -70,7 +70,7 @@ Identity is verified from Zitadel's signed ID token (JWKS, issuer, audience,
 expiry and nonce); PKCE and signed state bind the login exchange.
 No Zitadel token or QDIP API key is sent to the browser.
 
-Set `QDIP_WEB_SESSION_SIGNING_SECRET` (random 32+ chars) **only on qdip-web**.
+Set `QDIP_AUTH_COOKIE_SECRET` (random 32+ chars) **only on qdip-web**.
 It signs the short-lived browser session and OIDC login-state cookie; qdip-core
 never reads or validates these cookies. Store the value in web hosting secrets.
 
