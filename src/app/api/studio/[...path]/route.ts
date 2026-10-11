@@ -28,7 +28,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 
   if (!sessionFromRequest(request)) {
-    return NextResponse.json({ error: 'Zitadel login required' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json(
+      { error: 'Zitadel login required' },
+      { status: 401, headers: { 'Cache-Control': 'no-store' } }
+    )
   }
 
   const { path } = await context.params

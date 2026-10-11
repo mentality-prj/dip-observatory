@@ -33,24 +33,29 @@ function configuredIssuer() {
 }
 
 function subjects(name: string) {
-  return new Set((process.env[name] ?? '').split(',').map((subject) => subject.trim()).filter(Boolean))
+  return new Set(
+    (process.env[name] ?? '')
+      .split(',')
+      .map((subject) => subject.trim())
+      .filter(Boolean)
+  )
 }
 
 export function oidcConfigured() {
   return Boolean(
     configuredIssuer() &&
-      (process.env.ZITADEL_CLIENT_ID ?? '').trim() &&
-      sharedSecret() &&
-      subjects('QDIP_AUTH_ALLOWED_SUBJECTS').size
+    (process.env.ZITADEL_CLIENT_ID ?? '').trim() &&
+    sharedSecret() &&
+    subjects('QDIP_AUTH_ALLOWED_SUBJECTS').size
   )
 }
 
 export function operatorConfigured() {
   return Boolean(
     oidcConfigured() &&
-      subjects('QDIP_AUTH_OPERATOR_SUBJECTS').size &&
-      (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
-      process.env.DIP_API_KEY?.trim()
+    subjects('QDIP_AUTH_OPERATOR_SUBJECTS').size &&
+    (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
+    process.env.DIP_API_KEY?.trim()
   )
 }
 
@@ -63,7 +68,9 @@ export function isOperatorSubject(sub: string) {
 }
 
 function mac(purpose: string, payload: string, secret: string) {
-  return createHmac('sha256', secret).update(purpose + ':' + payload).digest('base64url')
+  return createHmac('sha256', secret)
+    .update(purpose + ':' + payload)
+    .digest('base64url')
 }
 
 function seal(value: Session | Pending, purpose: string) {
@@ -149,10 +156,13 @@ export function startFlow(response: NextResponse, request: NextRequest, returnTo
 export function readFlow(request: NextRequest, state: string | null) {
   const flow = unseal<Pending>(request.cookies.get(FLOW_COOKIE)?.value, 'flow-v1')
   if (!flow || typeof state !== 'string' || !/^[\w-]{20,100}$/.test(state)) return null
-  if (!Number.isFinite(flow.issuedAt) || Date.now() - flow.issuedAt > FLOW_SECONDS * 1000 ||
-      flow.issuedAt > Date.now() + 30_000) return null
-  if (typeof flow.state !== 'string' || typeof flow.nonce !== 'string' ||
-      typeof flow.verifier !== 'string') return null
+  if (
+    !Number.isFinite(flow.issuedAt) ||
+    Date.now() - flow.issuedAt > FLOW_SECONDS * 1000 ||
+    flow.issuedAt > Date.now() + 30_000
+  )
+    return null
+  if (typeof flow.state !== 'string' || typeof flow.nonce !== 'string' || typeof flow.verifier !== 'string') return null
   const expected = Buffer.from(flow.state)
   const actual = Buffer.from(state)
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null
@@ -179,8 +189,11 @@ export async function discoverOidc(): Promise<OidcDiscovery> {
   if (!issuer) throw new Error('OIDC issuer missing or invalid')
   const doc = await readJson(issuer + '/.well-known/openid-configuration')
   if (doc.issuer !== issuer) throw new Error('OIDC issuer mismatch')
-  if (typeof doc.authorization_endpoint !== 'string' ||
-      typeof doc.token_endpoint !== 'string' || typeof doc.jwks_uri !== 'string')
+  if (
+    typeof doc.authorization_endpoint !== 'string' ||
+    typeof doc.token_endpoint !== 'string' ||
+    typeof doc.jwks_uri !== 'string'
+  )
     throw new Error('Invalid OIDC discovery document')
   return {
     issuer,
@@ -223,23 +236,37 @@ export async function verifyIdToken(token: string, flow: Pending, config: OidcDi
   const jwks = await readJson(config.jwks_uri)
   const keys = jwks.keys
   if (!Array.isArray(keys)) throw new Error('Invalid JWKS')
-  const jwk = keys.find((key) => key && typeof key === 'object' &&
-    key.kid === header.kid && key.kty === 'RSA' &&
-    (key.use === undefined || key.use === 'sig') &&
-    (key.alg === undefined || key.alg === 'RS256'))
+  const jwk = keys.find(
+    (key) =>
+      key &&
+      typeof key === 'object' &&
+      key.kid === header.kid &&
+      key.kty === 'RSA' &&
+      (key.use === undefined || key.use === 'sig') &&
+      (key.alg === undefined || key.alg === 'RS256')
+  )
   if (!jwk) throw new Error('Untrusted ID token signing key')
   const publicKey = createPublicKey({ key: jwk as JsonWebKey, format: 'jwk' })
-  if (!verify('RSA-SHA256', Buffer.from(parts[0] + '.' + parts[1]), publicKey,
-    Buffer.from(parts[2], 'base64url'))) throw new Error('Invalid ID token signature')
+  if (!verify('RSA-SHA256', Buffer.from(parts[0] + '.' + parts[1]), publicKey, Buffer.from(parts[2], 'base64url')))
+    throw new Error('Invalid ID token signature')
   const clientId = process.env.ZITADEL_CLIENT_ID?.trim()
   const aud = claims.aud
   const audiences = typeof aud === 'string' ? [aud] : Array.isArray(aud) ? aud : []
   const now = Math.floor(Date.now() / 1000)
-  if (!clientId || !audiences.includes(clientId) || (audiences.length > 1 && claims.azp !== clientId) ||
-      claims.iss !== config.issuer || claims.nonce !== flow.nonce ||
-      typeof claims.sub !== 'string' || !claims.sub ||
-      typeof claims.exp !== 'number' || claims.exp <= now ||
-      typeof claims.iat !== 'number' || claims.iat > now + 60) throw new Error('Invalid ID token claims')
+  if (
+    !clientId ||
+    !audiences.includes(clientId) ||
+    (audiences.length > 1 && claims.azp !== clientId) ||
+    claims.iss !== config.issuer ||
+    claims.nonce !== flow.nonce ||
+    typeof claims.sub !== 'string' ||
+    !claims.sub ||
+    typeof claims.exp !== 'number' ||
+    claims.exp <= now ||
+    typeof claims.iat !== 'number' ||
+    claims.iat > now + 60
+  )
+    throw new Error('Invalid ID token claims')
   return { sub: claims.sub, issuer: config.issuer, clientId, expiresAt: Math.min(claims.exp, now + SESSION_SECONDS) }
 }
 
@@ -252,25 +279,36 @@ export async function exchangeCode(code: string, flow: Pending, config: OidcDisc
     code_verifier: flow.verifier,
   })
   const payload = await readJson(config.token_endpoint, {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
   })
   if (typeof payload.id_token !== 'string') throw new Error('OIDC ID token missing')
   return verifyIdToken(payload.id_token, flow, config)
 }
 
 export function attachSession(response: NextResponse, request: NextRequest, session: Session) {
-  response.cookies.set(SESSION_COOKIE, seal(session, 'session-v1'),
-    cookieOptions(request, Math.max(0, session.expiresAt - Math.floor(Date.now() / 1000)), true))
+  response.cookies.set(
+    SESSION_COOKIE,
+    seal(session, 'session-v1'),
+    cookieOptions(request, Math.max(0, session.expiresAt - Math.floor(Date.now() / 1000)), true)
+  )
 }
 
 export function getQdipSession(value: string | undefined): Session | null {
   if (!oidcConfigured()) return null
   const session = unseal<Session>(value, 'session-v1')
-  if (!session || typeof session.sub !== 'string' ||
-      !subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(session.sub) ||
-      session.issuer !== configuredIssuer() || session.clientId !== process.env.ZITADEL_CLIENT_ID ||
-      typeof session.expiresAt !== 'number' || session.expiresAt <= Math.floor(Date.now() / 1000) ||
-      session.expiresAt > Math.floor(Date.now() / 1000) + SESSION_SECONDS) return null
+  if (
+    !session ||
+    typeof session.sub !== 'string' ||
+    !subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(session.sub) ||
+    session.issuer !== configuredIssuer() ||
+    session.clientId !== process.env.ZITADEL_CLIENT_ID ||
+    typeof session.expiresAt !== 'number' ||
+    session.expiresAt <= Math.floor(Date.now() / 1000) ||
+    session.expiresAt > Math.floor(Date.now() / 1000) + SESSION_SECONDS
+  )
+    return null
   return session
 }
 

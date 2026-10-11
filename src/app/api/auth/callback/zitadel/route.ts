@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  attachSession, clearFlow, discoverOidc, exchangeCode, isAllowedSubject, oidcConfigured, onSiteOrigin, readFlow, safeReturnTo,
+  attachSession,
+  clearFlow,
+  discoverOidc,
+  exchangeCode,
+  isAllowedSubject,
+  oidcConfigured,
+  onSiteOrigin,
+  readFlow,
+  safeReturnTo,
 } from '@/lib/qdip-oidc'
 
 export const runtime = 'nodejs'

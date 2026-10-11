@@ -8,17 +8,35 @@ const issuer = 'https://identity.example.test'
 const clientId = '394566248211424533'
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'kid-1', use: 'sig', alg: 'RS256' }
-const flow = { state: 'a'.repeat(40), nonce: 'nonce-123', verifier: 'verifier-123', returnTo: 'https://qdip.ai/en', issuedAt: Date.now() }
-const config = { issuer, authorization_endpoint: issuer + '/oauth/v2/authorize', token_endpoint: issuer + '/oauth/v2/token', jwks_uri: issuer + '/oauth/v2/keys' }
+const flow = {
+  state: 'a'.repeat(40),
+  nonce: 'nonce-123',
+  verifier: 'verifier-123',
+  returnTo: 'https://qdip.ai/en',
+  issuedAt: Date.now(),
+}
+const config = {
+  issuer,
+  authorization_endpoint: issuer + '/oauth/v2/authorize',
+  token_endpoint: issuer + '/oauth/v2/token',
+  jwks_uri: issuer + '/oauth/v2/keys',
+}
 function token(changes: Record<string, unknown> = {}) {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'kid-1' })).toString('base64url')
-  const payload = Buffer.from(JSON.stringify({
-    iss: issuer, aud: clientId, sub: 'user-1', nonce: flow.nonce,
-    iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 1200,
-    ...changes,
-  })).toString('base64url')
+  const payload = Buffer.from(
+    JSON.stringify({
+      iss: issuer,
+      aud: clientId,
+      sub: 'user-1',
+      nonce: flow.nonce,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 1200,
+      ...changes,
+    })
+  ).toString('base64url')
   const input = header + '.' + payload
-  const sign = createSign('RSA-SHA256'); sign.update(input)
+  const sign = createSign('RSA-SHA256')
+  sign.update(input)
   return input + '.' + sign.sign(privateKey).toString('base64url')
 }
 beforeEach(() => {
@@ -26,13 +44,18 @@ beforeEach(() => {
   vi.stubEnv('ZITADEL_CLIENT_ID', clientId)
   vi.stubEnv('QDIP_AUTH_COOKIE_SECRET', 'long-cookie-secret-with-a-minimum-of-32-characters')
   vi.stubEnv('QDIP_AUTH_ALLOWED_SUBJECTS', 'user-1')
-  vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
-    ok: true,
-    text: async () => JSON.stringify(String(url).endsWith('openid-configuration') ?
-      config : { keys: [jwk] }),
-  })))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => ({
+      ok: true,
+      text: async () => JSON.stringify(String(url).endsWith('openid-configuration') ? config : { keys: [jwk] }),
+    }))
+  )
 })
-afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals() })
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
+})
 
 describe('QDIP Zitadel OIDC PKCE', () => {
   it('requires an issuer, a client ID, an allowlist and a server-side secret', () => {

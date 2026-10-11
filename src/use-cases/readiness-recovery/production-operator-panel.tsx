@@ -212,7 +212,8 @@ export function RRProductionOperatorPanel() {
           <h2 className="text-xl font-semibold text-sky-200">Kernel-backed RR — restricted reference operator</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
             Restricted, authenticated reference workflow. Import a normalized RR execution request. Only QDIP Kernel
-            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. Authentication uses Zitadel OIDC; Kernel permissions are still enforced by the server.
+            schedules jobs; stochastic Pareto scenarios are not convertible to this contract. Authentication uses
+            Zitadel OIDC; Kernel permissions are still enforced by the server.
           </p>
         </div>
         {session.authenticated && (
@@ -441,8 +442,8 @@ export function RRProductionOperatorPanel() {
         </p>
       )}
       <p className="mt-5 text-xs text-slate-400">
-        Zitadel identity with an explicitly authorized RR operator allowlist. Single-organization reference only. All operational requests are authorized server-side; no
-        privileged backend key is sent to the browser.
+        Zitadel identity with an explicitly authorized RR operator allowlist. Single-organization reference only. All
+        operational requests are authorized server-side; no privileged backend key is sent to the browser.
       </p>
     </section>
   )

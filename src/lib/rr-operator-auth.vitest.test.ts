@@ -35,7 +35,9 @@ describe('Zitadel-backed RR session boundary', () => {
     const req = { nextUrl: new URL('https://observatory.qdip.ai/en/readiness-recovery') } as NextRequest
     const response = NextResponse.json({})
     attachSession(response, req, {
-      sub: 'user-1', issuer: 'https://identity.example.test', clientId: '394566248211424533',
+      sub: 'user-1',
+      issuer: 'https://identity.example.test',
+      clientId: '394566248211424533',
       expiresAt: Math.floor(Date.now() / 1000) + 300,
     })
     const cookie = response.cookies.get('qdip_oidc_session')?.value
@@ -53,7 +55,9 @@ describe('Zitadel-backed RR session boundary', () => {
     const make = (url: string, origin?: string) =>
       ({ nextUrl: new URL(url), headers: new Headers(origin ? { origin } : {}) }) as unknown as NextRequest
     expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://evil.example'))).toBe(false)
-    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://observatory.qdip.ai'))).toBe(true)
+    expect(sameOrigin(make('https://observatory.qdip.ai/api/rr-operator/session', 'https://observatory.qdip.ai'))).toBe(
+      true
+    )
     expect(safeTransport(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(true)
     expect(safeTransport(make('http://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
     expect(safeTransport(make('https://qdip.ai/api/rr-operator/session'))).toBe(false)
