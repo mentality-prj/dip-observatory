@@ -36,7 +36,7 @@ const projection = {
   source_system: request.source.source_system,
   source_snapshot_id: request.source.snapshot_id,
   source_version: request.source.source_version,
-  payload_digest: 'abcdef',
+  payload_digest: 'a'.repeat(64),
   change_kind: 'INITIAL',
   predecessor_execution_id: null,
   outcome_kind: 'OPTIMAL_DECISION',
@@ -108,6 +108,8 @@ test('server-owned preflight and stored evidence are rendered without any browse
   await page.getByRole('button', { name: 'Create execution', exact: true }).click()
   await expect(page.getByTestId('rr-kernel-evidence')).toContainText('snapshot-001')
   await expect(page.getByTestId('rr-kernel-evidence')).toContainText('job-1')
+  await expect(page.getByTestId('rr-decision-first')).toBeVisible()
+  await expect(page.getByTestId('rr-kernel-schedule')).toBeVisible()
   expect(sentInput).toEqual(request)
 })
 
