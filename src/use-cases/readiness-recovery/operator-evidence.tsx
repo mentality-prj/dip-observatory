@@ -33,6 +33,17 @@ export type KernelRRPresentation = {
 
 const copy = {
   en: {
+    metric: 'Kernel metric provenance',
+    total: 'Input jobs',
+    scheduled: 'Scheduled jobs',
+    technicians: 'Available technicians',
+    selectedDonorCount: 'Selected donor IDs',
+    src: 'Metric origin',
+    unit: 'Units',
+    model: 'Model-verified projection; not field-verified',
+    uncertaintyNote: 'Probability and confidence intervals: not computed',
+    edge: 'Economic benefit or optimizer superiority: not established',
+    jobunits: 'Job counts; slot values are discrete model slots',
     title: 'Kernel evidence',
     status: 'Kernel status',
     execution: 'Execution',
@@ -53,6 +64,17 @@ const copy = {
     warning: 'This view does not issue real-world work orders. Backend authority is not field acceptance.',
   },
   uk: {
+    metric: 'Походження метрик Kernel',
+    total: 'Роботи у вхідних даних',
+    scheduled: 'Заплановані роботи',
+    technicians: 'Доступні спеціалісти',
+    selectedDonorCount: 'Вибрані донори',
+    src: 'Джерело метрик',
+    unit: 'Одиниці',
+    model: 'Перевірено в межах моделі, не в реальних умовах',
+    uncertaintyNote: 'Ймовірність та довірчі інтервали: не обчислювалися',
+    edge: 'Економічна вигода та перевага оптимізатора: не доведені',
+    jobunits: 'Кількість робіт; час вимірюється дискретними слотами моделі',
     title: 'Докази Kernel',
     status: 'Статус Kernel',
     execution: 'Виконання',
@@ -73,6 +95,17 @@ const copy = {
     warning: 'Інтерфейс не видає реальних ремонтних наказів. Авторитет Kernel не означає польового приймання.',
   },
   pl: {
+    metric: 'Pochodzenie metryk Kernel',
+    total: 'Zadania wejściowe',
+    scheduled: 'Zaplanowane zadania',
+    technicians: 'Dostępni technicy',
+    selectedDonorCount: 'Wybrani dawcy',
+    src: 'Źródło metryk',
+    unit: 'Jednostki',
+    model: 'Wynik zweryfikowany w modelu, nie w terenie',
+    uncertaintyNote: 'Prawdopodobieństwo i przedziały ufności: nie obliczono',
+    edge: 'Korzyść ekonomiczna i przewaga optymalizatora: niepotwierdzone',
+    jobunits: 'Liczba zadań; czas jest wyrażony w dyskretnych slotach modelu',
     title: 'Dowody Kernel',
     status: 'Status Kernel',
     execution: 'Wykonanie',
@@ -129,6 +162,7 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
     typeof v.job_count === 'number' &&
     Number.isSafeInteger(v.job_count) &&
     v.job_count > 0 &&
+    v.scheduled_job_count <= v.job_count &&
     typeof v.technician_count === 'number' &&
     Number.isSafeInteger(v.technician_count) &&
     v.technician_count > 0 &&
@@ -188,6 +222,37 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
           {t.jobs}: <strong>{record.scheduled_job_count}</strong>
         </span>
       </div>
+      <section className="mt-4 border border-sky-400/20 p-3" data-testid="rr-metric-provenance">
+        <h5 className="font-semibold text-sky-200">{t.metric}</h5>
+        <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            [t.total, record.job_count],
+            [t.scheduled, record.scheduled_job_count],
+            [t.technicians, record.technician_count],
+            [t.selectedDonorCount, record.selected_donor_ids.length],
+          ].map(([label, value]) => (
+            <div key={label} className="border-l border-white/20 pl-3">
+              <dt className="text-xs text-slate-400">{label}</dt>
+              <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <dl className="mt-3 text-xs text-slate-300">
+          <div>
+            <dt className="inline font-semibold">{t.src}: </dt>
+            <dd className="inline">
+              {record.source_system} / {record.source_version} · {record.computation_authority}
+            </dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">{t.unit}: </dt>
+            <dd className="inline">{t.jobunits}</dd>
+          </div>
+        </dl>
+        <p className="mt-2 text-xs text-amber-200">{t.model}</p>
+        <p className="mt-1 text-xs text-slate-300">{t.uncertaintyNote}</p>
+        <p className="mt-1 text-xs text-slate-300">{t.edge}</p>
+      </section>
       {record.scheduled_jobs.length ? (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm" data-testid="rr-kernel-schedule">
