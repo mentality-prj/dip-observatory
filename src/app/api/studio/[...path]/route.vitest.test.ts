@@ -3,8 +3,8 @@ import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/qdip-oidc', () => ({
-  sessionFromRequest: () => ({ sub: 'studio-only' }),
-  isStudioSubject: (subject: string) => subject === 'studio-only',
+  sessionFromRequest: () => ({ sub: 'studio-only', roles: ['studio'] }),
+  canAccessStudio: (session: { roles: string[] }) => session.roles.includes('studio'),
 }))
 
 import { GET, POST } from './route'
