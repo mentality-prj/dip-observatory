@@ -55,7 +55,7 @@ function token(changes: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', issuer)
   vi.stubEnv('ZITADEL_CLIENT_ID', clientId)
-  vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'long-cookie-secret-with-a-minimum-of-32-characters')
+  vi.stubEnv('QDIP_AUTH_COOKIE_SECRET', 'long-cookie-secret-with-a-minimum-of-32-characters')
   vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', projectId)
   vi.stubEnv('ZITADEL_QDIP_ORGANIZATION_ID', organizationId)
   vi.stubEnv('QDIP_STUDIO_ZITADEL_ROLE_KEY', 'studio')
