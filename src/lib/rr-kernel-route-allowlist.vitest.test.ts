@@ -9,7 +9,9 @@ describe('Kernel RR proxy allowlist', () => {
     expect(allowedKernelPath(['executions', 'rr-001', 'replay-verification'], 'GET')).toBe(true)
     expect(allowedKernelPath(['decisions', 'civil-case', 'history'], 'GET')).toBe(true)
     expect(allowedKernelPath(['decisions', 'civil-case', 'history-integrity'], 'GET')).toBe(true)
-    expect(allowedKernelPath(['decisions', 'civil-case', 'history', 'export'], 'GET')).toBe(true)
+    expect(allowedKernelPath(['decisions', 'civil-case', 'history', 'verified-export-page'], 'GET')).toBe(true)
+    expect(allowedKernelPath(['decisions', 'civil-case', 'history', 'export'], 'GET')).toBe(false)
+    expect(allowedKernelPath(['decisions', 'civil-case', 'history', 'export-complete'], 'GET')).toBe(false)
   })
 
   it('rejects arbitrary endpoints, traversal, extra segments and privilege escalation', () => {
