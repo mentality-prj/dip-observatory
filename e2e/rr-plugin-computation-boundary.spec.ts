@@ -113,28 +113,61 @@ test('server-owned preflight and stored evidence are rendered without any browse
   expect(sentInput).toEqual(request)
 })
 
-test('complete-history download is issued only after backend verification', async ({ page }) => {
-  await page.route('**/api/rr-operator/kernel/preflight', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(preflight) })
-  )
-  await page.route('**/api/rr-operator/kernel/decisions/plugin-only-decision/history/export-complete', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
+test('transport-only multi-page export preserves server attestation and page order', async ({ page }) => {
+  await page.goto(URL)
+  await page.getByLabel('Decision ID').fill(request.payload.decision_id)
+  const path = '**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*'
+  const calls: string[] = []
+  await page.route(path, (route) => {
+    const next = new URL(route.request().url())
+    const cursor = next.searchParams.get('cursor')
+    calls.push(cursor ?? 'start')
+    const final = cursor === 'rr-exec-001'
+    void route.fulfill({
+      status: 200, contentType: 'application/json',
       body: JSON.stringify({
         schema_version: 'readiness-recovery.presentation.v1',
         decision_id: request.payload.decision_id,
-        head_execution_id: request.execution_id,
-        executions: [{ result: { workflow: { execution_id: request.execution_id } } }],
-        export_complete: true,
+        head_execution_id: 'rr-exec-002',
+        history_manifest_digest: 'a'.repeat(64),
+        executions: [{ result: { workflow: { execution_id: final ? 'rr-exec-002' : 'rr-exec-001' } } }],
+        next_cursor: final ? null : 'rr-exec-001',
+        export_complete: final,
         history_verified: true,
       }),
     })
-  )
-  await page.goto(URL)
-  await page.getByLabel('Decision ID').fill(request.payload.decision_id)
+  })
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Export complete history' }).click()
   const file = await download
   expect(file.suggestedFilename()).toBe('rr-history-plugin-only-decision.json')
+  expect(calls).toEqual(['start', 'rr-exec-001'])
+  await expect(page.getByText('"history_verified": true', { exact: false })).toBeVisible()
+})
+
+test('changed decision head refuses complete download', async ({ page }) => {
+  await page.goto(URL)
+  await page.getByLabel('Decision ID').fill(request.payload.decision_id)
+  await page.route('**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*',
+    (route) => {
+      const cursor = new URL(route.request().url()).searchParams.get('cursor')
+      void route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({
+          schema_version: 'readiness-recovery.presentation.v1',
+          decision_id: request.payload.decision_id,
+          head_execution_id: cursor ? 'new-head' : 'original-head',
+          history_manifest_digest: 'b'.repeat(64),
+          executions: [{ result: { workflow: { execution_id: cursor ? 'rr-2' : 'rr-1' } } }],
+          next_cursor: cursor ? null : 'rr-1',
+          export_complete: Boolean(cursor),
+          history_verified: true,
+        }),
+      })
+    })
+  const downloads: string[] = []
+  page.on('download', (file) => downloads.push(file.suggestedFilename()))
+  await page.getByRole('button', { name: 'Export complete history' }).click()
+  await expect(page.getByRole('alert')).toContainText('Kernel decision head changed during export')
+  expect(downloads).toEqual([])
 })
