@@ -11,7 +11,7 @@ export function GET(request: NextRequest) {
   // surface allowlist, never trust x-forwarded-host.
   const host = request.headers.get('host') ?? request.nextUrl.host
   if (
-    /[,\\s@/?#]/.test(host) ||
+    /[,\s@/?#]/.test(host) ||
     !(['site', 'studio', 'observatory'] as const).some((surface) => isSurfaceHost(surface, host))
   )
     return NextResponse.json({ error: 'Invalid host' }, { status: 403 })
