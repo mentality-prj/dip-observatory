@@ -75,6 +75,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const requestGuard = useRef(new OperatorRequestGuard())
   const activeController = useRef<AbortController | null>(null)
   const fileRevision = useRef(0)
+  const inputRevision = useRef(0)
   const [view, setView] = useState<KernelView>(() => defaultKernelView())
   const [viewReady, setViewReady] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
@@ -86,6 +87,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [lastResult, setLastResult] = useState<unknown>(null)
   const [presentation, setPresentation] = useState<KernelRRPresentation | null>(null)
   const [preflight, setPreflight] = useState<KernelPreflight | null>(null)
+  const [validatedBody, setValidatedBody] = useState<string | null>(null)
   const [preflightStatus, setPreflightStatus] = useState('')
   const [operation, setOperation] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -131,6 +133,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setLastResult(null)
     setPresentation(null)
     setPreflight(null)
+    setValidatedBody(null)
     setPreflightStatus('Input changed; waiting for Kernel validation')
     setOperation('')
     setErrorKind(null)
@@ -161,8 +164,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     if (!session?.authenticated) return
     const controller = new AbortController()
     const currentBody = requestBody
+    const currentRevision = inputRevision.current
     const timeout = setTimeout(() => {
+      if (currentRevision !== inputRevision.current) return
       setPreflight(null)
+      setValidatedBody(null)
       setPreflightStatus('Checking Kernel contract…')
       void fetch('/api/rr-operator/kernel/preflight', {
         method: 'POST',
@@ -173,14 +179,16 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       })
         .then(checkedJson)
         .then((value) => {
-          if (controller.signal.aborted) return
+          if (controller.signal.aborted || currentRevision !== inputRevision.current) return
           if (!isKernelPreflight(value)) throw new Error('Unsupported Kernel preflight response')
           setPreflight(value)
+          setValidatedBody(currentBody)
           setPreflightStatus('')
         })
         .catch((reason: unknown) => {
-          if (controller.signal.aborted) return
+          if (controller.signal.aborted || currentRevision !== inputRevision.current) return
           setPreflight(null)
+          setValidatedBody(null)
           setPreflightStatus(reason instanceof Error ? reason.message : 'Preflight rejected')
         })
     }, 250)
@@ -211,7 +219,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setError(null)
     setErrorKind(null)
     setLastResult(null)
-    setPresentation(null)
+    if (method !== 'GET') setPresentation(null)
     try {
       const response = await fetch(url, {
         method,
@@ -222,8 +230,6 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       })
       const data = await checkedJson(response)
       if (!requestGuard.current.current(epoch)) return
-      setLastResult(data)
-      setOperation(label)
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
         if (
@@ -245,6 +251,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         setExecutionId(ids.executionId)
         setDecisionId(ids.decisionId)
       }
+      setLastResult(data)
+      setOperation(label)
       if (method === 'POST' && (label === 'Create execution' || label === 'Replan execution')) {
         const { executionId: id } = parsedExecutionIds(data)
         if (id) {
@@ -276,47 +284,83 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
 
   async function exportComplete() {
     const { epoch, signal } = startOperation()
-    const exportedDecisionId = decisionId
+    const id = decisionId
     setBusy(true)
     setError(null)
-    setPresentation(null)
     setLastResult(null)
     try {
-      const response: unknown = await checkedJson(
-        await fetch(`${prefix}/decisions/${encodeURIComponent(exportedDecisionId)}/history/export-complete`, {
-          cache: 'no-store',
-          signal,
-        })
-      )
-      if (!requestGuard.current.current(epoch)) return
-      // Only accept the backend's attested, complete response; never aggregate
-      // pages, infer a decision head, or compute history integrity in web.
-      if (
-        !response ||
-        typeof response !== 'object' ||
-        !('export_complete' in response) ||
-        response.export_complete !== true ||
-        !('history_verified' in response) ||
-        response.history_verified !== true ||
-        !('decision_id' in response) ||
-        response.decision_id !== exportedDecisionId ||
-        !('executions' in response) ||
-        !Array.isArray(response.executions)
-      ) {
-        throw new Error('Kernel did not attest complete decision history')
+      const records: unknown[] = []
+      let cursor: string | null = null
+      let expectedHead: string | null = null
+      let manifest: string | null = null
+      let complete = false
+      // Pagination here is purely transport assembly. Every page receives
+      // a fresh full-chain attestation and is bounded by qdip-core.
+      for (let index = 0; index < 1000; index++) {
+        const params = new URLSearchParams()
+        if (cursor) params.set('cursor', cursor)
+        if (expectedHead) params.set('expected_head', expectedHead)
+        const data: unknown = await checkedJson(await fetch(
+          `${prefix}/decisions/${encodeURIComponent(id)}/history/verified-export-page?${params.toString()}`,
+          { cache: 'no-store', signal }
+        ))
+        if (!requestGuard.current.current(epoch)) return
+        if (!data || typeof data !== 'object' || !('schema_version' in data) ||
+          data.schema_version !== 'readiness-recovery.presentation.v1' ||
+          !('history_verified' in data) || data.history_verified !== true ||
+          !('decision_id' in data) || data.decision_id !== id ||
+          !('head_execution_id' in data) || typeof data.head_execution_id !== 'string' ||
+          !('history_manifest_digest' in data) || typeof data.history_manifest_digest !== 'string' ||
+          !/^[a-f0-9]{64}$/.test(data.history_manifest_digest) ||
+          !('executions' in data) || !Array.isArray(data.executions) ||
+          !('export_complete' in data) || typeof data.export_complete !== 'boolean' ||
+          !('next_cursor' in data) ||
+          !(typeof data.next_cursor === 'string' || data.next_cursor === null)) {
+          throw new Error('Kernel did not attest the complete RR export page')
+        }
+        if (expectedHead !== null && data.head_execution_id !== expectedHead)
+          throw new Error('Kernel decision head changed during export')
+        if (manifest !== null && data.history_manifest_digest !== manifest)
+          throw new Error('Kernel history manifest changed during export')
+        expectedHead = data.head_execution_id
+        manifest = data.history_manifest_digest
+        if (!data.executions.length) throw new Error('Kernel returned an empty verified export page')
+        records.push(...data.executions)
+        if (data.export_complete) {
+          if (data.next_cursor !== null) throw new Error('Final RR export has a continuation cursor')
+          complete = true
+          break
+        }
+        if (!data.next_cursor || data.next_cursor === cursor)
+          throw new Error('Kernel export cursor did not advance')
+        cursor = data.next_cursor
       }
-      setOperation('Complete history export')
-      setLastResult(response)
-      const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' })
+      if (!complete || !manifest || !expectedHead) throw new Error('RR export has not been completely verified')
+      if (!requestGuard.current.current(epoch)) return
+      const document = {
+        schema_version: 'readiness-recovery.presentation.v1',
+        decision_id: id,
+        head_execution_id: expectedHead,
+        history_manifest_digest: manifest,
+        executions: records,
+        export_complete: true,
+        history_verified: true,
+      }
+      const blob = new Blob([JSON.stringify(document)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       try {
         const anchor = document.createElement('a')
         anchor.href = url
-        anchor.download = `rr-history-${exportedDecisionId}.json`
+        anchor.download = `rr-history-${id}.json`
         anchor.click()
-      } finally {
-        URL.revokeObjectURL(url)
-      }
+      } finally { URL.revokeObjectURL(url) }
+      setOperation('Complete history export')
+      // Keep only the attestation manifest in the visible panel, not
+      // potentially many megabytes of historical payloads.
+      setLastResult({
+        decision_id: id, head_execution_id: expectedHead,
+        history_manifest_digest: manifest, export_complete: true, history_verified: true,
+      })
     } catch (reason) {
       operationFailed(reason, epoch)
     } finally {
@@ -532,6 +576,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                     if (fileRevision.current !== revision) return
                     try {
                       const parsed: unknown = JSON.parse(value)
+                      inputRevision.current += 1
                       setRequestBody(JSON.stringify(parsed, null, 2))
                       setError(null)
                     } catch (reason) {
@@ -548,6 +593,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               value={requestBody}
               onChange={(event) => {
                 fileRevision.current += 1
+                inputRevision.current += 1
                 invalidateOutcome()
                 setRequestBody(event.target.value)
               }}
@@ -567,7 +613,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </p>
             <button
               type="button"
-              disabled={busy || !preflight}
+              disabled={busy || !preflight || validatedBody !== requestBody}
               onClick={() => void execute('Create execution', `${prefix}/executions`, 'POST', requestBody)}
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
