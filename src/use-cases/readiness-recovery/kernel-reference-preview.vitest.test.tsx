@@ -25,9 +25,10 @@ describe('public RR reference is useful without a second solver', () => {
     expect(kernel).toContain('<KernelReferencePreview locale={locale} />')
     expect(kernel).toContain('<RRProductionOperatorPanel locale={locale} />')
     expect(operator).toContain('data-testid="rr-decision-first"')
-    expect(operator).toContain(
-      '<OperatorEvidence locale={locale} record={presentation} visibleMetrics={view.metrics} />'
-    )
+    expect(operator).toContain('visibleMetrics={view.metrics}')
+    expect(operator).toContain('scheduleSearch={scheduleSearch}')
+    expect(operator).toContain('<RRExecutionComparison')
+    expect(operator).toContain('loadExistingPresentation()')
     expect(operator.indexOf('data-testid="rr-decision-first"')).toBeLessThan(
       operator.indexOf('data-testid="rr-operator-preferences"')
     )
