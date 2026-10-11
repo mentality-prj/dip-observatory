@@ -94,28 +94,48 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     expect(studio.organizationId).toBe(organizationId)
     expect(canOperateRr(studio)).toBe(false)
 
-    const rr = await verifyIdToken(token({ sub: 'user-1', [roleClaim]: { rr_operator: { [organizationId]: 'qdip.example.test' } } }), flow, config)
+    const rr = await verifyIdToken(
+      token({ sub: 'user-1', [roleClaim]: { rr_operator: { [organizationId]: 'qdip.example.test' } } }),
+      flow,
+      config
+    )
     expect(canAccessStudio(rr)).toBe(false)
     expect(canOperateRr(rr)).toBe(true)
 
-    const both = await verifyIdToken(token({ [roleClaim]: {
-      studio: { [organizationId]: 'qdip.example.test' },
-      rr_operator: { [organizationId]: 'qdip.example.test' },
-    } }), flow, config)
+    const both = await verifyIdToken(
+      token({
+        [roleClaim]: {
+          studio: { [organizationId]: 'qdip.example.test' },
+          rr_operator: { [organizationId]: 'qdip.example.test' },
+        },
+      }),
+      flow,
+      config
+    )
     expect(both.roles).toEqual(['studio', 'rr_operator'])
 
-    const otherOrg = await verifyIdToken(token({ [roleClaim]: {
-      studio: { '111111111': 'external.example.test' },
-    } }), flow, config)
+    const otherOrg = await verifyIdToken(
+      token({
+        [roleClaim]: { studio: { '111111111': 'external.example.test' } },
+      }),
+      flow,
+      config
+    )
     expect(isAllowedSession(otherOrg)).toBe(false)
 
-    const otherProject = await verifyIdToken(token({
-      [roleClaim]: undefined,
-      'urn:zitadel:iam:org:project:999999999:roles': {
-        studio: { [organizationId]: 'qdip.example.test' },
-      },
-      'urn:zitadel:iam:org:project:roles': { studio: { [organizationId]: 'qdip.example.test' } },
-    }), flow, config)
+    const otherProject = await verifyIdToken(
+      token({
+        [roleClaim]: undefined,
+        'urn:zitadel:iam:org:project:999999999:roles': {
+          studio: { [organizationId]: 'qdip.example.test' },
+        },
+        'urn:zitadel:iam:org:project:roles': {
+          studio: { [organizationId]: 'qdip.example.test' },
+        },
+      }),
+      flow,
+      config
+    )
     expect(isAllowedSession(otherProject)).toBe(false)
 
     await expect(verifyIdToken(token({ [roleClaim]: ['studio'] }), flow, config)).rejects.toThrow()
