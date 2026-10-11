@@ -14,8 +14,8 @@ const request = {
     decision_id: 'plugin-only-decision',
     horizon_slots: 6,
     workshop_capacity: 2,
-    jobs: [{}],
-    technicians: [{}],
+    jobs: [{ id: 'job-1', duration_slots: 1, required_skills: ['mechanical'], deadline_slot: 4, readiness_gain_units: 100 }],
+    technicians: [{ id: 'tech-1', skills: ['mechanical'], available_slots: [0, 1, 2, 3, 4, 5] }],
   },
 }
 const preflight = {
@@ -24,6 +24,7 @@ const preflight = {
   execution_id: request.execution_id,
   decision_id: request.payload.decision_id,
   source_snapshot_id: request.source.snapshot_id,
+  payload_digest: 'a'.repeat(64),
   job_count: 1,
   technician_count: 1,
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF',
@@ -93,7 +94,7 @@ test('server-owned preflight and stored evidence are rendered without any browse
         result: {
           workflow: {
             execution_id: request.execution_id,
-            ingestion: { payload: { decision_id: request.payload.decision_id } },
+            ingestion: { payload_digest: 'a'.repeat(64), payload: { decision_id: request.payload.decision_id } },
           },
         },
       }),
