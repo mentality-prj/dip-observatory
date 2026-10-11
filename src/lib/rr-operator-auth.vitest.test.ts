@@ -36,6 +36,8 @@ describe('Zitadel-backed RR session boundary', () => {
     attachSession(response, req, {
       sub: 'user-1',
       roles: ['rr_operator'],
+      projectId: '123456789',
+      organizationId: '987654321',
       issuer: 'https://identity.example.test',
       clientId: '394566248211424533',
       expiresAt: Math.floor(Date.now() / 1000) + 300,
@@ -49,6 +51,8 @@ describe('Zitadel-backed RR session boundary', () => {
     attachSession(studioResponse, req, {
       sub: 'user-1',
       roles: ['studio'],
+      projectId: '123456789',
+      organizationId: '987654321',
       issuer: 'https://identity.example.test',
       clientId: '394566248211424533',
       expiresAt: Math.floor(Date.now() / 1000) + 300,
