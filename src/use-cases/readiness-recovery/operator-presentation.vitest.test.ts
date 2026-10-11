@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   defaultKernelView,
+  templateKernelView,
   parseKernelView,
   moveKernelPanel,
   readKernelView,
@@ -15,6 +16,17 @@ describe('Kernel operator presentation stays private-data free', () => {
     expect(parseKernelView({ ...view, decisionId: 'private' })).toEqual(defaultKernelView())
     expect(parseKernelView({ ...view, panels: ['EXECUTE', 'EXECUTE', 'EVIDENCE'] })).toEqual(defaultKernelView())
   })
+  it('applies operator-friendly presets without changing the decision contract', () => {
+    const business = templateKernelView('BUSINESS')
+    const analyst = templateKernelView('ANALYST')
+    expect(business.panels).toEqual(['EVIDENCE', 'EXECUTE', 'REPLAN'])
+    expect(analyst.panels).toEqual(['EXECUTE', 'REPLAN', 'EVIDENCE'])
+    expect(business.version).toBe(1)
+    expect(business).not.toHaveProperty('decisionId')
+    expect(business).not.toHaveProperty('solver')
+    expect(business).not.toHaveProperty('policy')
+  })
+
   it('restores and fails closed without localStorage availability', () => {
     let raw = ''
     const storage = {
