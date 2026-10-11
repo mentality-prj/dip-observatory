@@ -5,10 +5,7 @@ import { isKernelRRPresentation, type KernelRRPresentation } from './operator-ev
  * Descriptive comparison of two distinct, persisted Kernel presentations.
  * This is neither a new optimizer nor a claim of plan superiority.
  */
-export function canCompareRRExecutions(
-  previous: unknown,
-  current: unknown
-): previous is KernelRRPresentation {
+export function canCompareRRExecutions(previous: unknown, current: unknown): previous is KernelRRPresentation {
   if (!isKernelRRPresentation(previous) || !isKernelRRPresentation(current)) return false
   return (
     previous.authoritative &&
@@ -90,26 +87,30 @@ export function RRExecutionComparison({
     [t.status, previous.outcome_kind, current.outcome_kind],
   ]
   return (
-    <section
-      data-testid="rr-execution-comparison"
-      aria-label={t.title}
-      className="mt-4 border border-sky-400/20 p-3"
-    >
+    <section data-testid="rr-execution-comparison" aria-label={t.title} className="mt-4 border border-sky-400/20 p-3">
       <h4 className="font-semibold text-sky-200">{t.title}</h4>
       <p className="mt-2 text-xs text-amber-200">{t.warning}</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[460px] text-left text-xs">
           <thead>
             <tr>
-              <th scope="col" className="p-2">{t.metric}</th>
-              <th scope="col" className="p-2">{t.previous}: {previous.execution_id}</th>
-              <th scope="col" className="p-2">{t.current}: {current.execution_id}</th>
+              <th scope="col" className="p-2">
+                {t.metric}
+              </th>
+              <th scope="col" className="p-2">
+                {t.previous}: {previous.execution_id}
+              </th>
+              <th scope="col" className="p-2">
+                {t.current}: {current.execution_id}
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.map(([label, before, after]) => (
               <tr key={label} className="border-t border-white/15">
-                <th scope="row" className="p-2 font-medium">{label}</th>
+                <th scope="row" className="p-2 font-medium">
+                  {label}
+                </th>
                 <td className="break-all p-2">{before ?? t.unknown}</td>
                 <td className="break-all p-2">{after ?? t.unknown}</td>
               </tr>
