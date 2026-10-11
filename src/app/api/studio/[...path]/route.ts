@@ -111,7 +111,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const apiKey = (process.env.DIP_API_KEY ?? process.env.DIP_ADMIN_API_KEY ?? '').trim()
   if (!base || !apiKey) return error('Set DIP_API_BASE_URL and DIP_API_KEY to connect Decision Studio.', 503)
   const target = new URL(base)
-  if (target.protocol !== 'https:' && !(target.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(target.hostname)))
+  if (
+    target.protocol !== 'https:' &&
+    !(target.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(target.hostname))
+  )
     return error('Studio backend requires TLS', 503)
 
   let payload: Uint8Array | undefined
