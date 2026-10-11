@@ -90,6 +90,8 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     const studio = await verifyIdToken(token(), flow, config)
     expect(isAllowedSession(studio)).toBe(true)
     expect(canAccessStudio(studio)).toBe(true)
+    expect(studio.projectId).toBe(projectId)
+    expect(studio.organizationId).toBe(organizationId)
     expect(canOperateRr(studio)).toBe(false)
 
     const rr = await verifyIdToken(token({ sub: 'user-1', [roleClaim]: { rr_operator: { [organizationId]: 'qdip.example.test' } } }), flow, config)
