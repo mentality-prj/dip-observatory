@@ -409,6 +409,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         )}
       </div>
 
+      {session.authenticated && presentation ? (
+        <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
+          <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
+          <OperatorEvidence locale={locale} record={presentation} />
+        </section>
+      ) : null}
       {session.authenticated && (
         <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
           <h3 className="font-semibold">{t.display}</h3>
@@ -660,10 +666,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {lastResult !== null && (
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              <OperatorEvidence locale={locale} record={presentation} />
-              <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all border border-white/15 bg-slate-950 p-4 font-mono text-xs">
-                {JSON.stringify(lastResult, null, 2)}
-              </pre>
+              <details className="mt-3 border border-white/15 p-3" data-testid="rr-technical-response">
+                <summary className="cursor-pointer text-sm font-semibold text-slate-200">
+                  {t.technicalPayload}
+                </summary>
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-4 font-mono text-xs">
+                  {JSON.stringify(lastResult, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </div>
