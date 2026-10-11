@@ -37,6 +37,8 @@ const current: KernelRRPresentation = {
   change_kind: 'REPLAN',
   scheduled_jobs: [],
   scheduled_job_count: 0,
+  outcome_kind: 'INFEASIBLE',
+  backend_status: 'INFEASIBLE',
   actionable: false,
 }
 
