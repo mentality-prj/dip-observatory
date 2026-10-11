@@ -48,8 +48,26 @@ async function handle(request: NextRequest, context: Context) {
       cache: 'no-store',
       signal: AbortSignal.timeout(45_000),
     })
-    const payload = await upstream.text()
-    if (Buffer.byteLength(payload, 'utf8') > 4_194_304) return json('RR response exceeds size limit', 502)
+    // Never buffer an unbounded upstream body before applying the 4 MiB gate.
+    const maxResponse = 4_194_304
+    if (Number(upstream.headers.get('content-length') ?? 0) > maxResponse)
+      return json('RR response exceeds size limit', 502)
+    const reader = upstream.body?.getReader()
+    const chunks: Uint8Array[] = []
+    let responseBytes = 0
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        responseBytes += value.byteLength
+        if (responseBytes > maxResponse) {
+          await reader.cancel()
+          return json('RR response exceeds size limit', 502)
+        }
+        chunks.push(value)
+      }
+    }
+    const payload = Buffer.concat(chunks).toString('utf8')
     return new NextResponse(payload, {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
