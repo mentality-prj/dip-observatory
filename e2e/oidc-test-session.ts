@@ -11,15 +11,17 @@ export const oidcTestConfig = {
 
 export function oidcTestCookies(roles: Array<'studio' | 'rr_operator'>): Cookie[] {
   const expiresAt = Math.floor(Date.now() / 1000) + 1800
-  const payload = Buffer.from(JSON.stringify({
-    sub: 'local-e2e-account',
-    issuer: oidcTestConfig.issuer,
-    clientId: oidcTestConfig.clientId,
-    projectId: oidcTestConfig.projectId,
-    organizationId: oidcTestConfig.organizationId,
-    expiresAt,
-    roles,
-  })).toString('base64url')
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: 'local-e2e-account',
+      issuer: oidcTestConfig.issuer,
+      clientId: oidcTestConfig.clientId,
+      projectId: oidcTestConfig.projectId,
+      organizationId: oidcTestConfig.organizationId,
+      expiresAt,
+      roles,
+    })
+  ).toString('base64url')
   const signature = createHmac('sha256', oidcTestConfig.signingSecret)
     .update('session-v1:' + payload)
     .digest('base64url')
