@@ -45,7 +45,10 @@ test.describe('visible Zitadel entry points', () => {
     const rect = await login.boundingBox()
     expect(rect).not.toBeNull()
     expect((rect?.x ?? 0) + (rect?.width ?? 0)).toBeLessThanOrEqual(390)
-    const headerOverflow = await page.locator('header').first().evaluate((header) => header.scrollWidth - header.clientWidth)
+    const headerOverflow = await page
+      .locator('header')
+      .first()
+      .evaluate((header) => header.scrollWidth - header.clientWidth)
     expect(headerOverflow).toBeLessThanOrEqual(1)
   })
 })
