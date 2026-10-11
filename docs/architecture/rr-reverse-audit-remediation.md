@@ -41,8 +41,8 @@ The canonical UI is Kernel-only. All 43 retired RR TypeScript research/optimizer
 
 Added **qdip-core RR plugin** modules and endpoints on backend branch `feat/rr-plugin-computation-ownership`:
 
-- `presentation.py` computes Pydantic-validated RR preflight, execution read-model metrics, provenance and strict complete-history projection;
-- `research_math.py` hosts bounded experimental distributions, Monte Carlo and Pareto primitives with explicit `BACKEND_RESEARCH_ONLY` status, no production route, no claim of equivalence to the retired TS planner;
+- `presentation.py` computes Pydantic-validated RR preflight with payload digest, audit/replay-checked execution read-model metrics and server-verified, bounded history pages;
+- `research_math.py`, `research_legacy_domain.py` and `research_legacy_engine.py` provide bounded backend-only distributions, Monte Carlo, Pareto, resource/dependency-aware feasibility search, capability-level evaluation and independent research comparators. There is no production route or claim of cross-language algorithmic/seed equivalence;
 - `POST /api/v1/readiness-recovery/preflight`;
 - `GET /api/v1/readiness-recovery/executions/:id/presentation`;
 - `GET /api/v1/readiness-recovery/decisions/:id/history/export-complete`, verifying the complete stored history via the plugin's Kernel replay and audit integrity chain before reporting success.
