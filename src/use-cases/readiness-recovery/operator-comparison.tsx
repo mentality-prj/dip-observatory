@@ -76,7 +76,7 @@ export function RRExecutionComparison({
   previous: KernelRRPresentation | null
   current: KernelRRPresentation | null
 }) {
-  if (!canCompareRRExecutions(previous, current)) return null
+  if (!current || !canCompareRRExecutions(previous, current)) return null
   const t = copy[locale]
   const rows = [
     [t.jobs, previous.job_count, current.job_count],
