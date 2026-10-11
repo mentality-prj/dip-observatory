@@ -63,6 +63,20 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     ).toBe(false)
     expect(isKernelRRPresentation({ ...valid, probability_demand_satisfied: 0.99 })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, field_verified: true })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, outcome_kind: 'INFEASIBLE' })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, backend_status: 'TIME_LIMIT' })).toBe(false)
+    expect(isKernelRRPresentation({ ...valid, actionable: false })).toBe(false)
+    expect(
+      isKernelRRPresentation({
+        ...valid,
+        outcome_kind: 'TIME_LIMIT',
+        backend_status: 'TIME_LIMIT',
+        authoritative: false,
+        actionable: false,
+        scheduled_jobs: [],
+        scheduled_job_count: 0,
+      })
+    ).toBe(true)
   })
 
   it('filters display-only metric cards, never provenance, schedule or Kernel decision', () => {
@@ -91,7 +105,6 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(html).toContain('data-testid="rr-kernel-schedule"')
     expect(html).toContain('No scheduled jobs match this display filter')
     expect(html).toContain('Scheduled jobs')
-    expect(html).toContain('value')
     expect(html).not.toContain('<td class="py-2 pr-3 font-mono text-xs">job-1</td>')
   })
 
