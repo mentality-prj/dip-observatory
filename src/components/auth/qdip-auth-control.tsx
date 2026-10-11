@@ -16,7 +16,12 @@ type AuthSession = {
 const labels = {
   en: { signIn: 'Sign in', signOut: 'Sign out', signedIn: 'Signed in', signOutFailed: 'Could not sign out' },
   uk: { signIn: 'Увійти', signOut: 'Вийти', signedIn: 'Ви увійшли', signOutFailed: 'Не вдалося вийти' },
-  pl: { signIn: 'Zaloguj się', signOut: 'Wyloguj się', signedIn: 'Zalogowano', signOutFailed: 'Nie udało się wylogować' },
+  pl: {
+    signIn: 'Zaloguj się',
+    signOut: 'Wyloguj się',
+    signedIn: 'Zalogowano',
+    signOutFailed: 'Nie udało się wylogować',
+  },
 } as const
 
 function loginHref(returnTo: string) {
@@ -80,7 +85,11 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
           <LogOut size={16} aria-hidden />
           <span>{copy.signOut}</span>
         </button>
-        {error ? <span className={styles.error} role="alert">{copy.signOutFailed}</span> : null}
+        {error ? (
+          <span className={styles.error} role="alert">
+            {copy.signOutFailed}
+          </span>
+        ) : null}
       </div>
     )
   }
