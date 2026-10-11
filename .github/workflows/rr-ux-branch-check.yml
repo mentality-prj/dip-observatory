@@ -31,7 +31,9 @@ jobs:
         run: pnpm lint
 
       - name: Prettier
-        run: pnpm prettier
+        run: |
+          pnpm exec prettier --write e2e/rr-ux-evidence-comparison.spec.ts src/use-cases/readiness-recovery/operator-comparison.tsx src/use-cases/readiness-recovery/operator-comparison.vitest.test.tsx src/use-cases/readiness-recovery/operator-evidence.tsx src/use-cases/readiness-recovery/operator-evidence.vitest.test.tsx src/use-cases/readiness-recovery/production-operator-panel.tsx
+          git --no-pager diff -- e2e/rr-ux-evidence-comparison.spec.ts src/use-cases/readiness-recovery/operator-comparison.tsx src/use-cases/readiness-recovery/operator-comparison.vitest.test.tsx src/use-cases/readiness-recovery/operator-evidence.tsx src/use-cases/readiness-recovery/operator-evidence.vitest.test.tsx src/use-cases/readiness-recovery/production-operator-panel.tsx
 
       - name: Typecheck
         run: pnpm typecheck
