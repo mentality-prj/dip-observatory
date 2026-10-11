@@ -1,0 +1,42 @@
+name: RR readiness QA (temporary)
+on:
+  push:
+    branches:
+      - fix/rr-ux-reverse-audit-integrity
+permissions:
+  contents: write
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format modified RR files
+        run: |
+          git diff --name-only --diff-filter=ACM origin/dev...HEAD | grep -E '\.(ts|tsx|md|yml)$' > /tmp/rr-files || true
+          if [ -s /tmp/rr-files ]; then
+            xargs -d '\n' pnpm exec prettier --write < /tmp/rr-files
+            git add --pathspec-from-file=/tmp/rr-files
+            if ! git diff --cached --quiet; then
+              git config user.name 'github-actions[bot]'
+              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+              git commit -m 'style(rr): format readiness fixes'
+              git push
+            fi
+          fi
+      - run: pnpm lint
+      - run: pnpm prettier
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
