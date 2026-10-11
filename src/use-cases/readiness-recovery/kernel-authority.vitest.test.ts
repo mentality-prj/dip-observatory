@@ -44,7 +44,7 @@ describe('canonical RR has one decision authority', () => {
     const allowlist = readFileSync(join(process.cwd(), 'src/lib/rr-kernel-route-allowlist.ts'), 'utf8')
     expect(allowlist).toContain("path[0] === 'preflight'")
     expect(allowlist).toContain("'presentation'")
-    expect(allowlist).toContain("'export-complete'")
+    expect(allowlist).toContain("'verified-export-page'")
   })
 
   it('never mounts the legacy TypeScript solver in the RR product workspace', () => {
