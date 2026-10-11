@@ -17,7 +17,7 @@ test.describe('visible Zitadel entry points', () => {
     {
       url: 'http://studio.localhost:3000/pl/profiles',
       locale: 'pl',
-      returnTo: 'https://studio.qdip.ai/pl',
+      returnTo: 'https://studio.qdip.ai/pl/profiles',
       label: 'Zaloguj się',
     },
   ] as const
