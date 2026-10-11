@@ -45,8 +45,8 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     typeof v.payload_digest === 'string' &&
     /^[0-9a-f]{64}$/.test(v.payload_digest) &&
     v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
-    Number.isSafeInteger(v.job_count) && (v.job_count ?? 0) > 0 &&
-    Number.isSafeInteger(v.technician_count) && (v.technician_count ?? 0) > 0
+    typeof v.job_count === 'number' && Number.isSafeInteger(v.job_count) && v.job_count > 0 &&
+    typeof v.technician_count === 'number' && Number.isSafeInteger(v.technician_count) && v.technician_count > 0
   )
 }
 const initialRequest = `{
@@ -247,7 +247,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           !ids.executionId || !ids.decisionId ||
           preflight?.execution_id !== ids.executionId ||
           preflight?.decision_id !== ids.decisionId ||
-          digest !== preflight.payload_digest
+          digest !== preflight?.payload_digest
         )
           throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
@@ -276,7 +276,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                 projection.decision_id !== parsedExecutionIds(data).decisionId ||
                 (label === 'Create execution' && (
                   projection.payload_digest !== preflight?.payload_digest ||
-                  projection.source_snapshot_id !== preflight.source_snapshot_id
+                  projection.source_snapshot_id !== preflight?.source_snapshot_id
                 )))
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
