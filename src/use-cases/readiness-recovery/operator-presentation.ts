@@ -35,7 +35,9 @@ export function parseKernelView(data: unknown): KernelView {
   const x = data as Record<string, unknown>
   const isV1 = x.version === 1
   if (
-    Object.keys(x).some((k) => !(isV1 ? ['version', 'density', 'panels'] : ['version', 'density', 'panels', 'metrics']).includes(k)) ||
+    Object.keys(x).some(
+      (k) => !(isV1 ? ['version', 'density', 'panels'] : ['version', 'density', 'panels', 'metrics']).includes(k)
+    ) ||
     ![1, 2].includes(x.version as number) ||
     !['COMFORTABLE', 'COMPACT'].includes(String(x.density)) ||
     !Array.isArray(x.panels) ||

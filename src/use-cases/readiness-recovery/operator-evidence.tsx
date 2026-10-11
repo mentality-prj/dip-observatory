@@ -240,12 +240,14 @@ export function OperatorEvidence({
       <section className="mt-4 border border-sky-400/20 p-3" data-testid="rr-metric-provenance">
         <h5 className="font-semibold text-sky-200">{t.metric}</h5>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {metricCards.filter(([key]) => visibleMetrics.includes(key)).map(([key, label, value]) => (
-            <div key={key} className="border-l border-white/20 pl-3">
-              <dt className="text-xs text-slate-400">{label}</dt>
-              <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
-            </div>
-          ))}
+          {metricCards
+            .filter(([key]) => visibleMetrics.includes(key))
+            .map(([key, label, value]) => (
+              <div key={key} className="border-l border-white/20 pl-3">
+                <dt className="text-xs text-slate-400">{label}</dt>
+                <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
+              </div>
+            ))}
         </dl>
         <dl className="mt-3 text-xs text-slate-300">
           <div>

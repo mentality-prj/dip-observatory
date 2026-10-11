@@ -56,9 +56,7 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
 
   it('filters display-only metric cards, never provenance, schedule or Kernel decision', () => {
     if (!isKernelRRPresentation(valid)) throw new Error('Test fixture must be valid')
-    const html = renderToStaticMarkup(
-      <OperatorEvidence locale="uk" record={valid} visibleMetrics={['TECHNICIANS']} />
-    )
+    const html = renderToStaticMarkup(<OperatorEvidence locale="uk" record={valid} visibleMetrics={['TECHNICIANS']} />)
     expect(html).toContain('Доступні спеціалісти')
     expect(html).not.toContain('Роботи у вхідних даних')
     expect(html).not.toContain('Вибрані донори')

@@ -44,7 +44,8 @@ export const rrOperatorCopy: Record<Locale, Record<string, string>> = {
     up: 'Move up',
     down: 'Move down',
     reset: 'Reset layout',
-    preferences: 'Only safe panel order, density and metric visibility are stored on this device — never credentials or decisions.',
+    preferences:
+      'Only safe panel order, density and metric visibility are stored on this device — never credentials or decisions.',
     technicalPayload: 'Show technical response (JSON)',
     noResult: 'No Kernel result available.',
     requestMismatch: 'Kernel response was not valid for the submitted execution.',
@@ -93,7 +94,8 @@ export const rrOperatorCopy: Record<Locale, Record<string, string>> = {
     up: 'Вище',
     down: 'Нижче',
     reset: 'Скинути вигляд',
-    preferences: 'Зберігаємо лише порядок панелей, щільність і видимість метрик — без паролів, рішень та приватних даних.',
+    preferences:
+      'Зберігаємо лише порядок панелей, щільність і видимість метрик — без паролів, рішень та приватних даних.',
     technicalPayload: 'Показати технічну відповідь (JSON)',
     noResult: 'Результату Kernel ще немає.',
     requestMismatch: 'Відповідь Kernel не відповідає створеному виконанню.',
