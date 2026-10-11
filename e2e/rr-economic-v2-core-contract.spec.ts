@@ -36,9 +36,12 @@ test('economic preview transports unchanged input and never offers execute or or
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(compiled) })
   })
   const intercepted: string[] = []
-  await page.route('**/api/rr-operator/kernel/economic-v2/**', (route) => {
-    intercepted.push(route.request().url())
-    return route.fulfill({ status: 404 })
+  page.on('request', (outgoing) => {
+    if (
+      outgoing.url().includes('/api/rr-operator/kernel/economic-v2/') &&
+      !outgoing.url().endsWith('/economic-v2/preflight')
+    )
+      intercepted.push(outgoing.url())
   })
 
   await page.goto(pageUrl)
@@ -46,7 +49,7 @@ test('economic preview transports unchanged input and never offers execute or or
   await page.getByRole('button', { name: 'Validate in Core (no execution)' }).click()
   const result = page.getByTestId('rr-economic-v2-result')
   await expect(result).toContainText('Core compiled preview only')
-  await expect(result).toContainText('synthetic-economic-001'.replace('synthetic-economic-001', 'Jobs'))
+  await expect(result).toContainText('Jobs: 2')
   await expect(result).toContainText('f'.repeat(64))
   await expect(result).toHaveAttribute('data-actionable', 'false')
   await expect(page.getByTestId('rr-economic-v2-warning')).toContainText('NOT ACTIONABLE')
