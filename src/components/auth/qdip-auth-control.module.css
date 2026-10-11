@@ -55,3 +55,16 @@
     display: none;
   }
 }
+
+@media (max-width: 768px) {
+  /* Product headers have a wordmark and locale control sharing one mobile row. */
+  :global(.ds-product-header) .action {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+  }
+
+  :global(.ds-product-header) .action > span {
+    display: none;
+  }
+}
