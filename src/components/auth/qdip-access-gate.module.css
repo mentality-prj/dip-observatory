@@ -1,0 +1,58 @@
+.gate {
+  display: grid;
+  min-height: 100dvh;
+  padding: 24px;
+  place-items: center;
+  color: #f8fafc;
+  background: #101b2b;
+  font: 16px/1.6 system-ui, sans-serif;
+}
+
+.panel {
+  width: 100%;
+  max-width: 580px;
+  padding: clamp(24px, 5vw, 42px);
+  border: 1px solid #334155;
+  border-radius: 18px;
+  background: #172338;
+}
+
+.brand {
+  margin-bottom: 18px;
+  color: #a5f3fc;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.panel h1 {
+  margin-bottom: 14px;
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  line-height: 1.25;
+}
+
+.panel p {
+  margin-bottom: 20px;
+  color: #cbd5e1;
+}
+
+.requirement strong {
+  color: #f8fafc;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.actions a {
+  color: #a5f3fc;
+}
+
+.actions a:focus-visible,
+.actions button:focus-visible {
+  outline: 3px solid #a5f3fc;
+  outline-offset: 3px;
+}
