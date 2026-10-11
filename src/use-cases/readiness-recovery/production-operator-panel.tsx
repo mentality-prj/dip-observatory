@@ -258,11 +258,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     }
   }, [])
 
-  async function findDirectPredecessor(
-    projection: KernelRRPresentation,
-    epoch: number,
-    signal: AbortSignal
-  ) {
+  async function findDirectPredecessor(projection: KernelRRPresentation, epoch: number, signal: AbortSignal) {
     setComparisonPredecessor(null)
     if (!projection.predecessor_execution_id) return
     try {
