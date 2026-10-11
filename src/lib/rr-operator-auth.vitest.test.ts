@@ -65,5 +65,53 @@ describe('Zitadel-backed RR session boundary', () => {
     expect(safeTransport(make('https://observatory.qdip.ai/api/rr-operator/session'))).toBe(true)
     expect(safeTransport(make('http://observatory.qdip.ai/api/rr-operator/session'))).toBe(false)
     expect(safeTransport(make('https://qdip.ai/api/rr-operator/session'))).toBe(false)
+    // Next's request URL can be the internal listener; the original Host is authoritative.
+    const behindLocalProxy = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/kernel/preflight'),
+      headers: new Headers({
+        host: 'observatory.localhost:3000',
+        origin: 'http://observatory.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(behindLocalProxy)).toBe(true)
+    expect(sameOrigin(behindLocalProxy)).toBe(true)
+
+    const wrongHost = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/kernel/preflight'),
+      headers: new Headers({
+        host: 'attacker.localhost:3000',
+        origin: 'http://attacker.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(wrongHost)).toBe(false)
+    expect(sameOrigin(wrongHost)).toBe(false)
+
+    const originSpoofed = {
+      nextUrl: behindLocalProxy.nextUrl,
+      headers: new Headers({
+        host: 'observatory.localhost:3000',
+        origin: 'http://attacker.localhost:3000',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(originSpoofed)).toBe(true)
+    expect(sameOrigin(originSpoofed)).toBe(false)
+
+    const behindTlsProxy = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/session'),
+      headers: new Headers({
+        host: 'observatory.qdip.ai',
+        origin: 'https://observatory.qdip.ai',
+        'x-forwarded-proto': 'https',
+      }),
+    } as unknown as NextRequest
+    expect(safeTransport(behindTlsProxy)).toBe(true)
+    expect(sameOrigin(behindTlsProxy)).toBe(true)
+
+    const insecureProduction = {
+      nextUrl: new URL('http://127.0.0.1:3000/api/rr-operator/session'),
+      headers: new Headers({ host: 'observatory.qdip.ai', origin: 'http://observatory.qdip.ai' }),
+    } as unknown as NextRequest
+    expect(safeTransport(insecureProduction)).toBe(false)
+    expect(sameOrigin(insecureProduction)).toBe(false)
   })
 })
