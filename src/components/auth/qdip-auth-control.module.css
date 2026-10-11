@@ -1,0 +1,57 @@
+.authControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.action {
+  display: inline-flex;
+  min-height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--ds-border, #94a3b8);
+  border-radius: var(--ds-radius-action, 0.5rem);
+  color: var(--ds-text, inherit);
+  background: var(--ds-surface-raised, transparent);
+  font-size: var(--ds-text-sm, 0.875rem);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action:hover {
+  border-color: var(--ds-accent, currentColor);
+  color: var(--ds-accent, currentColor);
+}
+
+.action:focus-visible {
+  outline: 3px solid var(--ds-focus, currentColor);
+  outline-offset: 2px;
+}
+
+.action:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.signedIn {
+  color: var(--ds-text-muted, #64748b);
+  font-size: var(--ds-text-xs, 0.75rem);
+  white-space: nowrap;
+}
+
+.error {
+  color: var(--ds-danger, #b91c1c);
+  font-size: var(--ds-text-xs, 0.75rem);
+}
+
+@media (max-width: 1150px) {
+  .signedIn {
+    display: none;
+  }
+}
