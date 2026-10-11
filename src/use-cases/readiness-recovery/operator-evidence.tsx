@@ -1,4 +1,5 @@
 import type { Locale } from '@/lib/observatory-i18n'
+import { METRIC_KEYS, type KernelMetric } from './operator-presentation'
 
 /**
  * This is a typed VIEW CONTRACT owned by qdip-core's RR plugin.
@@ -184,7 +185,15 @@ export function isKernelRRPresentation(value: unknown): value is KernelRRPresent
   )
 }
 
-export function OperatorEvidence({ locale, record }: { locale: Locale; record: KernelRRPresentation | null }) {
+export function OperatorEvidence({
+  locale,
+  record,
+  visibleMetrics = METRIC_KEYS,
+}: {
+  locale: Locale
+  record: KernelRRPresentation | null
+  visibleMetrics?: readonly KernelMetric[]
+}) {
   const t = copy[locale]
   if (!record)
     return (
@@ -192,6 +201,12 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
         {t.unknown}
       </p>
     )
+  const metricCards: readonly [KernelMetric, string, number][] = [
+    ['INPUT_JOBS', t.total, record.job_count],
+    ['SCHEDULED_JOBS', t.scheduled, record.scheduled_job_count],
+    ['TECHNICIANS', t.technicians, record.technician_count],
+    ['DONORS', t.selectedDonorCount, record.selected_donor_ids.length],
+  ]
   const cells = [
     [t.execution, record.execution_id],
     [t.decision, record.decision_id],
@@ -225,13 +240,8 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
       <section className="mt-4 border border-sky-400/20 p-3" data-testid="rr-metric-provenance">
         <h5 className="font-semibold text-sky-200">{t.metric}</h5>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            [t.total, record.job_count],
-            [t.scheduled, record.scheduled_job_count],
-            [t.technicians, record.technician_count],
-            [t.selectedDonorCount, record.selected_donor_ids.length],
-          ].map(([label, value]) => (
-            <div key={label} className="border-l border-white/20 pl-3">
+          {metricCards.filter(([key]) => visibleMetrics.includes(key)).map(([key, label, value]) => (
+            <div key={key} className="border-l border-white/20 pl-3">
               <dt className="text-xs text-slate-400">{label}</dt>
               <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
             </div>
