@@ -52,7 +52,9 @@ test.beforeEach(async ({ page }) => {
   )
 })
 
-test('retrieves server-owned predecessor, shows bounded comparison and does not persist private IDs', async ({ page }) => {
+test('retrieves server-owned predecessor, shows bounded comparison and does not persist private IDs', async ({
+  page,
+}) => {
   await page.route('**/api/rr-operator/kernel/executions/rr-002/presentation', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(current) })
   )
