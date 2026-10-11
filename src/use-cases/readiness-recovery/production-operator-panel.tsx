@@ -16,6 +16,7 @@ import {
   moveKernelPanel,
   readKernelView,
   saveKernelView,
+  templateKernelView,
   type KernelPanel,
   type KernelView,
 } from './operator-presentation'
@@ -418,6 +419,22 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && (
         <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
           <h3 className="font-semibold">{t.display}</h3>
+          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t.templates}>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('BUSINESS'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.business}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('ANALYST'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.analyst}
+            </button>
+          </div>
           <label className="mt-2 block text-sm">
             {t.density}
             <select
