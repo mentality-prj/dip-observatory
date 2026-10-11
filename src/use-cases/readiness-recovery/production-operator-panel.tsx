@@ -194,6 +194,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setError(t.sessionLost)
     } else if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
       setLastResult(null)
+      if (reason instanceof OperatorRequestError && reason.kind === 'ACCESS_DENIED') {
+        // A role/tenant denial invalidates previously displayed private read models.
+        setPresentation(null)
+        setComparisonPredecessor(null)
+        setPreflight(null)
+        setValidatedBody(null)
+      }
       setError(reason instanceof Error ? reason.message : 'RR operation failed')
     }
   }
