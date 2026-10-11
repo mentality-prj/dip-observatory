@@ -18,7 +18,14 @@ export default async function DecisionAuditPage({
 
   const access = await pageAccess('studio')
   if (!access.allowed)
-    return <QdipAccessGate locale={locale} role="studio" returnTo={observatoryHref('/decisions', locale)} authenticated={access.authenticated} />
+    return (
+      <QdipAccessGate
+        locale={locale}
+        role="studio"
+        returnTo={observatoryHref('/decisions', locale)}
+        authenticated={access.authenticated}
+      />
+    )
 
   const initialId = Array.isArray(query.decision) ? query.decision[0] : query.decision
   return <DecisionAuditView locale={locale} initialId={initialId} />
