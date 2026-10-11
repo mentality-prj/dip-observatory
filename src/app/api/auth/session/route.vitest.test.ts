@@ -10,8 +10,8 @@ beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', 'https://identity.example.test')
   vi.stubEnv('ZITADEL_CLIENT_ID', 'qdip-e2e-client')
   vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'independent-test-session-signing-secret-more-than-32-characters')
-  vi.stubEnv('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS', 'studio-only')
-  vi.stubEnv('QDIP_RR_ALLOWED_ZITADEL_USER_IDS', 'rr-only')
+  vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', '123456789')
+  vi.stubEnv('ZITADEL_QDIP_ORGANIZATION_ID', '987654321')
 })
 
 afterEach(() => vi.unstubAllEnvs())
@@ -19,8 +19,10 @@ afterEach(() => vi.unstubAllEnvs())
 function signedSession(sub: string) {
   const source = new NextRequest('https://observatory.qdip.ai/api/auth/session')
   const response = NextResponse.json({})
+  const roles: Array<'studio' | 'rr_operator'> = sub === 'studio-only' ? ['studio'] : sub === 'rr-only' ? ['rr_operator'] : []
   attachSession(response, source, {
     sub,
+    roles,
     issuer: 'https://identity.example.test',
     clientId: 'qdip-e2e-client',
     expiresAt: Math.floor(Date.now() / 1000) + 300,
