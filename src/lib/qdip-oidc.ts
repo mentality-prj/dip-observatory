@@ -6,7 +6,15 @@ import type { NextRequest, NextResponse } from 'next/server'
 import { PLATFORM_ORIGINS } from '@/routing-config'
 
 type Role = 'studio' | 'rr_operator'
-type Session = { sub: string; issuer: string; clientId: string; expiresAt: number; roles: Role[] }
+type Session = {
+  sub: string
+  issuer: string
+  clientId: string
+  projectId: string
+  organizationId: string
+  expiresAt: number
+  roles: Role[]
+}
 type Pending = { state: string; nonce: string; verifier: string; returnTo: string; issuedAt: number }
 type OidcDiscovery = { issuer: string; authorization_endpoint: string; token_endpoint: string; jwks_uri: string }
 
@@ -320,10 +328,14 @@ export async function verifyIdToken(token: string, flow: Pending, config: OidcDi
     claims.iat > now + 60
   )
     throw new Error('Invalid ID token claims')
+  const roleSettings = roleConfig()
+  if (!roleSettings) throw new Error('QDIP Zitadel role configuration is missing')
   return {
     sub: claims.sub,
     issuer: config.issuer,
     clientId,
+    projectId: roleSettings.projectId,
+    organizationId: roleSettings.organizationId,
     expiresAt: Math.min(claims.exp, now + SESSION_SECONDS),
     roles: rolesFromClaims(claims),
   }
@@ -356,6 +368,8 @@ export function attachSession(response: NextResponse, request: NextRequest, sess
 
 export function getQdipSession(value: string | undefined): Session | null {
   if (!oidcConfigured()) return null
+  const roleSettings = roleConfig()
+  if (!roleSettings) return null
   const session = unseal<Session>(value, 'session-v1')
   if (
     !session ||
@@ -363,6 +377,8 @@ export function getQdipSession(value: string | undefined): Session | null {
     !validRoles(session.roles) ||
     session.issuer !== configuredIssuer() ||
     session.clientId !== process.env.ZITADEL_CLIENT_ID ||
+    session.projectId !== roleSettings.projectId ||
+    session.organizationId !== roleSettings.organizationId ||
     typeof session.expiresAt !== 'number' ||
     session.expiresAt <= Math.floor(Date.now() / 1000) ||
     session.expiresAt > Math.floor(Date.now() / 1000) + SESSION_SECONDS
