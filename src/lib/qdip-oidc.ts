@@ -43,12 +43,13 @@ function subjects(name: string) {
 }
 
 export function oidcConfigured() {
+  const studioAllowed = subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').size > 0
+  const rrAllowed = subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size > 0
   return Boolean(
     configuredIssuer() &&
     (process.env.ZITADEL_CLIENT_ID ?? '').trim() &&
     sharedSecret() &&
-    (subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').size > 0 ||
-      subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size > 0)
+    (studioAllowed || rrAllowed)
   )
 }
 
