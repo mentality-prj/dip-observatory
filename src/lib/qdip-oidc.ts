@@ -56,8 +56,7 @@ function roleConfig(): QdipRoleConfig | null {
   const rrKey = (process.env.QDIP_RR_ZITADEL_ROLE_KEY ?? 'rr_operator').trim()
   // Zitadel role keys may contain spaces; reject empty/control-character keys only.
   const validKey = (key: string) => key.length > 0 && key.length <= 128 && !/[\x00-\x1f\x7f]/.test(key)
-  if (!/^\d+$/.test(projectId) || !/^\d+$/.test(organizationId) || !validKey(studioKey) || !validKey(rrKey))
-    return null
+  if (!/^\d+$/.test(projectId) || !/^\d+$/.test(organizationId) || !validKey(studioKey) || !validKey(rrKey)) return null
   if (studioKey === rrKey) return null
   return { projectId, organizationId, studioKey, rrKey }
 }
@@ -111,11 +110,11 @@ function rolesFromClaims(claims: Record<string, unknown>): Role[] {
     const roleGrants = (grant as Record<string, unknown>)[key]
     return Boolean(
       roleGrants &&
-        typeof roleGrants === 'object' &&
-        !Array.isArray(roleGrants) &&
-        Object.prototype.hasOwnProperty.call(roleGrants, config.organizationId) &&
-        typeof (roleGrants as Record<string, unknown>)[config.organizationId] === 'string' &&
-        (roleGrants as Record<string, string>)[config.organizationId].length > 0
+      typeof roleGrants === 'object' &&
+      !Array.isArray(roleGrants) &&
+      Object.prototype.hasOwnProperty.call(roleGrants, config.organizationId) &&
+      typeof (roleGrants as Record<string, unknown>)[config.organizationId] === 'string' &&
+      (roleGrants as Record<string, string>)[config.organizationId].length > 0
     )
   }
   const roles: Role[] = []
