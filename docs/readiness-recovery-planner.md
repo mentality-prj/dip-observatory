@@ -38,15 +38,25 @@ The precise server contract is
   live stock/quote repository yet. No physical ordering, asset reservation,
   customer ROI or stochastic optimization is implied.
 
-Code regression checks:
+Web-local Vitest contract checks only:
 `src/use-cases/readiness-recovery/economic-preflight-contract.vitest.test.ts`,
-`src/lib/rr-economic-proxy.vitest.test.ts`, the route allowlist tests,
-and mocked-browser `e2e/rr-economic-v2-core-contract.spec.ts`.
-These assert contract safety, not real Core/Mongo/Zitadel acceptance.
+`src/lib/rr-economic-proxy.vitest.test.ts`, and
+`src/lib/rr-kernel-route-allowlist.vitest.test.ts`.
+These cover pure transport/schema/permission boundaries and do NOT qualify
+real service integration. Project build/lint/typechecks remain regular Web
+CI checks; a developer is not required to run Playwright locally.
 
-Full local Web code gate: `pnpm check`; browser regression:
-`pnpm exec playwright test e2e/rr-economic-v2-core-contract.spec.ts`.
-Real pinned Core+Web+Zitadel+Mongo E2E is a separate RR-PROD-05 gate.
+All real Core+Web+native Mongo+Chromium RR E2E belongs in the independent
+public `qdip-ai/qdip-e2e` GitHub Actions repository, pinned to exact
+Core/Web SHAs. Add a genuine end-to-end RR-ECON-v2 preflight scenario there
+that submits valid source-independent synthetic economic JSON to Core,
+checks the Web proxy via authenticated browser, checks wrong-tenant/guest
+denial and that no solver execution or persistent plan was created. The
+current `rr-oidc-session-v1` E2E tests use synthetic signed browser sessions,
+not a real external Zitadel login; live OIDC needs a separate qualification
+gate. The runner's `QDIP_READ_TOKEN` must be configured via its GitHub
+Actions secret, not sourced from a developer machine or chat.
+
 Core #328 merged into `dev`; no Kernel v1 change or Vercel configuration
 change is part of this Web integration.
 
