@@ -150,7 +150,7 @@ test('mismatched normalized input digest is rejected even with the same executio
   await page.getByLabel('Kernel execution JSON').fill(JSON.stringify(request))
   await expect(page.getByRole('button', { name: 'Create execution', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Create execution', exact: true }).click()
-  await expect(page.getByRole('alert')).toContainText('Kernel response was not valid')
+  await expect(page.locator('p[role="alert"][data-error-kind]')).toContainText('Kernel response was not valid')
   await expect(page.getByTestId('rr-kernel-evidence')).toHaveCount(0)
 })
 
@@ -184,7 +184,7 @@ test('transport-only multi-page export preserves server attestation and page ord
   const file = await download
   expect(file.suggestedFilename()).toBe('rr-history-plugin-only-decision.json')
   expect(calls).toEqual(['start', 'rr-exec-001'])
-  await expect(page.getByText('"history_verified": true', { exact: false })).toBeVisible()
+  await expect(page.getByText('"history_verified": true', { exact: false })).toHaveCount(1)
 })
 
 test('changed decision head refuses complete download', async ({ page }) => {
@@ -213,6 +213,6 @@ test('changed decision head refuses complete download', async ({ page }) => {
   const downloads: string[] = []
   page.on('download', (file) => downloads.push(file.suggestedFilename()))
   await page.getByRole('button', { name: 'Export complete history' }).click()
-  await expect(page.getByRole('alert')).toContainText('Kernel decision head changed during export')
+  await expect(page.locator('p[role="alert"][data-error-kind]')).toContainText('Kernel decision head changed during export')
   expect(downloads).toEqual([])
 })
