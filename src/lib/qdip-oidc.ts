@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHash, createHmac, createPublicKey, randomBytes, timingSafeEqual, verify } from 'node:crypto'
+import type { JsonWebKey as NodeJsonWebKey } from 'node:crypto'
 import type { NextRequest, NextResponse } from 'next/server'
 import { PLATFORM_ORIGINS } from '@/routing-config'
 
@@ -246,7 +247,7 @@ export async function verifyIdToken(token: string, flow: Pending, config: OidcDi
       (key.alg === undefined || key.alg === 'RS256')
   )
   if (!jwk) throw new Error('Untrusted ID token signing key')
-  const publicKey = createPublicKey({ key: jwk as JsonWebKey, format: 'jwk' })
+  const publicKey = createPublicKey({ key: jwk as NodeJsonWebKey, format: 'jwk' })
   if (!verify('RSA-SHA256', Buffer.from(parts[0] + '.' + parts[1]), publicKey, Buffer.from(parts[2], 'base64url')))
     throw new Error('Invalid ID token signature')
   const clientId = process.env.ZITADEL_CLIENT_ID?.trim()
