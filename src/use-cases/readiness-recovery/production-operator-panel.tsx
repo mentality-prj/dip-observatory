@@ -70,13 +70,13 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     Number.isSafeInteger(v.technician_count) &&
     v.technician_count > 0 &&
     Number.isSafeInteger(v.inventory_item_types) &&
-    v.inventory_item_types >= 0 &&
+    (v.inventory_item_types ?? -1) >= 0 &&
     Number.isSafeInteger(v.donor_count) &&
-    v.donor_count >= 0 &&
+    (v.donor_count ?? -1) >= 0 &&
     Number.isSafeInteger(v.horizon_slots) &&
-    v.horizon_slots > 0 &&
+    (v.horizon_slots ?? 0) > 0 &&
     Number.isSafeInteger(v.workshop_capacity) &&
-    v.workshop_capacity > 0
+    (v.workshop_capacity ?? 0) > 0
   )
 }
 const initialRequest = `{
