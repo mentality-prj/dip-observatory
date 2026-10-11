@@ -106,3 +106,36 @@ test('invalid JSON never reaches the backend; rejected Core input never shows a 
   await expect(page.getByTestId('rr-economic-v2-result')).toHaveCount(0)
   expect(calls).toBe(1)
 })
+
+
+test('anonymous visitor cannot access the economic preflight editor', async ({ page }) => {
+  await page.route('**/api/rr-operator/session', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ configured: true, authenticated: false, mode: 'zitadel-oidc' }),
+    })
+  )
+  await page.goto(pageUrl)
+  await expect(page.getByTestId('rr-economic-v2-preflight')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Sign in with Zitadel' })).toBeVisible()
+})
+
+test('Core 401 fails closed and cannot preserve a previous preview', async ({ page }) => {
+  let calls = 0
+  await page.route('**/api/rr-operator/kernel/economic-v2/preflight', (route) => {
+    calls += 1
+    return route.fulfill({
+      status: calls === 1 ? 200 : 401,
+      contentType: 'application/json',
+      body: JSON.stringify(calls === 1 ? compiled : { error: 'Operator login required' }),
+    })
+  })
+  await page.goto(pageUrl)
+  await page.getByLabel('RR-ECON-v2 JSON').fill(JSON.stringify(request))
+  await page.getByRole('button', { name: 'Validate in Core (no execution)' }).click()
+  await expect(page.getByTestId('rr-economic-v2-result')).toBeVisible()
+  await page.getByRole('button', { name: 'Validate in Core (no execution)' }).click()
+  await expect(page.getByTestId('rr-economic-v2-result')).toHaveCount(0)
+  await expect(page.getByRole('alert')).toContainText('no longer authorized')
+})
