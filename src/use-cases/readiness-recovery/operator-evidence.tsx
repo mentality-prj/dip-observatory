@@ -41,7 +41,7 @@ const copy = {
     src: 'Metric origin',
     unit: 'Units',
     model: 'Model-verified projection; not field-verified',
-    unknown: 'Probability and confidence intervals: not computed',
+    uncertaintyNote: 'Probability and confidence intervals: not computed',
     edge: 'Economic benefit or optimizer superiority: not established',
     jobunits: 'Job counts; slot values are discrete model slots',
     title: 'Kernel evidence',
@@ -72,7 +72,7 @@ const copy = {
     src: 'Джерело метрик',
     unit: 'Одиниці',
     model: 'Перевірено в межах моделі, не в реальних умовах',
-    unknown: 'Ймовірність та довірчі інтервали: не обчислювалися',
+    uncertaintyNote: 'Ймовірність та довірчі інтервали: не обчислювалися',
     edge: 'Економічна вигода та перевага оптимізатора: не доведені',
     jobunits: 'Кількість робіт; час вимірюється дискретними слотами моделі',
     title: 'Докази Kernel',
@@ -103,7 +103,7 @@ const copy = {
     src: 'Źródło metryk',
     unit: 'Jednostki',
     model: 'Wynik zweryfikowany w modelu, nie w terenie',
-    unknown: 'Prawdopodobieństwo i przedziały ufności: nie obliczono',
+    uncertaintyNote: 'Prawdopodobieństwo i przedziały ufności: nie obliczono',
     edge: 'Korzyść ekonomiczna i przewaga optymalizatora: niepotwierdzone',
     jobunits: 'Liczba zadań; czas jest wyrażony w dyskretnych slotach modelu',
     title: 'Dowody Kernel',
@@ -238,11 +238,19 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
           ))}
         </dl>
         <dl className="mt-3 text-xs text-slate-300">
-          <div><dt className="inline font-semibold">{t.src}: </dt><dd className="inline">{record.source_system} / {record.source_version} · {record.computation_authority}</dd></div>
-          <div><dt className="inline font-semibold">{t.unit}: </dt><dd className="inline">{t.jobunits}</dd></div>
+          <div>
+            <dt className="inline font-semibold">{t.src}: </dt>
+            <dd className="inline">
+              {record.source_system} / {record.source_version} · {record.computation_authority}
+            </dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">{t.unit}: </dt>
+            <dd className="inline">{t.jobunits}</dd>
+          </div>
         </dl>
         <p className="mt-2 text-xs text-amber-200">{t.model}</p>
-        <p className="mt-1 text-xs text-slate-300">{t.unknown}</p>
+        <p className="mt-1 text-xs text-slate-300">{t.uncertaintyNote}</p>
         <p className="mt-1 text-xs text-slate-300">{t.edge}</p>
       </section>
       {record.scheduled_jobs.length ? (
