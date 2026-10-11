@@ -95,7 +95,16 @@ async function limitedResponse(upstream: Response): Promise<Uint8Array | null> {
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const origin = studioOrigin(request)
-  if (!origin) return error('Invalid Studio host or transport', 403)
+  if (!origin) {
+    const host = request.headers.get('host')
+    if (
+      host &&
+      !/[,\s@/?#]/.test(host) &&
+      (isSurfaceHost('site', host) || isSurfaceHost('observatory', host))
+    )
+      return error('Not found', 404)
+    return error('Invalid Studio host or transport', 403)
+  }
 
   const session = sessionFromRequest(request)
   if (!session || !isStudioSubject(session.sub)) return error('Zitadel login required', 401)
