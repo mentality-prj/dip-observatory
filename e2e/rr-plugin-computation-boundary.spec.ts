@@ -125,6 +125,30 @@ test('server-owned preflight and stored evidence are rendered without any browse
   expect(sentInput).toEqual(request)
 })
 
+test('mismatched normalized input digest is rejected even with the same execution ID', async ({ page }) => {
+  await page.route('**/api/rr-operator/kernel/preflight', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(preflight) }))
+  await page.route('**/api/rr-operator/kernel/executions', (route) =>
+    route.fulfill({
+      status: 201, contentType: 'application/json',
+      body: JSON.stringify({
+        result: { workflow: {
+          execution_id: request.execution_id,
+          ingestion: {
+            payload_digest: 'b'.repeat(64),
+            payload: { decision_id: request.payload.decision_id },
+          },
+        } },
+      }),
+    }))
+  await page.goto(PAGE_URL)
+  await page.getByLabel('Kernel execution JSON').fill(JSON.stringify(request))
+  await expect(page.getByRole('button', { name: 'Create execution', exact: true })).toBeEnabled()
+  await page.getByRole('button', { name: 'Create execution', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Kernel response was not valid')
+  await expect(page.getByTestId('rr-kernel-evidence')).toHaveCount(0)
+})
+
 test('transport-only multi-page export preserves server attestation and page order', async ({ page }) => {
   await page.goto(PAGE_URL)
   await page.getByLabel('Decision ID').fill(request.payload.decision_id)
