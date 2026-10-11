@@ -45,6 +45,10 @@ const copy = {
     denied: 'Non-actionable',
     jobs: 'Scheduled jobs',
     donors: 'Donors',
+    technician: 'Technician',
+    slotRange: 'Scheduled slots',
+    details: 'Show technical provenance',
+    empty: 'No jobs scheduled',
     unknown: 'Unknown / not recorded',
     warning: 'This view does not issue real-world work orders. Backend authority is not field acceptance.',
   },
@@ -61,6 +65,10 @@ const copy = {
     denied: 'Не дозволено до виконання',
     jobs: 'Заплановані роботи',
     donors: 'Донори',
+    technician: 'Спеціаліст',
+    slotRange: 'Часові слоти',
+    details: 'Показати технічне походження даних',
+    empty: 'Запланованих робіт немає',
     unknown: 'Невідомо / не записано',
     warning: 'Інтерфейс не видає реальних ремонтних наказів. Авторитет Kernel не означає польового приймання.',
   },
@@ -77,6 +85,10 @@ const copy = {
     denied: 'Brak zgody na wykonanie',
     jobs: 'Zaplanowane zadania',
     donors: 'Dawcy',
+    technician: 'Technik',
+    slotRange: 'Sloty harmonogramu',
+    details: 'Pokaż pochodzenie techniczne',
+    empty: 'Brak zaplanowanych zadań',
     unknown: 'Brak danych',
     warning: 'Interfejs nie wydaje zleceń napraw. Wynik Kernel nie jest akceptacją terenową.',
   },
@@ -86,16 +98,43 @@ const copy = {
 export function isKernelRRPresentation(value: unknown): value is KernelRRPresentation {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const v = value as Partial<KernelRRPresentation>
+  const validId = (id: unknown) => typeof id === 'string' && id.length > 0 && id.length <= 256
+  const count = (n: unknown) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0
   return (
     v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.computation_authority === 'QDIP_KERNEL_RR_V1' &&
-    typeof v.execution_id === 'string' &&
-    typeof v.decision_id === 'string' &&
+    validId(v.execution_id) &&
+    validId(v.decision_id) &&
+    validId(v.source_system) &&
+    validId(v.source_snapshot_id) &&
+    validId(v.source_version) &&
+    typeof v.payload_digest === 'string' &&
+    /^[a-f0-9]{64}$/.test(v.payload_digest) &&
+    typeof v.change_kind === 'string' &&
+    (v.predecessor_execution_id === null || validId(v.predecessor_execution_id)) &&
+    typeof v.backend_status === 'string' &&
+    typeof v.outcome_kind === 'string' &&
+    typeof v.summary === 'string' &&
     typeof v.authoritative === 'boolean' &&
     typeof v.actionable === 'boolean' &&
-    typeof v.outcome_kind === 'string' &&
+    count(v.scheduled_job_count) &&
+    count(v.job_count) &&
+    count(v.technician_count) &&
+    v.probability_demand_satisfied === null &&
+    v.probability_confidence_interval === null &&
+    v.field_verified === false &&
     Array.isArray(v.scheduled_jobs) &&
-    Array.isArray(v.selected_donor_ids)
+    v.scheduled_jobs.every(
+      (job) =>
+        job !== null &&
+        typeof job === 'object' &&
+        validId(job.job_id) &&
+        validId(job.technician_id) &&
+        count(job.start_slot) &&
+        count(job.finish_slot)
+    ) &&
+    Array.isArray(v.selected_donor_ids) &&
+    v.selected_donor_ids.every(validId)
   )
 }
 
@@ -129,21 +168,45 @@ export function OperatorEvidence({ locale, record }: { locale: Locale; record: K
       <p className="mt-2 text-sm">
         {record.actionable ? t.allowed : t.denied} · {record.summary}
       </p>
-      <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-        {cells.map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-xs text-slate-400">{label}</dt>
-            <dd className="mt-1 break-words text-slate-100">{value ?? t.unknown}</dd>
-          </div>
-        ))}
-      </dl>
-      <ul className="mt-3 space-y-1 text-xs font-mono">
-        {record.scheduled_jobs.map((job) => (
-          <li key={job.job_id}>
-            {job.job_id} · {job.technician_id} · {job.start_slot}–{job.finish_slot}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-4 flex flex-wrap gap-4 text-sm">
+        <span>{t.status}: <strong>{record.outcome_kind}</strong></span>
+        <span>{t.jobs}: <strong>{record.scheduled_job_count}</strong></span>
+      </div>
+      {record.scheduled_jobs.length ? (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[480px] text-left text-sm" data-testid="rr-kernel-schedule">
+            <thead>
+              <tr className="border-b border-white/20 text-slate-400">
+                <th scope="col" className="py-2 pr-3">{t.jobs}</th>
+                <th scope="col" className="py-2 pr-3">{t.technician}</th>
+                <th scope="col" className="py-2">{t.slotRange}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {record.scheduled_jobs.map((job) => (
+                <tr key={job.job_id} className="border-b border-white/10">
+                  <td className="py-2 pr-3 font-mono text-xs">{job.job_id}</td>
+                  <td className="py-2 pr-3">{job.technician_id}</td>
+                  <td className="py-2">{job.start_slot}–{job.finish_slot}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-amber-200">{t.empty}</p>
+      )}
+      <details className="mt-4 border-t border-white/15 pt-3">
+        <summary className="cursor-pointer text-sm text-slate-300">{t.details}</summary>
+        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          {cells.map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-xs text-slate-400">{label}</dt>
+              <dd className="mt-1 break-words text-slate-100">{value ?? t.unknown}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
       <p className="mt-4 text-xs text-amber-200">{t.warning}</p>
     </section>
   )
