@@ -567,7 +567,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             onClick={() => login()}
             className="bg-sky-400 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
           >
-            {locale === 'uk' ? 'Увійти через Zitadel' : locale === 'pl' ? 'Zaloguj przez Zitadel' : 'Sign in with Zitadel'}
+            {locale === 'uk'
+              ? 'Увійти через Zitadel'
+              : locale === 'pl'
+                ? 'Zaloguj przez Zitadel'
+                : 'Sign in with Zitadel'}
           </button>
         </div>
       ) : (

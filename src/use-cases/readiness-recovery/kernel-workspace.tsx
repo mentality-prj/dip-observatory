@@ -9,7 +9,8 @@ const labels = {
     title: 'Readiness Recovery',
     description:
       'QDIP Kernel is the only decision authority for RR scheduling. Use the authenticated reference operator to create executions, review history and replan. The former asset/capability Monte Carlo planner has a different data and mathematical contract and is not offered as an alternative solver here.',
-    warning: 'Zitadel authentication enabled. RR deployment and multi-tenant authorization remain subject to separate qualification.',
+    warning:
+      'Zitadel authentication enabled. RR deployment and multi-tenant authorization remain subject to separate qualification.',
   },
   uk: {
     title: 'Відновлення готовності',
