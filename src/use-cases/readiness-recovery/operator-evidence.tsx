@@ -73,6 +73,7 @@ const copy = {
     slotRange: 'Scheduled slots',
     details: 'Show technical provenance',
     empty: 'No jobs scheduled',
+    filterEmpty: 'No scheduled jobs match this display filter',
     unknown: 'Unknown / not recorded',
     warning: 'This view does not issue real-world work orders. Backend authority is not field acceptance.',
   },
@@ -116,6 +117,7 @@ const copy = {
     slotRange: 'Часові слоти',
     details: 'Показати технічне походження даних',
     empty: 'Запланованих робіт немає',
+    filterEmpty: 'У розкладі немає робіт за цим фільтром',
     unknown: 'Невідомо / не записано',
     warning: 'Інтерфейс не видає реальних ремонтних наказів. Авторитет Kernel не означає польового приймання.',
   },
@@ -159,6 +161,7 @@ const copy = {
     slotRange: 'Sloty harmonogramu',
     details: 'Pokaż pochodzenie techniczne',
     empty: 'Brak zaplanowanych zadań',
+    filterEmpty: 'Żadne zaplanowane zadania nie pasują do filtra',
     unknown: 'Brak danych',
     warning: 'Interfejs nie wydaje zleceń napraw. Wynik Kernel nie jest akceptacją terenową.',
   },
@@ -227,10 +230,12 @@ export function OperatorEvidence({
   locale,
   record,
   visibleMetrics = METRIC_KEYS,
+  scheduleSearch = '',
 }: {
   locale: Locale
   record: KernelRRPresentation | null
   visibleMetrics?: readonly KernelMetric[]
+  scheduleSearch?: string
 }) {
   const t = copy[locale]
   if (!record)
@@ -239,6 +244,12 @@ export function OperatorEvidence({
         {t.unknown}
       </p>
     )
+  const normalizedFilter = scheduleSearch.trim().toLocaleLowerCase()
+  const visibleJobs = record.scheduled_jobs.filter(
+    (job) =>
+      job.job_id.toLocaleLowerCase().includes(normalizedFilter) ||
+      job.technician_id.toLocaleLowerCase().includes(normalizedFilter)
+  )
   const metricCards: readonly [KernelMetric, string, number, string, string, string][] = [
     ['INPUT_JOBS', t.total, record.job_count, 'job_count', t.inputJobsMeaning, t.reported],
     ['SCHEDULED_JOBS', t.scheduled, record.scheduled_job_count, 'scheduled_job_count', t.scheduledMeaning, t.reported],
@@ -365,7 +376,7 @@ export function OperatorEvidence({
               </tr>
             </thead>
             <tbody>
-              {record.scheduled_jobs.map((job) => (
+              {visibleJobs.map((job) => (
                 <tr key={job.job_id} className="border-b border-white/10">
                   <td className="py-2 pr-3 font-mono text-xs">{job.job_id}</td>
                   <td className="py-2 pr-3">{job.technician_id}</td>
@@ -376,6 +387,9 @@ export function OperatorEvidence({
               ))}
             </tbody>
           </table>
+          {visibleJobs.length === 0 && (
+            <p role="status" className="mt-2 text-xs text-amber-200">{t.filterEmpty}</p>
+          )}
         </div>
       ) : (
         <p className="mt-4 text-sm text-amber-200">{t.empty}</p>
