@@ -56,7 +56,9 @@ export function QdipAccessGate({
         <div className={styles.brand}>QDIP</div>
         <h1 id="qdip-access-title">{authenticated ? copy.forbidden : copy.signIn}</h1>
         <p>{authenticated ? copy.forbiddenBody : copy.signInBody}</p>
-        <p className={styles.requirement}>{copy.required}: <strong>{copy[role]}</strong></p>
+        <p className={styles.requirement}>
+          {copy.required}: <strong>{copy[role]}</strong>
+        </p>
         <div className={styles.actions}>
           <QdipAuthControl locale={locale} returnTo={returnTo} />
           <a href={marketingHref(locale)}>{copy.home}</a>
