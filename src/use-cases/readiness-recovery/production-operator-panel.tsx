@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
+import { RREconomicPreflightPanel } from './economic-preflight-panel'
 import { OperatorEvidence, isKernelRRPresentation, type KernelRRPresentation } from './operator-evidence'
 import {
   OperatorRequestError,
@@ -789,6 +790,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           )}
         </div>
       )}
+      {session.authenticated && <RREconomicPreflightPanel locale={locale} />}
       {error && (
         <p role="alert" data-error-kind={errorKind ?? 'INVALID_INPUT'} className="mt-4 text-sm text-rose-300">
           {error}
