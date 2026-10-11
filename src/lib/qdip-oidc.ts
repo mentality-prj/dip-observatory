@@ -5,7 +5,16 @@ import type { JsonWebKey as NodeJsonWebKey } from 'node:crypto'
 import type { NextRequest, NextResponse } from 'next/server'
 import { PLATFORM_ORIGINS } from '@/routing-config'
 
-type Session = { sub: string; issuer: string; clientId: string; expiresAt: number }
+type Role = 'studio' | 'rr_operator'
+type Session = {
+  sub: string
+  issuer: string
+  clientId: string
+  projectId: string
+  organizationId: string
+  expiresAt: number
+  roles: Role[]
+}
 type Pending = { state: string; nonce: string; verifier: string; returnTo: string; issuedAt: number }
 type OidcDiscovery = { issuer: string; authorization_endpoint: string; token_endpoint: string; jwks_uri: string }
 
@@ -16,7 +25,7 @@ const FLOW_SECONDS = 10 * 60
 const AUTH_CALLBACK_PATH = '/api/auth/callback/zitadel'
 
 function sharedSecret() {
-  const value = process.env.QDIP_WEB_SESSION_SIGNING_SECRET ?? ''
+  const value = process.env.QDIP_AUTH_COOKIE_SECRET ?? ''
   return value.length >= 32 ? value : null
 }
 
@@ -33,45 +42,85 @@ function configuredIssuer() {
   }
 }
 
-function subjects(name: string) {
-  return new Set(
-    (process.env[name] ?? '')
-      .split(',')
-      .map((subject) => subject.trim())
-      .filter(Boolean)
+type QdipRoleConfig = {
+  projectId: string
+  organizationId: string
+  studioKey: string
+  rrKey: string
+}
+
+function roleConfig(): QdipRoleConfig | null {
+  const projectId = (process.env.ZITADEL_QDIP_PROJECT_ID ?? '').trim()
+  const organizationId = (process.env.ZITADEL_QDIP_ORGANIZATION_ID ?? '').trim()
+  const studioKey = (process.env.QDIP_STUDIO_ZITADEL_ROLE_KEY ?? 'studio').trim()
+  const rrKey = (process.env.QDIP_RR_ZITADEL_ROLE_KEY ?? 'rr_operator').trim()
+  // Zitadel role keys may contain spaces; reject empty/control-character keys only.
+  const validKey = (key: string) => key.length > 0 && key.length <= 128 && !/[\x00-\x1f\x7f]/.test(key)
+  if (!/^\d+$/.test(projectId) || !/^\d+$/.test(organizationId) || !validKey(studioKey) || !validKey(rrKey)) return null
+  if (studioKey === rrKey) return null
+  return { projectId, organizationId, studioKey, rrKey }
+}
+
+function validRoles(value: unknown): value is Role[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.length <= 2 &&
+    value.every((role) => role === 'studio' || role === 'rr_operator') &&
+    new Set(value).size === value.length
   )
 }
 
 export function oidcConfigured() {
-  const studioAllowed = subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').size > 0
-  const rrAllowed = subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size > 0
-  return Boolean(
-    configuredIssuer() && (process.env.ZITADEL_CLIENT_ID ?? '').trim() && sharedSecret() && (studioAllowed || rrAllowed)
-  )
+  return Boolean(configuredIssuer() && (process.env.ZITADEL_CLIENT_ID ?? '').trim() && sharedSecret() && roleConfig())
 }
 
 export function operatorConfigured() {
   return Boolean(
     oidcConfigured() &&
-    subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').size &&
     (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
     process.env.DIP_API_KEY?.trim() &&
     (process.env.RR_ACTOR_ASSERTION_SECRET ?? '').length >= 32
   )
 }
 
-// Authentication admits users assigned to either product surface; authorization
-// is verified independently at each privileged API boundary.
-export function isStudioSubject(sub: string) {
-  return subjects('QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS').has(sub)
+// The server trusts only permissions derived from verified project- and org-bound
+// Zitadel ID-token claims and stored in the signed, short-lived session cookie.
+// The subject alone NEVER grants access.
+export function canAccessStudio(session: Session) {
+  return validRoles(session.roles) && session.roles.includes('studio')
 }
 
-export function isOperatorSubject(sub: string) {
-  return subjects('QDIP_RR_ALLOWED_ZITADEL_USER_IDS').has(sub)
+export function canOperateRr(session: Session) {
+  return validRoles(session.roles) && session.roles.includes('rr_operator')
 }
 
-export function isAllowedSubject(sub: string) {
-  return isStudioSubject(sub) || isOperatorSubject(sub)
+export function isAllowedSession(session: Session) {
+  return validRoles(session.roles)
+}
+
+function rolesFromClaims(claims: Record<string, unknown>): Role[] {
+  const config = roleConfig()
+  if (!config) throw new Error('QDIP Zitadel role configuration is missing')
+  const grant = claims[`urn:zitadel:iam:org:project:${config.projectId}:roles`]
+  if (grant === undefined) return []
+  if (!grant || typeof grant !== 'object' || Array.isArray(grant))
+    throw new Error('Invalid Zitadel project roles claim')
+  const assignedToOrganization = (key: string) => {
+    const roleGrants = (grant as Record<string, unknown>)[key]
+    return Boolean(
+      roleGrants &&
+      typeof roleGrants === 'object' &&
+      !Array.isArray(roleGrants) &&
+      Object.prototype.hasOwnProperty.call(roleGrants, config.organizationId) &&
+      typeof (roleGrants as Record<string, unknown>)[config.organizationId] === 'string' &&
+      (roleGrants as Record<string, string>)[config.organizationId].length > 0
+    )
+  }
+  const roles: Role[] = []
+  if (assignedToOrganization(config.studioKey)) roles.push('studio')
+  if (assignedToOrganization(config.rrKey)) roles.push('rr_operator')
+  return roles
 }
 
 function mac(purpose: string, payload: string, secret: string) {
@@ -216,7 +265,12 @@ export function authorizationUrl(config: OidcDiscovery, flow: Pending) {
   const url = new URL(config.authorization_endpoint)
   url.searchParams.set('client_id', clientId)
   url.searchParams.set('response_type', 'code')
-  url.searchParams.set('scope', 'openid profile email')
+  const roleSettings = roleConfig()
+  if (!roleSettings) throw new Error('QDIP Zitadel role configuration is missing')
+  url.searchParams.set(
+    'scope',
+    `openid profile email urn:zitadel:iam:org:project:id:${roleSettings.projectId}:aud urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:roles:id:${roleSettings.organizationId}`
+  )
   url.searchParams.set('redirect_uri', new URL(AUTH_CALLBACK_PATH, PLATFORM_ORIGINS.site).toString())
   url.searchParams.set('state', flow.state)
   url.searchParams.set('nonce', flow.nonce)
@@ -274,7 +328,17 @@ export async function verifyIdToken(token: string, flow: Pending, config: OidcDi
     claims.iat > now + 60
   )
     throw new Error('Invalid ID token claims')
-  return { sub: claims.sub, issuer: config.issuer, clientId, expiresAt: Math.min(claims.exp, now + SESSION_SECONDS) }
+  const roleSettings = roleConfig()
+  if (!roleSettings) throw new Error('QDIP Zitadel role configuration is missing')
+  return {
+    sub: claims.sub,
+    issuer: config.issuer,
+    clientId,
+    projectId: roleSettings.projectId,
+    organizationId: roleSettings.organizationId,
+    expiresAt: Math.min(claims.exp, now + SESSION_SECONDS),
+    roles: rolesFromClaims(claims),
+  }
 }
 
 export async function exchangeCode(code: string, flow: Pending, config: OidcDiscovery) {
@@ -304,13 +368,17 @@ export function attachSession(response: NextResponse, request: NextRequest, sess
 
 export function getQdipSession(value: string | undefined): Session | null {
   if (!oidcConfigured()) return null
+  const roleSettings = roleConfig()
+  if (!roleSettings) return null
   const session = unseal<Session>(value, 'session-v1')
   if (
     !session ||
     typeof session.sub !== 'string' ||
-    !isAllowedSubject(session.sub) ||
+    !validRoles(session.roles) ||
     session.issuer !== configuredIssuer() ||
     session.clientId !== process.env.ZITADEL_CLIENT_ID ||
+    session.projectId !== roleSettings.projectId ||
+    session.organizationId !== roleSettings.organizationId ||
     typeof session.expiresAt !== 'number' ||
     session.expiresAt <= Math.floor(Date.now() / 1000) ||
     session.expiresAt > Math.floor(Date.now() / 1000) + SESSION_SECONDS

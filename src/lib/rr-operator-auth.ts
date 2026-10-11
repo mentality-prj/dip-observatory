@@ -1,14 +1,14 @@
 import 'server-only'
 
 import type { NextRequest } from 'next/server'
-import { isOperatorSubject, operatorConfigured, sessionFromRequest } from '@/lib/qdip-oidc'
+import { canOperateRr, operatorConfigured, sessionFromRequest } from '@/lib/qdip-oidc'
 import { isSurfaceHost } from '@/routing-config'
 
 export { operatorConfigured }
 
 export function operatorAuthorized(request: NextRequest) {
   const session = sessionFromRequest(request)
-  return Boolean(session && isOperatorSubject(session.sub))
+  return Boolean(session && canOperateRr(session))
 }
 
 /**

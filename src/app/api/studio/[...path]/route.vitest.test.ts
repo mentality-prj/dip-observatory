@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
+const auth = vi.hoisted(() => ({ roles: ['studio'] }))
 vi.mock('@/lib/qdip-oidc', () => ({
-  sessionFromRequest: () => ({ sub: 'studio-only' }),
-  isStudioSubject: (subject: string) => subject === 'studio-only',
+  sessionFromRequest: () => ({ sub: 'same-user', roles: auth.roles }),
+  canAccessStudio: (session: { roles: string[] }) => session.roles.includes('studio'),
 }))
 
 import { GET, POST } from './route'
@@ -25,6 +26,7 @@ function request(
 }
 
 beforeEach(() => {
+  auth.roles = ['studio']
   vi.stubEnv('DIP_API_BASE_URL', 'http://127.0.0.1:8000')
   vi.stubEnv('DIP_API_KEY', 'test-org-scoped-api-key')
   vi.stubGlobal(
@@ -38,6 +40,13 @@ afterEach(() => {
 })
 
 describe('Studio BFF reverse proxy trust boundary', () => {
+  it('denies a valid RR-only session at the Studio API without reaching Core', async () => {
+    auth.roles = ['rr_operator']
+    const response = await GET(request('GET', 'studio.localhost:3000'), context)
+    expect(response.status).toBe(401)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('routes a valid externally hosted Studio request via the authenticated backend key', async () => {
     const response = await GET(request('GET', 'studio.localhost:3000'), context)
     expect(response.status).toBe(200)

@@ -4,7 +4,7 @@ import {
   clearFlow,
   discoverOidc,
   exchangeCode,
-  isAllowedSubject,
+  isAllowedSession,
   oidcConfigured,
   onSiteOrigin,
   readFlow,
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   try {
     const discovery = await discoverOidc()
     const session = await exchangeCode(code, flow, discovery)
-    if (!isAllowedSubject(session.sub)) {
+    if (!isAllowedSession(session)) {
       const denied = NextResponse.json({ error: 'QDIP access has not been granted to this account' }, { status: 403 })
       clearFlow(denied, request)
       return denied

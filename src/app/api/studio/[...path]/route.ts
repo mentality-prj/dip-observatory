@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 import { isSurfaceHost } from '@/routing-config'
-import { isStudioSubject, sessionFromRequest } from '@/lib/qdip-oidc'
+import { canAccessStudio, sessionFromRequest } from '@/lib/qdip-oidc'
 
 const resource = /^[a-zA-Z0-9_.-]+$/
 function allowed(path: string[], method: string) {
@@ -103,7 +103,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 
   const session = sessionFromRequest(request)
-  if (!session || !isStudioSubject(session.sub)) return error('Zitadel login required', 401)
+  if (!session || !canAccessStudio(session)) return error('Zitadel login required', 401)
 
   const { path } = await context.params
   if (!allowed(path, request.method)) return error('Unsupported Studio resource', 404)
