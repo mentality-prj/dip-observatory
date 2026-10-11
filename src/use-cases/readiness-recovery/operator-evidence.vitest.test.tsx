@@ -27,7 +27,7 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     probability_demand_satisfied: null,
     probability_confidence_interval: null,
     field_verified: false,
-  } as const
+  }
 
   it('only accepts an intact versioned backend-owned RR projection', () => {
     expect(isKernelRRPresentation(valid)).toBe(true)
