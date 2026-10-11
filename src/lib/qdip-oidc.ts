@@ -56,7 +56,8 @@ export function operatorConfigured() {
     oidcConfigured() &&
     subjects('QDIP_AUTH_OPERATOR_SUBJECTS').size &&
     (process.env.DIP_API_BASE_URL ?? process.env.DIP_URL) &&
-    process.env.DIP_API_KEY?.trim()
+    process.env.DIP_API_KEY?.trim() &&
+    (process.env.RR_ACTOR_ASSERTION_SECRET ?? '').length >= 32
   )
 }
 
