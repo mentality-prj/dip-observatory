@@ -56,9 +56,7 @@ describe('Kernel RR comparison is descriptive and lineage bound', () => {
   })
 
   it('does not claim economic or optimizer advantage or infer missing uncertainty', () => {
-    const html = renderToStaticMarkup(
-      <RRExecutionComparison locale="uk" previous={previous} current={current} />
-    )
+    const html = renderToStaticMarkup(<RRExecutionComparison locale="uk" previous={previous} current={current} />)
     expect(html).toContain('data-testid="rr-execution-comparison"')
     expect(html).toContain('Порівняння двох виконань')
     expect(html).toContain('rr-001')
