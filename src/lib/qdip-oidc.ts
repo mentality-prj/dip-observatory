@@ -54,6 +54,10 @@ export function operatorConfigured() {
   )
 }
 
+export function isAllowedSubject(sub: string) {
+  return subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(sub)
+}
+
 export function isOperatorSubject(sub: string) {
   return subjects('QDIP_AUTH_ALLOWED_SUBJECTS').has(sub) && subjects('QDIP_AUTH_OPERATOR_SUBJECTS').has(sub)
 }

@@ -167,7 +167,7 @@ export function RRProductionOperatorPanel() {
   }
 
   async function logout() {
-    const response = await fetch('/api/auth/logout', { method: 'POST', headers: { Origin: window.location.origin } })
+    const response = await fetch('/api/auth/logout', { method: 'POST' })
     if (!response.ok) {
       setError('Sign out failed')
       return

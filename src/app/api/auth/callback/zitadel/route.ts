@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  attachSession, clearFlow, discoverOidc, exchangeCode, oidcConfigured, onSiteOrigin, readFlow, safeReturnTo,
+  attachSession, clearFlow, discoverOidc, exchangeCode, isAllowedSubject, oidcConfigured, onSiteOrigin, readFlow, safeReturnTo,
 } from '@/lib/qdip-oidc'
 
 export const runtime = 'nodejs'
@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
   try {
     const discovery = await discoverOidc()
     const session = await exchangeCode(code, flow, discovery)
+    if (!isAllowedSubject(session.sub)) {
+      const denied = NextResponse.json({ error: 'QDIP access has not been granted to this account' }, { status: 403 })
+      clearFlow(denied, request)
+      return denied
+    }
     const result = NextResponse.redirect(safeReturnTo(flow.returnTo), 303)
     clearFlow(result, request)
     attachSession(result, request, session)
