@@ -2,13 +2,13 @@ import 'server-only'
 
 import { createHash, createHmac } from 'node:crypto'
 import type { NextRequest } from 'next/server'
-import { isOperatorSubject, sessionFromRequest } from '@/lib/qdip-oidc'
+import { canOperateRr, sessionFromRequest } from '@/lib/qdip-oidc'
 
 export type RrActorOperation = 'execute' | 'replan'
 
 /**
  * The BFF has already verified Zitadel's signed ID token and the operator
- * subject allowlist. Core still authenticates its own org-scoped API key.
+ * project-role permissions. Core still authenticates its own org-scoped API key.
  * This separately authenticated hint is *audit attribution*, never RBAC.
  */
 export function signRrActor(
@@ -30,7 +30,7 @@ export function signRrActor(
 
 export function signedRrActorFromRequest(request: NextRequest, operation: RrActorOperation): string {
   const session = sessionFromRequest(request)
-  if (!session || !isOperatorSubject(session.sub)) throw new Error('RR operator permission denied')
+  if (!session || !canOperateRr(session)) throw new Error('RR operator permission denied')
   return signRrActor(
     session.issuer,
     session.sub,
