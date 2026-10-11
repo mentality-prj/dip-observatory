@@ -45,8 +45,12 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     typeof v.payload_digest === 'string' &&
     /^[0-9a-f]{64}$/.test(v.payload_digest) &&
     v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
-    typeof v.job_count === 'number' && Number.isSafeInteger(v.job_count) && v.job_count > 0 &&
-    typeof v.technician_count === 'number' && Number.isSafeInteger(v.technician_count) && v.technician_count > 0
+    typeof v.job_count === 'number' &&
+    Number.isSafeInteger(v.job_count) &&
+    v.job_count > 0 &&
+    typeof v.technician_count === 'number' &&
+    Number.isSafeInteger(v.technician_count) &&
+    v.technician_count > 0
   )
 }
 const initialRequest = `{
@@ -236,15 +240,22 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       if (!requestGuard.current.current(epoch)) return
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
-        const workflow = data && typeof data === 'object' && 'result' in data &&
-          data.result && typeof data.result === 'object' && 'workflow' in data.result
-          ? data.result.workflow : null
-        const ingestion = workflow && typeof workflow === 'object' && 'ingestion' in workflow
-          ? workflow.ingestion : null
-        const digest = ingestion && typeof ingestion === 'object' &&
-          'payload_digest' in ingestion ? ingestion.payload_digest : null
+        const workflow =
+          data &&
+          typeof data === 'object' &&
+          'result' in data &&
+          data.result &&
+          typeof data.result === 'object' &&
+          'workflow' in data.result
+            ? data.result.workflow
+            : null
+        const ingestion =
+          workflow && typeof workflow === 'object' && 'ingestion' in workflow ? workflow.ingestion : null
+        const digest =
+          ingestion && typeof ingestion === 'object' && 'payload_digest' in ingestion ? ingestion.payload_digest : null
         if (
-          !ids.executionId || !ids.decisionId ||
+          !ids.executionId ||
+          !ids.decisionId ||
           preflight?.execution_id !== ids.executionId ||
           preflight?.decision_id !== ids.decisionId ||
           digest !== preflight?.payload_digest
@@ -272,12 +283,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               await fetch(`${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal })
             )
             if (!requestGuard.current.current(epoch)) return
-            if (!isKernelRRPresentation(projection) || projection.execution_id !== id ||
-                projection.decision_id !== parsedExecutionIds(data).decisionId ||
-                (label === 'Create execution' && (
-                  projection.payload_digest !== preflight?.payload_digest ||
-                  projection.source_snapshot_id !== preflight?.source_snapshot_id
-                )))
+            if (
+              !isKernelRRPresentation(projection) ||
+              projection.execution_id !== id ||
+              projection.decision_id !== parsedExecutionIds(data).decisionId ||
+              (label === 'Create execution' &&
+                (projection.payload_digest !== preflight?.payload_digest ||
+                  projection.source_snapshot_id !== preflight?.source_snapshot_id))
+            )
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
           } catch (projectionError) {
@@ -316,22 +329,34 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         const params = new URLSearchParams()
         if (cursor) params.set('cursor', cursor)
         if (expectedHead) params.set('expected_head', expectedHead)
-        const data: unknown = await checkedJson(await fetch(
-          `${prefix}/decisions/${encodeURIComponent(id)}/history/verified-export-page?${params.toString()}`,
-          { cache: 'no-store', signal }
-        ))
+        const data: unknown = await checkedJson(
+          await fetch(
+            `${prefix}/decisions/${encodeURIComponent(id)}/history/verified-export-page?${params.toString()}`,
+            { cache: 'no-store', signal }
+          )
+        )
         if (!requestGuard.current.current(epoch)) return
-        if (!data || typeof data !== 'object' || !('schema_version' in data) ||
+        if (
+          !data ||
+          typeof data !== 'object' ||
+          !('schema_version' in data) ||
           data.schema_version !== 'readiness-recovery.presentation.v1' ||
-          !('history_verified' in data) || data.history_verified !== true ||
-          !('decision_id' in data) || data.decision_id !== id ||
-          !('head_execution_id' in data) || typeof data.head_execution_id !== 'string' ||
-          !('history_manifest_digest' in data) || typeof data.history_manifest_digest !== 'string' ||
+          !('history_verified' in data) ||
+          data.history_verified !== true ||
+          !('decision_id' in data) ||
+          data.decision_id !== id ||
+          !('head_execution_id' in data) ||
+          typeof data.head_execution_id !== 'string' ||
+          !('history_manifest_digest' in data) ||
+          typeof data.history_manifest_digest !== 'string' ||
           !/^[a-f0-9]{64}$/.test(data.history_manifest_digest) ||
-          !('executions' in data) || !Array.isArray(data.executions) ||
-          !('export_complete' in data) || typeof data.export_complete !== 'boolean' ||
+          !('executions' in data) ||
+          !Array.isArray(data.executions) ||
+          !('export_complete' in data) ||
+          typeof data.export_complete !== 'boolean' ||
           !('next_cursor' in data) ||
-          !(typeof data.next_cursor === 'string' || data.next_cursor === null)) {
+          !(typeof data.next_cursor === 'string' || data.next_cursor === null)
+        ) {
           throw new Error('Kernel did not attest the complete RR export page')
         }
         if (expectedHead !== null && data.head_execution_id !== expectedHead)
@@ -347,8 +372,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           complete = true
           break
         }
-        if (!data.next_cursor || data.next_cursor === cursor)
-          throw new Error('Kernel export cursor did not advance')
+        if (!data.next_cursor || data.next_cursor === cursor) throw new Error('Kernel export cursor did not advance')
         cursor = data.next_cursor
       }
       if (!complete || !manifest || !expectedHead) throw new Error('RR export has not been completely verified')
@@ -369,13 +393,18 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         anchor.href = url
         anchor.download = `rr-history-${id}.json`
         anchor.click()
-      } finally { URL.revokeObjectURL(url) }
+      } finally {
+        URL.revokeObjectURL(url)
+      }
       setOperation('Complete history export')
       // Keep only the attestation manifest in the visible panel, not
       // potentially many megabytes of historical payloads.
       setLastResult({
-        decision_id: id, head_execution_id: expectedHead,
-        history_manifest_digest: manifest, export_complete: true, history_verified: true,
+        decision_id: id,
+        head_execution_id: expectedHead,
+        history_manifest_digest: manifest,
+        export_complete: true,
+        history_verified: true,
       })
     } catch (reason) {
       operationFailed(reason, epoch)
@@ -746,9 +775,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
               <details className="mt-3 border border-white/15 p-3" data-testid="rr-technical-response">
-                <summary className="cursor-pointer text-sm font-semibold text-slate-200">
-                  {t.technicalPayload}
-                </summary>
+                <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t.technicalPayload}</summary>
                 <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-4 font-mono text-xs">
                   {JSON.stringify(lastResult, null, 2)}
                 </pre>

@@ -9,12 +9,7 @@ describe('public RR reference is useful without a second solver', () => {
     for (const locale of ['en', 'uk', 'pl'] as const) {
       const html = renderToStaticMarkup(<KernelReferencePreview locale={locale} />)
       expect(html).toContain('data-testid="rr-reference-preview"')
-      for (const task of [
-        'diagnostic-check',
-        'filter-replacement',
-        'safety-cable-check',
-        'sensor-service',
-      ]) {
+      for (const task of ['diagnostic-check', 'filter-replacement', 'safety-cable-check', 'sensor-service']) {
         expect(html).toContain(task)
       }
       expect(html).not.toContain('OPTIMAL')

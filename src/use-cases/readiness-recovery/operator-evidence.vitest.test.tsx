@@ -41,7 +41,9 @@ describe('RR evidence comes from the backend plugin, not UI calculations', () =>
     expect(isKernelRRPresentation({ ...valid, scheduled_jobs: null })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, scheduled_jobs: [null] })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, scheduled_jobs: [{ job_id: 'j' }] })).toBe(false)
-    expect(isKernelRRPresentation({ ...valid, scheduled_jobs: [{ ...valid.scheduled_jobs[0], start_slot: '0' }] })).toBe(false)
+    expect(
+      isKernelRRPresentation({ ...valid, scheduled_jobs: [{ ...valid.scheduled_jobs[0], start_slot: '0' }] })
+    ).toBe(false)
     expect(isKernelRRPresentation({ ...valid, selected_donor_ids: [true] })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, actionable: 'yes' })).toBe(false)
     expect(isKernelRRPresentation({ ...valid, payload_digest: 'tampered' })).toBe(false)

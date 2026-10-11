@@ -14,7 +14,9 @@ const request = {
     decision_id: 'plugin-only-decision',
     horizon_slots: 6,
     workshop_capacity: 2,
-    jobs: [{ id: 'job-1', duration_slots: 1, required_skills: ['mechanical'], deadline_slot: 4, readiness_gain_units: 100 }],
+    jobs: [
+      { id: 'job-1', duration_slots: 1, required_skills: ['mechanical'], deadline_slot: 4, readiness_gain_units: 100 },
+    ],
     technicians: [{ id: 'tech-1', skills: ['mechanical'], available_slots: [0, 1, 2, 3, 4, 5] }],
   },
 }
@@ -113,9 +115,11 @@ test('server-owned preflight and stored evidence are rendered without any browse
   await expect(page.getByTestId('rr-kernel-schedule')).toBeVisible()
   await page.route('**/api/rr-operator/kernel/decisions/plugin-only-decision/history', (route) =>
     route.fulfill({
-      status: 200, contentType: 'application/json',
+      status: 200,
+      contentType: 'application/json',
       body: JSON.stringify({ decision_id: request.payload.decision_id, executions: [] }),
-    }))
+    })
+  )
   await page.getByRole('button', { name: 'History', exact: true }).click()
   await expect(page.getByTestId('rr-kernel-evidence')).toContainText('snapshot-001')
   expect(sentInput).toEqual(request)
@@ -132,7 +136,8 @@ test('transport-only multi-page export preserves server attestation and page ord
     calls.push(cursor ?? 'start')
     const final = cursor === 'rr-exec-001'
     void route.fulfill({
-      status: 200, contentType: 'application/json',
+      status: 200,
+      contentType: 'application/json',
       body: JSON.stringify({
         schema_version: 'readiness-recovery.presentation.v1',
         decision_id: request.payload.decision_id,
@@ -156,11 +161,13 @@ test('transport-only multi-page export preserves server attestation and page ord
 test('changed decision head refuses complete download', async ({ page }) => {
   await page.goto(URL)
   await page.getByLabel('Decision ID').fill(request.payload.decision_id)
-  await page.route('**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*',
+  await page.route(
+    '**/api/rr-operator/kernel/decisions/plugin-only-decision/history/verified-export-page*',
     (route) => {
       const cursor = new URL(route.request().url()).searchParams.get('cursor')
       void route.fulfill({
-        status: 200, contentType: 'application/json',
+        status: 200,
+        contentType: 'application/json',
         body: JSON.stringify({
           schema_version: 'readiness-recovery.presentation.v1',
           decision_id: request.payload.decision_id,
@@ -172,7 +179,8 @@ test('changed decision head refuses complete download', async ({ page }) => {
           history_verified: true,
         }),
       })
-    })
+    }
+  )
   const downloads: string[] = []
   page.on('download', (file) => downloads.push(file.suggestedFilename()))
   await page.getByRole('button', { name: 'Export complete history' }).click()
