@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server'
 beforeEach(() => {
   vi.stubEnv('ZITADEL_ISSUER', 'https://identity.example.test')
   vi.stubEnv('ZITADEL_CLIENT_ID', '394566248211424533')
-  vi.stubEnv('QDIP_WEB_SESSION_SIGNING_SECRET', 'a-strong-and-independent-oidc-cookie-signing-secret')
+  vi.stubEnv('QDIP_AUTH_COOKIE_SECRET', 'a-strong-and-independent-oidc-cookie-signing-secret')
   vi.stubEnv('ZITADEL_QDIP_PROJECT_ID', '123456789')
   vi.stubEnv('ZITADEL_QDIP_ORGANIZATION_ID', '987654321')
   vi.stubEnv('DIP_API_BASE_URL', 'http://127.0.0.1:8000')
