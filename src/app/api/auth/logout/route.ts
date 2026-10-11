@@ -12,7 +12,11 @@ export const dynamic = 'force-dynamic'
  */
 export function POST(request: NextRequest) {
   const host = request.headers.get('host') ?? request.nextUrl.host
-  if (!host || /[,\s@/?#]/.test(host) || !(['site', 'studio', 'observatory'] as const).some((surface) => isSurfaceHost(surface, host)))
+  if (
+    !host ||
+    /[,\s@/?#]/.test(host) ||
+    !(['site', 'studio', 'observatory'] as const).some((surface) => isSurfaceHost(surface, host))
+  )
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   const forwardedProto = request.headers.get('x-forwarded-proto')
   if (forwardedProto && !['http', 'https'].includes(forwardedProto))
