@@ -98,44 +98,36 @@ const copy = {
 export function isKernelRRPresentation(value: unknown): value is KernelRRPresentation {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const v = value as Partial<KernelRRPresentation>
-  const validId = (id: unknown) => typeof id === 'string' && id.length > 0 && id.length <= 256
-  const count = (n: unknown) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0
-  return (
-    v.schema_version === 'readiness-recovery.presentation.v1' &&
+  const validId = (id: unknown) => typeof id === 'string' && /^[a-zA-Z0-9][\\w.-]{0,127}$/.test(id)
+  return v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.computation_authority === 'QDIP_KERNEL_RR_V1' &&
-    validId(v.execution_id) &&
-    validId(v.decision_id) &&
-    validId(v.source_system) &&
-    validId(v.source_snapshot_id) &&
-    validId(v.source_version) &&
-    typeof v.payload_digest === 'string' &&
-    /^[a-f0-9]{64}$/.test(v.payload_digest) &&
-    typeof v.change_kind === 'string' &&
+    validId(v.execution_id) && validId(v.decision_id) &&
+    typeof v.source_system === 'string' && v.source_system.length > 0 &&
+    typeof v.source_snapshot_id === 'string' && v.source_snapshot_id.length > 0 &&
+    typeof v.source_version === 'string' && v.source_version.length > 0 &&
+    typeof v.payload_digest === 'string' && /^[a-f0-9]{64}$/.test(v.payload_digest) &&
+    typeof v.change_kind === 'string' && typeof v.outcome_kind === 'string' &&
+    typeof v.backend_status === 'string' && typeof v.summary === 'string' &&
     (v.predecessor_execution_id === null || validId(v.predecessor_execution_id)) &&
-    typeof v.backend_status === 'string' &&
-    typeof v.outcome_kind === 'string' &&
-    typeof v.summary === 'string' &&
-    typeof v.authoritative === 'boolean' &&
-    typeof v.actionable === 'boolean' &&
-    count(v.scheduled_job_count) &&
-    count(v.job_count) &&
-    count(v.technician_count) &&
+    typeof v.authoritative === 'boolean' && typeof v.actionable === 'boolean' &&
+    (!v.actionable || v.authoritative) &&
+    v.field_verified === false &&
     v.probability_demand_satisfied === null &&
     v.probability_confidence_interval === null &&
-    v.field_verified === false &&
+    typeof v.scheduled_job_count === 'number' && Number.isSafeInteger(v.scheduled_job_count) &&
+    v.scheduled_job_count >= 0 && typeof v.job_count === 'number' &&
+    Number.isSafeInteger(v.job_count) && v.job_count > 0 &&
+    typeof v.technician_count === 'number' && Number.isSafeInteger(v.technician_count) &&
+    v.technician_count > 0 &&
+    Array.isArray(v.selected_donor_ids) && v.selected_donor_ids.every(validId) &&
     Array.isArray(v.scheduled_jobs) &&
-    v.scheduled_jobs.every(
-      (job) =>
-        job !== null &&
-        typeof job === 'object' &&
-        validId(job.job_id) &&
-        validId(job.technician_id) &&
-        count(job.start_slot) &&
-        count(job.finish_slot)
-    ) &&
-    Array.isArray(v.selected_donor_ids) &&
-    v.selected_donor_ids.every(validId)
-  )
+    v.scheduled_jobs.length === v.scheduled_job_count &&
+    v.scheduled_jobs.every((item) =>
+      Boolean(item) && typeof item === 'object' &&
+      validId(item.job_id) && validId(item.technician_id) &&
+      Number.isSafeInteger(item.start_slot) && Number.isSafeInteger(item.finish_slot) &&
+      item.start_slot >= 0 && item.finish_slot > item.start_slot
+    )
 }
 
 export function OperatorEvidence({ locale, record }: { locale: Locale; record: KernelRRPresentation | null }) {
