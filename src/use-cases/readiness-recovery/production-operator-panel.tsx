@@ -12,11 +12,13 @@ import {
   type OperatorErrorKind,
 } from './operator-guards'
 import {
+  METRIC_KEYS,
   defaultKernelView,
   moveKernelPanel,
   readKernelView,
   saveKernelView,
   templateKernelView,
+  toggleKernelMetric,
   type KernelPanel,
   type KernelView,
 } from './operator-presentation'
@@ -483,7 +485,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && presentation ? (
         <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
           <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
-          <OperatorEvidence locale={locale} record={presentation} />
+          <OperatorEvidence locale={locale} record={presentation} visibleMetrics={view.metrics} />
         </section>
       ) : null}
       {session.authenticated && (
@@ -517,6 +519,28 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               <option value="COMPACT">{t.compact}</option>
             </select>
           </label>
+          <fieldset className="mt-3 border border-white/15 p-3">
+            <legend className="px-2 text-sm">{t.visibleMetrics}</legend>
+            <div className="flex flex-wrap gap-4">
+              {METRIC_KEYS.map((key) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={view.metrics.includes(key)}
+                    disabled={view.metrics.length === 1 && view.metrics.includes(key)}
+                    onChange={() => setView(toggleKernelMetric(view, key))}
+                  />
+                  {key === 'INPUT_JOBS'
+                    ? t.inputJobs
+                    : key === 'SCHEDULED_JOBS'
+                      ? t.scheduledJobs
+                      : key === 'TECHNICIANS'
+                        ? t.technicians
+                        : t.selectedDonors}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="mt-3 flex flex-wrap gap-3">
             {view.panels.map((key: KernelPanel) => (
               <div key={key} className="flex items-center gap-2 border border-white/15 px-2 py-1 text-sm">
