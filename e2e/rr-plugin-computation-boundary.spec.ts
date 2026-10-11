@@ -111,6 +111,13 @@ test('server-owned preflight and stored evidence are rendered without any browse
   await expect(page.getByTestId('rr-kernel-evidence')).toContainText('job-1')
   await expect(page.getByTestId('rr-decision-first')).toBeVisible()
   await expect(page.getByTestId('rr-kernel-schedule')).toBeVisible()
+  await page.route('**/api/rr-operator/kernel/decisions/plugin-only-decision/history', (route) =>
+    route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ decision_id: request.payload.decision_id, executions: [] }),
+    }))
+  await page.getByRole('button', { name: 'History', exact: true }).click()
+  await expect(page.getByTestId('rr-kernel-evidence')).toContainText('snapshot-001')
   expect(sentInput).toEqual(request)
 })
 
