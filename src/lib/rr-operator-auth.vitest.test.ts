@@ -61,6 +61,8 @@ describe('Zitadel-backed RR session boundary', () => {
     const studioRequest = { cookies: { get: () => ({ value: studioCookie }) } } as unknown as NextRequest
     expect(operatorAuthorized(studioRequest)).toBe(false)
     expect(getQdipSession(cookie + 'tampered')).toBeNull()
+    vi.stubEnv('ZITADEL_QDIP_ORGANIZATION_ID', '111111111')
+    expect(getQdipSession(cookie)).toBeNull()
   })
 
   it('rejects open redirects and cross-origin mutation', () => {
