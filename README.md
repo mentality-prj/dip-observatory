@@ -92,7 +92,7 @@ Set **Project → Assert Roles on Authentication** and enable **User Roles Insid
 ID Token** for the QDIP Web application. The OIDC login requests the
 project audience and project role claims explicitly. Server-side authorization
 accepts only `urn:zitadel:iam:org:project:<projectId>:roles` in the
-*cryptographically validated* ID token and only grants belonging to the
+_cryptographically validated_ ID token and only grants belonging to the
 configured organization ID. It fails closed if there is no valid role claim.
 A Studio grant does not imply an RR grant, or vice versa.
 
