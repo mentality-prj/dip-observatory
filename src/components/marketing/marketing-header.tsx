@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { QdipAuthControl } from '@/components/auth/qdip-auth-control'
 import { SlidersHorizontal, Telescope } from 'lucide-react'
-import { marketingLocaleHref, observatoryHref, studioHref } from '@/lib/platform-urls'
+import { marketingLocaleHref, observatoryHref, studioHref, PLATFORM_URLS } from '@/lib/platform-urls'
 import { sharedI18n } from '@/lib/product-i18n'
 import { LanguageSwitcher } from './language-switcher'
 import { MobileMenu } from './mobile-menu'
@@ -28,6 +29,10 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
     { href: observatoryHref('', locale), label: 'Observatory', icon: <Telescope size={15} /> },
     { href: studioHref('', locale), label: 'Studio', icon: <SlidersHorizontal size={15} /> },
   ]
+  const returnTo = new URL(
+    currentPath ? marketingPath(locale, currentPath) : marketingLocaleHref(locale),
+    PLATFORM_URLS.site
+  ).toString()
   const hrefForLocale = (target: MarketingLocale) =>
     currentPath ? marketingPath(target, currentPath) : marketingLocaleHref(target)
 
@@ -59,6 +64,7 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
               Studio
             </Link>
           </div>
+          <QdipAuthControl locale={locale} returnTo={returnTo} />
           <LanguageSwitcher locale={locale} hrefForLocale={hrefForLocale} />
           <MobileMenu items={mobileItems} locale={locale} />
         </div>
