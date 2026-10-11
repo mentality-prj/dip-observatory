@@ -74,24 +74,44 @@ Set `QDIP_WEB_SESSION_SIGNING_SECRET` (random 32+ chars) **only on qdip-web**.
 It signs the short-lived browser session and OIDC login-state cookie; qdip-core
 never reads or validates these cookies. Store the value in web hosting secrets.
 
-Configure two **independent** comma-separated allowlists of exact immutable
-Zitadel User IDs (OIDC `sub` claims):
+QDIP uses **Zitadel project roles**, not user ID allowlists. Set the static
+`ZITADEL_QDIP_PROJECT_ID` and `ZITADEL_QDIP_ORGANIZATION_ID` (numeric IDs from
+the Zitadel Console) once in the qdip-web deployment. They are not secrets.
+The project ID must be the project that defines the QDIP roles; the org ID
+must be the organization whose grants should authorize the single-org Core
+API key.
 
-- `QDIP_STUDIO_ALLOWED_ZITADEL_USER_IDS`: accounts authorized for the Studio API.
-- `QDIP_RR_ALLOWED_ZITADEL_USER_IDS`: accounts authorized for the Readiness Recovery (RR) operator.
+Role keys are configured once (and are independent):
 
-An account may belong to either or both lists. An account in RR does **not**
-automatically receive Studio API access (and vice versa). Any account on neither
-list is denied at the Zitadel callback; changes to the lists also revoke
-subsequent privileged API access without re-login. Both lists default to deny.
-Logout clears the shared session cookie, which expires after 60 minutes.
-Legacy RR shared-password login is retired (HTTP 410).
+- `QDIP_STUDIO_ZITADEL_ROLE_KEY` — defaults to `studio`.
+- `QDIP_RR_ZITADEL_ROLE_KEY` — defaults to `rr_operator`.
 
-Studio pages remain publicly browsable, but privileged Studio BFF API calls
-require Studio authorization. RR additionally checks the independent RR list.
-Public marketing, inquiries and demonstrator routes remain public. An authenticated
-session does not grant a new QDIP Core tenant: the existing server-only
-organization-scoped API key continues to authorize Core operations.
+Create these application roles (or set their exact existing role keys) in
+Zitadel **Project → Roles**, and assign them through **Role Assignments**.
+Set **Project → Assert Roles on Authentication** and enable **User Roles Inside
+ID Token** for the QDIP Web application. The OIDC login requests the
+project audience and project role claims explicitly. Server-side authorization
+accepts only `urn:zitadel:iam:org:project:<projectId>:roles` in the
+*cryptographically validated* ID token and only grants belonging to the
+configured organization ID. It fails closed if there is no valid role claim.
+A Studio grant does not imply an RR grant, or vice versa.
+
+The callback creates a signed HttpOnly session containing only the validated
+subject and normalized role flags — never Zitadel tokens. Studio and RR
+privileged BFF API boundaries independently check this session. Changes
+made to role assignments in Zitadel require **no Vercel secret edits or
+redeployment**; they take effect at the user's **next login**, or no later
+than session expiry (maximum 60 minutes). For immediate removal, the user
+must log out, and administrators should separately revoke active access
+using the appropriate session strategy if a stricter revocation SLA is needed.
+An account with neither role is denied at login; pre-migration sessions
+are denied rather than silently retaining previous permissions.
+
+Studio pages remain publicly browsable; only privileged Studio BFF calls
+require Studio roles. Public marketing, inquiry and demonstrator routes
+remain public. The existing server-only organization-scoped API key continues
+to authorize Core operations; Zitadel roles alone do not create a Core tenant.
+Legacy RR password login stays retired (HTTP 410).
 
 Separately, `RR_ACTOR_ASSERTION_SECRET` **must** be identical on qdip-web
 and qdip-core. It authenticates the short-lived, pseudonymous RR actor assertion
@@ -101,7 +121,7 @@ the browser-session secret, and neither secret replaces the Core API key.
 **Security boundary:** This is a single-organization hosted BFF integration, not
 yet production multi-tenant OIDC-to-Core authorization, comprehensive per-user
 authorization (beyond the signed RR actor audit attribution),
-role binding from Zitadel project grants, or a replacement for Core API keys.
+a replacement for Core API keys or real-time role revocation.
 Only deploy with trusted `*.qdip.ai` subdomains and strict TLS. A shared domain
 cookie is intentionally visible (as an HttpOnly cookie) to the QDIP subdomains.
 Development on unrelated `*.localhost` hosts does not have cross-host SSO;
