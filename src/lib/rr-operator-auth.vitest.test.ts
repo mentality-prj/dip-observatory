@@ -15,6 +15,7 @@ beforeEach(() => {
   vi.stubEnv('QDIP_AUTH_OPERATOR_SUBJECTS', 'user-1')
   vi.stubEnv('DIP_API_BASE_URL', 'http://127.0.0.1:8000')
   vi.stubEnv('DIP_API_KEY', 'test-org-scoped-key')
+  vi.stubEnv('RR_ACTOR_ASSERTION_SECRET', 'this-is-an-independent-core-rr-actor-signing-secret')
 })
 
 afterEach(() => vi.unstubAllEnvs())
