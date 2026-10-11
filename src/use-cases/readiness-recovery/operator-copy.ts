@@ -41,7 +41,7 @@ export const rrOperatorCopy: Record<Locale, Record<string, string>> = {
     reset: 'Reset layout',
     preferences: 'Only panel order and density are stored on this device — never credentials or decisions.',
     technicalPayload: 'Show technical response (JSON)',
-    noResult: 'No Kernel result available.'
+    noResult: 'No Kernel result available.',
     requestMismatch: 'Kernel response was not valid for the submitted execution.',
     restricted: 'Restricted single-organization reference access. Backend credentials remain on the server.',
   },
@@ -85,7 +85,7 @@ export const rrOperatorCopy: Record<Locale, Record<string, string>> = {
     reset: 'Скинути вигляд',
     preferences: 'На пристрої зберігається лише порядок панелей і щільність, ніколи — паролі чи рішення.',
     technicalPayload: 'Показати технічну відповідь (JSON)',
-    noResult: 'Результату Kernel ще немає.'
+    noResult: 'Результату Kernel ще немає.',
     requestMismatch: 'Відповідь Kernel не відповідає створеному виконанню.',
     restricted: 'Обмежений референсний доступ для однієї організації. Ключі бекенду не передаються браузеру.',
   },
@@ -129,7 +129,7 @@ export const rrOperatorCopy: Record<Locale, Record<string, string>> = {
     reset: 'Przywróć widok',
     preferences: 'Na urządzeniu zapisujemy tylko kolejność paneli i gęstość, nigdy hasła ani decyzje.',
     technicalPayload: 'Pokaż odpowiedź techniczną (JSON)',
-    noResult: 'Brak wyniku Kernel.'
+    noResult: 'Brak wyniku Kernel.',
     requestMismatch: 'Odpowiedź Kernel nie odpowiada wysłanemu wykonaniu.',
     restricted: 'Ograniczony dostęp referencyjny jednej organizacji. Klucze serwera nie trafiają do przeglądarki.',
   },
