@@ -23,6 +23,8 @@ function signedSession(sub: string) {
   attachSession(response, source, {
     sub,
     roles,
+    projectId: '123456789',
+    organizationId: '987654321',
     issuer: 'https://identity.example.test',
     clientId: 'qdip-e2e-client',
     expiresAt: Math.floor(Date.now() / 1000) + 300,
