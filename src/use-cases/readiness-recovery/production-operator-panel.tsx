@@ -337,7 +337,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       }
       if (!complete || !manifest || !expectedHead) throw new Error('RR export has not been completely verified')
       if (!requestGuard.current.current(epoch)) return
-      const document = {
+      const exportedDocument = {
         schema_version: 'readiness-recovery.presentation.v1',
         decision_id: id,
         head_execution_id: expectedHead,
@@ -346,7 +346,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         export_complete: true,
         history_verified: true,
       }
-      const blob = new Blob([JSON.stringify(document)], { type: 'application/json' })
+      const blob = new Blob([JSON.stringify(exportedDocument)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       try {
         const anchor = document.createElement('a')
