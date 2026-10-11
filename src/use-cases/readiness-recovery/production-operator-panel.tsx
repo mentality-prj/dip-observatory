@@ -28,6 +28,7 @@ type KernelPreflight = {
   execution_id: string
   decision_id: string
   source_snapshot_id: string
+  payload_digest: string
   job_count: number
   technician_count: number
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
@@ -41,8 +42,11 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     typeof v.execution_id === 'string' &&
     typeof v.decision_id === 'string' &&
     typeof v.source_snapshot_id === 'string' &&
-    typeof v.job_count === 'number' &&
-    typeof v.technician_count === 'number'
+    typeof v.payload_digest === 'string' &&
+    /^[0-9a-f]{64}$/.test(v.payload_digest) &&
+    v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
+    Number.isSafeInteger(v.job_count) && (v.job_count ?? 0) > 0 &&
+    Number.isSafeInteger(v.technician_count) && (v.technician_count ?? 0) > 0
   )
 }
 const initialRequest = `{
@@ -232,11 +236,18 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       if (!requestGuard.current.current(epoch)) return
       if (method === 'POST' && label === 'Create execution') {
         const ids = parsedExecutionIds(data)
+        const workflow = data && typeof data === 'object' && 'result' in data &&
+          data.result && typeof data.result === 'object' && 'workflow' in data.result
+          ? data.result.workflow : null
+        const ingestion = workflow && typeof workflow === 'object' && 'ingestion' in workflow
+          ? workflow.ingestion : null
+        const digest = ingestion && typeof ingestion === 'object' &&
+          'payload_digest' in ingestion ? ingestion.payload_digest : null
         if (
-          !ids.executionId ||
-          !ids.decisionId ||
+          !ids.executionId || !ids.decisionId ||
           preflight?.execution_id !== ids.executionId ||
-          preflight?.decision_id !== ids.decisionId
+          preflight?.decision_id !== ids.decisionId ||
+          digest !== preflight.payload_digest
         )
           throw new Error(t.requestMismatch)
         setExecutionId(ids.executionId)
@@ -261,7 +272,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               await fetch(`${prefix}/executions/${encodeURIComponent(id)}/presentation`, { cache: 'no-store', signal })
             )
             if (!requestGuard.current.current(epoch)) return
-            if (!isKernelRRPresentation(projection) || projection.execution_id !== id)
+            if (!isKernelRRPresentation(projection) || projection.execution_id !== id ||
+                projection.decision_id !== parsedExecutionIds(data).decisionId ||
+                (label === 'Create execution' && (
+                  projection.payload_digest !== preflight?.payload_digest ||
+                  projection.source_snapshot_id !== preflight.source_snapshot_id
+                )))
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
           } catch (projectionError) {
