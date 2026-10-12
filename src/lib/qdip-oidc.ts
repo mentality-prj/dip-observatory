@@ -196,12 +196,8 @@ export function onSiteOrigin(request: NextRequest) {
   // public login to HTTP. For local tests only, allow the exact .localhost
   // canonical origin over HTTP without adding other allowed hosts.
   const forwardedProto = request.headers.get('x-forwarded-proto')
-  if (canonical.protocol === 'https:') {
-    return (
-      forwardedProto !== 'http' &&
-      (request.nextUrl.protocol === 'https:' || forwardedProto === 'https')
-    )
-  }
+  const secureRequest = request.nextUrl.protocol === 'https:' || forwardedProto === 'https'
+  if (canonical.protocol === 'https:') return forwardedProto !== 'http' && secureRequest
   // Only local HTTP testing is allowed; Next may annotate its internal
   // listener protocol differently from the external browser connection.
   return canonical.hostname.endsWith('.localhost')
