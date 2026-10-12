@@ -72,7 +72,7 @@ function isAdviceSummary(item: unknown): item is EconomicAdviceSummary {
     typeof x.status === 'string' && typeof x.created_at === 'string' &&
     (x.modeled_net_incremental_cents === null ||
       (typeof x.modeled_net_incremental_cents === 'string' &&
-        /^-?\\d+(?:\\.\\d+)?$/.test(x.modeled_net_incremental_cents)))
+        /^-?\d+(?:\.\d+)?$/.test(x.modeled_net_incremental_cents)))
   )
 }
 const copy = {
