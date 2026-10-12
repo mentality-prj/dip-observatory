@@ -45,6 +45,8 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
 }
 const copy = {
   en: {
+    find: 'Load archived advice',
+    archiveId: 'Archived advice execution ID',
     run: 'Solve and archive non-actionable advice',
     running: 'Solving with frozen Kernel…',
     solved: 'Operator-submitted economic advice',
@@ -74,6 +76,8 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    find: 'Відкрити збережену рекомендацію',
+    archiveId: 'ID збереженої рекомендації',
     run: 'Розрахувати і зберегти рекомендацію',
     running: 'Оптимізація через заморожений Kernel…',
     solved: 'Економічна рекомендація за даними оператора',
@@ -103,6 +107,8 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    find: 'Wczytaj zapisaną rekomendację',
+    archiveId: 'ID zapisanej rekomendacji',
     run: 'Oblicz i zapisz rekomendację',
     running: 'Rozwiązywanie przez zamrożony Kernel…',
     solved: 'Rekomendacja ekonomiczna z danych operatora',
@@ -138,6 +144,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
   const [input, setInput] = useState('')
   const [result, setResult] = useState<RREconomicPreflight | null>(null)
   const [advice, setAdvice] = useState<EconomicAdvice | null>(null)
+  const [archiveExecutionId, setArchiveExecutionId] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const revision = useRef(0)
@@ -241,7 +248,9 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       const registered: unknown = await source.json()
       if (!registered || typeof registered !== 'object' ||
         !('snapshot_id' in registered) || registered.snapshot_id !== snapshotId ||
-        !('actionable' in registered) || registered.actionable !== false) {
+        !('actionable' in registered) || registered.actionable !== false ||
+        !('input_digest' in registered) || typeof registered.input_digest !== 'string' ||
+        !/^[0-9a-f]{64}$/.test(registered.input_digest)) {
         throw new Error(t.incompatible)
       }
       if (controller.signal.aborted || current !== revision.current) return
@@ -261,7 +270,43 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       if (!isEconomicAdvice(value) ||
         value.execution_id !== executionId ||
         value.snapshot_id !== snapshotId ||
+        value.snapshot_digest !== registered.input_digest ||
         value.decision_id !== economicRequestDecisionId(doc)) throw new Error(t.incompatible)
+      setAdvice(value)
+      setArchiveExecutionId(value.execution_id)
+    } catch (reason) {
+      if (controller.signal.aborted || current !== revision.current) return
+      setError(reason instanceof Error ? reason.message : t.unavailable)
+    } finally {
+      if (current === revision.current) setBusy(false)
+    }
+  }
+
+
+  async function loadArchivedAdvice() {
+    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(archiveExecutionId)) {
+      setError(t.invalid)
+      return
+    }
+    const current = ++revision.current
+    pending.current?.abort()
+    setAdvice(null)
+    setError('')
+    const controller = new AbortController()
+    pending.current = controller
+    setBusy(true)
+    try {
+      const response = await fetch(
+        '/api/rr-operator/kernel/economic-v2/advice/' + encodeURIComponent(archiveExecutionId),
+        { cache: 'no-store', signal: controller.signal }
+      )
+      if (!response.ok) throw new Error(
+        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
+      )
+      const value: unknown = await response.json()
+      if (controller.signal.aborted || current !== revision.current) return
+      if (!isEconomicAdvice(value) || value.execution_id !== archiveExecutionId)
+        throw new Error(t.incompatible)
       setAdvice(value)
     } catch (reason) {
       if (controller.signal.aborted || current !== revision.current) return
@@ -305,6 +350,29 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
           {busy ? t.running : t.run}
         </button>
       ) : null}
+      <div className="mt-4 flex flex-wrap items-end gap-2">
+        <label className="block text-sm">
+          {t.archiveId}
+          <input
+            value={archiveExecutionId}
+            onChange={(event) => {
+              setArchiveExecutionId(event.target.value)
+              setAdvice(null)
+            }}
+            className="mt-1 block border border-white/20 bg-slate-950 p-2 font-mono text-xs"
+            autoComplete="off"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={busy || !/^[A-Za-z0-9_.-]{1,128}$/.test(archiveExecutionId)}
+          onClick={() => void loadArchivedAdvice()}
+          className="border border-white/20 px-3 py-2 text-sm disabled:opacity-40"
+          data-testid="rr-economic-v2-load-advice"
+        >
+          {t.find}
+        </button>
+      </div>
       {error ? (
         <p role="alert" className="mt-3 text-sm text-rose-300">
           {error}
