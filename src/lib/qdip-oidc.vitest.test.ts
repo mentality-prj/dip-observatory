@@ -139,7 +139,8 @@ describe('QDIP Zitadel OIDC PKCE', () => {
       flow,
       config
     )
-    expect(isAllowedSession(otherOrg)).toBe(false)
+    expect(otherOrg.roles).toEqual([])
+    expect(isAllowedSession(otherOrg)).toBe(true)
 
     const otherProject = await verifyIdToken(
       token({
@@ -154,7 +155,8 @@ describe('QDIP Zitadel OIDC PKCE', () => {
       flow,
       config
     )
-    expect(isAllowedSession(otherProject)).toBe(false)
+    expect(otherProject.roles).toEqual([])
+    expect(isAllowedSession(otherProject)).toBe(true)
 
     await expect(verifyIdToken(token({ [roleClaim]: ['studio'] }), flow, config)).rejects.toThrow()
   })
@@ -197,7 +199,8 @@ describe('QDIP Zitadel OIDC PKCE', () => {
       },
     })
     const session = await exchangeCode('zitadel-test-auth-code', flow, config)
-    expect(isAllowedSession(session)).toBe(false)
+    expect(session.roles).toEqual([])
+    expect(isAllowedSession(session)).toBe(true)
   })
 
   it('rejects Userinfo belonging to a different subject even when it has valid grants', async () => {

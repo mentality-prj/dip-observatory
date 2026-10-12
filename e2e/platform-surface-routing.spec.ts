@@ -80,7 +80,7 @@ test.describe('platform surface routing contract', () => {
     await expect(page.locator('a[href="https://studio.qdip.ai/en"]').first()).toBeVisible()
   })
 
-  test('client headers cannot bypass Studio host routing or authorization', async ({ request }) => {
+  test('Studio pages are public while client headers cannot bypass Core API authorization', async ({ request }) => {
     const response = await request.get('http://127.0.0.1:3000/uk/plugins', {
       headers: {
         host: 'studio.localhost:3000',
@@ -90,8 +90,8 @@ test.describe('platform surface routing contract', () => {
 
     expect(response.status()).toBeLessThan(400)
     const html = await response.text()
-    expect(html).toContain('qdip-access-gate')
-    expect(html).not.toContain('studio-workspace')
+    expect(html).toContain('studio-shell')
+    expect(html).toContain('studio-workspace')
   })
 
   test('foreign internal namespaces redirect to their owning surface', async ({ request }) => {

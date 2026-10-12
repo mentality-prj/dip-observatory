@@ -70,7 +70,6 @@ function roleConfig(): QdipRoleConfig | null {
 function validRoles(value: unknown): value is Role[] {
   return (
     Array.isArray(value) &&
-    value.length > 0 &&
     value.length <= 2 &&
     value.every((role) => role === 'studio' || role === 'rr_operator') &&
     new Set(value).size === value.length
@@ -389,16 +388,21 @@ export async function exchangeCode(code: string, flow: Pending, config: OidcDisc
   })
   if (typeof payload.id_token !== 'string') throw new Error('OIDC ID token missing')
   const session = await verifyIdToken(payload.id_token, flow, config)
-  if (isAllowedSession(session) || !config.userinfo_endpoint) return session
+  if (session.roles.length > 0 || !config.userinfo_endpoint) return session
 
   // Zitadel may assert roles in Userinfo even when they are absent from the ID token.
   // Read only from the discovered, issuer-pinned endpoint using this code exchange's access token.
   // A Userinfo response never overrides a role-bearing ID token.
   const accessToken = payload.access_token
   if (typeof accessToken !== 'string' || accessToken.length < 10 || accessToken.length > 15_000) return session
-  const userinfo = await readJson(config.userinfo_endpoint, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+  let userinfo: Record<string, unknown>
+  try {
+    userinfo = await readJson(config.userinfo_endpoint, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+  } catch {
+    return session
+  }
   if (userinfo.sub !== session.sub) throw new Error('OIDC Userinfo subject mismatch')
   return { ...session, roles: rolesFromClaims(userinfo) }
 }
@@ -420,6 +424,7 @@ export function getQdipSession(value: string | undefined): Session | null {
     !session ||
     typeof session.sub !== 'string' ||
     !validRoles(session.roles) ||
+    session.sub.length === 0 ||
     session.issuer !== configuredIssuer() ||
     session.clientId !== process.env.ZITADEL_CLIENT_ID ||
     session.projectId !== roleSettings.projectId ||

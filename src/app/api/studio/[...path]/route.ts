@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
+import { isOwnedAudit, publicOwnedAudit, publicOwnedProfile, toOwnedProfileId } from '@/lib/studio-user-scope'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 import { isSurfaceHost } from '@/routing-config'
-import { canAccessStudio, sessionFromRequest } from '@/lib/qdip-oidc'
+import { sessionFromRequest } from '@/lib/qdip-oidc'
 
 const resource = /^[a-zA-Z0-9_.-]+$/
 function allowed(path: string[], method: string) {
@@ -30,9 +32,14 @@ function error(message: string, status: number) {
 
 // Never use x-forwarded-host for authorization. The trusted ingress must
 // preserve the original Host and overwrite x-forwarded-proto.
-function studioOrigin(request: NextRequest): string | null {
+function studioOrigin(request: NextRequest, auditOnly = false): string | null {
   const host = request.headers.get('host')
-  if (!host || /[,\s@/?#]/.test(host) || !isSurfaceHost('studio', host)) return null
+  if (
+    !host ||
+    /[,\s@/?#]/.test(host) ||
+    !(isSurfaceHost('studio', host) || (auditOnly && isSurfaceHost('observatory', host)))
+  )
+    return null
   let parsed: URL
   try {
     parsed = new URL(`http://${host}`)
@@ -94,7 +101,9 @@ async function limitedResponse(upstream: Response): Promise<Uint8Array | null> {
 }
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-  const origin = studioOrigin(request)
+  const { path } = await context.params
+  if (!allowed(path, request.method)) return error('Unsupported Studio resource', 404)
+  const origin = studioOrigin(request, path[0] === 'dimension-decisions')
   if (!origin) {
     const host = request.headers.get('host')
     if (host && !/[,\s@/?#]/.test(host) && (isSurfaceHost('site', host) || isSurfaceHost('observatory', host)))
@@ -103,10 +112,12 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 
   const session = sessionFromRequest(request)
-  if (!session || !canAccessStudio(session)) return error('Zitadel login required', 401)
-
-  const { path } = await context.params
-  if (!allowed(path, request.method)) return error('Unsupported Studio resource', 404)
+  if (!session) return error('Zitadel login required', 401)
+  // Global binding configuration belongs to the shared Core tenant, not any personal Studio.
+  if (path[0] === 'plugins' && path[2] === 'dimension-bindings')
+    return request.method === 'GET'
+      ? NextResponse.json([], { headers: { 'Cache-Control': 'no-store' } })
+      : error('Shared plugin configuration is not editable in personal Studio', 403)
   if (request.method !== 'GET' && request.headers.get('origin') !== origin)
     return error('A same-origin request is required', 403)
 
@@ -130,10 +141,72 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     if (body === null) return error('Request too large', 413)
     payload = body
   }
+  const targetPath = [...path]
+  let resultKind: 'direct' | 'profile' | 'profiles' | 'audit' | 'audits' = 'direct'
+  if (path[0] === 'decision-profiles') {
+    if (path.length === 1) {
+      if (request.method === 'GET') resultKind = 'profiles'
+      if (request.method === 'POST') {
+        try {
+          const record: unknown = JSON.parse(Buffer.from(payload ?? []).toString('utf8'))
+          if (!record || typeof record !== 'object' || Array.isArray(record)) return error('Invalid profile body', 400)
+          const profile = record as Record<string, unknown>
+          const clientId = typeof profile.id === 'string' && profile.id ? profile.id : randomUUID().replaceAll('-', '')
+          profile.id = toOwnedProfileId(session, clientId)
+          payload = Buffer.from(JSON.stringify(profile))
+          resultKind = 'profile'
+        } catch {
+          return error('Invalid profile ID or JSON', 400)
+        }
+      }
+    } else {
+      try {
+        targetPath[1] = toOwnedProfileId(session, path[1])
+      } catch {
+        return error('Invalid profile ID', 400)
+      }
+      if (request.method === 'PATCH' || request.method === 'PUT') {
+        try {
+          const record: unknown = JSON.parse(Buffer.from(payload ?? []).toString('utf8'))
+          if (!record || typeof record !== 'object' || Array.isArray(record)) return error('Invalid profile', 400)
+          const update = record as Record<string, unknown>
+          if (update.id !== undefined && update.id !== path[1]) return error('Cannot change profile identity', 403)
+          update.id = targetPath[1]
+          payload = Buffer.from(JSON.stringify(update))
+          resultKind = 'profile'
+        } catch {
+          return error('Invalid profile JSON', 400)
+        }
+      } else if (path.length === 2 && request.method === 'GET') resultKind = 'profile'
+    }
+  } else if (path[0] === 'dimension-decisions') {
+    resultKind = request.method === 'POST' ? 'direct' : path.length === 1 ? 'audits' : 'audit'
+  }
+  const coreUrl = (parts: string[]) => base + '/api/v1/' + parts.join('/')
+  const coreHeaders = { 'Content-Type': 'application/json', 'x-api-key': apiKey }
+
+  // Replay is side-effecting. A user cannot replay an audit belonging to another identity.
+  if (path[0] === 'dimension-decisions' && request.method === 'POST') {
+    try {
+      const owner = await fetch(coreUrl(path.slice(0, 2)), {
+        headers: coreHeaders,
+        redirect: 'error',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(45_000),
+      })
+      if (!owner.ok) return error('Decision not found', 404)
+      const bytes = await limitedResponse(owner)
+      if (!bytes || !isOwnedAudit(session, JSON.parse(Buffer.from(bytes).toString('utf8'))))
+        return error('Decision not found', 404)
+    } catch {
+      return error('Decision ownership check failed', 502)
+    }
+  }
+
   try {
-    const upstream = await fetch(`${base}/api/v1/${path.join('/')}${request.nextUrl.search}`, {
+    const upstream = await fetch(coreUrl(targetPath) + request.nextUrl.search, {
       method: request.method,
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+      headers: coreHeaders,
       body: payload ? Buffer.from(payload) : undefined,
       redirect: 'error',
       cache: 'no-store',
@@ -142,7 +215,28 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     if (upstream.status === 204) return new NextResponse(null, { status: 204 })
     const body = await limitedResponse(upstream)
     if (body === null) return error('Studio response exceeds size limit', 502)
-    return new NextResponse(Buffer.from(body), {
+    let responseBody = Buffer.from(body)
+    if (upstream.ok && resultKind !== 'direct') {
+      try {
+        const parsed: unknown = JSON.parse(responseBody.toString('utf8'))
+        let visible: unknown
+        if (resultKind === 'profiles' || resultKind === 'audits') {
+          if (!Array.isArray(parsed)) return error('Invalid Core response', 502)
+          visible = parsed
+            .map((value) =>
+              resultKind === 'profiles' ? publicOwnedProfile(session, value) : publicOwnedAudit(session, value)
+            )
+            .filter(Boolean)
+        } else {
+          visible = resultKind === 'profile' ? publicOwnedProfile(session, parsed) : publicOwnedAudit(session, parsed)
+        }
+        if (!visible) return error('Resource not found', 404)
+        responseBody = Buffer.from(JSON.stringify(visible))
+      } catch {
+        return error('Invalid Core response', 502)
+      }
+    }
+    return new NextResponse(responseBody, {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' },
     })

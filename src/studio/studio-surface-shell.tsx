@@ -1,9 +1,8 @@
 import { Suspense, type ReactNode } from 'react'
-import { QdipAccessGate } from '@/components/auth/qdip-access-gate'
-import { pageAccess } from '@/lib/qdip-page-access'
 import { DesignSystemProvider, ProductHeader } from '@/design-system'
-import { marketingHref, studioHref, studioSurfaceHref } from '@/lib/platform-urls'
+import { marketingHref, studioSurfaceHref } from '@/lib/platform-urls'
 import { StudioCoreStatus, StudioProductHeader } from './studio-product-header'
+import { StudioPersistenceNotice } from './studio-persistence-notice'
 import { StudioFooter } from './studio-footer'
 import { StudioMobileNavigation } from './studio-mobile-navigation'
 import { StudioNav } from './studio-nav'
@@ -11,7 +10,7 @@ import { StudioLocaleProvider } from './use-studio-locale'
 import { studioCopy } from './studio-copy'
 import type { StudioLocale } from './studio-locale'
 
-export async function StudioSurfaceShell({
+export function StudioSurfaceShell({
   locale,
   route,
   children,
@@ -20,18 +19,6 @@ export async function StudioSurfaceShell({
   route: string
   children: ReactNode
 }) {
-  const access = await pageAccess('studio')
-  if (!access.allowed) {
-    return (
-      <QdipAccessGate
-        locale={locale}
-        role="studio"
-        returnTo={studioHref('/' + route, locale)}
-        authenticated={access.authenticated}
-      />
-    )
-  }
-
   const c = studioCopy(locale)
   const coreStatus = <StudioCoreStatus />
 
@@ -77,6 +64,7 @@ export async function StudioSurfaceShell({
         </aside>
 
         <div className="studio-workspace">
+          <StudioPersistenceNotice locale={locale} />
           <main className="studio-main ds-page" id="main-content" tabIndex={-1}>
             {children}
           </main>

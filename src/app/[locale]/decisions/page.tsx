@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { DecisionAuditView } from '@/features/studio'
 import { QdipAccessGate } from '@/components/auth/qdip-access-gate'
 import { isSupportedLocale } from '@/lib/observatory-i18n'
-import { pageAccess } from '@/lib/qdip-page-access'
+import { cookies } from 'next/headers'
+import { getQdipSession, QDIP_SESSION_COOKIE } from '@/lib/qdip-oidc'
 import { observatoryHref } from '@/lib/platform-urls'
 
 export default async function DecisionAuditPage({
@@ -16,14 +17,15 @@ export default async function DecisionAuditPage({
   const [{ locale }, query] = await Promise.all([params, searchParams])
   if (!isSupportedLocale(locale)) notFound()
 
-  const access = await pageAccess('studio')
-  if (!access.allowed)
+  const store = await cookies()
+  const authenticated = Boolean(getQdipSession(store.get(QDIP_SESSION_COOKIE)?.value))
+  if (!authenticated)
     return (
       <QdipAccessGate
         locale={locale}
         role="studio"
         returnTo={observatoryHref('/decisions', locale)}
-        authenticated={access.authenticated}
+        authenticated={false}
       />
     )
 

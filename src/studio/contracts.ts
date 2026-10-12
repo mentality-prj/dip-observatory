@@ -1,3 +1,5 @@
+import { demoStudioRequest } from './studio-demo'
+
 export type JsonSchema = {
   type?: string
   title?: string
@@ -134,7 +136,27 @@ export type Audit = {
   binding_versions: Record<string, string>
 }
 
+let studioSessionPromise: Promise<boolean> | undefined
+
+// A session is required to access Core. No anonymous request may carry the server's API key.
+export function studioCanPersist(): Promise<boolean> {
+  if (!studioSessionPromise) {
+    studioSessionPromise = fetch('/api/auth/session', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return false
+        const session: unknown = await response.json()
+        return Boolean(
+          session && typeof session === 'object' && 'authenticated' in session && session.authenticated === true
+        )
+      })
+      .catch(() => false)
+  }
+  return studioSessionPromise
+}
+
 export async function studioRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  if (path.startsWith('plugins/') && path.endsWith('/dimension-bindings')) return demoStudioRequest<T>(path, init)
+  if (!(await studioCanPersist())) return demoStudioRequest<T>(path, init)
   const response = await fetch(`/api/studio/${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },

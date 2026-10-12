@@ -7,6 +7,7 @@ export const STUDIO_COPY = {
       checking: { full: 'Core checking', compact: 'Checking' },
       connected: { full: 'Core connected', compact: 'Connected' },
       unavailable: { full: 'Core unavailable', compact: 'Offline' },
+      demo: { full: 'Public demo (local only)', compact: 'Demo' },
     },
     nav: {
       decisions: 'Decisions',
@@ -276,6 +277,7 @@ export const STUDIO_COPY = {
       checking: { full: 'Core перевіряється', compact: 'Перевірка' },
       connected: { full: 'Core підключено', compact: 'Підключено' },
       unavailable: { full: 'Core недоступний', compact: 'Недоступно' },
+      demo: { full: 'Публічне демо (локально)', compact: 'Демо' },
     },
     nav: {
       decisions: 'Рішення',
@@ -551,6 +553,7 @@ export const STUDIO_COPY = {
       checking: { full: 'Core: sprawdzanie', compact: 'Sprawdzanie' },
       connected: { full: 'Core połączony', compact: 'Połączono' },
       unavailable: { full: 'Core niedostępny', compact: 'Niedostępny' },
+      demo: { full: 'Publiczne demo (lokalnie)', compact: 'Demo' },
     },
     nav: {
       decisions: 'Decyzje',

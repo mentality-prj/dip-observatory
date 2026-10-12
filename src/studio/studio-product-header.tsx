@@ -8,9 +8,9 @@ import { marketingHref, studioHref, studioSurfaceHref } from '@/lib/platform-url
 import { studioCopy } from './studio-copy'
 import styles from './studio-core-status.module.css'
 import { StudioLanguageSwitcher } from './studio-language-switcher'
-import { useStudioLocale } from './use-studio-locale'
+import { useStudioLocale, useStudioRoute } from './use-studio-locale'
 
-type CoreStatus = 'checking' | 'connected' | 'unavailable'
+type CoreStatus = 'checking' | 'connected' | 'unavailable' | 'demo'
 
 export function StudioCoreStatus() {
   const locale = useStudioLocale()
@@ -22,6 +22,12 @@ export function StudioCoreStatus() {
 
     const check = async () => {
       try {
+        const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store', signal: controller.signal })
+        const session = sessionResponse.ok ? await sessionResponse.json() : null
+        if (!session?.authenticated) {
+          if (!disposed) setStatus('demo')
+          return
+        }
         const response = await fetch('/api/studio/dimensions', {
           cache: 'no-store',
           signal: controller.signal,
@@ -61,6 +67,7 @@ export function StudioCoreStatus() {
 
 export function StudioProductHeader() {
   const locale = useStudioLocale()
+  const route = useStudioRoute()
   return (
     <ProductHeader
       href={studioSurfaceHref('', locale)}
@@ -69,7 +76,7 @@ export function StudioProductHeader() {
       status={<StudioCoreStatus />}
       utilities={
         <>
-          <QdipAuthControl locale={locale} returnTo={studioHref('', locale)} />
+          <QdipAuthControl locale={locale} returnTo={studioHref(route, locale)} />
           <StudioLanguageSwitcher />
         </>
       }
