@@ -102,6 +102,7 @@ type EconomicIntegrity = {
   archive_digest_verified: true
   snapshot_binding_verified: true
   kernel_manifest_verified: true
+  source_and_advice_mac_verified: true
   actionable: false
 }
 function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
@@ -113,7 +114,8 @@ function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
     typeof x.response_digest === 'string' && /^[a-f0-9]{64}$/.test(x.response_digest) &&
     typeof x.snapshot_digest === 'string' && /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
     x.archive_digest_verified === true && x.snapshot_binding_verified === true &&
-    x.kernel_manifest_verified === true && x.actionable === false
+    x.kernel_manifest_verified === true &&
+    x.source_and_advice_mac_verified === true && x.actionable === false
 }
 const copy = {
   en: {
@@ -128,7 +130,7 @@ const copy = {
     procurementCost: 'Procurement costs',
     donorCost: 'Donor extraction costs',
     verify: 'Verify archive and Kernel provenance',
-    verified: 'Archive and manifest verified (not source attestation).',
+    verified: 'Archive, manifest and server evidence MAC verified (not source attestation).',
     archiveList: 'Archive history',
     archiveNext: 'More archived results',
     find: 'Load archived advice',
@@ -173,7 +175,7 @@ const copy = {
     procurementCost: 'Витрати на закупівлі',
     donorCost: 'Витрати на розбирання донорів',
     verify: 'Перевірити архів і походження Kernel',
-    verified: 'Архів і manifest перевірені (не посвідчення джерела).',
+    verified: 'Архів, manifest і серверний HMAC перевірені (не посвідчення джерела).',
     archiveList: 'Архів рекомендацій',
     archiveNext: 'Завантажити ще',
     find: 'Відкрити збережену рекомендацію',
@@ -218,7 +220,7 @@ const copy = {
     procurementCost: 'Koszty zakupów',
     donorCost: 'Koszty demontażu dawców',
     verify: 'Zweryfikuj archiwum i pochodzenie Kernel',
-    verified: 'Archiwum i manifest zweryfikowane (nie poświadczenie źródła).',
+    verified: 'Archiwum, manifest i serwerowy HMAC zweryfikowane (bez poświadczenia źródła).',
     archiveList: 'Archiwum rekomendacji',
     archiveNext: 'Więcej wyników',
     find: 'Wczytaj zapisaną rekomendację',
@@ -559,6 +561,8 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         stock_reserved: false,
         advice: stored,
         integrity: proof,
+        verification_scope: 'QDIP_SERVER_INTERNAL_ONLY',
+        portable_cryptographic_signature: false,
       }
       const download = new Blob([JSON.stringify(report, null, 2) + '\n'], {
         type: 'application/json',
