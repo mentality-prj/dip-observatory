@@ -22,10 +22,13 @@ describe('Kernel operator presentation stays private-data free', () => {
     const business = templateKernelView('BUSINESS')
     const analyst = templateKernelView('ANALYST')
     expect(business.panels).toEqual(['EVIDENCE', 'EXECUTE', 'REPLAN'])
-    expect(analyst.panels).toEqual(['EXECUTE', 'REPLAN', 'EVIDENCE'])
-    expect(business.version).toBe(2)
+    expect(analyst.panels).toEqual(['EVIDENCE', 'REPLAN', 'EXECUTE'])
+    expect(business.version).toBe(3)
     expect(business.metrics).toEqual(['INPUT_JOBS', 'SCHEDULED_JOBS'])
     expect(analyst.metrics).toEqual(METRIC_KEYS)
+    expect(analyst.details).toBe('DETAILED')
+    expect(templateKernelView('OPERATIONS').startPanel).toBe('EXECUTE')
+    expect(business.startPanel).toBe('EVIDENCE')
     expect(business).not.toHaveProperty('decisionId')
     expect(business).not.toHaveProperty('solver')
     expect(business).not.toHaveProperty('policy')
@@ -35,7 +38,9 @@ describe('Kernel operator presentation stays private-data free', () => {
     const v1 = { version: 1, density: 'COMPACT', panels: ['EVIDENCE', 'EXECUTE', 'REPLAN'] }
     expect(parseKernelView(v1)).toEqual({
       ...v1,
-      version: 2,
+      version: 3,
+      startPanel: 'EXECUTE',
+      details: 'SUMMARY',
       metrics: [...METRIC_KEYS],
     })
     expect(parseKernelView({ ...v1, decisionId: 'tenant-private' })).toEqual(defaultKernelView())
@@ -45,6 +50,26 @@ describe('Kernel operator presentation stays private-data free', () => {
     expect(parseKernelView({ ...current, metrics: ['DONORS', 'DONORS'] })).toEqual(defaultKernelView())
     expect(parseKernelView({ ...current, metrics: ['API_KEY'] })).toEqual(defaultKernelView())
     expect(parseKernelView({ ...current, tenantId: 'secret' })).toEqual(defaultKernelView())
+  })
+
+  it('migrates v2, rejects private fields and invalid starting-view configuration', () => {
+    const old = {
+      version: 2,
+      density: 'COMPACT',
+      panels: ['EVIDENCE', 'EXECUTE', 'REPLAN'],
+      metrics: ['TECHNICIANS', 'DONORS'],
+    }
+    const migrated = parseKernelView(old)
+    expect(migrated).toMatchObject({
+      version: 3,
+      startPanel: 'EXECUTE',
+      details: 'SUMMARY',
+      metrics: ['TECHNICIANS', 'DONORS'],
+    })
+    expect(parseKernelView({ ...defaultKernelView(), startPanel: 'SECRET' })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...defaultKernelView(), details: 'PRIVATE' })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...defaultKernelView(), tenantId: 'org-1' })).toEqual(defaultKernelView())
+    expect(parseKernelView({ ...defaultKernelView(), optimizer: 'override' })).toEqual(defaultKernelView())
   })
 
   it('changes displayed metric selection without touching solver or evidence', () => {

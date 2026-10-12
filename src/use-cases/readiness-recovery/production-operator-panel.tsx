@@ -152,6 +152,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       /* private browsing */
     }
   }, [view, viewReady])
+  useEffect(() => {
+    if (!viewReady || !session?.authenticated || view.startPanel === 'EXECUTE') return
+    // Only the selected local presentation anchor may change scroll position.
+    // Never affects Kernel requests, decision policy or authorization.
+    document.getElementById('rr-panel-' + view.startPanel.toLowerCase())?.scrollIntoView({ block: 'start' })
+  }, [viewReady, session?.authenticated, view.startPanel])
+
   useEffect(
     () => () => {
       requestGuard.current.invalidate()
@@ -575,6 +582,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && presentation ? (
         <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
           <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
+          <div data-testid="rr-decision-review" className="mt-3 border-l-2 border-sky-400/60 pl-3">
+            <h4 className="font-semibold">{t.reviewHeader}</h4>
+            <p className="mt-1 text-sm text-slate-300">{t.reviewBody}</p>
+            <p className="mt-2 text-xs text-amber-200">{t.evidenceGaps}</p>
+          </div>
           <label className="mt-4 block text-sm" htmlFor="rr-schedule-filter">
             {t.scheduleFilter}
           </label>
@@ -591,10 +603,16 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             record={presentation}
             visibleMetrics={view.metrics}
             scheduleSearch={scheduleSearch}
+            detailed={view.details === 'DETAILED'}
           />
           <RRExecutionComparison locale={locale} previous={comparisonPredecessor} current={presentation} />
         </section>
       ) : null}
+      {session.authenticated && (
+        <p data-testid="rr-workflow-steps" className="mt-4 text-sm text-slate-300">
+          {t.viewSteps}
+        </p>
+      )}
       {session.authenticated && (
         <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
           <h3 className="font-semibold">{t.display}</h3>
@@ -605,6 +623,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               className="border border-white/20 px-3 py-2 text-sm text-slate-200"
             >
               {t.business}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('OPERATIONS'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.operations}
             </button>
             <button
               type="button"
@@ -626,6 +651,33 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               <option value="COMPACT">{t.compact}</option>
             </select>
           </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm" htmlFor="rr-start-panel">
+              {t.startView}
+              <select
+                id="rr-start-panel"
+                className="mt-1 block w-full border border-white/20 bg-slate-950 p-2"
+                value={view.startPanel}
+                onChange={(event) => setView({ ...view, startPanel: event.target.value as KernelPanel })}
+              >
+                <option value="EXECUTE">{t.firstPanel}</option>
+                <option value="REPLAN">{t.replanPanel}</option>
+                <option value="EVIDENCE">{t.evidencePanel}</option>
+              </select>
+            </label>
+            <label className="block text-sm" htmlFor="rr-evidence-detail">
+              {t.detailLevel}
+              <select
+                id="rr-evidence-detail"
+                className="mt-1 block w-full border border-white/20 bg-slate-950 p-2"
+                value={view.details}
+                onChange={(event) => setView({ ...view, details: event.target.value as KernelView['details'] })}
+              >
+                <option value="SUMMARY">{t.summaryView}</option>
+                <option value="DETAILED">{t.detailedView}</option>
+              </select>
+            </label>
+          </div>
           <fieldset className="mt-3 border border-white/15 p-3">
             <legend className="px-2 text-sm">{t.visibleMetrics}</legend>
             <div className="flex flex-wrap gap-4">
@@ -707,7 +759,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         </div>
       ) : (
         <div className={`mt-6 grid xl:grid-cols-2 ${view.density === 'COMPACT' ? 'gap-2' : 'gap-5'}`}>
-          <div className="space-y-3" style={{ order: view.panels.indexOf('EXECUTE') }}>
+          <div
+            id="rr-panel-execute"
+            className="min-w-0 space-y-3 scroll-mt-6"
+            style={{ order: view.panels.indexOf('EXECUTE') }}
+          >
             <h3 className="font-semibold">1. {t.create}</h3>
             <p className="text-xs text-slate-400">{t.createHelp}</p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
@@ -778,7 +834,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3" style={{ order: view.panels.indexOf('REPLAN') }}>
+          <div
+            id="rr-panel-replan"
+            className="min-w-0 space-y-3 scroll-mt-6"
+            style={{ order: view.panels.indexOf('REPLAN') }}
+          >
             <h3 className="font-semibold">2. {t.replan}</h3>
             <p className="text-xs text-slate-400">{t.replanHelp}</p>
             <label className="block text-sm" htmlFor="rr-execution-id">
@@ -822,7 +882,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3 xl:col-span-2" style={{ order: view.panels.indexOf('EVIDENCE') }}>
+          <div
+            id="rr-panel-evidence"
+            className="min-w-0 space-y-3 scroll-mt-6 xl:col-span-2"
+            style={{ order: view.panels.indexOf('EVIDENCE') }}
+          >
             <h3 className="font-semibold">3. {t.evidence}</h3>
             <label className="block text-sm" htmlFor="rr-decision-id">
               {t.decisionId}
@@ -894,7 +958,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {lastResult !== null && (
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              <details className="mt-3 border border-white/15 p-3" data-testid="rr-technical-response">
+              <details
+                key={view.details}
+                open={view.details === 'DETAILED'}
+                className="mt-3 border border-white/15 p-3"
+                data-testid="rr-technical-response"
+              >
                 <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t.technicalPayload}</summary>
                 <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-4 font-mono text-xs">
                   {JSON.stringify(lastResult, null, 2)}
