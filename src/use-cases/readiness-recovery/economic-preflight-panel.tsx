@@ -26,7 +26,8 @@ const copy = {
     purchases: 'Offers',
     donors: 'Donor extractions',
     hash: 'Semantic hash',
-    warning: 'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
+    warning:
+      'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
     title: 'Економічний RR v2 — попередня компіляція',
@@ -45,7 +46,8 @@ const copy = {
     purchases: 'Пропозиції',
     donors: 'Вилучення донорів',
     hash: 'Семантичний хеш',
-    warning: 'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
+    warning:
+      'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
     title: 'Ekonomiczne RR v2 — podgląd kompilacji',
@@ -64,7 +66,8 @@ const copy = {
     purchases: 'Oferty',
     donors: 'Części z dawców',
     hash: 'Hash semantyczny',
-    warning: 'NIE POZWALA NA DZIAŁANIE. Stany i oferty niezweryfikowane; brak wyniku solvera, zamówienia, zatwierdzonego planu i dowodu korzyści ekonomicznej.',
+    warning:
+      'NIE POZWALA NA DZIAŁANIE. Stany i oferty niezweryfikowane; brak wyniku solvera, zamówienia, zatwierdzonego planu i dowodu korzyści ekonomicznej.',
   },
 } as const
 
@@ -128,8 +131,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       }
       const value: unknown = await response.json()
       if (controller.signal.aborted || current !== revision.current) return
-      if (!isRREconomicPreflight(value) || value.decision_id !== expected)
-        throw new Error(t.incompatible)
+      if (!isRREconomicPreflight(value) || value.decision_id !== expected) throw new Error(t.incompatible)
       setResult(value)
     } catch (reason) {
       if (controller.signal.aborted || current !== revision.current) return
@@ -140,11 +142,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section
-      data-testid="rr-economic-v2-preflight"
-      className="mt-6 border border-sky-400/20 p-4"
-      aria-label={t.title}
-    >
+    <section data-testid="rr-economic-v2-preflight" className="mt-6 border border-sky-400/20 p-4" aria-label={t.title}>
       <h3 className="font-semibold text-sky-200">{t.title}</h3>
       <p className="mt-2 text-xs leading-6 text-slate-300">{t.note}</p>
       <label className="mt-3 block text-sm" htmlFor="rr-economic-v2-json">
@@ -175,9 +173,8 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         <div className="mt-4 text-sm" data-testid="rr-economic-v2-result" data-actionable="false">
           <p className="font-semibold">{t.result}</p>
           <p className="mt-2">
-            {t.jobs}: {result.job_count} · {t.assets}: {result.asset_count} ·
-            {t.purchases}: {result.procurement_offer_count} · {t.donors}:{' '}
-            {result.donor_extraction_count}
+            {t.jobs}: {result.job_count} · {t.assets}: {result.asset_count} ·{t.purchases}:{' '}
+            {result.procurement_offer_count} · {t.donors}: {result.donor_extraction_count}
           </p>
           <p className="mt-2 break-all font-mono text-xs">
             {t.hash}: {result.ir_semantic_hash}

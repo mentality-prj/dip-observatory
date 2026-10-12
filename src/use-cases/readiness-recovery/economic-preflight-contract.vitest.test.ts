@@ -47,9 +47,7 @@ describe('Core RR-ECON-v2 transport contract', () => {
   })
 
   it('binds a candidate response to a valid, explicit v2 request decision ID', () => {
-    expect(economicRequestDecisionId({ operational: { decision_id: 'rr-synthetic-001' } })).toBe(
-      'rr-synthetic-001'
-    )
+    expect(economicRequestDecisionId({ operational: { decision_id: 'rr-synthetic-001' } })).toBe('rr-synthetic-001')
     for (const request of [
       null,
       [],

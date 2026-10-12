@@ -241,14 +241,16 @@
 }
 @media (max-width: 720px) {
   .localeControls {
-    min-width: 88px;
-    flex-basis: 88px;
+    min-width: 80px;
+    flex-basis: 80px;
   }
   .locale {
     display: none;
   }
   .localeSelect {
     display: flex;
+    gap: 6px;
+    padding-inline: 6px;
   }
 }
 
@@ -271,4 +273,23 @@
 .mobileProductLink:hover {
   color: var(--ds-accent);
   background: var(--ds-hover);
+}
+
+/* Keep Observatory's locale picker inside a 375px viewport without clipping RR evidence tables. */
+@media (max-width: 420px) {
+  .localeControls {
+    min-width: 0;
+    max-width: 64px;
+    flex: 0 1 64px;
+  }
+  .localeSelect {
+    min-width: 0;
+    max-width: 64px;
+    padding-inline: 4px;
+    gap: 2px;
+  }
+  .localeSelect select {
+    min-width: 0;
+    max-width: 38px;
+  }
 }

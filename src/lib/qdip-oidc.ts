@@ -16,7 +16,13 @@ type Session = {
   roles: Role[]
 }
 type Pending = { state: string; nonce: string; verifier: string; returnTo: string; issuedAt: number }
-type OidcDiscovery = { issuer: string; authorization_endpoint: string; token_endpoint: string; jwks_uri: string }
+type OidcDiscovery = {
+  issuer: string
+  authorization_endpoint: string
+  token_endpoint: string
+  jwks_uri: string
+  userinfo_endpoint?: string
+}
 
 const FLOW_COOKIE = 'qdip_oidc_flow'
 const SESSION_COOKIE = 'qdip_oidc_session'
@@ -172,7 +178,29 @@ export function loginUrl(returnTo: string) {
 }
 
 export function onSiteOrigin(request: NextRequest) {
-  return request.nextUrl.origin === new URL(PLATFORM_ORIGINS.site).origin
+  // Next.js can expose its internal listener (127.0.0.1) through nextUrl,
+  // even when a trusted proxy routes the external canonical site host.
+  // Use the actual Host header, never spoofable x-forwarded-host.
+  const canonical = new URL(PLATFORM_ORIGINS.site)
+  const host = request.headers.get('host') ?? request.nextUrl.host
+  if (!host || /[,\s@/?#]/.test(host)) return false
+  let observed: URL
+  try {
+    observed = new URL(canonical.protocol + '//' + host)
+  } catch {
+    return false
+  }
+  if (observed.host.toLowerCase() !== canonical.host.toLowerCase()) return false
+
+  // A proxy may terminate TLS, but cannot silently downgrade an HTTPS
+  // public login to HTTP. For local tests only, allow the exact .localhost
+  // canonical origin over HTTP without adding other allowed hosts.
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const secureRequest = request.nextUrl.protocol === 'https:' || forwardedProto === 'https'
+  if (canonical.protocol === 'https:') return forwardedProto !== 'http' && secureRequest
+  // Only local HTTP testing is allowed; Next may annotate its internal
+  // listener protocol differently from the external browser connection.
+  return canonical.hostname.endsWith('.localhost')
 }
 
 function cookieOptions(request: NextRequest, maxAge: number, shared: boolean) {
@@ -256,6 +284,9 @@ export async function discoverOidc(): Promise<OidcDiscovery> {
     authorization_endpoint: assertIssuerUrl(doc.authorization_endpoint, issuer),
     token_endpoint: assertIssuerUrl(doc.token_endpoint, issuer),
     jwks_uri: assertIssuerUrl(doc.jwks_uri, issuer),
+    ...(typeof doc.userinfo_endpoint === 'string'
+      ? { userinfo_endpoint: assertIssuerUrl(doc.userinfo_endpoint, issuer) }
+      : {}),
   }
 }
 
@@ -269,7 +300,9 @@ export function authorizationUrl(config: OidcDiscovery, flow: Pending) {
   if (!roleSettings) throw new Error('QDIP Zitadel role configuration is missing')
   url.searchParams.set(
     'scope',
-    `openid profile email urn:zitadel:iam:org:project:id:${roleSettings.projectId}:aud urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:roles:id:${roleSettings.organizationId}`
+    // Do not scope roles to a guessed organization: Zitadel silently drops grants for other organizations.
+    // The verified project/org membership is enforced by rolesFromClaims after token issuance.
+    `openid profile email urn:zitadel:iam:org:project:id:${roleSettings.projectId}:aud urn:iam:org:project:roles urn:zitadel:iam:org:projects:roles`
   )
   url.searchParams.set('redirect_uri', new URL(AUTH_CALLBACK_PATH, PLATFORM_ORIGINS.site).toString())
   url.searchParams.set('state', flow.state)
@@ -355,7 +388,19 @@ export async function exchangeCode(code: string, flow: Pending, config: OidcDisc
     body,
   })
   if (typeof payload.id_token !== 'string') throw new Error('OIDC ID token missing')
-  return verifyIdToken(payload.id_token, flow, config)
+  const session = await verifyIdToken(payload.id_token, flow, config)
+  if (isAllowedSession(session) || !config.userinfo_endpoint) return session
+
+  // Zitadel may assert roles in Userinfo even when they are absent from the ID token.
+  // Read only from the discovered, issuer-pinned endpoint using this code exchange's access token.
+  // A Userinfo response never overrides a role-bearing ID token.
+  const accessToken = payload.access_token
+  if (typeof accessToken !== 'string' || accessToken.length < 10 || accessToken.length > 15_000) return session
+  const userinfo = await readJson(config.userinfo_endpoint, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (userinfo.sub !== session.sub) throw new Error('OIDC Userinfo subject mismatch')
+  return { ...session, roles: rolesFromClaims(userinfo) }
 }
 
 export function attachSession(response: NextResponse, request: NextRequest, session: Session) {

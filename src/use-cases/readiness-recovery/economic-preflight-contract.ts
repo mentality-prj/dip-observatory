@@ -34,8 +34,7 @@ const expectedKeys = [
 export function economicRequestDecisionId(value: unknown): string | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const request = value as { operational?: unknown }
-  if (!request.operational || typeof request.operational !== 'object' || Array.isArray(request.operational))
-    return null
+  if (!request.operational || typeof request.operational !== 'object' || Array.isArray(request.operational)) return null
   const { decision_id: id } = request.operational as { decision_id?: unknown }
   return typeof id === 'string' && idPattern.test(id) && !['.', '..'].includes(id) ? id : null
 }

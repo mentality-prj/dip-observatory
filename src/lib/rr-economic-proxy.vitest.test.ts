@@ -45,14 +45,20 @@ afterEach(() => {
 describe('RR-ECON-v2 Web-to-Core proxy integration boundary', () => {
   it('forwards exactly the compiler-only path with server API key and no actor execution', async () => {
     const calls: { url: string; init: RequestInit }[] = []
-    vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {
-      calls.push({ url, init })
-      return new Response(JSON.stringify({
-        schema_version: 'readiness-recovery.economic-preflight.v2',
-        state: 'COMPILED_PREVIEW_ONLY',
-        actionable: false,
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({ url, init })
+        return new Response(
+          JSON.stringify({
+            schema_version: 'readiness-recovery.economic-preflight.v2',
+            state: 'COMPILED_PREVIEW_ONLY',
+            actionable: false,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      })
+    )
     const response = await POST(fakeRequest(), params(['economic-v2', 'preflight']))
     expect(response.status).toBe(200)
     expect(calls).toHaveLength(1)

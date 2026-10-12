@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { loginFailurePage } from '@/lib/oidc-login-error'
 import {
   attachSession,
   clearFlow,
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
   // Clear one-time PKCE state even when authentication fails.
   if (!flow || !code || code.length > 4096 || request.nextUrl.searchParams.has('error')) {
-    const rejected = NextResponse.json({ error: 'Invalid or expired OIDC callback' }, { status: 401 })
+    const rejected = loginFailurePage('expired-flow', flow?.returnTo)
     clearFlow(rejected, request)
     return rejected
   }
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     const discovery = await discoverOidc()
     const session = await exchangeCode(code, flow, discovery)
     if (!isAllowedSession(session)) {
-      const denied = NextResponse.json({ error: 'QDIP access has not been granted to this account' }, { status: 403 })
+      const denied = loginFailurePage('missing-role', flow.returnTo)
       clearFlow(denied, request)
       return denied
     }
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     result.headers.set('Cache-Control', 'no-store')
     return result
   } catch {
-    const rejected = NextResponse.json({ error: 'OIDC token validation failed' }, { status: 401 })
+    const rejected = loginFailurePage('invalid-token', flow.returnTo)
     clearFlow(rejected, request)
     return rejected
   }

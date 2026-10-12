@@ -5,6 +5,7 @@ import type { Locale } from '@/lib/observatory-i18n'
 import { rrOperatorCopy } from './operator-copy'
 import { RREconomicPreflightPanel } from './economic-preflight-panel'
 import { OperatorEvidence, isKernelRRPresentation, type KernelRRPresentation } from './operator-evidence'
+import { canCompareRRExecutions, RRExecutionComparison } from './operator-comparison'
 import {
   OperatorRequestError,
   OperatorRequestGuard,
@@ -28,12 +29,19 @@ type Session = { configured: boolean; authenticated: boolean; mode: string }
 type KernelPreflight = {
   schema_version: 'readiness-recovery.presentation.v1'
   validation_scope: 'SCHEMA_AND_ADMISSION_ONLY'
+  accepted_for_kernel_submission: true
   execution_id: string
   decision_id: string
+  source_system: string
   source_snapshot_id: string
+  source_version: string
   payload_digest: string
   job_count: number
   technician_count: number
+  inventory_item_types: number
+  donor_count: number
+  horizon_slots: number
+  workshop_capacity: number
   warning: 'NOT_EXECUTION_OR_FEASIBILITY_PROOF'
 }
 function isKernelPreflight(value: unknown): value is KernelPreflight {
@@ -42,9 +50,17 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
   return (
     v.schema_version === 'readiness-recovery.presentation.v1' &&
     v.validation_scope === 'SCHEMA_AND_ADMISSION_ONLY' &&
+    v.accepted_for_kernel_submission === true &&
     typeof v.execution_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.execution_id) &&
     typeof v.decision_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(v.decision_id) &&
+    typeof v.source_system === 'string' &&
+    v.source_system.trim().length > 0 &&
     typeof v.source_snapshot_id === 'string' &&
+    v.source_snapshot_id.trim().length > 0 &&
+    typeof v.source_version === 'string' &&
+    v.source_version.trim().length > 0 &&
     typeof v.payload_digest === 'string' &&
     /^[0-9a-f]{64}$/.test(v.payload_digest) &&
     v.warning === 'NOT_EXECUTION_OR_FEASIBILITY_PROOF' &&
@@ -53,7 +69,15 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
     v.job_count > 0 &&
     typeof v.technician_count === 'number' &&
     Number.isSafeInteger(v.technician_count) &&
-    v.technician_count > 0
+    v.technician_count > 0 &&
+    Number.isSafeInteger(v.inventory_item_types) &&
+    (v.inventory_item_types ?? -1) >= 0 &&
+    Number.isSafeInteger(v.donor_count) &&
+    (v.donor_count ?? -1) >= 0 &&
+    Number.isSafeInteger(v.horizon_slots) &&
+    (v.horizon_slots ?? 0) > 0 &&
+    Number.isSafeInteger(v.workshop_capacity) &&
+    (v.workshop_capacity ?? 0) > 0
   )
 }
 const initialRequest = `{
@@ -96,6 +120,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
   const [executionId, setExecutionId] = useState('')
   const [lastResult, setLastResult] = useState<unknown>(null)
   const [presentation, setPresentation] = useState<KernelRRPresentation | null>(null)
+  const [comparisonPredecessor, setComparisonPredecessor] = useState<KernelRRPresentation | null>(null)
+  const [scheduleSearch, setScheduleSearch] = useState('')
   const [preflight, setPreflight] = useState<KernelPreflight | null>(null)
   const [validatedBody, setValidatedBody] = useState<string | null>(null)
   const [preflightStatus, setPreflightStatus] = useState('')
@@ -127,6 +153,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       /* private browsing */
     }
   }, [view, viewReady])
+  useEffect(() => {
+    if (!viewReady || !session?.authenticated || view.startPanel === 'EXECUTE') return
+    // Only the selected local presentation anchor may change scroll position.
+    // Never affects Kernel requests, decision policy or authorization.
+    document.getElementById('rr-panel-' + view.startPanel.toLowerCase())?.scrollIntoView({ block: 'start' })
+  }, [viewReady, session?.authenticated, view.startPanel])
+
   useEffect(
     () => () => {
       requestGuard.current.invalidate()
@@ -142,6 +175,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     setBusy(false)
     setLastResult(null)
     setPresentation(null)
+    setComparisonPredecessor(null)
+    setScheduleSearch('')
     setPreflight(null)
     setValidatedBody(null)
     setPreflightStatus('Input changed; waiting for Kernel validation')
@@ -161,11 +196,19 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
       setLastResult(null)
       setPresentation(null)
+      setComparisonPredecessor(null)
       setDecisionId('')
       setExecutionId('')
       setError(t.sessionLost)
     } else if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
       setLastResult(null)
+      if (reason instanceof OperatorRequestError && reason.kind === 'ACCESS_DENIED') {
+        // A role/tenant denial invalidates previously displayed private read models.
+        setPresentation(null)
+        setComparisonPredecessor(null)
+        setPreflight(null)
+        setValidatedBody(null)
+      }
       setError(reason instanceof Error ? reason.message : 'RR operation failed')
     }
   }
@@ -223,13 +266,64 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
     }
   }, [])
 
+  async function findDirectPredecessor(projection: KernelRRPresentation, epoch: number, signal: AbortSignal) {
+    setComparisonPredecessor(null)
+    if (!projection.predecessor_execution_id) return
+    try {
+      const result: unknown = await checkedJson(
+        await fetch(
+          `/api/rr-operator/kernel/executions/${encodeURIComponent(projection.predecessor_execution_id)}/presentation`,
+          { cache: 'no-store', signal }
+        )
+      )
+      if (requestGuard.current.current(epoch) && canCompareRRExecutions(result, projection)) {
+        setComparisonPredecessor(result)
+      }
+    } catch {
+      // Optional descriptive comparison must not invalidate the authoritative current execution.
+    }
+  }
+
+  async function loadExistingPresentation() {
+    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(executionId)) return
+    const { epoch, signal } = startOperation()
+    setBusy(true)
+    setError(null)
+    setLastResult(null)
+    setPresentation(null)
+    setComparisonPredecessor(null)
+    try {
+      const result: unknown = await checkedJson(
+        await fetch(`/api/rr-operator/kernel/executions/${encodeURIComponent(executionId)}/presentation`, {
+          cache: 'no-store',
+          signal,
+        })
+      )
+      if (!requestGuard.current.current(epoch)) return
+      if (!isKernelRRPresentation(result) || result.execution_id !== executionId) {
+        throw new Error('Kernel returned an incompatible presentation schema')
+      }
+      setPresentation(result)
+      setDecisionId(result.decision_id)
+      setOperation('Inspect stored execution')
+      await findDirectPredecessor(result, epoch, signal)
+    } catch (reason) {
+      operationFailed(reason, epoch)
+    } finally {
+      if (requestGuard.current.current(epoch)) setBusy(false)
+    }
+  }
+
   async function execute(label: string, url: string, method = 'GET', body?: string) {
     const { epoch, signal } = startOperation()
     setBusy(true)
     setError(null)
     setErrorKind(null)
     setLastResult(null)
-    if (method !== 'GET') setPresentation(null)
+    if (method !== 'GET') {
+      setPresentation(null)
+      setComparisonPredecessor(null)
+    }
     try {
       const response = await fetch(url, {
         method,
@@ -295,6 +389,7 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             )
               throw new Error('Kernel returned an incompatible presentation schema')
             setPresentation(projection)
+            await findDirectPredecessor(projection, epoch, signal)
           } catch (projectionError) {
             if (
               requestGuard.current.current(epoch) &&
@@ -434,6 +529,8 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setSession({ configured: true, authenticated: false, mode: 'zitadel-oidc' })
       setLastResult(null)
       setPresentation(null)
+      setComparisonPredecessor(null)
+      setScheduleSearch('')
       setExecutionId('')
       setDecisionId('')
       setRequestBody(initialRequest)
@@ -486,9 +583,37 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       {session.authenticated && presentation ? (
         <section aria-label={t.outcome} data-testid="rr-decision-first" className="mt-6">
           <h3 className="text-lg font-semibold text-white">{t.outcome}</h3>
-          <OperatorEvidence locale={locale} record={presentation} visibleMetrics={view.metrics} />
+          <div data-testid="rr-decision-review" className="mt-3 border-l-2 border-sky-400/60 pl-3">
+            <h4 className="font-semibold">{t.reviewHeader}</h4>
+            <p className="mt-1 text-sm text-slate-300">{t.reviewBody}</p>
+            <p className="mt-2 text-xs text-amber-200">{t.evidenceGaps}</p>
+          </div>
+          <label className="mt-4 block text-sm" htmlFor="rr-schedule-filter">
+            {t.scheduleFilter}
+          </label>
+          <input
+            id="rr-schedule-filter"
+            type="search"
+            value={scheduleSearch}
+            onChange={(event) => setScheduleSearch(event.target.value)}
+            className="mt-2 w-full max-w-md border border-white/20 bg-slate-950 p-2 text-sm"
+            autoComplete="off"
+          />
+          <OperatorEvidence
+            locale={locale}
+            record={presentation}
+            visibleMetrics={view.metrics}
+            scheduleSearch={scheduleSearch}
+            detailed={view.details === 'DETAILED'}
+          />
+          <RRExecutionComparison locale={locale} previous={comparisonPredecessor} current={presentation} />
         </section>
       ) : null}
+      {session.authenticated && (
+        <p data-testid="rr-workflow-steps" className="mt-4 text-sm text-slate-300">
+          {t.viewSteps}
+        </p>
+      )}
       {session.authenticated && (
         <div className="mt-5 border border-white/15 p-3" data-testid="rr-operator-preferences">
           <h3 className="font-semibold">{t.display}</h3>
@@ -499,6 +624,13 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               className="border border-white/20 px-3 py-2 text-sm text-slate-200"
             >
               {t.business}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView(templateKernelView('OPERATIONS'))}
+              className="border border-white/20 px-3 py-2 text-sm text-slate-200"
+            >
+              {t.operations}
             </button>
             <button
               type="button"
@@ -520,6 +652,33 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               <option value="COMPACT">{t.compact}</option>
             </select>
           </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm" htmlFor="rr-start-panel">
+              {t.startView}
+              <select
+                id="rr-start-panel"
+                className="mt-1 block w-full border border-white/20 bg-slate-950 p-2"
+                value={view.startPanel}
+                onChange={(event) => setView({ ...view, startPanel: event.target.value as KernelPanel })}
+              >
+                <option value="EXECUTE">{t.firstPanel}</option>
+                <option value="REPLAN">{t.replanPanel}</option>
+                <option value="EVIDENCE">{t.evidencePanel}</option>
+              </select>
+            </label>
+            <label className="block text-sm" htmlFor="rr-evidence-detail">
+              {t.detailLevel}
+              <select
+                id="rr-evidence-detail"
+                className="mt-1 block w-full border border-white/20 bg-slate-950 p-2"
+                value={view.details}
+                onChange={(event) => setView({ ...view, details: event.target.value as KernelView['details'] })}
+              >
+                <option value="SUMMARY">{t.summaryView}</option>
+                <option value="DETAILED">{t.detailedView}</option>
+              </select>
+            </label>
+          </div>
           <fieldset className="mt-3 border border-white/15 p-3">
             <legend className="px-2 text-sm">{t.visibleMetrics}</legend>
             <div className="flex flex-wrap gap-4">
@@ -601,7 +760,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         </div>
       ) : (
         <div className={`mt-6 grid xl:grid-cols-2 ${view.density === 'COMPACT' ? 'gap-2' : 'gap-5'}`}>
-          <div className="space-y-3" style={{ order: view.panels.indexOf('EXECUTE') }}>
+          <div
+            id="rr-panel-execute"
+            className="min-w-0 space-y-3 scroll-mt-6"
+            style={{ order: view.panels.indexOf('EXECUTE') }}
+          >
             <h3 className="font-semibold">1. {t.create}</h3>
             <p className="text-xs text-slate-400">{t.createHelp}</p>
             <label className="block text-sm" htmlFor="rr-kernel-request-file">
@@ -672,7 +835,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3" style={{ order: view.panels.indexOf('REPLAN') }}>
+          <div
+            id="rr-panel-replan"
+            className="min-w-0 space-y-3 scroll-mt-6"
+            style={{ order: view.panels.indexOf('REPLAN') }}
+          >
             <h3 className="font-semibold">2. {t.replan}</h3>
             <p className="text-xs text-slate-400">{t.replanHelp}</p>
             <label className="block text-sm" htmlFor="rr-execution-id">
@@ -716,7 +883,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             </button>
           </div>
 
-          <div className="space-y-3 xl:col-span-2" style={{ order: view.panels.indexOf('EVIDENCE') }}>
+          <div
+            id="rr-panel-evidence"
+            className="min-w-0 space-y-3 scroll-mt-6 xl:col-span-2"
+            style={{ order: view.panels.indexOf('EVIDENCE') }}
+          >
             <h3 className="font-semibold">3. {t.evidence}</h3>
             <label className="block text-sm" htmlFor="rr-decision-id">
               {t.decisionId}
@@ -731,6 +902,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
               className="w-full border border-white/20 bg-slate-950 p-2 text-sm"
             />
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={busy || !validId(executionId)}
+                onClick={() => void loadExistingPresentation()}
+                className="border border-white/25 px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {t.inspectExecution}
+              </button>
               <button
                 type="button"
                 disabled={busy || !validId(decisionId)}
@@ -780,7 +959,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
           {lastResult !== null && (
             <div className="xl:col-span-2" style={{ order: 3 }} aria-live="polite">
               <h3 className="font-semibold">{operation}</h3>
-              <details className="mt-3 border border-white/15 p-3" data-testid="rr-technical-response">
+              <details
+                key={view.details}
+                open={view.details === 'DETAILED'}
+                className="mt-3 border border-white/15 p-3"
+                data-testid="rr-technical-response"
+              >
                 <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t.technicalPayload}</summary>
                 <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-4 font-mono text-xs">
                   {JSON.stringify(lastResult, null, 2)}
