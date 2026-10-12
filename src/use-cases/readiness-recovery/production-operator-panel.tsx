@@ -813,9 +813,11 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
                   .then((value) => {
                     if (fileRevision.current !== revision) return
                     try {
-                      const parsed: unknown = JSON.parse(value)
+                      // Preserve the original bytes so Core rejects duplicate
+                      // properties; browser reserialization must not erase them.
+                      JSON.parse(value)
                       inputRevision.current += 1
-                      setRequestBody(JSON.stringify(parsed, null, 2))
+                      setRequestBody(value)
                       setError(null)
                     } catch (reason) {
                       setError(reason instanceof Error ? reason.message : 'Invalid RR JSON')
