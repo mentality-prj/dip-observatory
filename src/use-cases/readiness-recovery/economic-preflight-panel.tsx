@@ -16,6 +16,11 @@ type EconomicAdvice = {
   decision_id: string
   status: string
   modeled_net_incremental_cents: string | null
+  modeled_baseline_margin_cents: string | null
+  modeled_recovered_margin_cents: string | null
+  modeled_repair_cost_cents: string | null
+  modeled_procurement_cost_cents: string | null
+  modeled_donor_cost_cents: string | null
   scheduled_jobs: { job_id: string; technician_id: string; start_slot: number; finish_slot: number }[]
   selected_procurement_ids: string[]
   scheduled_donors: { donor_id: string; start_slot: number; finish_slot: number }[]
@@ -28,6 +33,9 @@ function economicSnapshotId(doc: unknown): string | null {
   const id = doc.snapshot_id
   return typeof id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(id) ? id : null
 }
+const isMoneyOrNull = (value: unknown): value is string | null =>
+  value === null || (typeof value === 'string' && /^-?\d+(?:\.\d+)?$/.test(value))
+
 function isEconomicAdvice(value: unknown): value is EconomicAdvice {
   if (!value || typeof value !== 'object') return false
   const a = value as Partial<EconomicAdvice>
@@ -39,9 +47,12 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
     goodId(a.snapshot_id) && goodId(a.execution_id) &&
     /^[0-9a-f]{64}$/.test(a.snapshot_digest ?? '') &&
     typeof a.decision_id === 'string' && typeof a.status === 'string' &&
-    (a.modeled_net_incremental_cents === null ||
-      (typeof a.modeled_net_incremental_cents === 'string' &&
-        /^-?\d+(?:\.\d+)?$/.test(a.modeled_net_incremental_cents))) &&
+    isMoneyOrNull(a.modeled_net_incremental_cents) &&
+    isMoneyOrNull(a.modeled_baseline_margin_cents) &&
+    isMoneyOrNull(a.modeled_recovered_margin_cents) &&
+    isMoneyOrNull(a.modeled_repair_cost_cents) &&
+    isMoneyOrNull(a.modeled_procurement_cost_cents) &&
+    isMoneyOrNull(a.modeled_donor_cost_cents) &&
     Array.isArray(a.scheduled_jobs) && a.scheduled_jobs.length <= 2500 &&
     a.scheduled_jobs.every(job => !!job && goodId(job.job_id) && goodId(job.technician_id) &&
       Number.isSafeInteger(job.start_slot) && Number.isSafeInteger(job.finish_slot) &&
@@ -99,6 +110,11 @@ function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
 }
 const copy = {
   en: {
+    baseline: 'No-action margin',
+    recovered: 'Modeled operating margin',
+    repairsCost: 'Repair costs',
+    procurementCost: 'Procurement costs',
+    donorCost: 'Donor extraction costs',
     verify: 'Verify archive and Kernel provenance',
     verified: 'Archive and manifest verified (not source attestation).',
     archiveList: 'Archive history',
@@ -134,6 +150,11 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    baseline: 'Маржа без втручання',
+    recovered: 'Модельована операційна маржа',
+    repairsCost: 'Витрати на ремонт',
+    procurementCost: 'Витрати на закупівлі',
+    donorCost: 'Витрати на розбирання донорів',
     verify: 'Перевірити архів і походження Kernel',
     verified: 'Архів і manifest перевірені (не посвідчення джерела).',
     archiveList: 'Архів рекомендацій',
@@ -169,6 +190,11 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    baseline: 'Marża bez interwencji',
+    recovered: 'Modelowana marża operacyjna',
+    repairsCost: 'Koszty napraw',
+    procurementCost: 'Koszty zakupów',
+    donorCost: 'Koszty demontażu dawców',
     verify: 'Zweryfikuj archiwum i pochodzenie Kernel',
     verified: 'Archiwum i manifest zweryfikowane (nie poświadczenie źródła).',
     archiveList: 'Archiwum rekomendacji',
@@ -586,6 +612,15 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         <div className="mt-4 border border-white/20 p-3 text-sm" data-testid="rr-economic-v2-advice" data-actionable="false">
           <h4 className="font-semibold">{t.solved}</h4>
           <p className="mt-2">Status: {advice.status} · {t.net}: {advice.modeled_net_incremental_cents ?? 'N/A'}</p>
+          {advice.modeled_baseline_margin_cents !== null ? (
+            <dl className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2" data-testid="rr-economic-v2-breakdown">
+              <div><dt>{t.baseline}</dt><dd className="font-mono">{advice.modeled_baseline_margin_cents}</dd></div>
+              <div><dt>{t.recovered}</dt><dd className="font-mono">{advice.modeled_recovered_margin_cents}</dd></div>
+              <div><dt>{t.repairsCost}</dt><dd className="font-mono">{advice.modeled_repair_cost_cents}</dd></div>
+              <div><dt>{t.procurementCost}</dt><dd className="font-mono">{advice.modeled_procurement_cost_cents}</dd></div>
+              <div><dt>{t.donorCost}</dt><dd className="font-mono">{advice.modeled_donor_cost_cents}</dd></div>
+            </dl>
+          ) : null}
           <p className="mt-2">{t.jobsAdvice}</p>
           {advice.scheduled_jobs.length === 0 ? <p>{t.noResult}</p> : (
             <ul className="list-disc pl-5">
