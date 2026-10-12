@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSign, generateKeyPairSync } from 'node:crypto'
+import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 import {
@@ -10,6 +11,7 @@ import {
   canOperateRr,
   isAllowedSession,
   oidcConfigured,
+  onSiteOrigin,
   safeReturnTo,
   verifyIdToken,
 } from './qdip-oidc'
@@ -222,6 +224,34 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     const signed = token()
     await expect(verifyIdToken(signed.slice(0, -4) + 'ABCD', flow, config)).rejects.toThrow()
   })
+  it('accepts canonical site Host behind TLS-terminating reverse proxy, not internal listener', () => {
+    const request = new NextRequest('http://127.0.0.1:3000/api/auth/login', {
+      headers: { host: 'qdip.ai', 'x-forwarded-proto': 'https' },
+    })
+    expect(onSiteOrigin(request)).toBe(true)
+
+    const canonical = new NextRequest('https://qdip.ai/api/auth/login', {
+      headers: { host: 'qdip.ai' },
+    })
+    expect(onSiteOrigin(canonical)).toBe(true)
+  })
+
+  it('rejects untrusted Host, spoofed forwarding host and HTTPS downgrade', () => {
+    const make = (host: string, forwardedProto: string, forwardedHost?: string) =>
+      new NextRequest('http://127.0.0.1:3000/api/auth/login', {
+        headers: {
+          host,
+          'x-forwarded-proto': forwardedProto,
+          ...(forwardedHost ? { 'x-forwarded-host': forwardedHost } : {}),
+        },
+      })
+    expect(onSiteOrigin(make('evil.example', 'https', 'qdip.ai'))).toBe(false)
+    expect(onSiteOrigin(make('qdip.ai, evil.example', 'https'))).toBe(false)
+    expect(onSiteOrigin(make('qdip.ai', 'http'))).toBe(false)
+    expect(onSiteOrigin(make('www.qdip.ai', 'https'))).toBe(false)
+    expect(onSiteOrigin(make('qdip.ai:3000', 'https'))).toBe(false)
+  })
+
   it('disallows external return_to redirect targets', () => {
     expect(safeReturnTo('//evil.example')).toBe('https://qdip.ai/en')
     expect(safeReturnTo('https://evil.example')).toBe('https://qdip.ai/en')
