@@ -15,6 +15,9 @@ type EconomicAdvice = {
   execution_id: string
   decision_id: string
   status: string
+  optimality_proven: boolean
+  solver_best_bound_cents: string | null
+  solver_relative_gap: string | null
   modeled_net_incremental_cents: string | null
   modeled_baseline_margin_cents: string | null
   modeled_recovered_margin_cents: string | null
@@ -47,6 +50,10 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
     goodId(a.snapshot_id) && goodId(a.execution_id) &&
     /^[0-9a-f]{64}$/.test(a.snapshot_digest ?? '') &&
     typeof a.decision_id === 'string' && typeof a.status === 'string' &&
+    typeof a.optimality_proven === 'boolean' &&
+    a.optimality_proven === (a.status === 'OPTIMAL') &&
+    isMoneyOrNull(a.solver_best_bound_cents) &&
+    isMoneyOrNull(a.solver_relative_gap) &&
     isMoneyOrNull(a.modeled_net_incremental_cents) &&
     isMoneyOrNull(a.modeled_baseline_margin_cents) &&
     isMoneyOrNull(a.modeled_recovered_margin_cents) &&
@@ -110,6 +117,10 @@ function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
 }
 const copy = {
   en: {
+    proven: 'Proven optimal',
+    unproven: 'Feasible candidate (not proven optimal)',
+    bound: 'Solver best bound (EUR cents)',
+    gap: 'Relative optimality gap',
     baseline: 'No-action margin',
     recovered: 'Modeled operating margin',
     repairsCost: 'Repair costs',
@@ -150,6 +161,10 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    proven: 'Оптимальність доведено',
+    unproven: 'Допустимий план, оптимальність не доведена',
+    bound: 'Найкраща межа CP-SAT (євроценти)',
+    gap: 'Відносний розрив оптимальності',
     baseline: 'Маржа без втручання',
     recovered: 'Модельована операційна маржа',
     repairsCost: 'Витрати на ремонт',
@@ -190,6 +205,10 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    proven: 'Udowodnione optimum',
+    unproven: 'Wykonalny plan, optimum nieudowodnione',
+    bound: 'Najlepsza granica CP-SAT (eurocenty)',
+    gap: 'Względna luka optymalności',
     baseline: 'Marża bez interwencji',
     recovered: 'Modelowana marża operacyjna',
     repairsCost: 'Koszty napraw',
@@ -612,6 +631,13 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         <div className="mt-4 border border-white/20 p-3 text-sm" data-testid="rr-economic-v2-advice" data-actionable="false">
           <h4 className="font-semibold">{t.solved}</h4>
           <p className="mt-2">Status: {advice.status} · {t.net}: {advice.modeled_net_incremental_cents ?? 'N/A'}</p>
+          {advice.status === 'OPTIMAL' || advice.status === 'FEASIBLE' ? (
+            <p className="mt-1 text-xs" data-testid="rr-economic-v2-optimality">
+              {advice.optimality_proven ? t.proven : t.unproven}
+              {advice.solver_best_bound_cents !== null ? ` · ${t.bound}: ${advice.solver_best_bound_cents}` : ''}
+              {advice.solver_relative_gap !== null ? ` · ${t.gap}: ${advice.solver_relative_gap}` : ''}
+            </p>
+          ) : null}
           {advice.modeled_baseline_margin_cents !== null ? (
             <dl className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2" data-testid="rr-economic-v2-breakdown">
               <div><dt>{t.baseline}</dt><dd className="font-mono">{advice.modeled_baseline_margin_cents}</dd></div>
