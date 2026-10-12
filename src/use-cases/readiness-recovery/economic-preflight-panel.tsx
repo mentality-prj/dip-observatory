@@ -75,8 +75,32 @@ function isAdviceSummary(item: unknown): item is EconomicAdviceSummary {
         /^-?\d+(?:\.\d+)?$/.test(x.modeled_net_incremental_cents)))
   )
 }
+type EconomicIntegrity = {
+  schema_version: 'readiness-recovery.economic-advice-integrity.v2'
+  execution_id: string
+  snapshot_id: string
+  response_digest: string
+  snapshot_digest: string
+  archive_digest_verified: true
+  snapshot_binding_verified: true
+  kernel_manifest_verified: true
+  actionable: false
+}
+function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
+  if (!value || typeof value !== 'object') return false
+  const x = value as Partial<EconomicIntegrity>
+  return x.schema_version === 'readiness-recovery.economic-advice-integrity.v2' &&
+    typeof x.execution_id === 'string' &&
+    typeof x.snapshot_id === 'string' &&
+    typeof x.response_digest === 'string' && /^[a-f0-9]{64}$/.test(x.response_digest) &&
+    typeof x.snapshot_digest === 'string' && /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
+    x.archive_digest_verified === true && x.snapshot_binding_verified === true &&
+    x.kernel_manifest_verified === true && x.actionable === false
+}
 const copy = {
   en: {
+    verify: 'Verify archive and Kernel provenance',
+    verified: 'Archive and manifest verified (not source attestation).',
     archiveList: 'Archive history',
     archiveNext: 'More archived results',
     find: 'Load archived advice',
@@ -110,6 +134,8 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    verify: 'Перевірити архів і походження Kernel',
+    verified: 'Архів і manifest перевірені (не посвідчення джерела).',
     archiveList: 'Архів рекомендацій',
     archiveNext: 'Завантажити ще',
     find: 'Відкрити збережену рекомендацію',
@@ -143,6 +169,8 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    verify: 'Zweryfikuj archiwum i pochodzenie Kernel',
+    verified: 'Archiwum i manifest zweryfikowane (nie poświadczenie źródła).',
     archiveList: 'Archiwum rekomendacji',
     archiveNext: 'Więcej wyników',
     find: 'Wczytaj zapisaną rekomendację',
@@ -182,6 +210,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
   const [input, setInput] = useState('')
   const [result, setResult] = useState<RREconomicPreflight | null>(null)
   const [advice, setAdvice] = useState<EconomicAdvice | null>(null)
+  const [integrity, setIntegrity] = useState<EconomicIntegrity | null>(null)
   const [archiveExecutionId, setArchiveExecutionId] = useState('')
   const [archiveEntries, setArchiveEntries] = useState<EconomicAdviceSummary[]>([])
   const [archiveCursor, setArchiveCursor] = useState<string | null>(null)
@@ -204,6 +233,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     setInput(value)
     setResult(null)
     setAdvice(null)
+    setIntegrity(null)
     setError('')
     setBusy(false)
   }
@@ -213,6 +243,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     pending.current?.abort()
     setResult(null)
     setAdvice(null)
+    setIntegrity(null)
     setError('')
     let document: unknown
     try {
@@ -258,6 +289,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     const current = ++revision.current
     pending.current?.abort()
     setAdvice(null)
+    setIntegrity(null)
     setError('')
     let doc: unknown
     try {
@@ -313,6 +345,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         value.snapshot_digest !== registered.input_digest ||
         value.decision_id !== economicRequestDecisionId(doc)) throw new Error(t.incompatible)
       setAdvice(value)
+      setIntegrity(null)
       setArchiveExecutionId(value.execution_id)
     } catch (reason) {
       if (controller.signal.aborted || current !== revision.current) return
@@ -331,6 +364,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     const current = ++revision.current
     pending.current?.abort()
     setAdvice(null)
+    setIntegrity(null)
     setError('')
     const controller = new AbortController()
     pending.current = controller
@@ -348,6 +382,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       if (!isEconomicAdvice(value) || value.execution_id !== archiveExecutionId)
         throw new Error(t.incompatible)
       setAdvice(value)
+      setIntegrity(null)
     } catch (reason) {
       if (controller.signal.aborted || current !== revision.current) return
       setError(reason instanceof Error ? reason.message : t.unavailable)
@@ -399,6 +434,42 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     }
   }
 
+  async function verifyAdviceIntegrity() {
+    const candidate = advice
+    if (!candidate) return
+    const current = ++revision.current
+    pending.current?.abort()
+    setIntegrity(null)
+    setError('')
+    const controller = new AbortController()
+    pending.current = controller
+    setBusy(true)
+    try {
+      const response = await fetch(
+        '/api/rr-operator/kernel/economic-v2/advice/' +
+          encodeURIComponent(candidate.execution_id) + '/integrity',
+        { cache: 'no-store', signal: controller.signal }
+      )
+      if (!response.ok) throw new Error(
+        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
+      )
+      const value: unknown = await response.json()
+      if (controller.signal.aborted || current !== revision.current) return
+      if (!isEconomicIntegrity(value) ||
+        value.execution_id !== candidate.execution_id ||
+        value.snapshot_id !== candidate.snapshot_id ||
+        value.snapshot_digest !== candidate.snapshot_digest) {
+        throw new Error(t.incompatible)
+      }
+      setIntegrity(value)
+    } catch (reason) {
+      if (controller.signal.aborted || current !== revision.current) return
+      setError(reason instanceof Error ? reason.message : t.unavailable)
+    } finally {
+      if (current === revision.current) setBusy(false)
+    }
+  }
+
   return (
     <section data-testid="rr-economic-v2-preflight" className="mt-6 border border-sky-400/20 p-4" aria-label={t.title}>
       <h3 className="font-semibold text-sky-200">{t.title}</h3>
@@ -441,6 +512,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
             onChange={(event) => {
               setArchiveExecutionId(event.target.value)
               setAdvice(null)
+    setIntegrity(null)
             }}
             className="mt-1 block border border-white/20 bg-slate-950 p-2 font-mono text-xs"
             autoComplete="off"
@@ -529,6 +601,22 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
             (donor) => donor.donor_id + ' (' + donor.start_slot + '–' + donor.finish_slot + ')'
           ).join(', ') || '—'}</p>
           <p className="mt-2 break-all font-mono text-xs">Snapshot: {advice.snapshot_id} · {advice.snapshot_digest}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void verifyAdviceIntegrity()}
+              className="border border-sky-300/60 px-3 py-2 text-xs disabled:opacity-40"
+              data-testid="rr-economic-v2-verify-advice"
+            >
+              {t.verify}
+            </button>
+            {integrity ? (
+              <span className="text-xs text-sky-200" data-testid="rr-economic-v2-verified">
+                {t.verified}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-2 text-xs text-amber-200">{t.adviceWarning}</p>
         </div>
       ) : null}

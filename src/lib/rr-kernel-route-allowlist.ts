@@ -9,6 +9,8 @@ export function allowedKernelPath(path: string[], method: string) {
     if (path.length === 2 && ['preflight', 'snapshots'].includes(path[1]))
       return method === 'POST'
     if (path.length === 3 && path[1] === 'advice') return method === 'GET'
+    if (path.length === 4 && path[1] === 'advice' && path[3] === 'integrity')
+      return method === 'GET'
     return false
   }
   if (path[0] === 'source-import') {
