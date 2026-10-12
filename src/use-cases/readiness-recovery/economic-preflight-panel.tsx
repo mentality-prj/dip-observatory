@@ -117,6 +117,7 @@ function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
 }
 const copy = {
   en: {
+    download: 'Download verified advice JSON',
     proven: 'Proven optimal',
     unproven: 'Feasible candidate (not proven optimal)',
     bound: 'Solver best bound (EUR cents)',
@@ -161,6 +162,7 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    download: 'Завантажити перевірену рекомендацію JSON',
     proven: 'Оптимальність доведено',
     unproven: 'Допустимий план, оптимальність не доведена',
     bound: 'Найкраща межа CP-SAT (євроценти)',
@@ -205,6 +207,7 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    download: 'Pobierz zweryfikowaną rekomendację JSON',
     proven: 'Udowodnione optimum',
     unproven: 'Wykonalny plan, optimum nieudowodnione',
     bound: 'Najlepsza granica CP-SAT (eurocenty)',
@@ -515,6 +518,71 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     }
   }
 
+  async function downloadVerifiedAdvice() {
+    const candidate = advice
+    if (!candidate || !/^[A-Za-z0-9_.-]{1,128}$/.test(candidate.execution_id)) return
+    const current = ++revision.current
+    pending.current?.abort()
+    setError('')
+    const controller = new AbortController()
+    pending.current = controller
+    setBusy(true)
+    try {
+      const prefix = '/api/rr-operator/kernel/economic-v2/advice/' +
+        encodeURIComponent(candidate.execution_id)
+      // A browser-visible recommendation is not a signature or acceptance.
+      // Both authenticated reads must succeed and independently verify
+      // the *same* server-stored advice before an export is offered.
+      const proofResponse = await fetch(prefix + '/integrity', {
+        cache: 'no-store', signal: controller.signal,
+      })
+      if (!proofResponse.ok) throw new Error(t.unavailable)
+      const proof: unknown = await proofResponse.json()
+      if (!isEconomicIntegrity(proof) ||
+        proof.execution_id !== candidate.execution_id ||
+        proof.snapshot_digest !== candidate.snapshot_digest) throw new Error(t.incompatible)
+      const adviceResponse = await fetch(prefix, {
+        cache: 'no-store', signal: controller.signal,
+      })
+      if (!adviceResponse.ok) throw new Error(t.unavailable)
+      const stored: unknown = await adviceResponse.json()
+      if (!isEconomicAdvice(stored) ||
+        stored.execution_id !== proof.execution_id ||
+        stored.snapshot_digest !== proof.snapshot_digest ||
+        stored.snapshot_id !== proof.snapshot_id) throw new Error(t.incompatible)
+      if (controller.signal.aborted || current !== revision.current) return
+      const report = {
+        format_version: 'readiness-recovery.economic-evidence-export.v1',
+        authority: 'OPERATOR_SUBMITTED_NON_ACTIONABLE_ADVICE',
+        external_source_attested: false,
+        procurement_authorized: false,
+        stock_reserved: false,
+        advice: stored,
+        integrity: proof,
+      }
+      const download = new Blob([JSON.stringify(report, null, 2) + '\n'], {
+        type: 'application/json',
+      })
+      const uri = URL.createObjectURL(download)
+      try {
+        const link = document.createElement('a')
+        link.href = uri
+        link.download = 'rr-advice-' + candidate.execution_id + '.json'
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+      } finally {
+        URL.revokeObjectURL(uri)
+      }
+      setIntegrity(proof)
+    } catch (reason) {
+      if (controller.signal.aborted || current !== revision.current) return
+      setError(reason instanceof Error ? reason.message : t.unavailable)
+    } finally {
+      if (current === revision.current) setBusy(false)
+    }
+  }
+
   return (
     <section data-testid="rr-economic-v2-preflight" className="mt-6 border border-sky-400/20 p-4" aria-label={t.title}>
       <h3 className="font-semibold text-sky-200">{t.title}</h3>
@@ -671,6 +739,15 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
               data-testid="rr-economic-v2-verify-advice"
             >
               {t.verify}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void downloadVerifiedAdvice()}
+              className="border border-white/20 px-3 py-2 text-xs disabled:opacity-40"
+              data-testid="rr-economic-v2-export"
+            >
+              {t.download}
             </button>
             {integrity ? (
               <span className="text-xs text-sky-200" data-testid="rr-economic-v2-verified">
