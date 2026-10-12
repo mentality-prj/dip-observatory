@@ -281,11 +281,13 @@ export function OperatorEvidence({
   record,
   visibleMetrics = METRIC_KEYS,
   scheduleSearch = '',
+  detailed = false,
 }: {
   locale: Locale
   record: KernelRRPresentation | null
   visibleMetrics?: readonly KernelMetric[]
   scheduleSearch?: string
+  detailed?: boolean
 }) {
   const t = copy[locale]
   if (!record)
@@ -360,7 +362,7 @@ export function OperatorEvidence({
                 <p className="mt-1 text-xs text-slate-400">
                   {t.definition}: {definition}
                 </p>
-                <details className="mt-2 text-xs text-slate-300">
+                <details open={detailed} className="mt-2 text-xs text-slate-300">
                   <summary className="cursor-pointer text-sky-200">{t.metricDetails}</summary>
                   <dl className="mt-2 space-y-2">
                     <div>
@@ -449,7 +451,7 @@ export function OperatorEvidence({
       ) : (
         <p className="mt-4 text-sm text-amber-200">{t.empty}</p>
       )}
-      <details className="mt-4 border-t border-white/15 pt-3">
+      <details open={detailed} className="mt-4 border-t border-white/15 pt-3">
         <summary className="cursor-pointer text-sm text-slate-300">{t.details}</summary>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {cells.map(([label, value]) => (
