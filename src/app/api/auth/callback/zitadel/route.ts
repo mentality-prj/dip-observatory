@@ -5,7 +5,6 @@ import {
   clearFlow,
   discoverOidc,
   exchangeCode,
-  isAllowedSession,
   oidcConfigured,
   onSiteOrigin,
   readFlow,
@@ -29,11 +28,6 @@ export async function GET(request: NextRequest) {
   try {
     const discovery = await discoverOidc()
     const session = await exchangeCode(code, flow, discovery)
-    if (!isAllowedSession(session)) {
-      const denied = loginFailurePage('missing-role', flow.returnTo)
-      clearFlow(denied, request)
-      return denied
-    }
     const result = NextResponse.redirect(safeReturnTo(flow.returnTo), 303)
     clearFlow(result, request)
     attachSession(result, request, session)
