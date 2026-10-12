@@ -54,8 +54,31 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
       donor.finish_slot > donor.start_slot)
   )
 }
+type EconomicAdviceSummary = {
+  execution_id: string
+  snapshot_id: string
+  snapshot_digest: string
+  status: string
+  modeled_net_incremental_cents: string | null
+  created_at: string
+}
+function isAdviceSummary(item: unknown): item is EconomicAdviceSummary {
+  if (!item || typeof item !== 'object') return false
+  const x = item as Partial<EconomicAdviceSummary>
+  return (
+    typeof x.execution_id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(x.execution_id) &&
+    typeof x.snapshot_id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(x.snapshot_id) &&
+    typeof x.snapshot_digest === 'string' && /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
+    typeof x.status === 'string' && typeof x.created_at === 'string' &&
+    (x.modeled_net_incremental_cents === null ||
+      (typeof x.modeled_net_incremental_cents === 'string' &&
+        /^-?\\d+(?:\\.\\d+)?$/.test(x.modeled_net_incremental_cents)))
+  )
+}
 const copy = {
   en: {
+    archiveList: 'Archive history',
+    archiveNext: 'More archived results',
     find: 'Load archived advice',
     archiveId: 'Archived advice execution ID',
     run: 'Solve and archive non-actionable advice',
@@ -87,6 +110,8 @@ const copy = {
       'NOT ACTIONABLE. Source inventory/quotes not verified. No solver result, order, plan commit or commercial advantage.',
   },
   uk: {
+    archiveList: 'Архів рекомендацій',
+    archiveNext: 'Завантажити ще',
     find: 'Відкрити збережену рекомендацію',
     archiveId: 'ID збереженої рекомендації',
     run: 'Розрахувати і зберегти рекомендацію',
@@ -118,6 +143,8 @@ const copy = {
       'НЕ Є ДОЗВОЛОМ НА ДІЮ. Склад і ціни не підтверджено; немає рішення solver, закупівлі, збереженого плану або доведеної економічної переваги.',
   },
   pl: {
+    archiveList: 'Archiwum rekomendacji',
+    archiveNext: 'Więcej wyników',
     find: 'Wczytaj zapisaną rekomendację',
     archiveId: 'ID zapisanej rekomendacji',
     run: 'Oblicz i zapisz rekomendację',
@@ -156,6 +183,8 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
   const [result, setResult] = useState<RREconomicPreflight | null>(null)
   const [advice, setAdvice] = useState<EconomicAdvice | null>(null)
   const [archiveExecutionId, setArchiveExecutionId] = useState('')
+  const [archiveEntries, setArchiveEntries] = useState<EconomicAdviceSummary[]>([])
+  const [archiveCursor, setArchiveCursor] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const revision = useRef(0)
@@ -327,6 +356,49 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     }
   }
 
+
+  async function loadArchiveList(continueFromCursor = false) {
+    const current = ++revision.current
+    pending.current?.abort()
+    setError('')
+    const controller = new AbortController()
+    pending.current = controller
+    setBusy(true)
+    try {
+      const params = new URLSearchParams({ limit: '25' })
+      if (continueFromCursor && archiveCursor) params.set('cursor', archiveCursor)
+      const response = await fetch(
+        '/api/rr-operator/kernel/economic-v2/advice?' + params.toString(),
+        { cache: 'no-store', signal: controller.signal }
+      )
+      if (!response.ok) throw new Error(
+        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
+      )
+      const data: unknown = await response.json()
+      if (controller.signal.aborted || current !== revision.current) return
+      if (!data || typeof data !== 'object' || !('schema_version' in data) ||
+        data.schema_version !== 'readiness-recovery.economic-advice-list.v2' ||
+        !('entries' in data) || !Array.isArray(data.entries) || data.entries.length > 25 ||
+        !data.entries.every(isAdviceSummary) ||
+        !('next_cursor' in data) ||
+        !(data.next_cursor === null ||
+          (typeof data.next_cursor === 'string' &&
+          /^[A-Za-z0-9_.-]{1,128}$/.test(data.next_cursor)))) {
+        throw new Error(t.incompatible)
+      }
+      const next = data.next_cursor as string | null
+      if (continueFromCursor && next && next === archiveCursor) throw new Error(t.incompatible)
+      const rows = data.entries as EconomicAdviceSummary[]
+      setArchiveEntries(previous => continueFromCursor ? [...previous, ...rows] : rows)
+      setArchiveCursor(next)
+    } catch (reason) {
+      if (controller.signal.aborted || current !== revision.current) return
+      setError(reason instanceof Error ? reason.message : t.unavailable)
+    } finally {
+      if (current === revision.current) setBusy(false)
+    }
+  }
+
   return (
     <section data-testid="rr-economic-v2-preflight" className="mt-6 border border-sky-400/20 p-4" aria-label={t.title}>
       <h3 className="font-semibold text-sky-200">{t.title}</h3>
@@ -383,6 +455,43 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         >
           {t.find}
         </button>
+      </div>
+      <div className="mt-4 border border-white/15 p-3" data-testid="rr-economic-v2-archive">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void loadArchiveList()}
+          className="border border-white/20 px-3 py-2 text-sm disabled:opacity-40"
+          data-testid="rr-economic-v2-list-advice"
+        >
+          {t.archiveList}
+        </button>
+        {archiveEntries.length > 0 ? (
+          <ul className="mt-3 space-y-2 text-xs">
+            {archiveEntries.map((item) => (
+              <li key={item.execution_id} className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="text-sky-200 underline"
+                  onClick={() => { setArchiveExecutionId(item.execution_id); setAdvice(null) }}
+                >
+                  {item.execution_id}
+                </button>
+                <span>{item.status} · {item.modeled_net_incremental_cents ?? 'N/A'}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {archiveCursor ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void loadArchiveList(true)}
+            className="mt-3 border border-white/20 px-3 py-2 text-xs disabled:opacity-40"
+          >
+            {t.archiveNext}
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p role="alert" className="mt-3 text-sm text-rose-300">
