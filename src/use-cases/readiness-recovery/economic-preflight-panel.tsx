@@ -37,7 +37,7 @@ function economicSnapshotId(doc: unknown): string | null {
   return typeof id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(id) ? id : null
 }
 const isMoneyOrNull = (value: unknown): value is string | null =>
-  value === null || (typeof value === 'string' && /^-?\d+(?:\.\d+)?$/.test(value))
+  value === null || (typeof value === 'string' && /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value))
 
 function isEconomicAdvice(value: unknown): value is EconomicAdvice {
   if (!value || typeof value !== 'object') return false
@@ -90,7 +90,7 @@ function isAdviceSummary(item: unknown): item is EconomicAdviceSummary {
     typeof x.status === 'string' && typeof x.created_at === 'string' &&
     (x.modeled_net_incremental_cents === null ||
       (typeof x.modeled_net_incremental_cents === 'string' &&
-        /^-?\d+(?:\.\d+)?$/.test(x.modeled_net_incremental_cents)))
+        /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(x.modeled_net_incremental_cents)))
   )
 }
 type EconomicIntegrity = {
