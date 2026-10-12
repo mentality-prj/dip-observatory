@@ -31,16 +31,27 @@ function economicSnapshotId(doc: unknown): string | null {
 function isEconomicAdvice(value: unknown): value is EconomicAdvice {
   if (!value || typeof value !== 'object') return false
   const a = value as Partial<EconomicAdvice>
+  const goodId = (id: unknown) => typeof id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   return (
     a.schema_version === 'readiness-recovery.economic-advisory.v2' &&
     a.actionable === false && a.supply_source_verified === false &&
     a.atomic_plan_committed === false &&
-    typeof a.snapshot_id === 'string' && typeof a.execution_id === 'string' &&
+    goodId(a.snapshot_id) && goodId(a.execution_id) &&
     /^[0-9a-f]{64}$/.test(a.snapshot_digest ?? '') &&
     typeof a.decision_id === 'string' && typeof a.status === 'string' &&
-    (typeof a.modeled_net_incremental_cents === 'string' || a.modeled_net_incremental_cents === null) &&
-    Array.isArray(a.scheduled_jobs) && Array.isArray(a.selected_procurement_ids) &&
-    Array.isArray(a.scheduled_donors)
+    (a.modeled_net_incremental_cents === null ||
+      (typeof a.modeled_net_incremental_cents === 'string' &&
+        /^-?\d+(?:\.\d+)?$/.test(a.modeled_net_incremental_cents))) &&
+    Array.isArray(a.scheduled_jobs) && a.scheduled_jobs.length <= 2500 &&
+    a.scheduled_jobs.every(job => !!job && goodId(job.job_id) && goodId(job.technician_id) &&
+      Number.isSafeInteger(job.start_slot) && Number.isSafeInteger(job.finish_slot) &&
+      job.finish_slot > job.start_slot) &&
+    Array.isArray(a.selected_procurement_ids) && a.selected_procurement_ids.length <= 32 &&
+    a.selected_procurement_ids.every(goodId) &&
+    Array.isArray(a.scheduled_donors) && a.scheduled_donors.length <= 128 &&
+    a.scheduled_donors.every(donor => !!donor && goodId(donor.donor_id) &&
+      Number.isSafeInteger(donor.start_slot) && Number.isSafeInteger(donor.finish_slot) &&
+      donor.finish_slot > donor.start_slot)
   )
 }
 const copy = {
@@ -56,8 +67,8 @@ const copy = {
     suppliers: 'Chosen purchase offers',
     partsDonors: 'Scheduled donor disassembly',
     adviceWarning: 'Modeled, non-actionable advice. Real inventory, prices and external purchases are not verified or reserved.',
-    title: 'Economic RR v2 — compiler preview',
-    note: 'Paste a versioned RREconomicInput JSON document. Core checks the model contract and returns a semantic fingerprint, not a schedule, purchase order, margin estimate or authorization.',
+    title: 'Economic RR v2 — optimization advice',
+    note: 'Validate a versioned RREconomicInput, then compute and archive a CP-SAT schedule and modeled contribution. No external purchase or stock reservation occurs.',
     input: 'RR-ECON-v2 JSON',
     submit: 'Validate in Core (no execution)',
     pending: 'Checking Core contract…',
@@ -87,8 +98,8 @@ const copy = {
     suppliers: 'Обрані закупівельні пропозиції',
     partsDonors: 'Розбирання донорів',
     adviceWarning: 'Це модельована рекомендація, не дозвіл на дію. Реальні склад, ціни й закупівлі не перевірені та не зарезервовані.',
-    title: 'Економічний RR v2 — попередня компіляція',
-    note: 'Вставте версійний JSON RREconomicInput. Core перевірить контракт моделі й поверне семантичний відбиток, а не розклад, закупівлю, розрахунок маржі чи дозвіл на дію.',
+    title: 'Економічний RR v2 — оптимізаційна рекомендація',
+    note: 'Перевірте RREconomicInput, потім отримайте й збережіть оптимізаційний розклад CP-SAT та модельовану вигоду. Закупівлі й резервування складу не виконуються.',
     input: 'JSON RR-ECON-v2',
     submit: 'Перевірити в Core (без виконання)',
     pending: 'Перевірка контракту Core…',
@@ -118,8 +129,8 @@ const copy = {
     suppliers: 'Wybrane oferty zakupu',
     partsDonors: 'Demontaż dawców',
     adviceWarning: 'Porada modelowa, niewykonalna automatycznie. Rzeczywisty stan zapasów, ceny i zakupy nie są zweryfikowane ani zarezerwowane.',
-    title: 'Ekonomiczne RR v2 — podgląd kompilacji',
-    note: 'Wklej wersjonowany JSON RREconomicInput. Core sprawdzi kontrakt modelu i zwróci skrót semantyczny, a nie harmonogram, zakup, marżę ani autoryzację.',
+    title: 'Ekonomiczne RR v2 — rekomendacja optymalizacyjna',
+    note: 'Sprawdź RREconomicInput, a następnie oblicz i zapisz harmonogram CP-SAT oraz modelowaną korzyść. Bez rzeczywistych zakupów ani rezerwacji zapasów.',
     input: 'JSON RR-ECON-v2',
     submit: 'Sprawdź w Core (bez wykonania)',
     pending: 'Sprawdzanie kontraktu Core…',
@@ -413,7 +424,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         </div>
       ) : null}
       <p className="mt-3 text-xs text-amber-200" data-testid="rr-economic-v2-warning">
-        {t.warning}
+        {advice ? t.adviceWarning : t.warning}
       </p>
     </section>
   )
