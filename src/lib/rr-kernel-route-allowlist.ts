@@ -4,7 +4,19 @@ const identifier = /^[A-Za-z0-9_.-]{1,128}$/
 export function allowedKernelPath(path: string[], method: string) {
   if (path.some((part) => !identifier.test(part) || part === '.' || part === '..')) return false
   if (path.length === 1 && path[0] === 'preflight') return method === 'POST'
-  if (path.length === 2 && path[0] === 'economic-v2' && path[1] === 'preflight') return method === 'POST'
+  if (path[0] === 'economic-v2') {
+    if (path.length === 2 && ['preflight', 'snapshots', 'advice'].includes(path[1]))
+      return method === 'POST'
+    if (path.length === 3 && path[1] === 'advice') return method === 'GET'
+    return false
+  }
+  if (path[0] === 'source-import') {
+    if (path.length === 2 && ['preflight', 'executions'].includes(path[1]))
+      return method === 'POST'
+    if (path.length === 4 && path[1] === 'executions' && path[3] === 'replan')
+      return method === 'POST'
+    return false
+  }
   if (path.length === 1 && path[0] === 'executions') return method === 'POST'
   if (path[0] === 'executions' && path.length === 2) return method === 'GET'
   if (path[0] === 'executions' && path.length === 3) {

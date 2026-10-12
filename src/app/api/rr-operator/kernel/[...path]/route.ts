@@ -42,7 +42,15 @@ async function handle(request: NextRequest, context: Context) {
   }
   try {
     const actorOperation =
-      request.method === 'POST' && path[0] === 'executions' ? (path.length === 1 ? 'execute' : 'replan') : null
+      request.method !== 'POST'
+        ? null
+        : path[0] === 'executions'
+          ? path.length === 1 ? 'execute' : 'replan'
+          : path[0] === 'source-import' && path[1] === 'executions'
+            ? path.length === 2 ? 'execute' : 'replan'
+            : path[0] === 'economic-v2' && ['snapshots', 'advice'].includes(path[1])
+              ? 'execute'
+              : null
     const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-api-key': key }
     if (actorOperation) headers['x-qdip-actor-assertion'] = signedRrActorFromRequest(request, actorOperation)
     const upstream = await fetch(`${base}/api/v1/readiness-recovery/${path.join('/')}${request.nextUrl.search}`, {
