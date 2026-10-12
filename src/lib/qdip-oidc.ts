@@ -183,7 +183,7 @@ export function onSiteOrigin(request: NextRequest) {
   // Use the actual Host header, never spoofable x-forwarded-host.
   const canonical = new URL(PLATFORM_ORIGINS.site)
   const host = request.headers.get('host') ?? request.nextUrl.host
-  if (!host || /[,\\s@/?#]/.test(host)) return false
+  if (!host || /[,\s@/?#]/.test(host)) return false
   let observed: URL
   try {
     observed = new URL(canonical.protocol + '//' + host)
@@ -196,12 +196,15 @@ export function onSiteOrigin(request: NextRequest) {
   // public login to HTTP. For local tests only, allow the exact .localhost
   // canonical origin over HTTP without adding other allowed hosts.
   const forwardedProto = request.headers.get('x-forwarded-proto')
-  if (canonical.protocol === 'https:')
-    return forwardedProto !== 'http' &&
+  if (canonical.protocol === 'https:') {
+    return (
+      forwardedProto !== 'http' &&
       (request.nextUrl.protocol === 'https:' || forwardedProto === 'https')
-  return canonical.hostname.endsWith('.localhost') &&
-    request.nextUrl.protocol === 'http:' &&
-    (!forwardedProto || forwardedProto === 'http')
+    )
+  }
+  // Only local HTTP testing is allowed; Next may annotate its internal
+  // listener protocol differently from the external browser connection.
+  return canonical.hostname.endsWith('.localhost')
 }
 
 function cookieOptions(request: NextRequest, maxAge: number, shared: boolean) {
