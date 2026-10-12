@@ -178,7 +178,29 @@ export function loginUrl(returnTo: string) {
 }
 
 export function onSiteOrigin(request: NextRequest) {
-  return request.nextUrl.origin === new URL(PLATFORM_ORIGINS.site).origin
+  // Next.js can expose its internal listener (127.0.0.1) through nextUrl,
+  // even when a trusted proxy routes the external canonical site host.
+  // Use the actual Host header, never spoofable x-forwarded-host.
+  const canonical = new URL(PLATFORM_ORIGINS.site)
+  const host = request.headers.get('host') ?? request.nextUrl.host
+  if (!host || /[,\s@/?#]/.test(host)) return false
+  let observed: URL
+  try {
+    observed = new URL(canonical.protocol + '//' + host)
+  } catch {
+    return false
+  }
+  if (observed.host.toLowerCase() !== canonical.host.toLowerCase()) return false
+
+  // A proxy may terminate TLS, but cannot silently downgrade an HTTPS
+  // public login to HTTP. For local tests only, allow the exact .localhost
+  // canonical origin over HTTP without adding other allowed hosts.
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const secureRequest = request.nextUrl.protocol === 'https:' || forwardedProto === 'https'
+  if (canonical.protocol === 'https:') return forwardedProto !== 'http' && secureRequest
+  // Only local HTTP testing is allowed; Next may annotate its internal
+  // listener protocol differently from the external browser connection.
+  return canonical.hostname.endsWith('.localhost')
 }
 
 function cookieOptions(request: NextRequest, maxAge: number, shared: boolean) {
