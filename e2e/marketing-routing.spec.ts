@@ -140,6 +140,34 @@ test.describe('current marketing routing', () => {
     }
   })
 
+  test('comparison is perfectly mirrored and simulation shows two distinct scenarios', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
+    const symbols = page.locator('svg > g[transform]')
+    await expect(symbols).toHaveCount(13)
+
+    const balance = symbols.nth(1)
+    const pans = await balance.evaluate((root) => {
+      const art = root.querySelector('g[transform*="scale(1.5)"]')
+      const groups = art ? Array.from(art.querySelectorAll(':scope > g')) : []
+      return groups.map((g) => ({
+        transform: g.getAttribute('transform'),
+        paths: Array.from(g.children).map((child) => child.outerHTML),
+      }))
+    })
+    expect(pans).toHaveLength(2)
+    expect(pans[0].paths).toEqual(pans[1].paths)
+    expect(pans[1].transform).toBe('translate(64 0) scale(-1 1)')
+    await expect(balance.locator('circle[cx="32"][cy="20"]')).toHaveCount(1)
+
+    const simulation = symbols.nth(8)
+    await expect(simulation.locator('rect[x="7"][width="50"]')).toHaveCount(1)
+    await expect(simulation.locator('circle[cx="19"][cy="27"]')).toHaveCount(1)
+    await expect(simulation.locator('circle[cx="45"][cy="27"]')).toHaveCount(1)
+    await expect(
+      simulation.locator('path[d="M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37"]')
+    ).toHaveCount(1)
+  })
+
   test('allocation uses a symmetric custom engineering glyph without a decorative tile', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/en')
