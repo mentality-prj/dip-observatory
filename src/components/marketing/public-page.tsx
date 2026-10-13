@@ -395,6 +395,26 @@ function CoreNav({ l }: { l: MarketingLocale }) {
     </div>
   )
 }
+const decisionStepIcons: readonly TechIconName[] = [
+  'modeling',
+  'simulation',
+  'optimization',
+  'comparison',
+  'allocation',
+  'policy',
+  'explainability',
+  'constraints',
+  'human-approval',
+]
+const coreSectionIcons: readonly TechIconName[] = [
+  'modeling',
+  'constraints',
+  'simulation',
+  'evidence',
+  'audit',
+  'workflow',
+]
+
 export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: string }) {
   const x = copy[locale],
     c = marketingCopy[locale]
@@ -417,19 +437,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
             ].map((label, i) => (
               <article key={label}>
                 <MarketingTechIcon
-                  name={(
-                    [
-                      'modeling',
-                      'simulation',
-                      'optimization',
-                      'comparison',
-                      'allocation',
-                      'policy',
-                      'explainability',
-                      'constraints',
-                      'human-approval',
-                    ] as TechIconName[]
-                  )[i]}
+                  name={decisionStepIcons[i] ?? 'modeling'}
                   className={styles.techFeatureIcon}
                 />
                 <span>0{i + 1}</span>
@@ -530,7 +538,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
             {x.sections.map(([title, body], i) => (
               <article key={title}>
                 <MarketingTechIcon
-                  name={(['modeling', 'constraints', 'simulation', 'evidence', 'audit', 'workflow'] as TechIconName[])[i]}
+                  name={coreSectionIcons[i] ?? 'modeling'}
                   className={styles.techFeatureIcon}
                 />
                 <h3>{title}</h3>
