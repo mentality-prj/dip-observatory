@@ -124,7 +124,8 @@ const marketingHeader = readFileSync('src/components/marketing/marketing-header.
 test('marketing identity access is icon-only and screen-reader-labelled, without changing product login', () => {
   assert.match(marketingHeader, /<QdipAuthControl locale=\{locale\} returnTo=\{returnTo\} iconOnly \/>/)
   assert.match(marketingAuth, /iconOnly = false/)
-  assert.match(marketingAuth, /<QdipAccessIcon \/>/)
+  assert.match(marketingAuth, /<QdipAccessIcon direction="in" \/>/)
+  assert.match(marketingAuth, /<QdipAccessIcon direction="out" \/>/)
   assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
@@ -168,4 +169,15 @@ test('all 13 icon contracts remain self-contained and preserve badge cutouts', (
   assert.equal(iconEntries.length, 13)
   assert.equal((techIcons.match(/<clipPath id=/g) ?? []).length, 3)
   assert.doesNotMatch(techIcons, /comparisonPan/)
+})
+
+test('marketing login icon follows the 64x64 engineering icon system', () => {
+  assert.match(marketingAuth, /viewBox="0 0 64 64"/)
+  assert.match(marketingAuth, /strokeWidth=\{2\}/)
+  assert.match(marketingAuth, /strokeLinecap="round"/)
+  assert.match(marketingAuth, /strokeLinejoin="round"/)
+  assert.match(marketingAuth, /M29 9h18l7 7v32l-7 7H29/)
+  assert.match(marketingAuth, /M9 32h32m-8-8 8 8-8 8/)
+  assert.match(marketingAuth, /translate\(64 0\) scale\(-1 1\)/)
+  assert.doesNotMatch(marketingAuth, /<circle cx="11" cy="16" r="7" \/>/)
 })
