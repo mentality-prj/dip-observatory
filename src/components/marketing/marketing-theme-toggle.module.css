@@ -14,7 +14,9 @@
   font: inherit;
   font-size: 12px;
   font-weight: 650;
-  transition: background 180ms ease, border-color 180ms ease;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
 }
 .toggle span {
   display: none;
