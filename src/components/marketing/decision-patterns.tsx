@@ -7,6 +7,7 @@ import { DECISION_PATTERNS, decisionPattern, type DecisionPatternId } from '@/pr
 import { MarketingTrackedLink } from './marketing-analytics'
 import type { MarketingLocale } from './qdip-copy'
 import styles from './decision-patterns.module.css'
+import { MarketingTechIcon } from './marketing-tech-icon'
 
 type Props = { locale: MarketingLocale; cases: readonly string[] }
 const labels = {
@@ -80,6 +81,10 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
       </div>
       <div className={styles.stage} role="tabpanel">
         <div className={styles.context}>
+          <MarketingTechIcon
+            name={active === 'allocate' ? 'allocation' : active === 'decide' ? 'comparison' : 'optimization'}
+            className={styles.patternIcon}
+          />
           <span className={styles.kicker}>{current.title}</span>
           <h3>{current.question}</h3>
           <p>{current.body}</p>
@@ -92,7 +97,7 @@ export function DecisionPatterns({ locale, cases: c }: Props) {
             {current.cta} <ArrowRight size={15} />
           </MarketingTrackedLink>
         </div>
-        <div className={styles.engineFlow} aria-label={`${inputs.join(', ')} → QDIP → ${output}`}>
+        <div className={styles.engineFlow} data-pattern={active} aria-label={`${inputs.join(', ')} → QDIP → ${output}`}>
           <div className={styles.inputs}>
             {inputs.map((item) => (
               <span key={item}>{item}</span>
