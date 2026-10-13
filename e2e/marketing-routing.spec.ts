@@ -76,6 +76,48 @@ test.describe('current marketing routing', () => {
     }
   })
 
+  test('original network artwork replaces hero grid and is visible behind product sections', async ({ page, request }) => {
+    const svg = await (await request.get('http://qdip.localhost:3000/qdip-network.svg')).text()
+    expect(svg).toContain('<g opacity="0.5">')
+    for (const width of [375, 768, 1366]) {
+      await page.setViewportSize({ width, height: 850 })
+      await page.goto('http://qdip.localhost:3000/en')
+      const hero = page.locator('section[class*="engineeredHero"]')
+      const pattern = page.locator('section[class*="patternSection"]')
+      const heroBackdrop = await hero.evaluate((node) => getComputedStyle(node, '::before').backgroundImage)
+      const patternBackdrop = await pattern.evaluate((node) => getComputedStyle(node).backgroundImage)
+      expect(heroBackdrop).toContain('qdip-network.svg')
+      expect(heroBackdrop).not.toContain('linear-gradient')
+      expect(patternBackdrop).toContain('qdip-network.svg')
+      await expect(page.getByTestId('marketing-network-motion')).toHaveCount(0)
+    }
+  })
+
+  test('allocation uses a symmetric custom engineering glyph without a decorative tile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    const allocation = page.locator('svg[class*="patternIcon"]').first()
+    await expect(allocation).toHaveCSS('width', '76px')
+    await expect(allocation).toHaveCSS('border-top-width', '0px')
+    await expect(allocation.locator('rect')).toHaveCount(3)
+    await expect(allocation.locator('path').first()).toHaveAttribute('d', 'M23 32H32V16H43M32 32V48H43')
+  })
+
+  test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    await page.locator('[data-testid="marketing-theme-toggle"]:visible').click()
+    const playground = page.locator('section[aria-labelledby="decision-playground-title"]')
+    const stage = playground.locator('[data-expanded]').first()
+    await expect(stage).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+    await expect(playground.locator('.ds-workflow-step strong').first()).toHaveCSS('color', 'rgb(27, 32, 41)')
+    const budget = playground.locator('button[aria-pressed]').first()
+    await expect(budget).toHaveCSS('color', 'rgb(27, 32, 41)')
+    await budget.click()
+    await expect(budget).toHaveAttribute('aria-pressed', 'true')
+  })
+
   test('homepage uses a readable technical workbench at desktop and mobile widths', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     for (const viewport of [
