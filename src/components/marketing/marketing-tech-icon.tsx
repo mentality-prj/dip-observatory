@@ -19,12 +19,15 @@ const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
       <defs>
-        <mask id="qdip-audit-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="42" r="11.2" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-audit-loupe-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M32.8 42A11.2 11.2 0 1 0 55.2 42A11.2 11.2 0 1 0 32.8 42Z"
+            clipRule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-audit-loupe-cutout)">
+      <g clipPath="url(#qdip-audit-loupe-cutout)">
         <rect x="8" y="11" width="37" height="43" rx="3" />
         <path d="M19 11V7h9v4M18 7h11" />
         <rect x="13" y="19" width="8" height="8" rx="1" />
@@ -122,12 +125,15 @@ const artwork: Record<TechIconName, ReactNode> = {
   'human-approval': (
     <g>
       <defs>
-        <mask id="qdip-approval-badge-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="42" r="12.5" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-approval-badge-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M31.5 42A12.5 12.5 0 1 0 56.5 42A12.5 12.5 0 1 0 31.5 42Z"
+            clipRule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-approval-badge-cutout)">
+      <g clipPath="url(#qdip-approval-badge-cutout)">
         <rect x="8" y="9" width="38" height="45" rx="3" />
         <path d="M18 9V6h12v3M15 20h24M15 28h24M15 36h24M15 44h24" />
       </g>
@@ -180,12 +186,15 @@ const artwork: Record<TechIconName, ReactNode> = {
   evidence: (
     <g>
       <defs>
-        <mask id="qdip-evidence-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="43" r="12" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-evidence-loupe-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M32 43A12 12 0 1 0 56 43A12 12 0 1 0 32 43Z"
+            clipRule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-evidence-loupe-cutout)">
+      <g clipPath="url(#qdip-evidence-loupe-cutout)">
         <ellipse cx="25" cy="13" rx="17" ry="5" />
         <path d="M8 13v32c0 7 34 7 34 0V13M8 24c0 7 34 7 34 0M8 35c0 7 34 7 34 0" />
       </g>
