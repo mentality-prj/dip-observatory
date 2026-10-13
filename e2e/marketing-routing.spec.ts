@@ -139,10 +139,32 @@ test.describe('current marketing routing', () => {
     await expect(evidence).toHaveCSS('background-color', 'rgb(255, 255, 255)')
     const primary = page.locator('a[class*="primaryButtonLarge"]').first()
     await expect(primary).toHaveCSS('background-color', 'rgb(122, 24, 56)')
+    // Regressions from the light-theme screenshot: no white heading on pale CTA.
+    const cta = page.locator('section[class*="finalCta"]')
+    await expect(cta).toHaveCSS('background-color', 'rgb(245, 246, 248)')
+    await expect(cta.getByRole('heading', { level: 2 })).toHaveCSS('color', 'rgb(27, 32, 41)')
+    // The pre-redesign marketing footer remains dark in both appearances.
+    const footer = page.locator('footer[data-variant="marketing"]')
+    await expect(footer).toHaveCSS('background-color', 'rgb(24, 11, 17)')
+    await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(footer.locator('img').first()).toHaveCSS('filter', 'brightness(0) invert(1)')
+    await expect(footer.locator('nav a').first()).toHaveCSS('color', 'rgb(229, 217, 221)')
     await page.reload()
     await expect(page.locator('[data-marketing-appearance="light"]')).toBeVisible()
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
     expect(overflow).toBeLessThanOrEqual(1)
+  })
+
+  test('light-theme custom footer matches original dark footer on public pages', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    await page.locator('[data-testid="marketing-theme-toggle"]:visible').click()
+    await page.goto('http://qdip.localhost:3000/en/decision')
+    const footer = page.locator('footer[class*="footer"]').last()
+    await expect(footer).toHaveCSS('background-color', 'rgb(24, 11, 17)')
+    await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(footer.locator('nav a').first()).toHaveCSS('color', 'rgb(229, 217, 221)')
   })
 
   test('workbench budget changes recommendation and respects reduced motion', async ({ page }) => {
