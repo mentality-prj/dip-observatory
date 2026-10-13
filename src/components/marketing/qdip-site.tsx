@@ -6,6 +6,7 @@ import { MarketingHeader } from './marketing-header'
 import { MarketingFooter } from './marketing-footer'
 import { MarketingTrackedLink } from './marketing-analytics'
 import { SignatureDecisionVisual } from './signature-decision-visual'
+import { MarketingNetworkMotion } from './marketing-network-motion'
 import { DecisionPatterns } from './decision-patterns'
 import { DecisionPlayground } from './decision-playground'
 import { EvidenceStrip } from './evidence-strip'
@@ -55,6 +56,9 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 {c.conversion[2]} <ArrowRight size={15} />
               </MarketingTrackedLink>
             </div>
+          </div>
+          <div className={styles.heroMotion}>
+            <MarketingNetworkMotion />
           </div>
           <SignatureDecisionVisual locale={locale} labels={c.diagram} />
         </section>

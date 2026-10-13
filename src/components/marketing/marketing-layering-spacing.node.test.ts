@@ -7,6 +7,8 @@ const spacing = readFileSync('src/components/marketing/decision-inquiry-spacing.
 const marketing = readFileSync('src/components/marketing/marketing-atmosphere.module.css', 'utf8')
 const hero = readFileSync('src/components/marketing/qdip-site.module.css', 'utf8')
 const visual = readFileSync('src/components/marketing/signature-decision-visual.module.css', 'utf8')
+const network = readFileSync('src/components/marketing/marketing-network-motion.module.css', 'utf8')
+const networkMarkup = readFileSync('src/components/marketing/marketing-network-motion.tsx', 'utf8')
 
 test('network texture remains visible below application content', () => {
   assert.match(globals, /body::before\s*\{[\s\S]*?z-index:\s*0;/)
@@ -25,6 +27,15 @@ test('marketing hero uses a full-width decision visual with reduced-motion fallb
   assert.match(hero, /grid-template-columns:\s*minmax\(0, 1fr\)/)
   assert.match(visual, /\.livePath\s*\{[^}]*animation:/)
   assert.match(visual, /prefers-reduced-motion:\s*reduce/)
+})
+
+test('first viewport contains a prominent continuous marketing network on desktop and mobile', () => {
+  assert.match(hero, /grid-template-areas:\s*'copy network'\s*'scene scene'/)
+  assert.match(hero, /\.heroMotion\s*\{/)
+  assert.match(network, /\.activePaths path\s*\{[^}]*animation:/)
+  assert.match(networkMarkup, /data-testid="marketing-network-motion"/)
+  assert.match(network, /prefers-reduced-motion:\s*reduce/)
+  assert.match(visual, /\.arrow\s*\{[^}]*animation:\s*qdip-mobile-flow/)
 })
 
 test('decision inquiry form does not reintroduce a full section gap', () => {
