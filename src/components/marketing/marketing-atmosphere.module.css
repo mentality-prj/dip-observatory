@@ -31,9 +31,18 @@
   z-index: 1;
 }
 @keyframes qdip-marketing-glow {
-  from { transform: translate3d(-4%, 4%, 0); opacity: 0.55; }
-  to { transform: translate3d(9%, -7%, 0); opacity: 0.95; }
+  from {
+    transform: translate3d(-4%, 4%, 0);
+    opacity: 0.55;
+  }
+  to {
+    transform: translate3d(9%, -7%, 0);
+    opacity: 0.95;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .atmosphere::after { animation: none; transform: none; }
+  .atmosphere::after {
+    animation: none;
+    transform: none;
+  }
 }
