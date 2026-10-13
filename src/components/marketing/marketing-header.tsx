@@ -65,7 +65,7 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
               Studio
             </Link>
           </div>
-          <QdipAuthControl locale={locale} returnTo={returnTo} />
+          <QdipAuthControl locale={locale} returnTo={returnTo} iconOnly />
           <LanguageSwitcher locale={locale} hrefForLocale={hrefForLocale} />
           <div className={styles.desktopThemeSwitch}>
             <MarketingThemeToggle locale={locale} />
