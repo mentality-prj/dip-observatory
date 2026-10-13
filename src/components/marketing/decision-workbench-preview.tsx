@@ -165,8 +165,8 @@ export function DecisionWorkbenchPreview({ locale }: { locale: MarketingLocale }
               <span>
                 <b>subject to</b>
               </span>
-              <span>  {l.budgetRule}</span>
-              <span>  {l.eligibleRule}</span>
+              <span> {l.budgetRule}</span>
+              <span> {l.eligibleRule}</span>
             </code>
             <small>{l.codeLabel}</small>
           </div>
