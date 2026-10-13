@@ -102,8 +102,9 @@ test.describe('current marketing routing', () => {
     const allocation = page.locator('svg[class*="patternIcon"]').first()
     await expect(allocation).toHaveCSS('width', '76px')
     await expect(allocation).toHaveCSS('border-top-width', '0px')
-    await expect(allocation.locator('rect')).toHaveCount(3)
-    await expect(allocation.locator('path').first()).toHaveAttribute('d', 'M23 32H32V16H43M32 32V48H43')
+    await expect(allocation.locator('rect')).toHaveCount(2)
+    await expect(allocation.locator('ellipse')).toHaveCount(1)
+    await expect(allocation.locator('path').nth(1)).toHaveAttribute('d', 'M23 32h8V19h11M31 32v13h11')
   })
 
   test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
