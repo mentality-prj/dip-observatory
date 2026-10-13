@@ -15,14 +15,6 @@ export type TechIconName =
   | 'evidence'
   | 'policy'
 
-const comparisonPan = (
-  <g>
-    <path d="M13 20 6 38M13 20l7 18" />
-    <path d="M6 38h14M6 38q7 12 14 0" />
-    <circle cx="13" cy="20" r="2" />
-  </g>
-)
-
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
@@ -54,8 +46,16 @@ const artwork: Record<TechIconName, ReactNode> = {
       <path d="M13 20h17M34 20h17M32 13v5M32 22v29M24 54h16M20 58h24" />
       <circle cx="32" cy="10" r="3" />
       <circle cx="32" cy="20" r="2" />
-      {comparisonPan}
-      <g transform="translate(64 0) scale(-1 1)">{comparisonPan}</g>
+      <g>
+        <path d="M13 20 6 38M13 20l7 18" />
+        <path d="M6 38h14M6 38q7 12 14 0" />
+        <circle cx="13" cy="20" r="2" />
+      </g>
+      <g transform="translate(64 0) scale(-1 1)">
+        <path d="M13 20 6 38M13 20l7 18" />
+        <path d="M6 38h14M6 38q7 12 14 0" />
+        <circle cx="13" cy="20" r="2" />
+      </g>
     </g>
   ),
   replay: (
