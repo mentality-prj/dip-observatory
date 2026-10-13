@@ -18,17 +18,26 @@ export type TechIconName =
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
-      <rect x="8" y="11" width="29" height="43" rx="3" />
-      <path d="M19 11V7h9v4M18 7h11" />
-      <rect x="13" y="19" width="8" height="8" rx="1" />
-      <rect x="13" y="30" width="8" height="8" rx="1" />
-      <rect x="13" y="41" width="8" height="8" rx="1" />
-      <g strokeWidth={1.3}>
-        <path d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4" />
+      <defs>
+        <mask id="qdip-audit-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="white" stroke="none" />
+          <circle cx="44" cy="42" r="11.2" fill="black" stroke="none" />
+        </mask>
+      </defs>
+      <g mask="url(#qdip-audit-loupe-cutout)">
+        <rect x="8" y="11" width="37" height="43" rx="3" />
+        <path d="M19 11V7h9v4M18 7h11" />
+        <rect x="13" y="19" width="8" height="8" rx="1" />
+        <rect x="13" y="30" width="8" height="8" rx="1" />
+        <rect x="13" y="41" width="8" height="8" rx="1" />
+        <path
+          d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4"
+          strokeWidth={1.3}
+        />
+        <path d="M26 23h12M26 34h12M26 45h12" />
       </g>
-      <path d="M26 23h7M26 34h7M26 45h7" />
-      <circle cx="47" cy="42" r="9" />
-      <path d="m53.5 48.5 6.5 6.5" />
+      <circle cx="44" cy="42" r="10.5" />
+      <path d="m51.6 49.6 9 9" />
     </g>
   ),
   comparison: (
@@ -112,10 +121,18 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   'human-approval': (
     <g>
-      <rect x="7" y="9" width="29" height="45" rx="3" />
-      <path d="M16 9V6h11v3M15 20h14M15 28h14M15 36h12" />
-      <circle cx="47" cy="43" r="10" />
-      <path d="m41 43 4.5 4.5L53 38" />
+      <defs>
+        <mask id="qdip-approval-badge-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="white" stroke="none" />
+          <circle cx="44" cy="42" r="12.5" fill="black" stroke="none" />
+        </mask>
+      </defs>
+      <g mask="url(#qdip-approval-badge-cutout)">
+        <rect x="8" y="9" width="38" height="45" rx="3" />
+        <path d="M18 9V6h12v3M15 20h24M15 28h24M15 36h24M15 44h24" />
+      </g>
+      <circle cx="44" cy="42" r="11.7" />
+      <path d="m37.7 42 4.2 4.2 9.1-9.1" />
     </g>
   ),
   simulation: (
@@ -162,10 +179,18 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   evidence: (
     <g>
-      <ellipse cx="22" cy="13" rx="14" ry="5" />
-      <path d="M8 13v32c0 7 28 7 28 0V13M8 24c0 7 28 7 28 0M8 35c0 7 28 7 28 0" />
-      <circle cx="47" cy="43" r="9" />
-      <path d="m53.5 49.5 6.5 6.5" />
+      <defs>
+        <mask id="qdip-evidence-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect width="64" height="64" fill="white" stroke="none" />
+          <circle cx="44" cy="43" r="12" fill="black" stroke="none" />
+        </mask>
+      </defs>
+      <g mask="url(#qdip-evidence-loupe-cutout)">
+        <ellipse cx="25" cy="13" rx="17" ry="5" />
+        <path d="M8 13v32c0 7 34 7 34 0V13M8 24c0 7 34 7 34 0M8 35c0 7 34 7 34 0" />
+      </g>
+      <circle cx="44" cy="43" r="11.3" />
+      <path d="m52 51 9 9" />
     </g>
   ),
   policy: (
