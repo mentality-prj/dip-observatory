@@ -366,8 +366,8 @@
 .darkSection,
 .finalCta,
 .footer {
-  --ds-heading: #fff;
-  color: #fff;
+  --ds-heading: var(--qdip-text);
+  color: var(--qdip-text);
   background: var(--qdip-background);
 }
 .editorialSection {
@@ -1374,12 +1374,21 @@
 .site:global([data-marketing-appearance='light']) .finalCta {
   background: var(--qdip-background);
 }
+/* Restore the pre-redesign dark marketing footer in light appearance. */
 .site:global([data-marketing-appearance='light']) .footer {
-  border-color: var(--qdip-border);
-  background: var(--qdip-footer);
+  --ds-heading: #fff;
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.1);
+  background: #180b11;
 }
 .site:global([data-marketing-appearance='light']) .footer .logoWordmark {
-  filter: none;
+  filter: brightness(0) invert(1);
+}
+.site:global([data-marketing-appearance='light']) .footer nav a {
+  color: #e5d9dd;
+}
+.site:global([data-marketing-appearance='light']) .footer > span {
+  color: #aa9ba1;
 }
 
 .desktopThemeSwitch {
