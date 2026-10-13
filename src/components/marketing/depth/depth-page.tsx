@@ -32,7 +32,11 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
   const c = getDepthContent(locale, page)
   const labels = depthUiI18n[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="dark" className={`${styles.page} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="dark"
+      className={`${styles.page} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={page} />
         <section className={styles.hero}>
