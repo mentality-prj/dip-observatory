@@ -135,12 +135,13 @@ test('inspection loupes and approval badge overlap the source art but hide strok
     ['qdip-evidence-loupe-cutout', '<circle cx="44" cy="43" r="11.3" />'],
     ['qdip-approval-badge-cutout', '<circle cx="44" cy="42" r="11.7" />'],
   ]) {
-    assert.ok(techIcons.includes(`<mask id="${maskId}"`), `Missing cutout for ${maskId}`)
-    assert.ok(techIcons.includes(`mask="url(#${maskId})"`), `Source art is not masked for ${maskId}`)
+    assert.ok(techIcons.includes(`<clipPath id="${maskId}"`), `Missing cutout for ${maskId}`)
+    assert.ok(techIcons.includes(`clipPath="url(#${maskId})"`), `Source art is not masked for ${maskId}`)
     assert.ok(techIcons.includes(lens), `Overlapping lens/badge missing for ${maskId}`)
   }
   assert.match(techIcons, /<rect x="8" y="11" width="37" height="43" rx="3" \/>/)
   assert.match(techIcons, /<ellipse cx="25" cy="13" rx="17" ry="5" \/>/)
   assert.match(techIcons, /<rect x="8" y="9" width="38" height="45" rx="3" \/>/)
-  assert.match(techIcons, /<circle cx="44" cy="43" r="12" fill="black" stroke="none" \/>/)
+  assert.match(techIcons, /clipRule="evenodd"/)
+  assert.doesNotMatch(techIcons, /<mask id=/)
 })
