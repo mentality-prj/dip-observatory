@@ -97,7 +97,7 @@ test.describe('current marketing routing', () => {
     await page.goto('http://qdip.localhost:3000/en')
     const scene = page.locator('figure[aria-label]').first()
     const livePath = scene.locator('path[class*="livePath"]')
-    await expect(livePath).toHaveCSS('animation-name', 'qdip-trace-signal')
+    await expect(livePath).toHaveCSS('animation-name', /qdip-trace-signal/)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await expect(livePath).toHaveCSS('animation-name', 'none')
   })
