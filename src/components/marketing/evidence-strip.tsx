@@ -87,7 +87,7 @@ export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
           return (
             <article key={title}>
               <div className={styles.evidenceIcon}>
-                <MarketingTechIcon name={icons[index]} />
+                <MarketingTechIcon name={icons[index] ?? 'audit'} />
               </div>
               <div>
                 <strong>{title}</strong>
