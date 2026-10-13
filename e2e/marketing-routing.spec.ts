@@ -128,7 +128,9 @@ test.describe('current marketing routing', () => {
         const ctaRect = await primary.boundingBox()
         expect(headingRect).not.toBeNull()
         expect(ctaRect).not.toBeNull()
-        expect((ctaRect?.y ?? 0)).toBeGreaterThan((headingRect?.y ?? 0) + (headingRect?.height ?? 0))
+        const ctaTop = ctaRect?.y ?? 0
+        const headingBottom = (headingRect?.y ?? 0) + (headingRect?.height ?? 0)
+        expect(ctaTop).toBeGreaterThan(headingBottom)
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
         expect(overflow).toBeLessThanOrEqual(1)
       }
