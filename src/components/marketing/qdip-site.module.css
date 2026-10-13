@@ -368,7 +368,7 @@
 .footer {
   --ds-heading: #fff;
   color: #fff;
-  background: #180b11;
+  background: #140910;
 }
 .editorialSection {
   display: grid;
@@ -1072,19 +1072,19 @@
   margin: 0;
   padding: clamp(64px, 6.5vw, 104px) max(24px, calc((100vw - 1280px) / 2)) clamp(72px, 6vw, 96px);
   overflow: hidden;
-  border-bottom: 1px solid #27384a;
-  color: #f5f9fc;
+  border-bottom: 1px solid #714258;
+  color: #f8eff2;
   background:
-    radial-gradient(ellipse at 86% -5%, rgb(78 142 145 / 0.13), transparent 38%),
-    linear-gradient(180deg, #0c141f 0%, #070c15 100%);
+    radial-gradient(ellipse at 86% -5%, rgb(198 81 118 / 0.18), transparent 38%),
+    linear-gradient(180deg, #1e0d16 0%, #140910 100%);
 }
 .engineeredHero::before {
   position: absolute;
   inset: 0;
   z-index: 0;
   background-image:
-    linear-gradient(rgb(143 186 192 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(143 186 192 / 0.06) 1px, transparent 1px);
+    linear-gradient(rgb(198 81 118 / 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(198 81 118 / 0.09) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: linear-gradient(to bottom, black, transparent 75%);
   opacity: 0.8;
@@ -1098,7 +1098,7 @@
   width: 120px;
   height: 2px;
   content: '';
-  background: #97dccc;
+  background: #c65176;
 }
 .engineeredHero .heroCopy {
   position: relative;
@@ -1108,7 +1108,7 @@
   margin: 0 auto clamp(34px, 5vw, 64px);
 }
 .engineeredHero .eyebrow {
-  color: #9bdfce;
+  color: #f1abc3;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
   font-weight: 600;
@@ -1117,7 +1117,7 @@
 .engineeredHero h1 {
   max-width: 980px;
   margin: 18px 0 22px;
-  color: #f5f9fc;
+  color: #f8eff2;
   font-size: clamp(47px, 6.6vw, 94px);
   font-weight: 590;
   line-height: 1.045;
@@ -1127,13 +1127,13 @@
 .engineeredHero p {
   max-width: 820px;
   margin: 10px 0;
-  color: #a8b9c7;
+  color: #eac0d0;
   font-size: clamp(14px, 1.26vw, 17px);
   line-height: 1.65;
 }
 .engineeredHero .lead {
   max-width: 850px;
-  color: #dce7ef;
+  color: #f8e6ed;
   font-size: clamp(18px, 1.85vw, 23px);
   font-weight: 400;
   line-height: 1.48;
@@ -1143,24 +1143,24 @@
 }
 .engineeredHero .primaryButtonLarge {
   min-height: 50px;
-  border-color: #c0eadf;
-  color: #081520 !important;
-  background: #b5ebdd;
-  box-shadow: 0 10px 38px rgb(78 161 149 / 0.12);
+  border-color: #e8a3bd;
+  color: #140910 !important;
+  background: #ed9bb7;
+  box-shadow: 0 10px 38px rgb(198 81 118 / 0.22);
 }
 .engineeredHero .primaryButtonLarge:hover {
-  background: #c6f4e9;
+  background: #fac0d4;
 }
 .engineeredHero .secondaryButton {
   min-height: 50px;
-  border: 1px solid #344959;
-  color: #d4e3eb;
-  background: #15212f;
+  border: 1px solid #714258;
+  color: #f8eff2;
+  background: #29131e;
 }
 .engineeredHero .secondaryButton:hover {
   color: #fff;
-  border-color: #65888c;
-  background: #223545;
+  border-color: #ed9bb7;
+  background: #4a2132;
 }
 .heroProtocol {
   display: flex;
@@ -1172,7 +1172,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #92aabd;
+  color: #eac0d0;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
   letter-spacing: 0.03em;
@@ -1184,7 +1184,7 @@
   flex: 0 0 4px;
   border-radius: 50%;
   content: '';
-  background: #8fdfcb;
+  background: #c65176;
 }
 .consoleFrame {
   position: relative;
@@ -1197,7 +1197,7 @@
   position: absolute;
   z-index: -1;
   inset: -18px;
-  border: 1px solid rgb(137 177 189 / 0.1);
+  border: 1px solid rgb(198 81 118 / 0.2);
   border-radius: 22px;
   content: '';
   pointer-events: none;
@@ -1212,7 +1212,7 @@
   letter-spacing: -0.035em;
 }
 .engineeredHero ~ .patternSection {
-  background: linear-gradient(180deg, #f5f8fa 0%, #fff 100%);
+  background: linear-gradient(180deg, #29131e 0%, #140910 100%);
 }
 @media (max-width: 900px) {
   .engineeredHero {
@@ -1252,5 +1252,116 @@
   }
   .consoleFrame::before {
     display: none;
+  }
+}
+
+
+/* Semantic illustrations use one large 64px grid; never tiny generic symbols. */
+.evidenceGrid {
+  gap: clamp(12px, 2vw, 22px);
+}
+.evidenceGrid article,
+.evidenceGrid article:first-child,
+.evidenceGrid article:last-child {
+  display: flex;
+  min-height: 254px;
+  flex-direction: column;
+  gap: 19px;
+  padding: clamp(22px, 2.5vw, 34px);
+  border: 1px solid #714258;
+  border-radius: 16px;
+  background:
+    linear-gradient(160deg, rgb(198 81 118 / 0.12), transparent 63%),
+    #29131e;
+  transition:
+    border-color 240ms ease,
+    transform 240ms ease,
+    box-shadow 240ms ease;
+}
+.evidenceIcon {
+  display: grid;
+  width: 84px;
+  height: 84px;
+  place-items: center;
+  color: #ed9bb7;
+  border: 1px solid rgb(198 81 118 / 0.6);
+  border-radius: 18px;
+  background: #341a27;
+  box-shadow: inset 0 0 0 1px rgb(248 239 242 / 0.05);
+}
+.evidenceIcon svg,
+.techFeatureIcon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  color: #ed9bb7;
+  stroke-width: 2px;
+}
+.evidenceGrid article strong {
+  color: #f8eff2;
+  font-size: var(--ds-text-body);
+}
+.evidenceGrid article span {
+  color: #eac0d0;
+}
+.evidenceArtifactLink,
+.evidenceLinks a {
+  color: #f2b1c8 !important;
+}
+.techFeatureIcon {
+  margin-bottom: var(--ds-space-4);
+}
+.valueGrid article {
+  padding: var(--ds-space-6);
+  border: 1px solid #714258;
+  border-radius: 14px;
+  background: #29131e;
+}
+.caseGrid article {
+  background: #29131e;
+}
+.patternSection {
+  background: linear-gradient(180deg, #29131e, #140910) !important;
+}
+.finalCta {
+  border-top: 1px solid #714258;
+}
+@media (hover: hover) and (pointer: fine) {
+  .evidenceGrid article:hover {
+    transform: translateY(-3px);
+    border-color: #c65176;
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.23);
+  }
+}
+@media (max-width: 900px) {
+  .evidenceGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .evidenceGrid article {
+    border: 1px solid #714258;
+  }
+}
+@media (max-width: 600px) {
+  .evidenceGrid {
+    grid-template-columns: 1fr;
+  }
+  .evidenceGrid article,
+  .evidenceGrid article:first-child,
+  .evidenceGrid article:last-child {
+    min-height: 0;
+    padding: 22px;
+    border: 1px solid #714258;
+  }
+  .valueGrid article {
+    padding: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .evidenceGrid article {
+    transition: none;
+  }
+  .evidenceGrid article:hover {
+    transform: none;
   }
 }
