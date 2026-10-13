@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { MarketingHeader } from '../marketing-header'
@@ -10,6 +10,8 @@ import { depthUiI18n } from './i18n'
 import styles from './depth-page.module.css'
 import motionStyles from '../marketing-cta-motion.module.css'
 import atmosphereStyles from '../marketing-atmosphere.module.css'
+import burgundyStyles from '../marketing-deep-burgundy.module.css'
+import { MarketingTechIcon, type TechIconName } from '../marketing-tech-icon'
 
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
 
@@ -17,7 +19,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
   const c = getDepthContent(locale, page)
   const labels = depthUiI18n[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.page} ${atmosphereStyles.atmosphere}`}>
+    <DesignSystemProvider theme="burgundy" mode="dark" className={`${styles.page} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}>
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={page} />
         <section className={styles.hero}>
@@ -37,6 +39,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
           <section id="demos" className={styles.cases}>
             {c.cases.map((x) => (
               <article key={x.title} className={styles.case}>
+                <MarketingTechIcon name="allocation" className={styles.techFeatureIcon} />
                 <div className={styles.pattern}>{x.pattern}</div>
                 <h2>{x.title}</h2>
                 <h3>{x.question}</h3>
@@ -72,9 +75,25 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
                 <p>{s.body}</p>
                 {s.items && (
                   <div className={styles.items}>
-                    {s.items.map((i) => (
+                    {s.items.map((i, iconIndex) => (
                       <article key={i.title}>
-                        <CheckCircle2 size={17} />
+                        <MarketingTechIcon
+                          name={(
+                            [
+                              'modeling',
+                              'constraints',
+                              'optimization',
+                              'explainability',
+                              'human-approval',
+                              'simulation',
+                              'allocation',
+                              'workflow',
+                              'evidence',
+                              'policy',
+                            ] as TechIconName[]
+                          )[(index + iconIndex) % 10]}
+                          className={styles.techFeatureIcon}
+                        />
                         <div>
                           <h3>{i.title}</h3>
                           <p>{i.body}</p>
