@@ -186,8 +186,12 @@
 }
 
 @keyframes qdip-trace-signal {
-  from { stroke-dashoffset: 1200; }
-  to { stroke-dashoffset: -1200; }
+  from {
+    stroke-dashoffset: 1200;
+  }
+  to {
+    stroke-dashoffset: -1200;
+  }
 }
 @keyframes qdip-path-draw {
   to {
@@ -269,13 +273,29 @@
     padding: 10px 11px;
     font-size: 10px;
   }
-  .engine { font-size: 19px; }
-  .engine small, .evaluation > small { font-size: 7px; }
-  .evaluation { gap: 5px; padding: var(--ds-space-2); }
-  .evaluation span { padding: 7px 8px; }
-  .evaluation span em { font-size: 6px; }
-  .result span { font-size: 8px; }
-  .result em { font-size: 7px; }
+  .engine {
+    font-size: 19px;
+  }
+  .engine small,
+  .evaluation > small {
+    font-size: 7px;
+  }
+  .evaluation {
+    gap: 5px;
+    padding: var(--ds-space-2);
+  }
+  .evaluation span {
+    padding: 7px 8px;
+  }
+  .evaluation span em {
+    font-size: 6px;
+  }
+  .result span {
+    font-size: 8px;
+  }
+  .result em {
+    font-size: 7px;
+  }
   .inputs {
     width: 100%;
     grid-template-columns: 1fr 1fr;
@@ -326,5 +346,7 @@
   .mainPath {
     stroke-dashoffset: 0;
   }
-  .livePath { opacity: 0; }
+  .livePath {
+    opacity: 0;
+  }
 }
