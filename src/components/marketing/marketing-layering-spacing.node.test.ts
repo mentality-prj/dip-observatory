@@ -108,7 +108,7 @@ test('branded decision network is not replaced by a generic square grid', () => 
 })
 
 test('resource allocation glyph uses balanced connectors with no criss-cross arrow', () => {
-  assert.match(techIcons, /M23 32H32V16H43M32 32V48H43/)
+  assert.match(techIcons, /M23 32h8V19h11M31 32v13h11/)
   assert.match(hero, /url\('\/qdip-network\.svg'\)/)
 })
 
