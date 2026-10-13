@@ -15,7 +15,10 @@ const labels = {
 
 function applyAppearance(appearance: Appearance) {
   const root = document.querySelector<HTMLElement>('[data-ds-theme="burgundy"]')
-  if (root) root.dataset.marketingAppearance = appearance
+  if (root) {
+    root.dataset.marketingAppearance = appearance
+    root.dataset.dsMode = appearance
+  }
 }
 
 export function MarketingThemeToggle({ locale }: { locale: MarketingLocale }) {
@@ -29,12 +32,19 @@ export function MarketingThemeToggle({ locale }: { locale: MarketingLocale }) {
     }
     setAppearance(next)
     applyAppearance(next)
+    const updateFromAnotherToggle = (event: Event) => {
+      const value = (event as CustomEvent<Appearance>).detail
+      if (value === 'light' || value === 'dark') setAppearance(value)
+    }
+    window.addEventListener('qdip-marketing-appearance-change', updateFromAnotherToggle)
+    return () => window.removeEventListener('qdip-marketing-appearance-change', updateFromAnotherToggle)
   }, [])
 
   const changeAppearance = () => {
     const next = appearance === 'dark' ? 'light' : 'dark'
     applyAppearance(next)
     setAppearance(next)
+    window.dispatchEvent(new CustomEvent('qdip-marketing-appearance-change', { detail: next }))
     try {
       window.localStorage.setItem(key, next)
     } catch {
