@@ -24,25 +24,25 @@ const labels = {
   },
 } as const
 
-function QdipAccessIcon() {
+function QdipAccessIcon({ direction }: { direction: 'in' | 'out' }) {
   return (
     <svg
-      width="24"
-      height="24"
-      viewBox="0 0 32 32"
+      width="32"
+      height="32"
+      viewBox="0 0 64 64"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
     >
-      <circle cx="11" cy="16" r="7" />
-      <circle cx="11" cy="13.5" r="2" />
-      <path d="M6.5 20.5c.7-2.3 2.2-3.4 4.5-3.4s3.8 1.1 4.5 3.4" />
-      <path d="M22 5h4a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3h-4" />
-      <path d="M20 16h8m-3-3 3 3-3 3" />
+      <g transform={direction === 'out' ? 'translate(64 0) scale(-1 1)' : undefined}>
+        <path d="M29 9h18l7 7v32l-7 7H29" />
+        <path d="M36 17h10M36 47h10" strokeWidth={1.4} />
+        <path d="M9 32h32m-8-8 8 8-8 8" />
+      </g>
     </svg>
   )
 }
@@ -114,7 +114,7 @@ export function QdipAuthControl({
           onClick={() => void signOut()}
           aria-label={copy.signOut}
         >
-          <LogOut size={16} aria-hidden />
+          {iconOnly ? <QdipAccessIcon direction="out" /> : <LogOut size={16} aria-hidden />}
           {!iconOnly && <span>{copy.signOut}</span>}
         </button>
         {error ? (
@@ -134,7 +134,7 @@ export function QdipAuthControl({
       aria-label={copy.signIn}
       title={copy.signIn}
     >
-      {iconOnly ? <QdipAccessIcon /> : <LogIn size={16} aria-hidden />}
+      {iconOnly ? <QdipAccessIcon direction="in" /> : <LogIn size={16} aria-hidden />}
       {!iconOnly && <span>{copy.signIn}</span>}
     </a>
   )
