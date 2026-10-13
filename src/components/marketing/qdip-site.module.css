@@ -6,6 +6,8 @@
   --section-y: clamp(6rem, 8vw, 8.5rem);
   --section-y-mobile: clamp(4rem, 12vw, 5.5rem);
   --content-gap: clamp(2rem, 4vw, 3rem);
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   overflow: hidden;
   color: var(--ink);
@@ -147,13 +149,13 @@
 .hero {
   position: relative;
   display: grid;
-  width: min(calc(100% - 48px), 1240px);
-  min-height: 590px;
+  width: min(calc(100% - 48px), 1280px);
+  min-height: 0;
   margin: auto;
-  grid-template-columns: minmax(0, 0.92fr) minmax(480px, 1.08fr);
-  align-items: center;
-  gap: clamp(var(--ds-space-12), 5vw, var(--ds-space-20));
-  padding: var(--ds-space-20) 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ds-space-12);
+  padding: clamp(4rem, 6vw, 6rem) 0;
 }
 .hero:before {
   position: absolute;
@@ -168,6 +170,20 @@
 .heroVisual {
   position: relative;
 }
+.heroCopy {
+  max-width: 940px;
+  animation: qdip-marketing-intro 580ms ease-out both;
+}
+@keyframes qdip-marketing-intro {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
 .eyebrow {
   color: var(--accent);
   font-size: var(--ds-text-xs);
@@ -177,7 +193,7 @@
 }
 .hero h1 {
   margin: var(--ds-space-5) 0 var(--ds-space-5);
-  max-width: 13ch;
+  max-width: 21ch;
   font-size: var(--ds-text-display);
   font-weight: var(--ds-weight-heading);
   line-height: 1.01;
@@ -939,6 +955,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .heroCopy {
+    animation: none;
+  }
   .site * {
     scroll-behavior: auto !important;
     transition: none !important;

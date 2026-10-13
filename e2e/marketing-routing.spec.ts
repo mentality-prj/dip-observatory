@@ -41,6 +41,67 @@ const whyLabels = {
 } as const
 
 test.describe('current marketing routing', () => {
+  test('marketing network texture stays above the opaque surface on desktop and mobile', async ({ page, request }) => {
+    const asset = await request.get('http://qdip.localhost:3000/qdip-network.svg')
+    expect(asset.status()).toBe(200)
+    expect(asset.headers()['content-type']).toContain('image/svg+xml')
+
+    for (const viewport of [
+      { width: 1440, height: 900, locale: 'en' },
+      { width: 390, height: 844, locale: 'uk' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      const response = await page.goto(`http://qdip.localhost:3000/${viewport.locale}`)
+      expect(response?.status()).toBeLessThan(400)
+
+      const layers = await page.locator('#main-content').evaluate((main) => {
+        const shell = main.parentElement
+        if (!shell) throw new Error('Marketing shell not found')
+        const texture = getComputedStyle(shell, '::before')
+        return {
+          image: texture.backgroundImage,
+          position: texture.position,
+          opacity: Number(texture.opacity),
+          zIndex: Number(texture.zIndex),
+          mainZIndex: Number(getComputedStyle(main).zIndex),
+          shellIsolation: getComputedStyle(shell).isolation,
+        }
+      })
+
+      expect(layers.image).toContain('qdip-network.svg')
+      expect(layers.position).toBe('fixed')
+      expect(layers.opacity).toBeGreaterThan(0)
+      expect(layers.shellIsolation).toBe('isolate')
+      expect(layers.mainZIndex).toBeGreaterThan(layers.zIndex)
+    }
+  })
+
+  test('desktop decision scene expands without changing mobile arrangement', async ({ page }) => {
+    for (const viewport of [
+      { width: 1440, height: 900, expectedLayout: 'row' },
+      { width: 390, height: 844, expectedLayout: 'column' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await page.goto('http://qdip.localhost:3000/en')
+      const scene = page.locator('figure[aria-label]').first()
+      const hero = page.locator('#main-content > section').first()
+      await expect(scene).toBeVisible()
+      const width = await scene.evaluate((node) => node.getBoundingClientRect().width)
+      const heroWidth = await hero.evaluate((node) => node.getBoundingClientRect().width)
+      expect(width).toBeGreaterThan(heroWidth * 0.85)
+      await expect(scene).toHaveCSS('flex-direction', viewport.expectedLayout)
+    }
+  })
+
+  test('marketing ambient motion and decision trace honor reduced-motion', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/en')
+    const scene = page.locator('figure[aria-label]').first()
+    const livePath = scene.locator('path[class*="livePath"]')
+    await expect(livePath).toHaveCSS('animation-name', /qdip-trace-signal/)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(livePath).toHaveCSS('animation-name', 'none')
+  })
+
   for (const locale of locales) {
     test(`${locale} homepage keeps buyer navigation and headline semantics intact`, async ({ page }) => {
       const response = await page.goto(`http://qdip.localhost:3000/${locale}`)

@@ -12,6 +12,7 @@ import { EvidenceStrip } from './evidence-strip'
 import { conversionBridgeCopy } from './conversion-copy'
 import styles from './qdip-site.module.css'
 import shellStyles from './marketing-shell.module.css'
+import atmosphereStyles from './marketing-atmosphere.module.css'
 
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
 
@@ -19,7 +20,11 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   const c = marketingCopy[locale]
   const decisionHref = path(locale, 'decision')
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.site} ${shellStyles.stickyRoot}`}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="light"
+      className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} />
         <section className={styles.hero}>

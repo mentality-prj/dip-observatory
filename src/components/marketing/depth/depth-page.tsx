@@ -8,6 +8,7 @@ import type { MarketingLocale } from '../qdip-copy'
 import { getDepthContent, type DepthPageKey } from './content'
 import { depthUiI18n } from './i18n'
 import styles from './depth-page.module.css'
+import atmosphereStyles from '../marketing-atmosphere.module.css'
 
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
 
@@ -15,7 +16,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
   const c = getDepthContent(locale, page)
   const labels = depthUiI18n[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={styles.page}>
+    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.page} ${atmosphereStyles.atmosphere}`}>
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={page} />
         <section className={styles.hero}>
