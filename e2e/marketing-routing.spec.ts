@@ -102,32 +102,43 @@ test.describe('current marketing routing', () => {
     await expect(livePath).toHaveCSS('animation-name', 'none')
   })
 
-  test('first viewport has visible continuous decision motion on desktop and mobile', async ({ page }) => {
+  test('desktop network is visible, while mobile hero text stays unobstructed', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     for (const viewport of [
-      { width: 1440, height: 900 },
-      { width: 390, height: 844 },
+      { width: 1440, height: 900, networkVisible: true },
+      { width: 768, height: 1024, networkVisible: false },
+      { width: 390, height: 844, networkVisible: false },
     ]) {
-      await page.setViewportSize(viewport)
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await page.goto('http://qdip.localhost:3000/en')
       const network = page.getByTestId('marketing-network-motion')
-      await expect(network).toBeVisible()
-      const bounding = await network.boundingBox()
-      expect(bounding).not.toBeNull()
-      expect(bounding?.width ?? 0).toBeGreaterThan(150)
-      expect(bounding?.y ?? Infinity).toBeLessThan(viewport.height)
-      const activePath = network.locator('g[class*="activePaths"] path').first()
-      await expect(activePath).toHaveCSS('animation-name', /qdip-network-flow/)
-      if (viewport.width < 600) {
-        await expect(page.locator('figure[aria-label] svg[class*="arrow"]').first()).toHaveCSS(
-          'animation-name',
-          /qdip-mobile-flow/
-        )
+      if (viewport.networkVisible) {
+        await expect(network).toBeVisible()
+        const activePath = network.locator('g[class*="activePaths"] path').first()
+        await expect(activePath).toHaveCSS('animation-name', /qdip-network-flow/)
+      } else {
+        await expect(network).toBeHidden()
+        const hero = page.locator('#main-content > section').first()
+        const heading = hero.getByRole('heading', { level: 1 })
+        const primary = hero.locator('a[class*="primaryButtonLarge"]').first()
+        await expect(heading).toBeVisible()
+        await expect(primary).toBeVisible()
+        await expect(primary).toHaveCSS('animation-name', /qdip-cta-arrive/)
+        const headingRect = await heading.boundingBox()
+        const ctaRect = await primary.boundingBox()
+        expect(headingRect).not.toBeNull()
+        expect(ctaRect).not.toBeNull()
+        const ctaTop = ctaRect?.y ?? 0
+        const headingBottom = (headingRect?.y ?? 0) + (headingRect?.height ?? 0)
+        expect(ctaTop).toBeGreaterThan(headingBottom)
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+        expect(overflow).toBeLessThanOrEqual(1)
       }
     }
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    const activePath = page.getByTestId('marketing-network-motion').locator('g[class*="activePaths"] path').first()
-    await expect(activePath).toHaveCSS('animation-name', 'none')
+    const hero = page.locator('#main-content > section').first()
+    const reducedCta = hero.locator('a[class*="primaryButtonLarge"]').first()
+    await expect(reducedCta).toHaveCSS('animation-name', 'none')
   })
 
   for (const locale of locales) {

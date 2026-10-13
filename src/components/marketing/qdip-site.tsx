@@ -12,6 +12,7 @@ import { DecisionPlayground } from './decision-playground'
 import { EvidenceStrip } from './evidence-strip'
 import { conversionBridgeCopy } from './conversion-copy'
 import styles from './qdip-site.module.css'
+import motionStyles from './marketing-cta-motion.module.css'
 import shellStyles from './marketing-shell.module.css'
 import atmosphereStyles from './marketing-atmosphere.module.css'
 
@@ -40,7 +41,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 event="marketing_hero_observatory_click"
                 locale={locale}
                 placement="hero"
-                className={styles.primaryButtonLarge}
+                className={`${styles.primaryButtonLarge} ${motionStyles.primary}`}
                 href={observatoryHref('', locale)}
               >
                 <Play size={16} />
@@ -50,11 +51,16 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 event="marketing_decision_intake_click"
                 locale={locale}
                 placement="hero"
-                className={styles.secondaryButton}
+                className={`${styles.secondaryButton} ${motionStyles.secondary}`}
                 href={decisionHref}
               >
                 {c.conversion[2]} <ArrowRight size={15} />
               </MarketingTrackedLink>
+            </div>
+            <div className={styles.heroSignature} aria-hidden="true">
+              <span />
+              <span />
+              <span />
             </div>
           </div>
           <div className={styles.heroMotion}>
@@ -103,7 +109,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
             event="marketing_decision_intake_click"
             locale={locale}
             placement="final_cta"
-            className={styles.primaryButtonLarge}
+            className={`${styles.primaryButtonLarge} ${motionStyles.primary}`}
             href={decisionHref}
           >
             {c.conversion[2]} <ArrowRight size={16} />

@@ -9,6 +9,7 @@ const hero = readFileSync('src/components/marketing/qdip-site.module.css', 'utf8
 const visual = readFileSync('src/components/marketing/signature-decision-visual.module.css', 'utf8')
 const network = readFileSync('src/components/marketing/marketing-network-motion.module.css', 'utf8')
 const networkMarkup = readFileSync('src/components/marketing/marketing-network-motion.tsx', 'utf8')
+const cta = readFileSync('src/components/marketing/marketing-cta-motion.module.css', 'utf8')
 
 test('network texture remains visible below application content', () => {
   assert.match(globals, /body::before\s*\{[\s\S]*?z-index:\s*0;/)
@@ -29,13 +30,21 @@ test('marketing hero uses a full-width decision visual with reduced-motion fallb
   assert.match(visual, /prefers-reduced-motion:\s*reduce/)
 })
 
-test('first viewport contains a prominent continuous marketing network on desktop and mobile', () => {
+test('desktop hero retains decision network, mobile removes overlapping animation', () => {
   assert.match(hero, /grid-template-areas:\s*'copy network'\s*'scene scene'/)
   assert.match(hero, /\.heroMotion\s*\{/)
   assert.match(network, /\.activePaths path\s*\{[^}]*animation:/)
   assert.match(networkMarkup, /data-testid="marketing-network-motion"/)
   assert.match(network, /prefers-reduced-motion:\s*reduce/)
-  assert.match(visual, /\.arrow\s*\{[^}]*animation:\s*qdip-mobile-flow/)
+  assert.match(hero, /@media \(max-width: 900px\)\s*\{[\s\S]*?\.heroMotion\s*\{\s*display:\s*none;/)
+  assert.doesNotMatch(visual, /\.arrow\s*\{[^}]*animation:\s*qdip-mobile-flow/)
+})
+
+test('marketing CTA effects are subtle, accessible and disabled with reduced motion', () => {
+  assert.match(cta, /\.primary:hover::after/)
+  assert.match(cta, /\.primary:active,/)
+  assert.match(cta, /prefers-reduced-motion:\s*reduce/)
+  assert.match(hero, /\.heroSignature\s*\{/)
 })
 
 test('decision inquiry form does not reintroduce a full section gap', () => {

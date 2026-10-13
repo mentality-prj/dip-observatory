@@ -188,6 +188,40 @@
   grid-area: scene;
   width: 100%;
 }
+.heroSignature {
+  position: relative;
+  display: flex;
+  width: 142px;
+  height: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--ds-space-8);
+  pointer-events: none;
+}
+.heroSignature::before {
+  position: absolute;
+  top: 7px;
+  right: 5px;
+  left: 5px;
+  height: 1px;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgb(var(--ds-accent-rgb) / 0.5), transparent);
+}
+.heroSignature span {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(var(--ds-accent-rgb) / 0.65);
+  border-radius: 50%;
+  background: var(--ds-bg);
+}
+.heroSignature span:nth-child(2) {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--ds-bg);
+  outline: 1px solid rgb(var(--ds-accent-rgb) / 0.7);
+  background: var(--ds-accent);
+}
 @keyframes qdip-marketing-intro {
   from {
     opacity: 0;
@@ -414,11 +448,31 @@
   gap: 0 var(--ds-space-16);
 }
 .questionGrid article {
-  padding: var(--ds-space-5) 0;
+  position: relative;
+  padding: var(--ds-space-5) 0 var(--ds-space-5) var(--ds-space-5);
   border-bottom: 1px solid var(--line);
   font-size: var(--ds-text-lead);
   font-weight: 650;
   line-height: 1.4;
+}
+.questionGrid article::before {
+  position: absolute;
+  top: calc(var(--ds-space-5) + 0.55em);
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--ds-accent);
+  border-radius: 50%;
+  content: '';
+  transition:
+    background 220ms ease,
+    transform 220ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .questionGrid article:hover::before {
+    background: var(--ds-accent);
+    transform: scale(1.25);
+  }
 }
 .centerCopy {
   max-width: 900px;
@@ -771,14 +825,9 @@
       'copy'
       'scene';
   }
+  /* No animated illustration behind or beside hero copy on narrow viewports. */
   .heroMotion {
-    position: absolute;
-    top: 1.25rem;
-    right: -36px;
-    z-index: 0;
-    width: min(76%, 440px);
-    height: 300px;
-    opacity: 0.52;
+    display: none;
   }
   .heroCopy {
     z-index: 1;
@@ -842,12 +891,9 @@
   }
 }
 @media (max-width: 600px) {
-  .heroMotion {
-    top: 0;
-    right: -72px;
-    width: 91%;
-    height: 260px;
-    opacity: 0.48;
+  .heroSignature {
+    width: 106px;
+    margin-top: var(--ds-space-6);
   }
   .headerInner {
     width: calc(100% - 32px);

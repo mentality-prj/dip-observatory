@@ -8,6 +8,7 @@ import { DecisionInquiryForm } from './decision-inquiry-form'
 import { QdipLogo } from './qdip-logo'
 import { MarketingHeader } from './marketing-header'
 import styles from './qdip-site.module.css'
+import motionStyles from './marketing-cta-motion.module.css'
 import atmosphereStyles from './marketing-atmosphere.module.css'
 
 type Copy = {
@@ -377,16 +378,16 @@ function CoreNav({ l }: { l: MarketingLocale }) {
   const x = copy[l]
   return (
     <div className={styles.centerAction}>
-      <Link className={styles.secondaryButton} href={href(l, 'core/architecture')}>
+      <Link className={`${styles.secondaryButton} ${motionStyles.secondary}`} href={href(l, 'core/architecture')}>
         {x.architecture}
       </Link>
-      <Link className={styles.secondaryButton} href={href(l, 'core/decision-model')}>
+      <Link className={`${styles.secondaryButton} ${motionStyles.secondary}`} href={href(l, 'core/decision-model')}>
         {x.model}
       </Link>
-      <Link className={styles.secondaryButton} href={href(l, 'core/explainability')}>
+      <Link className={`${styles.secondaryButton} ${motionStyles.secondary}`} href={href(l, 'core/explainability')}>
         {x.explain}
       </Link>
-      <Link className={styles.secondaryButton} href={href(l, 'core/research')}>
+      <Link className={`${styles.secondaryButton} ${motionStyles.secondary}`} href={href(l, 'core/research')}>
         {x.research}
       </Link>
     </div>
@@ -420,7 +421,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
             ))}
           </div>
           <div className={styles.centerAction}>
-            <Link className={styles.primaryButtonLarge} href={href(locale, 'use-cases')}>
+            <Link className={`${styles.primaryButtonLarge} ${motionStyles.primary}`} href={href(locale, 'use-cases')}>
               {x.see} <ArrowRight size={15} />
             </Link>
           </div>
@@ -473,7 +474,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
           <div className={styles.embeddedSection}>
             <InlineHeading eyebrow="QDIP" title={x.flow} body={x.flowBody} />
             <div className={styles.centerAction}>
-              <Link className={styles.primaryButtonLarge} href={href(locale, 'decision')}>
+              <Link className={`${styles.primaryButtonLarge} ${motionStyles.primary}`} href={href(locale, 'decision')}>
                 {x.describe}
               </Link>
             </div>
