@@ -67,6 +67,22 @@
 .theme :global(footer[data-variant='marketing'] [data-footer-copyright]) {
   color: var(--qdip-muted);
 }
+/* Light marketing retains the exact pre-redesign dark footer treatment. */
+.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing']) {
+  color: #fff;
+  border-top-color: rgb(255 255 255 / 0.1);
+  background: #180b11;
+}
+.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] a) {
+  color: #e5d9dd;
+}
+.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] a:hover) {
+  color: #fff;
+}
+.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] [data-footer-disclaimer]),
+.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] [data-footer-copyright]) {
+  color: #aa9ba1;
+}
 .theme :global(a:focus-visible),
 .theme :global(button:focus-visible) {
   outline-color: var(--qdip-focus);
