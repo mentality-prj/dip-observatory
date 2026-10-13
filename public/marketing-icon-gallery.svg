@@ -1,16 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1510" height="570" viewBox="0 0 1510 570">
   <rect width="1510" height="570" fill="#fbfcfe"/>
   <text x="75" y="67" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#17283b">QDIP / Engineering iconography</text>
-  <text x="76" y="97" font-family="Arial,sans-serif" font-size="15" fill="#607080">13 semantic SVG symbols · masked overlapping magnifier and approval detail</text>
+  <text x="76" y="97" font-family="Arial,sans-serif" font-size="15" fill="#607080">13 semantic SVG symbols · overlapping clean magnifier and approval cutouts</text>
   <path d="M75 112H1436" stroke="#d9dfe7" stroke-width="1"/>
   <g transform="translate(70 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <defs>
-        <mask id="qdip-audit-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="42" r="11.2" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-audit-loupe-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M32.8 42A11.2 11.2 0 1 0 55.2 42A11.2 11.2 0 1 0 32.8 42Z"
+            clip-rule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-audit-loupe-cutout)">
+      <g clip-path="url(#qdip-audit-loupe-cutout)">
         <rect x="8" y="11" width="37" height="43" rx="3" />
         <path d="M19 11V7h9v4M18 7h11" />
         <rect x="13" y="19" width="8" height="8" rx="1" />
@@ -94,12 +97,15 @@
     </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Explainability</text></g>
 <g transform="translate(70 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <defs>
-        <mask id="qdip-approval-badge-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="42" r="12.5" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-approval-badge-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M31.5 42A12.5 12.5 0 1 0 56.5 42A12.5 12.5 0 1 0 31.5 42Z"
+            clip-rule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-approval-badge-cutout)">
+      <g clip-path="url(#qdip-approval-badge-cutout)">
         <rect x="8" y="9" width="38" height="45" rx="3" />
         <path d="M18 9V6h12v3M15 20h24M15 28h24M15 36h24M15 44h24" />
       </g>
@@ -144,12 +150,15 @@
     </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Workflow</text></g>
 <g transform="translate(830 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <defs>
-        <mask id="qdip-evidence-loupe-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="white" stroke="none" />
-          <circle cx="44" cy="43" r="12" fill="black" stroke="none" />
-        </mask>
+        <clipPath id="qdip-evidence-loupe-cutout" clipPathUnits="userSpaceOnUse">
+          <path
+            d="M0 0H64V64H0Z M32 43A12 12 0 1 0 56 43A12 12 0 1 0 32 43Z"
+            clip-rule="evenodd"
+            stroke="none"
+          />
+        </clipPath>
       </defs>
-      <g mask="url(#qdip-evidence-loupe-cutout)">
+      <g clip-path="url(#qdip-evidence-loupe-cutout)">
         <ellipse cx="25" cy="13" rx="17" ry="5" />
         <path d="M8 13v32c0 7 34 7 34 0V13M8 24c0 7 34 7 34 0M8 35c0 7 34 7 34 0" />
       </g>
