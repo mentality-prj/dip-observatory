@@ -163,7 +163,11 @@
   color: #9baaba;
   background: transparent;
   cursor: pointer;
-  font: 600 13px ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    600 13px ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
   transition:
     color 180ms ease,
     border-color 180ms ease,
@@ -207,9 +211,7 @@
   padding: 20px;
   border: 1px solid #334353;
   border-radius: 11px;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 60%),
-    #111c28;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 60%), #111c28;
 }
 .codeBlock code {
   display: grid;
@@ -283,7 +285,11 @@
 }
 .progressHeader strong {
   color: #d1f4e8;
-  font: 650 20px ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    650 20px ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 .progressHeader em {
   color: #647a8c;
@@ -335,7 +341,11 @@
   border: 1px solid #41586b;
   border-radius: 5px;
   color: #d8e5ed;
-  font: 700 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+  font:
+    700 10px ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 .consoleFooter {
   display: flex;
