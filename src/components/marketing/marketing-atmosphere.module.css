@@ -40,6 +40,12 @@
     opacity: 0.95;
   }
 }
+@media (max-width: 900px) {
+  /* Disable continuous ambient movement where it competes with mobile content. */
+  .atmosphere::after {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .atmosphere::after {
     animation: none;
