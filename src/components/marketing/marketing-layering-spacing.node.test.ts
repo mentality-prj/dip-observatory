@@ -53,3 +53,40 @@ test('decision inquiry form does not reintroduce a full section gap', () => {
   assert.match(spacing, /margin-top:\s*calc\(-1 \* var\(--section-y\) \+ var\(--ds-space-4\)\)/)
   assert.match(spacing, /margin-top:\s*calc\(-1 \* var\(--section-y-mobile\) \+ var\(--ds-space-3\)\)/)
 })
+
+const deepBurgundy = readFileSync('src/components/marketing/marketing-deep-burgundy.module.css', 'utf8')
+const deepConsole = readFileSync('src/components/marketing/decision-workbench-preview.module.css', 'utf8')
+const customIcons = readFileSync('src/components/marketing/marketing-tech-icon.tsx', 'utf8')
+const evidenceMarkup = readFileSync('src/components/marketing/evidence-strip.tsx', 'utf8')
+const homepageMarkup = readFileSync('src/components/marketing/qdip-site.tsx', 'utf8')
+
+test('Deep Burgundy identity is isolated to marketing and uses exact brand tokens', () => {
+  for (const token of ['#140910', '#29131e', '#7a1838', '#c65176', '#f8eff2']) {
+    assert.ok(deepBurgundy.includes(token), `Missing token ${token}`)
+  }
+  assert.match(deepBurgundy, /\.theme\.theme\.theme/)
+  assert.match(homepageMarkup, /mode="dark"/)
+  assert.doesNotMatch(deepConsole, /#0c131d|#293442|#9de2cf|#82d5c4/)
+  assert.match(deepConsole, /background:\s*#29131e;/)
+})
+
+test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny library symbols', () => {
+  assert.match(customIcons, /viewBox="0 0 64 64"/)
+  assert.match(customIcons, /strokeWidth=\{2\}/)
+  assert.match(evidenceMarkup, /'audit', 'comparison', 'replay'/)
+  assert.doesNotMatch(evidenceMarkup, /lucide-react/)
+  for (const name of [
+    'modeling',
+    'constraints',
+    'optimization',
+    'explainability',
+    'human-approval',
+    'simulation',
+    'allocation',
+    'workflow',
+    'evidence',
+    'policy',
+  ]) {
+    assert.ok(customIcons.includes(`  ${name}:`) || customIcons.includes(`  '${name}':`), `Missing ${name}`)
+  }
+})
