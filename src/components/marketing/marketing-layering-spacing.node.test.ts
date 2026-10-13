@@ -145,3 +145,27 @@ test('inspection loupes and approval badge overlap the source art but hide strok
   assert.match(techIcons, /clipRule="evenodd"/)
   assert.doesNotMatch(techIcons, /<mask id=/)
 })
+
+test('comparison scales are mirrored and pivotal circles sit on exact beam junctions', () => {
+  assert.match(techIcons, /transform="translate\(64 0\) scale\(-1 1\)"/)
+  assert.match(techIcons, /<circle cx="32" cy="10" r="3" \/>/)
+  assert.match(techIcons, /<circle cx="32" cy="20" r="2" \/>/)
+  assert.match(techIcons, /M13 20h17M34 20h17M32 13v5M13 20h17M34 20h17M32 13v5M32 22v29/)
+  const pan = 'M13 20 6 38M13 20l7 18'
+  assert.equal(techIcons.split(pan).length - 1, 2, 'Both pans must use the same artwork')
+})
+
+test('simulation shows two unambiguous scenarios instead of crossed sketch strokes', () => {
+  assert.match(techIcons, /M7 19h50M32 19v36/)
+  assert.match(techIcons, /<circle cx="19" cy="27" r="2\.5" \/>/)
+  assert.match(techIcons, /<circle cx="45" cy="27" r="2\.5" \/>/)
+  assert.match(techIcons, /M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37/)
+  assert.doesNotMatch(techIcons, /M13 29 6-6 6 6M13 44l6-6/)
+})
+
+test('all 13 icon contracts remain self-contained and preserve badge cutouts', () => {
+  const iconEntries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
+  assert.equal(iconEntries.length, 13)
+  assert.equal((techIcons.match(/<clipPath id=/g) ?? []).length, 3)
+  assert.doesNotMatch(techIcons, /comparisonPan/)
+})
