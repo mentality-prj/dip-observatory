@@ -33,10 +33,7 @@ const artwork: Record<TechIconName, ReactNode> = {
         <rect x="13" y="19" width="8" height="8" rx="1" />
         <rect x="13" y="30" width="8" height="8" rx="1" />
         <rect x="13" y="41" width="8" height="8" rx="1" />
-        <path
-          d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4"
-          strokeWidth={1.3}
-        />
+        <path d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4" strokeWidth={1.3} />
         <path d="M26 23h12M26 34h12M26 45h12" />
       </g>
       <circle cx="44" cy="42" r="10.5" />
@@ -187,11 +184,7 @@ const artwork: Record<TechIconName, ReactNode> = {
     <g>
       <defs>
         <clipPath id="qdip-evidence-loupe-cutout" clipPathUnits="userSpaceOnUse">
-          <path
-            d="M0 0H64V64H0Z M32 43A12 12 0 1 0 56 43A12 12 0 1 0 32 43Z"
-            clipRule="evenodd"
-            stroke="none"
-          />
+          <path d="M0 0H64V64H0Z M32 43A12 12 0 1 0 56 43A12 12 0 1 0 32 43Z" clipRule="evenodd" stroke="none" />
         </clipPath>
       </defs>
       <g clipPath="url(#qdip-evidence-loupe-cutout)">
