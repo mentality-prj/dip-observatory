@@ -18,17 +18,19 @@ export type TechIconName =
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
-      <rect x="10" y="10" width="36" height="44" rx="4" />
-      <path d="M24 10V6h10v4M23 6h12M17 20h6v6h-6zM17 31h6v6h-6zM17 42h6v6h-6z" />
-      <path d="m18.5 22 2 2 4-5m-6 14 2 2 4-5m-6 14 2 2 4-5" />
-      <g strokeWidth={1.4}>
-        <path d="M29 23h11M29 34h9M29 45h5" />
-        <circle cx="46" cy="41" r="8" />
-        <path d="m51.5 46.5 7 7" />
+      <rect x="8" y="11" width="29" height="43" rx="3" />
+      <path d="M19 11V7h9v4M18 7h11" />
+      <rect x="13" y="19" width="8" height="8" rx="1" />
+      <rect x="13" y="30" width="8" height="8" rx="1" />
+      <rect x="13" y="41" width="8" height="8" rx="1" />
+      <g strokeWidth={1.3}>
+        <path d="m14.5 22.7 1.9 1.8 3.7-4M14.5 33.7l1.9 1.8 3.7-4M14.5 44.7l1.9 1.8 3.7-4" />
       </g>
+      <path d="M26 23h7M26 34h7M26 45h7" />
+      <circle cx="47" cy="42" r="9" />
+      <path d="m53.5 48.5 6.5 6.5" />
     </g>
-  ),
-  comparison: (
+  ),  comparison: (
     <g>
       <path d="M32 8v44M19 55h26M23 50h18M32 8l-23 13h46L32 8" />
       <circle cx="32" cy="10" r="3.5" />
@@ -109,18 +111,12 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   'human-approval': (
     <g>
-      <rect x="8" y="8" width="34" height="46" rx="3" />
-      <path d="M16 18h19M16 25h19M16 32h12M16 41h8" />
-      <circle cx="45" cy="41" r="13" />
-      <path d="m37 41 6 6 10-12" />
-      <g strokeWidth={1.4}>
-        <path d="M14 8V5h22v3M17 48h7M27 48h5" />
-        <circle cx="16" cy="14" r="1.3" />
-        <path d="M48 23h7M54 28l4-4" />
-      </g>
+      <rect x="7" y="9" width="29" height="45" rx="3" />
+      <path d="M16 9V6h11v3M15 20h14M15 28h14M15 36h12" />
+      <circle cx="47" cy="43" r="10" />
+      <path d="m41 43 4.5 4.5L53 38" />
     </g>
-  ),
-  simulation: (
+  ),  simulation: (
     <g>
       <rect x="7" y="8" width="50" height="48" rx="4" />
       <path d="M7 18h50M32 18v38" />
@@ -164,17 +160,12 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   evidence: (
     <g>
-      <ellipse cx="25" cy="13" rx="15" ry="6" />
-      <path d="M10 13v30c0 8 26 8 30 2V13M10 24c0 8 30 8 30 0M10 35c0 8 30 8 30 0" />
-      <circle cx="42" cy="42" r="11" />
-      <path d="m49.5 49.5 9 9" />
-      <g strokeWidth={1.4}>
-        <path d="M16 19v4M16 30v4M16 41v4M37 42h10M42 37v10" />
-        <circle cx="25" cy="24" r="2" />
-      </g>
+      <ellipse cx="22" cy="13" rx="14" ry="5" />
+      <path d="M8 13v32c0 7 28 7 28 0V13M8 24c0 7 28 7 28 0M8 35c0 7 28 7 28 0" />
+      <circle cx="47" cy="43" r="9" />
+      <path d="m53.5 49.5 6.5 6.5" />
     </g>
-  ),
-  policy: (
+  ),  policy: (
     <g>
       <path d="M32 6 52 14v16c0 14-8 22-20 28-12-6-20-14-20-28V14z" />
       <path d="m22 31 7 7 14-16" />
