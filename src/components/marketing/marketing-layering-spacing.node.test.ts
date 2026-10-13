@@ -129,10 +129,18 @@ test('marketing identity access is icon-only and screen-reader-labelled, without
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
 
-test('audit, evidence and human approval icons have nonoverlapping geometries', () => {
-  assert.match(techIcons, /<circle cx="47" cy="42" r="9" \/>/)
-  assert.match(techIcons, /<circle cx="47" cy="43" r="9" \/>/)
-  assert.match(techIcons, /<circle cx="47" cy="43" r="10" \/>/)
-  assert.match(techIcons, /<rect x="13" y="19" width="8" height="8" rx="1" \/>/)
-  assert.doesNotMatch(techIcons, /M37 42h10|M42 37v10|M16 41h8/)
+test('inspection loupes and approval badge overlap the source art but hide strokes beneath them', () => {
+  for (const [maskId, lens] of [
+    ['qdip-audit-loupe-cutout', '<circle cx="44" cy="42" r="10.5" />'],
+    ['qdip-evidence-loupe-cutout', '<circle cx="44" cy="43" r="11.3" />'],
+    ['qdip-approval-badge-cutout', '<circle cx="44" cy="42" r="11.7" />'],
+  ]) {
+    assert.ok(techIcons.includes(`<mask id="${maskId}"`), `Missing cutout for ${maskId}`)
+    assert.ok(techIcons.includes(`mask="url(#${maskId})"`), `Source art is not masked for ${maskId}`)
+    assert.ok(techIcons.includes(lens), `Overlapping lens/badge missing for ${maskId}`)
+  }
+  assert.match(techIcons, /<rect x="8" y="11" width="37" height="43" rx="3" \/>/)
+  assert.match(techIcons, /<ellipse cx="25" cy="13" rx="17" ry="5" \/>/)
+  assert.match(techIcons, /<rect x="8" y="9" width="38" height="45" rx="3" \/>/)
+  assert.match(techIcons, /<circle cx="44" cy="43" r="12" fill="black" stroke="none" \/>/)
 })
