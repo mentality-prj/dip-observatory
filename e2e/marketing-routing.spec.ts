@@ -102,6 +102,34 @@ test.describe('current marketing routing', () => {
     await expect(livePath).toHaveCSS('animation-name', 'none')
   })
 
+  test('first viewport has visible continuous decision motion on desktop and mobile', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await page.goto('http://qdip.localhost:3000/en')
+      const network = page.getByTestId('marketing-network-motion')
+      await expect(network).toBeVisible()
+      const bounding = await network.boundingBox()
+      expect(bounding).not.toBeNull()
+      expect(bounding?.width ?? 0).toBeGreaterThan(150)
+      expect(bounding?.y ?? Infinity).toBeLessThan(viewport.height)
+      const activePath = network.locator('g[class*="activePaths"] path').first()
+      await expect(activePath).toHaveCSS('animation-name', /qdip-network-flow/)
+      if (viewport.width < 600) {
+        await expect(page.locator('figure[aria-label] svg[class*="arrow"]').first()).toHaveCSS(
+          'animation-name',
+          /qdip-mobile-flow/
+        )
+      }
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const activePath = page.getByTestId('marketing-network-motion').locator('g[class*="activePaths"] path').first()
+    await expect(activePath).toHaveCSS('animation-name', 'none')
+  })
+
   for (const locale of locales) {
     test(`${locale} homepage keeps buyer navigation and headline semantics intact`, async ({ page }) => {
       const response = await page.goto(`http://qdip.localhost:3000/${locale}`)
