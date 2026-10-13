@@ -68,3 +68,17 @@
     display: none;
   }
 }
+
+/* Compact marketing-only appearance; product headers keep their existing labels. */
+.iconOnly {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 10px;
+}
+.iconOnly svg {
+  display: block;
+  flex-shrink: 0;
+}
