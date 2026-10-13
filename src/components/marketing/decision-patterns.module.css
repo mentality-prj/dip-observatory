@@ -201,16 +201,14 @@
   border-color: var(--qdip-border);
 }
 .patternIcon {
-  width: 64px;
-  height: 64px;
+  display: block;
+  width: 76px;
+  height: 76px;
   margin-bottom: 20px;
-  padding: 10px;
-  overflow: visible;
+  padding: 0;
   color: var(--qdip-icon);
-  border: 1px solid var(--qdip-border);
-  border-radius: 14px;
-  background: var(--qdip-icon-background);
-  box-sizing: content-box;
+  border: 0;
+  background: transparent;
 }
 .engineFlow {
   position: relative;
