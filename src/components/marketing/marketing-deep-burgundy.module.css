@@ -1,43 +1,73 @@
-/* Marketing-only identity. No Studio, Observatory or Kernel tokens are touched. */
+/* Brand burgundy is an accent, never a full-card fill. Marketing only. */
 .theme.theme.theme {
-  --qdip-background: #140910;
-  --qdip-surface: #29131e;
+  --qdip-background: #15171c;
+  --qdip-surface: #20232a;
+  --qdip-surface-raised: #292d35;
+  --qdip-border: #414750;
   --qdip-brand: #7a1838;
   --qdip-signal: #c65176;
-  --qdip-text: #f8eff2;
-  --qdip-muted: #eac0d0;
+  --qdip-text: #f0f2f5;
+  --qdip-muted: #b8bec8;
+  --qdip-icon: #bac2ce;
+  --qdip-icon-background: #252932;
+  --qdip-button: #7a1838;
+  --qdip-button-hover: #98294d;
+  --qdip-button-text: #ffffff;
+  --qdip-hero-start: #1a1d23;
+  --qdip-hero-end: #15171c;
+  --qdip-footer: #111318;
+  --qdip-focus: #d49ab0;
   --ds-bg: var(--qdip-background);
   --ds-surface: var(--qdip-surface);
-  --ds-surface-raised: #341a27;
-  --ds-border: #714258;
+  --ds-surface-raised: var(--qdip-surface-raised);
+  --ds-border: var(--qdip-border);
   --ds-text: var(--qdip-text);
   --ds-text-muted: var(--qdip-muted);
   --ds-heading: var(--qdip-text);
-  /* Brighter accessible text variant; artwork retains exact brand signal #C65176. */
-  --ds-accent: #ed9bb7;
-  --ds-accent-rgb: 198 81 118;
-  --ds-accent-contrast: #140910;
-  --ds-focus: #f6b2c7;
+  --ds-accent: #d7a7b7;
+  --ds-accent-rgb: 122 24 56;
+  --ds-accent-contrast: #ffffff;
+  --ds-focus: var(--qdip-focus);
   color: var(--qdip-text);
   background: var(--qdip-background);
   color-scheme: dark;
 }
+
+.theme.theme.theme[data-marketing-appearance='light'] {
+  --qdip-background: #f5f6f8;
+  --qdip-surface: #ffffff;
+  --qdip-surface-raised: #eef0f3;
+  --qdip-border: #d1d6de;
+  --qdip-text: #1b2029;
+  --qdip-muted: #525c6a;
+  --qdip-icon: #505c6a;
+  --qdip-icon-background: #f1f3f6;
+  --qdip-button: #7a1838;
+  --qdip-button-hover: #952549;
+  --qdip-hero-start: #ffffff;
+  --qdip-hero-end: #f5f6f8;
+  --qdip-footer: #eceef2;
+  --qdip-focus: #7a1838;
+  --ds-accent: #7a1838;
+  --ds-focus: #7a1838;
+  color-scheme: light;
+}
 .theme :global(footer[data-variant='marketing']) {
-  border-top-color: #714258;
-  background: #10070d;
+  border-top-color: var(--qdip-border);
   color: var(--qdip-text);
+  background: var(--qdip-footer);
 }
 .theme :global(footer[data-variant='marketing'] a) {
   color: var(--qdip-text);
 }
 .theme :global(footer[data-variant='marketing'] a:hover) {
-  color: #f4b7cd;
+  color: var(--qdip-brand);
 }
 .theme :global(footer[data-variant='marketing'] [data-footer-disclaimer]),
 .theme :global(footer[data-variant='marketing'] [data-footer-copyright]) {
-  color: #eac0d0;
+  color: var(--qdip-muted);
 }
 .theme :global(a:focus-visible),
 .theme :global(button:focus-visible) {
-  outline-color: #f6b2c7;
+  outline-color: var(--qdip-focus);
 }
