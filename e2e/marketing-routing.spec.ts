@@ -76,7 +76,10 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('original network artwork replaces hero grid and is visible behind product sections', async ({ page, request }) => {
+  test('original network artwork replaces hero grid and is visible behind product sections', async ({
+    page,
+    request,
+  }) => {
     const svg = await (await request.get('http://qdip.localhost:3000/qdip-network.svg')).text()
     expect(svg).toContain('<g opacity="0.5">')
     for (const width of [375, 768, 1366]) {
