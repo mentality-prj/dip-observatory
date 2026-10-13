@@ -76,6 +76,32 @@ test.describe('current marketing routing', () => {
     }
   })
 
+  test('desktop decision scene expands without changing mobile arrangement', async ({ page }) => {
+    for (const viewport of [
+      { width: 1440, height: 900, expectedLayout: 'row' },
+      { width: 390, height: 844, expectedLayout: 'column' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await page.goto('http://qdip.localhost:3000/en')
+      const scene = page.locator('figure[aria-label]').first()
+      const hero = page.locator('#main-content > section').first()
+      await expect(scene).toBeVisible()
+      const width = await scene.evaluate((node) => node.getBoundingClientRect().width)
+      const heroWidth = await hero.evaluate((node) => node.getBoundingClientRect().width)
+      expect(width).toBeGreaterThan(heroWidth * 0.85)
+      await expect(scene).toHaveCSS('flex-direction', viewport.expectedLayout)
+    }
+  })
+
+  test('marketing ambient motion and decision trace honor reduced-motion', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/en')
+    const scene = page.locator('figure[aria-label]').first()
+    const livePath = scene.locator('path[class*="livePath"]')
+    await expect(livePath).toHaveCSS('animation-name', 'qdip-trace-signal')
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(livePath).toHaveCSS('animation-name', 'none')
+  })
+
   for (const locale of locales) {
     test(`${locale} homepage keeps buyer navigation and headline semantics intact`, async ({ page }) => {
       const response = await page.goto(`http://qdip.localhost:3000/${locale}`)
