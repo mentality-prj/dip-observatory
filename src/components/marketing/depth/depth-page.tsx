@@ -8,6 +8,7 @@ import type { MarketingLocale } from '../qdip-copy'
 import { getDepthContent, type DepthPageKey } from './content'
 import { depthUiI18n } from './i18n'
 import styles from './depth-page.module.css'
+import motionStyles from '../marketing-cta-motion.module.css'
 import atmosphereStyles from '../marketing-atmosphere.module.css'
 
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
@@ -24,10 +25,10 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
           <h1>{c.hero[1]}</h1>
           <p>{c.hero[2]}</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primary} href={localeHref(locale, 'use-cases#demos')}>
+            <Link className={`${styles.primary} ${motionStyles.primary}`} href={localeHref(locale, 'use-cases#demos')}>
               {labels.explore} <ArrowRight size={15} />
             </Link>
-            <Link className={styles.secondary} href={localeHref(locale, 'decision')}>
+            <Link className={`${styles.secondary} ${motionStyles.secondary}`} href={localeHref(locale, 'decision')}>
               {labels.describe}
             </Link>
           </div>
@@ -93,7 +94,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
             <p>{c.cta[1]}</p>
           </div>
           <Link
-            className={styles.primary}
+            className={`${styles.primary} ${motionStyles.primary}`}
             href={page === 'core' ? localeHref(locale, 'core/research') : localeHref(locale, 'decision')}
           >
             {c.cta[2]} <ArrowRight size={15} />
