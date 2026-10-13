@@ -20,7 +20,11 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   const c = marketingCopy[locale]
   const decisionHref = path(locale, 'decision')
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere}`}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="light"
+      className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} />
         <section className={styles.hero}>
