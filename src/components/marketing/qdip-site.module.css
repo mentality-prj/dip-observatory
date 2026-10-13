@@ -6,11 +6,29 @@
   --section-y: clamp(6rem, 8vw, 8.5rem);
   --section-y-mobile: clamp(4rem, 12vw, 5.5rem);
   --content-gap: clamp(2rem, 4vw, 3rem);
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   overflow: hidden;
   color: var(--ink);
   background: var(--ds-bg);
   font-family: var(--ds-font-sans);
+}
+/* The global body texture is hidden by the light marketing surface.
+   Render it inside that surface, behind all page content. */
+.site::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: url('/qdip-network.svg') center/cover no-repeat;
+  mask-image: radial-gradient(ellipse at center, black 30%, rgba(0, 0, 0, 0.78) 68%, transparent 100%);
+  opacity: 0.9;
+}
+.site > main {
+  position: relative;
+  z-index: 1;
 }
 .site * {
   box-sizing: border-box;
