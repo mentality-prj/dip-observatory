@@ -24,6 +24,29 @@ const labels = {
   },
 } as const
 
+function QdipAccessIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="11" cy="16" r="7" />
+      <circle cx="11" cy="13.5" r="2" />
+      <path d="M6.5 20.5c.7-2.3 2.2-3.4 4.5-3.4s3.8 1.1 4.5 3.4" />
+      <path d="M22 5h4a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3h-4" />
+      <path d="M20 16h8m-3-3 3 3-3 3" />
+    </svg>
+  )
+}
+
 function loginHref(returnTo: string) {
   const url = new URL('/api/auth/login', PLATFORM_URLS.site)
   url.searchParams.set('return_to', returnTo)
@@ -31,7 +54,16 @@ function loginHref(returnTo: string) {
 }
 
 /** Only public session flags are read; roles and tokens are never stored in browser state. */
-export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; returnTo: string }) {
+export function QdipAuthControl({
+  locale,
+  returnTo,
+  iconOnly = false,
+}: {
+  locale: PlatformLocale
+  returnTo: string
+  /** Marketing header can render an accessible icon-only control without changing product headers. */
+  iconOnly?: boolean
+}) {
   const copy = labels[locale]
   const [session, setSession] = useState<AuthSession | null>(null)
   const [signingOut, setSigningOut] = useState(false)
@@ -74,16 +106,16 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
   if (session?.authenticated) {
     return (
       <div className={styles.authControl} data-qdip-auth="signed-in">
-        <span className={styles.signedIn}>{copy.signedIn}</span>
+        {!iconOnly && <span className={styles.signedIn}>{copy.signedIn}</span>}
         <button
-          className={styles.action}
+          className={iconOnly ? `${styles.action} ${styles.iconOnly}` : styles.action}
           type="button"
           disabled={signingOut}
           onClick={() => void signOut()}
           aria-label={copy.signOut}
         >
           <LogOut size={16} aria-hidden />
-          <span>{copy.signOut}</span>
+          {!iconOnly && <span>{copy.signOut}</span>}
         </button>
         {error ? (
           <span className={styles.error} role="alert">
@@ -96,14 +128,14 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
 
   return (
     <a
-      className={styles.action}
+      className={iconOnly ? `${styles.action} ${styles.iconOnly}` : styles.action}
       data-qdip-auth="signed-out"
       href={loginHref(returnTo)}
       aria-label={copy.signIn}
       title={copy.signIn}
     >
-      <LogIn size={16} aria-hidden />
-      <span>{copy.signIn}</span>
+      {iconOnly ? <QdipAccessIcon /> : <LogIn size={16} aria-hidden />}
+      {!iconOnly && <span>{copy.signIn}</span>}
     </a>
   )
 }
