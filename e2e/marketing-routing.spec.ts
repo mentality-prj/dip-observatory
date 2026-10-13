@@ -41,6 +41,41 @@ const whyLabels = {
 } as const
 
 test.describe('current marketing routing', () => {
+  test('marketing network texture stays above the opaque surface on desktop and mobile', async ({ page, request }) => {
+    const asset = await request.get('http://qdip.localhost:3000/qdip-network.svg')
+    expect(asset.status()).toBe(200)
+    expect(asset.headers()['content-type']).toContain('image/svg+xml')
+
+    for (const viewport of [
+      { width: 1440, height: 900, locale: 'en' },
+      { width: 390, height: 844, locale: 'uk' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      const response = await page.goto(`http://qdip.localhost:3000/${viewport.locale}`)
+      expect(response?.status()).toBeLessThan(400)
+
+      const layers = await page.locator('#main-content').evaluate((main) => {
+        const shell = main.parentElement
+        if (!shell) throw new Error('Marketing shell not found')
+        const texture = getComputedStyle(shell, '::before')
+        return {
+          image: texture.backgroundImage,
+          position: texture.position,
+          opacity: Number(texture.opacity),
+          zIndex: Number(texture.zIndex),
+          mainZIndex: Number(getComputedStyle(main).zIndex),
+          shellIsolation: getComputedStyle(shell).isolation,
+        }
+      })
+
+      expect(layers.image).toContain('qdip-network.svg')
+      expect(layers.position).toBe('fixed')
+      expect(layers.opacity).toBeGreaterThan(0)
+      expect(layers.shellIsolation).toBe('isolate')
+      expect(layers.mainZIndex).toBeGreaterThan(layers.zIndex)
+    }
+  })
+
   for (const locale of locales) {
     test(`${locale} homepage keeps buyer navigation and headline semantics intact`, async ({ page }) => {
       const response = await page.goto(`http://qdip.localhost:3000/${locale}`)
