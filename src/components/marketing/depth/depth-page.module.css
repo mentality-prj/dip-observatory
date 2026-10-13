@@ -54,6 +54,11 @@
 .hero {
   padding: clamp(6rem, 9vw, 8.5rem) max(var(--ds-space-6), calc((100vw - 1160px) / 2)) clamp(6rem, 8vw, 7.5rem);
   border-bottom: 1px solid var(--ds-border);
+  animation: qdip-depth-intro 600ms ease-out both;
+}
+@keyframes qdip-depth-intro {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 .eyebrow,
 .pattern {
@@ -186,10 +191,13 @@
   border-radius: var(--ds-radius-marketing);
   background: var(--ds-surface-raised);
   transition:
-    background 150ms ease,
-    border-color 150ms ease;
+    transform 220ms ease,
+    border-color 150ms ease,
+    box-shadow 220ms ease;
 }
 .case:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 44px rgb(var(--ds-accent-rgb) / 0.09);
   border-color: rgb(var(--ds-accent-rgb) / 0.24);
   background: color-mix(in srgb, var(--ds-surface-raised) 94%, var(--ds-accent));
 }
@@ -365,4 +373,10 @@
   .footer nav {
     gap: var(--ds-space-3) var(--ds-space-5);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero { animation: none; }
+  .case { transition: none; }
+  .case:hover { transform: none; }
 }
