@@ -187,7 +187,8 @@ const artwork: Record<TechIconName, ReactNode> = {
       <path d="M32 12 46 18v12c0 10-5 16-14 21-9-5-14-11-14-21V18z" strokeWidth={1.4} />
       <path d="m23 32 6 6 12-13" />
     </g>
-  ),}
+  ),
+}
 
 export function MarketingTechIcon({ name, className }: { name: TechIconName; className?: string }) {
   return (
