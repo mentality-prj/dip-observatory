@@ -84,7 +84,7 @@ export function DecisionPlayground({ locale }: { locale: MarketingLocale }) {
           <span>{c.human}</span>
         </div>
       </div>
-      <div className={styles.stage}>
+      <div className={styles.stage} data-expanded={expanded}>
         <DecisionWorkflow locale={locale} compact />
         <div className={styles.controls}>
           <div>
@@ -97,6 +97,11 @@ export function DecisionPlayground({ locale }: { locale: MarketingLocale }) {
             <span>{c.high}</span>
             <b>{c.cta}</b>
           </button>
+        </div>
+        <div className={styles.constraintPath} aria-hidden="true">
+          <span />
+          <span />
+          <span />
         </div>
         <div className={styles.context}>
           <span>{c.requests}</span>
