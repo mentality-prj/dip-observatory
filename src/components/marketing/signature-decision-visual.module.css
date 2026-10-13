@@ -354,16 +354,9 @@
     color: var(--accent);
     stroke-width: 1.6;
     transform: rotate(90deg);
-    animation: qdip-mobile-flow 1.8s ease-in-out infinite;
   }
-  .arrow:nth-of-type(3) {
-    animation-delay: 0.25s;
-  }
-  .arrow:nth-of-type(4) {
-    animation-delay: 0.5s;
-  }
-  .arrow:nth-of-type(5) {
-    animation-delay: 0.75s;
+  .engine::after {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
