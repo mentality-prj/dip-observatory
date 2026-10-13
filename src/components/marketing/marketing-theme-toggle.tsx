@@ -42,7 +42,7 @@ function applyAppearance(appearance: Appearance) {
 }
 
 export function MarketingThemeToggle({ locale }: { locale: MarketingLocale }) {
-  const appearance = useSyncExternalStore(subscribeAppearance, currentAppearance, () => 'dark')
+  const appearance = useSyncExternalStore(subscribeAppearance, currentAppearance, (): Appearance => 'dark')
   useEffect(() => applyAppearance(appearance), [appearance])
 
   const changeAppearance = () => {
