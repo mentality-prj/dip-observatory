@@ -216,9 +216,7 @@
   position: relative;
   border: 1px solid #714258;
   border-radius: 16px;
-  background:
-    linear-gradient(115deg, transparent 12%, rgb(198 81 118 / 0.11) 54%, transparent 100%),
-    #29131e;
+  background: linear-gradient(115deg, transparent 12%, rgb(198 81 118 / 0.11) 54%, transparent 100%), #29131e;
 }
 .engineFlow::before {
   position: absolute;
