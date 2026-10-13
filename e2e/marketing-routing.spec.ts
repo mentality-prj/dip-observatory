@@ -103,15 +103,15 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('Deep Burgundy marketing remains responsive and localized at 375/768/1366', async ({ page }) => {
+  test('neutral burgundy marketing is responsive in EN/UK/PL at 375/768/1366', async ({ page }) => {
     for (const locale of locales) {
       for (const width of [375, 768, 1366]) {
         await page.setViewportSize({ width, height: 900 })
         await page.goto(`http://qdip.localhost:3000/${locale}`)
         const marketing = page.locator('[data-ds-theme="burgundy"][data-ds-mode="dark"]').first()
-        await expect(marketing).toHaveCSS('background-color', 'rgb(20, 9, 16)')
+        await expect(marketing).toHaveCSS('background-color', 'rgb(21, 23, 28)')
         const workbench = page.getByTestId('decision-workbench')
-        await expect(workbench).toHaveCSS('background-color', 'rgb(41, 19, 30)')
+        await expect(workbench).toHaveCSS('background-color', 'rgb(32, 35, 42)')
         const evidenceIcons = page.locator('#why svg[viewBox="0 0 64 64"]')
         await expect(evidenceIcons).toHaveCount(3)
         await expect(evidenceIcons.first()).toHaveCSS('width', '64px')
@@ -121,6 +121,28 @@ test.describe('current marketing routing', () => {
     }
     await page.goto('http://qdip.localhost:3000/en/core')
     await expect(page.locator('svg[viewBox="0 0 64 64"]')).toHaveCount(6)
+  })
+
+  test('light theme preserves the restrained burgundy CTA and theme choice on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    const toggle = page.locator('[data-testid="marketing-theme-toggle"]:visible')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('[data-marketing-appearance="light"]')).toHaveCSS(
+      'background-color',
+      'rgb(245, 246, 248)'
+    )
+    const evidence = page.locator('#why article').first()
+    await expect(evidence).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+    const primary = page.locator('a[class*="primaryButtonLarge"]').first()
+    await expect(primary).toHaveCSS('background-color', 'rgb(122, 24, 56)')
+    await page.reload()
+    await expect(page.locator('[data-marketing-appearance="light"]')).toBeVisible()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+    expect(overflow).toBeLessThanOrEqual(1)
   })
 
   test('workbench budget changes recommendation and respects reduced motion', async ({ page }) => {
