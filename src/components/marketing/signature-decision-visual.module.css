@@ -40,10 +40,11 @@
   animation: qdip-path-draw 900ms 120ms ease-out forwards;
 }
 .livePath {
-  stroke: #c05273;
-  stroke-width: 3;
-  stroke-dasharray: 22 1250;
-  animation: qdip-trace-signal 8s linear infinite;
+  stroke: #b31f55;
+  stroke-width: 5;
+  stroke-dasharray: 70 165;
+  filter: drop-shadow(0 0 4px rgb(179 31 85 / 0.38));
+  animation: qdip-trace-signal 4s linear infinite;
 }
 .blockedPath {
   stroke: rgb(var(--ds-semantic-blocked-rgb) / 0.24);
@@ -88,6 +89,15 @@
   font-size: clamp(22px, 2.2vw, 31px);
   text-align: center;
   animation: qdip-causal-reveal 320ms 300ms ease-out both;
+}
+.engine::after {
+  position: absolute;
+  inset: -6px;
+  border: 2px solid rgb(var(--ds-accent-rgb) / 0.72);
+  border-radius: var(--ds-radius-action);
+  content: '';
+  pointer-events: none;
+  animation: qdip-engine-halo 2.5s ease-out infinite;
 }
 .engine small {
   display: block;
@@ -185,6 +195,28 @@
   display: none;
 }
 
+@keyframes qdip-engine-halo {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  90%,
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+@keyframes qdip-mobile-flow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: rotate(90deg) translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(90deg) translateX(6px);
+  }
+}
 @keyframes qdip-trace-signal {
   from {
     stroke-dashoffset: 1200;
@@ -322,6 +354,16 @@
     color: var(--accent);
     stroke-width: 1.6;
     transform: rotate(90deg);
+    animation: qdip-mobile-flow 1.8s ease-in-out infinite;
+  }
+  .arrow:nth-of-type(3) {
+    animation-delay: 0.25s;
+  }
+  .arrow:nth-of-type(4) {
+    animation-delay: 0.5s;
+  }
+  .arrow:nth-of-type(5) {
+    animation-delay: 0.75s;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -348,5 +390,12 @@
   }
   .livePath {
     opacity: 0;
+  }
+  .engine::after {
+    animation: none;
+    opacity: 0;
+  }
+  .arrow {
+    animation: none;
   }
 }
