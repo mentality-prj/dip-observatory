@@ -392,3 +392,39 @@
     transform: none;
   }
 }
+
+/* Marketing-only technical illustrations match the home page semantic family. */
+.page {
+  --ds-bg: #140910;
+  --ds-surface: #29131e;
+}
+.hero {
+  background: radial-gradient(ellipse at 90% 0, rgb(198 81 118 / 0.15), transparent 50%), #140910;
+}
+.items article {
+  align-items: flex-start;
+}
+.techFeatureIcon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  color: #ed9bb7 !important;
+  stroke-width: 2px;
+}
+.case {
+  border-color: #714258;
+  background: #29131e;
+}
+.case:hover {
+  background: #341a27;
+}
+.cta {
+  border-color: #714258;
+  background: #29131e;
+}
+@media (max-width: 560px) {
+  .items article {
+    flex-direction: column;
+  }
+}
