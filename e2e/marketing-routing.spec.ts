@@ -63,16 +63,17 @@ test.describe('current marketing routing', () => {
       { iconIndex: 11, maskId: 'qdip-evidence-loupe-cutout', expectedR: 11.3, artRight: 42 },
     ]) {
       const icon = iconArtboards.nth(iconIndex)
-      const maskedArt = icon.locator(`g[mask="url(#${maskId})"]`)
-      await expect(maskedArt).toHaveCount(1)
+      const clippedArt = icon.locator(`g[clip-path="url(#${maskId})"]`)
+      await expect(clippedArt).toHaveCount(1)
       const lens = icon.locator('circle').last()
       const center = Number(await lens.getAttribute('cx'))
       const radius = Number(await lens.getAttribute('r'))
       expect(radius).toBe(expectedR)
       expect(artRight).toBeGreaterThan(center - radius + 5)
       expect(artRight).toBeLessThan(center + radius)
-      const exclusion = icon.locator(`mask[id="${maskId}"] circle[fill="black"]`)
-      const cutoutRadius = Number(await exclusion.getAttribute('r'))
+      const exclusion = icon.locator(`clipPath[id="${maskId}"] path[clip-rule="evenodd"]`)
+      const cutout = (await exclusion.getAttribute('d')) ?? ''
+      const cutoutRadius = Number(cutout.match(/A([0-9.]+) /)?.[1])
       expect(cutoutRadius).toBeGreaterThan(radius)
     }
   })
