@@ -396,7 +396,9 @@
 /* Marketing-only technical illustrations match the home page semantic family. */
 
 .hero {
-  background: url('/qdip-network.svg') center / cover no-repeat, var(--qdip-background);
+  background:
+    url('/qdip-network.svg') center / cover no-repeat,
+    var(--qdip-background);
 }
 .items article {
   align-items: flex-start;
