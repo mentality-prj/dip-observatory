@@ -61,13 +61,15 @@ const evidenceMarkup = readFileSync('src/components/marketing/evidence-strip.tsx
 const homepageMarkup = readFileSync('src/components/marketing/qdip-site.tsx', 'utf8')
 
 test('Deep Burgundy identity is isolated to marketing and uses exact brand tokens', () => {
-  for (const token of ['#140910', '#29131e', '#7a1838', '#c65176', '#f8eff2']) {
+  for (const token of ['#15171c', '#20232a', '#7a1838', '#c65176', '#f5f6f8', '#ffffff']) {
     assert.ok(deepBurgundy.includes(token), `Missing token ${token}`)
   }
   assert.match(deepBurgundy, /\.theme\.theme\.theme/)
   assert.match(homepageMarkup, /mode="dark"/)
   assert.doesNotMatch(deepConsole, /#0c131d|#293442|#9de2cf|#82d5c4/)
-  assert.match(deepConsole, /background:\s*#29131e;/)
+  assert.match(deepConsole, /background:\s*#20232a;/)
+  assert.match(deepBurgundy, /data-marketing-appearance='light'/)
+  assert.match(deepBurgundy, /--qdip-button:\s*#7a1838/)
 })
 
 test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny library symbols', () => {
@@ -89,4 +91,10 @@ test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny lib
   ]) {
     assert.ok(customIcons.includes(`  ${name}:`) || customIcons.includes(`  '${name}':`), `Missing ${name}`)
   }
+})
+
+test('marketing retains neutral card geometry and burgundy actions in both themes', () => {
+  assert.match(hero, /\.evidenceGrid article,[\s\S]*?background:\s*var\(--qdip-surface\);/)
+  assert.match(hero, /\.engineeredHero \.primaryButtonLarge\s*\{[^}]*background:\s*var\(--qdip-button\);/)
+  assert.doesNotMatch(hero, /background:\s*#ed9bb7;/)
 })
