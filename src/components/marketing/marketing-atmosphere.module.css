@@ -1,0 +1,39 @@
+/* Marketing-only artwork: it must sit above the opaque light surface, not behind the application. */
+.atmosphere {
+  position: relative;
+  isolation: isolate;
+}
+.atmosphere::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: url('/qdip-network.svg') center / cover no-repeat;
+  mask-image: radial-gradient(ellipse at center, black 40%, rgb(0 0 0 / 0.8) 72%, transparent 100%);
+  opacity: 0.9;
+}
+.atmosphere::after {
+  position: fixed;
+  z-index: 0;
+  top: -12rem;
+  right: -12rem;
+  width: min(72vw, 680px);
+  height: min(72vw, 680px);
+  content: '';
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--ds-accent-rgb) / 0.13), transparent 70%);
+  animation: qdip-marketing-glow 16s ease-in-out infinite alternate;
+}
+.atmosphere > main {
+  position: relative;
+  z-index: 1;
+}
+@keyframes qdip-marketing-glow {
+  from { transform: translate3d(-4%, 4%, 0); opacity: 0.55; }
+  to { transform: translate3d(9%, -7%, 0); opacity: 0.95; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere::after { animation: none; transform: none; }
+}
