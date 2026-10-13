@@ -18,117 +18,171 @@ export type TechIconName =
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
-      <rect x="11" y="9" width="42" height="46" rx="4" />
-      <path d="M22 21h22M22 32h22M22 43h22" />
-      <circle cx="17" cy="21" r="2" />
-      <circle cx="17" cy="32" r="2" />
-      <circle cx="17" cy="43" r="2" />
-      <path d="M37 16h8" />
+      <rect x="10" y="10" width="36" height="44" rx="4" />
+      <path d="M24 10V6h10v4M23 6h12M17 20h6v6h-6zM17 31h6v6h-6zM17 42h6v6h-6z" />
+      <path d="m18.5 22 2 2 4-5m-6 14 2 2 4-5m-6 14 2 2 4-5" />
+      <g strokeWidth={1.4}>
+        <path d="M29 23h11M29 34h9M29 45h5" />
+        <circle cx="46" cy="41" r="8" />
+        <path d="m51.5 46.5 7 7" />
+      </g>
     </g>
   ),
   comparison: (
     <g>
-      <rect x="6" y="14" width="21" height="36" rx="3" />
-      <rect x="37" y="14" width="21" height="36" rx="3" />
-      <path d="M12 23h9M12 30h7M12 37h9M43 23h9M43 30h7M43 37h9" />
-      <path d="M28 26h8m-3-3 3 3-3 3M36 39h-8m3-3-3 3 3 3" />
+      <path d="M32 8v44M19 55h26M23 50h18M32 8l-23 13h46L32 8" />
+      <circle cx="32" cy="10" r="3.5" />
+      <path d="M11 21 5 39h15zM53 21l-6 18h15zM5 39q7 10 15 0M47 39q7 10 15 0" />
+      <g strokeWidth={1.4}>
+        <path d="M18 17 7 37M46 17l11 20M26 42h12M24 46h16" />
+        <circle cx="32" cy="25" r="2.5" />
+      </g>
     </g>
   ),
   replay: (
     <g>
-      <rect x="9" y="12" width="46" height="40" rx="4" />
-      <rect x="16" y="21" width="9" height="9" rx="1" />
-      <rect x="28" y="21" width="9" height="9" rx="1" />
-      <rect x="40" y="21" width="9" height="9" rx="1" />
-      <path d="M18 41h29M23 36l-5 5 5 5" />
+      <path d="M12 25a22 22 0 0 1 36-11l4 4M52 9v9h-9M52 39a22 22 0 0 1-36 11l-4-4M12 55v-9h9" />
+      <circle cx="32" cy="32" r="16" />
+      <path d="m27 23 15 9-15 9z" />
+      <g strokeWidth={1.4}>
+        <path d="M32 12v4M32 48v4M12 32h4M48 32h4" />
+        <circle cx="10" cy="11" r="1.5" />
+        <circle cx="54" cy="53" r="1.5" />
+      </g>
     </g>
   ),
   modeling: (
     <g>
-      <rect x="9" y="9" width="14" height="14" rx="2" />
-      <rect x="41" y="9" width="14" height="14" rx="2" />
-      <rect x="25" y="39" width="14" height="14" rx="2" />
-      <path d="M23 16h18M16 23v9h16v7M48 23v9H32" />
-      <circle cx="32" cy="32" r="3" />
+      <path d="M32 7 53 19 32 31 11 19zM11 19v26l21 12 21-12V19M32 31v26" />
+      <path d="m21 13 21 12M43 13 22 25" strokeWidth={1.4} />
+      <circle cx="21" cy="36" r="5" />
+      <circle cx="43" cy="36" r="5" />
+      <g strokeWidth={1.4}>
+        <path d="M21 28v3M21 41v3M13 36h3M26 36h3M43 28v3M43 41v3M35 36h3M48 36h3" />
+        <circle cx="21" cy="36" r="1.6" />
+        <circle cx="43" cy="36" r="1.6" />
+        <path d="M17 49l5 3M42 52l5-3" />
+      </g>
     </g>
   ),
   constraints: (
     <g>
-      <path d="M8 19h48M8 45h48M19 8v48M45 8v48" />
-      <path d="M23 33l7 7 13-16" />
-      <circle cx="19" cy="19" r="4" />
-      <circle cx="45" cy="45" r="4" />
-      <path d="M8 8h7M49 56h7" />
+      <rect x="8" y="12" width="39" height="12" rx="2" />
+      <rect x="8" y="28" width="39" height="12" rx="2" />
+      <rect x="8" y="44" width="39" height="12" rx="2" />
+      <path d="M15 18h9M15 34h9M15 50h9M29 18h11M29 34h11M29 50h11" />
+      <path d="m53 15 8 14H45zM53 20v4M53 27v1M53 43l7 12H46z" />
+      <g strokeWidth={1.4}>
+        <path d="M4 18h4M4 34h4M4 50h4M47 18h4" />
+        <circle cx="53" cy="48" r="1.5" />
+        <path d="M53 52v1" />
+      </g>
     </g>
   ),
   optimization: (
     <g>
-      <path d="M9 52V12M9 52h46M16 42l10-9 10 4 14-19M45 18h5v5" />
-      <path d="M16 42v10M26 33v19M36 37v15M50 18v34" />
-      <circle cx="16" cy="42" r="3" />
-      <circle cx="26" cy="33" r="3" />
-      <circle cx="36" cy="37" r="3" />
-      <circle cx="50" cy="18" r="3" />
+      <rect x="7" y="8" width="50" height="48" rx="3" />
+      <path d="M7 17h50M14 13h2M20 13h2M26 13h2M14 49V35h7v14M26 49V30h7v19M38 49V25h7v24" />
+      <path d="m13 32 11-10 10 5 13-13m-8 0h8v8" />
+      <g strokeWidth={1.4}>
+        <path d="M14 52h37M49 30h4M49 35h4M49 40h4" />
+        <circle cx="14" cy="32" r="2" />
+        <circle cx="24" cy="22" r="2" />
+        <circle cx="34" cy="27" r="2" />
+      </g>
     </g>
   ),
   explainability: (
     <g>
-      <path d="M13 10h38v31H35l-9 11v-11H13zM20 19h24M20 26h17M20 33h8" />
-      <circle cx="43" cy="33" r="9" />
-      <path d="M40 30a3 3 0 0 1 6 1c0 3-3 3-3 6M43 40v1" />
+      <circle cx="32" cy="32" r="11" />
+      <circle cx="32" cy="32" r="3" />
+      <circle cx="10" cy="12" r="5" />
+      <circle cx="54" cy="12" r="5" />
+      <circle cx="10" cy="52" r="5" />
+      <circle cx="54" cy="52" r="5" />
+      <path d="M14 16 24 25M50 16 40 25M14 48l10-9M50 48l-10-9" />
+      <g strokeWidth={1.4}>
+        <path d="M29 24q3-5 6 0M29 40q3 3 6 0M25 32h14M10 9v6M7 12h6M51 12h6M10 49v6M7 52h6M51 52h6" />
+        <path d="M29 19V9M35 45v10" strokeDasharray="2 4" />
+      </g>
     </g>
   ),
   'human-approval': (
     <g>
-      <circle cx="21" cy="18" r="8" />
-      <path d="M8 46v-7c0-9 6-14 13-14 5 0 9 2 11 6" />
-      <path d="m35 12 15 5v12c0 11-8 19-15 22-8-3-15-11-15-22v-2" />
-      <path d="m27 32 6 6 11-14" />
-      <circle cx="49" cy="49" r="3" />
+      <rect x="8" y="8" width="34" height="46" rx="3" />
+      <path d="M16 18h19M16 25h19M16 32h12M16 41h8" />
+      <circle cx="45" cy="41" r="13" />
+      <path d="m37 41 6 6 10-12" />
+      <g strokeWidth={1.4}>
+        <path d="M14 8V5h22v3M17 48h7M27 48h5" />
+        <circle cx="16" cy="14" r="1.3" />
+        <path d="M48 23h7M54 28l4-4" />
+      </g>
     </g>
   ),
   simulation: (
     <g>
-      <path d="M10 14h44v36H10zM17 23h10M17 31h8M17 39h8" />
-      <path d="M33 38l7-9 8 4M33 38l8 5 7-8" />
-      <circle cx="33" cy="38" r="2" />
-      <circle cx="40" cy="29" r="2" />
-      <circle cx="48" cy="33" r="2" />
-      <circle cx="41" cy="43" r="2" />
+      <rect x="7" y="8" width="50" height="48" rx="4" />
+      <path d="M7 18h50M32 18v38" />
+      <path d="m13 29 6-6 6 6M13 44l6-6 6 6M38 43l5-8 8 3" />
+      <g strokeWidth={1.4}>
+        <path d="M13 13h15M34 13h15M19 29v9M25 30l-6 8M43 35l7-9" />
+        <circle cx="19" cy="38" r="2.5" />
+        <circle cx="43" cy="35" r="2.5" />
+        <circle cx="50" cy="26" r="2.5" />
+        <circle cx="50" cy="38" r="2.5" />
+      </g>
     </g>
   ),
   allocation: (
     <g>
-      <rect x="7" y="26" width="16" height="12" rx="2" />
-      <rect x="43" y="10" width="14" height="12" rx="2" />
-      <rect x="43" y="42" width="14" height="12" rx="2" />
-      <path d="M23 32H32V16H43M32 32V48H43" />
-      <circle cx="32" cy="32" r="2.5" fill="currentColor" stroke="none" />
-      <path d="M12 32h6M47 16h6M47 48h6" />
+      <ellipse cx="14" cy="19" rx="9" ry="4" />
+      <path d="M5 19v26c0 5 18 5 18 0V19M5 28c0 5 18 5 18 0M5 37c0 5 18 5 18 0" />
+      <rect x="42" y="12" width="16" height="15" rx="2" />
+      <rect x="42" y="38" width="16" height="15" rx="2" />
+      <path d="M23 32h8V19h11M31 32v13h11" />
+      <g strokeWidth={1.4}>
+        <path d="M47 18h6M47 22h4M47 44h6M47 48h4" />
+        <path d="m38 16 4 3-4 3m0 20 4 3-4 3" />
+        <circle cx="31" cy="32" r="2.5" />
+      </g>
     </g>
   ),
   workflow: (
     <g>
-      <rect x="8" y="23" width="14" height="18" rx="2" />
-      <rect x="42" y="9" width="14" height="18" rx="2" />
-      <rect x="42" y="37" width="14" height="18" rx="2" />
-      <path d="M22 32h10V18h10M32 32v14h10" />
-      <circle cx="32" cy="32" r="4" />
-      <path d="m12 31 3 3 4-5M46 18h6M46 46h6" />
+      <rect x="8" y="9" width="22" height="13" rx="3" />
+      <rect x="34" y="26" width="22" height="13" rx="3" />
+      <rect x="8" y="43" width="22" height="13" rx="3" />
+      <path d="M30 16h10v10M45 39v10H30M18 43v-9h16" />
+      <path d="m36 23 4 3 4-3m-17 23 3 3-3 3M15 15h8M41 32h8M15 49h8" />
+      <g strokeWidth={1.4}>
+        <path d="M12 22v17h6M51 26v-9H46" strokeDasharray="2 3" />
+        <circle cx="18" cy="34" r="2" />
+        <circle cx="46" cy="17" r="2" />
+      </g>
     </g>
   ),
   evidence: (
     <g>
-      <path d="M15 9h28l7 7v39H15zM43 9v9h7M22 25h19M22 31h13M22 37h10" />
-      <circle cx="41" cy="43" r="8" />
-      <path d="m47 49 8 8M37 43h8" />
+      <ellipse cx="25" cy="13" rx="15" ry="6" />
+      <path d="M10 13v30c0 8 26 8 30 2V13M10 24c0 8 30 8 30 0M10 35c0 8 30 8 30 0" />
+      <circle cx="42" cy="42" r="11" />
+      <path d="m49.5 49.5 9 9" />
+      <g strokeWidth={1.4}>
+        <path d="M16 19v4M16 30v4M16 41v4M37 42h10M42 37v10" />
+        <circle cx="25" cy="24" r="2" />
+      </g>
     </g>
   ),
   policy: (
     <g>
-      <path d="M32 7 51 14v17c0 12-8 20-19 26-11-6-19-14-19-26V14z" />
-      <path d="M23 28h18M23 35h13M23 21h18M29 14h6M36 42l4 4 7-9" />
-      <circle cx="19" cy="43" r="3" />
+      <path d="M32 6 52 14v16c0 14-8 22-20 28-12-6-20-14-20-28V14z" />
+      <path d="m22 31 7 7 14-16" />
+      <g strokeWidth={1.4}>
+        <path d="M32 12 46 18v12c0 10-5 16-14 21-9-5-14-11-14-21V18z" />
+        <path d="M32 3v3M10 10l4 3M54 10l-4 3M8 32h4M52 32h4" />
+        <circle cx="32" cy="51" r="1.5" />
+      </g>
     </g>
   ),
 }
