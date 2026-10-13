@@ -1,0 +1,42 @@
+/* Marketing-only identity. No Studio, Observatory or Kernel tokens are touched. */
+.theme.theme.theme {
+  --qdip-background: #140910;
+  --qdip-surface: #29131e;
+  --qdip-brand: #7a1838;
+  --qdip-signal: #c65176;
+  --qdip-text: #f8eff2;
+  --qdip-muted: #eac0d0;
+  --ds-bg: var(--qdip-background);
+  --ds-surface: var(--qdip-surface);
+  --ds-surface-raised: #341a27;
+  --ds-border: #714258;
+  --ds-text: var(--qdip-text);
+  --ds-text-muted: var(--qdip-muted);
+  --ds-heading: var(--qdip-text);
+  --ds-accent: var(--qdip-signal);
+  --ds-accent-rgb: 198 81 118;
+  --ds-accent-contrast: #140910;
+  --ds-focus: #f6b2c7;
+  color: var(--qdip-text);
+  background: var(--qdip-background);
+  color-scheme: dark;
+}
+.theme :global(footer[data-variant='marketing']) {
+  border-top-color: #714258;
+  background: #10070d;
+  color: var(--qdip-text);
+}
+.theme :global(footer[data-variant='marketing'] a) {
+  color: var(--qdip-text);
+}
+.theme :global(footer[data-variant='marketing'] a:hover) {
+  color: #f4b7cd;
+}
+.theme :global(footer[data-variant='marketing'] [data-footer-disclaimer]),
+.theme :global(footer[data-variant='marketing'] [data-footer-copyright]) {
+  color: #eac0d0;
+}
+.theme :global(a:focus-visible),
+.theme :global(button:focus-visible) {
+  outline-color: #f6b2c7;
+}
