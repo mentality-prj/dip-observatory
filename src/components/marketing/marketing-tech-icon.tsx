@@ -18,26 +18,29 @@ export type TechIconName =
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
-      <path d="M16 10h25l7 7v35H16zM41 10v9h7M23 26h18M23 33h11M23 40h9" />
-      <circle cx="41" cy="41" r="9" />
-      <path d="m37 41 3 3 6-7" />
+      <rect x="11" y="9" width="42" height="46" rx="4" />
+      <path d="M22 21h22M22 32h22M22 43h22" />
+      <circle cx="17" cy="21" r="2" />
+      <circle cx="17" cy="32" r="2" />
+      <circle cx="17" cy="43" r="2" />
+      <path d="M37 16h8" />
     </g>
   ),
   comparison: (
     <g>
-      <path d="M8 30h16V13H8zM40 51h16V34H40zM28 12v40M24 17l4-5 4 5M24 47l4 5 4-5" />
-      <path d="M12 24l4-5 4 3M44 45l4-6 4 4" />
-      <path d="M9 41h11M44 20h11" />
-      <circle cx="16" cy="41" r="3" />
-      <circle cx="48" cy="20" r="3" />
+      <rect x="6" y="14" width="21" height="36" rx="3" />
+      <rect x="37" y="14" width="21" height="36" rx="3" />
+      <path d="M12 23h9M12 30h7M12 37h9M43 23h9M43 30h7M43 37h9" />
+      <path d="M28 26h8m-3-3 3 3-3 3M36 39h-8m3-3-3 3 3 3" />
     </g>
   ),
   replay: (
     <g>
-      <path d="M20 16A22 22 0 1 1 10 35M10 19v16h16" />
-      <circle cx="34" cy="34" r="13" />
-      <path d="M34 22v12l9 5M16 51l-5 5M48 11l5-4" />
-      <circle cx="34" cy="34" r="2" />
+      <rect x="9" y="12" width="46" height="40" rx="4" />
+      <rect x="16" y="21" width="9" height="9" rx="1" />
+      <rect x="28" y="21" width="9" height="9" rx="1" />
+      <rect x="40" y="21" width="9" height="9" rx="1" />
+      <path d="M18 41h29M23 36l-5 5 5 5" />
     </g>
   ),
   modeling: (
