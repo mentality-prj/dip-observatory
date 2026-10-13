@@ -8,6 +8,7 @@ import { DecisionInquiryForm } from './decision-inquiry-form'
 import { QdipLogo } from './qdip-logo'
 import { MarketingHeader } from './marketing-header'
 import styles from './qdip-site.module.css'
+import atmosphereStyles from './marketing-atmosphere.module.css'
 
 type Copy = {
   decision: string
@@ -332,7 +333,7 @@ const href = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${
 function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: string; children: React.ReactNode }) {
   const x = copy[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={styles.site}>
+    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.site} ${atmosphereStyles.atmosphere}`}>
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={slug} />
         {children}
