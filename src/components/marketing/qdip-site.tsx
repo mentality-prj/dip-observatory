@@ -14,6 +14,7 @@ import styles from './qdip-site.module.css'
 import motionStyles from './marketing-cta-motion.module.css'
 import shellStyles from './marketing-shell.module.css'
 import atmosphereStyles from './marketing-atmosphere.module.css'
+import burgundyStyles from './marketing-deep-burgundy.module.css'
 
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
 
@@ -23,8 +24,8 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   return (
     <DesignSystemProvider
       theme="burgundy"
-      mode="light"
-      className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere}`}
+      mode="dark"
+      className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}
     >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} />
