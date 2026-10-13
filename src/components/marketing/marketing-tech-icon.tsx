@@ -30,7 +30,8 @@ const artwork: Record<TechIconName, ReactNode> = {
       <circle cx="47" cy="42" r="9" />
       <path d="m53.5 48.5 6.5 6.5" />
     </g>
-  ),  comparison: (
+  ),
+  comparison: (
     <g>
       <path d="M32 8v44M19 55h26M23 50h18M32 8l-23 13h46L32 8" />
       <circle cx="32" cy="10" r="3.5" />
@@ -116,7 +117,8 @@ const artwork: Record<TechIconName, ReactNode> = {
       <circle cx="47" cy="43" r="10" />
       <path d="m41 43 4.5 4.5L53 38" />
     </g>
-  ),  simulation: (
+  ),
+  simulation: (
     <g>
       <rect x="7" y="8" width="50" height="48" rx="4" />
       <path d="M7 18h50M32 18v38" />
@@ -165,7 +167,8 @@ const artwork: Record<TechIconName, ReactNode> = {
       <circle cx="47" cy="43" r="9" />
       <path d="m53.5 49.5 6.5 6.5" />
     </g>
-  ),  policy: (
+  ),
+  policy: (
     <g>
       <path d="M32 6 52 14v16c0 14-8 22-20 28-12-6-20-14-20-28V14z" />
       <path d="m22 31 7 7 14-16" />
