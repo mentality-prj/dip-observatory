@@ -216,7 +216,8 @@
   position: relative;
   border: 1px solid var(--qdip-border);
   border-radius: 16px;
-  background: linear-gradient(115deg, transparent 12%, rgb(198 81 118 / 0.11) 54%, transparent 100%), var(--qdip-surface);
+  background:
+    linear-gradient(115deg, transparent 12%, rgb(198 81 118 / 0.11) 54%, transparent 100%), var(--qdip-surface);
 }
 .engineFlow::before {
   position: absolute;
