@@ -48,7 +48,7 @@ test.describe('current marketing routing', () => {
     await expect(signIn).toBeVisible()
     await expect(signIn).toHaveAttribute('aria-label', 'Sign in')
     await expect(signIn).toHaveText('')
-    await expect(signIn.locator('svg')).toHaveCount(1)
+    await expect(signIn).toHaveAttribute('class', /iconOnly/)
     await expect(signIn).toHaveCSS('min-width', '44px')
     await page.goto('http://qdip.localhost:3000/uk')
     await expect(page.locator('header a[data-qdip-auth="signed-out"]')).toHaveAttribute('aria-label', 'Увійти')
