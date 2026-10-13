@@ -5,7 +5,7 @@
   padding: var(--ds-space-24) max(var(--ds-space-6), calc((100vw - 1180px) / 2));
   align-items: center;
   --ds-heading: #fff;
-  background: #180b11;
+  background: #140910;
   color: #fff;
 }
 .copy > span {
@@ -42,10 +42,10 @@
   display: grid;
   gap: var(--ds-space-6);
   padding: var(--ds-space-8);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  border: 1px solid #714258;
   border-radius: var(--ds-radius-marketing);
   background:
-    radial-gradient(circle at 70% 20%, rgb(var(--ds-accent-rgb) / 0.18), transparent 34%), rgba(255, 255, 255, 0.045);
+    radial-gradient(circle at 70% 20%, rgb(198 81 118 / 0.17), transparent 34%), #29131e;
   box-shadow: var(--ds-shadow-card);
 }
 .stage :global(.ds-workflow-compact) {
@@ -244,5 +244,53 @@
   .reason p {
     transition: none;
     animation: none;
+  }
+}
+
+/* Three-node constraint-flow responds to state changes, without continuous motion. */
+.constraintPath {
+  position: relative;
+  display: flex;
+  height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10%;
+}
+.constraintPath::before {
+  position: absolute;
+  top: 10px;
+  right: 10%;
+  left: 10%;
+  height: 2px;
+  content: '';
+  background: linear-gradient(90deg, #92546a, #c65176, #92546a);
+}
+.constraintPath span {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #c65176;
+  border-radius: 50%;
+  background: #29131e;
+  transition:
+    background 260ms ease,
+    box-shadow 260ms ease;
+}
+.stage[data-expanded='true'] .constraintPath span {
+  background: #c65176;
+  box-shadow: 0 0 0 4px rgb(198 81 118 / 0.16);
+}
+.stage[data-expanded='true'] .reason {
+  border-color: #ed9bb7;
+  background: rgb(198 81 118 / 0.12);
+}
+.stage[data-expanded='true'] .result strong {
+  color: #f8eff2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .constraintPath span {
+    transition: none;
   }
 }
