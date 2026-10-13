@@ -99,11 +99,12 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   allocation: (
     <g>
-      <rect x="8" y="12" width="14" height="14" rx="2" />
-      <rect x="42" y="9" width="14" height="14" rx="2" />
-      <rect x="42" y="41" width="14" height="14" rx="2" />
-      <path d="M22 19h10v-3h10M32 19v29h10M12 34v19h18M22 47l8 6 8-6" />
-      <circle cx="32" cy="19" r="3" />
+      <rect x="7" y="26" width="16" height="12" rx="2" />
+      <rect x="43" y="10" width="14" height="12" rx="2" />
+      <rect x="43" y="42" width="14" height="12" rx="2" />
+      <path d="M23 32H32V16H43M32 32V48H43" />
+      <circle cx="32" cy="32" r="2.5" fill="currentColor" stroke="none" />
+      <path d="M12 32h6M47 16h6M47 48h6" />
     </g>
   ),
   workflow: (
