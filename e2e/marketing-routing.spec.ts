@@ -114,10 +114,8 @@ test.describe('current marketing routing', () => {
       const network = page.getByTestId('marketing-network-motion')
       if (viewport.networkVisible) {
         await expect(network).toBeVisible()
-        await expect(network.locator('g[class*="activePaths"] path').first()).toHaveCSS(
-          'animation-name',
-          /qdip-network-flow/
-        )
+        const activePath = network.locator('g[class*="activePaths"] path').first()
+        await expect(activePath).toHaveCSS('animation-name', /qdip-network-flow/)
       } else {
         await expect(network).toBeHidden()
         const hero = page.locator('#main-content > section').first()
@@ -137,7 +135,8 @@ test.describe('current marketing routing', () => {
     }
     await page.emulateMedia({ reducedMotion: 'reduce' })
     const hero = page.locator('#main-content > section').first()
-    await expect(hero.locator('a[class*="primaryButtonLarge"]').first()).toHaveCSS('animation-name', 'none')
+    const reducedCta = hero.locator('a[class*="primaryButtonLarge"]').first()
+    await expect(reducedCta).toHaveCSS('animation-name', 'none')
   })
 
   for (const locale of locales) {
