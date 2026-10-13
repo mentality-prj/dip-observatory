@@ -59,6 +59,8 @@ const deepConsole = readFileSync('src/components/marketing/decision-workbench-pr
 const customIcons = readFileSync('src/components/marketing/marketing-tech-icon.tsx', 'utf8')
 const evidenceMarkup = readFileSync('src/components/marketing/evidence-strip.tsx', 'utf8')
 const homepageMarkup = readFileSync('src/components/marketing/qdip-site.tsx', 'utf8')
+const techIcons = readFileSync('src/components/marketing/marketing-tech-icon.tsx', 'utf8')
+const playgroundStyle = readFileSync('src/components/marketing/decision-playground.module.css', 'utf8')
 
 test('Deep Burgundy identity is isolated to marketing and uses exact brand tokens', () => {
   for (const token of ['#15171c', '#20232a', '#7a1838', '#c65176', '#f5f6f8', '#ffffff']) {
@@ -97,4 +99,21 @@ test('marketing retains neutral card geometry and burgundy actions in both theme
   assert.match(hero, /\.evidenceGrid article,[\s\S]*?background:\s*var\(--qdip-surface\);/)
   assert.match(hero, /\.engineeredHero \.primaryButtonLarge\s*\{[^}]*background:\s*var\(--qdip-button\);/)
   assert.doesNotMatch(hero, /background:\s*#ed9bb7;/)
+})
+
+test('branded decision network is not replaced by a generic square grid', () => {
+  assert.match(hero, /\.engineeredHero::before\s*\{[^}]*url\('\/qdip-network\.svg'\)/)
+  assert.match(hero, /\.patternSection\s*\{\s*background:\s*url\('\/qdip-network\.svg'\)/)
+  assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
+})
+
+test('resource allocation glyph uses balanced connectors with no criss-cross arrow', () => {
+  assert.match(techIcons, /M23 32H32V16H43M32 32V48H43/)
+  assert.match(hero, /url\('\/qdip-network\.svg'\)/)
+})
+
+test('playground workflow and controls use theme-aware text colors', () => {
+  assert.match(playgroundStyle, /\.stage :global\(\.ds-workflow-step strong\)\s*\{\s*color:\s*var\(--qdip-text\);/)
+  assert.match(playgroundStyle, /\.controls button\s*\{[\s\S]*?color:\s*var\(--qdip-text\);/)
+  assert.doesNotMatch(playgroundStyle, /\.stage :global\(\.ds-workflow-step strong\)\s*\{\s*color:\s*#fff;/)
 })
