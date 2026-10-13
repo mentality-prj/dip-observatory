@@ -5,8 +5,7 @@ import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { MarketingHeader } from './marketing-header'
 import { MarketingFooter } from './marketing-footer'
 import { MarketingTrackedLink } from './marketing-analytics'
-import { SignatureDecisionVisual } from './signature-decision-visual'
-import { MarketingNetworkMotion } from './marketing-network-motion'
+import { DecisionWorkbenchPreview } from './decision-workbench-preview'
 import { DecisionPatterns } from './decision-patterns'
 import { DecisionPlayground } from './decision-playground'
 import { EvidenceStrip } from './evidence-strip'
@@ -29,13 +28,12 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
     >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} />
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${styles.engineeredHero}`}>
           <div className={styles.heroCopy}>
-            <div className={styles.eyebrow}>{c.hero[0]}</div>
+            <div className={styles.eyebrow}>{c.hero[0]} / QDIP</div>
             <h1>{c.hero[1]}</h1>
             <p className={styles.lead}>{c.hero[2]}</p>
             <p>{c.hero[3]}</p>
-            <strong className={styles.human}>{c.hero[4]}</strong>
             <div className={styles.heroActions}>
               <MarketingTrackedLink
                 event="marketing_hero_observatory_click"
@@ -57,16 +55,15 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 {c.conversion[2]} <ArrowRight size={15} />
               </MarketingTrackedLink>
             </div>
-            <div className={styles.heroSignature} aria-hidden="true">
-              <span />
-              <span />
-              <span />
+            <div className={styles.heroProtocol} aria-label={c.hero[4]}>
+              <span>01 / {c.diagram[3]}</span>
+              <span>02 / {c.diagram[6]}</span>
+              <span>03 / {c.diagram[7]}</span>
             </div>
           </div>
-          <div className={styles.heroMotion}>
-            <MarketingNetworkMotion />
+          <div className={styles.consoleFrame}>
+            <DecisionWorkbenchPreview locale={locale} />
           </div>
-          <SignatureDecisionVisual locale={locale} labels={c.diagram} />
         </section>
         <EvidenceStrip locale={locale} />
         <section className={`${styles.section} ${styles.editorialSection}`}>

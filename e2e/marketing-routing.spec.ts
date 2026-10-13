@@ -76,69 +76,66 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('desktop decision scene expands without changing mobile arrangement', async ({ page }) => {
-    for (const viewport of [
-      { width: 1440, height: 900, expectedLayout: 'row' },
-      { width: 390, height: 844, expectedLayout: 'column' },
-    ]) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await page.goto('http://qdip.localhost:3000/en')
-      const scene = page.locator('figure[aria-label]').first()
-      const hero = page.locator('#main-content > section').first()
-      await expect(scene).toBeVisible()
-      const width = await scene.evaluate((node) => node.getBoundingClientRect().width)
-      const heroWidth = await hero.evaluate((node) => node.getBoundingClientRect().width)
-      expect(width).toBeGreaterThan(heroWidth * 0.85)
-      await expect(scene).toHaveCSS('flex-direction', viewport.expectedLayout)
-    }
-  })
-
-  test('marketing ambient motion and decision trace honor reduced-motion', async ({ page }) => {
-    await page.goto('http://qdip.localhost:3000/en')
-    const scene = page.locator('figure[aria-label]').first()
-    const livePath = scene.locator('path[class*="livePath"]')
-    await expect(livePath).toHaveCSS('animation-name', /qdip-trace-signal/)
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await expect(livePath).toHaveCSS('animation-name', 'none')
-  })
-
-  test('desktop network is visible, while mobile hero text stays unobstructed', async ({ page }) => {
+  test('homepage uses a readable technical workbench at desktop and mobile widths', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     for (const viewport of [
-      { width: 1440, height: 900, networkVisible: true },
-      { width: 768, height: 1024, networkVisible: false },
-      { width: 390, height: 844, networkVisible: false },
+      { width: 1440, height: 900 },
+      { width: 768, height: 1024 },
+      { width: 390, height: 844 },
     ]) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await page.setViewportSize(viewport)
       await page.goto('http://qdip.localhost:3000/en')
-      const network = page.getByTestId('marketing-network-motion')
-      if (viewport.networkVisible) {
-        await expect(network).toBeVisible()
-        const activePath = network.locator('g[class*="activePaths"] path').first()
-        await expect(activePath).toHaveCSS('animation-name', /qdip-network-flow/)
-      } else {
-        await expect(network).toBeHidden()
-        const hero = page.locator('#main-content > section').first()
-        const heading = hero.getByRole('heading', { level: 1 })
-        const primary = hero.locator('a[class*="primaryButtonLarge"]').first()
-        await expect(heading).toBeVisible()
-        await expect(primary).toBeVisible()
-        await expect(primary).toHaveCSS('animation-name', /qdip-cta-arrive/)
-        const headingRect = await heading.boundingBox()
-        const ctaRect = await primary.boundingBox()
-        expect(headingRect).not.toBeNull()
-        expect(ctaRect).not.toBeNull()
-        const ctaTop = ctaRect?.y ?? 0
-        const headingBottom = (headingRect?.y ?? 0) + (headingRect?.height ?? 0)
-        expect(ctaTop).toBeGreaterThan(headingBottom)
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
-        expect(overflow).toBeLessThanOrEqual(1)
-      }
+      const hero = page.locator('#main-content > section').first()
+      const heading = hero.getByRole('heading', { level: 1 })
+      const console = page.getByTestId('decision-workbench')
+      await expect(heading).toBeVisible()
+      await expect(console).toBeVisible()
+      await expect(page.getByTestId('marketing-network-motion')).toHaveCount(0)
+      const consoleBox = await console.boundingBox()
+      const headingBox = await heading.boundingBox()
+      expect(consoleBox).not.toBeNull()
+      expect(headingBox).not.toBeNull()
+      expect(consoleBox?.y ?? 0).toBeGreaterThan((headingBox?.y ?? 0) + (headingBox?.height ?? 0))
+      const consoleWidth = consoleBox?.width ?? 0
+      expect(consoleWidth).toBeGreaterThan(Math.min(300, viewport.width * 0.7))
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+      expect(overflow).toBeLessThanOrEqual(1)
     }
+  })
+
+  test('workbench budget changes recommendation and respects reduced motion', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/en')
+    const console = page.getByTestId('decision-workbench')
+    const low = console.getByRole('button', { name: '€40k' })
+    const high = console.getByRole('button', { name: '€70k' })
+    await expect(low).toHaveAttribute('aria-pressed', 'true')
+    await expect(console.getByText('Fund 5 highest-priority requests')).toBeVisible()
+    await high.click()
+    await expect(high).toHaveAttribute('aria-pressed', 'true')
+    await expect(low).toHaveAttribute('aria-pressed', 'false')
+    await expect(console.getByText('Fund 8 highest-priority requests')).toBeVisible()
+    const outcome = console.locator('strong[class*="outcome"]')
+    await expect(outcome).toHaveCSS('animation-name', /qdip-console-result/)
     await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(outcome).toHaveCSS('animation-name', 'none')
+    await expect(console.getByText('Example data, not a live QDIP execution')).toBeVisible()
+  })
+
+  test('marketing CTA remains below hero copy and reduced motion is respected', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
     const hero = page.locator('#main-content > section').first()
-    const reducedCta = hero.locator('a[class*="primaryButtonLarge"]').first()
-    await expect(reducedCta).toHaveCSS('animation-name', 'none')
+    const heading = hero.getByRole('heading', { level: 1 })
+    const primary = hero.locator('a[class*="primaryButtonLarge"]').first()
+    await expect(heading).toBeVisible()
+    await expect(primary).toBeVisible()
+    await expect(primary).toHaveCSS('animation-name', /qdip-cta-arrive/)
+    const headingRect = await heading.boundingBox()
+    const primaryRect = await primary.boundingBox()
+    const headingBottom = (headingRect?.y ?? 0) + (headingRect?.height ?? 0)
+    expect(primaryRect?.y ?? 0).toBeGreaterThan(headingBottom)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(primary).toHaveCSS('animation-name', 'none')
   })
 
   for (const locale of locales) {
