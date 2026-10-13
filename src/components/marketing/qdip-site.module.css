@@ -1316,7 +1316,9 @@
   background: var(--qdip-surface);
 }
 .patternSection {
-  background: url('/qdip-network.svg') center / cover no-repeat, var(--qdip-background) !important;
+  background:
+    url('/qdip-network.svg') center / cover no-repeat,
+    var(--qdip-background) !important;
 }
 .finalCta {
   border-top: 1px solid var(--qdip-border);
