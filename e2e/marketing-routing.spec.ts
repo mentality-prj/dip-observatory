@@ -163,9 +163,7 @@ test.describe('current marketing routing', () => {
     await expect(simulation.locator('rect[x="7"][width="50"]')).toHaveCount(1)
     await expect(simulation.locator('circle[cx="19"][cy="27"]')).toHaveCount(1)
     await expect(simulation.locator('circle[cx="45"][cy="27"]')).toHaveCount(1)
-    await expect(
-      simulation.locator('path[d="M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37"]')
-    ).toHaveCount(1)
+    await expect(simulation.locator('path[d="M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37"]')).toHaveCount(1)
   })
 
   test('allocation uses a symmetric custom engineering glyph without a decorative tile', async ({ page }) => {
