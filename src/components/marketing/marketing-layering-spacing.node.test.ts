@@ -117,3 +117,22 @@ test('playground workflow and controls use theme-aware text colors', () => {
   assert.match(playgroundStyle, /\.controls button\s*\{[\s\S]*?color:\s*var\(--qdip-text\);/)
   assert.doesNotMatch(playgroundStyle, /\.stage :global\(\.ds-workflow-step strong\)\s*\{\s*color:\s*#fff;/)
 })
+
+const marketingAuth = readFileSync('src/components/auth/qdip-auth-control.tsx', 'utf8')
+const marketingHeader = readFileSync('src/components/marketing/marketing-header.tsx', 'utf8')
+
+test('marketing identity access is icon-only and screen-reader-labelled, without changing product login', () => {
+  assert.match(marketingHeader, /<QdipAuthControl locale=\{locale\} returnTo=\{returnTo\} iconOnly \/>/)
+  assert.match(marketingAuth, /iconOnly = false/)
+  assert.match(marketingAuth, /<QdipAccessIcon \/>/)
+  assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
+  assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
+})
+
+test('audit, evidence and human approval icons have nonoverlapping geometries', () => {
+  assert.match(techIcons, /<circle cx="47" cy="42" r="9" \/>/)
+  assert.match(techIcons, /<circle cx="47" cy="43" r="9" \/>/)
+  assert.match(techIcons, /<circle cx="47" cy="43" r="10" \/>/)
+  assert.match(techIcons, /<rect x="13" y="19" width="8" height="8" rx="1" \/>/)
+  assert.doesNotMatch(techIcons, /M37 42h10|M42 37v10|M16 41h8/)
+})
