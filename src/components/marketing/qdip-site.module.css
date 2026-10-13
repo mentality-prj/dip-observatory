@@ -11,7 +11,7 @@
   min-height: 100vh;
   overflow: hidden;
   color: var(--ink);
-  background: var(--ds-bg);
+  background: var(--ds-bg) url('/qdip-network.svg') center / cover fixed no-repeat;
   font-family: var(--ds-font-sans);
 }
 .site * {
@@ -1082,12 +1082,8 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image:
-    linear-gradient(rgb(198 81 118 / 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(198 81 118 / 0.09) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(to bottom, black, transparent 75%);
-  opacity: 0.8;
+  background: url('/qdip-network.svg') center / cover no-repeat;
+  opacity: 1;
   content: '';
   pointer-events: none;
 }
@@ -1320,7 +1316,7 @@
   background: var(--qdip-surface);
 }
 .patternSection {
-  background: var(--qdip-background) !important;
+  background: url('/qdip-network.svg') center / cover no-repeat, var(--qdip-background) !important;
 }
 .finalCta {
   border-top: 1px solid var(--qdip-border);
@@ -1369,7 +1365,7 @@
   background: var(--qdip-brand);
 }
 .site:global([data-marketing-appearance='light']) .engineeredHero::before {
-  opacity: 0.32;
+  opacity: 1;
 }
 .site:global([data-marketing-appearance='light']) .finalCta {
   background: var(--qdip-background);
