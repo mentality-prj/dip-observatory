@@ -15,6 +15,9 @@ export function MarketingNetworkMotion() {
     'M326 194 C448 194 514 198 614 204',
     'M326 194 C438 278 510 300 604 316',
   ]
+  const paths = incoming.concat(outgoing)
+  const packets = incoming.slice(0, 2).concat(outgoing.slice(0, 2))
+
   return (
     <div className={styles.motion} data-testid="marketing-network-motion" aria-hidden="true">
       <svg viewBox="0 0 650 390" preserveAspectRatio="xMidYMid meet" focusable="false">
@@ -26,12 +29,12 @@ export function MarketingNetworkMotion() {
         </defs>
         <circle cx="326" cy="194" r="122" fill="url(#qdip-marketing-network-glow)" />
         <g className={styles.basePaths}>
-          {incoming.concat(outgoing).map((path) => (
+          {paths.map((path) => (
             <path key={path} d={path} />
           ))}
         </g>
         <g className={styles.activePaths}>
-          {incoming.concat(outgoing).map((path) => (
+          {paths.map((path) => (
             <path key={path} d={path} />
           ))}
         </g>
@@ -46,7 +49,7 @@ export function MarketingNetworkMotion() {
         <circle className={styles.hubPulse} cx="326" cy="194" r="47" />
         <circle className={styles.hubOuter} cx="326" cy="194" r="39" />
         <circle className={styles.hubInner} cx="326" cy="194" r="15" />
-        {incoming.slice(0, 2).concat(outgoing.slice(0, 2)).map((path, index) => (
+        {packets.map((path, index) => (
           <circle className={styles.packet} key={path} r="6">
             <animateMotion dur={`${3.4 + index * 0.6}s`} repeatCount="indefinite" path={path} />
           </circle>
