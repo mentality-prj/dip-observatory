@@ -103,6 +103,26 @@ test.describe('current marketing routing', () => {
     }
   })
 
+  test('Deep Burgundy marketing remains responsive and localized at 375/768/1366', async ({ page }) => {
+    for (const locale of locales) {
+      for (const width of [375, 768, 1366]) {
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(`http://qdip.localhost:3000/${locale}`)
+        const marketing = page.locator('[data-ds-theme="burgundy"][data-ds-mode="dark"]').first()
+        await expect(marketing).toHaveCSS('background-color', 'rgb(20, 9, 16)')
+        const workbench = page.getByTestId('decision-workbench')
+        await expect(workbench).toHaveCSS('background-color', 'rgb(41, 19, 30)')
+        const evidenceIcons = page.locator('#why svg[viewBox="0 0 64 64"]')
+        await expect(evidenceIcons).toHaveCount(3)
+        await expect(evidenceIcons.first()).toHaveCSS('width', '64px')
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+        expect(overflow).toBeLessThanOrEqual(1)
+      }
+    }
+    await page.goto('http://qdip.localhost:3000/en/core')
+    await expect(page.locator('svg[viewBox="0 0 64 64"]')).toHaveCount(6)
+  })
+
   test('workbench budget changes recommendation and respects reduced motion', async ({ page }) => {
     await page.goto('http://qdip.localhost:3000/en')
     const console = page.getByTestId('decision-workbench')
