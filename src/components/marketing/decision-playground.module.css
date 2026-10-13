@@ -44,8 +44,7 @@
   padding: var(--ds-space-8);
   border: 1px solid #714258;
   border-radius: var(--ds-radius-marketing);
-  background:
-    radial-gradient(circle at 70% 20%, rgb(198 81 118 / 0.17), transparent 34%), #29131e;
+  background: radial-gradient(circle at 70% 20%, rgb(198 81 118 / 0.17), transparent 34%), #29131e;
   box-shadow: var(--ds-shadow-card);
 }
 .stage :global(.ds-workflow-compact) {
