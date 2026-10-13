@@ -24,7 +24,7 @@ const artwork: Record<TechIconName, ReactNode> = {
       <rect x="13" y="30" width="8" height="8" rx="1" />
       <rect x="13" y="41" width="8" height="8" rx="1" />
       <g strokeWidth={1.3}>
-        <path d="m14.5 22.7 1.9 1.8 3.7-4M14.5 33.7l1.9 1.8 3.7-4M14.5 44.7l1.9 1.8 3.7-4" />
+        <path d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4" />
       </g>
       <path d="M26 23h7M26 34h7M26 45h7" />
       <circle cx="47" cy="42" r="9" />
