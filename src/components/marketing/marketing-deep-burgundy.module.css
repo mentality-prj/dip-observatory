@@ -13,7 +13,8 @@
   --ds-text: var(--qdip-text);
   --ds-text-muted: var(--qdip-muted);
   --ds-heading: var(--qdip-text);
-  --ds-accent: var(--qdip-signal);
+  /* Brighter accessible text variant; artwork retains exact brand signal #C65176. */
+  --ds-accent: #ed9bb7;
   --ds-accent-rgb: 198 81 118;
   --ds-accent-contrast: #140910;
   --ds-focus: #f6b2c7;
