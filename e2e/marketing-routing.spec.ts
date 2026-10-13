@@ -42,6 +42,13 @@ const whyLabels = {
 
 test.describe('current marketing routing', () => {
   test('marketing header uses an accessible custom icon without visible Sign in text', async ({ page }) => {
+    await page.route('**/api/auth/session', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ configured: true, authenticated: false, studio: false, operator: false }),
+      })
+    )
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/en')
     const signIn = page.locator('header a[data-qdip-auth="signed-out"]')
