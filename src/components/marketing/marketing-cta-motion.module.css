@@ -1,0 +1,95 @@
+/* Quiet motion language for marketing CTAs. No continuous flashes or JS. */
+.primary,
+.secondary {
+  position: relative;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease;
+}
+.primary {
+  overflow: hidden;
+}
+.primary::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 24%, rgb(255 255 255 / 0.24) 49%, transparent 74%);
+  content: '';
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-125%);
+}
+.primary svg,
+.secondary svg {
+  flex: 0 0 auto;
+  transition: transform 220ms ease;
+}
+.primary:active,
+.secondary:active {
+  transform: scale(0.985);
+}
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgb(var(--ds-accent-rgb) / 0.22);
+  }
+  .primary:hover::after,
+  .primary:focus-visible::after {
+    opacity: 1;
+    animation: qdip-cta-light-pass 680ms ease-out both;
+  }
+  .primary:hover svg,
+  .secondary:hover svg {
+    transform: translateX(3px);
+  }
+  .secondary:hover {
+    transform: translateY(-1px);
+    border-color: rgb(var(--ds-accent-rgb) / 0.25);
+  }
+}
+@keyframes qdip-cta-light-pass {
+  from {
+    transform: translateX(-125%);
+  }
+  to {
+    transform: translateX(125%);
+  }
+}
+@keyframes qdip-cta-arrive {
+  from {
+    opacity: 0.72;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 900px) {
+  .primary {
+    animation: qdip-cta-arrive 650ms 250ms ease-out both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .primary svg,
+  .secondary svg {
+    animation: none !important;
+    transition: none !important;
+  }
+  .primary::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .primary:active,
+  .secondary:active,
+  .primary:hover,
+  .secondary:hover {
+    transform: none;
+  }
+}
