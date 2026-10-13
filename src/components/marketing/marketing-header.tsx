@@ -5,6 +5,7 @@ import { marketingLocaleHref, observatoryHref, studioHref, PLATFORM_URLS } from 
 import { sharedI18n } from '@/lib/product-i18n'
 import { LanguageSwitcher } from './language-switcher'
 import { MobileMenu } from './mobile-menu'
+import { MarketingThemeToggle } from './marketing-theme-toggle'
 import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { QdipLogo } from './qdip-logo'
 import styles from './qdip-site.module.css'
@@ -66,6 +67,9 @@ export function MarketingHeader({ locale, currentPath }: { locale: MarketingLoca
           </div>
           <QdipAuthControl locale={locale} returnTo={returnTo} />
           <LanguageSwitcher locale={locale} hrefForLocale={hrefForLocale} />
+          <div className={styles.desktopThemeSwitch}>
+            <MarketingThemeToggle locale={locale} />
+          </div>
           <MobileMenu items={mobileItems} locale={locale} />
         </div>
       </div>
