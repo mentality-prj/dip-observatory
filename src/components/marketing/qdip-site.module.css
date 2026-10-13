@@ -1255,7 +1255,6 @@
   }
 }
 
-
 /* Semantic illustrations use one large 64px grid; never tiny generic symbols. */
 .evidenceGrid {
   gap: clamp(12px, 2vw, 22px);
@@ -1270,9 +1269,7 @@
   padding: clamp(22px, 2.5vw, 34px);
   border: 1px solid #714258;
   border-radius: 16px;
-  background:
-    linear-gradient(160deg, rgb(198 81 118 / 0.12), transparent 63%),
-    #29131e;
+  background: linear-gradient(160deg, rgb(198 81 118 / 0.12), transparent 63%), #29131e;
   transition:
     border-color 240ms ease,
     transform 240ms ease,
