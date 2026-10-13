@@ -122,7 +122,7 @@ test.describe('current marketing routing', () => {
         await expect(network).toBeHidden()
         const hero = page.locator('#main-content > section').first()
         const heading = hero.getByRole('heading', { level: 1 })
-        const primary = hero.getByRole('link', { name: /Explore|See|Open|Observatory/i }).first()
+        const primary = hero.locator('a[class*="primaryButtonLarge"]').first()
         await expect(heading).toBeVisible()
         await expect(primary).toBeVisible()
         await expect(primary).toHaveCSS('animation-name', /qdip-cta-arrive/)
