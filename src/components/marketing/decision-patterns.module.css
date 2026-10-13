@@ -195,3 +195,70 @@
     transition: none !important;
   }
 }
+
+/* Named engineering patterns: the diagrams are inspectable, not marketing badges. */
+.stage {
+  border-color: #714258;
+}
+.patternIcon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+  padding: 10px;
+  overflow: visible;
+  color: #ed9bb7;
+  border: 1px solid #714258;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #341a27, #29131e);
+  box-sizing: content-box;
+}
+.engineFlow {
+  position: relative;
+  border: 1px solid #714258;
+  border-radius: 16px;
+  background:
+    linear-gradient(115deg, transparent 12%, rgb(198 81 118 / 0.11) 54%, transparent 100%),
+    #29131e;
+}
+.engineFlow::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 70px;
+  height: 3px;
+  content: '';
+  background: #c65176;
+}
+.engineFlow[data-pattern='decide']::before {
+  width: 110px;
+}
+.engineFlow[data-pattern='prioritize']::before {
+  width: 150px;
+}
+.inputs span,
+.output {
+  border-color: #75445c;
+  background: #341a27;
+  color: #f8eff2;
+}
+.output {
+  border-color: #c65176;
+  box-shadow: inset 3px 0 0 #c65176;
+}
+.output strong {
+  color: #f5b4cb;
+}
+.output span {
+  color: #eac0d0;
+}
+@media (max-width: 600px) {
+  .engineFlow {
+    padding: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .patternIcon,
+  .engineFlow {
+    animation: none;
+  }
+}
