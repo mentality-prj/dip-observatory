@@ -129,13 +129,7 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
 }
 
-export function MarketingTechIcon({
-  name,
-  className,
-}: {
-  name: TechIconName
-  className?: string
-}) {
+export function MarketingTechIcon({ name, className }: { name: TechIconName; className?: string }) {
   return (
     <svg
       aria-hidden="true"
