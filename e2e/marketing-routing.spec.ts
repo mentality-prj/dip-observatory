@@ -41,6 +41,30 @@ const whyLabels = {
 } as const
 
 test.describe('current marketing routing', () => {
+  test('marketing header uses an accessible custom icon without visible Sign in text', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    const signIn = page.locator('header a[data-qdip-auth="signed-out"]')
+    await expect(signIn).toBeVisible()
+    await expect(signIn).toHaveAttribute('aria-label', 'Sign in')
+    await expect(signIn).toHaveText('')
+    await expect(signIn.locator('svg[viewBox="0 0 32 32"]')).toHaveCount(1)
+    await expect(signIn).toHaveCSS('min-width', '44px')
+    await page.goto('http://qdip.localhost:3000/uk')
+    await expect(page.locator('header a[data-qdip-auth="signed-out"]')).toHaveAttribute('aria-label', 'Увійти')
+  })
+
+  test('clean marketing icons keep loupe and approval strokes away from document content', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/en')
+    const audit = page.locator('#why svg[viewBox="0 0 64 64"]').first()
+    await expect(audit.locator('circle[cx="47"][cy="42"][r="9"]')).toHaveCount(1)
+    await expect(audit.locator('rect[x="13"][width="8"]')).toHaveCount(3)
+    await expect(audit.locator('path[d*="M26 23h7"]')).toHaveCount(1)
+    await page.goto('http://qdip.localhost:3000/en/core')
+    const icons = page.locator('svg[viewBox="0 0 64 64"]')
+    await expect(icons.first()).toBeVisible()
+  })
+
   test('marketing network texture stays above the opaque surface on desktop and mobile', async ({ page, request }) => {
     const asset = await request.get('http://qdip.localhost:3000/qdip-network.svg')
     expect(asset.status()).toBe(200)
