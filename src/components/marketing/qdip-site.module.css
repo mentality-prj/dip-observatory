@@ -152,9 +152,12 @@
   width: min(calc(100% - 48px), 1280px);
   min-height: 0;
   margin: auto;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: var(--ds-space-12);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.96fr);
+  grid-template-areas:
+    'copy network'
+    'scene scene';
+  align-items: center;
+  gap: clamp(var(--ds-space-6), 3vw, var(--ds-space-12));
   padding: clamp(4rem, 6vw, 6rem) 0;
 }
 .hero:before {
@@ -171,8 +174,19 @@
   position: relative;
 }
 .heroCopy {
+  grid-area: copy;
   max-width: 940px;
   animation: qdip-marketing-intro 580ms ease-out both;
+}
+.heroMotion {
+  position: relative;
+  grid-area: network;
+  width: 100%;
+  height: clamp(275px, 27vw, 420px);
+}
+.hero > figure {
+  grid-area: scene;
+  width: 100%;
 }
 @keyframes qdip-marketing-intro {
   from {
@@ -751,6 +765,24 @@
   font-size: var(--ds-text-xs);
 }
 @media (max-width: 900px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'copy'
+      'scene';
+  }
+  .heroMotion {
+    position: absolute;
+    top: 1.25rem;
+    right: -36px;
+    z-index: 0;
+    width: min(76%, 440px);
+    height: 300px;
+    opacity: 0.52;
+  }
+  .heroCopy {
+    z-index: 1;
+  }
   .nav {
     display: none;
   }
@@ -810,6 +842,13 @@
   }
 }
 @media (max-width: 600px) {
+  .heroMotion {
+    top: 0;
+    right: -72px;
+    width: 91%;
+    height: 260px;
+    opacity: 0.48;
+  }
   .headerInner {
     width: calc(100% - 32px);
     gap: var(--ds-space-2);
