@@ -110,7 +110,9 @@ export function DecisionWorkbenchPreview({ locale }: { locale: MarketingLocale }
       </div>
 
       <div className={styles.pathbar}>
-        <span className={styles.scenario}><GitBranch size={14} aria-hidden="true" /> {l.resource}</span>
+        <span className={styles.scenario}>
+          <GitBranch size={14} aria-hidden="true" /> {l.resource}
+        </span>
         <ol aria-label={l.title}>
           {l.stages.map((stage, index) => (
             <li key={stage}>
@@ -157,8 +159,12 @@ export function DecisionWorkbenchPreview({ locale }: { locale: MarketingLocale }
               <span>{l.rules}</span>
             </div>
             <code>
-              <span><b>maximize</b> {l.objective.replace('objective: ', '')}</span>
-              <span><b>subject to</b></span>
+              <span>
+                <b>maximize</b> {l.objective.replace('objective: ', '')}
+              </span>
+              <span>
+                <b>subject to</b>
+              </span>
               <span>  {l.budgetRule}</span>
               <span>  {l.eligibleRule}</span>
             </code>
@@ -170,13 +176,20 @@ export function DecisionWorkbenchPreview({ locale }: { locale: MarketingLocale }
           <div className={styles.panelHeader}>
             <CircleDot size={16} aria-hidden="true" />
             <span>{l.evaluation}</span>
-            <span className={styles.resultState}><Check size={13} aria-hidden="true" /> {l.stages[2]}</span>
+            <span className={styles.resultState}>
+              <Check size={13} aria-hidden="true" /> {l.stages[2]}
+            </span>
           </div>
           <span className={styles.resultLabel}>{l.recommendation}</span>
-          <strong className={styles.outcome} key={budget}>{budget === 40 ? l.outcomeLow : l.outcomeHigh}</strong>
+          <strong className={styles.outcome} key={budget}>
+            {budget === 40 ? l.outcomeLow : l.outcomeHigh}
+          </strong>
           <div className={styles.progressHeader}>
             <span>{l.coverage}</span>
-            <strong>{funded}<em>/12</em></strong>
+            <strong>
+              {funded}
+              <em>/12</em>
+            </strong>
           </div>
           <div className={styles.requestTiles} aria-hidden="true">
             {Array.from({ length: 12 }, (_, index) => (
