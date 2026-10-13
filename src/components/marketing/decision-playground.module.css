@@ -44,17 +44,17 @@
   padding: var(--ds-space-8);
   border: 1px solid var(--qdip-border);
   border-radius: var(--ds-radius-marketing);
-  background: radial-gradient(circle at 70% 20%, rgb(198 81 118 / 0.17), transparent 34%), var(--qdip-surface);
+  background: var(--qdip-surface);
   box-shadow: var(--ds-shadow-card);
 }
 .stage :global(.ds-workflow-compact) {
   margin: 0;
 }
 .stage :global(.ds-workflow-step) {
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: var(--qdip-border);
 }
 .stage :global(.ds-workflow-step strong) {
-  color: #fff;
+  color: var(--qdip-text);
 }
 .stage :global(.ds-workflow-step span) {
   color: var(--qdip-muted);
@@ -62,7 +62,7 @@
 .stage :global(.ds-workflow-index) {
   color: var(--qdip-brand);
   background: var(--qdip-surface);
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: var(--qdip-border);
 }
 .controls {
   display: flex;
@@ -94,10 +94,10 @@
   align-items: center;
   gap: var(--ds-space-2);
   padding: var(--ds-space-2) var(--ds-space-3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--qdip-border);
   border-radius: var(--ds-radius-pill);
-  color: #fff;
-  background: rgb(145 154 169 / 0.09);
+  color: var(--qdip-text);
+  background: var(--qdip-surface-raised);
   cursor: pointer;
 }
 .controls button:focus-visible {
@@ -176,7 +176,7 @@
   margin-top: 0;
   padding: var(--ds-space-4);
   border-left: 2px solid var(--qdip-brand);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--qdip-surface-raised);
 }
 .reason strong {
   font-size: var(--ds-text-sm);
