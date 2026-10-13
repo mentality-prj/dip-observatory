@@ -54,15 +54,27 @@ test.describe('current marketing routing', () => {
     await expect(page.locator('header a[data-qdip-auth="signed-out"]')).toHaveAttribute('aria-label', 'Увійти')
   })
 
-  test('clean marketing icons keep loupe and approval strokes away from document content', async ({ page }) => {
-    await page.goto('http://qdip.localhost:3000/en')
-    const audit = page.locator('#why svg[viewBox="0 0 64 64"]').first()
-    await expect(audit.locator('circle[cx="47"][cy="42"][r="9"]')).toHaveCount(1)
-    await expect(audit.locator('rect[x="13"][width="8"]')).toHaveCount(3)
-    await expect(audit.locator('path[d*="M26 23h7"]')).toHaveCount(1)
-    await page.goto('http://qdip.localhost:3000/en/core')
-    const icons = page.locator('svg[viewBox="0 0 64 64"]')
-    await expect(icons.first()).toBeVisible()
+  test('audit, evidence and approval have real overlapping cutouts, not moved-away symbols', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
+    const iconArtboards = page.locator('svg > g[transform]')
+    for (const { iconIndex, maskId, expectedR, artRight } of [
+      { iconIndex: 0, maskId: 'qdip-audit-loupe-cutout', expectedR: 10.5, artRight: 45 },
+      { iconIndex: 7, maskId: 'qdip-approval-badge-cutout', expectedR: 11.7, artRight: 46 },
+      { iconIndex: 11, maskId: 'qdip-evidence-loupe-cutout', expectedR: 11.3, artRight: 42 },
+    ]) {
+      const icon = iconArtboards.nth(iconIndex)
+      const maskedArt = icon.locator(`g[mask="url(#${maskId})"]`)
+      await expect(maskedArt).toHaveCount(1)
+      const lens = icon.locator('circle').last()
+      const center = Number(await lens.getAttribute('cx'))
+      const radius = Number(await lens.getAttribute('r'))
+      expect(radius).toBe(expectedR)
+      expect(artRight).toBeGreaterThan(center - radius + 5)
+      expect(artRight).toBeLessThan(center + radius)
+      const exclusion = icon.locator(`mask[id="${maskId}"] circle[fill="black"]`)
+      const cutoutRadius = Number(await exclusion.getAttribute('r'))
+      expect(cutoutRadius).toBeGreaterThan(radius)
+    }
   })
 
   test('marketing network texture stays above the opaque surface on desktop and mobile', async ({ page, request }) => {
