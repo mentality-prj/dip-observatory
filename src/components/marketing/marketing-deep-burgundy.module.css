@@ -46,42 +46,31 @@
   --qdip-button-hover: #952549;
   --qdip-hero-start: #ffffff;
   --qdip-hero-end: #f5f6f8;
-  --qdip-footer: #eceef2;
+  --qdip-footer: #180b11;
+  --qdip-footer-border: rgb(255 255 255 / 0.1);
+  --qdip-footer-text: #fff;
+  --qdip-footer-link: #e5d9dd;
+  --qdip-footer-hover: #fff;
+  --qdip-footer-muted: #aa9ba1;
   --qdip-focus: #7a1838;
   --ds-accent: #7a1838;
   --ds-focus: #7a1838;
   color-scheme: light;
 }
 .theme :global(footer[data-variant='marketing']) {
-  border-top-color: var(--qdip-border);
-  color: var(--qdip-text);
+  border-top-color: var(--qdip-footer-border, var(--qdip-border));
+  color: var(--qdip-footer-text, var(--qdip-text));
   background: var(--qdip-footer);
 }
 .theme :global(footer[data-variant='marketing'] a) {
-  color: var(--qdip-text);
+  color: var(--qdip-footer-link, var(--qdip-text));
 }
 .theme :global(footer[data-variant='marketing'] a:hover) {
-  color: var(--qdip-brand);
+  color: var(--qdip-footer-hover, var(--qdip-brand));
 }
 .theme :global(footer[data-variant='marketing'] [data-footer-disclaimer]),
 .theme :global(footer[data-variant='marketing'] [data-footer-copyright]) {
-  color: var(--qdip-muted);
-}
-/* Light marketing retains the exact pre-redesign dark footer treatment. */
-.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing']) {
-  color: #fff;
-  border-top-color: rgb(255 255 255 / 0.1);
-  background: #180b11;
-}
-.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] a) {
-  color: #e5d9dd;
-}
-.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] a:hover) {
-  color: #fff;
-}
-.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] [data-footer-disclaimer]),
-.theme.theme.theme[data-marketing-appearance='light'] :global(footer[data-variant='marketing'] [data-footer-copyright]) {
-  color: #aa9ba1;
+  color: var(--qdip-footer-muted, var(--qdip-muted));
 }
 .theme :global(a:focus-visible),
 .theme :global(button:focus-visible) {
