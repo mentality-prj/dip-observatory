@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0 .",
     "fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --write e2e/marketing-routing.spec.ts src/components/marketing/marketing-tech-icon.tsx && python3 -c 'import sys,json; [print(\"QDIP_FORMATTED:\"+p+\":\"+json.dumps(open(p,encoding=\"utf-8\").read(),ensure_ascii=False)) for p in sys.argv[1:]]' e2e/marketing-routing.spec.ts src/components/marketing/marketing-tech-icon.tsx && prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
+    "prettier": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore .",
     "format": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore .",
     "check": "pnpm lint && pnpm prettier && pnpm typecheck && pnpm test && pnpm build",
     "test": "vitest run",
