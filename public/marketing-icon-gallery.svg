@@ -1,18 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1510" height="570" viewBox="0 0 1510 570">
   <rect width="1510" height="570" fill="#fbfcfe"/>
-  <text x="75" y="67" font-family="Inter,Arial,sans-serif" font-size="28" font-weight="700" fill="#17283b">QDIP / Engineering iconography</text>
-  <text x="76" y="97" font-family="Inter,Arial,sans-serif" font-size="15" fill="#607080">13 semantic SVG symbols · 64 × 64 artboard · 2px contour · technical line art</text>
+  <text x="75" y="67" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#17283b">QDIP / Engineering iconography</text>
+  <text x="76" y="97" font-family="Arial,sans-serif" font-size="15" fill="#607080">13 semantic SVG symbols · 64 × 64 artboard · 2px technical line art</text>
   <path d="M75 112H1436" stroke="#d9dfe7" stroke-width="1"/>
   <g transform="translate(70 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
-      <rect x="10" y="10" width="36" height="44" rx="4" />
-      <path d="M24 10V6h10v4M23 6h12M17 20h6v6h-6zM17 31h6v6h-6zM17 42h6v6h-6z" />
-      <path d="m18.5 22 2 2 4-5m-6 14 2 2 4-5m-6 14 2 2 4-5" />
-      <g stroke-width="1.4">
-        <path d="M29 23h11M29 34h9M29 45h5" />
-        <circle cx="46" cy="41" r="8" />
-        <path d="m51.5 46.5 7 7" />
+      <rect x="8" y="11" width="29" height="43" rx="3" />
+      <path d="M19 11V7h9v4M18 7h11" />
+      <rect x="13" y="19" width="8" height="8" rx="1" />
+      <rect x="13" y="30" width="8" height="8" rx="1" />
+      <rect x="13" y="41" width="8" height="8" rx="1" />
+      <g stroke-width="1.3">
+        <path d="m14.6 23 2 2 3.5-4M14.6 34l2 2 3.5-4M14.6 45l2 2 3.5-4" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Audit</text></g>
+      <path d="M26 23h7M26 34h7M26 45h7" />
+      <circle cx="47" cy="42" r="9" />
+      <path d="m53.5 48.5 6.5 6.5" />
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Audit</text></g>
 <g transform="translate(260 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <path d="M32 8v44M19 55h26M23 50h18M32 8l-23 13h46L32 8" />
       <circle cx="32" cy="10" r="3.5" />
@@ -21,7 +24,7 @@
         <path d="M18 17 7 37M46 17l11 20M26 42h12M24 46h16" />
         <circle cx="32" cy="25" r="2.5" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Comparison</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Comparison</text></g>
 <g transform="translate(450 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <path d="M12 25a22 22 0 0 1 36-11l4 4M52 9v9h-9M52 39a22 22 0 0 1-36 11l-4-4M12 55v-9h9" />
       <circle cx="32" cy="32" r="16" />
@@ -31,7 +34,7 @@
         <circle cx="10" cy="11" r="1.5" />
         <circle cx="54" cy="53" r="1.5" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Replay</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Replay</text></g>
 <g transform="translate(640 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <path d="M32 7 53 19 32 31 11 19zM11 19v26l21 12 21-12V19M32 31v26" />
       <path d="m21 13 21 12M43 13 22 25" stroke-width="1.4" />
@@ -43,7 +46,7 @@
         <circle cx="43" cy="36" r="1.6" />
         <path d="M17 49l5 3M42 52l5-3" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Modeling</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Modeling</text></g>
 <g transform="translate(830 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <rect x="8" y="12" width="39" height="12" rx="2" />
       <rect x="8" y="28" width="39" height="12" rx="2" />
@@ -55,7 +58,7 @@
         <circle cx="53" cy="48" r="1.5" />
         <path d="M53 52v1" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Constraints</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Constraints</text></g>
 <g transform="translate(1020 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <rect x="7" y="8" width="50" height="48" rx="3" />
       <path d="M7 17h50M14 13h2M20 13h2M26 13h2M14 49V35h7v14M26 49V30h7v19M38 49V25h7v24" />
@@ -66,7 +69,7 @@
         <circle cx="24" cy="22" r="2" />
         <circle cx="34" cy="27" r="2" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Optimization</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Optimization</text></g>
 <g transform="translate(1210 130)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <circle cx="32" cy="32" r="11" />
       <circle cx="32" cy="32" r="3" />
@@ -79,18 +82,13 @@
         <path d="M29 24q3-5 6 0M29 40q3 3 6 0M25 32h14M10 9v6M7 12h6M51 12h6M10 49v6M7 52h6M51 52h6" />
         <path d="M29 19V9M35 45v10" stroke-dasharray="2 4" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Explainability</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Explainability</text></g>
 <g transform="translate(70 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
-      <rect x="8" y="8" width="34" height="46" rx="3" />
-      <path d="M16 18h19M16 25h19M16 32h12M16 41h8" />
-      <circle cx="45" cy="41" r="13" />
-      <path d="m37 41 6 6 10-12" />
-      <g stroke-width="1.4">
-        <path d="M14 8V5h22v3M17 48h7M27 48h5" />
-        <circle cx="16" cy="14" r="1.3" />
-        <path d="M48 23h7M54 28l4-4" />
-      </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Human approval</text></g>
+      <rect x="7" y="9" width="29" height="45" rx="3" />
+      <path d="M16 9V6h11v3M15 20h14M15 28h14M15 36h12" />
+      <circle cx="47" cy="43" r="10" />
+      <path d="m41 43 4.5 4.5L53 38" />
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Human Approval</text></g>
 <g transform="translate(260 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <rect x="7" y="8" width="50" height="48" rx="4" />
       <path d="M7 18h50M32 18v38" />
@@ -102,7 +100,7 @@
         <circle cx="50" cy="26" r="2.5" />
         <circle cx="50" cy="38" r="2.5" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Simulation</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Simulation</text></g>
 <g transform="translate(450 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <ellipse cx="14" cy="19" rx="9" ry="4" />
       <path d="M5 19v26c0 5 18 5 18 0V19M5 28c0 5 18 5 18 0M5 37c0 5 18 5 18 0" />
@@ -114,7 +112,7 @@
         <path d="m38 16 4 3-4 3m0 20 4 3-4 3" />
         <circle cx="31" cy="32" r="2.5" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Allocation</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Allocation</text></g>
 <g transform="translate(640 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <rect x="8" y="9" width="22" height="13" rx="3" />
       <rect x="34" y="26" width="22" height="13" rx="3" />
@@ -126,17 +124,13 @@
         <circle cx="18" cy="34" r="2" />
         <circle cx="46" cy="17" r="2" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Workflow</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Workflow</text></g>
 <g transform="translate(830 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
-      <ellipse cx="25" cy="13" rx="15" ry="6" />
-      <path d="M10 13v30c0 8 26 8 30 2V13M10 24c0 8 30 8 30 0M10 35c0 8 30 8 30 0" />
-      <circle cx="42" cy="42" r="11" />
-      <path d="m49.5 49.5 9 9" />
-      <g stroke-width="1.4">
-        <path d="M16 19v4M16 30v4M16 41v4M37 42h10M42 37v10" />
-        <circle cx="25" cy="24" r="2" />
-      </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Evidence</text></g>
+      <ellipse cx="22" cy="13" rx="14" ry="5" />
+      <path d="M8 13v32c0 7 28 7 28 0V13M8 24c0 7 28 7 28 0M8 35c0 7 28 7 28 0" />
+      <circle cx="47" cy="43" r="9" />
+      <path d="m53.5 49.5 6.5 6.5" />
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Evidence</text></g>
 <g transform="translate(1020 318)"><g transform="translate(52 0) scale(1.5)" fill="none" stroke="#17283b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#17283b">
       <path d="M32 6 52 14v16c0 14-8 22-20 28-12-6-20-14-20-28V14z" />
       <path d="m22 31 7 7 14-16" />
@@ -145,8 +139,8 @@
         <path d="M32 3v3M10 10l4 3M54 10l-4 3M8 32h4M52 32h4" />
         <circle cx="32" cy="51" r="1.5" />
       </g>
-    </g><text x="100" y="127" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Policy</text></g>
+    </g><text x="100" y="127" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="600" fill="#17283b">Policy</text></g>
   <path d="M75 524H1436" stroke="#d9dfe7" stroke-width="1"/>
-  <text x="75" y="549" font-family="Inter,Arial,sans-serif" font-size="14" fill="#7a1838">Deep Burgundy / brand accent</text>
-  <text x="1436" y="549" text-anchor="end" font-family="Inter,Arial,sans-serif" font-size="14" fill="#607080">Review sheet · no merge</text>
+  <text x="75" y="549" font-family="Arial,sans-serif" font-size="14" fill="#7a1838">Deep Burgundy / brand accent</text>
+  <text x="1436" y="549" text-anchor="end" font-family="Arial,sans-serif" font-size="14" fill="#607080">Review sheet · no merge</text>
 </svg>
