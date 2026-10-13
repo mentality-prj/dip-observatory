@@ -13,6 +13,19 @@ import atmosphereStyles from '../marketing-atmosphere.module.css'
 import burgundyStyles from '../marketing-deep-burgundy.module.css'
 import { MarketingTechIcon, type TechIconName } from '../marketing-tech-icon'
 
+const technologyIcons: readonly TechIconName[] = [
+  'modeling',
+  'constraints',
+  'optimization',
+  'explainability',
+  'human-approval',
+  'simulation',
+  'allocation',
+  'workflow',
+  'evidence',
+  'policy',
+]
+
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
 
 export function DepthPage({ locale, page }: { locale: MarketingLocale; page: DepthPageKey }) {
@@ -78,20 +91,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
                     {s.items.map((i, iconIndex) => (
                       <article key={i.title}>
                         <MarketingTechIcon
-                          name={(
-                            [
-                              'modeling',
-                              'constraints',
-                              'optimization',
-                              'explainability',
-                              'human-approval',
-                              'simulation',
-                              'allocation',
-                              'workflow',
-                              'evidence',
-                              'policy',
-                            ] as TechIconName[]
-                          )[(index + iconIndex) % 10]}
+                          name={technologyIcons[(index + iconIndex) % technologyIcons.length] ?? 'modeling'}
                           className={styles.techFeatureIcon}
                         />
                         <div>
