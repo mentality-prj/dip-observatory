@@ -113,7 +113,11 @@ export function QdipAuthControl({
       aria-label={copy.signIn}
       title={copy.signIn}
     >
-      {iconOnly ? <Image src="/auth-smile-lock.svg" width={32} height={32} alt="" aria-hidden unoptimized /> : <LogIn size={16} aria-hidden />}
+      {iconOnly ? (
+        <Image src="/auth-smile-lock.svg" width={32} height={32} alt="" aria-hidden unoptimized />
+      ) : (
+        <LogIn size={16} aria-hidden />
+      )}
       {!iconOnly && <span>{copy.signIn}</span>}
     </a>
   )
