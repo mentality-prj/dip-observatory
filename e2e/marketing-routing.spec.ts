@@ -98,27 +98,18 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('audit, evidence and approval have real overlapping cutouts, not moved-away symbols', async ({ page }) => {
+  test('engineering gallery exposes all 13 distinct semantic SVGs without masks', async ({ page, request }) => {
+    const response = await request.get('http://qdip.localhost:3000/marketing-icon-gallery.svg')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toContain('image/svg+xml')
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
-    const iconArtboards = page.locator('svg > g[transform]')
-    for (const { iconIndex, maskId, expectedR, artRight } of [
-      { iconIndex: 0, maskId: 'qdip-audit-loupe-cutout', expectedR: 10.5, artRight: 45 },
-      { iconIndex: 7, maskId: 'qdip-approval-badge-cutout', expectedR: 11.7, artRight: 46 },
-      { iconIndex: 11, maskId: 'qdip-evidence-loupe-cutout', expectedR: 11.3, artRight: 42 },
-    ]) {
-      const icon = iconArtboards.nth(iconIndex)
-      const clippedArt = icon.locator(`g[clip-path="url(#${maskId})"]`)
-      await expect(clippedArt).toHaveCount(1)
-      const lens = icon.locator('circle').last()
-      const center = Number(await lens.getAttribute('cx'))
-      const radius = Number(await lens.getAttribute('r'))
-      expect(radius).toBe(expectedR)
-      expect(artRight).toBeGreaterThan(center - radius + 5)
-      expect(artRight).toBeLessThan(center + radius)
-      const exclusion = icon.locator(`clipPath[id="${maskId}"] path[clip-rule="evenodd"]`)
-      const cutout = (await exclusion.getAttribute('d')) ?? ''
-      const cutoutRadius = Number(cutout.match(/A([0-9.]+) /)?.[1])
-      expect(cutoutRadius).toBeGreaterThan(radius)
+    const symbols = page.locator('svg > g[data-icon]')
+    await expect(symbols).toHaveCount(13)
+    for (const symbol of await symbols.all()) {
+      await expect(symbol.locator('clipPath, mask')).toHaveCount(0)
+      const icon = symbol.locator('g[stroke-width="2.5"]').first()
+      await expect(icon).toHaveCount(1)
+      expect(await icon.locator('path, rect, circle, ellipse').count()).toBeLessThanOrEqual(9)
     }
   })
 
@@ -177,41 +168,27 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('comparison is perfectly mirrored and simulation shows two distinct scenarios', async ({ page }) => {
+  test('comparison has two aligned cards and simulation forks into two scenarios', async ({ page }) => {
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
-    const symbols = page.locator('svg > g[transform]')
-    await expect(symbols).toHaveCount(13)
+    const comparison = page.locator('[data-icon="comparison"] g[stroke-width="2.5"]')
+    await expect(comparison.locator(':scope > rect')).toHaveCount(2)
+    await expect(comparison.locator('path[stroke="#c65176"]')).toHaveCount(1)
 
-    const balance = symbols.nth(1)
-    const pans = await balance.evaluate((root) => {
-      const art = root.querySelector('g[transform*="scale(1.5)"]')
-      const groups = art ? Array.from(art.querySelectorAll(':scope > g')) : []
-      return groups.map((g) => ({
-        transform: g.getAttribute('transform'),
-        paths: Array.from(g.children).map((child) => child.outerHTML),
-      }))
-    })
-    expect(pans).toHaveLength(2)
-    expect(pans[0].paths).toEqual(pans[1].paths)
-    expect(pans[1].transform).toBe('translate(64 0) scale(-1 1)')
-    await expect(balance.locator('circle[cx="32"][cy="20"]')).toHaveCount(1)
-
-    const simulation = symbols.nth(8)
-    await expect(simulation.locator('rect[x="7"][width="50"]')).toHaveCount(1)
-    await expect(simulation.locator('circle[cx="19"][cy="27"]')).toHaveCount(1)
-    await expect(simulation.locator('circle[cx="45"][cy="27"]')).toHaveCount(1)
-    await expect(simulation.locator('path[d="M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37"]')).toHaveCount(1)
+    const simulation = page.locator('[data-icon="simulation"] g[stroke-width="2.5"]')
+    await expect(simulation.locator(':scope > circle')).toHaveCount(3)
+    await expect(simulation.locator(':scope > path')).toHaveCount(2)
+    await expect(simulation.locator('path[stroke="#c65176"]')).toHaveCount(1)
   })
 
-  test('allocation uses a symmetric custom engineering glyph without a decorative tile', async ({ page }) => {
+  test('allocation is a clear source-to-three-outcomes semantic glyph', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/en')
     const allocation = page.locator('svg[class*="patternIcon"]').first()
     await expect(allocation).toHaveCSS('width', '76px')
     await expect(allocation).toHaveCSS('border-top-width', '0px')
-    await expect(allocation.locator('rect')).toHaveCount(2)
-    await expect(allocation.locator('ellipse')).toHaveCount(1)
-    await expect(allocation.locator('path').nth(1)).toHaveAttribute('d', 'M23 32h8V19h11M31 32v13h11')
+    await expect(allocation.locator('rect')).toHaveCount(4)
+    await expect(allocation.locator('circle')).toHaveCount(1)
+    await expect(allocation.locator('path')).toHaveCount(1)
   })
 
   test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
