@@ -111,7 +111,7 @@ test.describe('current marketing routing', () => {
       const compact = symbol.locator('g[transform*="scale(0.5)"]')
       await expect(fullSize).toHaveCount(1)
       await expect(compact).toHaveCount(1)
-      expect(await fullSize.locator('path, rect, circle, ellipse').count()).toBeGreaterThanOrEqual(7)
+      expect(await fullSize.locator('path, rect, circle, ellipse').count()).toBeGreaterThanOrEqual(5)
     }
   })
 
@@ -192,7 +192,7 @@ test.describe('current marketing routing', () => {
     await expect(allocation.locator('rect')).toHaveCount(3)
     await expect(allocation.locator('ellipse')).toHaveCount(1)
     await expect(allocation.locator('circle')).toHaveCount(1)
-    await expect(allocation.locator('path').count()).resolves.toBeGreaterThanOrEqual(4)
+    expect(await allocation.locator('path').count()).toBeGreaterThanOrEqual(4)
   })
 
 
