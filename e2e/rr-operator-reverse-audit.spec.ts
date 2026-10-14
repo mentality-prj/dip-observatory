@@ -111,5 +111,5 @@ test('editing a Kernel request invalidates its obsolete delayed response', async
   )
   await page.waitForTimeout(600)
   await expect(page.getByText('old-result')).toHaveCount(0)
-  await expect(page.getByLabel('Execution ID')).toHaveValue('')
+  await expect(page.getByLabel('Execution ID', { exact: true })).toHaveValue('')
 })
