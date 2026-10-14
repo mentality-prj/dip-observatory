@@ -93,7 +93,7 @@ export function QdipAuthControl({
           onClick={() => void signOut()}
           aria-label={copy.signOut}
         >
-          {iconOnly ? <LogOut size={27} aria-hidden /> : <LogOut size={16} aria-hidden />}
+          {iconOnly ? <LogOut size={24} aria-hidden /> : <LogOut size={16} aria-hidden />}
           {!iconOnly && <span>{copy.signOut}</span>}
         </button>
         {error ? (
@@ -114,7 +114,7 @@ export function QdipAuthControl({
       title={copy.signIn}
     >
       {iconOnly ? (
-        <Image src="/auth-smile-lock.svg" width={32} height={32} alt="" aria-hidden unoptimized />
+        <Image src="/auth-smile-lock.svg" width={24} height={24} alt="" aria-hidden unoptimized />
       ) : (
         <LogIn size={16} aria-hidden />
       )}
