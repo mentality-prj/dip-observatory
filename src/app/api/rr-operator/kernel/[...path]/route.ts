@@ -45,9 +45,13 @@ async function handle(request: NextRequest, context: Context) {
       request.method !== 'POST'
         ? null
         : path[0] === 'executions'
-          ? path.length === 1 ? 'execute' : 'replan'
+          ? path.length === 1
+            ? 'execute'
+            : 'replan'
           : path[0] === 'source-import' && path[1] === 'executions'
-            ? path.length === 2 ? 'execute' : 'replan'
+            ? path.length === 2
+              ? 'execute'
+              : 'replan'
             : path[0] === 'economic-v2' && ['snapshots', 'advice'].includes(path[1])
               ? 'execute'
               : null

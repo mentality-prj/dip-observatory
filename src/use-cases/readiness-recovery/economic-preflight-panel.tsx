@@ -45,11 +45,14 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
   const goodId = (id: unknown) => typeof id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(id)
   return (
     a.schema_version === 'readiness-recovery.economic-advisory.v2' &&
-    a.actionable === false && a.supply_source_verified === false &&
+    a.actionable === false &&
+    a.supply_source_verified === false &&
     a.atomic_plan_committed === false &&
-    goodId(a.snapshot_id) && goodId(a.execution_id) &&
+    goodId(a.snapshot_id) &&
+    goodId(a.execution_id) &&
     /^[0-9a-f]{64}$/.test(a.snapshot_digest ?? '') &&
-    typeof a.decision_id === 'string' && typeof a.status === 'string' &&
+    typeof a.decision_id === 'string' &&
+    typeof a.status === 'string' &&
     typeof a.optimality_proven === 'boolean' &&
     a.optimality_proven === (a.status === 'OPTIMAL') &&
     isMoneyOrNull(a.solver_best_bound_cents) &&
@@ -60,16 +63,30 @@ function isEconomicAdvice(value: unknown): value is EconomicAdvice {
     isMoneyOrNull(a.modeled_repair_cost_cents) &&
     isMoneyOrNull(a.modeled_procurement_cost_cents) &&
     isMoneyOrNull(a.modeled_donor_cost_cents) &&
-    Array.isArray(a.scheduled_jobs) && a.scheduled_jobs.length <= 2500 &&
-    a.scheduled_jobs.every(job => !!job && goodId(job.job_id) && goodId(job.technician_id) &&
-      Number.isSafeInteger(job.start_slot) && Number.isSafeInteger(job.finish_slot) &&
-      job.finish_slot > job.start_slot) &&
-    Array.isArray(a.selected_procurement_ids) && a.selected_procurement_ids.length <= 32 &&
+    Array.isArray(a.scheduled_jobs) &&
+    a.scheduled_jobs.length <= 2500 &&
+    a.scheduled_jobs.every(
+      (job) =>
+        !!job &&
+        goodId(job.job_id) &&
+        goodId(job.technician_id) &&
+        Number.isSafeInteger(job.start_slot) &&
+        Number.isSafeInteger(job.finish_slot) &&
+        job.finish_slot > job.start_slot
+    ) &&
+    Array.isArray(a.selected_procurement_ids) &&
+    a.selected_procurement_ids.length <= 32 &&
     a.selected_procurement_ids.every(goodId) &&
-    Array.isArray(a.scheduled_donors) && a.scheduled_donors.length <= 128 &&
-    a.scheduled_donors.every(donor => !!donor && goodId(donor.donor_id) &&
-      Number.isSafeInteger(donor.start_slot) && Number.isSafeInteger(donor.finish_slot) &&
-      donor.finish_slot > donor.start_slot)
+    Array.isArray(a.scheduled_donors) &&
+    a.scheduled_donors.length <= 128 &&
+    a.scheduled_donors.every(
+      (donor) =>
+        !!donor &&
+        goodId(donor.donor_id) &&
+        Number.isSafeInteger(donor.start_slot) &&
+        Number.isSafeInteger(donor.finish_slot) &&
+        donor.finish_slot > donor.start_slot
+    )
   )
 }
 type EconomicAdviceSummary = {
@@ -84,10 +101,14 @@ function isAdviceSummary(item: unknown): item is EconomicAdviceSummary {
   if (!item || typeof item !== 'object') return false
   const x = item as Partial<EconomicAdviceSummary>
   return (
-    typeof x.execution_id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(x.execution_id) &&
-    typeof x.snapshot_id === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(x.snapshot_id) &&
-    typeof x.snapshot_digest === 'string' && /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
-    typeof x.status === 'string' && typeof x.created_at === 'string' &&
+    typeof x.execution_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(x.execution_id) &&
+    typeof x.snapshot_id === 'string' &&
+    /^[A-Za-z0-9_.-]{1,128}$/.test(x.snapshot_id) &&
+    typeof x.snapshot_digest === 'string' &&
+    /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
+    typeof x.status === 'string' &&
+    typeof x.created_at === 'string' &&
     (x.modeled_net_incremental_cents === null ||
       (typeof x.modeled_net_incremental_cents === 'string' &&
         /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(x.modeled_net_incremental_cents)))
@@ -108,14 +129,20 @@ type EconomicIntegrity = {
 function isEconomicIntegrity(value: unknown): value is EconomicIntegrity {
   if (!value || typeof value !== 'object') return false
   const x = value as Partial<EconomicIntegrity>
-  return x.schema_version === 'readiness-recovery.economic-advice-integrity.v2' &&
+  return (
+    x.schema_version === 'readiness-recovery.economic-advice-integrity.v2' &&
     typeof x.execution_id === 'string' &&
     typeof x.snapshot_id === 'string' &&
-    typeof x.response_digest === 'string' && /^[a-f0-9]{64}$/.test(x.response_digest) &&
-    typeof x.snapshot_digest === 'string' && /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
-    x.archive_digest_verified === true && x.snapshot_binding_verified === true &&
+    typeof x.response_digest === 'string' &&
+    /^[a-f0-9]{64}$/.test(x.response_digest) &&
+    typeof x.snapshot_digest === 'string' &&
+    /^[a-f0-9]{64}$/.test(x.snapshot_digest) &&
+    x.archive_digest_verified === true &&
+    x.snapshot_binding_verified === true &&
     x.kernel_manifest_verified === true &&
-    x.source_and_advice_mac_verified === true && x.actionable === false
+    x.source_and_advice_mac_verified === true &&
+    x.actionable === false
+  )
 }
 const copy = {
   en: {
@@ -143,7 +170,8 @@ const copy = {
     jobsAdvice: 'Recommended repair slots',
     suppliers: 'Chosen purchase offers',
     partsDonors: 'Scheduled donor disassembly',
-    adviceWarning: 'Modeled, non-actionable advice. Real inventory, prices and external purchases are not verified or reserved.',
+    adviceWarning:
+      'Modeled, non-actionable advice. Real inventory, prices and external purchases are not verified or reserved.',
     title: 'Economic RR v2 — optimization advice',
     note: 'Validate a versioned RREconomicInput, then compute and archive a CP-SAT schedule and modeled contribution. No external purchase or stock reservation occurs.',
     input: 'RR-ECON-v2 JSON',
@@ -188,7 +216,8 @@ const copy = {
     jobsAdvice: 'Рекомендовані роботи',
     suppliers: 'Обрані закупівельні пропозиції',
     partsDonors: 'Розбирання донорів',
-    adviceWarning: 'Це модельована рекомендація, не дозвіл на дію. Реальні склад, ціни й закупівлі не перевірені та не зарезервовані.',
+    adviceWarning:
+      'Це модельована рекомендація, не дозвіл на дію. Реальні склад, ціни й закупівлі не перевірені та не зарезервовані.',
     title: 'Економічний RR v2 — оптимізаційна рекомендація',
     note: 'Перевірте RREconomicInput, потім отримайте й збережіть оптимізаційний розклад CP-SAT та модельовану вигоду. Закупівлі й резервування складу не виконуються.',
     input: 'JSON RR-ECON-v2',
@@ -233,7 +262,8 @@ const copy = {
     jobsAdvice: 'Zalecane zadania',
     suppliers: 'Wybrane oferty zakupu',
     partsDonors: 'Demontaż dawców',
-    adviceWarning: 'Porada modelowa, niewykonalna automatycznie. Rzeczywisty stan zapasów, ceny i zakupy nie są zweryfikowane ani zarezerwowane.',
+    adviceWarning:
+      'Porada modelowa, niewykonalna automatycznie. Rzeczywisty stan zapasów, ceny i zakupy nie są zweryfikowane ani zarezerwowane.',
     title: 'Ekonomiczne RR v2 — rekomendacja optymalizacyjna',
     note: 'Sprawdź RREconomicInput, a następnie oblicz i zapisz harmonogram CP-SAT oraz modelowaną korzyść. Bez rzeczywistych zakupów ani rezerwacji zapasów.',
     input: 'JSON RR-ECON-v2',
@@ -334,7 +364,6 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     }
   }
 
-
   async function solveAdvice() {
     const current = ++revision.current
     pending.current?.abort()
@@ -364,15 +393,19 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         cache: 'no-store',
         signal: controller.signal,
       })
-      if (!source.ok) throw new Error(
-        source.status === 401 || source.status === 403 ? t.unauthenticated : t.rejected
-      )
+      if (!source.ok) throw new Error(source.status === 401 || source.status === 403 ? t.unauthenticated : t.rejected)
       const registered: unknown = await source.json()
-      if (!registered || typeof registered !== 'object' ||
-        !('snapshot_id' in registered) || registered.snapshot_id !== snapshotId ||
-        !('actionable' in registered) || registered.actionable !== false ||
-        !('input_digest' in registered) || typeof registered.input_digest !== 'string' ||
-        !/^[0-9a-f]{64}$/.test(registered.input_digest)) {
+      if (
+        !registered ||
+        typeof registered !== 'object' ||
+        !('snapshot_id' in registered) ||
+        registered.snapshot_id !== snapshotId ||
+        !('actionable' in registered) ||
+        registered.actionable !== false ||
+        !('input_digest' in registered) ||
+        typeof registered.input_digest !== 'string' ||
+        !/^[0-9a-f]{64}$/.test(registered.input_digest)
+      ) {
         throw new Error(t.incompatible)
       }
       if (controller.signal.aborted || current !== revision.current) return
@@ -384,16 +417,18 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         cache: 'no-store',
         signal: controller.signal,
       })
-      if (!response.ok) throw new Error(
-        response.status === 401 || response.status === 403 ? t.unauthenticated : t.rejected
-      )
+      if (!response.ok)
+        throw new Error(response.status === 401 || response.status === 403 ? t.unauthenticated : t.rejected)
       const value: unknown = await response.json()
       if (controller.signal.aborted || current !== revision.current) return
-      if (!isEconomicAdvice(value) ||
+      if (
+        !isEconomicAdvice(value) ||
         value.execution_id !== executionId ||
         value.snapshot_id !== snapshotId ||
         value.snapshot_digest !== registered.input_digest ||
-        value.decision_id !== economicRequestDecisionId(doc)) throw new Error(t.incompatible)
+        value.decision_id !== economicRequestDecisionId(doc)
+      )
+        throw new Error(t.incompatible)
       setAdvice(value)
       setIntegrity(null)
       setArchiveExecutionId(value.execution_id)
@@ -404,7 +439,6 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       if (current === revision.current) setBusy(false)
     }
   }
-
 
   async function loadArchivedAdvice() {
     if (!/^[A-Za-z0-9_.-]{1,128}$/.test(archiveExecutionId)) {
@@ -424,13 +458,11 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         '/api/rr-operator/kernel/economic-v2/advice/' + encodeURIComponent(archiveExecutionId),
         { cache: 'no-store', signal: controller.signal }
       )
-      if (!response.ok) throw new Error(
-        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
-      )
+      if (!response.ok)
+        throw new Error(response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable)
       const value: unknown = await response.json()
       if (controller.signal.aborted || current !== revision.current) return
-      if (!isEconomicAdvice(value) || value.execution_id !== archiveExecutionId)
-        throw new Error(t.incompatible)
+      if (!isEconomicAdvice(value) || value.execution_id !== archiveExecutionId) throw new Error(t.incompatible)
       setAdvice(value)
       setIntegrity(null)
     } catch (reason) {
@@ -440,7 +472,6 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
       if (current === revision.current) setBusy(false)
     }
   }
-
 
   async function loadArchiveList(continueFromCursor = false) {
     const current = ++revision.current
@@ -452,29 +483,35 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     try {
       const params = new URLSearchParams({ limit: '25' })
       if (continueFromCursor && archiveCursor) params.set('cursor', archiveCursor)
-      const response = await fetch(
-        '/api/rr-operator/kernel/economic-v2/advice?' + params.toString(),
-        { cache: 'no-store', signal: controller.signal }
-      )
-      if (!response.ok) throw new Error(
-        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
-      )
+      const response = await fetch('/api/rr-operator/kernel/economic-v2/advice?' + params.toString(), {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+      if (!response.ok)
+        throw new Error(response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable)
       const data: unknown = await response.json()
       if (controller.signal.aborted || current !== revision.current) return
-      if (!data || typeof data !== 'object' || !('schema_version' in data) ||
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        !('schema_version' in data) ||
         data.schema_version !== 'readiness-recovery.economic-advice-list.v2' ||
-        !('entries' in data) || !Array.isArray(data.entries) || data.entries.length > 25 ||
+        !('entries' in data) ||
+        !Array.isArray(data.entries) ||
+        data.entries.length > 25 ||
         !data.entries.every(isAdviceSummary) ||
         !('next_cursor' in data) ||
-        !(data.next_cursor === null ||
-          (typeof data.next_cursor === 'string' &&
-          /^[A-Za-z0-9_.-]{1,128}$/.test(data.next_cursor)))) {
+        !(
+          data.next_cursor === null ||
+          (typeof data.next_cursor === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(data.next_cursor))
+        )
+      ) {
         throw new Error(t.incompatible)
       }
       const next = data.next_cursor as string | null
       if (continueFromCursor && next && next === archiveCursor) throw new Error(t.incompatible)
       const rows = data.entries as EconomicAdviceSummary[]
-      setArchiveEntries(previous => continueFromCursor ? [...previous, ...rows] : rows)
+      setArchiveEntries((previous) => (continueFromCursor ? [...previous, ...rows] : rows))
       setArchiveCursor(next)
     } catch (reason) {
       if (controller.signal.aborted || current !== revision.current) return
@@ -496,19 +533,19 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     setBusy(true)
     try {
       const response = await fetch(
-        '/api/rr-operator/kernel/economic-v2/advice/' +
-          encodeURIComponent(candidate.execution_id) + '/integrity',
+        '/api/rr-operator/kernel/economic-v2/advice/' + encodeURIComponent(candidate.execution_id) + '/integrity',
         { cache: 'no-store', signal: controller.signal }
       )
-      if (!response.ok) throw new Error(
-        response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable
-      )
+      if (!response.ok)
+        throw new Error(response.status === 401 || response.status === 403 ? t.unauthenticated : t.unavailable)
       const value: unknown = await response.json()
       if (controller.signal.aborted || current !== revision.current) return
-      if (!isEconomicIntegrity(value) ||
+      if (
+        !isEconomicIntegrity(value) ||
         value.execution_id !== candidate.execution_id ||
         value.snapshot_id !== candidate.snapshot_id ||
-        value.snapshot_digest !== candidate.snapshot_digest) {
+        value.snapshot_digest !== candidate.snapshot_digest
+      ) {
         throw new Error(t.incompatible)
       }
       setIntegrity(value)
@@ -530,28 +567,35 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
     pending.current = controller
     setBusy(true)
     try {
-      const prefix = '/api/rr-operator/kernel/economic-v2/advice/' +
-        encodeURIComponent(candidate.execution_id)
+      const prefix = '/api/rr-operator/kernel/economic-v2/advice/' + encodeURIComponent(candidate.execution_id)
       // A browser-visible recommendation is not a signature or acceptance.
       // Both authenticated reads must succeed and independently verify
       // the *same* server-stored advice before an export is offered.
       const proofResponse = await fetch(prefix + '/integrity', {
-        cache: 'no-store', signal: controller.signal,
+        cache: 'no-store',
+        signal: controller.signal,
       })
       if (!proofResponse.ok) throw new Error(t.unavailable)
       const proof: unknown = await proofResponse.json()
-      if (!isEconomicIntegrity(proof) ||
+      if (
+        !isEconomicIntegrity(proof) ||
         proof.execution_id !== candidate.execution_id ||
-        proof.snapshot_digest !== candidate.snapshot_digest) throw new Error(t.incompatible)
+        proof.snapshot_digest !== candidate.snapshot_digest
+      )
+        throw new Error(t.incompatible)
       const adviceResponse = await fetch(prefix, {
-        cache: 'no-store', signal: controller.signal,
+        cache: 'no-store',
+        signal: controller.signal,
       })
       if (!adviceResponse.ok) throw new Error(t.unavailable)
       const stored: unknown = await adviceResponse.json()
-      if (!isEconomicAdvice(stored) ||
+      if (
+        !isEconomicAdvice(stored) ||
         stored.execution_id !== proof.execution_id ||
         stored.snapshot_digest !== proof.snapshot_digest ||
-        stored.snapshot_id !== proof.snapshot_id) throw new Error(t.incompatible)
+        stored.snapshot_id !== proof.snapshot_id
+      )
+        throw new Error(t.incompatible)
       if (controller.signal.aborted || current !== revision.current) return
       const report = {
         format_version: 'readiness-recovery.economic-evidence-export.v1',
@@ -629,7 +673,7 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
             onChange={(event) => {
               setArchiveExecutionId(event.target.value)
               setAdvice(null)
-    setIntegrity(null)
+              setIntegrity(null)
             }}
             className="mt-1 block border border-white/20 bg-slate-950 p-2 font-mono text-xs"
             autoComplete="off"
@@ -662,11 +706,16 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   className="text-sky-200 underline"
-                  onClick={() => { setArchiveExecutionId(item.execution_id); setAdvice(null) }}
+                  onClick={() => {
+                    setArchiveExecutionId(item.execution_id)
+                    setAdvice(null)
+                  }}
                 >
                   {item.execution_id}
                 </button>
-                <span>{item.status} · {item.modeled_net_incremental_cents ?? 'N/A'}</span>
+                <span>
+                  {item.status} · {item.modeled_net_incremental_cents ?? 'N/A'}
+                </span>
               </li>
             ))}
           </ul>
@@ -700,9 +749,15 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
         </div>
       ) : null}
       {advice ? (
-        <div className="mt-4 border border-white/20 p-3 text-sm" data-testid="rr-economic-v2-advice" data-actionable="false">
+        <div
+          className="mt-4 border border-white/20 p-3 text-sm"
+          data-testid="rr-economic-v2-advice"
+          data-actionable="false"
+        >
           <h4 className="font-semibold">{t.solved}</h4>
-          <p className="mt-2">Status: {advice.status} · {t.net}: {advice.modeled_net_incremental_cents ?? 'N/A'}</p>
+          <p className="mt-2">
+            Status: {advice.status} · {t.net}: {advice.modeled_net_incremental_cents ?? 'N/A'}
+          </p>
           {advice.status === 'OPTIMAL' || advice.status === 'FEASIBLE' ? (
             <p className="mt-1 text-xs" data-testid="rr-economic-v2-optimality">
               {advice.optimality_proven ? t.proven : t.unproven}
@@ -712,15 +767,32 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
           ) : null}
           {advice.modeled_baseline_margin_cents !== null ? (
             <dl className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2" data-testid="rr-economic-v2-breakdown">
-              <div><dt>{t.baseline}</dt><dd className="font-mono">{advice.modeled_baseline_margin_cents}</dd></div>
-              <div><dt>{t.recovered}</dt><dd className="font-mono">{advice.modeled_recovered_margin_cents}</dd></div>
-              <div><dt>{t.repairsCost}</dt><dd className="font-mono">{advice.modeled_repair_cost_cents}</dd></div>
-              <div><dt>{t.procurementCost}</dt><dd className="font-mono">{advice.modeled_procurement_cost_cents}</dd></div>
-              <div><dt>{t.donorCost}</dt><dd className="font-mono">{advice.modeled_donor_cost_cents}</dd></div>
+              <div>
+                <dt>{t.baseline}</dt>
+                <dd className="font-mono">{advice.modeled_baseline_margin_cents}</dd>
+              </div>
+              <div>
+                <dt>{t.recovered}</dt>
+                <dd className="font-mono">{advice.modeled_recovered_margin_cents}</dd>
+              </div>
+              <div>
+                <dt>{t.repairsCost}</dt>
+                <dd className="font-mono">{advice.modeled_repair_cost_cents}</dd>
+              </div>
+              <div>
+                <dt>{t.procurementCost}</dt>
+                <dd className="font-mono">{advice.modeled_procurement_cost_cents}</dd>
+              </div>
+              <div>
+                <dt>{t.donorCost}</dt>
+                <dd className="font-mono">{advice.modeled_donor_cost_cents}</dd>
+              </div>
             </dl>
           ) : null}
           <p className="mt-2">{t.jobsAdvice}</p>
-          {advice.scheduled_jobs.length === 0 ? <p>{t.noResult}</p> : (
+          {advice.scheduled_jobs.length === 0 ? (
+            <p>{t.noResult}</p>
+          ) : (
             <ul className="list-disc pl-5">
               {advice.scheduled_jobs.map((job) => (
                 <li key={job.job_id + job.start_slot}>
@@ -729,11 +801,18 @@ export function RREconomicPreflightPanel({ locale }: { locale: Locale }) {
               ))}
             </ul>
           )}
-          <p className="mt-2">{t.suppliers}: {advice.selected_procurement_ids.join(', ') || '—'}</p>
-          <p className="mt-2">{t.partsDonors}: {advice.scheduled_donors.map(
-            (donor) => donor.donor_id + ' (' + donor.start_slot + '–' + donor.finish_slot + ')'
-          ).join(', ') || '—'}</p>
-          <p className="mt-2 break-all font-mono text-xs">Snapshot: {advice.snapshot_id} · {advice.snapshot_digest}</p>
+          <p className="mt-2">
+            {t.suppliers}: {advice.selected_procurement_ids.join(', ') || '—'}
+          </p>
+          <p className="mt-2">
+            {t.partsDonors}:{' '}
+            {advice.scheduled_donors
+              .map((donor) => donor.donor_id + ' (' + donor.start_slot + '–' + donor.finish_slot + ')')
+              .join(', ') || '—'}
+          </p>
+          <p className="mt-2 break-all font-mono text-xs">
+            Snapshot: {advice.snapshot_id} · {advice.snapshot_digest}
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"

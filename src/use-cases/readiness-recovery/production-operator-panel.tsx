@@ -84,16 +84,19 @@ function isKernelPreflight(value: unknown): value is KernelPreflight {
 function hasVersion(raw: string, version: string): boolean {
   try {
     const doc: unknown = JSON.parse(raw)
-    return !!doc && typeof doc === 'object' && !Array.isArray(doc) &&
-      'format_version' in doc && doc.format_version === version
+    return (
+      !!doc &&
+      typeof doc === 'object' &&
+      !Array.isArray(doc) &&
+      'format_version' in doc &&
+      doc.format_version === version
+    )
   } catch {
     return false
   }
 }
-const isNormalizedImport = (raw: string) =>
-  hasVersion(raw, 'readiness-recovery.normalized-import.v1')
-const isNormalizedReplan = (raw: string) =>
-  hasVersion(raw, 'readiness-recovery.normalized-replan.v1')
+const isNormalizedImport = (raw: string) => hasVersion(raw, 'readiness-recovery.normalized-import.v1')
+const isNormalizedReplan = (raw: string) => hasVersion(raw, 'readiness-recovery.normalized-replan.v1')
 
 const initialRequest = `{
   "execution_id": "rr-reference-001",
@@ -238,15 +241,18 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
       setPreflight(null)
       setValidatedBody(null)
       setPreflightStatus('Checking Kernel contract…')
-      void fetch(isNormalizedImport(currentBody)
-        ? '/api/rr-operator/kernel/source-import/preflight'
-        : '/api/rr-operator/kernel/preflight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: currentBody,
-        cache: 'no-store',
-        signal: controller.signal,
-      })
+      void fetch(
+        isNormalizedImport(currentBody)
+          ? '/api/rr-operator/kernel/source-import/preflight'
+          : '/api/rr-operator/kernel/preflight',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: currentBody,
+          cache: 'no-store',
+          signal: controller.signal,
+        }
+      )
         .then(checkedJson)
         .then((value) => {
           if (controller.signal.aborted || currentRevision !== inputRevision.current) return
@@ -381,9 +387,12 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
         const ids = parsedExecutionIds(data)
         const successor: unknown = body ? (JSON.parse(body) as unknown) : null
         const target = isNormalizedReplan(body ?? '')
-          ? successor && typeof successor === 'object' && 'import_document' in successor &&
-              successor.import_document && typeof successor.import_document === 'object' &&
-              'execution_id' in successor.import_document
+          ? successor &&
+            typeof successor === 'object' &&
+            'import_document' in successor &&
+            successor.import_document &&
+            typeof successor.import_document === 'object' &&
+            'execution_id' in successor.import_document
             ? successor.import_document.execution_id
             : null
           : successor && typeof successor === 'object' && 'execution_id' in successor
@@ -854,9 +863,14 @@ export function RRProductionOperatorPanel({ locale = 'en' }: { locale?: Locale }
             <button
               type="button"
               disabled={busy || !preflight || validatedBody !== requestBody}
-              onClick={() => void execute('Create execution',
-                isNormalizedImport(requestBody) ? `${prefix}/source-import/executions` : `${prefix}/executions`,
-                'POST', requestBody)}
+              onClick={() =>
+                void execute(
+                  'Create execution',
+                  isNormalizedImport(requestBody) ? `${prefix}/source-import/executions` : `${prefix}/executions`,
+                  'POST',
+                  requestBody
+                )
+              }
               className="bg-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             >
               {t.createButton}
