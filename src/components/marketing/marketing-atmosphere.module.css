@@ -1,4 +1,4 @@
-/* Marketing-only artwork: it must sit above the opaque light surface, not behind the application. */
+/* Marketing-only background texture above the dark brand surface. */
 .atmosphere {
   position: relative;
   isolation: isolate;
@@ -23,8 +23,8 @@
   content: '';
   pointer-events: none;
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(var(--ds-accent-rgb) / 0.13), transparent 70%);
-  animation: qdip-marketing-glow 16s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgb(198 81 118 / 0.1), transparent 70%);
+  /* Ambient lighting stays static; motion is reserved for direct user interactions. */
 }
 .atmosphere > main {
   position: relative;

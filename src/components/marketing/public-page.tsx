@@ -10,6 +10,8 @@ import { MarketingHeader } from './marketing-header'
 import styles from './qdip-site.module.css'
 import motionStyles from './marketing-cta-motion.module.css'
 import atmosphereStyles from './marketing-atmosphere.module.css'
+import burgundyStyles from './marketing-deep-burgundy.module.css'
+import { MarketingTechIcon, type TechIconName } from './marketing-tech-icon'
 
 type Copy = {
   decision: string
@@ -334,7 +336,11 @@ const href = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${
 function Shell({ locale, slug, children }: { locale: MarketingLocale; slug: string; children: React.ReactNode }) {
   const x = copy[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.site} ${atmosphereStyles.atmosphere}`}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="dark"
+      className={`${styles.site} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={slug} />
         {children}
@@ -393,6 +399,26 @@ function CoreNav({ l }: { l: MarketingLocale }) {
     </div>
   )
 }
+const decisionStepIcons: readonly TechIconName[] = [
+  'modeling',
+  'simulation',
+  'optimization',
+  'comparison',
+  'allocation',
+  'policy',
+  'explainability',
+  'constraints',
+  'human-approval',
+]
+const coreSectionIcons: readonly TechIconName[] = [
+  'modeling',
+  'constraints',
+  'simulation',
+  'evidence',
+  'audit',
+  'workflow',
+]
+
 export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: string }) {
   const x = copy[locale],
     c = marketingCopy[locale]
@@ -414,6 +440,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               x.recommendation,
             ].map((label, i) => (
               <article key={label}>
+                <MarketingTechIcon name={decisionStepIcons[i] ?? 'modeling'} className={styles.techFeatureIcon} />
                 <span>0{i + 1}</span>
                 <h3>{label}</h3>
                 <p>{x.how[i]}</p>
@@ -435,6 +462,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
         <section className={styles.section} id="demos">
           <div className={styles.caseGrid}>
             <article className={styles.featuredCase}>
+              <MarketingTechIcon name="allocation" className={styles.techFeatureIcon} />
               <span>{c.cases[1]}</span>
               <h3>{c.cases[2]}</h3>
               <strong>{c.cases[3]}</strong>
@@ -444,6 +472,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               </Link>
             </article>
             <article>
+              <MarketingTechIcon name="workflow" className={styles.techFeatureIcon} />
               <span>{supplyCaseCopy[locale].pattern}</span>
               <h3>{PUBLIC_DEMO_NAMES.supplyNetworkOptimization}</h3>
               <strong>{supplyCaseCopy[locale].question}</strong>
@@ -456,6 +485,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               </Link>
             </article>
             <article>
+              <MarketingTechIcon name="comparison" className={styles.techFeatureIcon} />
               <span>{c.cases[6]}</span>
               <h3>{c.cases[7]}</h3>
               <strong>{c.cases[8]}</strong>
@@ -465,6 +495,7 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
               </Link>
             </article>
             <article>
+              <MarketingTechIcon name="optimization" className={styles.techFeatureIcon} />
               <span>{c.cases[11]}</span>
               <h3>{c.cases[12]}</h3>
               <strong>{c.cases[13]}</strong>
@@ -505,8 +536,9 @@ export function PublicPage({ locale, slug }: { locale: MarketingLocale; slug: st
             ))}
           </div>
           <div className={styles.valueGrid}>
-            {x.sections.map(([title, body]) => (
+            {x.sections.map(([title, body], i) => (
               <article key={title}>
+                <MarketingTechIcon name={coreSectionIcons[i] ?? 'modeling'} className={styles.techFeatureIcon} />
                 <h3>{title}</h3>
                 <p>{body}</p>
               </article>

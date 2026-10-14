@@ -41,6 +41,50 @@ const whyLabels = {
 } as const
 
 test.describe('current marketing routing', () => {
+  test('marketing header uses an accessible custom icon without visible Sign in text', async ({ page }) => {
+    await page.route('**/api/auth/session', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ configured: true, authenticated: false, studio: false, operator: false }),
+      })
+    )
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    const signIn = page.locator('header a[data-qdip-auth="signed-out"]')
+    await expect(signIn).toBeVisible()
+    await expect(signIn).toHaveAttribute('aria-label', 'Sign in')
+    await expect(signIn).toHaveText('')
+    await expect(signIn).toHaveAttribute('class', /iconOnly/)
+    await expect(signIn).toHaveCSS('min-width', '44px')
+    await page.goto('http://qdip.localhost:3000/uk')
+    await expect(page.locator('header a[data-qdip-auth="signed-out"]')).toHaveAttribute('aria-label', 'Увійти')
+  })
+
+  test('audit, evidence and approval have real overlapping cutouts, not moved-away symbols', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
+    const iconArtboards = page.locator('svg > g[transform]')
+    for (const { iconIndex, maskId, expectedR, artRight } of [
+      { iconIndex: 0, maskId: 'qdip-audit-loupe-cutout', expectedR: 10.5, artRight: 45 },
+      { iconIndex: 7, maskId: 'qdip-approval-badge-cutout', expectedR: 11.7, artRight: 46 },
+      { iconIndex: 11, maskId: 'qdip-evidence-loupe-cutout', expectedR: 11.3, artRight: 42 },
+    ]) {
+      const icon = iconArtboards.nth(iconIndex)
+      const clippedArt = icon.locator(`g[clip-path="url(#${maskId})"]`)
+      await expect(clippedArt).toHaveCount(1)
+      const lens = icon.locator('circle').last()
+      const center = Number(await lens.getAttribute('cx'))
+      const radius = Number(await lens.getAttribute('r'))
+      expect(radius).toBe(expectedR)
+      expect(artRight).toBeGreaterThan(center - radius + 5)
+      expect(artRight).toBeLessThan(center + radius)
+      const exclusion = icon.locator(`clipPath[id="${maskId}"] path[clip-rule="evenodd"]`)
+      const cutout = (await exclusion.getAttribute('d')) ?? ''
+      const cutoutRadius = Number(cutout.match(/A([0-9.]+) /)?.[1])
+      expect(cutoutRadius).toBeGreaterThan(radius)
+    }
+  })
+
   test('marketing network texture stays above the opaque surface on desktop and mobile', async ({ page, request }) => {
     const asset = await request.get('http://qdip.localhost:3000/qdip-network.svg')
     expect(asset.status()).toBe(200)
@@ -76,6 +120,78 @@ test.describe('current marketing routing', () => {
     }
   })
 
+  test('original network artwork replaces hero grid and is visible behind product sections', async ({
+    page,
+    request,
+  }) => {
+    const svg = await (await request.get('http://qdip.localhost:3000/qdip-network.svg')).text()
+    expect(svg).toContain('<g opacity="0.5">')
+    for (const width of [375, 768, 1366]) {
+      await page.setViewportSize({ width, height: 850 })
+      await page.goto('http://qdip.localhost:3000/en')
+      const hero = page.locator('section[class*="engineeredHero"]')
+      const pattern = page.locator('section[class*="patternSection"]')
+      const heroBackdrop = await hero.evaluate((node) => getComputedStyle(node, '::before').backgroundImage)
+      const patternBackdrop = await pattern.evaluate((node) => getComputedStyle(node).backgroundImage)
+      expect(heroBackdrop).toContain('qdip-network.svg')
+      expect(heroBackdrop).not.toContain('linear-gradient')
+      expect(patternBackdrop).toContain('qdip-network.svg')
+      await expect(page.getByTestId('marketing-network-motion')).toHaveCount(0)
+    }
+  })
+
+  test('comparison is perfectly mirrored and simulation shows two distinct scenarios', async ({ page }) => {
+    await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
+    const symbols = page.locator('svg > g[transform]')
+    await expect(symbols).toHaveCount(13)
+
+    const balance = symbols.nth(1)
+    const pans = await balance.evaluate((root) => {
+      const art = root.querySelector('g[transform*="scale(1.5)"]')
+      const groups = art ? Array.from(art.querySelectorAll(':scope > g')) : []
+      return groups.map((g) => ({
+        transform: g.getAttribute('transform'),
+        paths: Array.from(g.children).map((child) => child.outerHTML),
+      }))
+    })
+    expect(pans).toHaveLength(2)
+    expect(pans[0].paths).toEqual(pans[1].paths)
+    expect(pans[1].transform).toBe('translate(64 0) scale(-1 1)')
+    await expect(balance.locator('circle[cx="32"][cy="20"]')).toHaveCount(1)
+
+    const simulation = symbols.nth(8)
+    await expect(simulation.locator('rect[x="7"][width="50"]')).toHaveCount(1)
+    await expect(simulation.locator('circle[cx="19"][cy="27"]')).toHaveCount(1)
+    await expect(simulation.locator('circle[cx="45"][cy="27"]')).toHaveCount(1)
+    await expect(simulation.locator('path[d="M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37"]')).toHaveCount(1)
+  })
+
+  test('allocation uses a symmetric custom engineering glyph without a decorative tile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    const allocation = page.locator('svg[class*="patternIcon"]').first()
+    await expect(allocation).toHaveCSS('width', '76px')
+    await expect(allocation).toHaveCSS('border-top-width', '0px')
+    await expect(allocation.locator('rect')).toHaveCount(2)
+    await expect(allocation.locator('ellipse')).toHaveCount(1)
+    await expect(allocation.locator('path').nth(1)).toHaveAttribute('d', 'M23 32h8V19h11M31 32v13h11')
+  })
+
+  test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    await page.locator('[data-testid="marketing-theme-toggle"]:visible').click()
+    const playground = page.locator('section[aria-labelledby="decision-playground-title"]')
+    const stage = playground.locator('[data-expanded]').first()
+    await expect(stage).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+    await expect(playground.locator('.ds-workflow-step strong').first()).toHaveCSS('color', 'rgb(27, 32, 41)')
+    const budget = playground.locator('button[aria-pressed]').first()
+    await expect(budget).toHaveCSS('color', 'rgb(27, 32, 41)')
+    await budget.click()
+    await expect(budget).toHaveAttribute('aria-pressed', 'true')
+  })
+
   test('homepage uses a readable technical workbench at desktop and mobile widths', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     for (const viewport of [
@@ -101,6 +217,78 @@ test.describe('current marketing routing', () => {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
       expect(overflow).toBeLessThanOrEqual(1)
     }
+  })
+
+  test('neutral burgundy marketing is responsive in EN/UK/PL at 375/768/1366', async ({ page }) => {
+    for (const locale of locales) {
+      for (const width of [375, 768, 1366]) {
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto(`http://qdip.localhost:3000/${locale}`)
+        const marketing = page.locator('[data-ds-theme="burgundy"][data-ds-mode="dark"]').first()
+        await expect(marketing).toHaveCSS('background-color', 'rgb(21, 23, 28)')
+        const workbench = page.getByTestId('decision-workbench')
+        await expect(workbench).toHaveCSS('background-color', 'rgb(32, 35, 42)')
+        const evidenceIcons = page.locator('#why svg[viewBox="0 0 64 64"]')
+        await expect(evidenceIcons).toHaveCount(3)
+        await expect(evidenceIcons.first()).toHaveCSS('width', '64px')
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+        expect(overflow).toBeLessThanOrEqual(1)
+      }
+    }
+    await page.goto('http://qdip.localhost:3000/en/core')
+    // Count the six semantic Core feature icons, not unrelated header/footer SVGs.
+    const coreFeatureIcons = page.locator(
+      '#main-content section[class*="section"] article svg[class*="techFeatureIcon"]'
+    )
+    await expect(coreFeatureIcons).toHaveCount(6)
+    for (const icon of await coreFeatureIcons.all()) {
+      await expect(icon).toHaveAttribute('viewBox', '0 0 64 64')
+      await expect(icon).toHaveAttribute('aria-hidden', 'true')
+    }
+  })
+
+  test('light theme preserves the restrained burgundy CTA and theme choice on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    const toggle = page.locator('[data-testid="marketing-theme-toggle"]:visible')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('[data-marketing-appearance="light"]')).toHaveCSS(
+      'background-color',
+      'rgb(245, 246, 248)'
+    )
+    const evidence = page.locator('#why article').first()
+    await expect(evidence).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+    const primary = page.locator('a[class*="primaryButtonLarge"]').first()
+    await expect(primary).toHaveCSS('background-color', 'rgb(122, 24, 56)')
+    // Regressions from the light-theme screenshot: no white heading on pale CTA.
+    const cta = page.locator('section[class*="finalCta"]')
+    await expect(cta).toHaveCSS('background-color', 'rgb(245, 246, 248)')
+    await expect(cta.getByRole('heading', { level: 2 })).toHaveCSS('color', 'rgb(27, 32, 41)')
+    // The pre-redesign marketing footer remains dark in both appearances.
+    const footer = page.locator('footer[data-variant="marketing"]')
+    await expect(footer).toHaveCSS('background-color', 'rgb(24, 11, 17)')
+    await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(footer.locator('img').first()).toHaveCSS('filter', 'brightness(0) invert(1)')
+    await expect(footer.locator('nav a').first()).toHaveCSS('color', 'rgb(229, 217, 221)')
+    await page.reload()
+    await expect(page.locator('[data-marketing-appearance="light"]')).toBeVisible()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+    expect(overflow).toBeLessThanOrEqual(1)
+  })
+
+  test('light-theme custom footer matches original dark footer on public pages', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('http://qdip.localhost:3000/en')
+    await page.locator('button[class*="menuButton"]').click()
+    await page.locator('[data-testid="marketing-theme-toggle"]:visible').click()
+    await page.goto('http://qdip.localhost:3000/en/decision')
+    const footer = page.locator('footer[class*="footer"]').last()
+    await expect(footer).toHaveCSS('background-color', 'rgb(24, 11, 17)')
+    await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(footer.locator('nav a').first()).toHaveCSS('color', 'rgb(229, 217, 221)')
   })
 
   test('workbench budget changes recommendation and respects reduced motion', async ({ page }) => {
