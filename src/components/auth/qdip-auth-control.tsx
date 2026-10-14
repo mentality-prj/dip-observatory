@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { LogIn, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -23,38 +25,6 @@ const labels = {
     signOutFailed: 'Nie udało się wylogować',
   },
 } as const
-
-function QdipAccessIcon({ direction }: { direction: 'in' | 'out' }) {
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 64 64"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <g transform={direction === 'out' ? 'translate(64 0) scale(-1 1)' : undefined}>
-        {/* shackle */}
-        <path d="M22 26v-6c0-7 4-11 10-11s10 4 10 11v6" />
-        {/* lock body */}
-        <rect x="16" y="26" width="32" height="26" rx="4" />
-        {/* keypad dots */}
-        <circle cx="26" cy="36" r="1.8" />
-        <circle cx="32" cy="36" r="1.8" />
-        <circle cx="26" cy="42" r="1.8" />
-        <circle cx="32" cy="42" r="1.8" />
-        {/* confirm / access mark */}
-        <path d="M39 43h7" />
-        <path d="m43 39 4 4-4 4" />
-      </g>
-    </svg>
-  )
-}
 
 function loginHref(returnTo: string) {
   const url = new URL('/api/auth/login', PLATFORM_URLS.site)
@@ -123,7 +93,7 @@ export function QdipAuthControl({
           onClick={() => void signOut()}
           aria-label={copy.signOut}
         >
-          {iconOnly ? <QdipAccessIcon direction="out" /> : <LogOut size={16} aria-hidden />}
+          {iconOnly ? <LogOut size={27} aria-hidden /> : <LogOut size={16} aria-hidden />}
           {!iconOnly && <span>{copy.signOut}</span>}
         </button>
         {error ? (
@@ -143,7 +113,7 @@ export function QdipAuthControl({
       aria-label={copy.signIn}
       title={copy.signIn}
     >
-      {iconOnly ? <QdipAccessIcon direction="in" /> : <LogIn size={16} aria-hidden />}
+      {iconOnly ? <Image src="/auth-smile-lock.svg" width={32} height={32} alt="" aria-hidden unoptimized /> : <LogIn size={16} aria-hidden />}
       {!iconOnly && <span>{copy.signIn}</span>}
     </a>
   )
