@@ -61,6 +61,43 @@ test.describe('current marketing routing', () => {
     await expect(page.locator('header a[data-qdip-auth="signed-out"]')).toHaveAttribute('aria-label', 'Увійти')
   })
 
+  test('mobile header orders language, sign-in, then menu with no horizontal overflow', async ({ page }) => {
+    await page.route('**/api/auth/session', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ configured: true, authenticated: false, studio: false, operator: false }),
+      })
+    )
+
+    for (const locale of locales) {
+      for (const width of [375, 390]) {
+        await page.setViewportSize({ width, height: 844 })
+        await page.goto(`http://qdip.localhost:3000/${locale}`)
+
+        const language = page.locator('header summary[aria-label]')
+        const signIn = page.locator('header [data-qdip-auth="signed-out"]')
+        const menu = page.locator('header button[aria-controls="mobile-navigation"]')
+
+        await expect(language).toBeVisible()
+        await expect(signIn).toBeVisible()
+        await expect(menu).toBeVisible()
+
+        const languageBox = await language.boundingBox()
+        const signInBox = await signIn.boundingBox()
+        const menuBox = await menu.boundingBox()
+        expect(languageBox).not.toBeNull()
+        expect(signInBox).not.toBeNull()
+        expect(menuBox).not.toBeNull()
+        expect(languageBox!.x + languageBox!.width).toBeLessThanOrEqual(signInBox!.x)
+        expect(signInBox!.x + signInBox!.width).toBeLessThanOrEqual(menuBox!.x)
+
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+        expect(overflow).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
   test('audit, evidence and approval have real overlapping cutouts, not moved-away symbols', async ({ page }) => {
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
     const iconArtboards = page.locator('svg > g[transform]')
