@@ -55,6 +55,8 @@ describe('QDIP shared authentication control', () => {
 
     const login = screen.getByRole('link', { name: 'Увійти' })
     expect(login.querySelector('img')?.getAttribute('src')).toBe('/auth-smile-lock.svg')
+    expect(login.querySelector('img')?.getAttribute('width')).toBe('24')
+    expect(login.querySelector('img')?.getAttribute('height')).toBe('24')
     expect(login.querySelector('img')?.getAttribute('alt')).toBe('')
     expect(login.querySelector('svg')).toBeNull()
     await waitFor(() => expect(fetch).toHaveBeenCalled())
