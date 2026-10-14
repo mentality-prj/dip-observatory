@@ -107,11 +107,13 @@ test('branded decision network is not replaced by a generic square grid', () => 
   assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
 })
 
-test('resource allocation glyph uses balanced connectors with no criss-cross arrow', () => {
-  assert.match(techIcons, /M23 32h8V19h11M31 32v13h11/)
-  assert.match(hero, /url\('\/qdip-network\.svg'\)/)
+test('resource allocation glyph uses one source and three clearly separated destinations', () => {
+  const allocation = techIcons.slice(techIcons.indexOf('  allocation: ('), techIcons.indexOf('  workflow: ('))
+  assert.equal((allocation.match(/<rect /g) ?? []).length, 4)
+  assert.match(allocation, /M26 33h10M36 16v34/)
+  assert.match(allocation, /fill=\{accent\}/)
+  assert.doesNotMatch(allocation, /strokeWidth=\{1\.4\}/)
 })
-
 test('playground workflow and controls use theme-aware text colors', () => {
   assert.match(playgroundStyle, /\.stage :global\(\.ds-workflow-step strong\)\s*\{\s*color:\s*var\(--qdip-text\);/)
   assert.match(playgroundStyle, /\.controls button\s*\{[\s\S]*?color:\s*var\(--qdip-text\);/)
@@ -121,63 +123,47 @@ test('playground workflow and controls use theme-aware text colors', () => {
 const marketingAuth = readFileSync('src/components/auth/qdip-auth-control.tsx', 'utf8')
 const marketingHeader = readFileSync('src/components/marketing/marketing-header.tsx', 'utf8')
 
-test('marketing identity access is icon-only and screen-reader-labelled, without changing product login', () => {
+test('marketing identity access uses a compact vector SVG without changing product sign-in', () => {
   assert.match(marketingHeader, /<QdipAuthControl locale=\{locale\} returnTo=\{returnTo\} iconOnly \/>/)
   assert.match(marketingAuth, /iconOnly = false/)
-  assert.match(marketingAuth, /<QdipAccessIcon direction="in" \/>/)
-  assert.match(marketingAuth, /<QdipAccessIcon direction="out" \/>/)
+  assert.match(marketingAuth, /auth-smile-lock\.svg/)
   assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
-
-test('inspection loupes and approval badge overlap the source art but hide strokes beneath them', () => {
-  for (const [maskId, lens] of [
-    ['qdip-audit-loupe-cutout', '<circle cx="44" cy="42" r="10.5" />'],
-    ['qdip-evidence-loupe-cutout', '<circle cx="44" cy="43" r="11.3" />'],
-    ['qdip-approval-badge-cutout', '<circle cx="44" cy="42" r="11.7" />'],
-  ]) {
-    assert.ok(techIcons.includes(`<clipPath id="${maskId}"`), `Missing cutout for ${maskId}`)
-    assert.ok(techIcons.includes(`clipPath="url(#${maskId})"`), `Source art is not masked for ${maskId}`)
-    assert.ok(techIcons.includes(lens), `Overlapping lens/badge missing for ${maskId}`)
-  }
-  assert.match(techIcons, /<rect x="8" y="11" width="37" height="43" rx="3" \/>/)
-  assert.match(techIcons, /<ellipse cx="25" cy="13" rx="17" ry="5" \/>/)
-  assert.match(techIcons, /<rect x="8" y="9" width="38" height="45" rx="3" \/>/)
-  assert.match(techIcons, /clipRule="evenodd"/)
-  assert.doesNotMatch(techIcons, /<mask id=/)
+test('audit, approval and evidence glyphs use simple semantic forms without SVG masking', () => {
+  const audit = techIcons.slice(techIcons.indexOf('  audit: ('), techIcons.indexOf('  comparison: ('))
+  const approval = techIcons.slice(techIcons.indexOf("  'human-approval': ("), techIcons.indexOf('  simulation: ('))
+  const evidence = techIcons.slice(techIcons.indexOf('  evidence: ('), techIcons.indexOf('  policy: ('))
+  assert.match(audit, /<circle cx="42" cy="42" r="11"/)
+  assert.match(approval, /<circle cx="44" cy="44" r="11"/)
+  assert.match(evidence, /M40 8v10h9/)
+  assert.doesNotMatch(techIcons, /clipPath|clipRule|<mask/)
 })
-
-test('comparison scales are mirrored and pivotal circles sit on exact beam junctions', () => {
-  assert.match(techIcons, /transform="translate\(64 0\) scale\(-1 1\)"/)
-  assert.match(techIcons, /<circle cx="32" cy="10" r="3" \/>/)
-  assert.match(techIcons, /<circle cx="32" cy="20" r="2" \/>/)
-  assert.match(techIcons, /M13 20h17M34 20h17M32 13v5M13 20h17M34 20h17M32 13v5M32 22v29/)
-  const pan = 'M13 20 6 38M13 20l7 18'
-  assert.equal(techIcons.split(pan).length - 1, 2, 'Both pans must use the same artwork')
+test('comparison pairs two aligned cards with a restrained outcome accent', () => {
+  const comparison = techIcons.slice(techIcons.indexOf('  comparison: ('), techIcons.indexOf('  replay: ('))
+  assert.equal((comparison.match(/<rect /g) ?? []).length, 2)
+  assert.match(comparison, /M14 43v-9h8v9M42 43V29h8v14/)
+  assert.doesNotMatch(comparison, /scale\(-1 1\)/)
 })
-
-test('simulation shows two unambiguous scenarios instead of crossed sketch strokes', () => {
-  assert.match(techIcons, /M7 19h50M32 19v36/)
-  assert.match(techIcons, /<circle cx="19" cy="27" r="2\.5" \/>/)
-  assert.match(techIcons, /<circle cx="45" cy="27" r="2\.5" \/>/)
-  assert.match(techIcons, /M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37/)
-  assert.doesNotMatch(techIcons, /M13 29 6-6 6 6M13 44l6-6/)
+test('simulation represents two branching scenario paths from one shared origin', () => {
+  const simulation = techIcons.slice(techIcons.indexOf('  simulation: ('), techIcons.indexOf('  allocation: ('))
+  assert.equal((simulation.match(/<circle /g) ?? []).length, 3)
+  assert.match(simulation, /M17 32h10c5 0 7-12 13-12h7/)
+  assert.match(simulation, /M17 32h10c5 0 7 12 13 12h7/)
+  assert.doesNotMatch(simulation, /<rect /)
 })
-
-test('all 13 icon contracts remain self-contained and preserve badge cutouts', () => {
-  const iconEntries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
-  assert.equal(iconEntries.length, 13)
-  assert.equal((techIcons.match(/<clipPath id=/g) ?? []).length, 3)
-  assert.doesNotMatch(techIcons, /comparisonPan/)
+test('all 13 decision glyphs have a common optical grid and a single accent', () => {
+  const entries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
+  assert.equal(entries.length, 13)
+  assert.match(techIcons, /viewBox="0 0 64 64"/)
+  assert.match(techIcons, /strokeWidth=\{2\.5\}/)
+  assert.match(techIcons, /const accent = 'var\(--qdip-signal, #c65176\)'/)
+  assert.doesNotMatch(techIcons, /strokeWidth=\{1\.4\}|clipPath|clipRule/)
 })
-
-test('marketing login icon follows the 64x64 engineering icon system', () => {
-  assert.match(marketingAuth, /viewBox="0 0 64 64"/)
-  assert.match(marketingAuth, /strokeWidth=\{2\}/)
-  assert.match(marketingAuth, /strokeLinecap="round"/)
-  assert.match(marketingAuth, /strokeLinejoin="round"/)
-  assert.match(marketingAuth, /M29 9h18l7 7v32l-7 7H29/)
-  assert.match(marketingAuth, /M9 32h32m-8-8 8 8-8 8/)
-  assert.match(marketingAuth, /translate\(64 0\) scale\(-1 1\)/)
-  assert.doesNotMatch(marketingAuth, /<circle cx="11" cy="16" r="7" \/>/)
+test('marketing SVG icon gallery reflects all 13 redrawn symbols', () => {
+  const gallery = readFileSync('public/marketing-icon-gallery.svg', 'utf8')
+  assert.equal((gallery.match(/<g data-icon="/g) ?? []).length, 13)
+  assert.match(gallery, /stroke-width="2\.5"/)
+  assert.match(gallery, /#c65176/)
+  assert.doesNotMatch(gallery, /clip-path|clipPath|<image/)
 })
