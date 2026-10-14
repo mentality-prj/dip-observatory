@@ -107,13 +107,13 @@ test('branded decision network is not replaced by a generic square grid', () => 
   assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
 })
 
-test('allocation distributes a central resource into equal-sized destination frames', () => {
+test('allocation keeps equal destinations and aligned distribution junctions', () => {
   const allocation = techIcons.slice(techIcons.indexOf('  allocation: ('), techIcons.indexOf('  workflow: ('))
   assert.match(allocation, /<ellipse cx="14" cy="18" rx="8" ry="4"/)
   assert.equal((allocation.match(/<rect /g) ?? []).length, 3)
   assert.match(allocation, /M22 33h9M31 15v36/)
-  assert.match(allocation, /M47 15h5M47 33h5M47 51h5/)
-  assert.match(allocation, /fill=\{accent\}/)
+  assert.match(allocation, /M47 15h6M47 33h6M47 51h6/)
+  assert.match(allocation, /<circle cx="31" cy="33" r="2\.6" fill=\{accent\}/)
 })
 
 test('playground workflow and controls use theme-aware text colors', () => {
@@ -133,35 +133,36 @@ test('marketing identity access uses a compact vector SVG without changing produ
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
 
-test('audit, approval and evidence badges are geometrically separated from main records', () => {
+test('audit and approval reuse A4 geometry; badges overlap the host shape', () => {
   const audit = techIcons.slice(techIcons.indexOf('  audit: ('), techIcons.indexOf('  comparison: ('))
   const approval = techIcons.slice(techIcons.indexOf("  'human-approval': ("), techIcons.indexOf('  simulation: ('))
   const evidence = techIcons.slice(techIcons.indexOf('  evidence: ('), techIcons.indexOf('  policy: ('))
-  assert.match(audit, /<rect x="8" y="8" width="27"/)
-  assert.match(audit, /<circle cx="47" cy="44" r="9"/)
-  assert.match(approval, /<rect x="8" y="7" width="25"/)
-  assert.match(approval, /<circle cx="47" cy="44" r="10"/)
-  assert.match(evidence, /<ellipse cx="22" cy="15" rx="14"/)
-  assert.match(evidence, /<circle cx="48" cy="44" r="9"/)
+  for (const document of [audit, approval]) {
+    assert.match(document, /<rect x="9" y="7" width="32" height="46" rx="3\.5"/)
+    assert.match(document, /<circle cx="39" cy="43"/)
+  }
+  assert.match(audit, /<circle cx="39" cy="43" r="9" fill=\{surface\}/)
+  assert.match(approval, /<circle cx="39" cy="43" r="10" fill=\{surface\} stroke=\{accent\}/)
+  assert.match(evidence, /<circle cx="40" cy="44" r="10" fill=\{surface\} stroke=\{accent\}/)
   assert.doesNotMatch(techIcons, /clipPath|clipRule|<mask/)
 })
 
-test('comparison aligns frames and gives identically sized status markers', () => {
+test('comparison uses symmetric frames with consistent baselines and one semantic difference', () => {
   const comparison = techIcons.slice(techIcons.indexOf('  comparison: ('), techIcons.indexOf('  replay: ('))
-  assert.match(comparison, /<rect x="8" y="13" width="19"/)
-  assert.match(comparison, /<rect x="37" y="13" width="19"/)
-  assert.match(comparison, /<circle cx="18" cy="35" r="2\.5"/)
-  assert.match(comparison, /<circle cx="47" cy="35" r="2\.5"/)
-  assert.equal((comparison.match(/fill=\{accent\}/g) ?? []).length, 2)
+  assert.match(comparison, /<rect x="7" y="12" width="22" height="40"/)
+  assert.match(comparison, /<rect x="35" y="12" width="22" height="40"/)
+  assert.match(comparison, /M12 20h12M40 20h12/)
+  assert.match(comparison, /M40 43h12" stroke=\{accent\}/)
+  assert.doesNotMatch(comparison, /<circle/)
 })
 
-test('simulation paths terminate before equally sized future-state blocks', () => {
+test('simulation origin marker and all 3 branches intersect at x26 y32', () => {
   const simulation = techIcons.slice(techIcons.indexOf('  simulation: ('), techIcons.indexOf('  allocation: ('))
   assert.equal((simulation.match(/<rect /g) ?? []).length, 2)
-  assert.match(simulation, /M26 32C34 32 34 16 42 16/)
-  assert.match(simulation, /M26 32C34 32 34 48 42 48/)
-  assert.match(simulation, /<circle cx="10" cy="32" r="3"/)
-  assert.match(simulation, /<circle cx="26" cy="32" r="3"/)
+  assert.match(simulation, /M10 32h16M26 32C35 32 35 18 45 18M26 32C35 32 35 46 45 46/)
+  assert.match(simulation, /<circle cx="26" cy="32" r="3" fill=\{accent\}/)
+  assert.match(simulation, /<rect x="45" y="11" width="12" height="14"/)
+  assert.match(simulation, /<rect x="45" y="39" width="12" height="14"/)
 })
 
 test('13 engineering glyphs share scale, surface color, and optical stroke hierarchy', () => {
@@ -176,12 +177,13 @@ test('13 engineering glyphs share scale, surface color, and optical stroke hiera
   assert.doesNotMatch(techIcons, /clipPath|clipRule|<image/)
 })
 
-test('gallery shows each of 13 SVGs at 76px and at compact 32px scale', () => {
+test('gallery displays all 13 components at 76px and 24px with real vector geometry', () => {
   const gallery = readFileSync('public/marketing-icon-gallery.svg', 'utf8')
   assert.equal((gallery.match(/<g data-icon="/g) ?? []).length, 13)
   assert.equal((gallery.match(/scale\(1\.1875\)/g) ?? []).length, 13)
-  assert.equal((gallery.match(/scale\(0\.5\)/g) ?? []).length, 13)
+  assert.equal((gallery.match(/scale\(0\.375\)/g) ?? []).length, 13)
   assert.match(gallery, /stroke-width="2\.2"/)
   assert.match(gallery, /#c65176/)
   assert.doesNotMatch(gallery, /clip-path|clipPath|<image/)
 })
+
