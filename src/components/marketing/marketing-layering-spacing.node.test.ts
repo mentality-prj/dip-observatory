@@ -76,7 +76,7 @@ test('Deep Burgundy identity is isolated to marketing and uses exact brand token
 
 test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny library symbols', () => {
   assert.match(customIcons, /viewBox="0 0 64 64"/)
-  assert.match(customIcons, /strokeWidth=\{2\}/)
+  assert.match(customIcons, /strokeWidth=\{2\.2\}/)
   assert.match(evidenceMarkup, /'audit', 'comparison', 'replay'/)
   assert.doesNotMatch(evidenceMarkup, /lucide-react/)
   for (const name of [
@@ -107,9 +107,13 @@ test('branded decision network is not replaced by a generic square grid', () => 
   assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
 })
 
-test('resource allocation glyph uses balanced connectors with no criss-cross arrow', () => {
-  assert.match(techIcons, /M23 32h8V19h11M31 32v13h11/)
-  assert.match(hero, /url\('\/qdip-network\.svg'\)/)
+test('allocation keeps equal destinations and aligned distribution junctions', () => {
+  const allocation = techIcons.slice(techIcons.indexOf('  allocation: ('), techIcons.indexOf('  workflow: ('))
+  assert.match(allocation, /<ellipse cx="14" cy="18" rx="8" ry="4"/)
+  assert.equal((allocation.match(/<rect /g) ?? []).length, 3)
+  assert.match(allocation, /M22 33h9M31 15v36/)
+  assert.match(allocation, /M47 15h6M47 33h6M47 51h6/)
+  assert.match(allocation, /<circle cx="31" cy="33" r="2\.6" fill=\{accent\}/)
 })
 
 test('playground workflow and controls use theme-aware text colors', () => {
@@ -121,63 +125,64 @@ test('playground workflow and controls use theme-aware text colors', () => {
 const marketingAuth = readFileSync('src/components/auth/qdip-auth-control.tsx', 'utf8')
 const marketingHeader = readFileSync('src/components/marketing/marketing-header.tsx', 'utf8')
 
-test('marketing identity access is icon-only and screen-reader-labelled, without changing product login', () => {
+test('marketing identity access uses a compact vector SVG without changing product sign-in', () => {
   assert.match(marketingHeader, /<QdipAuthControl locale=\{locale\} returnTo=\{returnTo\} iconOnly \/>/)
   assert.match(marketingAuth, /iconOnly = false/)
-  assert.match(marketingAuth, /<QdipAccessIcon direction="in" \/>/)
-  assert.match(marketingAuth, /<QdipAccessIcon direction="out" \/>/)
+  assert.match(marketingAuth, /auth-smile-lock\.svg/)
   assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
 
-test('inspection loupes and approval badge overlap the source art but hide strokes beneath them', () => {
-  for (const [maskId, lens] of [
-    ['qdip-audit-loupe-cutout', '<circle cx="44" cy="42" r="10.5" />'],
-    ['qdip-evidence-loupe-cutout', '<circle cx="44" cy="43" r="11.3" />'],
-    ['qdip-approval-badge-cutout', '<circle cx="44" cy="42" r="11.7" />'],
-  ]) {
-    assert.ok(techIcons.includes(`<clipPath id="${maskId}"`), `Missing cutout for ${maskId}`)
-    assert.ok(techIcons.includes(`clipPath="url(#${maskId})"`), `Source art is not masked for ${maskId}`)
-    assert.ok(techIcons.includes(lens), `Overlapping lens/badge missing for ${maskId}`)
+test('audit and approval reuse A4 geometry; badges overlap the host shape', () => {
+  const audit = techIcons.slice(techIcons.indexOf('  audit: ('), techIcons.indexOf('  comparison: ('))
+  const approval = techIcons.slice(techIcons.indexOf("  'human-approval': ("), techIcons.indexOf('  simulation: ('))
+  const evidence = techIcons.slice(techIcons.indexOf('  evidence: ('), techIcons.indexOf('  policy: ('))
+  for (const document of [audit, approval]) {
+    assert.match(document, /<rect x="9" y="7" width="32" height="46" rx="3\.5"/)
+    assert.match(document, /<circle cx="39" cy="43"/)
   }
-  assert.match(techIcons, /<rect x="8" y="11" width="37" height="43" rx="3" \/>/)
-  assert.match(techIcons, /<ellipse cx="25" cy="13" rx="17" ry="5" \/>/)
-  assert.match(techIcons, /<rect x="8" y="9" width="38" height="45" rx="3" \/>/)
-  assert.match(techIcons, /clipRule="evenodd"/)
-  assert.doesNotMatch(techIcons, /<mask id=/)
+  assert.match(audit, /<circle cx="39" cy="43" r="9" fill=\{surface\}/)
+  assert.match(approval, /<circle cx="39" cy="43" r="10" fill=\{surface\} stroke=\{accent\}/)
+  assert.match(evidence, /<circle cx="40" cy="44" r="10" fill=\{surface\} stroke=\{accent\}/)
+  assert.doesNotMatch(techIcons, /clipPath|clipRule|<mask/)
 })
 
-test('comparison scales are mirrored and pivotal circles sit on exact beam junctions', () => {
-  assert.match(techIcons, /transform="translate\(64 0\) scale\(-1 1\)"/)
-  assert.match(techIcons, /<circle cx="32" cy="10" r="3" \/>/)
-  assert.match(techIcons, /<circle cx="32" cy="20" r="2" \/>/)
-  assert.match(techIcons, /M13 20h17M34 20h17M32 13v5M13 20h17M34 20h17M32 13v5M32 22v29/)
-  const pan = 'M13 20 6 38M13 20l7 18'
-  assert.equal(techIcons.split(pan).length - 1, 2, 'Both pans must use the same artwork')
+test('comparison uses symmetric frames with consistent baselines and one semantic difference', () => {
+  const comparison = techIcons.slice(techIcons.indexOf('  comparison: ('), techIcons.indexOf('  replay: ('))
+  assert.match(comparison, /<rect x="7" y="12" width="22" height="40"/)
+  assert.match(comparison, /<rect x="35" y="12" width="22" height="40"/)
+  assert.match(comparison, /M12 20h12M40 20h12/)
+  assert.match(comparison, /M40 43h12" stroke=\{accent\}/)
+  assert.doesNotMatch(comparison, /<circle/)
 })
 
-test('simulation shows two unambiguous scenarios instead of crossed sketch strokes', () => {
-  assert.match(techIcons, /M7 19h50M32 19v36/)
-  assert.match(techIcons, /<circle cx="19" cy="27" r="2\.5" \/>/)
-  assert.match(techIcons, /<circle cx="45" cy="27" r="2\.5" \/>/)
-  assert.match(techIcons, /M12 45 18 38 24 41 28 34M36 45 42 41 48 33 54 37/)
-  assert.doesNotMatch(techIcons, /M13 29 6-6 6 6M13 44l6-6/)
+test('simulation origin marker and all 3 branches intersect at x26 y32', () => {
+  const simulation = techIcons.slice(techIcons.indexOf('  simulation: ('), techIcons.indexOf('  allocation: ('))
+  assert.equal((simulation.match(/<rect /g) ?? []).length, 2)
+  assert.match(simulation, /M10 32h16M26 32C35 32 35 18 45 18M26 32C35 32 35 46 45 46/)
+  assert.match(simulation, /<circle cx="26" cy="32" r="3" fill=\{accent\}/)
+  assert.match(simulation, /<rect x="45" y="11" width="12" height="14"/)
+  assert.match(simulation, /<rect x="45" y="39" width="12" height="14"/)
 })
 
-test('all 13 icon contracts remain self-contained and preserve badge cutouts', () => {
-  const iconEntries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
-  assert.equal(iconEntries.length, 13)
-  assert.equal((techIcons.match(/<clipPath id=/g) ?? []).length, 3)
-  assert.doesNotMatch(techIcons, /comparisonPan/)
+test('13 engineering glyphs share scale, surface color, and optical stroke hierarchy', () => {
+  const entries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
+  assert.equal(entries.length, 13)
+  assert.match(techIcons, /viewBox="0 0 64 64"/)
+  assert.match(techIcons, /strokeWidth=\{2\.2\}/)
+  assert.match(techIcons, /strokeWidth=\{1\.35\}/)
+  assert.match(techIcons, /const accent = 'var\(--qdip-signal, #c65176\)'/)
+  assert.match(techIcons, /const surface = 'var\(--qdip-surface, #20232a\)'/)
+  assert.match(techIcons, /fill=\{surface\}/)
+  assert.doesNotMatch(techIcons, /clipPath|clipRule|<image/)
 })
 
-test('marketing login icon follows the 64x64 engineering icon system', () => {
-  assert.match(marketingAuth, /viewBox="0 0 64 64"/)
-  assert.match(marketingAuth, /strokeWidth=\{2\}/)
-  assert.match(marketingAuth, /strokeLinecap="round"/)
-  assert.match(marketingAuth, /strokeLinejoin="round"/)
-  assert.match(marketingAuth, /M29 9h18l7 7v32l-7 7H29/)
-  assert.match(marketingAuth, /M9 32h32m-8-8 8 8-8 8/)
-  assert.match(marketingAuth, /translate\(64 0\) scale\(-1 1\)/)
-  assert.doesNotMatch(marketingAuth, /<circle cx="11" cy="16" r="7" \/>/)
+test('gallery displays all 13 components at 76px and 24px with real vector geometry', () => {
+  const gallery = readFileSync('public/marketing-icon-gallery.svg', 'utf8')
+  assert.equal((gallery.match(/<g data-icon="/g) ?? []).length, 13)
+  assert.equal((gallery.match(/scale\(1\.1875\)/g) ?? []).length, 13)
+  assert.equal((gallery.match(/scale\(0\.375\)/g) ?? []).length, 13)
+  assert.match(gallery, /stroke-width="2\.2"/)
+  assert.match(gallery, /#c65176/)
+  assert.doesNotMatch(gallery, /clip-path|clipPath|<image/)
 })
