@@ -182,7 +182,6 @@ test.describe('current marketing routing', () => {
     await expect(simulation.locator('path[stroke="#c65176"]')).toHaveCount(1)
   })
 
-
   test('allocation displays an actual detailed source feeding three destinations', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/en')
@@ -194,7 +193,6 @@ test.describe('current marketing routing', () => {
     await expect(allocation.locator('circle')).toHaveCount(1)
     expect(await allocation.locator('path').count()).toBeGreaterThanOrEqual(4)
   })
-
 
   test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
