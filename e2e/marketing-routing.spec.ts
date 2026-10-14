@@ -98,7 +98,7 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('all 13 icons stay within a safe optical grid at 76px and 32px', async ({ page, request }) => {
+  test('all 13 icons stay within a safe optical grid at 76px and 24px', async ({ page, request }) => {
     const response = await request.get('http://qdip.localhost:3000/marketing-icon-gallery.svg')
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toContain('image/svg+xml')
@@ -109,7 +109,7 @@ test.describe('current marketing routing', () => {
 
     for (const symbol of await symbols.all()) {
       await expect(symbol.locator('clipPath, mask')).toHaveCount(0)
-      for (const scale of ['1.1875', '0.5']) {
+      for (const scale of ['1.1875', '0.375']) {
         const glyph = symbol.locator(`g[transform*="scale(${scale})"]`)
         await expect(glyph).toHaveCount(1)
         const bounds = await glyph.evaluate((node) => {
@@ -180,17 +180,31 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('comparison, simulation, and workflow keep aligned, equally sized markers', async ({ page }) => {
+  test('A4 proportions, concentric replay and integrated verification badges are geometrically consistent', async ({
+    page,
+  }) => {
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
-    const comparison = page.locator('[data-icon="comparison"] g[transform*="scale(1.1875)"]')
-    await expect(comparison.locator(':scope > rect')).toHaveCount(2)
-    await expect(comparison.locator('circle[r="2.5"]')).toHaveCount(2)
+
+    for (const key of ['audit', 'human-approval']) {
+      const glyph = page.locator(`[data-icon="${key}"] g[transform*="scale(1.1875)"]`)
+      await expect(glyph.locator('rect[x="9"][y="7"][width="32"][height="46"]')).toHaveCount(1)
+      await expect(glyph.locator('circle[cx="39"][cy="43"]')).toHaveCount(1)
+    }
+    const evidence = page.locator('[data-icon="evidence"] g[transform*="scale(1.1875)"]')
+    await expect(evidence.locator('circle[cx="40"][cy="44"][r="10"]')).toHaveCount(1)
+
+    const replay = page.locator('[data-icon="replay"] g[transform*="scale(1.1875)"]')
+    await expect(replay.locator('circle[cx="32"][cy="32"][r="13"]')).toHaveCount(1)
+    await expect(replay.locator('path[d*="A24 24"]')).toHaveCount(1)
+
     const simulation = page.locator('[data-icon="simulation"] g[transform*="scale(1.1875)"]')
-    await expect(simulation.locator(':scope > rect')).toHaveCount(2)
-    await expect(simulation.locator('circle[r="3"]')).toHaveCount(2)
+    await expect(simulation.locator('circle[cx="26"][cy="32"][r="3"]')).toHaveCount(1)
+    await expect(simulation.locator('path[d*="M26 32C35 32 35 18 45 18"]')).toHaveCount(1)
+
+    const constraints = page.locator('[data-icon="constraints"] g[transform*="scale(1.1875)"]')
+    await expect(constraints.locator('circle[r="3.5"]')).toHaveCount(3)
     const workflow = page.locator('[data-icon="workflow"] g[transform*="scale(1.1875)"]')
-    await expect(workflow.locator(':scope > rect')).toHaveCount(3)
-    await expect(workflow.locator('circle[r="3.5"]')).toHaveCount(3)
+    await expect(workflow.locator('circle[r="3"]')).toHaveCount(3)
   })
 
   test('allocation displays an actual detailed source feeding three destinations', async ({ page }) => {
