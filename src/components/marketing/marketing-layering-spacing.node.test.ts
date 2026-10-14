@@ -186,4 +186,3 @@ test('gallery displays all 13 components at 76px and 24px with real vector geome
   assert.match(gallery, /#c65176/)
   assert.doesNotMatch(gallery, /clip-path|clipPath|<image/)
 })
-
