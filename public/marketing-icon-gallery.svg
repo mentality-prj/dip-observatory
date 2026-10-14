@@ -7,7 +7,7 @@
     <rect width="327" height="211" rx="16" stroke="#414750" fill="#20232a"/>
     <path d="M16 1h44" stroke="#c65176" stroke-width="3"/>
     <g transform="translate(15 35) scale(1.1875)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="8" width="29" height="48" rx="4" />
+        <rect x="8" y="8" width="27" height="48" rx="4" />
         <path d="M17 22v22M23 16h8" stroke-width="1.35" opacity="0.72" />
         <circle cx="17" cy="22" r="2.4" fill="#c65176" stroke="none" />
         <circle cx="17" cy="33" r="2.4" fill="#20232a" />
@@ -18,7 +18,7 @@
         <path d="m43.5 44 2.5 2.5 4.5-5" stroke="#c65176" stroke-width="1.6" />
     </g>
     <g transform="translate(276 17) scale(0.5)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="8" width="29" height="48" rx="4" />
+        <rect x="8" y="8" width="27" height="48" rx="4" />
         <path d="M17 22v22M23 16h8" stroke-width="1.35" opacity="0.72" />
         <circle cx="17" cy="22" r="2.4" fill="#c65176" stroke="none" />
         <circle cx="17" cy="33" r="2.4" fill="#20232a" />
@@ -207,14 +207,14 @@
     <rect width="327" height="211" rx="16" stroke="#414750" fill="#20232a"/>
     <path d="M16 1h44" stroke="#c65176" stroke-width="3"/>
     <g transform="translate(15 35) scale(1.1875)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="7" width="29" height="49" rx="4" />
+        <rect x="8" y="7" width="25" height="49" rx="4" />
         <path d="M15 17h15M15 25h15M15 33h10M15 41h15" stroke-width="1.4" />
         <path d="M15 48h10" stroke-width="1.4" opacity="0.64" />
         <circle cx="47" cy="44" r="10" fill="#20232a" stroke="#c65176" />
         <path d="m42 44 3.5 3.5 6.5-7" stroke="#c65176" stroke-width="1.8" />
     </g>
     <g transform="translate(276 17) scale(0.5)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="8" y="7" width="29" height="49" rx="4" />
+        <rect x="8" y="7" width="25" height="49" rx="4" />
         <path d="M15 17h15M15 25h15M15 33h10M15 41h15" stroke-width="1.4" />
         <path d="M15 48h10" stroke-width="1.4" opacity="0.64" />
         <circle cx="47" cy="44" r="10" fill="#20232a" stroke="#c65176" />
@@ -231,7 +231,7 @@
     <rect width="327" height="211" rx="16" stroke="#414750" fill="#20232a"/>
     <path d="M16 1h44" stroke="#c65176" stroke-width="3"/>
     <g transform="translate(15 35) scale(1.1875)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 32h13M26 32C34 32 34 16 43 16M26 32C34 32 34 48 43 48" />
+        <path d="M13 32h13M26 32C34 32 34 16 42 16M26 32C34 32 34 48 42 48" />
         <circle cx="10" cy="32" r="3" fill="#20232a" />
         <circle cx="26" cy="32" r="3" fill="#c65176" stroke="none" />
         <rect x="45" y="10" width="12" height="13" rx="2" />
@@ -239,7 +239,7 @@
         <path d="M49 15h4M49 19h4M49 46h4M49 50h4" stroke-width="1.35" opacity="0.72" />
     </g>
     <g transform="translate(276 17) scale(0.5)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 32h13M26 32C34 32 34 16 43 16M26 32C34 32 34 48 43 48" />
+        <path d="M13 32h13M26 32C34 32 34 16 42 16M26 32C34 32 34 48 42 48" />
         <circle cx="10" cy="32" r="3" fill="#20232a" />
         <circle cx="26" cy="32" r="3" fill="#c65176" stroke="none" />
         <rect x="45" y="10" width="12" height="13" rx="2" />
@@ -259,7 +259,7 @@
     <g transform="translate(15 35) scale(1.1875)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <ellipse cx="14" cy="18" rx="8" ry="4" />
         <path d="M6 18v26c0 5 16 5 16 0V18M6 31c0 5 16 5 16 0" />
-        <path d="M22 33h9M31 15v36M31 15h10M31 33h10M31 51h10" />
+        <path d="M22 33h9M31 15v36M31 15h9M31 33h9M31 51h9" />
         <rect x="43" y="8" width="13" height="14" rx="3" />
         <rect x="43" y="26" width="13" height="14" rx="3" />
         <rect x="43" y="44" width="13" height="14" rx="3" />
@@ -269,7 +269,7 @@
     <g transform="translate(276 17) scale(0.5)" fill="none" stroke="#c8ced8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <ellipse cx="14" cy="18" rx="8" ry="4" />
         <path d="M6 18v26c0 5 16 5 16 0V18M6 31c0 5 16 5 16 0" />
-        <path d="M22 33h9M31 15v36M31 15h10M31 33h10M31 51h10" />
+        <path d="M22 33h9M31 15v36M31 15h9M31 33h9M31 51h9" />
         <rect x="43" y="8" width="13" height="14" rx="3" />
         <rect x="43" y="26" width="13" height="14" rx="3" />
         <rect x="43" y="44" width="13" height="14" rx="3" />
