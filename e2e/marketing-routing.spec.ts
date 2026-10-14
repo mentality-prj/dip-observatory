@@ -236,7 +236,13 @@ test.describe('current marketing routing', () => {
       }
     }
     await page.goto('http://qdip.localhost:3000/en/core')
-    await expect(page.locator('svg[viewBox="0 0 64 64"]')).toHaveCount(6)
+    // Count the six semantic Core feature icons, not unrelated header/footer SVGs.
+    const coreFeatureIcons = page.locator('#main-content section[class*="section"] article svg[class*="techFeatureIcon"]')
+    await expect(coreFeatureIcons).toHaveCount(6)
+    for (const icon of await coreFeatureIcons.all()) {
+      await expect(icon).toHaveAttribute('viewBox', '0 0 64 64')
+      await expect(icon).toHaveAttribute('aria-hidden', 'true')
+    }
   })
 
   test('light theme preserves the restrained burgundy CTA and theme choice on mobile', async ({ page }) => {
