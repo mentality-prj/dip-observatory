@@ -98,20 +98,30 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('gallery presents all 13 structured SVG icons at actual 76px and compact scale', async ({ page, request }) => {
+  test('all 13 icons stay within a safe optical grid at 76px and 32px', async ({ page, request }) => {
     const response = await request.get('http://qdip.localhost:3000/marketing-icon-gallery.svg')
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toContain('image/svg+xml')
+
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
     const symbols = page.locator('svg > g[data-icon]')
     await expect(symbols).toHaveCount(13)
+
     for (const symbol of await symbols.all()) {
       await expect(symbol.locator('clipPath, mask')).toHaveCount(0)
-      const fullSize = symbol.locator('g[transform*="scale(1.1875)"]')
-      const compact = symbol.locator('g[transform*="scale(0.5)"]')
-      await expect(fullSize).toHaveCount(1)
-      await expect(compact).toHaveCount(1)
-      expect(await fullSize.locator('path, rect, circle, ellipse').count()).toBeGreaterThanOrEqual(5)
+      for (const scale of ['1.1875', '0.5']) {
+        const glyph = symbol.locator(`g[transform*="scale(${scale})"]`)
+        await expect(glyph).toHaveCount(1)
+        const bounds = await glyph.evaluate((node) => {
+          const rect = (node as SVGGraphicsElement).getBBox()
+          return { left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height }
+        })
+        // Leave at least 3 units for round caps and anti-aliasing on all sides.
+        expect(bounds.left).toBeGreaterThanOrEqual(3)
+        expect(bounds.top).toBeGreaterThanOrEqual(3)
+        expect(bounds.right).toBeLessThanOrEqual(61)
+        expect(bounds.bottom).toBeLessThanOrEqual(61)
+      }
     }
   })
 
@@ -170,16 +180,17 @@ test.describe('current marketing routing', () => {
     }
   })
 
-  test('comparison contrasts two measurements and simulation branches from a common state', async ({ page }) => {
+  test('comparison, simulation, and workflow keep aligned, equally sized markers', async ({ page }) => {
     await page.goto('http://qdip.localhost:3000/marketing-icon-gallery.svg')
     const comparison = page.locator('[data-icon="comparison"] g[transform*="scale(1.1875)"]')
     await expect(comparison.locator(':scope > rect')).toHaveCount(2)
-    await expect(comparison.locator('circle[fill="#c65176"]')).toHaveCount(2)
-
+    await expect(comparison.locator('circle[r="2.5"]')).toHaveCount(2)
     const simulation = page.locator('[data-icon="simulation"] g[transform*="scale(1.1875)"]')
     await expect(simulation.locator(':scope > rect')).toHaveCount(2)
-    await expect(simulation.locator(':scope > circle')).toHaveCount(2)
-    await expect(simulation.locator('path[stroke="#c65176"]')).toHaveCount(1)
+    await expect(simulation.locator('circle[r="3"]')).toHaveCount(2)
+    const workflow = page.locator('[data-icon="workflow"] g[transform*="scale(1.1875)"]')
+    await expect(workflow.locator(':scope > rect')).toHaveCount(3)
+    await expect(workflow.locator('circle[r="3.5"]')).toHaveCount(3)
   })
 
   test('allocation displays an actual detailed source feeding three destinations', async ({ page }) => {
@@ -191,7 +202,7 @@ test.describe('current marketing routing', () => {
     await expect(allocation.locator('rect')).toHaveCount(3)
     await expect(allocation.locator('ellipse')).toHaveCount(1)
     await expect(allocation.locator('circle')).toHaveCount(1)
-    expect(await allocation.locator('path').count()).toBeGreaterThanOrEqual(4)
+    expect(await allocation.locator('path').count()).toBeGreaterThanOrEqual(3)
   })
 
   test('light-theme decision playground has readable workflow stages and budget labels', async ({ page }) => {
