@@ -21,11 +21,12 @@ export type TechIconName =
  * encodes part of the decision concept; none is a repeated decorative frame.
  */
 const accent = 'var(--qdip-signal, #c65176)'
+const surface = 'var(--qdip-surface, #20232a)'
 
 const artwork: Record<TechIconName, ReactNode> = {
   audit: (
     <g>
-      <rect x="8" y="8" width="29" height="48" rx="4" />
+      <rect x="8" y="8" width="27" height="48" rx="4" />
       <path d="M17 22v22M23 16h8" strokeWidth={1.35} opacity={0.72} />
       <circle cx="17" cy="22" r="2.4" fill={accent} stroke="none" />
       <circle cx="17" cy="33" r="2.4" fill={surface} />
@@ -104,7 +105,7 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   'human-approval': (
     <g>
-      <rect x="8" y="7" width="29" height="49" rx="4" />
+      <rect x="8" y="7" width="25" height="49" rx="4" />
       <path d="M15 17h15M15 25h15M15 33h10M15 41h15" strokeWidth={1.4} />
       <path d="M15 48h10" strokeWidth={1.4} opacity={0.64} />
       <circle cx="47" cy="44" r="10" fill={surface} stroke={accent} />
@@ -113,7 +114,7 @@ const artwork: Record<TechIconName, ReactNode> = {
   ),
   simulation: (
     <g>
-      <path d="M13 32h13M26 32C34 32 34 16 43 16M26 32C34 32 34 48 43 48" />
+      <path d="M13 32h13M26 32C34 32 34 16 42 16M26 32C34 32 34 48 42 48" />
       <circle cx="10" cy="32" r="3" fill={surface} />
       <circle cx="26" cy="32" r="3" fill={accent} stroke="none" />
       <rect x="45" y="10" width="12" height="13" rx="2" />
@@ -125,7 +126,7 @@ const artwork: Record<TechIconName, ReactNode> = {
     <g>
       <ellipse cx="14" cy="18" rx="8" ry="4" />
       <path d="M6 18v26c0 5 16 5 16 0V18M6 31c0 5 16 5 16 0" />
-      <path d="M22 33h9M31 15v36M31 15h10M31 33h10M31 51h10" />
+      <path d="M22 33h9M31 15v36M31 15h9M31 33h9M31 51h9" />
       <rect x="43" y="8" width="13" height="14" rx="3" />
       <rect x="43" y="26" width="13" height="14" rx="3" />
       <rect x="43" y="44" width="13" height="14" rx="3" />
