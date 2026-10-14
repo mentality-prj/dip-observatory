@@ -107,11 +107,12 @@ test('branded decision network is not replaced by a generic square grid', () => 
   assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
 })
 
-test('resource allocation shows a pool feeding three weighted destinations', () => {
+test('allocation distributes a central resource into equal-sized destination frames', () => {
   const allocation = techIcons.slice(techIcons.indexOf('  allocation: ('), techIcons.indexOf('  workflow: ('))
-  assert.match(allocation, /<ellipse cx="13" cy="19"/)
+  assert.match(allocation, /<ellipse cx="14" cy="18" rx="8" ry="4"/)
   assert.equal((allocation.match(/<rect /g) ?? []).length, 3)
-  assert.match(allocation, /M21 32h9M30 16v34/)
+  assert.match(allocation, /M22 33h9M31 15v36/)
+  assert.match(allocation, /M47 15h5M47 33h5M47 51h5/)
   assert.match(allocation, /fill=\{accent\}/)
 })
 
@@ -131,40 +132,47 @@ test('marketing identity access uses a compact vector SVG without changing produ
   assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
-test('audit, human approval and evidence retain distinct layered semantics', () => {
+
+test('audit, approval and evidence badges are geometrically separated from main records', () => {
   const audit = techIcons.slice(techIcons.indexOf('  audit: ('), techIcons.indexOf('  comparison: ('))
   const approval = techIcons.slice(techIcons.indexOf("  'human-approval': ("), techIcons.indexOf('  simulation: ('))
   const evidence = techIcons.slice(techIcons.indexOf('  evidence: ('), techIcons.indexOf('  policy: ('))
-  assert.match(audit, /<circle cx="45" cy="43" r="10"/)
-  assert.match(audit, /<circle cx="17" cy="35"/)
-  assert.match(approval, /<circle cx="46" cy="46" r="10"/)
-  assert.match(evidence, /<ellipse cx="27" cy="15"/)
+  assert.match(audit, /<rect x="8" y="8" width="27"/)
+  assert.match(audit, /<circle cx="47" cy="44" r="9"/)
+  assert.match(approval, /<rect x="8" y="7" width="25"/)
+  assert.match(approval, /<circle cx="47" cy="44" r="10"/)
+  assert.match(evidence, /<ellipse cx="22" cy="15" rx="14"/)
+  assert.match(evidence, /<circle cx="48" cy="44" r="9"/)
   assert.doesNotMatch(techIcons, /clipPath|clipRule|<mask/)
 })
 
-test('comparison uses aligned baseline cards with distinct measured outcomes', () => {
+test('comparison aligns frames and gives identically sized status markers', () => {
   const comparison = techIcons.slice(techIcons.indexOf('  comparison: ('), techIcons.indexOf('  replay: ('))
-  assert.equal((comparison.match(/<rect /g) ?? []).length, 2)
-  assert.match(comparison, /M12 43V29l5 5 5-9v18M41 43V32l5 5 6-13v19/)
+  assert.match(comparison, /<rect x="8" y="13" width="19"/)
+  assert.match(comparison, /<rect x="37" y="13" width="19"/)
+  assert.match(comparison, /<circle cx="18" cy="35" r="2\.5"/)
+  assert.match(comparison, /<circle cx="47" cy="35" r="2\.5"/)
   assert.equal((comparison.match(/fill=\{accent\}/g) ?? []).length, 2)
 })
 
-test('simulation shows a common origin branching into two modeled future states', () => {
+test('simulation paths terminate before equally sized future-state blocks', () => {
   const simulation = techIcons.slice(techIcons.indexOf('  simulation: ('), techIcons.indexOf('  allocation: ('))
   assert.equal((simulation.match(/<rect /g) ?? []).length, 2)
-  assert.match(simulation, /M25 32c6 0 6-16 15-16h10/)
-  assert.match(simulation, /M25 32c6 0 6 16 15 16h10/)
-  assert.match(simulation, /strokeWidth=\{1\.35\}/)
+  assert.match(simulation, /M26 32C34 32 34 16 42 16/)
+  assert.match(simulation, /M26 32C34 32 34 48 42 48/)
+  assert.match(simulation, /<circle cx="10" cy="32" r="3"/)
+  assert.match(simulation, /<circle cx="26" cy="32" r="3"/)
 })
 
-test('13 large-format decision glyphs carry primary and secondary optical detail', () => {
+test('13 engineering glyphs share scale, surface color, and optical stroke hierarchy', () => {
   const entries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
   assert.equal(entries.length, 13)
   assert.match(techIcons, /viewBox="0 0 64 64"/)
   assert.match(techIcons, /strokeWidth=\{2\.2\}/)
   assert.match(techIcons, /strokeWidth=\{1\.35\}/)
   assert.match(techIcons, /const accent = 'var\(--qdip-signal, #c65176\)'/)
-  assert.match(techIcons, /fill="var\(--qdip-surface, #20232a\)"/)
+  assert.match(techIcons, /const surface = 'var\(--qdip-surface, #20232a\)'/)
+  assert.match(techIcons, /fill=\{surface\}/)
   assert.doesNotMatch(techIcons, /clipPath|clipRule|<image/)
 })
 
