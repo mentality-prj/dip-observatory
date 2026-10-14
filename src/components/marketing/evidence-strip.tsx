@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { GitCompareArrows, History, SearchCheck } from 'lucide-react'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { marketingA11yI18n } from '@/lib/product-i18n'
 import type { MarketingLocale } from './qdip-copy'
 import styles from './qdip-site.module.css'
+import { MarketingTechIcon, type TechIconName } from './marketing-tech-icon'
 
 const copy = {
   en: {
@@ -68,7 +68,7 @@ const copy = {
   },
 } as const
 
-const icons = [SearchCheck, GitCompareArrows, History] as const
+const icons: readonly TechIconName[] = ['audit', 'comparison', 'replay']
 
 export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
   const base = marketingLocaleHref(locale)
@@ -84,10 +84,11 @@ export function EvidenceStrip({ locale }: { locale: MarketingLocale }) {
     <section className={styles.evidenceStrip} id="why" aria-label={a11y.evidence}>
       <div className={styles.evidenceGrid}>
         {c.items.map(([title, body, action], index) => {
-          const Icon = icons[index] ?? SearchCheck
           return (
             <article key={title}>
-              <Icon size={17} aria-hidden />
+              <div className={styles.evidenceIcon}>
+                <MarketingTechIcon name={icons[index] ?? 'audit'} />
+              </div>
               <div>
                 <strong>{title}</strong>
                 <span>{body}</span>

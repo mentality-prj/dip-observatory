@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { LogIn, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -31,7 +33,16 @@ function loginHref(returnTo: string) {
 }
 
 /** Only public session flags are read; roles and tokens are never stored in browser state. */
-export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; returnTo: string }) {
+export function QdipAuthControl({
+  locale,
+  returnTo,
+  iconOnly = false,
+}: {
+  locale: PlatformLocale
+  returnTo: string
+  /** Marketing header can render an accessible icon-only control without changing product headers. */
+  iconOnly?: boolean
+}) {
   const copy = labels[locale]
   const [session, setSession] = useState<AuthSession | null>(null)
   const [signingOut, setSigningOut] = useState(false)
@@ -74,16 +85,16 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
   if (session?.authenticated) {
     return (
       <div className={styles.authControl} data-qdip-auth="signed-in">
-        <span className={styles.signedIn}>{copy.signedIn}</span>
+        {!iconOnly && <span className={styles.signedIn}>{copy.signedIn}</span>}
         <button
-          className={styles.action}
+          className={iconOnly ? `${styles.action} ${styles.iconOnly}` : styles.action}
           type="button"
           disabled={signingOut}
           onClick={() => void signOut()}
           aria-label={copy.signOut}
         >
-          <LogOut size={16} aria-hidden />
-          <span>{copy.signOut}</span>
+          {iconOnly ? <LogOut size={24} aria-hidden /> : <LogOut size={16} aria-hidden />}
+          {!iconOnly && <span>{copy.signOut}</span>}
         </button>
         {error ? (
           <span className={styles.error} role="alert">
@@ -96,14 +107,18 @@ export function QdipAuthControl({ locale, returnTo }: { locale: PlatformLocale; 
 
   return (
     <a
-      className={styles.action}
+      className={iconOnly ? `${styles.action} ${styles.iconOnly}` : styles.action}
       data-qdip-auth="signed-out"
       href={loginHref(returnTo)}
       aria-label={copy.signIn}
       title={copy.signIn}
     >
-      <LogIn size={16} aria-hidden />
-      <span>{copy.signIn}</span>
+      {iconOnly ? (
+        <Image src="/auth-smile-lock.svg" width={24} height={24} alt="" aria-hidden unoptimized />
+      ) : (
+        <LogIn size={16} aria-hidden />
+      )}
+      {!iconOnly && <span>{copy.signIn}</span>}
     </a>
   )
 }

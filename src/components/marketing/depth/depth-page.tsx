@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { DesignSystemProvider } from '@/design-system'
 import { marketingLocaleHref, observatoryHref } from '@/lib/platform-urls'
 import { MarketingHeader } from '../marketing-header'
@@ -8,6 +8,23 @@ import type { MarketingLocale } from '../qdip-copy'
 import { getDepthContent, type DepthPageKey } from './content'
 import { depthUiI18n } from './i18n'
 import styles from './depth-page.module.css'
+import motionStyles from '../marketing-cta-motion.module.css'
+import atmosphereStyles from '../marketing-atmosphere.module.css'
+import burgundyStyles from '../marketing-deep-burgundy.module.css'
+import { MarketingTechIcon, type TechIconName } from '../marketing-tech-icon'
+
+const technologyIcons: readonly TechIconName[] = [
+  'modeling',
+  'constraints',
+  'optimization',
+  'explainability',
+  'human-approval',
+  'simulation',
+  'allocation',
+  'workflow',
+  'evidence',
+  'policy',
+]
 
 const localeHref = (l: MarketingLocale, path: string) => `${marketingLocaleHref(l)}/${path}`
 
@@ -15,7 +32,11 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
   const c = getDepthContent(locale, page)
   const labels = depthUiI18n[locale]
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={styles.page}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="dark"
+      className={`${styles.page} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} currentPath={page} />
         <section className={styles.hero}>
@@ -23,10 +44,10 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
           <h1>{c.hero[1]}</h1>
           <p>{c.hero[2]}</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primary} href={localeHref(locale, 'use-cases#demos')}>
+            <Link className={`${styles.primary} ${motionStyles.primary}`} href={localeHref(locale, 'use-cases#demos')}>
               {labels.explore} <ArrowRight size={15} />
             </Link>
-            <Link className={styles.secondary} href={localeHref(locale, 'decision')}>
+            <Link className={`${styles.secondary} ${motionStyles.secondary}`} href={localeHref(locale, 'decision')}>
               {labels.describe}
             </Link>
           </div>
@@ -35,6 +56,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
           <section id="demos" className={styles.cases}>
             {c.cases.map((x) => (
               <article key={x.title} className={styles.case}>
+                <MarketingTechIcon name="allocation" className={styles.techFeatureIcon} />
                 <div className={styles.pattern}>{x.pattern}</div>
                 <h2>{x.title}</h2>
                 <h3>{x.question}</h3>
@@ -70,9 +92,12 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
                 <p>{s.body}</p>
                 {s.items && (
                   <div className={styles.items}>
-                    {s.items.map((i) => (
+                    {s.items.map((i, iconIndex) => (
                       <article key={i.title}>
-                        <CheckCircle2 size={17} />
+                        <MarketingTechIcon
+                          name={technologyIcons[(index + iconIndex) % technologyIcons.length] ?? 'modeling'}
+                          className={styles.techFeatureIcon}
+                        />
                         <div>
                           <h3>{i.title}</h3>
                           <p>{i.body}</p>
@@ -92,7 +117,7 @@ export function DepthPage({ locale, page }: { locale: MarketingLocale; page: Dep
             <p>{c.cta[1]}</p>
           </div>
           <Link
-            className={styles.primary}
+            className={`${styles.primary} ${motionStyles.primary}`}
             href={page === 'core' ? localeHref(locale, 'core/research') : localeHref(locale, 'decision')}
           >
             {c.cta[2]} <ArrowRight size={15} />

@@ -43,6 +43,40 @@ describe('QDIP shared authentication control', () => {
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
   })
 
+  it('uses the vector smile-lock instead of an arrow for icon-only marketing sign-in', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ configured: true, authenticated: false, studio: false, operator: false }),
+      }))
+    )
+    render(<QdipAuthControl locale="uk" returnTo="https://qdip.ai/uk" iconOnly />)
+
+    const login = screen.getByRole('link', { name: 'Увійти' })
+    expect(login.querySelector('img')?.getAttribute('src')).toBe('/auth-smile-lock.svg')
+    expect(login.querySelector('img')?.getAttribute('width')).toBe('24')
+    expect(login.querySelector('img')?.getAttribute('height')).toBe('24')
+    expect(login.querySelector('img')?.getAttribute('alt')).toBe('')
+    expect(login.querySelector('svg')).toBeNull()
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+  })
+
+  it('uses a distinct sign-out symbol for authenticated marketing users', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ configured: true, authenticated: true, studio: false, operator: false }),
+      }))
+    )
+    render(<QdipAuthControl locale="en" returnTo="https://qdip.ai/en" iconOnly />)
+
+    const signOut = await screen.findByRole('button', { name: 'Sign out' })
+    expect(signOut.querySelector('img')).toBeNull()
+    expect(signOut.querySelector('svg')).not.toBeNull()
+  })
+
   it('keeps the session if sign-out fails and offers an error message', async () => {
     vi.stubGlobal(
       'fetch',

@@ -5,13 +5,16 @@ import { marketingCopy, type MarketingLocale } from './qdip-copy'
 import { MarketingHeader } from './marketing-header'
 import { MarketingFooter } from './marketing-footer'
 import { MarketingTrackedLink } from './marketing-analytics'
-import { SignatureDecisionVisual } from './signature-decision-visual'
+import { DecisionWorkbenchPreview } from './decision-workbench-preview'
 import { DecisionPatterns } from './decision-patterns'
 import { DecisionPlayground } from './decision-playground'
 import { EvidenceStrip } from './evidence-strip'
 import { conversionBridgeCopy } from './conversion-copy'
 import styles from './qdip-site.module.css'
+import motionStyles from './marketing-cta-motion.module.css'
 import shellStyles from './marketing-shell.module.css'
+import atmosphereStyles from './marketing-atmosphere.module.css'
+import burgundyStyles from './marketing-deep-burgundy.module.css'
 
 const path = (locale: MarketingLocale, slug: string) => `${marketingLocaleHref(locale)}/${slug}`
 
@@ -19,22 +22,25 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
   const c = marketingCopy[locale]
   const decisionHref = path(locale, 'decision')
   return (
-    <DesignSystemProvider theme="burgundy" mode="light" className={`${styles.site} ${shellStyles.stickyRoot}`}>
+    <DesignSystemProvider
+      theme="burgundy"
+      mode="dark"
+      className={`${styles.site} ${shellStyles.stickyRoot} ${atmosphereStyles.atmosphere} ${burgundyStyles.theme}`}
+    >
       <main id="main-content" lang={locale}>
         <MarketingHeader locale={locale} />
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${styles.engineeredHero}`}>
           <div className={styles.heroCopy}>
-            <div className={styles.eyebrow}>{c.hero[0]}</div>
+            <div className={styles.eyebrow}>{c.hero[0]} / QDIP</div>
             <h1>{c.hero[1]}</h1>
             <p className={styles.lead}>{c.hero[2]}</p>
             <p>{c.hero[3]}</p>
-            <strong className={styles.human}>{c.hero[4]}</strong>
             <div className={styles.heroActions}>
               <MarketingTrackedLink
                 event="marketing_hero_observatory_click"
                 locale={locale}
                 placement="hero"
-                className={styles.primaryButtonLarge}
+                className={`${styles.primaryButtonLarge} ${motionStyles.primary}`}
                 href={observatoryHref('', locale)}
               >
                 <Play size={16} />
@@ -44,14 +50,21 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
                 event="marketing_decision_intake_click"
                 locale={locale}
                 placement="hero"
-                className={styles.secondaryButton}
+                className={`${styles.secondaryButton} ${motionStyles.secondary}`}
                 href={decisionHref}
               >
                 {c.conversion[2]} <ArrowRight size={15} />
               </MarketingTrackedLink>
             </div>
+            <div className={styles.heroProtocol} aria-label={c.hero[4]}>
+              <span>01 / {c.diagram[3]}</span>
+              <span>02 / {c.diagram[6]}</span>
+              <span>03 / {c.diagram[7]}</span>
+            </div>
           </div>
-          <SignatureDecisionVisual locale={locale} labels={c.diagram} />
+          <div className={styles.consoleFrame}>
+            <DecisionWorkbenchPreview locale={locale} />
+          </div>
         </section>
         <EvidenceStrip locale={locale} />
         <section className={`${styles.section} ${styles.editorialSection}`}>
@@ -94,7 +107,7 @@ export function QdipSite({ locale = 'en' }: { locale?: MarketingLocale }) {
             event="marketing_decision_intake_click"
             locale={locale}
             placement="final_cta"
-            className={styles.primaryButtonLarge}
+            className={`${styles.primaryButtonLarge} ${motionStyles.primary}`}
             href={decisionHref}
           >
             {c.conversion[2]} <ArrowRight size={16} />

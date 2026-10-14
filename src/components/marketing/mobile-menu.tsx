@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { sharedI18n } from '@/lib/product-i18n'
 import type { MarketingLocale } from './qdip-copy'
+import { MarketingThemeToggle } from './marketing-theme-toggle'
 import styles from './qdip-site.module.css'
 
 type Item = { href: string; label: string; icon?: ReactNode }
@@ -42,6 +43,9 @@ export function MobileMenu({ items, locale }: { items: readonly Item[]; locale: 
               <span>{item.label}</span>
             </Link>
           ))}
+          <div className={styles.mobileThemeRow}>
+            <MarketingThemeToggle locale={locale} />
+          </div>
         </nav>
       )}
     </div>
