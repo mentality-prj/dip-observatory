@@ -43,6 +43,24 @@ describe('QDIP shared authentication control', () => {
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
   })
 
+  it('uses the four-dot code lock for icon-only marketing sign-in', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ configured: true, authenticated: false, studio: false, operator: false }),
+      }))
+    )
+    render(<QdipAuthControl locale="uk" returnTo="https://qdip.ai/uk" iconOnly />)
+
+    const login = screen.getByRole('link', { name: 'Увійти' })
+    expect(login.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 64 64')
+    expect(login.querySelectorAll('circle')).toHaveLength(4)
+    expect(login.querySelector('path[d^="M22 26"]')).not.toBeNull()
+    expect(login.querySelector('path[d="M9 32h32m-8-8 8 8-8 8"]')).toBeNull()
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+  })
+
   it('keeps the session if sign-out fails and offers an error message', async () => {
     vi.stubGlobal(
       'fetch',
