@@ -76,7 +76,7 @@ test('Deep Burgundy identity is isolated to marketing and uses exact brand token
 
 test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny library symbols', () => {
   assert.match(customIcons, /viewBox="0 0 64 64"/)
-  assert.match(customIcons, /strokeWidth=\{2\}/)
+  assert.match(customIcons, /strokeWidth=\{2\.2\}/)
   assert.match(evidenceMarkup, /'audit', 'comparison', 'replay'/)
   assert.doesNotMatch(evidenceMarkup, /lucide-react/)
   for (const name of [
@@ -107,13 +107,14 @@ test('branded decision network is not replaced by a generic square grid', () => 
   assert.doesNotMatch(hero, /background-size:\s*48px 48px/)
 })
 
-test('resource allocation glyph uses one source and three clearly separated destinations', () => {
+test('resource allocation shows a pool feeding three weighted destinations', () => {
   const allocation = techIcons.slice(techIcons.indexOf('  allocation: ('), techIcons.indexOf('  workflow: ('))
-  assert.equal((allocation.match(/<rect /g) ?? []).length, 4)
-  assert.match(allocation, /M26 33h10M36 16v34/)
+  assert.match(allocation, /<ellipse cx="13" cy="19"/)
+  assert.equal((allocation.match(/<rect /g) ?? []).length, 3)
+  assert.match(allocation, /M21 32h9M30 16v34/)
   assert.match(allocation, /fill=\{accent\}/)
-  assert.doesNotMatch(allocation, /strokeWidth=\{1\.4\}/)
 })
+
 test('playground workflow and controls use theme-aware text colors', () => {
   assert.match(playgroundStyle, /\.stage :global\(\.ds-workflow-step strong\)\s*\{\s*color:\s*var\(--qdip-text\);/)
   assert.match(playgroundStyle, /\.controls button\s*\{[\s\S]*?color:\s*var\(--qdip-text\);/)
@@ -130,40 +131,49 @@ test('marketing identity access uses a compact vector SVG without changing produ
   assert.match(marketingAuth, /aria-label=\{copy\.signIn\}/)
   assert.match(marketingAuth, /!iconOnly && <span>\{copy\.signIn\}<\/span>/)
 })
-test('audit, approval and evidence glyphs use simple semantic forms without SVG masking', () => {
+test('audit, human approval and evidence retain distinct layered semantics', () => {
   const audit = techIcons.slice(techIcons.indexOf('  audit: ('), techIcons.indexOf('  comparison: ('))
   const approval = techIcons.slice(techIcons.indexOf("  'human-approval': ("), techIcons.indexOf('  simulation: ('))
   const evidence = techIcons.slice(techIcons.indexOf('  evidence: ('), techIcons.indexOf('  policy: ('))
-  assert.match(audit, /<circle cx="42" cy="42" r="11"/)
-  assert.match(approval, /<circle cx="44" cy="44" r="11"/)
-  assert.match(evidence, /M40 8v10h9/)
+  assert.match(audit, /<circle cx="45" cy="43" r="10"/)
+  assert.match(audit, /<circle cx="17" cy="35"/)
+  assert.match(approval, /<circle cx="46" cy="46" r="10"/)
+  assert.match(evidence, /<ellipse cx="27" cy="15"/)
   assert.doesNotMatch(techIcons, /clipPath|clipRule|<mask/)
 })
-test('comparison pairs two aligned cards with a restrained outcome accent', () => {
+
+test('comparison uses aligned baseline cards with distinct measured outcomes', () => {
   const comparison = techIcons.slice(techIcons.indexOf('  comparison: ('), techIcons.indexOf('  replay: ('))
   assert.equal((comparison.match(/<rect /g) ?? []).length, 2)
-  assert.match(comparison, /M14 43v-9h8v9M42 43V29h8v14/)
-  assert.doesNotMatch(comparison, /scale\(-1 1\)/)
+  assert.match(comparison, /M12 43V29l5 5 5-9v18M41 43V32l5 5 6-13v19/)
+  assert.equal((comparison.match(/fill=\{accent\}/g) ?? []).length, 2)
 })
-test('simulation represents two branching scenario paths from one shared origin', () => {
+
+test('simulation shows a common origin branching into two modeled future states', () => {
   const simulation = techIcons.slice(techIcons.indexOf('  simulation: ('), techIcons.indexOf('  allocation: ('))
-  assert.equal((simulation.match(/<circle /g) ?? []).length, 3)
-  assert.match(simulation, /M17 32h10c5 0 7-12 13-12h7/)
-  assert.match(simulation, /M17 32h10c5 0 7 12 13 12h7/)
-  assert.doesNotMatch(simulation, /<rect /)
+  assert.equal((simulation.match(/<rect /g) ?? []).length, 2)
+  assert.match(simulation, /M25 32c6 0 6-16 15-16h10/)
+  assert.match(simulation, /M25 32c6 0 6 16 15 16h10/)
+  assert.match(simulation, /strokeWidth=\{1\.35\}/)
 })
-test('all 13 decision glyphs have a common optical grid and a single accent', () => {
+
+test('13 large-format decision glyphs carry primary and secondary optical detail', () => {
   const entries = techIcons.match(/^  (?:'[a-z-]+'|[a-z-]+): \($/gm) ?? []
   assert.equal(entries.length, 13)
   assert.match(techIcons, /viewBox="0 0 64 64"/)
-  assert.match(techIcons, /strokeWidth=\{2\.5\}/)
+  assert.match(techIcons, /strokeWidth=\{2\.2\}/)
+  assert.match(techIcons, /strokeWidth=\{1\.35\}/)
   assert.match(techIcons, /const accent = 'var\(--qdip-signal, #c65176\)'/)
-  assert.doesNotMatch(techIcons, /strokeWidth=\{1\.4\}|clipPath|clipRule/)
+  assert.match(techIcons, /fill="var\(--qdip-surface, #20232a\)"/)
+  assert.doesNotMatch(techIcons, /clipPath|clipRule|<image/)
 })
-test('marketing SVG icon gallery reflects all 13 redrawn symbols', () => {
+
+test('gallery shows each of 13 SVGs at 76px and at compact 32px scale', () => {
   const gallery = readFileSync('public/marketing-icon-gallery.svg', 'utf8')
   assert.equal((gallery.match(/<g data-icon="/g) ?? []).length, 13)
-  assert.match(gallery, /stroke-width="2\.5"/)
+  assert.equal((gallery.match(/scale\(1\.1875\)/g) ?? []).length, 13)
+  assert.equal((gallery.match(/scale\(0\.5\)/g) ?? []).length, 13)
+  assert.match(gallery, /stroke-width="2\.2"/)
   assert.match(gallery, /#c65176/)
   assert.doesNotMatch(gallery, /clip-path|clipPath|<image/)
 })
