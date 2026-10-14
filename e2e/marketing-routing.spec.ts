@@ -237,7 +237,9 @@ test.describe('current marketing routing', () => {
     }
     await page.goto('http://qdip.localhost:3000/en/core')
     // Count the six semantic Core feature icons, not unrelated header/footer SVGs.
-    const coreFeatureIcons = page.locator('#main-content section[class*="section"] article svg[class*="techFeatureIcon"]')
+    const coreFeatureIcons = page.locator(
+      '#main-content section[class*="section"] article svg[class*="techFeatureIcon"]'
+    )
     await expect(coreFeatureIcons).toHaveCount(6)
     for (const icon of await coreFeatureIcons.all()) {
       await expect(icon).toHaveAttribute('viewBox', '0 0 64 64')
