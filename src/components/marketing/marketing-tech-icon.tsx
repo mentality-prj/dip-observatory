@@ -81,9 +81,9 @@ const artwork: Record<TechIconName, ReactNode> = {
       <path d="M17 8H9v48h8M47 8h8v48h-8" />
       <path d="M19 21h24M19 34h24M19 47h24" strokeWidth={1.35} opacity={0.75} />
       <path d="M18 17v8M44 30v8M30 43v8" opacity={0.75} />
-      <circle cx="25" cy="21" r="4" fill="#20232a" />
-      <circle cx="38" cy="34" r="4" stroke={accent} fill="#20232a" />
-      <circle cx="27" cy="47" r="4" fill="#20232a" />
+      <circle cx="25" cy="21" r="4" fill="var(--qdip-surface, #20232a)" />
+      <circle cx="38" cy="34" r="4" stroke={accent} fill="var(--qdip-surface, #20232a)" />
+      <circle cx="27" cy="47" r="4" fill="var(--qdip-surface, #20232a)" />
       <path d="m42 13 5 5-5 5" stroke={accent} strokeWidth={1.4} />
       <path d="M20 10h25" strokeWidth={1.3} opacity={0.65} />
     </g>
@@ -121,7 +121,7 @@ const artwork: Record<TechIconName, ReactNode> = {
       <path d="M40 7v10h9M19 25h22M19 32h15" strokeWidth={1.35} opacity={0.75} />
       <path d="m19 43 6-7 4 5 6-8" stroke={accent} />
       <path d="M19 48h15" strokeWidth={1.4} opacity={0.7} />
-      <circle cx="46" cy="46" r="10" fill="#20232a" stroke={accent} />
+      <circle cx="46" cy="46" r="10" fill="var(--qdip-surface, #20232a)" stroke={accent} />
       <path d="m41 46 4 4 7-9" stroke={accent} strokeWidth={1.9} />
       <path d="M19 14h13" strokeWidth={1.35} opacity={0.6} />
     </g>
@@ -170,7 +170,7 @@ const artwork: Record<TechIconName, ReactNode> = {
       <ellipse cx="27" cy="15" rx="17" ry="6" />
       <path d="M10 15v30c0 8 34 8 34 0V15M10 26c0 8 34 8 34 0M10 36c0 8 34 8 34 0" />
       <path d="M16 32h5M16 42h5" strokeWidth={1.3} opacity={0.62} />
-      <circle cx="46" cy="44" r="11" fill="#20232a" />
+      <circle cx="46" cy="44" r="11" fill="var(--qdip-surface, #20232a)" />
       <path d="M40 44h12M46 38v12" strokeWidth={1.25} opacity={0.65} />
       <path d="m41 45 4 4 7-9" stroke={accent} strokeWidth={1.8} />
       <path d="m17 15 8 3 10-3" strokeWidth={1.3} opacity={0.65} />
