@@ -39,9 +39,18 @@ function QdipAccessIcon({ direction }: { direction: 'in' | 'out' }) {
       focusable="false"
     >
       <g transform={direction === 'out' ? 'translate(64 0) scale(-1 1)' : undefined}>
-        <path d="M29 9h18l7 7v32l-7 7H29" />
-        <path d="M36 17h10M36 47h10" strokeWidth={1.4} />
-        <path d="M9 32h32m-8-8 8 8-8 8" />
+        {/* shackle */}
+        <path d="M22 26v-6c0-7 4-11 10-11s10 4 10 11v6" />
+        {/* lock body */}
+        <rect x="16" y="26" width="32" height="26" rx="4" />
+        {/* keypad dots */}
+        <circle cx="26" cy="36" r="1.8" />
+        <circle cx="32" cy="36" r="1.8" />
+        <circle cx="26" cy="42" r="1.8" />
+        <circle cx="32" cy="42" r="1.8" />
+        {/* confirm / access mark */}
+        <path d="M39 43h7" />
+        <path d="m43 39 4 4-4 4" />
       </g>
     </svg>
   )
