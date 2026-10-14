@@ -78,7 +78,8 @@
   padding: 0;
   border-radius: 10px;
 }
-.iconOnly svg {
+.iconOnly svg,
+.iconOnly img {
   display: block;
   flex-shrink: 0;
 }
