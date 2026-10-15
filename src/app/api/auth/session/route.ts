@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { oidcConfigured, sessionFromRequest, canOperateRr, canAccessStudio } from '@/lib/qdip-oidc'
+import { oidcConfigured, sessionFromRequest, canOperateRr, canAccessStudio, canAdministerObservatory } from '@/lib/qdip-oidc'
 import { isSurfaceHost } from '@/routing-config'
 
 export const runtime = 'nodejs'
@@ -21,6 +21,7 @@ export function GET(request: NextRequest) {
       configured: oidcConfigured(),
       authenticated: Boolean(session),
       studio: Boolean(session && canAccessStudio(session)),
+      observatoryAdmin: Boolean(session && canAdministerObservatory(session)),
       operator: Boolean(session && canOperateRr(session)),
     },
     { headers: { 'Cache-Control': 'no-store' } }
