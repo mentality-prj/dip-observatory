@@ -8,6 +8,7 @@ import {
   exchangeCode,
   discoverOidc,
   canAccessStudio,
+  canAdministerObservatory,
   canOperateRr,
   isAllowedSession,
   oidcConfigured,
@@ -131,6 +132,21 @@ describe('QDIP Zitadel OIDC PKCE', () => {
       config
     )
     expect(both.roles).toEqual(['studio', 'rr_operator'])
+
+    const admin = await verifyIdToken(
+      token({ [roleClaim]: { observatory_admin: { [organizationId]: 'qdip.example.test' } } }),
+      flow,
+      config
+    )
+    expect(canAdministerObservatory(admin)).toBe(true)
+    expect(canAccessStudio(admin)).toBe(false)
+    expect(canOperateRr(admin)).toBe(false)
+    const adminOtherOrg = await verifyIdToken(
+      token({ [roleClaim]: { observatory_admin: { '111111111': 'foreign.example.test' } } }),
+      flow,
+      config
+    )
+    expect(canAdministerObservatory(adminOtherOrg)).toBe(false)
 
     const otherOrg = await verifyIdToken(
       token({
