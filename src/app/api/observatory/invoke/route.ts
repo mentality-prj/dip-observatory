@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSurfaceHost } from '@/routing-config'
-import { sessionFromRequest } from '@/lib/qdip-oidc'
+import { authorizedObservatoryUser } from '@/lib/observatory-access'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 const ID = /^[a-zA-Z0-9_.-]{1,128}$/
@@ -10,8 +10,7 @@ export async function POST(request: NextRequest) {
   const host = request.headers.get('host')
   if (!host || /[,\\s@/?#]/.test(host) || !isSurfaceHost('observatory', host))
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  const session = sessionFromRequest(request)
-  if (!session) return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
+  if (!authorizedObservatoryUser(request)) return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
   const origin = request.headers.get('origin')
   const forwarded = request.headers.get('x-forwarded-proto')
   if (forwarded && forwarded !== 'https' && forwarded !== 'http') return NextResponse.json({ error: 'Invalid transport' }, { status: 403 })
@@ -25,8 +24,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Input too large' }, { status: 413 })
 
   // No global admin key fallback. A dedicated execute-only key may be enabled
-  // only for a single-organization Observatory deployment; multi-org routing
-  // must be implemented before general availability.
+  // only for explicitly authorized Zitadel subjects on one Gateway tenant.
+  // User-specific Core identities are required before broader rollout.
   const key = process.env.QDIP_OBSERVATORY_EXECUTE_API_KEY?.trim()
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL)
   if (!key || !base) return NextResponse.json({ error: 'Execution not configured' }, { status: 503 })
