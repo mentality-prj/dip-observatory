@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic'
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ name: string }> }) {
   const { error, session } = adminRequest(request, true)
-  if (error || !session) return error
+  if (error) return error
+  if (!session) return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
   const { name } = await context.params
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(name))
     return NextResponse.json({ error: 'Invalid plugin id' }, { status: 400 })
@@ -23,7 +24,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  if (typeof update.published !== 'boolean' || !Number.isSafeInteger(update.expected_revision)
+  if (typeof update.published !== 'boolean' || typeof update.expected_revision !== 'number' || !Number.isSafeInteger(update.expected_revision)
       || (update.expected_revision as number) < 0)
     return NextResponse.json({ error: 'Invalid publication request' }, { status: 422 })
 
