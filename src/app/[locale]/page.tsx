@@ -4,6 +4,8 @@ import { visiblePluginUseCaseIds } from '@/lib/observatory-plugin-catalog'
 import { ObservatoryHome, PrototypeShell } from '@/features/observatory'
 import { isSupportedLocale, type Locale } from '@/lib/observatory-i18n'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LocalizedHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   if (!isSupportedLocale(locale)) notFound()
