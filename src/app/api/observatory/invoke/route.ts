@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac } from 'node:crypto'
 import { isSurfaceHost } from '@/routing-config'
 import { observatoryCapabilityGrants } from '@/lib/observatory-access'
+import { sessionFromRequest } from '@/lib/qdip-oidc'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 const ID = /^[a-zA-Z0-9_.-]{1,128}$/
@@ -49,10 +51,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
   if (!grants.has(payload.capability_id)) return NextResponse.json({ error: 'Capability not allowed' }, { status: 403 })
+  const subject = sessionFromRequest(request)?.sub
+  const actorSecret = process.env.QDIP_OBSERVATORY_ACTOR_SECRET ?? ''
+  if (!subject || actorSecret.length < 32)
+    return NextResponse.json({ error: 'User audit attribution is not configured' }, { status: 503 })
+  const stamp = String(Math.floor(Date.now() / 1000))
+  const assertion = createHmac('sha256', actorSecret)
+    .update(subject + '\\n' + stamp + '\\n' + payload.capability_id)
+    .digest('hex')
   try {
     const upstream = await fetch(base + '/api/v1/remote-plugins/' + encodeURIComponent(payload.capability_id) + '/invoke', {
       method: 'POST',
-      headers: { 'x-api-key': key, 'Content-Type': 'application/json' },
+      headers: {
+        'x-api-key': key,
+        'Content-Type': 'application/json',
+        'x-qdip-observatory-sub': subject,
+        'x-qdip-observatory-ts': stamp,
+        'x-qdip-observatory-signature': assertion,
+      },
       body: JSON.stringify({ input: payload.input, capability_version: payload.capability_version, timeout_seconds: 10 }),
       cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000),
     })
