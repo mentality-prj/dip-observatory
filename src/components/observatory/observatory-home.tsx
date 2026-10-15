@@ -1,5 +1,7 @@
 import { ArrowRight, BrainCircuit, FileUp, Network, Route, Scale } from 'lucide-react'
 
+import { PluginWorkspace } from './plugin-workspace'
+
 import { DecisionWorkflow } from '@/components/product/decision-workflow'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { createTranslator } from '@/i18n/runtime'
@@ -47,6 +49,7 @@ export function ObservatoryHome({ locale }: { locale: Locale }) {
         </header>
 
         <DecisionWorkflow locale={locale} tone="dark" />
+        <PluginWorkspace locale={locale} />
 
         <section className="mt-12" aria-labelledby="observatory-inspect">
           <div className="max-w-3xl">
