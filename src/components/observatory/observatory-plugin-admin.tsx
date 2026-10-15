@@ -67,7 +67,24 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
     }
   }, [t.noAccess])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(String(response.status))
+        return response.json() as Promise<{ plugins?: Row[] }>
+      })
+      .then((data) => {
+        if (controller.signal.aborted) return
+        if (!Array.isArray(data.plugins)) throw new Error('Invalid response')
+        setRows(data.plugins)
+        setError('')
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(t.noAccess)
+      })
+    return () => controller.abort()
+  }, [t.noAccess])
 
   async function save(row: Row, published: boolean) {
     setPending(row.name)
