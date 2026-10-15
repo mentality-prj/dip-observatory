@@ -6,9 +6,12 @@ import { QdipAccessGate } from '@/components/auth/qdip-access-gate'
 import { createTranslator } from '@/i18n/runtime'
 import { isSupportedLocale, SUPPORTED_LOCALES } from '@/lib/observatory-i18n'
 import { pageAccess } from '@/lib/qdip-page-access'
+import { visiblePluginUseCaseIds } from '@/lib/observatory-plugin-catalog'
 import { observatoryHref } from '@/lib/platform-urls'
 import { ApplicationFrontend } from '@/use-cases/application-runtime'
 import { DIP_USE_CASES, findUseCaseByRoute, type UseCaseId } from '@/use-cases/registry'
+
+export const dynamic = 'force-dynamic'
 
 type UseCasePageParams = {
   locale: string
@@ -34,6 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<UseCasePage
 
   const application = resolveUseCase(routeSegment)
   if (!application) return {}
+  if (!(await visiblePluginUseCaseIds()).includes(application.id)) return { robots: { index: false, follow: false } }
 
   const messages = createTranslator(locale, `useCases.${application.id}`)
   const title = `${messages('title')} — QDIP Observatory`
@@ -68,6 +72,7 @@ export default async function UseCasePage({ params }: { params: Promise<UseCaseP
   if (!isSupportedLocale(locale)) notFound()
   const application = resolveUseCase(routeSegment)
   if (!application) notFound()
+  if (!(await visiblePluginUseCaseIds()).includes(application.id)) notFound()
 
   if (application.id === 'readiness-recovery') {
     const access = await pageAccess('rr_operator')
