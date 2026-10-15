@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSurfaceHost } from '@/routing-config'
-import { authorizedObservatoryUser } from '@/lib/observatory-access'
+import { observatoryCapabilityGrants } from '@/lib/observatory-access'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 const ID = /^[a-zA-Z0-9_.-]{1,128}$/
@@ -10,7 +10,8 @@ export async function POST(request: NextRequest) {
   const host = request.headers.get('host')
   if (!host || /[,\\s@/?#]/.test(host) || !isSurfaceHost('observatory', host))
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (!authorizedObservatoryUser(request)) return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
+  const grants = observatoryCapabilityGrants(request)
+  if (!grants) return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
   const origin = request.headers.get('origin')
   const forwarded = request.headers.get('x-forwarded-proto')
   if (forwarded && forwarded !== 'https' && forwarded !== 'http') return NextResponse.json({ error: 'Invalid transport' }, { status: 403 })
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
+  if (!grants.has(payload.capability_id)) return NextResponse.json({ error: 'Capability not allowed' }, { status: 403 })
   try {
     const upstream = await fetch(base + '/api/v1/remote-plugins/' + encodeURIComponent(payload.capability_id) + '/invoke', {
       method: 'POST',
