@@ -13,7 +13,10 @@ export async function POST(request: NextRequest) {
   const session = sessionFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
   const origin = request.headers.get('origin')
-  const proto = request.nextUrl.protocol === 'https:' ? 'https' : 'http'
+  const forwarded = request.headers.get('x-forwarded-proto')
+  if (forwarded && forwarded !== 'https' && forwarded !== 'http') return NextResponse.json({ error: 'Invalid transport' }, { status: 403 })
+  const proto = request.nextUrl.protocol === 'https:' || forwarded === 'https' ? 'https' : 'http'
+  if (proto !== 'https' && !host.endsWith('.localhost')) return NextResponse.json({ error: 'TLS required' }, { status: 403 })
   if (origin !== proto + '://' + host.toLowerCase())
     return NextResponse.json({ error: 'Same-origin request required' }, { status: 403 })
   if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json')
