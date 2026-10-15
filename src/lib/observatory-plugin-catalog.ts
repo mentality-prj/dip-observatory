@@ -50,9 +50,24 @@ export async function readCorePublications(): Promise<CorePluginPublication[]> {
   if (!response.ok) throw new Error('QDIP plugin publication API unavailable')
   if (Number(response.headers.get('content-length') ?? '0') > 250_000)
     throw new Error('Oversized plugin catalog')
-  const raw = await response.text()
-  if (raw.length > 250_000) throw new Error('Oversized plugin catalog')
-  const data: unknown = JSON.parse(raw)
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('Empty plugin catalog')
+  const chunks: Uint8Array[] = []
+  let size = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > 250_000) {
+      await reader.cancel()
+      throw new Error('Oversized plugin catalog')
+    }
+    chunks.push(value)
+  }
+  const bytes = new Uint8Array(size)
+  let index = 0
+  for (const chunk of chunks) { bytes.set(chunk, index); index += chunk.byteLength }
+  const data: unknown = JSON.parse(new TextDecoder().decode(bytes))
   if (!Array.isArray(data) || data.length > 1000) throw new Error('Invalid plugin catalog')
   return data as CorePluginPublication[]
 }
