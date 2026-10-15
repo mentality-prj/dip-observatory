@@ -25,10 +25,12 @@ const USE_CASE_ICONS: Record<string, ObservatoryApplicationIcon> = {
   'gtm-lab': 'sparkles',
 }
 
-export const observableApplications = (): ObservatoryApplication[] =>
+export const observableApplications = (visibleUseCaseIds?: readonly string[]): ObservatoryApplication[] =>
   [
     ...SYSTEM_APPLICATIONS,
-    ...observableUseCases().map((item) => ({
+    ...observableUseCases()
+      .filter((item) => visibleUseCaseIds === undefined || visibleUseCaseIds.includes(item.id))
+      .map((item) => ({
       id: item.id,
       route: item.route,
       kind: 'use-case' as const,
