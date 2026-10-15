@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSurfaceHost } from '@/routing-config'
-import { authorizedObservatoryUser } from '@/lib/observatory-access'
+import { observatoryCapabilityGrants } from '@/lib/observatory-access'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 export async function GET(request: NextRequest) {
   const host = request.headers.get('host')
   if (!host || /[,\\s@/?#]/.test(host) || !isSurfaceHost('observatory', host))
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (!authorizedObservatoryUser(request))
+  const grants = observatoryCapabilityGrants(request)
+  if (!grants)
     return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL)
   // Dedicated read-only Gateway service key: never fall back to admin/execute credentials.
@@ -29,7 +30,9 @@ export async function GET(request: NextRequest) {
     const body: unknown = await upstream.json()
     if (!body || typeof body !== 'object' || !('items' in body) || !Array.isArray(body.items) || body.items.length > 1000)
       return NextResponse.json({ error: 'Invalid catalog' }, { status: 502 })
-    return NextResponse.json({ items: body.items, count: body.items.length }, { headers: { 'Cache-Control': 'no-store' } })
+    const items = body.items.filter((item: unknown) => item && typeof item === 'object' &&
+      'capability_id' in item && typeof item.capability_id === 'string' && grants.has(item.capability_id))
+    return NextResponse.json({ items, count: items.length }, { headers: { 'Cache-Control': 'no-store' } })
   } catch {
     return NextResponse.json({ error: 'Catalog unavailable' }, { status: 502 })
   }
