@@ -13,12 +13,12 @@ const demoIcons = {
   'supply-network-optimization': Network,
 } as const
 
-export function ObservatoryHome({ locale }: { locale: Locale }) {
+export function ObservatoryHome({ locale, visibleIds }: { locale: Locale; visibleIds?: string[] }) {
   const t = createTranslator(locale, 'observatoryHome')
   const caseMessages = createTranslator(locale, 'useCases')
   const decisionPatterns = createTranslator(locale, 'decisionPatterns')
   const questions = t.raw<Array<[string, string]>>('questions')
-  const applications = observableApplications()
+  const applications = observableApplications(visibleIds)
   const challengeCopy = systemApplicationCopy(locale, 'decision-challenge')
   const intakeCopy = systemApplicationCopy(locale, 'decision-intake')
   return (
