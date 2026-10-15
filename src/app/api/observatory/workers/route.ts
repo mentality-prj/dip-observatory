@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSurfaceHost } from '@/routing-config'
-import { sessionFromRequest } from '@/lib/qdip-oidc'
+import { authorizedObservatoryUser } from '@/lib/observatory-access'
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 
 export async function GET(request: NextRequest) {
   const host = request.headers.get('host')
   if (!host || /[,\\s@/?#]/.test(host) || !isSurfaceHost('observatory', host))
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (!sessionFromRequest(request))
+  if (!authorizedObservatoryUser(request))
     return NextResponse.json({ error: 'Zitadel login required' }, { status: 401 })
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL)
-  // Dedicated read-only org key: never fall back to admin/execute credentials.
+  // Dedicated read-only Gateway service key: never fall back to admin/execute credentials.
   const key = process.env.QDIP_OBSERVATORY_READ_API_KEY?.trim()
   if (!base || !key) return NextResponse.json({ error: 'Catalog not configured' }, { status: 503 })
   const target = new URL(base)
