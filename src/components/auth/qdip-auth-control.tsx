@@ -132,7 +132,9 @@ export function QdipAuthControl({
         event.target instanceof Node &&
         !profileRef.current?.contains(event.target) &&
         !profilePanelRef.current?.contains(event.target)
-      ) setProfileOpen(false)
+      ) {
+        setProfileOpen(false)
+      }
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setProfileOpen(false)
@@ -204,40 +206,40 @@ export function QdipAuthControl({
                 aria-label={copy.account}
                 style={{ top: profilePlacement.top, maxHeight: profilePlacement.maxHeight }}
               >
-            <p className={styles.profileTitle}>{copy.account}</p>
-            <strong className={styles.profileName}>{display}</strong>
-            {identity?.email && identity.email !== display ? (
-              <span className={styles.profileEmail}>{identity.email}</span>
-            ) : null}
-            <span className={styles.profileId}>
-              {copy.accountId}: {identity?.id ?? '—'}
-            </span>
-            <p className={styles.profileTitle}>{copy.roles}</p>
-            <div className={styles.roleList}>
-              {roles.length ? (
-                roles.map((role) => (
-                  <span className={styles.roleChip} key={role}>
-                    {role}
+                <p className={styles.profileTitle}>{copy.account}</p>
+                <strong className={styles.profileName}>{display}</strong>
+                {identity?.email && identity.email !== display ? (
+                  <span className={styles.profileEmail}>{identity.email}</span>
+                ) : null}
+                <span className={styles.profileId}>
+                  {copy.accountId}: {identity?.id ?? '—'}
+                </span>
+                <p className={styles.profileTitle}>{copy.roles}</p>
+                <div className={styles.roleList}>
+                  {roles.length ? (
+                    roles.map((role) => (
+                      <span className={styles.roleChip} key={role}>
+                        {role}
+                      </span>
+                    ))
+                  ) : (
+                    <span className={styles.profileId}>—</span>
+                  )}
+                </div>
+                <button
+                  className={styles.profileSignOut}
+                  type="button"
+                  disabled={signingOut}
+                  onClick={() => void signOut()}
+                >
+                  <LogOut size={16} aria-hidden />
+                  {copy.signOut}
+                </button>
+                {error ? (
+                  <span className={styles.error} role="alert">
+                    {copy.signOutFailed}
                   </span>
-                ))
-              ) : (
-                <span className={styles.profileId}>—</span>
-              )}
-            </div>
-            <button
-              className={styles.profileSignOut}
-              type="button"
-              disabled={signingOut}
-              onClick={() => void signOut()}
-            >
-              <LogOut size={16} aria-hidden />
-              {copy.signOut}
-            </button>
-            {error ? (
-              <span className={styles.error} role="alert">
-                {copy.signOutFailed}
-              </span>
-            ) : null}
+                ) : null}
               </div>
             </div>,
             document.body
