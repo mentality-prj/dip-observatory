@@ -53,4 +53,4 @@ just mocked HTTP tests. Maintain the existing Vercel build-cost limit.
 5. Open **Plugins** in the Observatory navigation to browse the directory.
 
 Adding a new Python implementation or SDK-02 remote Worker is deliberately
-*not* a web metadata form. No new service, Gateway, SDK or marketplace is needed.
+_not_ a web metadata form. No new service, Gateway, SDK or marketplace is needed.
