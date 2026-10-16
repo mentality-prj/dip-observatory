@@ -63,9 +63,7 @@ export default async function PluginDirectoryPage({ params }: { params: Promise<
               className="block min-w-0 rounded-xl border border-white/15 bg-slate-900 p-5 hover:border-cyan-300/50"
             >
               <h3 className="break-words text-lg font-semibold text-white">{plugin.ui?.label || plugin.name}</h3>
-              {!plugin.enabled && (
-                <p role="status" className="mt-2 text-sm text-amber-300">{t.offline}</p>
-              )}
+              {!plugin.enabled && <p role="status" className="mt-2 text-sm text-amber-300">{t.offline}</p>}
               <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-slate-400">{plugin.description}</p>
               <p className="mt-4 text-sm font-semibold text-cyan-300">{t.details} →</p>
             </a>

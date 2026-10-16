@@ -50,9 +50,7 @@ export default async function PluginDetailsPage({ params }: { params: Promise<{ 
           ← {t.back}
         </a>
         <h1 className="mt-6 break-words text-3xl font-semibold">{plugin.ui?.label || plugin.name}</h1>
-        {!plugin.enabled && (
-          <p role="status" className="mt-3 text-sm font-semibold text-amber-300">{t.offline}</p>
-        )}
+        {!plugin.enabled && <p role="status" className="mt-3 text-sm font-semibold text-amber-300">{t.offline}</p>}
         <p className="mt-5 whitespace-pre-line break-words text-base leading-7 text-slate-300">{plugin.description}</p>
         <dl className="mt-8 grid gap-4 rounded-xl border border-white/15 bg-slate-900 p-5 sm:grid-cols-2">
           <div>

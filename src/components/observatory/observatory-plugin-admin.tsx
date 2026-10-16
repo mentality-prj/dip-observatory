@@ -346,6 +346,10 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
       <section className="mt-8 grid gap-4" aria-label={t.registered}>
         {sorted.map((row) => {
           const published = isPublished(row)
+          let badgeText: string = published ? t.published : t.unpublished
+          if (!row.enabled) {
+            badgeText = row.source === 'remote' ? t.offline : t.disabled
+          }
           const demo = DIP_USE_CASES.find(
             (item) => item.plugin.id === row.name && row.capabilities.includes(item.plugin.capability)
           )
@@ -361,15 +365,7 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                     </p>
                   )}
                 </div>
-                <Badge variant={published && row.enabled ? 'emerald' : 'neutral'}>
-                  {!row.enabled
-                    ? row.source === 'remote'
-                      ? t.offline
-                      : t.disabled
-                    : published
-                      ? t.published
-                      : t.unpublished}
-                </Badge>
+                <Badge variant={published && row.enabled ? 'emerald' : 'neutral'}>{badgeText}</Badge>
               </div>
               <p className="mt-4 break-words text-xs text-slate-400">
                 {t.version}: {row.version} · {demo ? t.demo : t.generic}

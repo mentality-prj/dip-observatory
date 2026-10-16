@@ -13,9 +13,13 @@ describe('Observatory delegates catalog reads through @qdip/client', () => {
     vi.stubEnv('DIP_API_BASE_URL', 'https://core.example.test')
     vi.stubEnv('DIP_ADMIN_API_KEY', '')
     vi.stubEnv('DIP_API_KEY', 'existing-platform-key')
-    const fetcher = vi.fn(async () => new Response('[]', {
-      status: 200, headers: { 'content-type': 'application/json' },
-    }))
+    const fetcher = vi.fn(
+      async () =>
+        new Response('[]', {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+    )
     vi.stubGlobal('fetch', fetcher)
     await expect(readCorePublications()).resolves.toEqual([])
     expect(fetcher).toHaveBeenCalledWith(
