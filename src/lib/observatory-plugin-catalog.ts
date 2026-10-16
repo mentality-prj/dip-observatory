@@ -1,21 +1,11 @@
 import 'server-only'
 
+import { QdipClient, type PluginCatalogEntry } from '@qdip/client'
+
 import { normalizeDipBaseUrl } from '@/lib/dip-url'
 import { DIP_USE_CASES } from '@/use-cases/registry'
 
-export type CorePluginPublication = {
-  name: string
-  version: string
-  description: string
-  enabled: boolean
-  capabilities: string[]
-  capability_versions: Record<string, string>
-  ui: { label?: string; category?: string }
-  published: boolean | null
-  revision: number
-  capability_id: string | null
-  published_version: string | null
-}
+export type CorePluginPublication = PluginCatalogEntry
 
 // These specific demos were already publicly listed before the admin controls.
 // New application routes are PRIVATE until explicitly published.
@@ -37,44 +27,18 @@ export function corePluginConnection(): { base: string; key: string } {
   return { base, key }
 }
 
-export async function corePluginRequest(path: string, init: RequestInit = {}): Promise<Response> {
+/** The Observatory backend is an SDK consumer, never a second registry client. */
+export function coreCatalogClient(): QdipClient {
   const { base, key } = corePluginConnection()
-  return fetch(base + '/api/v1/plugin-publications' + path, {
-    ...init,
-    headers: { 'x-api-key': key, 'Content-Type': 'application/json', ...init.headers },
-    redirect: 'error',
-    cache: 'no-store',
-    signal: AbortSignal.timeout(8_000),
+  return new QdipClient({
+    baseUrl: base,
+    adminApiKey: key,
+    allowInsecureLoopback: process.env.NODE_ENV === 'test',
   })
 }
 
 export async function readCorePublications(): Promise<CorePluginPublication[]> {
-  const response = await corePluginRequest('')
-  if (!response.ok) throw new Error('QDIP plugin publication API unavailable')
-  if (Number(response.headers.get('content-length') ?? '0') > 250_000) throw new Error('Oversized plugin catalog')
-  const reader = response.body?.getReader()
-  if (!reader) throw new Error('Empty plugin catalog')
-  const chunks: Uint8Array[] = []
-  let size = 0
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    size += value.byteLength
-    if (size > 250_000) {
-      await reader.cancel()
-      throw new Error('Oversized plugin catalog')
-    }
-    chunks.push(value)
-  }
-  const bytes = new Uint8Array(size)
-  let index = 0
-  for (const chunk of chunks) {
-    bytes.set(chunk, index)
-    index += chunk.byteLength
-  }
-  const data: unknown = JSON.parse(new TextDecoder().decode(bytes))
-  if (!Array.isArray(data) || data.length > 1000) throw new Error('Invalid plugin catalog')
-  return data as CorePluginPublication[]
+  return coreCatalogClient().catalog.list()
 }
 
 export function visibleUseCases(records: readonly CorePluginPublication[]): string[] {
