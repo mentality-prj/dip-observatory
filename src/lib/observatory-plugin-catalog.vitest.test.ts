@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
-import { visibleUseCases, type CorePluginPublication } from './observatory-plugin-catalog'
+import { publishedPluginEntries, visibleUseCases, type CorePluginPublication } from './observatory-plugin-catalog'
 
 const meta: CorePluginPublication = {
   name: 'readiness-recovery',
@@ -33,5 +33,30 @@ describe('public Observatory plugin projection', () => {
   })
   it('does not add arbitrary plugin IDs to the compiled Observatory route registry', () => {
     expect(visibleUseCases([{ ...meta, name: 'untrusted', published: true }])).not.toContain('untrusted')
+  })
+})
+
+describe('published plugin directory', () => {
+  const approved: CorePluginPublication = {
+    ...meta,
+    name: 'route-optimizer',
+    version: '2.0',
+    description: 'Delivery route optimization',
+    ui: { label: 'Route Optimizer', category: 'Operations' },
+    capabilities: ['routing.optimize'],
+    published: true,
+    capability_id: 'routing.optimize',
+    published_version: '2.0',
+  }
+  it('includes approved installed plugins without a compiled use-case route', () => {
+    expect(publishedPluginEntries([approved])).toEqual([approved])
+    expect(visibleUseCases([approved])).not.toContain('route-optimizer')
+  })
+  it('excludes disabled, unpublished and stale catalog entries', () => {
+    expect(publishedPluginEntries([{ ...approved, enabled: false }])).toEqual([])
+    expect(publishedPluginEntries([{ ...approved, published: false }])).toEqual([])
+    expect(publishedPluginEntries([{ ...approved, published_version: '1.0' }])).toEqual([])
+    expect(publishedPluginEntries([{ ...approved, capability_id: 'unknown' }])).toEqual([])
+    expect(publishedPluginEntries([{ ...approved, name: '../escape' }])).toEqual([])
   })
 })
