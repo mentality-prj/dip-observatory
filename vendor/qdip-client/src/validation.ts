@@ -128,6 +128,8 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
       (v.published_version !== null && typeof v.published_version !== 'string') ||
       !Array.isArray(v.capabilities) || v.capabilities.length > 256 ||
       typeof v.description !== 'string' || v.description.length > 2000) return fail();
+  if (v.plugin_id !== undefined && typeof v.plugin_id !== 'string') return fail();
+  if (v.source !== undefined && v.source !== 'embedded' && v.source !== 'remote') return fail();
   const versions = obj(v.capability_versions);
   if (ui.label != null && typeof ui.label !== 'string') return fail();
   if (ui.category != null && typeof ui.category !== 'string') return fail();
@@ -139,6 +141,8 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
   }
   return {
     name: str(v.name), version: str(v.version), description: v.description,
+    ...(v.plugin_id !== undefined ? { plugin_id: str(v.plugin_id) } : {}),
+    ...(v.source !== undefined ? { source: v.source as 'embedded' | 'remote' } : {}),
     enabled: v.enabled, capabilities, capability_versions,
     ui: { ...(typeof ui.label === 'string' ? { label: ui.label } : {}),
       ...(typeof ui.category === 'string' ? { category: ui.category } : {}) },
