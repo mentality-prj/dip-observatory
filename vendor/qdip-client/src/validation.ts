@@ -129,8 +129,8 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
       !Array.isArray(v.capabilities) || v.capabilities.length > 256 ||
       typeof v.description !== 'string' || v.description.length > 2000) return fail();
   const versions = obj(v.capability_versions);
-  if (typeof ui.label !== 'undefined' && typeof ui.label !== 'string') return fail();
-  if (typeof ui.category !== 'undefined' && typeof ui.category !== 'string') return fail();
+  if (ui.label != null && typeof ui.label !== 'string') return fail();
+  if (ui.category != null && typeof ui.category !== 'string') return fail();
   const capabilities = v.capabilities.map(str);
   const capability_versions: Record<string,string> = {};
   for (const [key, val] of Object.entries(versions)) {
@@ -140,8 +140,8 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
   return {
     name: str(v.name), version: str(v.version), description: v.description,
     enabled: v.enabled, capabilities, capability_versions,
-    ui: { ...(ui.label !== undefined ? { label: ui.label as string } : {}),
-      ...(ui.category !== undefined ? { category: ui.category as string } : {}) },
+    ui: { ...(typeof ui.label === 'string' ? { label: ui.label } : {}),
+      ...(typeof ui.category === 'string' ? { category: ui.category } : {}) },
     published: v.published, revision: v.revision as number,
     capability_id: v.capability_id, published_version: v.published_version
   };
