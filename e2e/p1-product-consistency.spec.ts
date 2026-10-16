@@ -94,10 +94,7 @@ test('P1 Observatory mobile navigation aligns with the content grid', async ({ p
   expect(response?.status()).toBeLessThan(400)
 
   const menuSummary = page.locator('.ds-product-mobile-navigation summary')
-  const mobileLocale = page
-    .locator('label')
-    .filter({ has: page.getByRole('combobox') })
-    .first()
+  const mobileLocale = page.getByRole('group', { name: 'Language' })
   const breadcrumbHome = page.locator('[aria-label="Breadcrumb"]').getByRole('link', { name: 'QDIP home' })
 
   await expect(menuSummary).toBeVisible()
