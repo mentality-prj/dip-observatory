@@ -117,9 +117,10 @@ test.describe('Observatory production routing contract', () => {
       })
       expect(response?.status()).toBeLessThan(400)
 
-      const localeSelect = page.getByRole('combobox').first()
-      await expect(localeSelect).toBeVisible()
-      await localeSelect.selectOption('uk')
+      const languages = page.getByRole('group', { name: 'Language' })
+      await expect(languages).toBeVisible()
+      await expect(languages.locator('a[aria-current="page"]')).toHaveText('EN')
+      await languages.locator('a[data-mobile-locale="uk"]').click()
       await expect(page).toHaveURL(new RegExp(`observatory\\.localhost:3000/uk${route.path}$`))
       await expect(page.locator('#main-content')).toBeVisible()
 
