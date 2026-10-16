@@ -19,6 +19,7 @@
     "all": "pnpm check && pnpm test:e2e"
   },
   "dependencies": {
+    "@qdip/client": "link:vendor/qdip-client",
     "@radix-ui/react-slot": "^1.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
