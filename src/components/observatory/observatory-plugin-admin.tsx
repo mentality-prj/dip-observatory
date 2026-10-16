@@ -26,13 +26,13 @@ const copy = {
   uk: {
     title: 'Керування плагінами',
     subtitle:
-      'Реєструйте встановлені плагіни в каталозі Observatory. Код, організації та API-ключі тут не налаштовуються.',
+      'Плагіни автоматично реєструються через QDIP SDK. Тут можна заповнити опис і керувати публікацією в каталозі.',
     refresh: 'Оновити список',
     loading: 'Завантаження реєстру…',
-    empty: 'У QDIP Core немає встановлених плагінів.',
-    formTitle: 'Реєстрація плагіна',
+    empty: 'Через QDIP SDK ще не зареєстровано плагінів.',
+    formTitle: 'Публікація плагіна',
     registered: 'Публікація в каталозі',
-    choose: 'Встановлений плагін',
+    choose: 'Зареєстрований через SDK плагін',
     select: 'Виберіть плагін…',
     name: 'Назва',
     description: 'Опис',
@@ -52,20 +52,20 @@ const copy = {
     busy: 'Збереження…',
     error: 'Не вдалося зберегти. Перевірте доступність Core та права адміністратора.',
     conflict: 'Запис змінився. Оновіть список і повторіть.',
-    hint: 'Форма створює запис каталогу для вже встановленого плагіна. Вона не завантажує код і не надає доступу до виконання.',
+    hint: 'Реєстрація відбувається автоматично через SDK незалежно від розташування Worker. Ця форма змінює лише дані каталогу та стан публікації.',
     demosTitle: 'Наявні спеціалізовані сторінки',
     demosHint: 'Ці демонстрації вже реалізовані у Web. Вони не є автоматично встановленими плагінами Core.',
   },
   en: {
     title: 'Manage plugins',
     subtitle:
-      'Register installed plugins in the Observatory catalog. No code, organizations, or API keys are managed here.',
+      'Plugins register automatically through the QDIP SDK. Edit catalog metadata and publication here.',
     refresh: 'Refresh list',
     loading: 'Loading registry…',
-    empty: 'No plugins are installed in QDIP Core.',
-    formTitle: 'Plugin registration',
+    empty: 'No plugins have registered through the QDIP SDK yet.',
+    formTitle: 'Publish plugin',
     registered: 'Catalog publication',
-    choose: 'Installed plugin',
+    choose: 'SDK-registered plugin',
     select: 'Select a plugin…',
     name: 'Display name',
     description: 'Description',
@@ -85,20 +85,20 @@ const copy = {
     busy: 'Saving…',
     error: 'Unable to save. Check Core connectivity and administrative permissions.',
     conflict: 'The registry changed. Refresh and retry.',
-    hint: 'This form publishes metadata for an already installed plugin; it does not upload executable code or grant execution rights.',
+    hint: 'The SDK registers the plugin regardless of worker location. This form only manages catalog metadata and publication.',
     demosTitle: 'Existing application workspaces',
     demosHint: 'These demos are implemented in Web and are not automatically installed Core plugins.',
   },
   pl: {
     title: 'Zarządzanie wtyczkami',
     subtitle:
-      'Rejestruj zainstalowane wtyczki w katalogu Observatory. Bez zarządzania kodem, organizacjami i kluczami API.',
+      'Wtyczki rejestrują się automatycznie przez QDIP SDK. Tutaj edytujesz opis i publikację w katalogu.',
     refresh: 'Odśwież listę',
     loading: 'Ładowanie rejestru…',
-    empty: 'Brak zainstalowanych wtyczek w QDIP Core.',
-    formTitle: 'Rejestracja wtyczki',
+    empty: 'Nie zarejestrowano jeszcze wtyczek przez QDIP SDK.',
+    formTitle: 'Publikacja wtyczki',
     registered: 'Publikacja w katalogu',
-    choose: 'Zainstalowana wtyczka',
+    choose: 'Wtyczka zarejestrowana przez SDK',
     select: 'Wybierz wtyczkę…',
     name: 'Nazwa wyświetlana',
     description: 'Opis',
@@ -118,7 +118,7 @@ const copy = {
     busy: 'Zapisywanie…',
     error: 'Nie udało się zapisać. Sprawdź Core i uprawnienia administratora.',
     conflict: 'Stan rejestru się zmienił. Odśwież i spróbuj ponownie.',
-    hint: 'Formularz publikuje metadane istniejącej wtyczki. Nie instaluje kodu ani nie przyznaje dostępu do wykonania.',
+    hint: 'SDK rejestruje wtyczkę niezależnie od lokalizacji Workera. Formularz zarządza tylko opisem i publikacją.',
     demosTitle: 'Istniejące strony demonstracyjne',
     demosHint: 'Te aplikacje istnieją w Web i nie są automatycznie zainstalowanymi wtyczkami Core.',
   },
@@ -126,7 +126,6 @@ const copy = {
 
 function isPublished(row: Row) {
   return (
-    row.enabled &&
     row.published === true &&
     row.published_version === row.version &&
     typeof row.capability_id === 'string' &&
@@ -362,14 +361,14 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                     </p>
                   )}
                 </div>
-                <Badge variant={published ? 'emerald' : 'neutral'}>
-                  {published
-                    ? t.published
-                    : row.enabled
-                      ? t.unpublished
-                      : row.source === 'remote'
-                        ? t.offline
-                        : t.disabled}
+                <Badge variant={published && row.enabled ? 'emerald' : 'neutral'}>
+                  {!row.enabled
+                    ? row.source === 'remote'
+                      ? t.offline
+                      : t.disabled
+                    : published
+                      ? t.published
+                      : t.unpublished}
                 </Badge>
               </div>
               <p className="mt-4 break-words text-xs text-slate-400">
