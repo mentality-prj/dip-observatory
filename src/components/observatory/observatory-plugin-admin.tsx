@@ -58,8 +58,7 @@ const copy = {
   },
   en: {
     title: 'Manage plugins',
-    subtitle:
-      'Plugins register automatically through the QDIP SDK. Edit catalog metadata and publication here.',
+    subtitle: 'Plugins register automatically through the QDIP SDK. Edit catalog metadata and publication here.',
     refresh: 'Refresh list',
     loading: 'Loading registry…',
     empty: 'No plugins have registered through the QDIP SDK yet.',
@@ -91,8 +90,7 @@ const copy = {
   },
   pl: {
     title: 'Zarządzanie wtyczkami',
-    subtitle:
-      'Wtyczki rejestrują się automatycznie przez QDIP SDK. Tutaj edytujesz opis i publikację w katalogu.',
+    subtitle: 'Wtyczki rejestrują się automatycznie przez QDIP SDK. Tutaj edytujesz opis i publikację w katalogu.',
     refresh: 'Odśwież listę',
     loading: 'Ładowanie rejestru…',
     empty: 'Nie zarejestrowano jeszcze wtyczek przez QDIP SDK.',
