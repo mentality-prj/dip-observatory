@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Badge, Button } from '@/design-system'
-import type { Locale } from '@/lib/observatory-i18n'
+import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { DIP_USE_CASES } from '@/use-cases/registry'
 
 type Row = {
@@ -18,211 +18,314 @@ type Row = {
   ui: { label?: string; category?: string }
 }
 
-const legacy = new Set([
-  'resource-allocation',
-  'supply-network-optimization',
-  'contractor-allocation',
-  'readiness-recovery',
-  'gtm-lab',
-])
-
+type FormFields = { display_name: string; description: string; category: string; capability_id: string }
+const categories = ['Operations', 'Optimization', 'Analytics', 'Decision support', 'Other']
 const copy = {
   uk: {
     title: 'Керування плагінами',
-    subtitle:
-      'Додавайте до Observatory лише перевірені плагіни з чинного QDIP Core. Код, організації та ключі тут не налаштовуються.',
-    reload: 'Оновити',
+    subtitle: 'Реєструйте встановлені плагіни в каталозі Observatory. Код, організації та API-ключі тут не налаштовуються.',
+    refresh: 'Оновити список',
     loading: 'Завантаження реєстру…',
-    none: 'У QDIP Core немає зареєстрованих плагінів.',
-    available: 'Підготовлений',
-    published: 'Опублікований',
-    disabled: 'Вимкнений',
-    missing: 'Немає сторінки Observatory',
-    add: 'Додати до Observatory',
-    remove: 'Прибрати з Observatory',
-    working: 'Збереження…',
-    version: 'Версія',
+    empty: 'У QDIP Core немає встановлених плагінів.',
+    formTitle: 'Реєстрація плагіна',
+    registered: 'Публікація в каталозі',
+    choose: 'Встановлений плагін',
+    select: 'Виберіть плагін…',
+    name: 'Назва',
+    description: 'Опис',
+    category: 'Категорія',
     capability: 'Можливість',
-    noAccess: 'Немає доступу або QDIP Core недоступний.',
-    reloadConflict: 'Стан змінився. Онови список.',
-    info: 'Додавання публікує наявну сторінку. Воно не встановлює код та не надає право виконувати плагін.',
+    version: 'Версія',
+    publish: 'Зберегти й опублікувати',
+    edit: 'Редагувати',
+    published: 'Опубліковано',
+    unpublished: 'Не опубліковано',
+    disabled: 'Вимкнено в Core',
+    demo: 'Готова демосторінка',
+    generic: 'Стандартна сторінка каталогу',
+    details: 'Переглянути сторінку',
+    hide: 'Приховати з каталогу',
+    busy: 'Збереження…',
+    error: 'Не вдалося зберегти. Перевірте доступність Core та права адміністратора.',
+    conflict: 'Запис змінився. Оновіть список і повторіть.',
+    hint: 'Форма створює запис каталогу для вже встановленого плагіна. Вона не завантажує код і не надає доступу до виконання.',
+    demosTitle: 'Наявні спеціалізовані сторінки',
+    demosHint: 'Ці демонстрації вже реалізовані у Web. Вони не є автоматично встановленими плагінами Core.',
   },
   en: {
     title: 'Manage plugins',
-    subtitle:
-      'Publish only verified plugins from the existing QDIP Core registry. No code, organizations or keys are managed here.',
-    reload: 'Refresh',
+    subtitle: 'Register installed plugins in the Observatory catalog. No code, organizations, or API keys are managed here.',
+    refresh: 'Refresh list',
     loading: 'Loading registry…',
-    none: 'No plugins registered in QDIP Core.',
-    available: 'Ready',
-    published: 'Published',
-    disabled: 'Disabled',
-    missing: 'No Observatory workspace',
-    add: 'Add to Observatory',
-    remove: 'Remove from Observatory',
-    working: 'Saving…',
-    version: 'Version',
+    empty: 'No plugins are installed in QDIP Core.',
+    formTitle: 'Plugin registration',
+    registered: 'Catalog publication',
+    choose: 'Installed plugin',
+    select: 'Select a plugin…',
+    name: 'Display name',
+    description: 'Description',
+    category: 'Category',
     capability: 'Capability',
-    noAccess: 'Access denied or QDIP Core unavailable.',
-    reloadConflict: 'Registry changed. Reload.',
-    info: 'Publishing exposes an existing application page. It never installs code or grants execution permissions.',
+    version: 'Version',
+    publish: 'Save and publish',
+    edit: 'Edit',
+    published: 'Published',
+    unpublished: 'Unpublished',
+    disabled: 'Disabled in Core',
+    demo: 'Existing demo workspace',
+    generic: 'Standard catalog page',
+    details: 'View page',
+    hide: 'Unpublish from catalog',
+    busy: 'Saving…',
+    error: 'Unable to save. Check Core connectivity and administrative permissions.',
+    conflict: 'The registry changed. Refresh and retry.',
+    hint: 'This form publishes metadata for an already installed plugin; it does not upload executable code or grant execution rights.',
+    demosTitle: 'Existing application workspaces',
+    demosHint: 'These demos are implemented in Web and are not automatically installed Core plugins.',
   },
   pl: {
     title: 'Zarządzanie wtyczkami',
-    subtitle: 'Publikuj tylko sprawdzone wtyczki z QDIP Core. Bez konfiguracji kodu, organizacji lub kluczy.',
-    reload: 'Odśwież',
+    subtitle: 'Rejestruj zainstalowane wtyczki w katalogu Observatory. Bez zarządzania kodem, organizacjami i kluczami API.',
+    refresh: 'Odśwież listę',
     loading: 'Ładowanie rejestru…',
-    none: 'Brak zarejestrowanych wtyczek.',
-    available: 'Gotowa',
-    published: 'Opublikowana',
-    disabled: 'Wyłączona',
-    missing: 'Brak strony Observatory',
-    add: 'Dodaj do Observatory',
-    remove: 'Usuń z Observatory',
-    working: 'Zapisywanie…',
+    empty: 'Brak zainstalowanych wtyczek w QDIP Core.',
+    formTitle: 'Rejestracja wtyczki',
+    registered: 'Publikacja w katalogu',
+    choose: 'Zainstalowana wtyczka',
+    select: 'Wybierz wtyczkę…',
+    name: 'Nazwa wyświetlana',
+    description: 'Opis',
+    category: 'Kategoria',
+    capability: 'Funkcja',
     version: 'Wersja',
-    capability: 'Możliwość',
-    noAccess: 'Brak dostępu lub QDIP Core jest niedostępny.',
-    reloadConflict: 'Rejestr uległ zmianie. Odśwież.',
-    info: 'Publikacja udostępnia istniejącą stronę. Nie instaluje kodu ani nie nadaje uprawnień wykonania.',
+    publish: 'Zapisz i opublikuj',
+    edit: 'Edytuj',
+    published: 'Opublikowano',
+    unpublished: 'Nieopublikowano',
+    disabled: 'Wyłączona w Core',
+    demo: 'Gotowa strona demo',
+    generic: 'Standardowa strona katalogu',
+    details: 'Zobacz stronę',
+    hide: 'Ukryj w katalogu',
+    busy: 'Zapisywanie…',
+    error: 'Nie udało się zapisać. Sprawdź Core i uprawnienia administratora.',
+    conflict: 'Stan rejestru się zmienił. Odśwież i spróbuj ponownie.',
+    hint: 'Formularz publikuje metadane istniejącej wtyczki. Nie instaluje kodu ani nie przyznaje dostępu do wykonania.',
+    demosTitle: 'Istniejące strony demonstracyjne',
+    demosHint: 'Te aplikacje istnieją w Web i nie są automatycznie zainstalowanymi wtyczkami Core.',
   },
 } as const
+
+function isPublished(row: Row) {
+  return (
+    row.enabled &&
+    row.published === true &&
+    row.published_version === row.version &&
+    typeof row.capability_id === 'string' &&
+    row.capabilities.includes(row.capability_id)
+  )
+}
+function initialFields(row: Row): FormFields {
+  return {
+    display_name: row.ui?.label || row.name,
+    description: row.description || '',
+    category: row.ui?.category || 'Other',
+    capability_id: row.capability_id || row.capabilities[0] || '',
+  }
+}
 
 export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [rows, setRows] = useState<Row[] | null>(null)
+  const [selected, setSelected] = useState('')
+  const [fields, setFields] = useState<FormFields>({ display_name: '', description: '', category: 'Other', capability_id: '' })
   const [error, setError] = useState('')
-  const [pending, setPending] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+  const installed = rows?.find((row) => row.name === selected)
+  const sorted = [...(rows ?? [])].sort((a, b) => a.name.localeCompare(b.name))
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (signal?: AbortSignal) => {
     try {
-      const response = await fetch('/api/observatory/admin/plugins', { cache: 'no-store' })
+      const response = await fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal })
       if (!response.ok) throw new Error(String(response.status))
-      const data = (await response.json()) as { plugins?: Row[] }
-      if (!Array.isArray(data.plugins)) throw new Error('Invalid response')
-      setRows(data.plugins)
+      const data: unknown = await response.json()
+      if (!data || typeof data !== 'object' || !('plugins' in data) || !Array.isArray(data.plugins))
+        throw new Error('Invalid catalog response')
+      if (signal?.aborted) return
+      setRows(data.plugins as Row[])
       setError('')
     } catch {
-      setError(t.noAccess)
+      if (!signal?.aborted) setError(t.error)
     }
-  }, [t.noAccess])
+  }, [t.error])
 
   useEffect(() => {
     const controller = new AbortController()
-    void fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(String(response.status))
-        return response.json() as Promise<{ plugins?: Row[] }>
-      })
-      .then((data) => {
-        if (controller.signal.aborted) return
-        if (!Array.isArray(data.plugins)) throw new Error('Invalid response')
-        setRows(data.plugins)
-        setError('')
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setError(t.noAccess)
-      })
+    void refresh(controller.signal)
     return () => controller.abort()
-  }, [t.noAccess])
+  }, [refresh])
 
-  async function save(row: Row, published: boolean) {
-    setPending(row.name)
+  function choose(name: string) {
+    setSelected(name)
+    const row = rows?.find((entry) => entry.name === name)
+    if (row) setFields(initialFields(row))
+  }
+
+  async function update(row: Row, published: boolean, presentation?: FormFields) {
+    setPending(true)
     setError('')
     try {
       const response = await fetch('/api/observatory/admin/plugins/' + encodeURIComponent(row.name), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ published, expected_revision: row.revision }),
+        body: JSON.stringify({
+          published,
+          expected_revision: row.revision,
+          capability_id: presentation?.capability_id || row.capability_id || row.capabilities[0],
+          ...(presentation
+            ? { display_name: presentation.display_name, description: presentation.description, category: presentation.category }
+            : {}),
+        }),
       })
-      if (!response.ok) throw new Error(response.status === 409 ? t.reloadConflict : t.noAccess)
+      if (!response.ok) throw new Error(response.status === 409 ? t.conflict : t.error)
       await refresh()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t.noAccess)
+      setError(cause instanceof Error ? cause.message : t.error)
     } finally {
-      setPending(null)
+      setPending(false)
     }
   }
-
-  const listed = [...(rows ?? [])].sort(
-    (a, b) =>
-      Number(Boolean(DIP_USE_CASES.find((item) => item.plugin.id === b.name))) -
-        Number(Boolean(DIP_USE_CASES.find((item) => item.plugin.id === a.name))) || a.name.localeCompare(b.name)
-  )
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 text-slate-100 md:px-8 md:py-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">QDIP / Observatory / Admin</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t.title}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">{t.subtitle}</p>
         </div>
-        <Button type="button" variant="secondary" onClick={() => void refresh()} disabled={pending !== null}>
-          {t.reload}
-        </Button>
+        <Button type="button" variant="secondary" disabled={pending} onClick={() => void refresh()}>{t.refresh}</Button>
       </div>
-      {error && (
-        <p className="mt-6 rounded-lg border border-rose-500/50 px-4 py-3 text-sm text-rose-300" role="alert">
-          {error}
-        </p>
-      )}
-      {!rows && !error && (
-        <p className="mt-6" role="status">
-          {t.loading}
-        </p>
-      )}
-      {rows?.length === 0 && <p className="mt-6">{t.none}</p>}
-      <div className="mt-8 grid gap-4">
-        {listed.map((row) => {
-          const workspace = DIP_USE_CASES.find(
-            (item) => item.plugin.id === row.name && row.capabilities.includes(item.plugin.capability)
-          )
-          const isPublished =
-            row.published === null
-              ? Boolean(workspace && legacy.has(workspace.id))
-              : row.published &&
-                row.version === row.published_version &&
-                row.capability_id === workspace?.plugin.capability
-          const canPublish = Boolean(row.enabled && workspace)
-          const busy = pending === row.name
-          return (
-            <article key={row.name} className="rounded-xl border border-white/15 bg-slate-900/50 p-5 md:p-6">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-semibold">{row.ui?.label || row.name}</h2>
-                  <p className="mt-1 break-all text-xs text-slate-500">{row.name}</p>
-                  {row.description && <p className="mt-3 text-sm leading-6 text-slate-400">{row.description}</p>}
-                </div>
-                <Badge variant={isPublished ? 'emerald' : 'neutral'}>
-                  {isPublished ? t.published : !row.enabled ? t.disabled : workspace ? t.available : t.missing}
-                </Badge>
+      {error && <p role="alert" className="mt-5 rounded-lg border border-rose-500/50 px-4 py-3 text-sm text-rose-300">{error}</p>}
+      {!rows && !error && <p className="mt-5" role="status">{t.loading}</p>}
+
+      <section className="mt-8 min-w-0 rounded-xl border border-white/15 bg-slate-900 p-4 sm:p-6" aria-labelledby="register-plugin">
+        <h2 id="register-plugin" className="text-xl font-semibold">{t.formTitle}</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{t.hint}</p>
+        <form
+          className="mt-5 grid gap-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (installed && installed.enabled && fields.capability_id) void update(installed, true, fields)
+          }}
+        >
+          <label className="grid min-w-0 gap-2 text-sm font-semibold">
+            {t.choose}
+            <select
+              className="min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-slate-100"
+              value={selected}
+              onChange={(event) => choose(event.target.value)}
+              required
+            >
+              <option value="">{t.select}</option>
+              {sorted.map((row) => <option key={row.name} value={row.name}>{row.name} ({row.version})</option>)}
+            </select>
+          </label>
+          {installed && (
+            <>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold">
+                {t.name}
+                <input
+                  className="min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-slate-100"
+                  value={fields.display_name}
+                  required
+                  minLength={2}
+                  maxLength={120}
+                  onChange={(event) => setFields((prev) => ({ ...prev, display_name: event.target.value }))}
+                />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm font-semibold">
+                {t.description}
+                <textarea
+                  className="w-full min-w-0 rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-slate-100"
+                  value={fields.description}
+                  rows={4}
+                  maxLength={2000}
+                  onChange={(event) => setFields((prev) => ({ ...prev, description: event.target.value }))}
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid min-w-0 gap-2 text-sm font-semibold">
+                  {t.category}
+                  <select
+                    className="min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-slate-100"
+                    value={fields.category}
+                    onChange={(event) => setFields((prev) => ({ ...prev, category: event.target.value }))}
+                  >
+                    {categories.map((category) => <option key={category}>{category}</option>)}
+                  </select>
+                </label>
+                <label className="grid min-w-0 gap-2 text-sm font-semibold">
+                  {t.capability}
+                  <select
+                    className="min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-slate-100"
+                    value={fields.capability_id}
+                    onChange={(event) => setFields((prev) => ({ ...prev, capability_id: event.target.value }))}
+                  >
+                    {installed.capabilities.map((capability) => <option key={capability}>{capability}</option>)}
+                  </select>
+                </label>
               </div>
-              <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-xs text-slate-400">
-                <div>
-                  <dt>{t.version}</dt>
-                  <dd className="mt-1 text-slate-200">{row.version}</dd>
+              <Button type="submit" disabled={pending || !installed.enabled || !fields.display_name.trim() || !fields.capability_id}>
+                {pending ? t.busy : t.publish}
+              </Button>
+            </>
+          )}
+        </form>
+      </section>
+
+      {rows?.length === 0 && <p className="mt-6 text-sm text-slate-400">{t.empty}</p>}
+      <section className="mt-8 grid gap-4" aria-label={t.registered}>
+        {sorted.map((row) => {
+          const published = isPublished(row)
+          const demo = DIP_USE_CASES.find((item) => item.plugin.id === row.name && row.capabilities.includes(item.plugin.capability))
+          return (
+            <article key={row.name} className="min-w-0 rounded-xl border border-white/15 bg-slate-900 p-4 sm:p-6">
+              <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
+                <div className="w-full min-w-0 flex-1">
+                  <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
+                  <p className="mt-1 break-all text-xs text-slate-500">{row.name}</p>
+                  {row.description && <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">{row.description}</p>}
                 </div>
-                <div>
-                  <dt>{t.capability}</dt>
-                  <dd className="mt-1 break-all text-slate-200">{workspace?.plugin.capability ?? '—'}</dd>
-                </div>
-              </dl>
-              <div className="mt-5">
-                <Button
-                  type="button"
-                  variant={isPublished ? 'secondary' : 'default'}
-                  disabled={busy || pending !== null || (!isPublished && !canPublish)}
-                  onClick={() => void save(row, !isPublished)}
-                >
-                  {busy ? t.working : isPublished ? t.remove : t.add}
-                </Button>
+                <Badge variant={published ? 'emerald' : 'neutral'}>{published ? t.published : row.enabled ? t.unpublished : t.disabled}</Badge>
+              </div>
+              <p className="mt-4 break-words text-xs text-slate-400">
+                {t.version}: {row.version} · {demo ? t.demo : t.generic}
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Button type="button" variant="secondary" disabled={pending} onClick={() => choose(row.name)}>{t.edit}</Button>
+                {published && (
+                  <>
+                    <a className="text-sm font-semibold text-cyan-300" href={buildLocalePath(`/plugins/${row.name}`, locale)}>{t.details} →</a>
+                    <Button type="button" variant="secondary" disabled={pending} onClick={() => void update(row, false)}>{t.hide}</Button>
+                  </>
+                )}
               </div>
             </article>
           )
         })}
-      </div>
-      <p className="mt-6 text-xs leading-6 text-slate-500">{t.info}</p>
+      </section>
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold">{t.demosTitle}</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-400">{t.demosHint}</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {DIP_USE_CASES.map((useCase) => (
+            <a key={useCase.id} href={buildLocalePath(useCase.route, locale)} className="max-w-full break-words rounded-lg border border-white/15 px-3 py-2 text-sm text-cyan-300">
+              {useCase.id}
+            </a>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }
