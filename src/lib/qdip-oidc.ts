@@ -14,6 +14,8 @@ type Session = {
   organizationId: string
   expiresAt: number
   roles: Role[]
+  displayName?: string
+  email?: string
 }
 type Pending = { state: string; nonce: string; verifier: string; returnTo: string; issuedAt: number }
 type OidcDiscovery = {
@@ -327,6 +329,22 @@ export function authorizationUrl(config: OidcDiscovery, flow: Pending) {
 
 type JwtClaims = Record<string, unknown>
 
+function safeIdentityLabel(value: unknown, maxLength: number): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim()
+  if (!normalized || normalized.length > maxLength || /[\x00-\x1f\x7f]/.test(normalized)) return undefined
+  return normalized
+}
+
+function identityFromClaims(claims: Record<string, unknown>) {
+  const displayName = safeIdentityLabel(claims.name, 160) ?? safeIdentityLabel(claims.preferred_username, 160)
+  const email = safeIdentityLabel(claims.email, 254)
+  return {
+    ...(displayName ? { displayName } : {}),
+    ...(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? { email } : {}),
+  }
+}
+
 export async function verifyIdToken(token: string, flow: Pending, config: OidcDiscovery): Promise<Session> {
   if (token.length > 15_000) throw new Error('Invalid ID token')
   const parts = token.split('.')
@@ -384,6 +402,7 @@ export async function verifyIdToken(token: string, flow: Pending, config: OidcDi
     organizationId: roleSettings.organizationId,
     expiresAt: Math.min(claims.exp, now + SESSION_SECONDS),
     roles: rolesFromClaims(claims),
+    ...identityFromClaims(claims),
   }
 }
 
@@ -402,7 +421,7 @@ export async function exchangeCode(code: string, flow: Pending, config: OidcDisc
   })
   if (typeof payload.id_token !== 'string') throw new Error('OIDC ID token missing')
   const session = await verifyIdToken(payload.id_token, flow, config)
-  if (session.roles.length > 0 || !config.userinfo_endpoint) return session
+  if (!config.userinfo_endpoint || (session.email && session.displayName)) return session
 
   // Zitadel may assert roles in Userinfo even when they are absent from the ID token.
   // Read only from the discovered, issuer-pinned endpoint using this code exchange's access token.
@@ -418,7 +437,13 @@ export async function exchangeCode(code: string, flow: Pending, config: OidcDisc
     return session
   }
   if (userinfo.sub !== session.sub) throw new Error('OIDC Userinfo subject mismatch')
-  return { ...session, roles: rolesFromClaims(userinfo) }
+  const identity = identityFromClaims(userinfo)
+  return {
+    ...session,
+    displayName: session.displayName ?? identity.displayName,
+    email: session.email ?? identity.email,
+    roles: session.roles.length > 0 ? session.roles : rolesFromClaims(userinfo),
+  }
 }
 
 export function attachSession(response: NextResponse, request: NextRequest, session: Session) {
@@ -437,6 +462,8 @@ export function getQdipSession(value: string | undefined): Session | null {
   if (
     !session ||
     typeof session.sub !== 'string' ||
+    (session.displayName !== undefined && safeIdentityLabel(session.displayName, 160) !== session.displayName) ||
+    (session.email !== undefined && safeIdentityLabel(session.email, 254) !== session.email) ||
     !validRoles(session.roles) ||
     session.sub.length === 0 ||
     session.issuer !== configuredIssuer() ||
