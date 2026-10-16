@@ -1,5 +1,5 @@
-import { QdipError } from './errors.js';
-import type { ApproximationContract, CapabilitiesResponse, ExecutionResult, InvokeResponse, SemanticReplayContract, PluginCatalogEntry } from './types.js';
+import { QdipError } from './errors';
+import type { ApproximationContract, CapabilitiesResponse, ExecutionResult, InvokeResponse, SemanticReplayContract, PluginCatalogEntry } from './types';
 
 const fail = (): never => { throw new QdipError('INVALID_RESPONSE'); };
 const obj = (v: unknown): Record<string, unknown> => {
