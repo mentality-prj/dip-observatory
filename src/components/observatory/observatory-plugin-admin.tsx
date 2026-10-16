@@ -355,7 +355,10 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
               <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
                 <div className="w-full min-w-0 flex-1">
                   <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
-                  <p className="mt-1 break-all text-xs text-slate-500">{row.plugin_id || row.name}{row.source === 'remote' ? ' · SDK Remote' : ''}</p>
+                  <p className="mt-1 break-all text-xs text-slate-500">
+                    {row.plugin_id || row.name}
+                    {row.source === 'remote' ? ' · SDK Remote' : ''}
+                  </p>
                   {row.description && (
                     <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">
                       {row.description}
@@ -363,7 +366,13 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                   )}
                 </div>
                 <Badge variant={published ? 'emerald' : 'neutral'}>
-                  {published ? t.published : row.enabled ? t.unpublished : row.source === 'remote' ? t.offline : t.disabled}
+                  {published
+                    ? t.published
+                    : row.enabled
+                      ? t.unpublished
+                      : row.source === 'remote'
+                        ? t.offline
+                        : t.disabled}
                 </Badge>
               </div>
               <p className="mt-4 break-words text-xs text-slate-400">
