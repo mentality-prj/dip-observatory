@@ -1,43 +1,56 @@
-# Observatory plugin administration — P0 (#254)
+# Observatory plugin administration — catalog registration
 
-**Route:** `https://observatory.qdip.ai/uk/admin/plugins` (also en/pl).
-Existing Design System and Observatory shell; no Marketplace, new SDK/Gateway,
-organization selection, end-user API keys, code upload or Worker auto-deployment.
+**Admin:** `https://observatory.qdip.ai/uk/admin/plugins` (EN/PL supported).
 
-## Architecture
+**Public directory:** `https://observatory.qdip.ai/uk/plugins`.
+Each explicitly published installed runtime plugin has a generic
+`/uk/plugins/<plugin-name>` information page without requiring a new React
+workspace in `DIP_USE_CASES`.
 
-Verified Zitadel `observatory_admin` project role -> signed QDIP session ->
-same-origin Observatory Web API -> existing QDIP Core `/api/v1/plugin-publications`
-(platform-admin key, server-only) -> installed PluginRegistry + MongoDB
-publication metadata/audit. The browser never receives an infrastructure key.
-The Core endpoint **cannot install or execute code**.
+## What the two registries mean
 
-Only already compiled `src/use-cases/registry.ts` application routes with an
-installed, enabled and matching Core capability can be published. Existing
-public demos retain their old visibility until explicitly unpublished; new
-applications must be approved/published. Public catalog only receives visible
-use-case IDs. Missing Core publication API fails closed for use-case listings;
-system challenges/intake remain available. Merely showing a card never grants
-execution rights.
+- **QDIP Core runtime registry:** installed Python plugins with verified
+  capability IDs and versions. This cannot be modified by typing arbitrary
+  data in a web form. Installation/remote Worker registration is a separate,
+  trusted backend deployment and SDK/Gateway lifecycle.
+- **Observatory catalog:** title, description, category, selected installed
+  capability and publish/hide flag. Admins register these through a form and
+  QDIP Core persists them, with revision checks and audit in MongoDB.
+- **Existing Web demos:** application routes compiled in
+  `src/use-cases/registry.ts`; they remain specialized UI experiences.
+  An ordinary plugin no longer requires one of these routes for a discoverable
+  public information page. A generic information page is **not** an executable
+  invocation UI.
 
-## Deployment order (not yet performed)
+The admin `Refresh list` action performs a GET against the installed Core
+registry; it never installs or updates plugin code.
 
-1. Deploy/review the **Core dependency PR #382** first, using the existing
-   MongoDB and Core service. Production routes remain unchanged until then.
-2. Configure Zitadel's existing QDIP project to issue the dedicated
-   `observatory_admin` role to the actual owner; a normal `studio` or
-   `rr_operator` role is **not** enough. Default role key can be overridden
-   with `QDIP_OBSERVATORY_ADMIN_ZITADEL_ROLE_KEY`. No VHV organization.
-3. Ensure the QDIP Web server has `DIP_API_BASE_URL` and a server-only
-   platform-admin `DIP_ADMIN_API_KEY` (or the existing `DIP_API_KEY` if it
-   actually has platform-admin rights). Do not expose it as `NEXT_PUBLIC_*`.
-4. Deploy/review the Web PR against the deployed Core endpoint. Verify real
-   Zitadel owner access, published/disabled catalog changes and negative
-   unauthenticated/non-admin/cross-origin requests before promotion.
-5. Backend `plugin_publications` and `plugin_publication_audit` need a
-   MongoDB deployment supporting transactions (replica set); failed storage
-   writes return 503, not an optimistic success.
+## Security and release order
 
-P0 **does not** provision a Python Worker or issue register/execute credentials.
-Workers still connect through the existing SDK-02 Gateway. The admin web UI
-manages publication only, not runtime deployment.
+Zitadel `observatory_admin` project role + signed same-origin session ->
+server-side Web API -> existing Core `/api/v1/plugin-publications` protected
+by a platform-admin API key -> MongoDB publication state and audit. The browser
+never obtains this key or selects Core organizations. Admin input is limited to
+presentation metadata and a capability from the installed server-verified
+manifest. An uninstalled plugin or stale capability/version is rejected;
+unpublished, disabled, stale or unavailable entries do not appear in the
+public directory.
+
+**Release Core PR #385 first**, followed by Web PR #261; merging Web first
+would cause attempts to save catalog metadata to receive a validation error.
+Core's transactional writes require a MongoDB replica set. Test publication
+and unpublication against a real installed plugin after Core deployment, not
+just mocked HTTP tests. Maintain the existing Vercel build-cost limit.
+
+## User workflow
+
+1. Open Admin and select an **installed Core plugin**.
+2. Enter a readable name, description and category; select an installed
+   capability from its manifest.
+3. Choose **Save and publish**. Its public catalog information page appears
+   under `/plugins/<plugin-name>`.
+4. Use **Unpublish** on a card to remove it from public discovery.
+5. Open **Plugins** in the Observatory navigation to browse the directory.
+
+Adding a new Python implementation or SDK-02 remote Worker is deliberately
+*not* a web metadata form. No new service, Gateway, SDK or marketplace is needed.
