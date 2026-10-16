@@ -87,6 +87,8 @@ export interface QdipClientOptions {
 /** One registry projection for embedded and remotely registered SDK plugins. */
 export interface PluginCatalogEntry {
   name: string;
+  plugin_id?: string;
+  source?: 'embedded' | 'remote';
   version: string;
   description: string;
   enabled: boolean;
