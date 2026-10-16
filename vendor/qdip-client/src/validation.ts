@@ -1,5 +1,5 @@
 import { QdipError } from './errors';
-import type { ApproximationContract, CapabilitiesResponse, ExecutionResult, InvokeResponse, SemanticReplayContract, PluginCatalogEntry } from './types';
+import type { ApproximationContract, CapabilitiesResponse, ExecutionResult, InvokeResponse, SemanticReplayContract, PluginCatalogEntry, PluginCapabilityContract } from './types';
 
 const fail = (): never => { throw new QdipError('INVALID_RESPONSE'); };
 const obj = (v: unknown): Record<string, unknown> => {
@@ -139,6 +139,39 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
     if (!capabilities.includes(key)) return fail();
     capability_versions[key] = str(val);
   }
+  let manifest_version: string | undefined;
+  let capability_contracts: Record<string, PluginCapabilityContract> | undefined;
+  if (v.manifest_version !== undefined) {
+    manifest_version = str(v.manifest_version);
+    if (manifest_version !== '1.0.0') return fail();
+    const contracts = obj(v.capability_contracts);
+    if (Object.keys(contracts).length > 16) return fail();
+    capability_contracts = {};
+    for (const [id, raw] of Object.entries(contracts)) {
+      if (!capabilities.includes(id)) return fail();
+      const contract = obj(raw);
+      if (contract.id !== id || contract.output_type !== 'decision_spec' ||
+          contract.schema_version !== '1.0.0') return fail();
+      const required = contract.required_caller_scopes === undefined
+        ? [] : contract.required_caller_scopes;
+      if (!Array.isArray(required) || required.length > 2 ||
+          required.some((scope: unknown) => scope !== 'plugins:read' && scope !== 'plugins:execute') ||
+          new Set(required).size !== required.length) return fail();
+      const input_schema = contract.input_schema === undefined
+        ? undefined : obj(contract.input_schema);
+      if (input_schema && JSON.stringify(input_schema).length > 8192) return fail();
+      const contractVersion = str(contract.version);
+      if (contractVersion !== capability_versions[id]) return fail();
+      capability_contracts[id] = {
+        id, version: contractVersion, output_type: 'decision_spec',
+        schema_version: '1.0.0',
+        ...(input_schema === undefined ? {} : { input_schema }),
+        required_caller_scopes: required as string[],
+      };
+    }
+  } else if (v.capability_contracts !== undefined) {
+    return fail();
+  }
   return {
     name: str(v.name), version: str(v.version), description: v.description,
     ...(v.plugin_id !== undefined ? { plugin_id: str(v.plugin_id) } : {}),
@@ -147,7 +180,8 @@ export function parsePluginCatalogEntry(input: unknown): PluginCatalogEntry {
     ui: { ...(typeof ui.label === 'string' ? { label: ui.label } : {}),
       ...(typeof ui.category === 'string' ? { category: ui.category } : {}) },
     published: v.published, revision: v.revision as number,
-    capability_id: v.capability_id, published_version: v.published_version
+    capability_id: v.capability_id, published_version: v.published_version,
+    ...(manifest_version === undefined ? {} : { manifest_version, capability_contracts })
   };
 }
 
