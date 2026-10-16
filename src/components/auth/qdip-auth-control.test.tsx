@@ -43,6 +43,52 @@ describe('QDIP shared authentication control', () => {
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
   })
 
+  it('shows the signed-in identity and authorized roles in Observatory profile menu', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          configured: true,
+          authenticated: true,
+          studio: true,
+          operator: true,
+          observatoryAdmin: true,
+          user: { id: 'qa-id-001', displayName: 'QA Tester', email: 'qa@qdip.ai' },
+        }),
+      }))
+    )
+    render(<QdipAuthControl locale="uk" returnTo="https://observatory.qdip.ai/uk/admin/plugins" showProfile />)
+
+    expect(await screen.findByTestId('observatory-profile')).toBeVisible()
+    expect(screen.getByText('QA Tester')).toBeInTheDocument()
+    expect(screen.getByText('qa@qdip.ai')).toBeInTheDocument()
+    expect(screen.getByText('Адміністратор Observatory')).toBeInTheDocument()
+    expect(screen.getByText('Оператор RR')).toBeInTheDocument()
+    expect(screen.getByText('Studio')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Вийти' })).toBeInTheDocument()
+  })
+
+  it('falls back to a stable account ID for sessions issued before profile fields existed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          configured: true,
+          authenticated: true,
+          studio: false,
+          operator: false,
+          observatoryAdmin: true,
+          user: { id: 'old-sub-123', displayName: null, email: null },
+        }),
+      }))
+    )
+    render(<QdipAuthControl locale="en" returnTo="https://observatory.qdip.ai/en" showProfile />)
+    expect(await screen.findByText('Account ID: old-sub-123')).toBeInTheDocument()
+    expect(screen.getByText('Observatory admin')).toBeInTheDocument()
+  })
+
   it('uses the vector smile-lock instead of an arrow for icon-only marketing sign-in', async () => {
     vi.stubGlobal(
       'fetch',
