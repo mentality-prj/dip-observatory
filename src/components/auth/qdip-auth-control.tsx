@@ -36,7 +36,6 @@ const labels = {
     admin: 'Observatory admin',
     studio: 'Studio',
     operator: 'RR operator',
-    accountId: 'Account ID',
   },
   uk: {
     signIn: 'Увійти',
@@ -48,7 +47,6 @@ const labels = {
     admin: 'Адміністратор Observatory',
     studio: 'Studio',
     operator: 'Оператор RR',
-    accountId: 'ID користувача',
   },
   pl: {
     signIn: 'Zaloguj się',
@@ -60,7 +58,6 @@ const labels = {
     admin: 'Administrator Observatory',
     studio: 'Studio',
     operator: 'Operator RR',
-    accountId: 'ID użytkownika',
   },
 } as const
 
@@ -211,9 +208,6 @@ export function QdipAuthControl({
                 {identity?.email && identity.email !== display ? (
                   <span className={styles.profileEmail}>{identity.email}</span>
                 ) : null}
-                <span className={styles.profileId}>
-                  {copy.accountId}: {identity?.id ?? '—'}
-                </span>
                 <p className={styles.profileTitle}>{copy.roles}</p>
                 <div className={styles.roleList}>
                   {roles.length ? (
@@ -223,7 +217,7 @@ export function QdipAuthControl({
                       </span>
                     ))
                   ) : (
-                    <span className={styles.profileId}>—</span>
+                    <span className={styles.profileEmpty}>—</span>
                   )}
                 </div>
                 <button
