@@ -161,9 +161,22 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
 
   useEffect(() => {
     const controller = new AbortController()
-    void refresh(controller.signal)
+    void fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(String(response.status))
+        return response.json() as Promise<{ plugins?: Row[] }>
+      })
+      .then((result) => {
+        if (controller.signal.aborted) return
+        if (!Array.isArray(result.plugins)) throw new Error('Invalid registry')
+        setRows(result.plugins)
+        setError('')
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(t.error)
+      })
     return () => controller.abort()
-  }, [refresh])
+  }, [t.error])
 
   function choose(name: string) {
     setSelected(name)
