@@ -40,6 +40,7 @@ describe('published plugin directory', () => {
   const approved: CorePluginPublication = {
     ...meta,
     name: 'route-optimizer',
+    source: 'remote',
     version: '2.0',
     description: 'Delivery route optimization',
     ui: { label: 'Route Optimizer', category: 'Operations' },
@@ -52,8 +53,13 @@ describe('published plugin directory', () => {
     expect(publishedPluginEntries([approved])).toEqual([approved])
     expect(visibleUseCases([approved])).not.toContain('route-optimizer')
   })
-  it('excludes disabled, unpublished and stale catalog entries', () => {
-    expect(publishedPluginEntries([{ ...approved, enabled: false }])).toEqual([])
+  it('preserves published catalog pages when a remote worker goes offline', () => {
+    expect(publishedPluginEntries([{ ...approved, enabled: false }])).toEqual([{ ...approved, enabled: false }])
+  })
+  it('hides explicitly disabled embedded plugins from the public directory', () => {
+    expect(publishedPluginEntries([{ ...approved, source: 'embedded', enabled: false }])).toEqual([])
+  })
+  it('excludes unpublished and stale catalog entries', () => {
     expect(publishedPluginEntries([{ ...approved, published: false }])).toEqual([])
     expect(publishedPluginEntries([{ ...approved, published_version: '1.0' }])).toEqual([])
     expect(publishedPluginEntries([{ ...approved, capability_id: 'unknown' }])).toEqual([])

@@ -19,7 +19,10 @@ const LEGACY_PUBLIC = new Set([
 
 export function corePluginConnection(): { base: string; key: string } {
   const base = normalizeDipBaseUrl(process.env.DIP_API_BASE_URL ?? process.env.DIP_URL)
-  const key = (process.env.DIP_ADMIN_API_KEY ?? process.env.DIP_API_KEY ?? '').trim()
+  // The Core publication endpoint currently accepts the platform API key only.
+  // Reuse the existing server-only key for P0; a scoped catalog key requires
+  // a Core authorization contract, not an arbitrary additional environment key.
+  const key = process.env.DIP_ADMIN_API_KEY?.trim() || process.env.DIP_API_KEY?.trim() || ''
   if (!base || !key) throw new Error('QDIP Core admin connection is not configured')
   const url = new URL(base)
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)))
@@ -75,7 +78,10 @@ export function publishedPluginEntries(records: readonly CorePluginPublication[]
   return records.filter(
     (plugin) =>
       /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(plugin.name) &&
-      plugin.enabled &&
+      // Publication and current runtime availability are independent states.
+      // Preserve published details only for disconnected remote SDK workers.
+      // Locally disabled embedded plugins must still disappear from public listings.
+      (plugin.enabled || plugin.source === 'remote') &&
       plugin.published === true &&
       plugin.published_version === plugin.version &&
       typeof plugin.capability_id === 'string' &&
