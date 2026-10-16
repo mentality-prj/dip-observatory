@@ -84,6 +84,16 @@ export interface QdipClientOptions {
   defaultDeadlineMs?: number;
 }
 
+/** Declarative SDK-02 contract; never delegates authority to a Worker. */
+export interface PluginCapabilityContract {
+  id: string;
+  version: string;
+  output_type: 'decision_spec';
+  schema_version: '1.0.0';
+  input_schema?: Record<string, unknown>;
+  required_caller_scopes?: string[];
+}
+
 /** One registry projection for embedded and remotely registered SDK plugins. */
 export interface PluginCatalogEntry {
   name: string;
@@ -99,6 +109,8 @@ export interface PluginCatalogEntry {
   revision: number;
   capability_id: string | null;
   published_version: string | null;
+  manifest_version?: string;
+  capability_contracts?: Record<string, PluginCapabilityContract>;
 }
 
 export interface PluginCatalogUpdate {

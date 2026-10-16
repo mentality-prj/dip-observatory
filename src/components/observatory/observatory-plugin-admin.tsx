@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import type { PluginCapabilityContract } from '@qdip/client'
 import { Badge, Button } from '@/design-system'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
 import { DIP_USE_CASES } from '@/use-cases/registry'
@@ -13,6 +14,8 @@ type Row = {
   version: string
   enabled: boolean
   capabilities: string[]
+  manifest_version?: string
+  capability_contracts?: Record<string, PluginCapabilityContract>
   published: boolean | null
   published_version: string | null
   capability_id: string | null
@@ -31,6 +34,12 @@ const copy = {
     loading: 'Завантаження реєстру…',
     empty: 'Через QDIP SDK ще не зареєстровано плагінів.',
     formTitle: 'Публікація плагіна',
+    manifestTitle: 'Контракт SDK-плагіна',
+    manifestVersion: 'Версія маніфесту',
+    manifestPermissions: 'Права викликача',
+    manifestInput: 'Схема вхідних даних',
+    manifestNone: 'Додаткові права не потрібні',
+    manifestNote: 'Контракт надходить через SDK. Тут він доступний лише для перегляду.',
     registered: 'Публікація в каталозі',
     choose: 'Зареєстрований через SDK плагін',
     select: 'Виберіть плагін…',
@@ -63,6 +72,12 @@ const copy = {
     loading: 'Loading registry…',
     empty: 'No plugins have registered through the QDIP SDK yet.',
     formTitle: 'Publish plugin',
+    manifestTitle: 'SDK plugin contract',
+    manifestVersion: 'Manifest version',
+    manifestPermissions: 'Caller permissions',
+    manifestInput: 'Input schema',
+    manifestNone: 'No additional scopes',
+    manifestNote: 'The SDK supplies this contract. You can review it here, not edit it.',
     registered: 'Catalog publication',
     choose: 'SDK-registered plugin',
     select: 'Select a plugin…',
@@ -95,6 +110,12 @@ const copy = {
     loading: 'Ładowanie rejestru…',
     empty: 'Nie zarejestrowano jeszcze wtyczek przez QDIP SDK.',
     formTitle: 'Publikacja wtyczki',
+    manifestTitle: 'Kontrakt wtyczki SDK',
+    manifestVersion: 'Wersja manifestu',
+    manifestPermissions: 'Uprawnienia wywołującego',
+    manifestInput: 'Schemat danych wejściowych',
+    manifestNone: 'Bez dodatkowych uprawnień',
+    manifestNote: 'Kontrakt jest przesyłany przez SDK. Tutaj można go tylko przeglądać.',
     registered: 'Publikacja w katalogu',
     choose: 'Wtyczka zarejestrowana przez SDK',
     select: 'Wybierz wtyczkę…',
@@ -339,6 +360,36 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
             </>
           )}
         </form>
+        {installed?.source === 'remote' && installed.manifest_version && (
+          <section
+            className="mt-6 min-w-0 rounded-xl border border-white/15 bg-slate-950 p-4"
+            aria-label={t.manifestTitle}
+          >
+            <h3 className="font-semibold">{t.manifestTitle}</h3>
+            <p className="mt-2 text-sm text-slate-400">
+              {t.manifestVersion}: <code>{installed.manifest_version}</code>
+            </p>
+            {Object.entries(installed.capability_contracts ?? {}).map(([id, contract]) => (
+              <div key={id} className="mt-4 min-w-0 border-t border-white/10 pt-4 text-sm">
+                <p className="break-all font-mono">
+                  {id} · {contract.version}
+                </p>
+                <p className="mt-2 text-slate-400">
+                  {t.manifestPermissions}: {contract.required_caller_scopes?.join(', ') || t.manifestNone}
+                </p>
+                {contract.input_schema && (
+                  <div className="mt-3">
+                    <p className="text-slate-400">{t.manifestInput}</p>
+                    <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-900 p-3 text-xs">
+                      {JSON.stringify(contract.input_schema, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ))}
+            <p className="mt-4 text-xs text-slate-500">{t.manifestNote}</p>
+          </section>
+        )}
       </section>
 
       {rows?.length === 0 && <p className="mt-6 text-sm text-slate-400">{t.empty}</p>}

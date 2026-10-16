@@ -6,8 +6,24 @@ test('admin publishes SDK-registered plugin metadata without a compiled Observat
   await page.context().addCookies(oidcTestCookies(['observatory_admin']))
   const plugin = {
     name: 'route-optimizer',
+    source: 'remote',
     version: '1.0.0',
     enabled: true,
+    manifest_version: '1.0.0',
+    capability_contracts: {
+      'routes.optimize': {
+        id: 'routes.optimize',
+        version: '1',
+        output_type: 'decision_spec',
+        schema_version: '1.0.0',
+        required_caller_scopes: ['plugins:read'],
+        input_schema: {
+          type: 'object',
+          properties: { task_id: { type: 'string' } },
+          required: ['task_id'],
+        },
+      },
+    },
     description: 'Delivery routing',
     capabilities: ['routes.optimize'],
     capability_versions: {},
@@ -27,6 +43,10 @@ test('admin publishes SDK-registered plugin metadata without a compiled Observat
   })
   await page.goto('http://observatory.localhost:3000/uk/admin/plugins')
   await page.getByLabel('Зареєстрований через SDK плагін').selectOption('route-optimizer')
+  const contract = page.getByRole('region', { name: 'Контракт SDK-плагіна' })
+  await expect(contract).toBeVisible()
+  await expect(contract.getByText('plugins:read')).toBeVisible()
+  await expect(contract.locator('pre')).toContainText('"task_id"')
   await page.getByLabel('Назва').fill('Оптимізатор маршрутів')
   await page.getByLabel('Опис').fill('Розрахунок маршрутів доставки')
   await page.getByLabel('Категорія').selectOption('Optimization')
