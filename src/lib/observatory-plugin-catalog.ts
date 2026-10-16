@@ -105,3 +105,25 @@ export async function visiblePluginUseCaseIds(): Promise<string[]> {
     return []
   }
 }
+
+/** Public-facing catalog entries are server-derived and expose no infrastructure keys. */
+export function publishedPluginEntries(records: readonly CorePluginPublication[]): CorePluginPublication[] {
+  return records.filter(
+    (plugin) =>
+      /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(plugin.name) &&
+      plugin.enabled &&
+      plugin.published === true &&
+      plugin.published_version === plugin.version &&
+      typeof plugin.capability_id === 'string' &&
+      plugin.capabilities.includes(plugin.capability_id)
+  )
+}
+
+export async function publishedPlugins(): Promise<CorePluginPublication[]> {
+  try {
+    return publishedPluginEntries(await readCorePublications())
+  } catch {
+    // No public fallbacks: unavailable Core or admin credential must fail closed.
+    return []
+  }
+}
