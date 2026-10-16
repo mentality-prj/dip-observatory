@@ -12,7 +12,7 @@ describe('Observatory delegates catalog reads through @qdip/client', () => {
   it('requests the single QDIP registry using only the server admin SDK credential', async () => {
     vi.stubEnv('DIP_API_BASE_URL', 'https://core.example.test')
     vi.stubEnv('DIP_ADMIN_API_KEY', 'test-platform-admin-not-real')
-    const fetcher = vi.fn(async (_url: string, _init: RequestInit) =>
+    const fetcher = vi.fn(async () =>
       new Response(
         JSON.stringify([
           {
