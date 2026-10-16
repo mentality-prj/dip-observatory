@@ -1,9 +1,9 @@
-export { QdipClient } from './client.js';
-export { QdipError } from './errors.js';
-export type { QdipErrorCode } from './errors.js';
-export { parseCapabilitiesResponse, parseInvokeResponse, parsePluginCatalog, parsePluginCatalogEntry, isActionable } from './validation.js';
+export { QdipClient } from './client';
+export { QdipError } from './errors';
+export type { QdipErrorCode } from './errors';
+export { parseCapabilitiesResponse, parseInvokeResponse, parsePluginCatalog, parsePluginCatalogEntry, isActionable } from './validation';
 export type {
   Capability, CapabilitiesResponse, ExecutionManifest, ExecutionResult,
   SemanticReplayContract, ApproximationContract, InvokeOptions,
   InvokeResponse, QdipClientOptions, SemanticStatus, PluginCatalogEntry, PluginCatalogUpdate
-} from './types.js';
+} from './types';
