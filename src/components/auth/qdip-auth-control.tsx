@@ -153,7 +153,12 @@ export function QdipAuthControl({
                 <span className={styles.profileId}>—</span>
               )}
             </div>
-            <button className={styles.profileSignOut} type="button" disabled={signingOut} onClick={() => void signOut()}>
+            <button
+              className={styles.profileSignOut}
+              type="button"
+              disabled={signingOut}
+              onClick={() => void signOut()}
+            >
               <LogOut size={16} aria-hidden />
               {copy.signOut}
             </button>
