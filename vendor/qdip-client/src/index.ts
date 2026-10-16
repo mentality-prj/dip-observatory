@@ -5,5 +5,5 @@ export { parseCapabilitiesResponse, parseInvokeResponse, parsePluginCatalog, par
 export type {
   Capability, CapabilitiesResponse, ExecutionManifest, ExecutionResult,
   SemanticReplayContract, ApproximationContract, InvokeOptions,
-  InvokeResponse, QdipClientOptions, SemanticStatus, PluginCatalogEntry, PluginCatalogUpdate
+  InvokeResponse, QdipClientOptions, SemanticStatus, PluginCatalogEntry, PluginCatalogUpdate, PluginCapabilityContract
 } from './types';
