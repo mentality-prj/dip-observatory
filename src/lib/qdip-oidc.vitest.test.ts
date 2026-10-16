@@ -227,11 +227,37 @@ describe('QDIP Zitadel OIDC PKCE', () => {
     await expect(exchangeCode('zitadel-test-auth-code', flow, config)).rejects.toThrow('subject mismatch')
   })
 
-  it('uses role-bearing ID token without fetching Userinfo', async () => {
-    const fetchMock = stubExchange(token())
+  it('uses verified identity from the ID token without a Userinfo roundtrip', async () => {
+    const fetchMock = stubExchange(token({ name: 'QA Tester', email: 'qa@qdip.ai' }))
     const session = await exchangeCode('zitadel-test-auth-code', flow, config)
     expect(session.roles).toEqual(['studio'])
+    expect(session.displayName).toBe('QA Tester')
+    expect(session.email).toBe('qa@qdip.ai')
     expect(fetchMock.mock.calls.some(([url]) => url === config.userinfo_endpoint)).toBe(false)
+  })
+
+  it('fills a missing display identity from verified Userinfo without replacing ID token roles', async () => {
+    const fetchMock = stubExchange(token(), {
+      sub: 'user-1',
+      name: 'QA Tester',
+      email: 'qa@qdip.ai',
+      [roleClaim]: { observatory_admin: { [organizationId]: 'qdip.example.test' } },
+    })
+    const session = await exchangeCode('zitadel-test-auth-code', flow, config)
+    expect(session.roles).toEqual(['studio'])
+    expect(session.displayName).toBe('QA Tester')
+    expect(session.email).toBe('qa@qdip.ai')
+    expect(fetchMock.mock.calls.some(([url]) => url === config.userinfo_endpoint)).toBe(true)
+  })
+
+  it('ignores malformed identity labels in verified tokens', async () => {
+    const session = await verifyIdToken(
+      token({ name: 'QA\\nInvalid', email: 'not-an-address', preferred_username: 'tester' }),
+      flow,
+      config
+    )
+    expect(session.displayName).toBe('tester')
+    expect(session.email).toBeUndefined()
   })
 
   it('verifies Zitadel ID token signature, nonce, issuer and audience', async () => {
