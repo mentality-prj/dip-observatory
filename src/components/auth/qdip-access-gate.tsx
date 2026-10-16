@@ -14,7 +14,8 @@ const messages = {
     studio: 'Studio Access',
     rr_operator: 'RR Operator',
     observatory_admin: 'Observatory Admin',
-    adminSessionInfo: 'Your current login session does not include this permission. Sign out, then sign in again to refresh your roles.',
+    adminSessionInfo:
+      'Your current login session does not include this permission. Sign out, then sign in again to refresh your roles.',
     required: 'Required role',
     home: 'Back to QDIP',
   },
