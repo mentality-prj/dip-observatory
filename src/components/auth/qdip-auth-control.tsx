@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 
-import { LogIn, LogOut } from 'lucide-react'
+import { ChevronDown, LogIn, LogOut, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { PLATFORM_URLS, type PlatformLocale } from '@/lib/platform-urls'
@@ -13,16 +13,46 @@ type AuthSession = {
   authenticated: boolean
   studio: boolean
   operator: boolean
+  observatoryAdmin?: boolean
+  user?: { id: string; displayName: string | null; email: string | null }
 }
 
 const labels = {
-  en: { signIn: 'Sign in', signOut: 'Sign out', signedIn: 'Signed in', signOutFailed: 'Could not sign out' },
-  uk: { signIn: 'Увійти', signOut: 'Вийти', signedIn: 'Ви увійшли', signOutFailed: 'Не вдалося вийти' },
+  en: {
+    signIn: 'Sign in',
+    signOut: 'Sign out',
+    signedIn: 'Signed in',
+    signOutFailed: 'Could not sign out',
+    account: 'Account',
+    roles: 'Access roles',
+    admin: 'Observatory admin',
+    studio: 'Studio',
+    operator: 'RR operator',
+    accountId: 'Account ID',
+  },
+  uk: {
+    signIn: 'Увійти',
+    signOut: 'Вийти',
+    signedIn: 'Ви увійшли',
+    signOutFailed: 'Не вдалося вийти',
+    account: 'Обліковий запис',
+    roles: 'Ролі доступу',
+    admin: 'Адміністратор Observatory',
+    studio: 'Studio',
+    operator: 'Оператор RR',
+    accountId: 'ID користувача',
+  },
   pl: {
     signIn: 'Zaloguj się',
     signOut: 'Wyloguj się',
     signedIn: 'Zalogowano',
     signOutFailed: 'Nie udało się wylogować',
+    account: 'Konto',
+    roles: 'Role dostępu',
+    admin: 'Administrator Observatory',
+    studio: 'Studio',
+    operator: 'Operator RR',
+    accountId: 'ID użytkownika',
   },
 } as const
 
@@ -37,11 +67,14 @@ export function QdipAuthControl({
   locale,
   returnTo,
   iconOnly = false,
+  showProfile = false,
 }: {
   locale: PlatformLocale
   returnTo: string
   /** Marketing header can render an accessible icon-only control without changing product headers. */
   iconOnly?: boolean
+  /** Use the full account menu in Observatory; other surfaces retain their compact auth control. */
+  showProfile?: boolean
 }) {
   const copy = labels[locale]
   const [session, setSession] = useState<AuthSession | null>(null)
@@ -80,6 +113,47 @@ export function QdipAuthControl({
     } finally {
       setSigningOut(false)
     }
+  }
+
+  if (session?.authenticated && showProfile) {
+    const identity = session.user
+    const display = identity?.displayName || identity?.email || copy.account
+    const shortLabel = identity?.email?.split('@')[0] || identity?.displayName || copy.account
+    const roles = [
+      ...(session.observatoryAdmin ? [copy.admin] : []),
+      ...(session.studio ? [copy.studio] : []),
+      ...(session.operator ? [copy.operator] : []),
+    ]
+    return (
+      <div className={styles.authControl} data-qdip-auth="signed-in" data-testid="observatory-profile">
+        <details className={styles.profile}>
+          <summary className={styles.profileTrigger} aria-label={`${copy.account}: ${display}`}>
+            <UserRound size={18} aria-hidden />
+            <span className={styles.profileShortName}>{shortLabel}</span>
+            <ChevronDown size={14} aria-hidden />
+          </summary>
+          <div className={styles.profilePanel}>
+            <p className={styles.profileTitle}>{copy.account}</p>
+            <strong className={styles.profileName}>{display}</strong>
+            {identity?.email && identity.email !== display ? (
+              <span className={styles.profileEmail}>{identity.email}</span>
+            ) : null}
+            <span className={styles.profileId}>{copy.accountId}: {identity?.id ?? '—'}</span>
+            <p className={styles.profileTitle}>{copy.roles}</p>
+            <div className={styles.roleList}>
+              {roles.length ? roles.map((role) => (
+                <span className={styles.roleChip} key={role}>{role}</span>
+              )) : <span className={styles.profileId}>—</span>}
+            </div>
+            <button className={styles.profileSignOut} type="button" disabled={signingOut} onClick={() => void signOut()}>
+              <LogOut size={16} aria-hidden />
+              {copy.signOut}
+            </button>
+            {error ? <span className={styles.error} role="alert">{copy.signOutFailed}</span> : null}
+          </div>
+        </details>
+      </div>
+    )
   }
 
   if (session?.authenticated) {
