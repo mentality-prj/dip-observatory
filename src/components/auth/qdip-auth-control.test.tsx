@@ -69,13 +69,15 @@ describe('QDIP shared authentication control', () => {
     expect(screen.getByRole('dialog', { name: 'Обліковий запис' })).toBeVisible()
     expect(screen.getByText('QA Tester')).toBeInTheDocument()
     expect(screen.getByText('qa@qdip.ai')).toBeInTheDocument()
+    expect(screen.getByText('qa@qdip.ai').closest('a')).toBeNull()
+    expect(screen.queryByText(/ID користувача:/)).not.toBeInTheDocument()
     expect(screen.getByText('Адміністратор Observatory')).toBeInTheDocument()
     expect(screen.getByText('Оператор RR')).toBeInTheDocument()
     expect(screen.getByText('Studio')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Вийти' })).toBeInTheDocument()
   })
 
-  it('falls back to a stable account ID for sessions issued before profile fields existed', async () => {
+  it('does not show a technical ID even when the OIDC session has no display identity', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -93,7 +95,8 @@ describe('QDIP shared authentication control', () => {
     render(<QdipAuthControl locale="en" returnTo="https://observatory.qdip.ai/en" showProfile />)
     const avatar = await screen.findByRole('button', { name: 'Account: Account' })
     fireEvent.click(avatar)
-    expect(screen.getByText('Account ID: old-sub-123')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Account' })).toBeVisible()
+    expect(screen.queryByText(/old-sub-123|Account ID/)).not.toBeInTheDocument()
     expect(screen.getByText('Observatory admin')).toBeInTheDocument()
   })
 
