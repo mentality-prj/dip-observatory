@@ -4,6 +4,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://qdip.ai'),
+  // iOS Safari must not convert the signed-in user's own email into a mailto link.
+  formatDetection: { email: false },
   title: { default: 'QDIP — Decision Engine for consistent, explainable decisions', template: '%s · QDIP' },
   description:
     'QDIP evaluates alternatives, priorities, constraints and uncertainty to provide a recommendation with supporting evidence. The responsible person makes the final decision.',
