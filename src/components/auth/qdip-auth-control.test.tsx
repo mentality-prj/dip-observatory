@@ -61,6 +61,12 @@ describe('QDIP shared authentication control', () => {
     render(<QdipAuthControl locale="uk" returnTo="https://observatory.qdip.ai/uk/admin/plugins" showProfile />)
 
     expect(await screen.findByTestId('observatory-profile')).toBeVisible()
+    const avatar = screen.getByRole('button', { name: 'Обліковий запис: QA Tester' })
+    expect(avatar).toHaveAttribute('aria-expanded', 'false')
+    expect(avatar.querySelector('svg')).not.toBeNull()
+    fireEvent.click(avatar)
+    expect(avatar).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('dialog', { name: 'Обліковий запис' })).toBeVisible()
     expect(screen.getByText('QA Tester')).toBeInTheDocument()
     expect(screen.getByText('qa@qdip.ai')).toBeInTheDocument()
     expect(screen.getByText('Адміністратор Observatory')).toBeInTheDocument()
@@ -85,7 +91,9 @@ describe('QDIP shared authentication control', () => {
       }))
     )
     render(<QdipAuthControl locale="en" returnTo="https://observatory.qdip.ai/en" showProfile />)
-    expect(await screen.findByText('Account ID: old-sub-123')).toBeInTheDocument()
+    const avatar = await screen.findByRole('button', { name: 'Account: Account' })
+    fireEvent.click(avatar)
+    expect(screen.getByText('Account ID: old-sub-123')).toBeInTheDocument()
     expect(screen.getByText('Observatory admin')).toBeInTheDocument()
   })
 
