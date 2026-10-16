@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminRequest } from '@/lib/observatory-plugin-admin'
 import { corePluginRequest, readCorePublications } from '@/lib/observatory-plugin-catalog'
-import { DIP_USE_CASES } from '@/use-cases/registry'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,10 +15,17 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
 
   if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json')
     return NextResponse.json({ error: 'JSON required' }, { status: 415 })
-  let update: { published?: unknown; expected_revision?: unknown }
+  let update: {
+    published?: unknown
+    expected_revision?: unknown
+    capability_id?: unknown
+    display_name?: unknown
+    description?: unknown
+    category?: unknown
+  }
   try {
     const raw = await request.text()
-    if (raw.length > 256) return NextResponse.json({ error: 'Request too large' }, { status: 413 })
+    if (raw.length > 4096) return NextResponse.json({ error: 'Request too large' }, { status: 413 })
     update = JSON.parse(raw) as typeof update
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
@@ -35,17 +41,25 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
   try {
     const installed = (await readCorePublications()).find((item) => item.name === name)
     if (!installed) return NextResponse.json({ error: 'Plugin not installed' }, { status: 404 })
-    const workspace = DIP_USE_CASES.find(
-      (item) => item.plugin.id === name && installed.capabilities.includes(item.plugin.capability)
-    )
-    if (update.published && (!workspace || !installed.enabled))
-      return NextResponse.json(
-        { error: 'An approved Observatory workspace and active capability are required' },
-        { status: 409 }
-      )
-    // A server-owned route/capability binding, never browser-supplied executable code or URL.
-    const capability = workspace?.plugin.capability ?? installed.capabilities[0]
-    if (!capability) return NextResponse.json({ error: 'Plugin has no capability' }, { status: 409 })
+    // Runtime registration belongs to QDIP Core. Observatory registers only
+    // a catalog entry for a plugin/capability already installed and verified.
+    const capability =
+      typeof update.capability_id === 'string'
+        ? update.capability_id
+        : installed.capability_id ?? installed.capabilities[0]
+    if (!capability || !installed.capabilities.includes(capability))
+      return NextResponse.json({ error: 'Capability is not installed' }, { status: 409 })
+    if (update.published && !installed.enabled)
+      return NextResponse.json({ error: 'Disabled plugin cannot be published' }, { status: 409 })
+    const displayName = update.display_name
+    const description = update.description
+    const category = update.category
+    if (displayName !== undefined && (typeof displayName !== 'string' || displayName.trim().length < 2 || displayName.length > 120))
+      return NextResponse.json({ error: 'Invalid display name' }, { status: 422 })
+    if (description !== undefined && (typeof description !== 'string' || description.length > 2000))
+      return NextResponse.json({ error: 'Invalid description' }, { status: 422 })
+    if (category !== undefined && (typeof category !== 'string' || !/^[A-Za-z0-9 _.-]{1,64}$/.test(category)))
+      return NextResponse.json({ error: 'Invalid category' }, { status: 422 })
     const upstream = await corePluginRequest('/' + encodeURIComponent(name), {
       method: 'PUT',
       headers: { 'X-QDIP-Actor': session.sub },
@@ -54,6 +68,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
         expected_revision: update.expected_revision,
         capability_id: capability,
         plugin_version: installed.version,
+        ...(displayName !== undefined ? { display_name: (displayName as string).trim() } : {}),
+        ...(description !== undefined ? { description: (description as string).trim() } : {}),
+        ...(category !== undefined ? { category: (category as string).trim() } : {}),
       }),
     })
     const text = await upstream.text()
