@@ -14,6 +14,7 @@ const copy = {
     category: 'Категорія',
     demo: 'Відкрити демонстрацію',
     note: 'Публікація в каталозі не надає доступу до виконання плагіна.',
+    offline: 'Плагін тимчасово недоступний. Опис збережено.',
   },
   en: {
     back: 'All plugins',
@@ -22,6 +23,7 @@ const copy = {
     category: 'Category',
     demo: 'Open demo',
     note: 'Catalog publication does not grant plugin execution permissions.',
+    offline: 'Plugin temporarily unavailable. Catalog details are preserved.',
   },
   pl: {
     back: 'Wszystkie wtyczki',
@@ -30,6 +32,7 @@ const copy = {
     category: 'Kategoria',
     demo: 'Otwórz demo',
     note: 'Publikacja w katalogu nie nadaje uprawnień do wykonania wtyczki.',
+    offline: 'Wtyczka tymczasowo niedostępna. Opis pozostaje dostępny.',
   },
 } as const
 
@@ -47,6 +50,9 @@ export default async function PluginDetailsPage({ params }: { params: Promise<{ 
           ← {t.back}
         </a>
         <h1 className="mt-6 break-words text-3xl font-semibold">{plugin.ui?.label || plugin.name}</h1>
+        {!plugin.enabled && (
+          <p role="status" className="mt-3 text-sm font-semibold text-amber-300">{t.offline}</p>
+        )}
         <p className="mt-5 whitespace-pre-line break-words text-base leading-7 text-slate-300">{plugin.description}</p>
         <dl className="mt-8 grid gap-4 rounded-xl border border-white/15 bg-slate-900 p-5 sm:grid-cols-2">
           <div>
@@ -62,7 +68,7 @@ export default async function PluginDetailsPage({ params }: { params: Promise<{ 
             <dd className="mt-1 break-all font-mono text-sm">{plugin.capability_id}</dd>
           </div>
         </dl>
-        {demo && (
+        {plugin.enabled && demo && (
           <a
             className="mt-6 inline-block rounded-lg border border-cyan-300/40 px-4 py-3 text-sm font-semibold text-cyan-300"
             href={buildLocalePath(demo.route, locale)}
