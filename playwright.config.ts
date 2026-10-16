@@ -20,6 +20,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm start --hostname 127.0.0.1',
     env: {
+      QDIP_PLAYWRIGHT_LEGACY_CATALOG: '1',
       ZITADEL_ISSUER: oidcTestConfig.issuer,
       ZITADEL_CLIENT_ID: oidcTestConfig.clientId,
       ZITADEL_QDIP_PROJECT_ID: oidcTestConfig.projectId,
