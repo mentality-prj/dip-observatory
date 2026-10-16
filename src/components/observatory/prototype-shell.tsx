@@ -9,6 +9,7 @@ import {
   Menu,
   ShieldCheck,
   Network,
+  Blocks,
   Scale,
   SlidersHorizontal,
   UsersRound,
@@ -25,7 +26,8 @@ import { ObservatoryFooter } from './observatory-footer'
 import styles from './prototype-shell.module.css'
 
 export type PrototypeTheme = UseCaseTheme
-export type ObservatoryRoute = '/' | '/challenges' | '/decision-intake' | '/decisions' | '/admin/plugins' | UseCaseRoute
+export type ObservatoryRoute =
+  '/' | '/challenges' | '/decision-intake' | '/decisions' | '/plugins' | '/admin/plugins' | UseCaseRoute
 
 type PrototypeShellProps = {
   locale: Locale
@@ -80,9 +82,11 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
   const activeLabel =
     activeRoute === '/admin/plugins'
       ? ({ en: 'Plugin administration', uk: 'Керування плагінами', pl: 'Administracja wtyczkami' } as const)[locale]
-      : activeItem
-        ? labelFor(activeItem)
-        : 'Observatory'
+      : activeRoute === '/plugins'
+        ? ({ en: 'Plugin catalog', uk: 'Каталог плагінів', pl: 'Katalog wtyczek' } as const)[locale]
+        : activeItem
+          ? labelFor(activeItem)
+          : 'Observatory'
 
   const nav = (
     <nav className={styles.navigation} aria-label={observatory('applications')}>
@@ -102,6 +106,14 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
           </a>
         )
       })}
+      <a
+        className={styles.navLink}
+        href={buildLocalePath('/plugins', locale)}
+        aria-current={activeRoute === '/plugins' ? 'page' : undefined}
+      >
+        <Blocks className={styles.navIcon} aria-hidden />
+        <span>{({ en: 'Plugins', uk: 'Плагіни', pl: 'Wtyczki' } as const)[locale]}</span>
+      </a>
       {isAdmin && (
         <a
           className={styles.navLink}
