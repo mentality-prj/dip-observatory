@@ -3,7 +3,7 @@ import { marketingHref } from '@/lib/platform-urls'
 import { QdipAuthControl } from './qdip-auth-control'
 import styles from './qdip-access-gate.module.css'
 
-type Role = 'studio' | 'rr_operator'
+type Role = 'studio' | 'rr_operator' | 'observatory_admin'
 
 const messages = {
   en: {
@@ -13,6 +13,9 @@ const messages = {
     forbiddenBody: 'You are signed in, but this account does not have the role required for this workspace.',
     studio: 'Studio Access',
     rr_operator: 'RR Operator',
+    observatory_admin: 'Observatory Admin',
+    adminSessionInfo:
+      'Your current login session does not include this permission. Sign out, then sign in again to refresh your roles.',
     required: 'Required role',
     home: 'Back to QDIP',
   },
@@ -23,6 +26,8 @@ const messages = {
     forbiddenBody: 'Ви увійшли, але цьому обліковому запису не надано необхідної ролі.',
     studio: 'Studio Access',
     rr_operator: 'RR Operator',
+    observatory_admin: 'Адміністратор Observatory',
+    adminSessionInfo: 'Поточна сесія не містить цієї ролі. Вийдіть із системи та увійдіть знову, щоб оновити права.',
     required: 'Необхідна роль',
     home: 'На головну QDIP',
   },
@@ -33,6 +38,8 @@ const messages = {
     forbiddenBody: 'Jesteś zalogowany, ale to konto nie ma wymaganej roli.',
     studio: 'Studio Access',
     rr_operator: 'RR Operator',
+    observatory_admin: 'Administrator Observatory',
+    adminSessionInfo: 'Bieżąca sesja nie zawiera tego uprawnienia. Wyloguj się i zaloguj ponownie, aby odświeżyć role.',
     required: 'Wymagana rola',
     home: 'Wróć do QDIP',
   },
@@ -56,6 +63,7 @@ export function QdipAccessGate({
         <div className={styles.brand}>QDIP</div>
         <h1 id="qdip-access-title">{authenticated ? copy.forbidden : copy.signIn}</h1>
         <p>{authenticated ? copy.forbiddenBody : copy.signInBody}</p>
+        {authenticated && role === 'observatory_admin' && <p role="status">{copy.adminSessionInfo}</p>}
         <p className={styles.requirement}>
           {copy.required}: <strong>{copy[role]}</strong>
         </p>
