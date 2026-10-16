@@ -3,3 +3,6 @@ tsconfig.json
 settings.json
 .vscode/extensions.json
 pnpm-lock.yaml
+
+# Upstream @qdip/client SDK source is consumed verbatim and formatted in qdip-core.
+vendor/qdip-client/src/

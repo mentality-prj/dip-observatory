@@ -5,6 +5,7 @@ const hasHost = (value: string) => [{ type: 'host' as const, value }]
 const metadataPaths = ['/robots.txt', '/sitemap.xml', '/manifest.webmanifest'] as const
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@qdip/client'],
   async redirects() {
     return [
       {

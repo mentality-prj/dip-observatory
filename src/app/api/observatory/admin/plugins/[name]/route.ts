@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminRequest } from '@/lib/observatory-plugin-admin'
-import { corePluginRequest, readCorePublications } from '@/lib/observatory-plugin-catalog'
+import { coreCatalogClient, readCorePublications } from '@/lib/observatory-plugin-catalog'
+import { QdipError } from '@qdip/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -63,30 +64,28 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
       return NextResponse.json({ error: 'Invalid description' }, { status: 422 })
     if (category !== undefined && (typeof category !== 'string' || !/^[A-Za-z0-9 _.-]{1,64}$/.test(category)))
       return NextResponse.json({ error: 'Invalid category' }, { status: 422 })
-    const upstream = await corePluginRequest('/' + encodeURIComponent(name), {
-      method: 'PUT',
-      headers: { 'X-QDIP-Actor': session.sub },
-      body: JSON.stringify({
-        published: update.published,
-        expected_revision: update.expected_revision,
-        capability_id: capability,
-        plugin_version: installed.version,
-        ...(displayName !== undefined ? { display_name: (displayName as string).trim() } : {}),
-        ...(description !== undefined ? { description: (description as string).trim() } : {}),
-        ...(category !== undefined ? { category: (category as string).trim() } : {}),
-      }),
+    const updated = await coreCatalogClient().catalog.publish(name, {
+      published: update.published,
+      expectedRevision: update.expected_revision,
+      capabilityId: capability,
+      pluginVersion: installed.version,
+      actor: session.sub,
+      ...(displayName !== undefined ? { displayName: (displayName as string).trim() } : {}),
+      ...(description !== undefined ? { description: (description as string).trim() } : {}),
+      ...(category !== undefined ? { category: (category as string).trim() } : {}),
     })
-    const text = await upstream.text()
-    if (text.length > 16_384) return NextResponse.json({ error: 'Oversized Core response' }, { status: 502 })
-    if (upstream.status === 409)
-      return NextResponse.json({ error: 'Registry changed. Reload and retry.' }, { status: 409 })
-    if (!upstream.ok)
-      return NextResponse.json({ error: 'Could not update plugin publication' }, { status: upstream.status })
-    return new NextResponse(text, {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    return NextResponse.json(updated, {
+      headers: { 'Cache-Control': 'no-store' },
     })
-  } catch {
+  } catch (cause) {
+    if (cause instanceof QdipError) {
+      if (cause.httpStatus === 409)
+        return NextResponse.json({ error: 'Registry changed. Reload and retry.' }, { status: 409 })
+      if (cause.httpStatus === 401 || cause.httpStatus === 403)
+        return NextResponse.json({ error: 'QDIP Core administrative credential rejected' }, { status: 502 })
+      if (cause.httpStatus === 400 || cause.httpStatus === 422)
+        return NextResponse.json({ error: 'Invalid plugin publication' }, { status: 422 })
+    }
     return NextResponse.json({ error: 'QDIP Core unavailable' }, { status: 503 })
   }
 }
