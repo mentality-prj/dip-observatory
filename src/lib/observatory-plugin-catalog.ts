@@ -96,7 +96,12 @@ export async function visiblePluginUseCaseIds(): Promise<string[]> {
   try {
     return visibleUseCases(await readCorePublications())
   } catch {
-    // An unverified catalog must never expose newly provisioned plugins.
+    // Existing browser fixtures intentionally run without Core; this explicit
+    // Playwright-only override is set by playwright.config.ts, never by Web.
+    // Production fails closed if Core cannot verify publication status.
+    if (process.env.QDIP_PLAYWRIGHT_LEGACY_CATALOG === '1') {
+      return visibleUseCases([])
+    }
     return []
   }
 }
