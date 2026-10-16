@@ -117,13 +117,24 @@
   outline-offset: 2px;
 }
 
+/* Render outside the blurred/sticky header so the panel cannot be clipped or
+   appear underneath Observatory's navigation and content. */
+.profilePortal {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  pointer-events: none;
+  color: var(--ds-text);
+  font-family: var(--ds-font-sans);
+}
+
 .profilePanel {
   position: absolute;
-  z-index: 100;
-  max-height: calc(100dvh - 120px);
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 1;
   overflow-y: auto;
-  top: calc(100% + 8px);
-  right: 0;
+  overscroll-behavior: contain;
+  pointer-events: auto;
   display: grid;
   width: min(318px, calc(100vw - 24px));
   gap: 10px;
@@ -131,8 +142,11 @@
   border: 1px solid var(--ds-border);
   border-radius: var(--ds-radius-panel);
   color: var(--ds-text);
-  background: var(--ds-surface-raised);
-  box-shadow: var(--ds-shadow-card);
+  /* --ds-surface-raised is translucent (6% white) in dark mode; use
+     an opaque base, then tint it without showing page content underneath. */
+  background-color: var(--ds-bg);
+  background-image: linear-gradient(145deg, rgb(var(--ds-accent-rgb) / 0.07), rgb(var(--ds-accent-rgb) / 0.02));
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.65);
 }
 
 .profileTitle {

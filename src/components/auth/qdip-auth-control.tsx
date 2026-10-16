@@ -4,9 +4,17 @@ import Image from 'next/image'
 
 import { LogIn, LogOut, UserRound } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { PLATFORM_URLS, type PlatformLocale } from '@/lib/platform-urls'
 import styles from './qdip-auth-control.module.css'
+
+type ProfilePlacement = {
+  top: number
+  maxHeight: number
+  theme: string
+  mode: string
+}
 
 type AuthSession = {
   configured: boolean
@@ -82,6 +90,8 @@ export function QdipAuthControl({
   const [error, setError] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const profilePanelRef = useRef<HTMLDivElement>(null)
+  const [profilePlacement, setProfilePlacement] = useState<ProfilePlacement | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -99,8 +109,32 @@ export function QdipAuthControl({
   // Match VHV's avatar button: close the popover on outside press or Escape.
   useEffect(() => {
     if (!profileOpen) return
+    const measure = () => {
+      const trigger = profileRef.current?.querySelector('button')
+      if (!trigger) return
+      const box = trigger.getBoundingClientRect()
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+      const top = Math.max(12, Math.min(Math.round(box.bottom + 8), viewportHeight - 132))
+      const shell = trigger.closest('[data-ds-theme]')
+      setProfilePlacement({
+        top,
+        maxHeight: Math.max(120, viewportHeight - top - 12),
+        theme: shell?.getAttribute('data-ds-theme') ?? 'cyan',
+        mode: shell?.getAttribute('data-ds-mode') ?? 'dark',
+      })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    window.visualViewport?.addEventListener('resize', measure)
     const onPointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && !profileRef.current?.contains(event.target)) setProfileOpen(false)
+      if (
+        event.target instanceof Node &&
+        !profileRef.current?.contains(event.target) &&
+        !profilePanelRef.current?.contains(event.target)
+      ) {
+        setProfileOpen(false)
+      }
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setProfileOpen(false)
@@ -108,6 +142,9 @@ export function QdipAuthControl({
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
     return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+      window.visualViewport?.removeEventListener('resize', measure)
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
     }
@@ -154,44 +191,59 @@ export function QdipAuthControl({
         >
           <UserRound size={22} aria-hidden />
         </button>
-        {profileOpen && (
-          <div className={styles.profilePanel} role="dialog" aria-label={copy.account}>
-            <p className={styles.profileTitle}>{copy.account}</p>
-            <strong className={styles.profileName}>{display}</strong>
-            {identity?.email && identity.email !== display ? (
-              <span className={styles.profileEmail}>{identity.email}</span>
-            ) : null}
-            <span className={styles.profileId}>
-              {copy.accountId}: {identity?.id ?? '—'}
-            </span>
-            <p className={styles.profileTitle}>{copy.roles}</p>
-            <div className={styles.roleList}>
-              {roles.length ? (
-                roles.map((role) => (
-                  <span className={styles.roleChip} key={role}>
-                    {role}
-                  </span>
-                ))
-              ) : (
-                <span className={styles.profileId}>—</span>
-              )}
-            </div>
-            <button
-              className={styles.profileSignOut}
-              type="button"
-              disabled={signingOut}
-              onClick={() => void signOut()}
+        {profileOpen &&
+          profilePlacement &&
+          createPortal(
+            <div
+              className={styles.profilePortal}
+              data-ds-theme={profilePlacement.theme}
+              data-ds-mode={profilePlacement.mode}
             >
-              <LogOut size={16} aria-hidden />
-              {copy.signOut}
-            </button>
-            {error ? (
-              <span className={styles.error} role="alert">
-                {copy.signOutFailed}
-              </span>
-            ) : null}
-          </div>
-        )}
+              <div
+                ref={profilePanelRef}
+                className={styles.profilePanel}
+                role="dialog"
+                aria-label={copy.account}
+                style={{ top: profilePlacement.top, maxHeight: profilePlacement.maxHeight }}
+              >
+                <p className={styles.profileTitle}>{copy.account}</p>
+                <strong className={styles.profileName}>{display}</strong>
+                {identity?.email && identity.email !== display ? (
+                  <span className={styles.profileEmail}>{identity.email}</span>
+                ) : null}
+                <span className={styles.profileId}>
+                  {copy.accountId}: {identity?.id ?? '—'}
+                </span>
+                <p className={styles.profileTitle}>{copy.roles}</p>
+                <div className={styles.roleList}>
+                  {roles.length ? (
+                    roles.map((role) => (
+                      <span className={styles.roleChip} key={role}>
+                        {role}
+                      </span>
+                    ))
+                  ) : (
+                    <span className={styles.profileId}>—</span>
+                  )}
+                </div>
+                <button
+                  className={styles.profileSignOut}
+                  type="button"
+                  disabled={signingOut}
+                  onClick={() => void signOut()}
+                >
+                  <LogOut size={16} aria-hidden />
+                  {copy.signOut}
+                </button>
+                {error ? (
+                  <span className={styles.error} role="alert">
+                    {copy.signOutFailed}
+                  </span>
+                ) : null}
+              </div>
+            </div>,
+            document.body
+          )}
       </div>
     )
   }
