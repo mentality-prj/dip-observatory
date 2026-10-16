@@ -9,10 +9,27 @@ afterEach(() => {
 })
 
 describe('Observatory delegates catalog reads through @qdip/client', () => {
-  it('fails closed when the catalog admin credential is missing despite a general Core key', async () => {
+  it('uses the existing server-only platform key when an admin alias is absent', async () => {
     vi.stubEnv('DIP_API_BASE_URL', 'https://core.example.test')
     vi.stubEnv('DIP_ADMIN_API_KEY', '')
-    vi.stubEnv('DIP_API_KEY', 'non-admin-general-key')
+    vi.stubEnv('DIP_API_KEY', 'existing-platform-key')
+    const fetcher = vi.fn(async () => new Response('[]', {
+      status: 200, headers: { 'content-type': 'application/json' },
+    }))
+    vi.stubGlobal('fetch', fetcher)
+    await expect(readCorePublications()).resolves.toEqual([])
+    expect(fetcher).toHaveBeenCalledWith(
+      'https://core.example.test/api/v1/plugin-publications',
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'x-api-key': 'existing-platform-key' }),
+      })
+    )
+  })
+
+  it('rejects a missing platform key rather than running anonymous catalog access', async () => {
+    vi.stubEnv('DIP_API_BASE_URL', 'https://core.example.test')
+    vi.stubEnv('DIP_ADMIN_API_KEY', '')
+    vi.stubEnv('DIP_API_KEY', '')
     const fetcher = vi.fn()
     vi.stubGlobal('fetch', fetcher)
     await expect(readCorePublications()).rejects.toThrow('QDIP Core admin connection is not configured')
