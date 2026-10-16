@@ -76,7 +76,9 @@ export function publishedPluginEntries(records: readonly CorePluginPublication[]
     (plugin) =>
       /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(plugin.name) &&
       // Publication and current runtime availability are independent states.
-      // Preserve published details when a remote SDK worker disconnects.
+      // Preserve published details only for disconnected remote SDK workers.
+      // Locally disabled embedded plugins must still disappear from public listings.
+      (plugin.enabled || plugin.source === 'remote') &&
       plugin.published === true &&
       plugin.published_version === plugin.version &&
       typeof plugin.capability_id === 'string' &&
