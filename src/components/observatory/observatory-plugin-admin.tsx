@@ -7,6 +7,8 @@ import { DIP_USE_CASES } from '@/use-cases/registry'
 
 type Row = {
   name: string
+  plugin_id?: string
+  source?: 'embedded' | 'remote'
   description: string
   version: string
   enabled: boolean
@@ -42,6 +44,7 @@ const copy = {
     published: 'Опубліковано',
     unpublished: 'Не опубліковано',
     disabled: 'Вимкнено в Core',
+    offline: 'Remote Worker не підключений',
     demo: 'Готова демосторінка',
     generic: 'Стандартна сторінка каталогу',
     details: 'Переглянути сторінку',
@@ -74,6 +77,7 @@ const copy = {
     published: 'Published',
     unpublished: 'Unpublished',
     disabled: 'Disabled in Core',
+    offline: 'Remote Worker is offline',
     demo: 'Existing demo workspace',
     generic: 'Standard catalog page',
     details: 'View page',
@@ -106,6 +110,7 @@ const copy = {
     published: 'Opublikowano',
     unpublished: 'Nieopublikowano',
     disabled: 'Wyłączona w Core',
+    offline: 'Zdalny Worker niedostępny',
     demo: 'Gotowa strona demo',
     generic: 'Standardowa strona katalogu',
     details: 'Zobacz stronę',
@@ -273,7 +278,7 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
               <option value="">{t.select}</option>
               {sorted.map((row) => (
                 <option key={row.name} value={row.name}>
-                  {row.name} ({row.version})
+                  {row.ui?.label || row.plugin_id || row.name} ({row.version})
                 </option>
               ))}
             </select>
@@ -350,7 +355,7 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
               <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
                 <div className="w-full min-w-0 flex-1">
                   <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
-                  <p className="mt-1 break-all text-xs text-slate-500">{row.name}</p>
+                  <p className="mt-1 break-all text-xs text-slate-500">{row.plugin_id || row.name}{row.source === 'remote' ? ' · SDK Remote' : ''}</p>
                   {row.description && (
                     <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">
                       {row.description}
@@ -358,7 +363,7 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                   )}
                 </div>
                 <Badge variant={published ? 'emerald' : 'neutral'}>
-                  {published ? t.published : row.enabled ? t.unpublished : t.disabled}
+                  {published ? t.published : row.enabled ? t.unpublished : row.source === 'remote' ? t.offline : t.disabled}
                 </Badge>
               </div>
               <p className="mt-4 break-words text-xs text-slate-400">
