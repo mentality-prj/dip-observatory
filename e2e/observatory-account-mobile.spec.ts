@@ -20,7 +20,10 @@ test.describe('Observatory identity and mobile utilities', () => {
     await page.keyboard.press('Escape')
     await expect(avatar).toHaveAttribute('aria-expanded', 'false')
     await avatar.click()
-    await page.locator('main').first().click({ position: { x: 4, y: 4 } })
+    await page
+      .locator('main')
+      .first()
+      .click({ position: { x: 4, y: 4 } })
     await expect(avatar).toHaveAttribute('aria-expanded', 'false')
   })
 
@@ -46,9 +49,7 @@ test.describe('Observatory identity and mobile utilities', () => {
       expect(scrollWidth).toBeLessThanOrEqual(width)
       await language.locator('a[data-mobile-locale="uk"]').click()
       await expect(page).toHaveURL('http://observatory.localhost:3000/uk/admin/plugins')
-      await expect(page.getByRole('group', { name: 'Мова' }).locator('a[aria-current="page"]')).toHaveText(
-        'UK'
-      )
+      await expect(page.getByRole('group', { name: 'Мова' }).locator('a[aria-current="page"]')).toHaveText('UK')
     })
   }
 })
