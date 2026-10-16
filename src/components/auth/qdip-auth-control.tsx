@@ -138,18 +138,30 @@ export function QdipAuthControl({
             {identity?.email && identity.email !== display ? (
               <span className={styles.profileEmail}>{identity.email}</span>
             ) : null}
-            <span className={styles.profileId}>{copy.accountId}: {identity?.id ?? '—'}</span>
+            <span className={styles.profileId}>
+              {copy.accountId}: {identity?.id ?? '—'}
+            </span>
             <p className={styles.profileTitle}>{copy.roles}</p>
             <div className={styles.roleList}>
-              {roles.length ? roles.map((role) => (
-                <span className={styles.roleChip} key={role}>{role}</span>
-              )) : <span className={styles.profileId}>—</span>}
+              {roles.length ? (
+                roles.map((role) => (
+                  <span className={styles.roleChip} key={role}>
+                    {role}
+                  </span>
+                ))
+              ) : (
+                <span className={styles.profileId}>—</span>
+              )}
             </div>
             <button className={styles.profileSignOut} type="button" disabled={signingOut} onClick={() => void signOut()}>
               <LogOut size={16} aria-hidden />
               {copy.signOut}
             </button>
-            {error ? <span className={styles.error} role="alert">{copy.signOutFailed}</span> : null}
+            {error ? (
+              <span className={styles.error} role="alert">
+                {copy.signOutFailed}
+              </span>
+            ) : null}
           </div>
         </details>
       </div>
