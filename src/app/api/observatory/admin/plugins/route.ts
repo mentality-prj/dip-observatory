@@ -9,9 +9,12 @@ export async function GET(request: NextRequest) {
   const { error } = adminRequest(request)
   if (error) return error
   try {
-    return NextResponse.json({ plugins: await readCorePublications() }, {
-      headers: { 'Cache-Control': 'no-store' },
-    })
+    return NextResponse.json(
+      { plugins: await readCorePublications() },
+      {
+        headers: { 'Cache-Control': 'no-store' },
+      }
+    )
   } catch {
     return NextResponse.json({ error: 'QDIP Core publication registry unavailable' }, { status: 503 })
   }

@@ -24,17 +24,25 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  if (typeof update.published !== 'boolean' || typeof update.expected_revision !== 'number' || !Number.isSafeInteger(update.expected_revision)
-      || (update.expected_revision as number) < 0)
+  if (
+    typeof update.published !== 'boolean' ||
+    typeof update.expected_revision !== 'number' ||
+    !Number.isSafeInteger(update.expected_revision) ||
+    (update.expected_revision as number) < 0
+  )
     return NextResponse.json({ error: 'Invalid publication request' }, { status: 422 })
 
   try {
     const installed = (await readCorePublications()).find((item) => item.name === name)
     if (!installed) return NextResponse.json({ error: 'Plugin not installed' }, { status: 404 })
-    const workspace = DIP_USE_CASES.find((item) =>
-      item.plugin.id === name && installed.capabilities.includes(item.plugin.capability))
+    const workspace = DIP_USE_CASES.find(
+      (item) => item.plugin.id === name && installed.capabilities.includes(item.plugin.capability)
+    )
     if (update.published && (!workspace || !installed.enabled))
-      return NextResponse.json({ error: 'An approved Observatory workspace and active capability are required' }, { status: 409 })
+      return NextResponse.json(
+        { error: 'An approved Observatory workspace and active capability are required' },
+        { status: 409 }
+      )
     // A server-owned route/capability binding, never browser-supplied executable code or URL.
     const capability = workspace?.plugin.capability ?? installed.capabilities[0]
     if (!capability) return NextResponse.json({ error: 'Plugin has no capability' }, { status: 409 })
@@ -52,8 +60,12 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
     if (text.length > 16_384) return NextResponse.json({ error: 'Oversized Core response' }, { status: 502 })
     if (upstream.status === 409)
       return NextResponse.json({ error: 'Registry changed. Reload and retry.' }, { status: 409 })
-    if (!upstream.ok) return NextResponse.json({ error: 'Could not update plugin publication' }, { status: upstream.status })
-    return new NextResponse(text, { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } })
+    if (!upstream.ok)
+      return NextResponse.json({ error: 'Could not update plugin publication' }, { status: upstream.status })
+    return new NextResponse(text, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    })
   } catch {
     return NextResponse.json({ error: 'QDIP Core unavailable' }, { status: 503 })
   }

@@ -20,8 +20,11 @@ export type CorePluginPublication = {
 // These specific demos were already publicly listed before the admin controls.
 // New application routes are PRIVATE until explicitly published.
 const LEGACY_PUBLIC = new Set([
-  'resource-allocation', 'supply-network-optimization', 'contractor-allocation',
-  'readiness-recovery', 'gtm-lab',
+  'resource-allocation',
+  'supply-network-optimization',
+  'contractor-allocation',
+  'readiness-recovery',
+  'gtm-lab',
 ])
 
 export function corePluginConnection(): { base: string; key: string } {
@@ -48,8 +51,7 @@ export async function corePluginRequest(path: string, init: RequestInit = {}): P
 export async function readCorePublications(): Promise<CorePluginPublication[]> {
   const response = await corePluginRequest('')
   if (!response.ok) throw new Error('QDIP plugin publication API unavailable')
-  if (Number(response.headers.get('content-length') ?? '0') > 250_000)
-    throw new Error('Oversized plugin catalog')
+  if (Number(response.headers.get('content-length') ?? '0') > 250_000) throw new Error('Oversized plugin catalog')
   const reader = response.body?.getReader()
   if (!reader) throw new Error('Empty plugin catalog')
   const chunks: Uint8Array[] = []
@@ -66,7 +68,10 @@ export async function readCorePublications(): Promise<CorePluginPublication[]> {
   }
   const bytes = new Uint8Array(size)
   let index = 0
-  for (const chunk of chunks) { bytes.set(chunk, index); index += chunk.byteLength }
+  for (const chunk of chunks) {
+    bytes.set(chunk, index)
+    index += chunk.byteLength
+  }
   const data: unknown = JSON.parse(new TextDecoder().decode(bytes))
   if (!Array.isArray(data) || data.length > 1000) throw new Error('Invalid plugin catalog')
   return data as CorePluginPublication[]
@@ -79,9 +84,11 @@ export function visibleUseCases(records: readonly CorePluginPublication[]): stri
     if (!record) return LEGACY_PUBLIC.has(item.id)
     if (!record.enabled || !record.capabilities.includes(item.plugin.capability)) return false
     if (record.published === null) return LEGACY_PUBLIC.has(item.id)
-    return record.published === true
-      && record.published_version === record.version
-      && record.capability_id === item.plugin.capability
+    return (
+      record.published === true &&
+      record.published_version === record.version &&
+      record.capability_id === item.plugin.capability
+    )
   }).map((item) => item.id)
 }
 

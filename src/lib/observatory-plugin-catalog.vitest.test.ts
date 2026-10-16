@@ -4,9 +4,17 @@ vi.mock('server-only', () => ({}))
 import { visibleUseCases, type CorePluginPublication } from './observatory-plugin-catalog'
 
 const meta: CorePluginPublication = {
-  name: 'readiness-recovery', version: '1.0', description: '', enabled: true,
-  capabilities: ['operations.readiness-recovery.plan'], capability_versions: {},
-  ui: {}, published: null, revision: 0, capability_id: null, published_version: null,
+  name: 'readiness-recovery',
+  version: '1.0',
+  description: '',
+  enabled: true,
+  capabilities: ['operations.readiness-recovery.plan'],
+  capability_versions: {},
+  ui: {},
+  published: null,
+  revision: 0,
+  capability_id: null,
+  published_version: null,
 }
 
 describe('public Observatory plugin projection', () => {

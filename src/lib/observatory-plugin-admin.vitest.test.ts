@@ -4,14 +4,15 @@ import { NextRequest } from 'next/server'
 vi.mock('server-only', () => ({}))
 const auth = vi.hoisted(() => ({ user: 'owner' as string | null, admin: true }))
 vi.mock('@/lib/qdip-oidc', () => ({
-  sessionFromRequest: () => auth.user ? { sub: auth.user } : null,
+  sessionFromRequest: () => (auth.user ? { sub: auth.user } : null),
   canAdministerObservatory: () => auth.admin,
 }))
 import { adminRequest } from './observatory-plugin-admin'
 
 function request(host = 'observatory.qdip.ai', origin = 'https://observatory.qdip.ai') {
   return new NextRequest('https://observatory.qdip.ai/api/observatory/admin/plugins', {
-    method: 'PUT', headers: { host, origin },
+    method: 'PUT',
+    headers: { host, origin },
   })
 }
 

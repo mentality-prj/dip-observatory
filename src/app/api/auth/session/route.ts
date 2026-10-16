@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { oidcConfigured, sessionFromRequest, canOperateRr, canAccessStudio, canAdministerObservatory } from '@/lib/qdip-oidc'
+import {
+  oidcConfigured,
+  sessionFromRequest,
+  canOperateRr,
+  canAccessStudio,
+  canAdministerObservatory,
+} from '@/lib/qdip-oidc'
 import { isSurfaceHost } from '@/routing-config'
 
 export const runtime = 'nodejs'

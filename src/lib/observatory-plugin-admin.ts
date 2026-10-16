@@ -13,8 +13,7 @@ export function adminRequest(request: NextRequest, mutate = false) {
   if (!secure && !localhost)
     return { error: NextResponse.json({ error: 'HTTPS required' }, { status: 403 }), session: null }
   const session = sessionFromRequest(request)
-  if (!session)
-    return { error: NextResponse.json({ error: 'Sign in required' }, { status: 401 }), session: null }
+  if (!session) return { error: NextResponse.json({ error: 'Sign in required' }, { status: 401 }), session: null }
   if (!canAdministerObservatory(session))
     return { error: NextResponse.json({ error: 'Admin role required' }, { status: 403 }), session: null }
   if (mutate && request.headers.get('origin') !== `${secure ? 'https' : 'http'}://${host.toLowerCase()}`)

@@ -51,15 +51,17 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
   useEffect(() => {
     const controller = new AbortController()
     void fetch('/api/observatory/catalog', { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => response.ok ? response.json() : { visibleIds: [] })
+      .then(async (response) => (response.ok ? response.json() : { visibleIds: [] }))
       .then((data: { visibleIds?: string[] }) => {
         if (!controller.signal.aborted && Array.isArray(data.visibleIds)) setVisibleIds(data.visibleIds)
-      }).catch(() => {})
+      })
+      .catch(() => {})
     void fetch('/api/auth/session', { cache: 'no-store', signal: controller.signal })
-      .then(async response => response.ok ? response.json() : {})
+      .then(async (response) => (response.ok ? response.json() : {}))
       .then((data: { observatoryAdmin?: boolean }) => {
         if (!controller.signal.aborted) setIsAdmin(data.observatoryAdmin === true)
-      }).catch(() => {})
+      })
+      .catch(() => {})
     return () => controller.abort()
   }, [])
   const shared = useTranslations('shared')
@@ -76,9 +78,12 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
     item.kind === 'use-case'
       ? caseT(`${item.useCaseId}.title`)
       : systemApplicationCopy(locale, item.id as 'decision-challenge' | 'decision-intake').title
-  const activeLabel = activeRoute === '/admin/plugins'
-    ? ({ en: 'Plugin administration', uk: 'Керування плагінами', pl: 'Administracja wtyczkami' } as const)[locale]
-    : activeItem ? labelFor(activeItem) : 'Observatory'
+  const activeLabel =
+    activeRoute === '/admin/plugins'
+      ? ({ en: 'Plugin administration', uk: 'Керування плагінами', pl: 'Administracja wtyczkami' } as const)[locale]
+      : activeItem
+        ? labelFor(activeItem)
+        : 'Observatory'
 
   const nav = (
     <nav className={styles.navigation} aria-label={observatory('applications')}>
@@ -99,9 +104,15 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         )
       })}
       {isAdmin && (
-        <a className={styles.navLink} href={buildLocalePath('/admin/plugins', locale)} aria-current={activeRoute === '/admin/plugins' ? 'page' : undefined}>
+        <a
+          className={styles.navLink}
+          href={buildLocalePath('/admin/plugins', locale)}
+          aria-current={activeRoute === '/admin/plugins' ? 'page' : undefined}
+        >
           <ShieldCheck className={styles.navIcon} aria-hidden />
-          <span>{({ en: 'Manage plugins', uk: 'Керування плагінами', pl: 'Zarządzaj wtyczkami' } as const)[locale]}</span>
+          <span>
+            {({ en: 'Manage plugins', uk: 'Керування плагінами', pl: 'Zarządzaj wtyczkami' } as const)[locale]}
+          </span>
         </a>
       )}
     </nav>

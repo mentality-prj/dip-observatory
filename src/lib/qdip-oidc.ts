@@ -64,7 +64,14 @@ function roleConfig(): QdipRoleConfig | null {
   const adminKey = (process.env.QDIP_OBSERVATORY_ADMIN_ZITADEL_ROLE_KEY ?? 'observatory_admin').trim()
   // Zitadel role keys may contain spaces; reject empty/control-character keys only.
   const validKey = (key: string) => key.length > 0 && key.length <= 128 && !/[\x00-\x1f\x7f]/.test(key)
-  if (!/^\d+$/.test(projectId) || !/^\d+$/.test(organizationId) || !validKey(studioKey) || !validKey(rrKey) || !validKey(adminKey)) return null
+  if (
+    !/^\d+$/.test(projectId) ||
+    !/^\d+$/.test(organizationId) ||
+    !validKey(studioKey) ||
+    !validKey(rrKey) ||
+    !validKey(adminKey)
+  )
+    return null
   if (new Set([studioKey, rrKey, adminKey]).size !== 3) return null
   return { projectId, organizationId, studioKey, rrKey, adminKey }
 }

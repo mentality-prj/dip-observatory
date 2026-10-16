@@ -31,14 +31,14 @@ export const observableApplications = (visibleUseCaseIds?: readonly string[]): O
     ...observableUseCases()
       .filter((item) => visibleUseCaseIds === undefined || visibleUseCaseIds.includes(item.id))
       .map((item) => ({
-      id: item.id,
-      route: item.route,
-      kind: 'use-case' as const,
-      order: item.navigation.order + 20,
-      theme: item.presentation.theme,
-      icon: USE_CASE_ICONS[item.id] ?? 'sparkles',
-      useCaseId: item.id,
-    })),
+        id: item.id,
+        route: item.route,
+        kind: 'use-case' as const,
+        order: item.navigation.order + 20,
+        theme: item.presentation.theme,
+        icon: USE_CASE_ICONS[item.id] ?? 'sparkles',
+        useCaseId: item.id,
+      })),
   ].sort((a, b) => a.order - b.order)
 
 export const findObservatoryApplicationByRoute = (route: string) =>
