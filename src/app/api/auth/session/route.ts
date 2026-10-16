@@ -26,6 +26,9 @@ export function GET(request: NextRequest) {
     {
       configured: oidcConfigured(),
       authenticated: Boolean(session),
+      ...(session
+        ? { user: { id: session.sub, displayName: session.displayName ?? null, email: session.email ?? null } }
+        : {}),
       studio: Boolean(session && canAccessStudio(session)),
       observatoryAdmin: Boolean(session && canAdministerObservatory(session)),
       operator: Boolean(session && canOperateRr(session)),

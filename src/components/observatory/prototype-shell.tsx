@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
+  ChevronDown,
   ChevronRight,
   FileUp,
   FlaskConical,
-  Globe2,
   Home,
   Menu,
   ShieldCheck,
@@ -133,9 +133,9 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         ))}
       </div>
       <label className={styles.localeSelect}>
-        <Globe2 aria-hidden />
         <span className="sr-only">{shared('language')}</span>
         <select
+          aria-label={shared('language')}
           value={locale}
           onChange={(event) => {
             const next = event.target.value as Locale
@@ -144,10 +144,11 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         >
           {SUPPORTED_LOCALES.map((option) => (
             <option key={option} value={option}>
-              {shared(`localeLabels.${option}`)}
+              {option.toUpperCase()}
             </option>
           ))}
         </select>
+        <ChevronDown aria-hidden />
       </label>
     </div>
   )
@@ -182,7 +183,7 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
       }}
       utilities={
         <>
-          <QdipAuthControl locale={locale} returnTo={observatoryHref(activeRoute, locale)} />
+          <QdipAuthControl locale={locale} returnTo={observatoryHref(activeRoute, locale)} showProfile />
           {utilities}
         </>
       }

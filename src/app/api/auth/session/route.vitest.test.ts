@@ -29,6 +29,8 @@ function signedSession(sub: string) {
     issuer: 'https://identity.example.test',
     clientId: 'qdip-e2e-client',
     expiresAt: Math.floor(Date.now() / 1000) + 300,
+    displayName: 'QA Tester',
+    email: 'qa@qdip.ai',
   })
   const token = response.cookies.get('qdip_oidc_session')?.value
   if (!token) throw new Error('Missing signed OIDC session')
@@ -54,6 +56,7 @@ describe('global OIDC session endpoint with reverse proxy Host', () => {
       authenticated: true,
       studio: true,
       operator: false,
+      user: { id: 'studio-only', displayName: 'QA Tester', email: 'qa@qdip.ai' },
     })
   })
 
