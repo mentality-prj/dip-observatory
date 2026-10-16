@@ -113,7 +113,7 @@
 }
 .localeSelect {
   display: none;
-  min-height: 40px;
+  min-height: 44px;
   flex: 0 0 auto;
   align-items: center;
   gap: 4px;
@@ -291,6 +291,20 @@
   }
   .shell :global(.ds-product-header-actions) {
     gap: var(--ds-space-1);
+  }
+  .shell :global(.ds-product-lockup-product) {
+    font-size: 1.1rem;
+  }
+  .shell :global(.ds-product-lockup-wordmark-frame) {
+    width: 88px;
+    flex-basis: 88px;
+  }
+  .shell :global(.ds-product-lockup-wordmark) {
+    width: 110px;
+    margin-inline: -11px;
+  }
+  .shell :global(.ds-product-lockup-brand) {
+    margin-left: -8px;
   }
   .localeControls {
     min-width: 62px;
