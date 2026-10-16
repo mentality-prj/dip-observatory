@@ -1,6 +1,6 @@
-import { QdipError, type QdipErrorCode } from './errors.js';
-import { parseCapabilitiesResponse, parseInvokeResponse, parsePluginCatalog, parsePluginCatalogEntry } from './validation.js';
-import type { CapabilitiesResponse, InvokeOptions, InvokeResponse, QdipClientOptions, PluginCatalogEntry, PluginCatalogUpdate } from './types.js';
+import { QdipError, type QdipErrorCode } from './errors';
+import { parseCapabilitiesResponse, parseInvokeResponse, parsePluginCatalog, parsePluginCatalogEntry } from './validation';
+import type { CapabilitiesResponse, InvokeOptions, InvokeResponse, QdipClientOptions, PluginCatalogEntry, PluginCatalogUpdate } from './types';
 
 const DEFAULT_INVOKE_DEADLINE_MS = 45_000;
 const DISCOVERY_DEADLINE_MS = 15_000;
