@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  ChevronDown,
   ChevronRight,
   FileUp,
   FlaskConical,
@@ -132,24 +131,20 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
           </a>
         ))}
       </div>
-      <label className={styles.localeSelect}>
-        <span className="sr-only">{shared('language')}</span>
-        <select
-          aria-label={shared('language')}
-          value={locale}
-          onChange={(event) => {
-            const next = event.target.value as Locale
-            if (next !== locale) window.location.assign(localeHref(next))
-          }}
-        >
-          {SUPPORTED_LOCALES.map((option) => (
-            <option key={option} value={option}>
-              {option.toUpperCase()}
-            </option>
-          ))}
-        </select>
-        <ChevronDown aria-hidden />
-      </label>
+      <div className={styles.mobileLocale} role="group" aria-label={shared('language')}>
+        {SUPPORTED_LOCALES.map((option) => (
+          <a
+            key={option}
+            href={localeHref(option)}
+            data-mobile-locale={option}
+            lang={option}
+            aria-label={shared(`localeLabels.${option}`)}
+            aria-current={option === locale ? 'page' : undefined}
+          >
+            {option.toUpperCase()}
+          </a>
+        ))}
+      </div>
     </div>
   )
 
