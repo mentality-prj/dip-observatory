@@ -361,14 +361,19 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
           )}
         </form>
         {installed?.source === 'remote' && installed.manifest_version && (
-          <section className="mt-6 min-w-0 rounded-xl border border-white/15 bg-slate-950 p-4" aria-label={t.manifestTitle}>
+          <section
+            className="mt-6 min-w-0 rounded-xl border border-white/15 bg-slate-950 p-4"
+            aria-label={t.manifestTitle}
+          >
             <h3 className="font-semibold">{t.manifestTitle}</h3>
             <p className="mt-2 text-sm text-slate-400">
               {t.manifestVersion}: <code>{installed.manifest_version}</code>
             </p>
             {Object.entries(installed.capability_contracts ?? {}).map(([id, contract]) => (
               <div key={id} className="mt-4 min-w-0 border-t border-white/10 pt-4 text-sm">
-                <p className="break-all font-mono">{id} · {contract.version}</p>
+                <p className="break-all font-mono">
+                  {id} · {contract.version}
+                </p>
                 <p className="mt-2 text-slate-400">
                   {t.manifestPermissions}: {contract.required_caller_scopes?.join(', ') || t.manifestNone}
                 </p>
