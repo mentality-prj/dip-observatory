@@ -23,7 +23,8 @@ const categories = ['Operations', 'Optimization', 'Analytics', 'Decision support
 const copy = {
   uk: {
     title: 'Керування плагінами',
-    subtitle: 'Реєструйте встановлені плагіни в каталозі Observatory. Код, організації та API-ключі тут не налаштовуються.',
+    subtitle:
+      'Реєструйте встановлені плагіни в каталозі Observatory. Код, організації та API-ключі тут не налаштовуються.',
     refresh: 'Оновити список',
     loading: 'Завантаження реєстру…',
     empty: 'У QDIP Core немає встановлених плагінів.',
@@ -54,7 +55,8 @@ const copy = {
   },
   en: {
     title: 'Manage plugins',
-    subtitle: 'Register installed plugins in the Observatory catalog. No code, organizations, or API keys are managed here.',
+    subtitle:
+      'Register installed plugins in the Observatory catalog. No code, organizations, or API keys are managed here.',
     refresh: 'Refresh list',
     loading: 'Loading registry…',
     empty: 'No plugins are installed in QDIP Core.',
@@ -85,7 +87,8 @@ const copy = {
   },
   pl: {
     title: 'Zarządzanie wtyczkami',
-    subtitle: 'Rejestruj zainstalowane wtyczki w katalogu Observatory. Bez zarządzania kodem, organizacjami i kluczami API.',
+    subtitle:
+      'Rejestruj zainstalowane wtyczki w katalogu Observatory. Bez zarządzania kodem, organizacjami i kluczami API.',
     refresh: 'Odśwież listę',
     loading: 'Ładowanie rejestru…',
     empty: 'Brak zainstalowanych wtyczek w QDIP Core.',
@@ -138,26 +141,34 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [rows, setRows] = useState<Row[] | null>(null)
   const [selected, setSelected] = useState('')
-  const [fields, setFields] = useState<FormFields>({ display_name: '', description: '', category: 'Other', capability_id: '' })
+  const [fields, setFields] = useState<FormFields>({
+    display_name: '',
+    description: '',
+    category: 'Other',
+    capability_id: '',
+  })
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   const installed = rows?.find((row) => row.name === selected)
   const sorted = [...(rows ?? [])].sort((a, b) => a.name.localeCompare(b.name))
 
-  const refresh = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const response = await fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal })
-      if (!response.ok) throw new Error(String(response.status))
-      const data: unknown = await response.json()
-      if (!data || typeof data !== 'object' || !('plugins' in data) || !Array.isArray(data.plugins))
-        throw new Error('Invalid catalog response')
-      if (signal?.aborted) return
-      setRows(data.plugins as Row[])
-      setError('')
-    } catch {
-      if (!signal?.aborted) setError(t.error)
-    }
-  }, [t.error])
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await fetch('/api/observatory/admin/plugins', { cache: 'no-store', signal })
+        if (!response.ok) throw new Error(String(response.status))
+        const data: unknown = await response.json()
+        if (!data || typeof data !== 'object' || !('plugins' in data) || !Array.isArray(data.plugins))
+          throw new Error('Invalid catalog response')
+        if (signal?.aborted) return
+        setRows(data.plugins as Row[])
+        setError('')
+      } catch {
+        if (!signal?.aborted) setError(t.error)
+      }
+    },
+    [t.error]
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -196,7 +207,11 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
           expected_revision: row.revision,
           capability_id: presentation?.capability_id || row.capability_id || row.capabilities[0],
           ...(presentation
-            ? { display_name: presentation.display_name, description: presentation.description, category: presentation.category }
+            ? {
+                display_name: presentation.display_name,
+                description: presentation.description,
+                category: presentation.category,
+              }
             : {}),
         }),
       })
@@ -217,13 +232,28 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t.title}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">{t.subtitle}</p>
         </div>
-        <Button type="button" variant="secondary" disabled={pending} onClick={() => void refresh()}>{t.refresh}</Button>
+        <Button type="button" variant="secondary" disabled={pending} onClick={() => void refresh()}>
+          {t.refresh}
+        </Button>
       </div>
-      {error && <p role="alert" className="mt-5 rounded-lg border border-rose-500/50 px-4 py-3 text-sm text-rose-300">{error}</p>}
-      {!rows && !error && <p className="mt-5" role="status">{t.loading}</p>}
+      {error && (
+        <p role="alert" className="mt-5 rounded-lg border border-rose-500/50 px-4 py-3 text-sm text-rose-300">
+          {error}
+        </p>
+      )}
+      {!rows && !error && (
+        <p className="mt-5" role="status">
+          {t.loading}
+        </p>
+      )}
 
-      <section className="mt-8 min-w-0 rounded-xl border border-white/15 bg-slate-900 p-4 sm:p-6" aria-labelledby="register-plugin">
-        <h2 id="register-plugin" className="text-xl font-semibold">{t.formTitle}</h2>
+      <section
+        className="mt-8 min-w-0 rounded-xl border border-white/15 bg-slate-900 p-4 sm:p-6"
+        aria-labelledby="register-plugin"
+      >
+        <h2 id="register-plugin" className="text-xl font-semibold">
+          {t.formTitle}
+        </h2>
         <p className="mt-2 text-sm leading-6 text-slate-400">{t.hint}</p>
         <form
           className="mt-5 grid gap-4"
@@ -241,7 +271,11 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
               required
             >
               <option value="">{t.select}</option>
-              {sorted.map((row) => <option key={row.name} value={row.name}>{row.name} ({row.version})</option>)}
+              {sorted.map((row) => (
+                <option key={row.name} value={row.name}>
+                  {row.name} ({row.version})
+                </option>
+              ))}
             </select>
           </label>
           {installed && (
@@ -275,7 +309,9 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                     value={fields.category}
                     onChange={(event) => setFields((prev) => ({ ...prev, category: event.target.value }))}
                   >
-                    {categories.map((category) => <option key={category}>{category}</option>)}
+                    {categories.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
                   </select>
                 </label>
                 <label className="grid min-w-0 gap-2 text-sm font-semibold">
@@ -285,11 +321,16 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                     value={fields.capability_id}
                     onChange={(event) => setFields((prev) => ({ ...prev, capability_id: event.target.value }))}
                   >
-                    {installed.capabilities.map((capability) => <option key={capability}>{capability}</option>)}
+                    {installed.capabilities.map((capability) => (
+                      <option key={capability}>{capability}</option>
+                    ))}
                   </select>
                 </label>
               </div>
-              <Button type="submit" disabled={pending || !installed.enabled || !fields.display_name.trim() || !fields.capability_id}>
+              <Button
+                type="submit"
+                disabled={pending || !installed.enabled || !fields.display_name.trim() || !fields.capability_id}
+              >
                 {pending ? t.busy : t.publish}
               </Button>
             </>
@@ -301,26 +342,48 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
       <section className="mt-8 grid gap-4" aria-label={t.registered}>
         {sorted.map((row) => {
           const published = isPublished(row)
-          const demo = DIP_USE_CASES.find((item) => item.plugin.id === row.name && row.capabilities.includes(item.plugin.capability))
+          const demo = DIP_USE_CASES.find(
+            (item) => item.plugin.id === row.name && row.capabilities.includes(item.plugin.capability)
+          )
           return (
             <article key={row.name} className="min-w-0 rounded-xl border border-white/15 bg-slate-900 p-4 sm:p-6">
               <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
                 <div className="w-full min-w-0 flex-1">
                   <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
                   <p className="mt-1 break-all text-xs text-slate-500">{row.name}</p>
-                  {row.description && <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">{row.description}</p>}
+                  {row.description && (
+                    <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">
+                      {row.description}
+                    </p>
+                  )}
                 </div>
-                <Badge variant={published ? 'emerald' : 'neutral'}>{published ? t.published : row.enabled ? t.unpublished : t.disabled}</Badge>
+                <Badge variant={published ? 'emerald' : 'neutral'}>
+                  {published ? t.published : row.enabled ? t.unpublished : t.disabled}
+                </Badge>
               </div>
               <p className="mt-4 break-words text-xs text-slate-400">
                 {t.version}: {row.version} · {demo ? t.demo : t.generic}
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                <Button type="button" variant="secondary" disabled={pending} onClick={() => choose(row.name)}>{t.edit}</Button>
+                <Button type="button" variant="secondary" disabled={pending} onClick={() => choose(row.name)}>
+                  {t.edit}
+                </Button>
                 {published && (
                   <>
-                    <a className="text-sm font-semibold text-cyan-300" href={buildLocalePath(`/plugins/${row.name}`, locale)}>{t.details} →</a>
-                    <Button type="button" variant="secondary" disabled={pending} onClick={() => void update(row, false)}>{t.hide}</Button>
+                    <a
+                      className="text-sm font-semibold text-cyan-300"
+                      href={buildLocalePath(`/plugins/${row.name}`, locale)}
+                    >
+                      {t.details} →
+                    </a>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={pending}
+                      onClick={() => void update(row, false)}
+                    >
+                      {t.hide}
+                    </Button>
                   </>
                 )}
               </div>
@@ -333,7 +396,11 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
         <p className="mt-2 text-sm leading-6 text-slate-400">{t.demosHint}</p>
         <div className="mt-4 flex flex-wrap gap-3">
           {DIP_USE_CASES.map((useCase) => (
-            <a key={useCase.id} href={buildLocalePath(useCase.route, locale)} className="max-w-full break-words rounded-lg border border-white/15 px-3 py-2 text-sm text-cyan-300">
+            <a
+              key={useCase.id}
+              href={buildLocalePath(useCase.route, locale)}
+              className="max-w-full break-words rounded-lg border border-white/15 px-3 py-2 text-sm text-cyan-300"
+            >
               {useCase.id}
             </a>
           ))}

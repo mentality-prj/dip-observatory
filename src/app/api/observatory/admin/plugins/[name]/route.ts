@@ -46,7 +46,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
     const capability =
       typeof update.capability_id === 'string'
         ? update.capability_id
-        : installed.capability_id ?? installed.capabilities[0]
+        : (installed.capability_id ?? installed.capabilities[0])
     if (!capability || !installed.capabilities.includes(capability))
       return NextResponse.json({ error: 'Capability is not installed' }, { status: 409 })
     if (update.published && !installed.enabled)
@@ -54,7 +54,10 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ nam
     const displayName = update.display_name
     const description = update.description
     const category = update.category
-    if (displayName !== undefined && (typeof displayName !== 'string' || displayName.trim().length < 2 || displayName.length > 120))
+    if (
+      displayName !== undefined &&
+      (typeof displayName !== 'string' || displayName.trim().length < 2 || displayName.length > 120)
+    )
       return NextResponse.json({ error: 'Invalid display name' }, { status: 422 })
     if (description !== undefined && (typeof description !== 'string' || description.length > 2000))
       return NextResponse.json({ error: 'Invalid description' }, { status: 422 })
