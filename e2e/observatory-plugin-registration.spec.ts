@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { oidcTestCookies } from './oidc-test-session'
 
-test('admin registers installed plugin metadata without a compiled Observatory workspace', async ({ page }) => {
+test('admin publishes SDK-registered plugin metadata without a compiled Observatory workspace', async ({ page }) => {
   await page.context().clearCookies()
   await page.context().addCookies(oidcTestCookies(['observatory_admin']))
   const plugin = {
@@ -26,7 +26,7 @@ test('admin registers installed plugin metadata without a compiled Observatory w
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
   await page.goto('http://observatory.localhost:3000/uk/admin/plugins')
-  await page.getByLabel('Встановлений плагін').selectOption('route-optimizer')
+  await page.getByLabel('Зареєстрований через SDK плагін').selectOption('route-optimizer')
   await page.getByLabel('Назва').fill('Оптимізатор маршрутів')
   await page.getByLabel('Опис').fill('Розрахунок маршрутів доставки')
   await page.getByLabel('Категорія').selectOption('Optimization')
