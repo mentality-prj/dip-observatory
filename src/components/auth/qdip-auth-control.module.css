@@ -83,3 +83,146 @@
   display: block;
   flex-shrink: 0;
 }
+
+/* Observatory account menu reuses the shared DS color, border and spacing tokens. */
+.profile {
+  position: relative;
+  min-width: 0;
+}
+
+.profileTrigger {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-action);
+  color: var(--ds-text);
+  background: var(--ds-surface-raised);
+  cursor: pointer;
+  list-style: none;
+}
+
+.profileTrigger::-webkit-details-marker {
+  display: none;
+}
+
+.profileTrigger:hover,
+.profile[open] .profileTrigger {
+  border-color: var(--ds-accent);
+  background: var(--ds-hover);
+}
+
+.profileTrigger:focus-visible,
+.profileSignOut:focus-visible {
+  outline: 3px solid var(--ds-focus);
+  outline-offset: 2px;
+}
+
+.profileShortName {
+  max-width: 132px;
+  overflow: hidden;
+  font-size: var(--ds-text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profilePanel {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  width: min(318px, calc(100vw - 24px));
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-panel);
+  color: var(--ds-text);
+  background: var(--ds-surface-raised);
+  box-shadow: var(--ds-shadow-card);
+}
+
+.profileTitle {
+  margin: 0;
+  color: var(--ds-text-muted);
+  font-size: var(--ds-text-xs);
+  font-weight: 600;
+}
+
+.profileName,
+.profileEmail,
+.profileId {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profileName {
+  font-size: var(--ds-text-sm);
+}
+
+.profileEmail {
+  color: var(--ds-text-muted);
+  font-size: var(--ds-text-xs);
+}
+
+.profileId {
+  color: var(--ds-text-muted);
+  font-size: var(--ds-text-xs);
+}
+
+.roleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roleChip {
+  border: 1px solid rgb(var(--ds-accent-rgb) / 0.22);
+  border-radius: var(--ds-radius-pill);
+  padding: 4px 8px;
+  color: var(--ds-text);
+  background: rgb(var(--ds-accent-rgb) / 0.08);
+  font-size: var(--ds-text-xs);
+}
+
+.profileSignOut {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-action);
+  color: var(--ds-text);
+  background: var(--ds-surface);
+  font: 600 var(--ds-text-sm)/1.2 var(--ds-font-sans);
+  cursor: pointer;
+}
+
+.profileSignOut:hover {
+  color: var(--ds-accent);
+  background: var(--ds-hover);
+}
+
+.profileSignOut:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 420px) {
+  .profileTrigger {
+    min-height: 40px;
+    padding-inline: 8px;
+    gap: 4px;
+  }
+
+  .profileShortName {
+    max-width: 42px;
+  }
+}
