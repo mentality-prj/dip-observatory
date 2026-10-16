@@ -355,9 +355,7 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
               <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
                 <div className="w-full min-w-0 flex-1">
                   <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
-                  <p className="mt-1 break-all text-xs text-slate-500">
-                    {row.plugin_id || row.name}
-                  </p>
+                  <p className="mt-1 break-all text-xs text-slate-500">{row.plugin_id || row.name}</p>
                   {row.description && (
                     <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">
                       {row.description}
