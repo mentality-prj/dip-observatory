@@ -357,7 +357,6 @@ export function ObservatoryPluginAdmin({ locale }: { locale: Locale }) {
                   <h3 className="break-words text-lg font-semibold">{row.ui?.label || row.name}</h3>
                   <p className="mt-1 break-all text-xs text-slate-500">
                     {row.plugin_id || row.name}
-                    {row.source === 'remote' ? ' · SDK Remote' : ''}
                   </p>
                   {row.description && (
                     <p className="mt-3 whitespace-pre-line break-words text-sm leading-6 text-slate-400">
