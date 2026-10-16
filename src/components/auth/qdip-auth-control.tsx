@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 
-import { ChevronDown, LogIn, LogOut, UserRound } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { LogIn, LogOut, UserRound } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { PLATFORM_URLS, type PlatformLocale } from '@/lib/platform-urls'
 import styles from './qdip-auth-control.module.css'
@@ -80,6 +80,8 @@ export function QdipAuthControl({
   const [session, setSession] = useState<AuthSession | null>(null)
   const [signingOut, setSigningOut] = useState(false)
   const [error, setError] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -93,6 +95,23 @@ export function QdipAuthControl({
       })
     return () => controller.abort()
   }, [])
+
+  // Match VHV's avatar button: close the popover on outside press or Escape.
+  useEffect(() => {
+    if (!profileOpen) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !profileRef.current?.contains(event.target)) setProfileOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProfileOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [profileOpen])
 
   async function signOut() {
     if (signingOut) return
@@ -118,21 +137,25 @@ export function QdipAuthControl({
   if (session?.authenticated && showProfile) {
     const identity = session.user
     const display = identity?.displayName || identity?.email || copy.account
-    const shortLabel = identity?.email?.split('@')[0] || identity?.displayName || copy.account
     const roles = [
       ...(session.observatoryAdmin ? [copy.admin] : []),
       ...(session.studio ? [copy.studio] : []),
       ...(session.operator ? [copy.operator] : []),
     ]
     return (
-      <div className={styles.authControl} data-qdip-auth="signed-in" data-testid="observatory-profile">
-        <details className={styles.profile}>
-          <summary className={styles.profileTrigger} aria-label={`${copy.account}: ${display}`}>
-            <UserRound size={18} aria-hidden />
-            <span className={styles.profileShortName}>{shortLabel}</span>
-            <ChevronDown size={14} aria-hidden />
-          </summary>
-          <div className={styles.profilePanel}>
+      <div ref={profileRef} className={styles.authControl} data-qdip-auth="signed-in" data-testid="observatory-profile">
+        <button
+          type="button"
+          className={styles.profileToggle}
+          aria-label={`${copy.account}: ${display}`}
+          aria-haspopup="dialog"
+          aria-expanded={profileOpen}
+          onClick={() => setProfileOpen((open) => !open)}
+        >
+          <UserRound size={22} aria-hidden />
+        </button>
+        {profileOpen && (
+          <div className={styles.profilePanel} role="dialog" aria-label={copy.account}>
             <p className={styles.profileTitle}>{copy.account}</p>
             <strong className={styles.profileName}>{display}</strong>
             {identity?.email && identity.email !== display ? (
@@ -168,7 +191,7 @@ export function QdipAuthControl({
               </span>
             ) : null}
           </div>
-        </details>
+        )}
       </div>
     )
   }
