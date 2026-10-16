@@ -252,7 +252,7 @@ describe('QDIP Zitadel OIDC PKCE', () => {
 
   it('ignores malformed identity labels in verified tokens', async () => {
     const session = await verifyIdToken(
-      token({ name: 'QA\\nInvalid', email: 'not-an-address', preferred_username: 'tester' }),
+      token({ name: 'QA\nInvalid', email: 'not-an-address', preferred_username: 'tester' }),
       flow,
       config
     )
