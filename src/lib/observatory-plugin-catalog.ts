@@ -75,7 +75,8 @@ export function publishedPluginEntries(records: readonly CorePluginPublication[]
   return records.filter(
     (plugin) =>
       /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(plugin.name) &&
-      plugin.enabled &&
+      // Publication and current runtime availability are independent states.
+      // Preserve published details when a remote SDK worker disconnects.
       plugin.published === true &&
       plugin.published_version === plugin.version &&
       typeof plugin.capability_id === 'string' &&
