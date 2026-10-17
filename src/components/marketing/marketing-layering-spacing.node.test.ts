@@ -80,11 +80,13 @@ test('light appearance does not retain dark-only footer, CTA hover or mobile-men
   const toggle = readFileSync('src/components/marketing/marketing-theme-toggle.tsx', 'utf8')
   const menu = readFileSync('src/components/marketing/mobile-menu.tsx', 'utf8')
   const footer = readFileSync('src/components/product/qdip-footer.module.css', 'utf8')
+  const authStyles = readFileSync('src/components/auth/qdip-auth-control.module.css', 'utf8')
   assert.match(toggle, /onChange\?\.\(\)/)
   assert.match(menu, /onChange=\{\(\) => setOpen\(false\)\}/)
   assert.match(hero, /\.engineeredHero \.secondaryButton:hover\s*\{\s*color:\s*var\(--qdip-text\);/)
   assert.match(deepBurgundy, /--qdip-footer-text:\s*#1b2029;/)
   assert.match(footer, /--qdip-footer-logo-filter/)
+  assert.match(authStyles, /data-marketing-appearance='light'/)
 })
 
 test('EvidenceStrip uses 64px hand-built engineering illustrations, not tiny library symbols', () => {
