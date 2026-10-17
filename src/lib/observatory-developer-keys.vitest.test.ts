@@ -80,6 +80,31 @@ describe('Observatory developer keys: audited app+Worker bootstrap', () => {
     expect(revokeCount).toBe(2)
   })
 
+
+  it('revokes both known credentials when the Worker raw key is malformed', async () => {
+    const issued = [] as ReturnType<typeof key>[]
+    const revoked: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (input: string, options: RequestInit) => {
+      const path = new URL(input).pathname, method = options.method || 'GET'
+      if (method === 'GET' && path.endsWith('/organizations')) return Response.json([{id:ORG,name:'qdip-sdk-app:vhv'}])
+      if (method === 'POST' && path.endsWith('/keys')) {
+        const body = JSON.parse(String(options.body))
+        const record = key(issued.length === 0 ? APP : WORKER, issued.length === 0 ? 'app' : 'worker')
+        record.name = body.name
+        if (issued.length === 1) record.key = 'invalid-raw-key'
+        issued.push(record)
+        return Response.json(record, { status: 201 })
+      }
+      if (method === 'POST' && path.endsWith('/revoke')) {
+        revoked.push(path)
+        return Response.json({})
+      }
+      throw Error('Unexpected request')
+    }))
+    await expect(createDeveloperCredentials('VHV', 'secretary.plan')).rejects.toMatchObject({status:503})
+    expect(revoked).toHaveLength(2)
+  })
+
   it('rejects invalid application input without contacting QDIP', async () => {
     const fetchStub = vi.fn()
     vi.stubGlobal('fetch', fetchStub)
