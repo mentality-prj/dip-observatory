@@ -2,7 +2,13 @@
 
 import { useState, type FormEvent } from 'react'
 import { buildLocalePath, type Locale } from '@/lib/observatory-i18n'
-import type { DeveloperKeyPair } from '@/lib/observatory-developer-keys'
+type DeveloperKeyPair = {
+  application: string
+  capability: string
+  environment: 'production'
+  app: { key: string; expiresAt: string }
+  worker: { key: string; expiresAt: string }
+}
 
 const copy = {
   uk: {
