@@ -114,8 +114,10 @@ async function issue(orgId: string, name: string, scopes: string[], capability: 
     'POST', 'organizations/' + orgId + '/keys',
     { name, environment: 'production', scopes, allowed_capabilities: [capability], expires_at: expiresAt }
   )
-  if (!UUID.test(key?.id ?? '') || !RAW_KEY.test(key?.key ?? ''))
-    throw new DeveloperKeyError(502, 'QDIP Core returned an invalid credential')
+  // Return the key ID to the caller before validating the one-time raw
+  // material. A malformed raw response must still be revoked if possible.
+  if (!UUID.test(key?.id ?? ''))
+    throw new DeveloperKeyError(502, 'QDIP Core returned an invalid credential ID')
   return key
 }
 
@@ -142,8 +144,10 @@ export async function createDeveloperCredentials(
   try {
     const app = await issue(org.id, 'app/' + application + '/' + operation, APP_SCOPES, capability)
     keyIds.push(app.id)
+    if (!RAW_KEY.test(app.key ?? '')) throw new DeveloperKeyError(502, 'Invalid application credential')
     const worker = await issue(org.id, 'worker/' + application + '/' + operation, WORKER_SCOPES, capability)
     keyIds.push(worker.id)
+    if (!RAW_KEY.test(worker.key ?? '')) throw new DeveloperKeyError(502, 'Invalid Worker credential')
     const stored = await coreRequest<CoreKey[]>('GET', 'organizations/' + org.id + '/keys')
     if (!Array.isArray(stored)) throw new DeveloperKeyError(502, 'QDIP key policy readback failed')
     for (const [credential, scopes] of [[app, APP_SCOPES], [worker, WORKER_SCOPES]] as const) {
