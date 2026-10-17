@@ -15,10 +15,10 @@ The one-time response contains **two** identities with an explicit
 `allowed_capabilities: ["secretary.plan"]` policy, verified by Core
 create-response and persisted readback:
 
-| Role | Scopes | Railway target | Variable |
-| --- | --- | --- | --- |
-| VHV application | `plugins:read`, `plugins:execute` | `@secretary/api` | `QDIP_API_KEY` |
-| Python SDK Worker | `plugins:register` | `vhv-qdip-secretary-plan-worker` | `QDIP_REMOTE_API_KEY` |
+| Role              | Scopes                            | Railway target                   | Variable              |
+| ----------------- | --------------------------------- | -------------------------------- | --------------------- |
+| VHV application   | `plugins:read`, `plugins:execute` | `@secretary/api`                 | `QDIP_API_KEY`        |
+| Python SDK Worker | `plugins:register`                | `vhv-qdip-secretary-plan-worker` | `QDIP_REMOTE_API_KEY` |
 
 The existing `QDIP_API_URL` and `QDIP_REMOTE_URL` remain as the HTTPS and
 WSS endpoints respectively. The application credential is only consumed by
