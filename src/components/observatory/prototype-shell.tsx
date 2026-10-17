@@ -52,13 +52,19 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
   const navItems = observableApplications(visibleIds)
   useEffect(() => {
     const controller = new AbortController()
-    void fetch('/api/observatory/catalog', { cache: 'no-store', signal: controller.signal })
+    void fetch('/api/observatory/catalog', {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
       .then(async (response) => (response.ok ? response.json() : { visibleIds: [] }))
       .then((data: { visibleIds?: string[] }) => {
         if (!controller.signal.aborted && Array.isArray(data.visibleIds)) setVisibleIds(data.visibleIds)
       })
       .catch(() => {})
-    void fetch('/api/auth/session', { cache: 'no-store', signal: controller.signal })
+    void fetch('/api/auth/session', {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
       .then(async (response) => (response.ok ? response.json() : {}))
       .then((data: { observatoryAdmin?: boolean }) => {
         if (!controller.signal.aborted) setIsAdmin(data.observatoryAdmin === true)
@@ -72,7 +78,10 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
   const activeItem = findObservatoryApplicationByRoute(activeRoute)
 
   useEffect(() => {
-    activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    activeNavRef.current?.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest',
+    })
   }, [activeRoute])
 
   const localeHref = (next: Locale) => buildLocalePath(activeRoute, next)
@@ -82,14 +91,32 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
       : systemApplicationCopy(locale, item.id as 'decision-challenge' | 'decision-intake').title
   const activeLabel =
     activeRoute === '/admin/apps'
-      ? ({ en: 'Developer applications', uk: 'Застосунки та ключі', pl: 'Aplikacje i klucze' } as const)[locale]
+      ? (
+          {
+            en: 'Developer applications',
+            uk: 'Застосунки та ключі',
+            pl: 'Aplikacje i klucze',
+          } as const
+        )[locale]
       : activeRoute === '/admin/plugins'
-      ? ({ en: 'Plugin administration', uk: 'Керування плагінами', pl: 'Administracja wtyczkami' } as const)[locale]
-      : activeRoute === '/plugins'
-        ? ({ en: 'Plugin catalog', uk: 'Каталог плагінів', pl: 'Katalog wtyczek' } as const)[locale]
-        : activeItem
-          ? labelFor(activeItem)
-          : 'Observatory'
+        ? (
+            {
+              en: 'Plugin administration',
+              uk: 'Керування плагінами',
+              pl: 'Administracja wtyczkami',
+            } as const
+          )[locale]
+        : activeRoute === '/plugins'
+          ? (
+              {
+                en: 'Plugin catalog',
+                uk: 'Каталог плагінів',
+                pl: 'Katalog wtyczek',
+              } as const
+            )[locale]
+          : activeItem
+            ? labelFor(activeItem)
+            : 'Observatory'
 
   const nav = (
     <nav className={styles.navigation} aria-label={observatory('applications')}>
@@ -125,7 +152,15 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         >
           <KeyRound className={styles.navIcon} aria-hidden />
           <span>
-            {({ en: 'Applications & keys', uk: 'Застосунки та ключі', pl: 'Aplikacje i klucze' } as const)[locale]}
+            {
+              (
+                {
+                  en: 'Applications & keys',
+                  uk: 'Застосунки та ключі',
+                  pl: 'Aplikacje i klucze',
+                } as const
+              )[locale]
+            }
           </span>
         </a>
       )}
@@ -137,7 +172,15 @@ export function PrototypeShell({ locale, children, activeRoute, theme = 'cyan' }
         >
           <ShieldCheck className={styles.navIcon} aria-hidden />
           <span>
-            {({ en: 'Manage plugins', uk: 'Керування плагінами', pl: 'Zarządzaj wtyczkami' } as const)[locale]}
+            {
+              (
+                {
+                  en: 'Manage plugins',
+                  uk: 'Керування плагінами',
+                  pl: 'Zarządzaj wtyczkami',
+                } as const
+              )[locale]
+            }
           </span>
         </a>
       )}

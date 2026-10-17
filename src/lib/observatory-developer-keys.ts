@@ -37,19 +37,33 @@ type CoreKey = {
 }
 
 export class DeveloperKeyError extends Error {
-  constructor(public readonly status: number, message: string) { super(message) }
+  constructor(
+    public readonly status: number,
+    message: string
+  ) {
+    super(message)
+  }
 }
 
 function exactArray(actual: unknown, expected: string[]) {
-  return Array.isArray(actual) && actual.length === expected.length &&
+  return (
+    Array.isArray(actual) &&
+    actual.length === expected.length &&
     actual.every((item, index) => item === expected[index])
+  )
 }
 
 function safeCore() {
   const { base, key } = corePluginConnection()
   const origin = new URL(base)
-  if (origin.protocol !== 'https:' && !(process.env.NODE_ENV === 'test' &&
-      origin.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(origin.hostname)))
+  if (
+    origin.protocol !== 'https:' &&
+    !(
+      process.env.NODE_ENV === 'test' &&
+      origin.protocol === 'http:' &&
+      ['localhost', '127.0.0.1'].includes(origin.hostname)
+    )
+  )
     throw new DeveloperKeyError(503, 'QDIP Core HTTPS origin required')
   if (origin.username || origin.password || origin.search || origin.hash || origin.pathname !== '/')
     throw new DeveloperKeyError(503, 'QDIP Core origin misconfigured')
@@ -64,7 +78,7 @@ async function coreRequest<T>(method: 'GET' | 'POST', path: string, body?: Recor
       method,
       headers: {
         'x-api-key': key,
-        'accept': 'application/json',
+        accept: 'application/json',
         ...(body ? { 'content-type': 'application/json' } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -77,7 +91,8 @@ async function coreRequest<T>(method: 'GET' | 'POST', path: string, body?: Recor
   }
   if (!response.ok) {
     await response.body?.cancel().catch(() => undefined)
-    if ([401, 403].includes(response.status)) throw new DeveloperKeyError(502, 'QDIP administrative credential rejected')
+    if ([401, 403].includes(response.status))
+      throw new DeveloperKeyError(502, 'QDIP administrative credential rejected')
     throw new DeveloperKeyError(503, 'QDIP Core operation failed')
   }
   const length = response.headers.get('content-length')
@@ -89,35 +104,49 @@ async function coreRequest<T>(method: 'GET' | 'POST', path: string, body?: Recor
     throw new DeveloperKeyError(502, 'Invalid QDIP Core response')
   }
   if (data.length > LIMIT) throw new DeveloperKeyError(502, 'QDIP Core response too large')
-  try { return JSON.parse(data) as T } catch { throw new DeveloperKeyError(502, 'Invalid QDIP Core response') }
+  try {
+    return JSON.parse(data) as T
+  } catch {
+    throw new DeveloperKeyError(502, 'Invalid QDIP Core response')
+  }
 }
 
 function validPolicy(key: CoreKey, orgId: string, name: string, scopes: string[], capability: string) {
   const remaining = Date.parse(key.expires_at ?? '') - Date.now()
-  return key.org_id === orgId && key.name === name &&
-    key.environment === 'production' && exactArray(key.scopes, scopes) &&
+  return (
+    key.org_id === orgId &&
+    key.name === name &&
+    key.environment === 'production' &&
+    exactArray(key.scopes, scopes) &&
     exactArray(key.allowed_capabilities, [capability]) &&
-    key.revoked_at === null && Number.isFinite(remaining) &&
-    remaining > 29 * 86_400_000 && remaining <= 31 * 86_400_000
+    key.revoked_at === null &&
+    Number.isFinite(remaining) &&
+    remaining > 29 * 86_400_000 &&
+    remaining <= 31 * 86_400_000
+  )
 }
 
 async function revoke(orgId: string, keyId: string) {
   try {
     await coreRequest('POST', 'organizations/' + orgId + '/keys/' + keyId + '/revoke', {})
     return true
-  } catch { return false }
+  } catch {
+    return false
+  }
 }
 
 async function issue(orgId: string, name: string, scopes: string[], capability: string) {
   const expiresAt = new Date(Date.now() + 30 * 86_400_000).toISOString()
-  const key = await coreRequest<CoreKey>(
-    'POST', 'organizations/' + orgId + '/keys',
-    { name, environment: 'production', scopes, allowed_capabilities: [capability], expires_at: expiresAt }
-  )
+  const key = await coreRequest<CoreKey>('POST', 'organizations/' + orgId + '/keys', {
+    name,
+    environment: 'production',
+    scopes,
+    allowed_capabilities: [capability],
+    expires_at: expiresAt,
+  })
   // Return the key ID to the caller before validating the one-time raw
   // material. A malformed raw response must still be revoked if possible.
-  if (!UUID.test(key?.id ?? ''))
-    throw new DeveloperKeyError(502, 'QDIP Core returned an invalid credential ID')
+  if (!UUID.test(key?.id ?? '')) throw new DeveloperKeyError(502, 'QDIP Core returned an invalid credential ID')
   return key
 }
 
@@ -126,17 +155,15 @@ async function issue(orgId: string, name: string, scopes: string[], capability: 
  * Never silently accept old QDIP releases that ignore allowed_capabilities.
  * Raw values are returned once in the authenticated no-store response only.
  */
-export async function createDeveloperCredentials(
-  application: string, capability: string,
-): Promise<DeveloperKeyPair> {
+export async function createDeveloperCredentials(application: string, capability: string): Promise<DeveloperKeyPair> {
   if (!APP_NAME.test(application) || !CAPABILITY.test(capability))
     throw new DeveloperKeyError(422, 'Invalid application or capability')
   const name = 'qdip-sdk-app:' + application.toLowerCase()
   const orgs = await coreRequest<CoreOrg[]>('GET', 'organizations')
   if (!Array.isArray(orgs)) throw new DeveloperKeyError(502, 'Invalid QDIP organization response')
-  const existing = orgs.filter(org => org && org.name === name && UUID.test(org.id))
+  const existing = orgs.filter((org) => org && org.name === name && UUID.test(org.id))
   if (existing.length > 1) throw new DeveloperKeyError(409, 'Ambiguous QDIP application identity')
-  const org = existing[0] ?? await coreRequest<CoreOrg>('POST', 'organizations', { name })
+  const org = existing[0] ?? (await coreRequest<CoreOrg>('POST', 'organizations', { name }))
   if (!org || !UUID.test(org.id) || org.name !== name)
     throw new DeveloperKeyError(502, 'QDIP application isolation was not created')
   const operation = randomUUID()
@@ -150,10 +177,16 @@ export async function createDeveloperCredentials(
     if (!RAW_KEY.test(worker.key ?? '')) throw new DeveloperKeyError(502, 'Invalid Worker credential')
     const stored = await coreRequest<CoreKey[]>('GET', 'organizations/' + org.id + '/keys')
     if (!Array.isArray(stored)) throw new DeveloperKeyError(502, 'QDIP key policy readback failed')
-    for (const [credential, scopes] of [[app, APP_SCOPES], [worker, WORKER_SCOPES]] as const) {
-      const matches = stored.filter(row => row.id === credential.id)
-      if (!validPolicy(credential, org.id, credential.name, scopes, capability) ||
-          matches.length !== 1 || !validPolicy(matches[0], org.id, credential.name, scopes, capability)) {
+    for (const [credential, scopes] of [
+      [app, APP_SCOPES],
+      [worker, WORKER_SCOPES],
+    ] as const) {
+      const matches = stored.filter((row) => row.id === credential.id)
+      if (
+        !validPolicy(credential, org.id, credential.name, scopes, capability) ||
+        matches.length !== 1 ||
+        !validPolicy(matches[0], org.id, credential.name, scopes, capability)
+      ) {
         throw new DeveloperKeyError(502, 'QDIP key restrictions not verified; keys not released')
       }
     }
@@ -166,8 +199,8 @@ export async function createDeveloperCredentials(
     }
   } catch {
     // Best effort cleanup after partial issuance. Never disclose an unverified key.
-    const outcomes = await Promise.all(keyIds.map(id => revoke(org.id, id)))
-    if (outcomes.some(result => !result))
+    const outcomes = await Promise.all(keyIds.map((id) => revoke(org.id, id)))
+    if (outcomes.some((result) => !result))
       throw new DeveloperKeyError(503, 'Key creation failed; revocation unverified. Contact administrator before retry')
     throw new DeveloperKeyError(503, 'Unable to issue verified scoped credentials')
   }

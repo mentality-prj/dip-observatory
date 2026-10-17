@@ -10,7 +10,7 @@ function noStore(body: Record<string, unknown>, status: number) {
     status,
     headers: {
       'Cache-Control': 'private, no-store, max-age=0',
-      'Pragma': 'no-cache',
+      Pragma: 'no-cache',
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff',
     },
@@ -32,18 +32,19 @@ export async function POST(request: NextRequest) {
   } catch {
     return noStore({ error: 'Invalid JSON' }, 400)
   }
-  if (!data || typeof data !== 'object' || Array.isArray(data))
-    return noStore({ error: 'Invalid request' }, 422)
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return noStore({ error: 'Invalid request' }, 422)
   const props = data as Record<string, unknown>
-  if (Object.keys(props).some(key => !['application', 'capability'].includes(key)) ||
-      typeof props.application !== 'string' || typeof props.capability !== 'string')
+  if (
+    Object.keys(props).some((key) => !['application', 'capability'].includes(key)) ||
+    typeof props.application !== 'string' ||
+    typeof props.capability !== 'string'
+  )
     return noStore({ error: 'Invalid application request' }, 422)
   try {
     const credentials = await createDeveloperCredentials(props.application, props.capability)
     return noStore(credentials, 201)
   } catch (error) {
-    if (error instanceof DeveloperKeyError)
-      return noStore({ error: error.message }, error.status)
+    if (error instanceof DeveloperKeyError) return noStore({ error: error.message }, error.status)
     return noStore({ error: 'Credential provisioning failed' }, 503)
   }
 }
