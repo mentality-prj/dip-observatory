@@ -235,6 +235,13 @@ test.describe('current marketing routing', () => {
   })
 
   test('mobile appearance switch closes navigation and keeps the workbench readable', async ({ page }) => {
+    await page.route('**/api/auth/session', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ configured: true, authenticated: false, studio: false, operator: false }),
+      })
+    )
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('http://qdip.localhost:3000/en')
 
@@ -256,6 +263,13 @@ test.describe('current marketing routing', () => {
       'background-color',
       'rgb(241, 243, 246)'
     )
+    await expect(page.locator('header [data-qdip-auth="signed-out"] img')).toHaveCSS(
+      'filter',
+      'brightness(0)'
+    )
+    const secondaryCta = page.locator('a[class*="secondaryButton"]').first()
+    await secondaryCta.hover()
+    await expect(secondaryCta).toHaveCSS('color', 'rgb(27, 32, 41)')
     const selectedBudget = workbench.getByRole('button', { name: '€40k' })
     await expect(selectedBudget).toHaveCSS('color', 'rgb(255, 255, 255)')
     await expect(selectedBudget).toHaveCSS('background-color', 'rgb(122, 24, 56)')
