@@ -798,11 +798,11 @@
   align-items: center;
   gap: var(--ds-space-10);
   padding: var(--ds-space-8) max(var(--ds-space-6), calc((100vw - 1240px) / 2));
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--qdip-border);
 }
 .footer .logoWordmark {
   width: 110px;
-  filter: brightness(0) invert(1);
+  filter: var(--qdip-footer-logo-filter, brightness(0) invert(1));
 }
 .footer nav {
   display: flex;
