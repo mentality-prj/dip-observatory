@@ -45,7 +45,7 @@ describe('Observatory developer keys: audited app+Worker bootstrap', () => {
         issued.push(issuedKey)
         return Response.json(issuedKey, { status: 201 })
       }
-      if (method === 'GET' && path.endsWith('/keys')) return Response.json(issued.map(({key: _private, ...item}) => item))
+      if (method === 'GET' && path.endsWith('/keys')) return Response.json(issued.map(row => Object.fromEntries(Object.entries(row).filter(([field]) => field !== 'key'))))
       throw Error('Unexpected QDIP call')
     }))
     const response = await createDeveloperCredentials('VHV', 'secretary.plan')
@@ -71,7 +71,7 @@ describe('Observatory developer keys: audited app+Worker bootstrap', () => {
         issued.push(record)
         return Response.json(record, { status: 201 })
       }
-      if (method === 'GET' && path.endsWith('/keys')) return Response.json(issued.map(({key: _private,...item})=>item))
+      if (method === 'GET' && path.endsWith('/keys')) return Response.json(issued.map(row => Object.fromEntries(Object.entries(row).filter(([field]) => field !== 'key'))))
       if (method === 'POST' && path.endsWith('/revoke')) {revokeCount++;return Response.json({})}
       throw Error('Unexpected request')
     }))
